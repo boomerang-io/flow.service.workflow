@@ -1,0 +1,17 @@
+{
+    "workflowName": "HeyJoe Slack Slash Command",
+    "workflowId": "5e17a4b1e638b70001fae9ca",
+    "workflowActivityId": "5e1de2b85cec48000144834a",
+    "taskActivityId": "5e1de2b85cec48000144834b",
+    "taskName": "Tail Log",
+    "taskId": "80c25e3b-c295-4f7b-97dc-8a363826dcb7",
+    "properties": {
+        "path": "",
+        "script": "",
+        "shell": "/bin/bash"
+    },
+    "arguments": [
+        "shell",
+        "execute"
+    ]
+}

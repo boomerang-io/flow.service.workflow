@@ -1,0 +1,30 @@
+{
+    "_id" : ObjectId("5e17a4b1e638b70001fae9ca"),
+    "revisionCount" : NumberLong(0),
+    "properties" : [],
+    "description" : "",
+    "flowTeamId" : "5d30f07b571b410001a410f5",
+    "icon" : "flow",
+    "name" : "HeyJoe Slack Slash Command",
+    "shortDescription" : "",
+    "status" : "active",
+    "triggers" : {
+        "scheduler" : {
+            "enable" : false,
+            "schedule" : "",
+            "timezone" : "",
+            "advancedCron" : false
+        },
+        "webhook" : {
+            "enable" : false,
+            "token" : "AA9ADE4AC29D87DC94BAE793E16CCE7DD2CC80CAFC1DAE6B0E09C81502293929"
+        },
+        "event" : {
+            "enable" : true,
+            "topic" : "heyjoe"
+        }
+    },
+    "enablePersistentStorage" : false,
+    "enableACCIntegration" : false,
+    "_class" : "net.boomerangplatform.model.WorkflowSummary"
+}

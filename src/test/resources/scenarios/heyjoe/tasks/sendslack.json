@@ -1,0 +1,88 @@
+{
+    "_id": ObjectId("5e1bf6ca0351fdc9e4319c3b"),
+    "description": "Send slack message with log",
+    "key": "slackSendLogMessage",
+    "lastModiifed": ISODate("2018-10-09T00:01:00.000Z"),
+    "name": "Send Slack Log Message",
+    "type": "ValuesList",
+    "category": "communication",
+    "nodetype": "templateTask",
+    "status": "active",
+    "revisions": [
+        {
+            "version": 1,
+            "image": "image",
+            "command": "command",
+            "config": [
+                {
+                    "key": "url",
+                    "label": "URL",
+                    "type": "text",
+                    "helperText": "The Slack Webhook URL to call. Needs to be a fully qualified URL or property containing URL.",
+                    "description": "",
+                    "placeholder": ""
+                },
+                {
+                    "key": "channel",
+                    "label": "Channel",
+                    "type": "text",
+                    "helperText": "The name of the channel or user as a destination for the messages",
+                    "description": "",
+                    "placeholder": ""
+                },
+                {
+                    "key": "icon",
+                    "label": "Icon",
+                    "type": "text",
+                    "helperText": "The emoji to set as the icon",
+                    "description": "If left blank, defaults to :boomerang:",
+                    "placeholder": ""
+                },
+                {
+                    "key": "username",
+                    "label": "Username",
+                    "type": "text",
+                    "helperText": "Larger, bold text near the top of a message",
+                    "description": "",
+                    "placeholder": ""
+                },
+                {
+                    "key": "message",
+                    "label": "Message",
+                    "type": "textarea",
+                    "helperText": "The text to appear above the log and also in the fallback.",
+                    "description": "",
+                    "placeholder": ""
+                },
+                {
+                    "key": "logContent",
+                    "label": "Log Content",
+                    "type": "textarea",
+                    "helperText": "The flow property or text containing the log content.",
+                    "description": "",
+                    "placeholder": ""
+                },
+                {
+                    "key": "encoded",
+                    "label": "Decode Log Content",
+                    "type": "boolean",
+                    "helperText": "Decode the log content from base64. This is useful if an encoded Flow output property is used as the Log Content.",
+                    "description": "",
+                    "placeholder": ""
+                },
+                {
+                    "key": "context",
+                    "label": "Context",
+                    "type": "text",
+                    "helperText": "Provide a message context at the base of the response.",
+                    "description": "",
+                    "placeholder": ""
+                }
+            ],
+            "arguments": [
+                "slack",
+                "sendLogMessage"
+            ]
+        }
+    ]
+}

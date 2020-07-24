@@ -1,0 +1,17 @@
+{
+    "properties": {
+        "token": "H3JpI2osywM0TsERaT3uBCOQ",
+        "team_id": "T27TLPNS1",
+        "team_domain": "gbs-cai",
+        "channel_id": "D0YGZQ6L9",
+        "channel_name": "directmessage",
+        "user_id": "W3FJMSSQ4",
+        "user_name": "mdroy",
+        "command": "heyjoe",
+        "text": "default test",
+        "enterprise_id": "E27SFGS2W",
+        "enterprise_name": "IBM",
+        "response_url": "https://hooks.slack.com/commands/T27TLPNS1/893078779026/p1TyOpPKRsM8HepTU3nkG1y5",
+        "trigger_id": "905406871172.75938804885.705748e80b467052159167ee567cd32a"
+    }
+}

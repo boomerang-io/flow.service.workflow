@@ -1,0 +1,8 @@
+{
+    "code": "1",
+    "message": "net.boomerangplatform.kube.exception.KubeRuntimeException: Task (80c25e3b-c295-4f7b-97dc-8a363826dcb7) has failed to execute 0 times triggering failure.",
+    "output": {
+        "#Tue Jan 14 15:48:19 GMT 2020": "",
+        "ERROR\\:\\:Allowed": "methods are [usage logs]. [default] is not a method."
+    }
+}
