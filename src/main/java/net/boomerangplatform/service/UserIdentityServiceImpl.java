@@ -11,6 +11,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import net.boomerangplatform.client.BoomerangUserService;
 import net.boomerangplatform.client.model.UserProfile;
+import net.boomerangplatform.model.FlowUser;
 import net.boomerangplatform.model.UserQueryResult;
 import net.boomerangplatform.mongo.entity.FlowUserEntity;
 import net.boomerangplatform.mongo.model.UserType;
@@ -102,5 +103,15 @@ public class UserIdentityServiceImpl implements UserIdentityService {
   @Override
   public List<FlowUserEntity> getUsersForTeams(List<String> teamIds) {
     return this.flowUserService.getUsersforTeams(teamIds);
+  }
+
+  @Override
+  public void updateFlowUser(String userId, FlowUser updatedFlowUser) {
+    Optional<FlowUserEntity> userOptional = this.flowUserService.getUserById(userId);
+    if (userOptional.isPresent()) {
+      FlowUserEntity user = userOptional.get();
+      user.setType(updatedFlowUser.getType()); 
+      this.flowUserService.save(user);
+    }
   }
 }

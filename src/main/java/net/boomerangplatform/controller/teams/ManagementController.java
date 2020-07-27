@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import net.boomerangplatform.model.FlowTeam;
+import net.boomerangplatform.model.FlowUser;
 import net.boomerangplatform.model.TeamQueryResult;
 import net.boomerangplatform.model.UserQueryResult;
 import net.boomerangplatform.model.profile.SortSummary;
@@ -36,6 +37,14 @@ public class ManagementController {
   @Autowired
   private UserIdentityService userIdentityService;
 
+  
+  @PatchMapping(value = "/users/{userId}")
+  public void updateFlowUser(@PathVariable String userId,
+      @RequestBody FlowUser flowUser) {
+    userIdentityService.updateFlowUser(userId, flowUser);
+  }
+  
+  
   @GetMapping(value = "/users")
   public UserQueryResult getUsers(@RequestParam(required = false) String query,
       @RequestParam(defaultValue = "ASC") Direction order,
@@ -93,6 +102,8 @@ public class ManagementController {
     response.setupSortSummary(sortSummary);
     return response;
   }
+  
+  
 
   @PostMapping(value = "/teams")
   public FlowTeam addTeam(FlowTeam flowTeam) {
@@ -110,7 +121,7 @@ public class ManagementController {
       @RequestBody List<String> teamMembers) {
     teamService.updateTeamMembers(teamId, teamMembers);
   }
-
+  
   @PutMapping(value = "/teams/{teamId}")
   public void updateTeamMembers(@PathVariable String teamId, @RequestBody FlowTeam flow) {
     teamService.updateTeam(teamId, flow);
