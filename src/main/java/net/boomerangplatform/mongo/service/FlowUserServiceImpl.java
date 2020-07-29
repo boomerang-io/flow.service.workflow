@@ -64,4 +64,9 @@ public class FlowUserServiceImpl implements FlowUserService {
   public FlowUserEntity save(FlowUserEntity user) {
     return flowUserRepository.save(user);
   }
+
+  @Override
+  public Long getUserCount() {
+    return flowUserRepository.count();
+  }
 }

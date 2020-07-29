@@ -8,6 +8,8 @@ import net.boomerangplatform.mongo.entity.FlowUserEntity;
 
 public interface FlowUserService {
 
+  public Long getUserCount();
+  
   public FlowUserEntity save(FlowUserEntity user);
 
   public Optional<FlowUserEntity> getUserById(String id);
