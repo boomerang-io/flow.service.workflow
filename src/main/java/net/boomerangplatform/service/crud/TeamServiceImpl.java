@@ -1,5 +1,7 @@
 package net.boomerangplatform.service.crud;
 
+import java.sql.Date;
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -10,6 +12,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import net.boomerangplatform.client.BoomerangTeamService;
@@ -24,10 +27,12 @@ import net.boomerangplatform.model.WorkflowSummary;
 import net.boomerangplatform.mongo.entity.FlowTeamConfiguration;
 import net.boomerangplatform.mongo.entity.FlowTeamEntity;
 import net.boomerangplatform.mongo.entity.FlowUserEntity;
+import net.boomerangplatform.mongo.entity.FlowWorkflowActivityEntity;
 import net.boomerangplatform.mongo.model.FlowTeamQuotas;
 import net.boomerangplatform.mongo.model.Settings;
 import net.boomerangplatform.mongo.service.FlowTeamService;
 import net.boomerangplatform.mongo.service.FlowUserService;
+import net.boomerangplatform.mongo.service.FlowWorkflowActivityService;
 import net.boomerangplatform.service.UserIdentityService;
 
 @Service
@@ -50,6 +55,9 @@ public class TeamServiceImpl implements TeamService {
 
   @Autowired
   private UserIdentityService userIdentiyService;
+  
+  @Autowired
+  private FlowWorkflowActivityService flowWorkflowActivityService;
 
   @Value("${boomerang.standalone}")
   private boolean standAloneMode;
@@ -330,16 +338,30 @@ public class TeamServiceImpl implements TeamService {
 
   @Override
   public FlowTeamQuotas getTeamQuotas(String teamId) {
-    FlowTeamEntity flowTeamEntity = flowTeamService.findById(teamId);
+    FlowTeamEntity team = flowTeamService.findById(teamId);
+    List<WorkflowSummary> workflows = workflowService.getWorkflowsForTeam(team.getId());
+    
+    Pageable page = PageRequest.of(0, 10);
+    Page<FlowWorkflowActivityEntity> activities = 
+        flowWorkflowActivityService.findAllActivities(Optional.empty(), Optional.empty(), page);
+    Page<FlowWorkflowActivityEntity> activitiesMonthly = 
+        flowWorkflowActivityService.findAllActivities(
+            Optional.of(Date.valueOf(LocalDate.now().withDayOfMonth(1))), Optional.of(Date.valueOf(LocalDate.now())), page);
+    
     FlowTeamQuotas quotas = new FlowTeamQuotas();
     quotas.setMaxWorkflowCount(maxWorkflowCount);
     quotas.setMaxWorkflowExecutionMonthly(maxWorkflowExecutionMonthly);
     quotas.setMaxWorkflowStorage(maxWorkflowStorage);
     quotas.setMaxWorkflowExecutionTime(maxWorkflowExecutionTime);
     quotas.setMaxConcurrentWorkflows(maxConcurrentWorkflows);
-//    quotas.setCurrentWorkflowCount(currentWorkflowCount);
-//    quotas.setCurrentConcurrentWorkflows(currentConcurrentWorkflows);
-//    quotas.setCurrentWorkflowExecutionMonthly(currentWorkflowExecutionMonthly);
+    
+    quotas.setCurrentWorkflowCount(workflows.size());
+    quotas.setCurrentConcurrentWorkflows(activities.getSize());
+    quotas.setCurrentWorkflowExecutionMonthly(activitiesMonthly.getSize());
+    
+//  if current quota exceeds max, return Http 429
+//  HttpStatus.TOO_MANY_REQUESTS 429
+    
     return quotas;
   }
 }
