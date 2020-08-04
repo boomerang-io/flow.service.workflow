@@ -24,6 +24,7 @@ import net.boomerangplatform.model.WorkflowSummary;
 import net.boomerangplatform.mongo.entity.FlowTeamConfiguration;
 import net.boomerangplatform.mongo.entity.FlowTeamEntity;
 import net.boomerangplatform.mongo.entity.FlowUserEntity;
+import net.boomerangplatform.mongo.model.FlowTeamQuotas;
 import net.boomerangplatform.mongo.model.Settings;
 import net.boomerangplatform.mongo.service.FlowTeamService;
 import net.boomerangplatform.mongo.service.FlowUserService;
@@ -310,5 +311,20 @@ public class TeamServiceImpl implements TeamService {
       team.setIsActive(flow.getIsActive());
     }
     this.flowTeamService.save(team);
+  }
+
+  @Override
+  public FlowTeamQuotas getTeamQuotas(String teamId) {
+    FlowTeamEntity flowTeamEntity = flowTeamService.findById(teamId);
+    FlowTeamQuotas quotas = new FlowTeamQuotas();
+//    quotas.setMaxWorkflowCount(maxWorkflowCount);
+//    quotas.setMaxWorkflowExecutionMonthly(maxWorkflowExecutionMonthly);
+//    quotas.setMaxWorkflowStorage(maxWorkflowStorage);
+//    quotas.setMaxWorkflowExecutionTime(maxWorkflowExecutionTime);
+//    quotas.setMaxConcurrentWorkflows(maxConcurrentWorkflows);
+//    quotas.setCurrentWorkflowCount(currentWorkflowCount);
+//    quotas.setCurrentConcurrentWorkflows(currentConcurrentWorkflows);
+//    quotas.setCurrentWorkflowExecutionMonthly(currentWorkflowExecutionMonthly);
+    return quotas;
   }
 }

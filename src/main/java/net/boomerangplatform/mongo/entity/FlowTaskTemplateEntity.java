@@ -115,4 +115,12 @@ public class FlowTaskTemplateEntity {
     this.icon = icon;
   }
 
+  public Quotas getQuotas() {
+    return quotas;
+  }
+
+  public void setQuotas(Quotas quotas) {
+    this.quotas = quotas;
+  }
+
 }

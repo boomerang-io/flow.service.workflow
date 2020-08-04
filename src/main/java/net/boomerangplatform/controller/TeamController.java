@@ -15,6 +15,7 @@ import net.boomerangplatform.model.CreateFlowTeam;
 import net.boomerangplatform.model.TeamWorkflowSummary;
 import net.boomerangplatform.mongo.entity.FlowTeamConfiguration;
 import net.boomerangplatform.mongo.entity.FlowUserEntity;
+import net.boomerangplatform.mongo.model.FlowTeamQuotas;
 import net.boomerangplatform.mongo.model.UserType;
 import net.boomerangplatform.service.UserIdentityService;
 import net.boomerangplatform.service.crud.TeamService;
@@ -69,4 +70,8 @@ public class TeamController {
     return flowTeamService.createNewTeamProperty(teamId, property);
   }
 
+  @GetMapping(value = "/teams/{teamId}/quotas")
+  public FlowTeamQuotas getTeamQuotas(@PathVariable String teamId) {
+    return flowTeamService.getTeamQuotas(teamId);
+  }
 }
