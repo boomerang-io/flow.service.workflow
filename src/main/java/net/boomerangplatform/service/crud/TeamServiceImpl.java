@@ -53,6 +53,21 @@ public class TeamServiceImpl implements TeamService {
 
   @Value("${boomerang.standalone}")
   private boolean standAloneMode;
+  
+  @Value("${max.workflow.count}")
+  private Integer maxWorkflowCount;
+  
+  @Value("${max.workflow.execution.monthly}")
+  private Integer maxWorkflowExecutionMonthly;
+  
+  @Value("${max.workflow.storage}")
+  private Integer maxWorkflowStorage;
+  
+  @Value("${max.workflow.execution.time}")
+  private Integer maxWorkflowExecutionTime;
+  
+  @Value("${max.concurrent.workflows}")
+  private Integer maxConcurrentWorkflows;
 
   @Autowired
   private FlowUserService flowUserService;
@@ -317,11 +332,11 @@ public class TeamServiceImpl implements TeamService {
   public FlowTeamQuotas getTeamQuotas(String teamId) {
     FlowTeamEntity flowTeamEntity = flowTeamService.findById(teamId);
     FlowTeamQuotas quotas = new FlowTeamQuotas();
-//    quotas.setMaxWorkflowCount(maxWorkflowCount);
-//    quotas.setMaxWorkflowExecutionMonthly(maxWorkflowExecutionMonthly);
-//    quotas.setMaxWorkflowStorage(maxWorkflowStorage);
-//    quotas.setMaxWorkflowExecutionTime(maxWorkflowExecutionTime);
-//    quotas.setMaxConcurrentWorkflows(maxConcurrentWorkflows);
+    quotas.setMaxWorkflowCount(maxWorkflowCount);
+    quotas.setMaxWorkflowExecutionMonthly(maxWorkflowExecutionMonthly);
+    quotas.setMaxWorkflowStorage(maxWorkflowStorage);
+    quotas.setMaxWorkflowExecutionTime(maxWorkflowExecutionTime);
+    quotas.setMaxConcurrentWorkflows(maxConcurrentWorkflows);
 //    quotas.setCurrentWorkflowCount(currentWorkflowCount);
 //    quotas.setCurrentConcurrentWorkflows(currentConcurrentWorkflows);
 //    quotas.setCurrentWorkflowExecutionMonthly(currentWorkflowExecutionMonthly);
