@@ -343,7 +343,6 @@ public class TeamServiceImpl implements TeamService {
     
     List<WorkflowSummary> workflows = workflowService.getWorkflowsForTeam(team.getId());
     
-//    Pageable page = PageRequest.of(0, 2147483647);
     Pageable page = Pageable.unpaged();
     Page<FlowWorkflowActivityEntity> activities = 
         flowWorkflowActivityService.findAllActivities(Optional.empty(), Optional.empty(), page);
