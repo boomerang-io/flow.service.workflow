@@ -14,7 +14,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import net.boomerangplatform.client.BoomerangTeamService;
 import net.boomerangplatform.client.BoomerangUserService;
 import net.boomerangplatform.client.model.Team;
@@ -339,9 +341,9 @@ public class TeamServiceImpl implements TeamService {
   @Override
   public FlowTeamQuotas getTeamQuotas(String teamId) {
     FlowTeamEntity team = flowTeamService.findById(teamId);
-    List<WorkflowSummary> workflows = workflowService.getWorkflowsForTeam(team.getId());
     
-    Pageable page = PageRequest.of(0, 10);
+    List<WorkflowSummary> workflows = workflowService.getWorkflowsForTeam(team.getId());
+    Pageable page = PageRequest.of(0, 100);
     Page<FlowWorkflowActivityEntity> activities = 
         flowWorkflowActivityService.findAllActivities(Optional.empty(), Optional.empty(), page);
     Page<FlowWorkflowActivityEntity> activitiesMonthly = 
@@ -356,12 +358,15 @@ public class TeamServiceImpl implements TeamService {
     quotas.setMaxConcurrentWorkflows(maxConcurrentWorkflows);
     
     quotas.setCurrentWorkflowCount(workflows.size());
-    quotas.setCurrentConcurrentWorkflows(activities.getSize());
-    quotas.setCurrentWorkflowExecutionMonthly(activitiesMonthly.getSize());
+    quotas.setCurrentConcurrentWorkflows(activities.getContent().size());
+    quotas.setCurrentWorkflowExecutionMonthly(activitiesMonthly.getContent().size());
     
-//  if current quota exceeds max, return Http 429
-//  HttpStatus.TOO_MANY_REQUESTS 429
-    
-    return quotas;
+    if(workflows.size() > maxWorkflowCount ||
+        activities.getContent().size() > maxConcurrentWorkflows ||
+        activitiesMonthly.getContent().size() > maxWorkflowExecutionMonthly) {
+      throw new HttpClientErrorException(HttpStatus.TOO_MANY_REQUESTS);
+    } else {
+      return quotas;
+    }
   }
 }

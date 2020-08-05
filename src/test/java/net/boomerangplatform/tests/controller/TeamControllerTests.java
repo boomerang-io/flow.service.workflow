@@ -11,11 +11,13 @@ import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.web.client.HttpClientErrorException;
 import net.boomerangplatform.Application;
 import net.boomerangplatform.MongoConfig;
 import net.boomerangplatform.controller.TeamController;
 import net.boomerangplatform.model.CreateFlowTeam;
 import net.boomerangplatform.mongo.entity.FlowTeamConfiguration;
+import net.boomerangplatform.mongo.model.FlowTeamQuotas;
 import net.boomerangplatform.tests.FlowTests;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -31,7 +33,7 @@ public class TeamControllerTests extends FlowTests {
 
   @Test
   public void testGetTeams() {
-    assertEquals(2, controller.getTeams().size());
+    assertEquals(3, controller.getTeams().size());
   }
 
   @Test
@@ -41,7 +43,7 @@ public class TeamControllerTests extends FlowTests {
     request.setCreatedGroupId("5cedb53261a23a0001e4c1b6");
 
     controller.createCiTeam(request);
-    assertEquals(3, controller.getTeams().size());
+    assertEquals(4, controller.getTeams().size());
   }
 
   @Test
@@ -92,5 +94,19 @@ public class TeamControllerTests extends FlowTests {
 
     assertEquals("dylan.new.key", newConfig2.getKey());
     assertEquals("Dylan's New Value", newConfig2.getValue());
+  }
+  
+  @Test
+  public void testGetTeamQuotas() {
+    FlowTeamQuotas quotas = controller.getTeamQuotas("5d1a1841f6ca2c00014c4303");
+    assertEquals(Integer.valueOf(0), quotas.getCurrentWorkflowCount());
+    assertEquals(Integer.valueOf(10), quotas.getMaxWorkflowCount());
+    assertEquals(Integer.valueOf(2), quotas.getCurrentConcurrentWorkflows());
+    assertEquals(Integer.valueOf(4), quotas.getMaxConcurrentWorkflows());
+  }
+  
+  @Test(expected = HttpClientErrorException.class)
+  public void testGetTeamQuotasExceedMax() {
+    controller.getTeamQuotas("5d1a1841f6ca2c00014c4309");
   }
 }
