@@ -1,8 +1,8 @@
 package net.boomerangplatform.service.crud;
 
-import java.sql.Date;
-import java.time.LocalDate;
+import java.util.Calendar;
 import java.util.Collections;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -343,12 +343,17 @@ public class TeamServiceImpl implements TeamService {
     FlowTeamEntity team = flowTeamService.findById(teamId);
     
     List<WorkflowSummary> workflows = workflowService.getWorkflowsForTeam(team.getId());
-    Pageable page = PageRequest.of(0, 100);
+    
+//    Pageable page = PageRequest.of(0, 2147483647);
+    Pageable page = Pageable.unpaged();
     Page<FlowWorkflowActivityEntity> activities = 
         flowWorkflowActivityService.findAllActivities(Optional.empty(), Optional.empty(), page);
+    
+    Calendar c = Calendar.getInstance();   
+    c.set(Calendar.DAY_OF_MONTH, 1);
     Page<FlowWorkflowActivityEntity> activitiesMonthly = 
         flowWorkflowActivityService.findAllActivities(
-            Optional.of(Date.valueOf(LocalDate.now().withDayOfMonth(1))), Optional.of(Date.valueOf(LocalDate.now())), page);
+            Optional.of(c.getTime()), Optional.of(new Date()), page);
     
     FlowTeamQuotas quotas = new FlowTeamQuotas();
     quotas.setMaxWorkflowCount(maxWorkflowCount);
