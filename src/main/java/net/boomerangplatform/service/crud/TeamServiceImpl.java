@@ -354,7 +354,7 @@ public class TeamServiceImpl implements TeamService {
       workflowIds.add(workflow.getId());
     }
     Page<FlowWorkflowActivityEntity> concurrentActivities =
-        flowWorkflowActivityService.findActivitesInProgressForTeam(workflowIds, FlowTaskStatus.inProgress);
+        flowWorkflowActivityService.findbyWorkflowIdsAndStatus(workflowIds, FlowTaskStatus.inProgress);
     
     Pageable page = Pageable.unpaged();
     Calendar c = Calendar.getInstance();   

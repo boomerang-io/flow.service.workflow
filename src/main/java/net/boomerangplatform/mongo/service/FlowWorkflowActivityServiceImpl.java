@@ -278,7 +278,7 @@ public class FlowWorkflowActivityServiceImpl implements FlowWorkflowActivityServ
     return repository.findByWorkflowAndProperty(workflowId, key, value);
   }
   
-  public Page<FlowWorkflowActivityEntity> findActivitesInProgressForTeam(List<String> workflowIds, FlowTaskStatus status){
+  public Page<FlowWorkflowActivityEntity> findbyWorkflowIdsAndStatus(List<String> workflowIds, FlowTaskStatus status){
     return repository.findByWorkflowIdInAndStatus(workflowIds, status);
   }
 }
