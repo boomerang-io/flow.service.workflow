@@ -27,8 +27,6 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import net.boomerangplatform.Application;
 import net.boomerangplatform.MongoConfig;
 import net.boomerangplatform.controller.ActivityController;
@@ -82,7 +80,7 @@ public class ActivityControllerTests extends FlowTests {
         getOptionalListString(workflowIds), getOptionalListString(teamIds), 0, 2147483647,
         Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
 
-    assertEquals(2, response.getRecords().size());
+    assertEquals(5, response.getRecords().size());
   }
 
   @Test
@@ -91,17 +89,14 @@ public class ActivityControllerTests extends FlowTests {
         getOptionalString("sort"), getOptionalString("5d1a1841f6ca2c00014c4309"), 0, 2147483647,
         Optional.empty(), Optional.empty());
 
-    assertEquals(2, summary.getExecutions().size());
+    assertEquals(5, summary.getExecutions().size());
     Long executiontime = (summary.getExecutions().get(0).getDuration()
-        + summary.getExecutions().get(1).getDuration()) / summary.getExecutions().size();
-    ObjectMapper objectMapper = new ObjectMapper();
-    try {
-      System.out.println(objectMapper.writeValueAsString(summary));
-    } catch (JsonProcessingException e) {
-      // log an error
-    }
+        + summary.getExecutions().get(1).getDuration()
+        + summary.getExecutions().get(2).getDuration()
+        + summary.getExecutions().get(3).getDuration()
+        + summary.getExecutions().get(4).getDuration()) / summary.getExecutions().size();
     assertEquals(executiontime, summary.getMedianExecutionTime());
-    assertEquals(2, summary.getTotalActivitiesExecuted().intValue());
+    assertEquals(5, summary.getTotalActivitiesExecuted().intValue());
 
   }
 
