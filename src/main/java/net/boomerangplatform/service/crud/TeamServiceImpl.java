@@ -13,9 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpClientErrorException;
 import net.boomerangplatform.client.BoomerangTeamService;
 import net.boomerangplatform.client.BoomerangUserService;
 import net.boomerangplatform.client.model.Team;
@@ -364,12 +362,6 @@ public class TeamServiceImpl implements TeamService {
     quotas.setCurrentConcurrentWorkflows(activities.getContent().size());
     quotas.setCurrentWorkflowExecutionMonthly(activitiesMonthly.getContent().size());
     
-    if(workflows.size() > maxWorkflowCount ||
-        activities.getContent().size() > maxConcurrentWorkflows ||
-        activitiesMonthly.getContent().size() > maxWorkflowExecutionMonthly) {
-      throw new HttpClientErrorException(HttpStatus.TOO_MANY_REQUESTS);
-    } else {
-      return quotas;
-    }
+    return quotas;
   }
 }

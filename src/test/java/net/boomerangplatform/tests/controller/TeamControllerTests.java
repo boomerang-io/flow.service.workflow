@@ -11,7 +11,6 @@ import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import org.springframework.web.client.HttpClientErrorException;
 import net.boomerangplatform.Application;
 import net.boomerangplatform.MongoConfig;
 import net.boomerangplatform.controller.TeamController;
@@ -103,10 +102,5 @@ public class TeamControllerTests extends FlowTests {
     assertEquals(Integer.valueOf(10), quotas.getMaxWorkflowCount());
     assertEquals(Integer.valueOf(2), quotas.getCurrentConcurrentWorkflows());
     assertEquals(Integer.valueOf(4), quotas.getMaxConcurrentWorkflows());
-  }
-  
-  @Test(expected = HttpClientErrorException.class)
-  public void testGetTeamQuotasExceedMax() {
-    controller.getTeamQuotas("5d1a1841f6ca2c00014c4309");
   }
 }

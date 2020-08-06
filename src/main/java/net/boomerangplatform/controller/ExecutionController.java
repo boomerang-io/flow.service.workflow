@@ -51,43 +51,47 @@ public class ExecutionController {
       @RequestBody Optional<FlowExecutionRequest> executionRequest) {
 
     final FlowWorkflowEntity newEntity = workflowService.getWorkflow(workflowId);
-
-    if (newEntity != null && newEntity.getStatus() == WorkflowStatus.active) {
-
-      FlowExecutionRequest request = null;
-
-      if (executionRequest.isPresent()) {
-        request = executionRequest.get();
-        logPayload(request);
-      } else {
-        request = new FlowExecutionRequest();
-      }
-
-      final FlowWorkflowRevisionEntity entity =
-          this.flowRevisionService.getLatestWorkflowVersion(workflowId);
-      if (entity != null) {
-        final FlowWorkflowActivityEntity activity =
-            activityService.createFlowActivity(entity.getId(), trigger, request);
-        flowExecutionService.executeWorkflowVersion(entity.getId(), activity.getId());
-        final List<FlowTaskExecutionEntity> steps =
-            activityService.getTaskExecutions(activity.getId());
-
-        final FlowActivity response = new FlowActivity(activity);
-        response.setSteps(steps);
-
-        return response;
-      } else {
-        LOGGER.error("No revision to execute");
-      }
-
-      return null;
-
+    
+    if(!workflowService.canExecuteWorkflow(newEntity.getFlowTeamId())) {
+      LOGGER.error("HTTP 429");
     } else {
-      LOGGER.error("The workflow status is not active");
-      return null;
+      
+      if (newEntity != null && newEntity.getStatus() == WorkflowStatus.active) {
+        
+        FlowExecutionRequest request = null;
+  
+        if (executionRequest.isPresent()) {
+          request = executionRequest.get();
+          logPayload(request);
+        } else {
+          request = new FlowExecutionRequest();
+        }
+  
+        final FlowWorkflowRevisionEntity entity =
+            this.flowRevisionService.getLatestWorkflowVersion(workflowId);
+        if (entity != null) {
+          final FlowWorkflowActivityEntity activity =
+              activityService.createFlowActivity(entity.getId(), trigger, request);
+          flowExecutionService.executeWorkflowVersion(entity.getId(), activity.getId());
+          final List<FlowTaskExecutionEntity> steps =
+              activityService.getTaskExecutions(activity.getId());
+  
+          final FlowActivity response = new FlowActivity(activity);
+          response.setSteps(steps);
+  
+          return response;
+        } else {
+          LOGGER.error("No revision to execute");
+        }
+  
+        return null;
+  
+      } else {
+        LOGGER.error("The workflow status is not active");
+        return null;
+      }
     }
-
-
+    return null;
 
   }
 

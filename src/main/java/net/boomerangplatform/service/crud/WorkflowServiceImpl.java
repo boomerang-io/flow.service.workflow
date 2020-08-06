@@ -13,6 +13,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.quartz.SchedulerException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -27,6 +28,7 @@ import net.boomerangplatform.mongo.entity.FlowWorkflowEntity;
 import net.boomerangplatform.mongo.entity.FlowWorkflowRevisionEntity;
 import net.boomerangplatform.mongo.model.Event;
 import net.boomerangplatform.mongo.model.FlowProperty;
+import net.boomerangplatform.mongo.model.FlowTeamQuotas;
 import net.boomerangplatform.mongo.model.Scheduler;
 import net.boomerangplatform.mongo.model.TaskType;
 import net.boomerangplatform.mongo.model.Triggers;
@@ -52,6 +54,18 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   @Autowired
   private FlowTaskTemplateService templateService;
+  
+  @Autowired
+  private TeamService teamService;
+  
+  @Value("${max.workflow.count}")
+  private Integer maxWorkflowCount;
+  
+  @Value("${max.workflow.execution.monthly}")
+  private Integer maxWorkflowExecutionMonthly;
+  
+  @Value("${max.concurrent.workflows}")
+  private Integer maxConcurrentWorkflows;
 
   private final Logger logger = LogManager.getLogger(getClass());
 
@@ -480,6 +494,15 @@ public class WorkflowServiceImpl implements WorkflowService {
     }
 
     return newProperties;
+  }
+
+  @Override
+  public boolean canExecuteWorkflow(String teamId) {
+    FlowTeamQuotas quotas = teamService.getTeamQuotas(teamId);
+    // if any of the conditions are true, return false
+    return !(quotas.getCurrentWorkflowCount() > maxWorkflowCount || 
+        quotas.getCurrentConcurrentWorkflows() > maxConcurrentWorkflows ||
+            quotas.getCurrentWorkflowExecutionMonthly() > maxWorkflowExecutionMonthly);
   }
 
 }
