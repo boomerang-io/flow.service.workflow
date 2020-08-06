@@ -110,9 +110,9 @@ public class ActivityControllerTests extends FlowTests {
     Map<String, Long> activitySummary = activityController.getFlowActivitySummary(Direction.ASC, 0,
         2147483647, null, null, null, null, null);
 
-    assertEquals(4, activitySummary.get("all").longValue());
+    assertEquals(5, activitySummary.get("all").longValue());
     assertEquals(3, activitySummary.get(FlowTaskStatus.completed.getStatus()).longValue());
-    assertEquals(1, activitySummary.get(FlowTaskStatus.inProgress.getStatus()).longValue());
+    assertEquals(2, activitySummary.get(FlowTaskStatus.inProgress.getStatus()).longValue());
   }
 
   Optional<String> getOptionalString(String string) {

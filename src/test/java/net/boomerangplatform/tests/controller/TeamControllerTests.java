@@ -98,9 +98,9 @@ public class TeamControllerTests extends FlowTests {
   @Test
   public void testGetTeamQuotas() {
     FlowTeamQuotas quotas = controller.getTeamQuotas("5d1a1841f6ca2c00014c4303");
-    assertEquals(Integer.valueOf(2), quotas.getCurrentWorkflowCount());
+    assertEquals(Integer.valueOf(3), quotas.getCurrentWorkflowCount());
     assertEquals(Integer.valueOf(10), quotas.getMaxWorkflowCount());
-    assertEquals(Integer.valueOf(1), quotas.getCurrentConcurrentWorkflows());
+    assertEquals(Integer.valueOf(2), quotas.getCurrentConcurrentWorkflows());
     assertEquals(Integer.valueOf(4), quotas.getMaxConcurrentWorkflows());
   }
 }
