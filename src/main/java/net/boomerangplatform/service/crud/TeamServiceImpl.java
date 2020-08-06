@@ -355,8 +355,8 @@ public class TeamServiceImpl implements TeamService {
     for(FlowWorkflowEntity workflow : teamWorkflows) {
       workflowIds.add(workflow.getId());
     }
-    Page<FlowWorkflowActivityEntity> concurrentActivities =
-        flowWorkflowActivityService.findbyWorkflowIdsAndStatus(workflowIds, FlowTaskStatus.inProgress, page);
+    List<FlowWorkflowActivityEntity> concurrentActivities =
+        flowWorkflowActivityService.findbyWorkflowIdsAndStatus(workflowIds, FlowTaskStatus.inProgress);
     
     Calendar c = Calendar.getInstance();   
     c.set(Calendar.DAY_OF_MONTH, 1);
@@ -372,7 +372,7 @@ public class TeamServiceImpl implements TeamService {
     quotas.setMaxConcurrentWorkflows(maxConcurrentWorkflows);
     
     quotas.setCurrentWorkflowCount(workflows.size());
-    quotas.setCurrentConcurrentWorkflows(concurrentActivities.getContent().size());
+    quotas.setCurrentConcurrentWorkflows(concurrentActivities.size());
     quotas.setCurrentWorkflowExecutionMonthly(activitiesMonthly.getContent().size());
     
     return quotas;
