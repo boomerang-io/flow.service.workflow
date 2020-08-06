@@ -27,6 +27,8 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import net.boomerangplatform.Application;
 import net.boomerangplatform.MongoConfig;
 import net.boomerangplatform.controller.ActivityController;
@@ -92,6 +94,12 @@ public class ActivityControllerTests extends FlowTests {
     assertEquals(2, summary.getExecutions().size());
     Long executiontime = (summary.getExecutions().get(0).getDuration()
         + summary.getExecutions().get(1).getDuration()) / summary.getExecutions().size();
+    ObjectMapper objectMapper = new ObjectMapper();
+    try {
+      System.out.println(objectMapper.writeValueAsString(summary));
+    } catch (JsonProcessingException e) {
+      // log an error
+    }
     assertEquals(executiontime, summary.getMedianExecutionTime());
     assertEquals(2, summary.getTotalActivitiesExecuted().intValue());
 
@@ -102,9 +110,9 @@ public class ActivityControllerTests extends FlowTests {
     Map<String, Long> activitySummary = activityController.getFlowActivitySummary(Direction.ASC, 0,
         2147483647, null, null, null, null, null);
 
-    assertEquals(2, activitySummary.get("all").longValue());
-    assertEquals(2, activitySummary.get(FlowTaskStatus.completed.getStatus()).longValue());
-    assertEquals(0, activitySummary.get(FlowTaskStatus.inProgress.getStatus()).longValue());
+    assertEquals(4, activitySummary.get("all").longValue());
+    assertEquals(3, activitySummary.get(FlowTaskStatus.completed.getStatus()).longValue());
+    assertEquals(1, activitySummary.get(FlowTaskStatus.inProgress.getStatus()).longValue());
   }
 
   Optional<String> getOptionalString(String string) {

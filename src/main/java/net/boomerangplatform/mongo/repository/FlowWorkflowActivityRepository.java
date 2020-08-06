@@ -110,7 +110,7 @@ public interface FlowWorkflowActivityRepository
 
   Page<FlowWorkflowActivityEntity> findByCreationDateBefore(Date to, Pageable page);
   
-  Page<FlowWorkflowActivityEntity> findByWorkflowIdInAndStatus(List<String> workflowIds, FlowTaskStatus status);
+  Page<FlowWorkflowActivityEntity> findByWorkflowIdInAndStatus(List<String> workflowIds, FlowTaskStatus status, Pageable page);
 
   @Query("{'workflowId' : ?0, 'properties.key' : ?1, 'properties.value' : ?2}")
   FlowWorkflowActivityEntity findByWorkflowAndProperty(String workflowId, String key, String value);

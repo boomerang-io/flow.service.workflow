@@ -348,15 +348,16 @@ public class TeamServiceImpl implements TeamService {
     
     List<WorkflowSummary> workflows = workflowService.getWorkflowsForTeam(team.getId());
     
+    Pageable page = Pageable.unpaged();
+    
     List<FlowWorkflowEntity> teamWorkflows = flowWorkflowService.getWorkflowsForTeams(teamId);
     List<String> workflowIds = new ArrayList<>();
     for(FlowWorkflowEntity workflow : teamWorkflows) {
       workflowIds.add(workflow.getId());
     }
     Page<FlowWorkflowActivityEntity> concurrentActivities =
-        flowWorkflowActivityService.findbyWorkflowIdsAndStatus(workflowIds, FlowTaskStatus.inProgress);
+        flowWorkflowActivityService.findbyWorkflowIdsAndStatus(workflowIds, FlowTaskStatus.inProgress, page);
     
-    Pageable page = Pageable.unpaged();
     Calendar c = Calendar.getInstance();   
     c.set(Calendar.DAY_OF_MONTH, 1);
     Page<FlowWorkflowActivityEntity> activitiesMonthly = 

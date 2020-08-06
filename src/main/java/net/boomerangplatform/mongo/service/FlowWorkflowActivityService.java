@@ -30,6 +30,6 @@ public interface FlowWorkflowActivityService {
       Pageable page, Optional<List<String>> workflowIds, Optional<List<String>> statuses,
       Optional<List<String>> triggers);
   
-  Page<FlowWorkflowActivityEntity> findbyWorkflowIdsAndStatus(List<String> workflowIds, FlowTaskStatus status);
+  Page<FlowWorkflowActivityEntity> findbyWorkflowIdsAndStatus(List<String> workflowIds, FlowTaskStatus status, Pageable page);
 
 }

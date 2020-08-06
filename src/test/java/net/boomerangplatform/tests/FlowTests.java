@@ -50,7 +50,8 @@ public class FlowTests extends AbstractFlowTests {
         Arrays.asList("db/core_groups_lower_level/lowerlevelgroup.json"));
 
     data.put("flow_workflows_activity", Arrays.asList("db/flow_workflows_activity/activity1.json",
-        "db/flow_workflows_activity/activity2.json"));
+        "db/flow_workflows_activity/activity2.json", "db/flow_workflows_activity/activity3.json",
+        "db/flow_workflows_activity/activity4.json"));
 
     data.put("flow_workflows_activity_task",
         Arrays.asList("db/flow_workflows_activity_task/activityTask1.json"));
