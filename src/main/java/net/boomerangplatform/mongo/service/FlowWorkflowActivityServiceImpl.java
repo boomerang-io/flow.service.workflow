@@ -8,6 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import net.boomerangplatform.mongo.entity.FlowWorkflowActivityEntity;
+import net.boomerangplatform.mongo.model.FlowTaskStatus;
 import net.boomerangplatform.mongo.model.converter.FlowTaskStatusConverter;
 import net.boomerangplatform.mongo.model.converter.FlowTriggerEnumConverter;
 import net.boomerangplatform.mongo.repository.FlowWorkflowActivityRepository;
@@ -275,5 +276,9 @@ public class FlowWorkflowActivityServiceImpl implements FlowWorkflowActivityServ
   public FlowWorkflowActivityEntity findByWorkflowAndProperty(String workflowId, String key,
       String value) {
     return repository.findByWorkflowAndProperty(workflowId, key, value);
+  }
+  
+  public Page<FlowWorkflowActivityEntity> findActivitesInProgressForTeam(List<String> workflowIds, FlowTaskStatus status){
+    return repository.findByWorkflowIdInAndStatus(workflowIds, status);
   }
 }

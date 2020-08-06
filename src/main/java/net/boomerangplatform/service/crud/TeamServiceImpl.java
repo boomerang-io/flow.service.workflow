@@ -1,5 +1,6 @@
 package net.boomerangplatform.service.crud;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
@@ -27,11 +28,14 @@ import net.boomerangplatform.mongo.entity.FlowTeamConfiguration;
 import net.boomerangplatform.mongo.entity.FlowTeamEntity;
 import net.boomerangplatform.mongo.entity.FlowUserEntity;
 import net.boomerangplatform.mongo.entity.FlowWorkflowActivityEntity;
+import net.boomerangplatform.mongo.entity.FlowWorkflowEntity;
+import net.boomerangplatform.mongo.model.FlowTaskStatus;
 import net.boomerangplatform.mongo.model.FlowTeamQuotas;
 import net.boomerangplatform.mongo.model.Settings;
 import net.boomerangplatform.mongo.service.FlowTeamService;
 import net.boomerangplatform.mongo.service.FlowUserService;
 import net.boomerangplatform.mongo.service.FlowWorkflowActivityService;
+import net.boomerangplatform.mongo.service.FlowWorkflowService;
 import net.boomerangplatform.service.UserIdentityService;
 
 @Service
@@ -57,6 +61,9 @@ public class TeamServiceImpl implements TeamService {
   
   @Autowired
   private FlowWorkflowActivityService flowWorkflowActivityService;
+  
+  @Autowired
+  private FlowWorkflowService flowWorkflowService;
 
   @Value("${boomerang.standalone}")
   private boolean standAloneMode;
@@ -341,10 +348,15 @@ public class TeamServiceImpl implements TeamService {
     
     List<WorkflowSummary> workflows = workflowService.getWorkflowsForTeam(team.getId());
     
-    Pageable page = Pageable.unpaged();
-    Page<FlowWorkflowActivityEntity> activities = 
-        flowWorkflowActivityService.findAllActivities(Optional.empty(), Optional.empty(), page);
+    List<FlowWorkflowEntity> teamWorkflows = flowWorkflowService.getWorkflowsForTeams(teamId);
+    List<String> workflowIds = new ArrayList<>();
+    for(FlowWorkflowEntity workflow : teamWorkflows) {
+      workflowIds.add(workflow.getId());
+    }
+    Page<FlowWorkflowActivityEntity> concurrentActivities =
+        flowWorkflowActivityService.findActivitesInProgressForTeam(workflowIds, FlowTaskStatus.inProgress);
     
+    Pageable page = Pageable.unpaged();
     Calendar c = Calendar.getInstance();   
     c.set(Calendar.DAY_OF_MONTH, 1);
     Page<FlowWorkflowActivityEntity> activitiesMonthly = 
@@ -359,7 +371,7 @@ public class TeamServiceImpl implements TeamService {
     quotas.setMaxConcurrentWorkflows(maxConcurrentWorkflows);
     
     quotas.setCurrentWorkflowCount(workflows.size());
-    quotas.setCurrentConcurrentWorkflows(activities.getContent().size());
+    quotas.setCurrentConcurrentWorkflows(concurrentActivities.getContent().size());
     quotas.setCurrentWorkflowExecutionMonthly(activitiesMonthly.getContent().size());
     
     return quotas;
