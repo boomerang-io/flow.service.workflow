@@ -51,9 +51,15 @@ public class ExecutionController {
       @RequestBody Optional<FlowExecutionRequest> executionRequest) {
 
     final FlowWorkflowEntity newEntity = workflowService.getWorkflow(workflowId);
-    
+    ObjectMapper objectMapper = new ObjectMapper();
+    try {
+      System.out.println(objectMapper.writeValueAsString(newEntity));
+    } catch (JsonProcessingException e) {
+      // log an error
+    }
     if(!workflowService.canExecuteWorkflow(newEntity.getFlowTeamId())) {
       LOGGER.error("HTTP 429");
+      return null;
     } else {
       
       if (newEntity != null && newEntity.getStatus() == WorkflowStatus.active) {
@@ -91,7 +97,6 @@ public class ExecutionController {
         return null;
       }
     }
-    return null;
 
   }
 

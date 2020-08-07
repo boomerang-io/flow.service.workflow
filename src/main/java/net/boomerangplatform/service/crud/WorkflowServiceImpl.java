@@ -19,6 +19,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import net.boomerangplatform.model.GenerateTokenResponse;
 import net.boomerangplatform.model.WorkflowExport;
@@ -499,10 +500,23 @@ public class WorkflowServiceImpl implements WorkflowService {
   @Override
   public boolean canExecuteWorkflow(String teamId) {
     FlowTeamQuotas quotas = teamService.getTeamQuotas(teamId);
-    // if any of the conditions are true, return false
-    return !(quotas.getCurrentWorkflowCount() > maxWorkflowCount || 
+    ObjectMapper objectMapper = new ObjectMapper();
+    try {
+      System.out.println(teamId);
+      System.out.println(objectMapper.writeValueAsString(quotas));
+      System.out.println(quotas.getCurrentWorkflowCount() + " > " + maxWorkflowCount);
+      System.out.println(quotas.getCurrentConcurrentWorkflows() + " > " + maxConcurrentWorkflows);
+      System.out.println(quotas.getCurrentWorkflowExecutionMonthly() + " > " + maxWorkflowExecutionMonthly);
+    } catch (JsonProcessingException e) {
+      // log an error
+    }
+    if(quotas.getCurrentWorkflowCount() > maxWorkflowCount || 
         quotas.getCurrentConcurrentWorkflows() > maxConcurrentWorkflows ||
-            quotas.getCurrentWorkflowExecutionMonthly() > maxWorkflowExecutionMonthly);
+        quotas.getCurrentWorkflowExecutionMonthly() > maxWorkflowExecutionMonthly) {
+      return false;
+    } else {
+      return true;
+    }
   }
 
 }

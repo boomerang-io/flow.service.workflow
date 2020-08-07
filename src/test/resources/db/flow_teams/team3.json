@@ -7,10 +7,10 @@
 		"properties" : null
 	},
 	"quotas":{
-      "maxWorkflowCount":10,
-      "maxWorkflowExecutionMonthly":100,
-      "maxWorkflowStorage":5,
-      "maxWorkflowExecutionTime":30,
-      "maxConcurrentWorkflows":4
+      "maxWorkflowCount":10000,
+      "maxWorkflowExecutionMonthly":100000,
+      "maxWorkflowStorage":5000,
+      "maxWorkflowExecutionTime":30000,
+      "maxConcurrentWorkflows":4000
 	}
 }

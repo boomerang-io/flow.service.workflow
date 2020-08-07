@@ -16,6 +16,7 @@ import net.boomerangplatform.MongoConfig;
 import net.boomerangplatform.controller.ExecutionController;
 import net.boomerangplatform.model.FlowActivity;
 import net.boomerangplatform.model.FlowExecutionRequest;
+import net.boomerangplatform.mongo.model.FlowTeamQuotas;
 import net.boomerangplatform.mongo.model.FlowTriggerEnum;
 import net.boomerangplatform.tests.FlowTests;
 
@@ -37,6 +38,17 @@ public class ExecutionControllerTests extends FlowTests {
     FlowActivity activity = executionController.executeWorkflow(workflowId,
         Optional.of(FlowTriggerEnum.manual), Optional.of(new FlowExecutionRequest()));
 
+    assertNull(activity);
+  }
+  
+  @Test
+  public void testExecuteWorkflowExceedQuotaMax() {
+    FlowTeamQuotas quotas = new FlowTeamQuotas();
+    quotas.setCurrentWorkflowCount(100000);
+    
+    FlowActivity activity = executionController.executeWorkflow("5d1a188af6ca2c00014c4371", // workflow15.json, team3.json 
+        Optional.of(FlowTriggerEnum.manual), Optional.of(new FlowExecutionRequest()));
+    
     assertNull(activity);
   }
 
