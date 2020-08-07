@@ -8,7 +8,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import net.boomerangplatform.mongo.model.FlowTaskTemplateStatus;
-import net.boomerangplatform.mongo.model.Quotas;
 import net.boomerangplatform.mongo.model.Revision;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -29,7 +28,6 @@ public class FlowTaskTemplateEntity {
   private FlowTaskTemplateStatus status;
   private Date createdDate;
   private String icon;
-  private Quotas quotas;
 
   public FlowTaskTemplateEntity() {
     // Do nothing
@@ -113,14 +111,6 @@ public class FlowTaskTemplateEntity {
 
   public void setIcon(String icon) {
     this.icon = icon;
-  }
-
-  public Quotas getQuotas() {
-    return quotas;
-  }
-
-  public void setQuotas(Quotas quotas) {
-    this.quotas = quotas;
   }
 
 }

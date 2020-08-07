@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -73,5 +74,10 @@ public class TeamController {
   @GetMapping(value = "/teams/{teamId}/quotas")
   public FlowTeamQuotas getTeamQuotas(@PathVariable String teamId) {
     return flowTeamService.getTeamQuotas(teamId);
+  }
+  
+  @PutMapping(value = "/teams/{teamId}/quotas/default")
+  public FlowTeamQuotas resetTeamQuotas(@PathVariable String teamId) {
+    return flowTeamService.resetTeamQuotas(teamId);
   }
 }

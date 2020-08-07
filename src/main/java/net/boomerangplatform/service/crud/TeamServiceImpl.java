@@ -31,6 +31,7 @@ import net.boomerangplatform.mongo.entity.FlowWorkflowActivityEntity;
 import net.boomerangplatform.mongo.entity.FlowWorkflowEntity;
 import net.boomerangplatform.mongo.model.FlowTaskStatus;
 import net.boomerangplatform.mongo.model.FlowTeamQuotas;
+import net.boomerangplatform.mongo.model.Quotas;
 import net.boomerangplatform.mongo.model.Settings;
 import net.boomerangplatform.mongo.service.FlowTeamService;
 import net.boomerangplatform.mongo.service.FlowUserService;
@@ -339,15 +340,66 @@ public class TeamServiceImpl implements TeamService {
     if (flow.getIsActive() != null) {
       team.setIsActive(flow.getIsActive());
     }
+    
+    Quotas quotas = flow.getQuotas();
+    if(quotas != null) {
+      if(quotas.getMaxWorkflowCount() != null) {
+        team.getQuotas().setMaxWorkflowCount(quotas.getMaxWorkflowCount());
+      }
+      if(quotas.getMaxWorkflowExecutionMonthly() != null) {
+        team.getQuotas().setMaxWorkflowExecutionMonthly(quotas.getMaxWorkflowExecutionMonthly());
+      }
+      if(quotas.getMaxWorkflowStorage() != null) {
+        team.getQuotas().setMaxWorkflowStorage(quotas.getMaxWorkflowStorage());
+      }
+      if(quotas.getMaxWorkflowExecutionTime() != null) {
+        team.getQuotas().setMaxWorkflowExecutionTime(quotas.getMaxWorkflowExecutionTime());
+      }
+      if(quotas.getMaxConcurrentWorkflows() != null) {
+        team.getQuotas().setMaxConcurrentWorkflows(quotas.getMaxConcurrentWorkflows());
+      }
+    }
+    
     this.flowTeamService.save(team);
   }
 
   @Override
   public FlowTeamQuotas getTeamQuotas(String teamId) {
     FlowTeamEntity team = flowTeamService.findById(teamId);
-    
     List<WorkflowSummary> workflows = workflowService.getWorkflowsForTeam(team.getId());
+    Pageable page = Pageable.unpaged();
     
+    List<FlowWorkflowEntity> teamWorkflows = flowWorkflowService.getWorkflowsForTeams(teamId);
+    List<String> workflowIds = new ArrayList<>();
+    for(FlowWorkflowEntity workflow : teamWorkflows) {
+      workflowIds.add(workflow.getId());
+    }
+    List<FlowWorkflowActivityEntity> concurrentActivities =
+        flowWorkflowActivityService.findbyWorkflowIdsAndStatus(workflowIds, FlowTaskStatus.inProgress);
+    
+    Calendar c = Calendar.getInstance();   
+    c.set(Calendar.DAY_OF_MONTH, 1);
+    Page<FlowWorkflowActivityEntity> activitiesMonthly = 
+        flowWorkflowActivityService.findAllActivities(
+            Optional.of(c.getTime()), Optional.of(new Date()), page);
+    
+    FlowTeamQuotas quotas = new FlowTeamQuotas();
+    quotas.setMaxWorkflowCount(team.getQuotas().getMaxWorkflowCount());
+    quotas.setMaxWorkflowExecutionMonthly(team.getQuotas().getMaxWorkflowExecutionMonthly());
+    quotas.setMaxWorkflowStorage(team.getQuotas().getMaxWorkflowStorage());
+    quotas.setMaxWorkflowExecutionTime(team.getQuotas().getMaxWorkflowExecutionTime());
+    quotas.setMaxConcurrentWorkflows(team.getQuotas().getMaxConcurrentWorkflows());
+    quotas.setCurrentWorkflowCount(workflows.size());
+    quotas.setCurrentConcurrentWorkflows(concurrentActivities.size());
+    quotas.setCurrentWorkflowExecutionMonthly(activitiesMonthly.getContent().size());
+    
+    return quotas;
+  }
+
+  @Override
+  public FlowTeamQuotas resetTeamQuotas(String teamId) {
+    FlowTeamEntity team = flowTeamService.findById(teamId);
+    List<WorkflowSummary> workflows = workflowService.getWorkflowsForTeam(team.getId());
     Pageable page = Pageable.unpaged();
     
     List<FlowWorkflowEntity> teamWorkflows = flowWorkflowService.getWorkflowsForTeams(teamId);
@@ -370,7 +422,6 @@ public class TeamServiceImpl implements TeamService {
     quotas.setMaxWorkflowStorage(maxWorkflowStorage);
     quotas.setMaxWorkflowExecutionTime(maxWorkflowExecutionTime);
     quotas.setMaxConcurrentWorkflows(maxConcurrentWorkflows);
-    
     quotas.setCurrentWorkflowCount(workflows.size());
     quotas.setCurrentConcurrentWorkflows(concurrentActivities.size());
     quotas.setCurrentWorkflowExecutionMonthly(activitiesMonthly.getContent().size());

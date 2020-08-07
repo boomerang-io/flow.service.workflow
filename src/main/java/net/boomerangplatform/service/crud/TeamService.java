@@ -38,4 +38,6 @@ public interface TeamService {
   void updateTeam(String teamId, FlowTeam flow);
 
   FlowTeamQuotas getTeamQuotas(String teamId);
+
+  FlowTeamQuotas resetTeamQuotas(String teamId);
 }
