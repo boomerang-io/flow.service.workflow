@@ -28,6 +28,7 @@ public class FlowTaskTemplateEntity {
   private FlowTaskTemplateStatus status;
   private Date createdDate;
   private String icon;
+  private boolean verified;
 
   public FlowTaskTemplateEntity() {
     // Do nothing
@@ -111,6 +112,14 @@ public class FlowTaskTemplateEntity {
 
   public void setIcon(String icon) {
     this.icon = icon;
+  }
+
+  public boolean isVerified() {
+    return verified;
+  }
+
+  public void setVerified(boolean verified) {
+    this.verified = verified;
   }
 
 }

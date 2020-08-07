@@ -68,6 +68,7 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
 
     flowTaskTemplateEntity.setCreatedDate(creationDate);
     flowTaskTemplateEntity.setLastModified(creationDate);
+    flowTaskTemplateEntity.setVerified(false);
 
     updateChangeLog(flowTaskTemplateEntity);
 
@@ -79,6 +80,7 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
     updateChangeLog(flowTaskTemplateEntity);
 
     flowTaskTemplateEntity.setLastModified(new Date());
+    flowTaskTemplateEntity.setVerified(false);
     return new FlowTaskTemplate(flowTaskTemplateService.updateTaskTemplate(flowTaskTemplateEntity));
   }
 
