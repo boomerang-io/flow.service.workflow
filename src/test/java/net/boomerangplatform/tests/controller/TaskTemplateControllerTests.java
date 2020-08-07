@@ -38,6 +38,7 @@ public class TaskTemplateControllerTests extends FlowTests {
     FlowTaskTemplate template = controller.getTaskTemplateWithId("5bd9d0825a5df954ad5bb5c3");
     assertEquals("5bd9d0825a5df954ad5bb5c3", template.getId());
     assertEquals(1, template.getCurrentVersion());
+    assertEquals(false, template.isVerified());
 
   }
 
@@ -46,6 +47,7 @@ public class TaskTemplateControllerTests extends FlowTests {
     List<FlowTaskTemplate> templates = controller.getAllTaskTemplates();
     assertEquals(9, templates.size());
     assertEquals(1, templates.get(0).getCurrentVersion());
+    assertEquals(false, templates.get(0).isVerified());
 
   }
 
@@ -58,6 +60,7 @@ public class TaskTemplateControllerTests extends FlowTests {
     entity.setNodeType("custom");
     FlowTaskTemplate testTemplate = controller.insertTaskTemplate(entity);
     assertEquals("TestTaskTemplate", testTemplate.getName());
+    assertEquals(false, testTemplate.isVerified());
 
   }
 
@@ -69,6 +72,7 @@ public class TaskTemplateControllerTests extends FlowTests {
     entity.setDescription("test");
 
     entity.setName("TestTaskTemplate");
+    entity.setVerified(true);
 
     Revision revision = new Revision();
     ChangeLog changelog = new ChangeLog();
@@ -90,6 +94,7 @@ public class TaskTemplateControllerTests extends FlowTests {
 
     assertNotNull(updatedEntity.getRevisions().get(0).getChangelog().getUserId());
     assertEquals("reason", updatedEntity.getRevisions().get(0).getChangelog().getReason());
+    assertEquals(false, updatedEntity.isVerified());
   }
 
   @Test
