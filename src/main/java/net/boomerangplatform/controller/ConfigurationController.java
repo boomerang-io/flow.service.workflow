@@ -11,10 +11,8 @@ import org.springframework.web.bind.annotation.RestController;
 import net.boomerangplatform.model.FlowSettings;
 import net.boomerangplatform.service.crud.ConfigurationService;
 
-
-
 @RestController
-@RequestMapping("/ci/settings/config")
+@RequestMapping("/flow/settings/config")
 @Secured({"ROLE_admin"})
 public class ConfigurationController {
 
