@@ -15,8 +15,11 @@ import net.boomerangplatform.Application;
 import net.boomerangplatform.MongoConfig;
 import net.boomerangplatform.controller.TeamController;
 import net.boomerangplatform.model.CreateFlowTeam;
+import net.boomerangplatform.model.FlowTeam;
 import net.boomerangplatform.mongo.entity.FlowTeamConfiguration;
 import net.boomerangplatform.mongo.model.FlowTeamQuotas;
+import net.boomerangplatform.mongo.model.Quotas;
+import net.boomerangplatform.service.crud.TeamService;
 import net.boomerangplatform.tests.FlowTests;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -29,6 +32,9 @@ public class TeamControllerTests extends FlowTests {
 
   @Autowired
   private TeamController controller;
+  
+  @Autowired
+  private TeamService teamService;
 
   @Test
   public void testGetTeams() {
@@ -99,8 +105,37 @@ public class TeamControllerTests extends FlowTests {
   public void testGetTeamQuotas() {
     FlowTeamQuotas quotas = controller.getTeamQuotas("5d1a1841f6ca2c00014c4309");
     assertEquals(Integer.valueOf(9), quotas.getCurrentWorkflowCount());
+    assertEquals(Integer.valueOf(75), quotas.getMaxWorkflowCount());
+    assertEquals(Integer.valueOf(3), quotas.getCurrentConcurrentWorkflows());
+    assertEquals(Integer.valueOf(25), quotas.getMaxConcurrentWorkflows());
+  }
+  
+  @Test
+  public void testResetTeamQuotas() {
+    FlowTeamQuotas quotas = controller.resetTeamQuotas("5d1a1841f6ca2c00014c4309");
+    assertEquals(Integer.valueOf(9), quotas.getCurrentWorkflowCount());
     assertEquals(Integer.valueOf(10), quotas.getMaxWorkflowCount());
     assertEquals(Integer.valueOf(3), quotas.getCurrentConcurrentWorkflows());
     assertEquals(Integer.valueOf(4), quotas.getMaxConcurrentWorkflows());
+  }
+  
+  @Test
+  public void testUpdateTeam() {
+    FlowTeam flow = new FlowTeam();
+    flow.setName("New Updated Name");
+    flow.setIsActive(true);
+    Quotas quotas = new Quotas();
+    quotas.setMaxWorkflowCount(44);
+    quotas.setMaxWorkflowExecutionMonthly(44);
+    quotas.setMaxWorkflowStorage(44);
+    quotas.setMaxWorkflowExecutionTime(44);
+    quotas.setMaxConcurrentWorkflows(444);
+    flow.setQuotas(quotas);
+    teamService.updateTeam("5d1a1841f6ca2c00014c4309", flow);
+    FlowTeam updatedTeam = teamService.getTeamById("5d1a1841f6ca2c00014c4309");
+
+    assertEquals("New Updated Name", updatedTeam.getName());
+    assertEquals(Integer.valueOf(44), updatedTeam.getQuotas().getMaxWorkflowCount());
+    assertEquals(Integer.valueOf(444), updatedTeam.getQuotas().getMaxConcurrentWorkflows());
   }
 }

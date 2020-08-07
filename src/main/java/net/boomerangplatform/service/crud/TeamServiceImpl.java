@@ -426,6 +426,15 @@ public class TeamServiceImpl implements TeamService {
     quotas.setCurrentConcurrentWorkflows(concurrentActivities.size());
     quotas.setCurrentWorkflowExecutionMonthly(activitiesMonthly.getContent().size());
     
+    Quotas teamQuotas = new Quotas();
+    teamQuotas.setMaxWorkflowCount(maxWorkflowCount);
+    teamQuotas.setMaxWorkflowExecutionMonthly(maxWorkflowExecutionMonthly);
+    teamQuotas.setMaxWorkflowStorage(maxWorkflowStorage);
+    teamQuotas.setMaxWorkflowExecutionTime(maxWorkflowExecutionTime);
+    teamQuotas.setMaxConcurrentWorkflows(maxConcurrentWorkflows);
+    team.setQuotas(teamQuotas);
+    this.flowTeamService.save(team);
+    
     return quotas;
   }
 }
