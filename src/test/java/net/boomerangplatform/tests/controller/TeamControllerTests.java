@@ -102,6 +102,10 @@ public class TeamControllerTests extends FlowTests {
     assertEquals(Integer.valueOf(75), quotas.getMaxWorkflowCount());
     assertEquals(Integer.valueOf(3), quotas.getCurrentConcurrentWorkflows());
     assertEquals(Integer.valueOf(25), quotas.getMaxConcurrentWorkflows());
+    assertEquals(Integer.valueOf(0), quotas.getCurrentWorkflowExecutionMonthly());
+    assertEquals(Integer.valueOf(100), quotas.getMaxWorkflowExecutionMonthly());
+    assertEquals(Integer.valueOf(5), quotas.getMaxWorkflowStorage());
+    assertEquals(Integer.valueOf(30), quotas.getMaxWorkflowExecutionTime());
   }
   
   @Test
@@ -112,5 +116,9 @@ public class TeamControllerTests extends FlowTests {
     assertEquals(Integer.valueOf(10), updadtedQuotas.getMaxWorkflowCount());
     assertEquals(Integer.valueOf(3), updadtedQuotas.getCurrentConcurrentWorkflows());
     assertEquals(Integer.valueOf(4), updadtedQuotas.getMaxConcurrentWorkflows());
+    assertEquals(Integer.valueOf(0), updadtedQuotas.getCurrentWorkflowExecutionMonthly());
+    assertEquals(Integer.valueOf(100), updadtedQuotas.getMaxWorkflowExecutionMonthly());
+    assertEquals(Integer.valueOf(5), updadtedQuotas.getMaxWorkflowStorage());
+    assertEquals(Integer.valueOf(30), updadtedQuotas.getMaxWorkflowExecutionTime());
   }
 }
