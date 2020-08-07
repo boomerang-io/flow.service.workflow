@@ -12,7 +12,7 @@ import net.boomerangplatform.model.FlowSettings;
 import net.boomerangplatform.service.crud.ConfigurationService;
 
 @RestController
-@RequestMapping("/flow/settings/config")
+@RequestMapping("/flow/settings")
 @Secured({"ROLE_admin"})
 public class ConfigurationController {
 
