@@ -1,6 +1,8 @@
 package net.boomerangplatform.tests.controller;
 
 import static org.junit.Assert.assertEquals;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -33,6 +35,8 @@ public class TeamControllerTests extends FlowTests {
   @Test
   public void testGetTeams() {
     assertEquals(3, controller.getTeams().size());
+    assertEquals(Integer.valueOf(9), controller.getTeams().get(0).getWorkflowQuotas().getCurrentWorkflowCount());
+    assertEquals(Integer.valueOf(10), controller.getTeams().get(0).getWorkflowQuotas().getMaxWorkflowCount());
   }
 
   @Test
@@ -106,6 +110,7 @@ public class TeamControllerTests extends FlowTests {
     assertEquals(Integer.valueOf(100), quotas.getMaxWorkflowExecutionMonthly());
     assertEquals(Integer.valueOf(5), quotas.getMaxWorkflowStorage());
     assertEquals(Integer.valueOf(30), quotas.getMaxWorkflowExecutionTime());
+    assertEquals(firstOfNextMonth(), quotas.getResetDate());
   }
   
   @Test
@@ -120,5 +125,19 @@ public class TeamControllerTests extends FlowTests {
     assertEquals(Integer.valueOf(100), updatedQuotas.getMaxWorkflowExecutionMonthly());
     assertEquals(Integer.valueOf(5), updatedQuotas.getMaxWorkflowStorage());
     assertEquals(Integer.valueOf(30), updatedQuotas.getMaxWorkflowExecutionTime());
+    assertEquals(firstOfNextMonth(), updatedQuotas.getResetDate());
+    
+    firstOfNextMonth();
+  }
+
+  private Date firstOfNextMonth() {
+    Calendar nextMonth = Calendar.getInstance();
+    nextMonth.add(Calendar.MONTH, 1);
+    nextMonth.set(Calendar.DAY_OF_MONTH, 1);
+    nextMonth.set(Calendar.HOUR_OF_DAY, 0);
+    nextMonth.set(Calendar.MINUTE, 0);
+    nextMonth.set(Calendar.SECOND, 0);
+    nextMonth.set(Calendar.MILLISECOND, 0);
+    return nextMonth.getTime();
   }
 }
