@@ -14,9 +14,9 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import net.boomerangplatform.Application;
 import net.boomerangplatform.MongoConfig;
 import net.boomerangplatform.controller.ExecutionController;
+import net.boomerangplatform.error.BoomerangException;
 import net.boomerangplatform.model.FlowActivity;
 import net.boomerangplatform.model.FlowExecutionRequest;
-import net.boomerangplatform.mongo.model.FlowTeamQuotas;
 import net.boomerangplatform.mongo.model.FlowTriggerEnum;
 import net.boomerangplatform.tests.FlowTests;
 
@@ -41,15 +41,10 @@ public class ExecutionControllerTests extends FlowTests {
     assertNull(activity);
   }
   
-  @Test
+  @Test(expected = BoomerangException.class)
   public void testExecuteWorkflowExceedQuotaMax() {
-    FlowTeamQuotas quotas = new FlowTeamQuotas();
-    quotas.setCurrentWorkflowCount(100000);
-    
-    FlowActivity activity = executionController.executeWorkflow("5d1a188af6ca2c00014c4372", // workflow17.json, team4.json 
+    executionController.executeWorkflow("5d1a188af6ca2c00014c4372", // workflow17.json, team4.json 
         Optional.of(FlowTriggerEnum.manual), Optional.of(new FlowExecutionRequest()));
-    
-    assertNull(activity);
   }
 
 }

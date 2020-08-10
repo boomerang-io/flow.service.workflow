@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import net.boomerangplatform.error.BoomerangError;
+import net.boomerangplatform.error.BoomerangException;
 import net.boomerangplatform.model.FlowActivity;
 import net.boomerangplatform.model.FlowExecutionRequest;
 import net.boomerangplatform.mongo.entity.FlowTaskExecutionEntity;
@@ -53,9 +55,7 @@ public class ExecutionController {
     final FlowWorkflowEntity newEntity = workflowService.getWorkflow(workflowId);
     
     if(!workflowService.canExecuteWorkflow(newEntity.getFlowTeamId())) {
-      // replace this w error framework
-      LOGGER.error("HTTP 429");
-      return null;
+      throw new BoomerangException(BoomerangError.TOO_MANY_REQUESTS);
     } else {
       
       if (newEntity != null && newEntity.getStatus() == WorkflowStatus.active) {
