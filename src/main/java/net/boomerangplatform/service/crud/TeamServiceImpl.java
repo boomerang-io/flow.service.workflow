@@ -383,6 +383,9 @@ public class TeamServiceImpl implements TeamService {
     quotas.setCurrentWorkflowExecutionMonthly(activitiesMonthly.getContent().size());
     Calendar nextMonth = Calendar.getInstance();
     // nextMonth = 1st of the next month
+    nextMonth.add(Calendar.MONTH, 1);
+    nextMonth.set(Calendar.DAY_OF_MONTH, 1);
+    nextMonth.set(Calendar.HOUR_OF_DAY, 0);
     quotas.setResetDate(nextMonth.getTime());
     
     return quotas;
@@ -419,6 +422,9 @@ public class TeamServiceImpl implements TeamService {
     quotas.setCurrentWorkflowExecutionMonthly(activitiesMonthly.getContent().size());
     Calendar nextMonth = Calendar.getInstance();
     // nextMonth = 1st of the next month
+    nextMonth.add(Calendar.MONTH, 1);
+    nextMonth.set(Calendar.DAY_OF_MONTH, 1);
+    nextMonth.set(Calendar.HOUR_OF_DAY, 0);
     quotas.setResetDate(nextMonth.getTime());
     
     Quotas teamQuotas = new Quotas();
