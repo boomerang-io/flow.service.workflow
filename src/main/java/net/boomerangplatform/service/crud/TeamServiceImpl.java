@@ -23,6 +23,7 @@ import net.boomerangplatform.model.FlowTeam;
 import net.boomerangplatform.model.FlowWorkflowRevision;
 import net.boomerangplatform.model.TeamQueryResult;
 import net.boomerangplatform.model.TeamWorkflowSummary;
+import net.boomerangplatform.model.WorkflowQuotas;
 import net.boomerangplatform.model.WorkflowSummary;
 import net.boomerangplatform.mongo.entity.FlowTeamConfiguration;
 import net.boomerangplatform.mongo.entity.FlowTeamEntity;
@@ -123,6 +124,10 @@ public class TeamServiceImpl implements TeamService {
           workflowService.getWorkflowsForTeam(entity.getId());
       final TeamWorkflowSummary teamWorkFlow = new TeamWorkflowSummary(entity, workflowSummary);
       updateSummaryWithUpgradeFlags(teamWorkFlow);
+      WorkflowQuotas workflowQuotas = new WorkflowQuotas();
+      workflowQuotas.setCurrentWorkflowCount(workflowSummary.size());
+      workflowQuotas.setMaxWorkflowCount(maxWorkflowCount);
+      teamWorkFlow.setWorkflowQuotas(workflowQuotas);
       teamWorkFlowSummary.add(teamWorkFlow);
     }
     return teamWorkFlowSummary;
@@ -150,9 +155,12 @@ public class TeamServiceImpl implements TeamService {
           workflowService.getWorkflowsForTeam(entity.getId());
       final TeamWorkflowSummary teamWorkFlow = new TeamWorkflowSummary(entity, workflowSummary);
       updateSummaryWithUpgradeFlags(teamWorkFlow);
+      WorkflowQuotas workflowQuotas = new WorkflowQuotas();
+      workflowQuotas.setCurrentWorkflowCount(workflowSummary.size());
+      workflowQuotas.setMaxWorkflowCount(maxWorkflowCount);
+      teamWorkFlow.setWorkflowQuotas(workflowQuotas);
       teamWorkFlowSummary.add(teamWorkFlow);
     }
-
     return teamWorkFlowSummary;
   }
 
