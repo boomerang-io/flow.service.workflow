@@ -23,7 +23,7 @@ import net.boomerangplatform.tests.FlowTests;
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = {Application.class, MongoConfig.class})
 @SpringBootTest
-@ActiveProfiles("local")
+@ActiveProfiles("test")
 @WithMockUser(roles = {"admin"})
 @WithUserDetails("mdroy@us.ibm.com")
 public class ExecutionControllerTests extends FlowTests {
@@ -43,7 +43,7 @@ public class ExecutionControllerTests extends FlowTests {
   
   @Test(expected = BoomerangException.class)
   public void testExecuteWorkflowExceedQuotaMax() {
-    executionController.executeWorkflow("5d1a188af6ca2c00014c4372", // workflow17.json, team4.json 
+    executionController.executeWorkflow("5d1a188af6ca2c00014c4314", // workflow1.json
         Optional.of(FlowTriggerEnum.manual), Optional.of(new FlowExecutionRequest()));
   }
 

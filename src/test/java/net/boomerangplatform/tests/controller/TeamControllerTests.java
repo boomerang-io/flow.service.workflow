@@ -32,7 +32,7 @@ public class TeamControllerTests extends FlowTests {
 
   @Test
   public void testGetTeams() {
-    assertEquals(4, controller.getTeams().size());
+    assertEquals(3, controller.getTeams().size());
   }
 
   @Test
@@ -42,7 +42,7 @@ public class TeamControllerTests extends FlowTests {
     request.setCreatedGroupId("5cedb53261a23a0001e4c1b6");
 
     controller.createCiTeam(request);
-    assertEquals(5, controller.getTeams().size());
+    assertEquals(4, controller.getTeams().size());
   }
 
   @Test
