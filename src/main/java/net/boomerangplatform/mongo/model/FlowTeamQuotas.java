@@ -1,5 +1,7 @@
 package net.boomerangplatform.mongo.model;
 
+import java.util.Date;
+
 public class FlowTeamQuotas {
 
   private Integer maxWorkflowCount;
@@ -10,6 +12,7 @@ public class FlowTeamQuotas {
   private Integer currentWorkflowCount;
   private Integer currentConcurrentWorkflows;
   private Integer currentWorkflowExecutionMonthly;
+  private Date resetDate;
   
   public Integer getMaxWorkflowCount() {
     return maxWorkflowCount;
@@ -58,6 +61,12 @@ public class FlowTeamQuotas {
   }
   public void setCurrentWorkflowExecutionMonthly(Integer currentWorkflowExecutionMonthly) {
     this.currentWorkflowExecutionMonthly = currentWorkflowExecutionMonthly;
+  }
+  public Date getResetDate() {
+    return resetDate;
+  }
+  public void setResetDate(Date resetDate) {
+    this.resetDate = resetDate;
   }
   
 }
