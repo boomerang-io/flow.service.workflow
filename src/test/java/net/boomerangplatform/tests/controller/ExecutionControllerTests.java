@@ -46,7 +46,7 @@ public class ExecutionControllerTests extends FlowTests {
     FlowTeamQuotas quotas = new FlowTeamQuotas();
     quotas.setCurrentWorkflowCount(100000);
     
-    FlowActivity activity = executionController.executeWorkflow("5d1a188af6ca2c00014c4371", // workflow15.json, team3.json 
+    FlowActivity activity = executionController.executeWorkflow("5d1a188af6ca2c00014c4372", // workflow17.json, team4.json 
         Optional.of(FlowTriggerEnum.manual), Optional.of(new FlowExecutionRequest()));
     
     assertNull(activity);

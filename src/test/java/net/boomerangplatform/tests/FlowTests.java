@@ -65,7 +65,7 @@ public class FlowTests extends AbstractFlowTests {
             "scenarios/heyjoe/tasks/slack.json", "scenarios/heyjoe/tasks/richslack.json"));
 
     data.put("flow_teams", Arrays.asList("db/flow_teams/team1.json", "db/flow_teams/team2.json",
-        "db/flow_teams/team3.json"));
+        "db/flow_teams/team3.json", "db/flow_teams/team4.json"));
 
     data.put("flow_workflows",
         Arrays.asList("db/flow_workflows/workflow1.json", "db/flow_workflows/workflow2.json",
@@ -76,6 +76,12 @@ public class FlowTests extends AbstractFlowTests {
             "db/flow_workflows/workflow11.json", "db/flow_workflows/workflow12.json",
             "db/flow_workflows/workflow13.json", "db/flow_workflows/workflow14.json",
             "db/flow_workflows/workflow15.json", "db/flow_workflows/workflow16.json",
+            "db/flow_workflows/workflow17.json", "db/flow_workflows/workflow18.json",
+            "db/flow_workflows/workflow19.json", "db/flow_workflows/workflow20.json",
+            "db/flow_workflows/workflow21.json", "db/flow_workflows/workflow22.json",
+            "db/flow_workflows/workflow23.json", "db/flow_workflows/workflow24.json",
+            "db/flow_workflows/workflow25.json", "db/flow_workflows/workflow26.json",
+            "db/flow_workflows/workflow27.json", "db/flow_workflows/workflow28.json",
             "scenarios/complex/workflow.json", "scenarios/emptySwitchCondition/workflow.json",
             "scenarios/heyjoe/workflow.json"));
 
