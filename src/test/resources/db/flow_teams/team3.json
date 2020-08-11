@@ -1,0 +1,16 @@
+{
+    "_id" : ObjectId("5d1a1841f6ca2c00014c4303"),
+    "_class" : "net.boomerangplatform.mongo.entity.FlowTeamEntity",
+    "higherLevelGroupId" : "5a5d2bb7d91eb90007f486c3",
+    "name" : "Dylan Test Team",
+    "settings" : {
+		"properties" : null
+	},
+	"quotas":{
+      "maxWorkflowCount":10000,
+      "maxWorkflowExecutionMonthly":100000,
+      "maxWorkflowStorage":5000,
+      "maxWorkflowExecutionTime":30000,
+      "maxConcurrentWorkflows":4000
+	}
+}

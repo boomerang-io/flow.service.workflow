@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import net.boomerangplatform.error.BoomerangError;
+import net.boomerangplatform.error.BoomerangException;
 import net.boomerangplatform.model.FlowActivity;
 import net.boomerangplatform.model.FlowExecutionRequest;
 import net.boomerangplatform.mongo.entity.FlowTaskExecutionEntity;
@@ -28,7 +30,7 @@ import net.boomerangplatform.service.crud.FlowActivityService;
 import net.boomerangplatform.service.crud.WorkflowService;
 
 @RestController
-@RequestMapping("/flow/")
+@RequestMapping("/workflow/")
 public class ExecutionController {
 
   private static final Logger LOGGER = LogManager.getLogger("ExecutionController");
@@ -51,43 +53,46 @@ public class ExecutionController {
       @RequestBody Optional<FlowExecutionRequest> executionRequest) {
 
     final FlowWorkflowEntity newEntity = workflowService.getWorkflow(workflowId);
-
-    if (newEntity != null && newEntity.getStatus() == WorkflowStatus.active) {
-
-      FlowExecutionRequest request = null;
-
-      if (executionRequest.isPresent()) {
-        request = executionRequest.get();
-        logPayload(request);
-      } else {
-        request = new FlowExecutionRequest();
-      }
-
-      final FlowWorkflowRevisionEntity entity =
-          this.flowRevisionService.getLatestWorkflowVersion(workflowId);
-      if (entity != null) {
-        final FlowWorkflowActivityEntity activity =
-            activityService.createFlowActivity(entity.getId(), trigger, request);
-        flowExecutionService.executeWorkflowVersion(entity.getId(), activity.getId());
-        final List<FlowTaskExecutionEntity> steps =
-            activityService.getTaskExecutions(activity.getId());
-
-        final FlowActivity response = new FlowActivity(activity);
-        response.setSteps(steps);
-
-        return response;
-      } else {
-        LOGGER.error("No revision to execute");
-      }
-
-      return null;
-
+    
+    if(!workflowService.canExecuteWorkflow(newEntity.getFlowTeamId())) {
+      throw new BoomerangException(BoomerangError.TOO_MANY_REQUESTS);
     } else {
-      LOGGER.error("The workflow status is not active");
-      return null;
+      
+      if (newEntity != null && newEntity.getStatus() == WorkflowStatus.active) {
+        
+        FlowExecutionRequest request = null;
+  
+        if (executionRequest.isPresent()) {
+          request = executionRequest.get();
+          logPayload(request);
+        } else {
+          request = new FlowExecutionRequest();
+        }
+  
+        final FlowWorkflowRevisionEntity entity =
+            this.flowRevisionService.getLatestWorkflowVersion(workflowId);
+        if (entity != null) {
+          final FlowWorkflowActivityEntity activity =
+              activityService.createFlowActivity(entity.getId(), trigger, request);
+          flowExecutionService.executeWorkflowVersion(entity.getId(), activity.getId());
+          final List<FlowTaskExecutionEntity> steps =
+              activityService.getTaskExecutions(activity.getId());
+  
+          final FlowActivity response = new FlowActivity(activity);
+          response.setSteps(steps);
+  
+          return response;
+        } else {
+          LOGGER.error("No revision to execute");
+        }
+  
+        return null;
+  
+      } else {
+        LOGGER.error("The workflow status is not active");
+        return null;
+      }
     }
-
-
 
   }
 
