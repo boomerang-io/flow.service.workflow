@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -23,6 +24,7 @@ import net.boomerangplatform.model.TeamWorkflowSummary;
 import net.boomerangplatform.model.profile.SortSummary;
 import net.boomerangplatform.mongo.entity.FlowTeamConfiguration;
 import net.boomerangplatform.mongo.entity.FlowUserEntity;
+import net.boomerangplatform.mongo.model.FlowTeamQuotas;
 import net.boomerangplatform.mongo.model.UserType;
 import net.boomerangplatform.service.UserIdentityService;
 import net.boomerangplatform.service.crud.TeamService;
@@ -77,6 +79,15 @@ public class TeamController {
     return flowTeamService.createNewTeamProperty(teamId, property);
   }
 
+  @GetMapping(value = "/teams/{teamId}/quotas")
+  public FlowTeamQuotas getTeamQuotas(@PathVariable String teamId) {
+    return flowTeamService.getTeamQuotas(teamId);
+  }
+  
+  @PutMapping(value = "/teams/{teamId}/quotas/default")
+  public FlowTeamQuotas resetTeamQuotas(@PathVariable String teamId) {
+    return flowTeamService.resetTeamQuotas(teamId);
+  }
   
   @GetMapping(value = "/manage/teams")
   public TeamQueryResult getTeams(@RequestParam(required = false) String query,
@@ -104,6 +115,5 @@ public class TeamController {
     response.setupSortSummary(sortSummary);
     return response;
   }
-  
   
 }
