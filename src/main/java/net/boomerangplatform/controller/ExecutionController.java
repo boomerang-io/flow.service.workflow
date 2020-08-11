@@ -28,7 +28,7 @@ import net.boomerangplatform.service.crud.FlowActivityService;
 import net.boomerangplatform.service.crud.WorkflowService;
 
 @RestController
-@RequestMapping("/flow/")
+@RequestMapping("/workflow/")
 public class ExecutionController {
 
   private static final Logger LOGGER = LogManager.getLogger("ExecutionController");

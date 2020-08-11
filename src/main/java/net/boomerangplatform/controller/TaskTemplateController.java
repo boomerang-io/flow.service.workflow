@@ -15,7 +15,7 @@ import net.boomerangplatform.mongo.model.FlowTaskTemplateStatus;
 import net.boomerangplatform.service.crud.TaskTemplateService;
 
 @RestController
-@RequestMapping("/flow/tasktemplate")
+@RequestMapping("/workflow/tasktemplate")
 public class TaskTemplateController {
 
   @Autowired

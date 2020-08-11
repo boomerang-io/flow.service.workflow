@@ -34,7 +34,7 @@ import net.boomerangplatform.service.UserIdentityService;
 import net.boomerangplatform.service.crud.FlowActivityService;
 
 @RestController
-@RequestMapping("/flow/")
+@RequestMapping("/workflow/")
 public class ActivityController {
 
   @Autowired

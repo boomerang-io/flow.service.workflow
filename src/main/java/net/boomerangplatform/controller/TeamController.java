@@ -20,7 +20,7 @@ import net.boomerangplatform.service.UserIdentityService;
 import net.boomerangplatform.service.crud.TeamService;
 
 @RestController
-@RequestMapping("/flow")
+@RequestMapping("/workflow")
 public class TeamController {
 
   @Autowired
