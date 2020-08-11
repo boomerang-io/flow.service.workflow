@@ -8,7 +8,7 @@ public class TeamWorkflowSummary extends FlowTeamEntity {
 
   private List<WorkflowSummary> workflows;
   
-  private WorkflowQuotas workflowQuotas;
+  private CurrentWorkflowQuotas workflowQuotas;
 
   public TeamWorkflowSummary(FlowTeamEntity teamEntity, List<WorkflowSummary> workflows) {
     BeanUtils.copyProperties(teamEntity, this);
@@ -24,11 +24,11 @@ public class TeamWorkflowSummary extends FlowTeamEntity {
     this.workflows = workflowSummary;
   }
 
-  public WorkflowQuotas getWorkflowQuotas() {
+  public CurrentWorkflowQuotas getWorkflowQuotas() {
     return workflowQuotas;
   }
 
-  public void setWorkflowQuotas(WorkflowQuotas workflowQuotas) {
+  public void setWorkflowQuotas(CurrentWorkflowQuotas workflowQuotas) {
     this.workflowQuotas = workflowQuotas;
   }
 

@@ -1,16 +1,9 @@
 package net.boomerangplatform.model;
 
-public class WorkflowQuotas {
+public class CurrentWorkflowQuotas {
 
-  private Integer maxWorkflowCount;
   private Integer currentWorkflowCount;
   
-  public Integer getMaxWorkflowCount() {
-    return maxWorkflowCount;
-  }
-  public void setMaxWorkflowCount(Integer maxWorkflowCount) {
-    this.maxWorkflowCount = maxWorkflowCount;
-  }
   public Integer getCurrentWorkflowCount() {
     return currentWorkflowCount;
   }

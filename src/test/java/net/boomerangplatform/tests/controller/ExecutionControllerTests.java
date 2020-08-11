@@ -1,11 +1,13 @@
 package net.boomerangplatform.tests.controller;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import java.util.Optional;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.context.ActiveProfiles;
@@ -41,10 +43,16 @@ public class ExecutionControllerTests extends FlowTests {
     assertNull(activity);
   }
   
-  @Test(expected = BoomerangException.class)
+  @Test
   public void testExecuteWorkflowExceedQuotaMax() {
-    executionController.executeWorkflow("5d1a188af6ca2c00014c4314", // workflow1.json
-        Optional.of(FlowTriggerEnum.manual), Optional.of(new FlowExecutionRequest()));
+    try {
+      executionController.executeWorkflow("5d1a188af6ca2c00014c4314", // workflow1.json
+          Optional.of(FlowTriggerEnum.manual), Optional.of(new FlowExecutionRequest()));
+    } catch (BoomerangException e) {
+      assertEquals(429, e.getCode());
+      assertEquals("TOO_MANY_REQUESTS", e.getDescription());
+      assertEquals(HttpStatus.TOO_MANY_REQUESTS, e.getHttpStatus());
+    }
   }
 
 }
