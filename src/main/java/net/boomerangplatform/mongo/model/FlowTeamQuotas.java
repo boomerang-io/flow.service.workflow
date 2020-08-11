@@ -12,6 +12,7 @@ public class FlowTeamQuotas {
   private Integer currentWorkflowCount;
   private Integer currentConcurrentWorkflows;
   private Integer currentWorkflowExecutionMonthly;
+  private Integer currentWorkflowsPersistentStorage;
   private Date resetDate;
   
   public Integer getMaxWorkflowCount() {
@@ -61,6 +62,12 @@ public class FlowTeamQuotas {
   }
   public void setCurrentWorkflowExecutionMonthly(Integer currentWorkflowExecutionMonthly) {
     this.currentWorkflowExecutionMonthly = currentWorkflowExecutionMonthly;
+  }
+  public Integer getCurrentWorkflowsPersistentStorage() {
+    return currentWorkflowsPersistentStorage;
+  }
+  public void setCurrentWorkflowsPersistentStorage(Integer currentWorkflowsPersistentStorage) {
+    this.currentWorkflowsPersistentStorage = currentWorkflowsPersistentStorage;
   }
   public Date getResetDate() {
     return resetDate;
