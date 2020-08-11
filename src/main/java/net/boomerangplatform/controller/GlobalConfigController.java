@@ -15,7 +15,7 @@ import net.boomerangplatform.service.config.model.GlobalConfig;
 import net.boomerangplatform.service.crud.GlobalConfigurationService;
 
 @RestController
-@RequestMapping("/flow/config")
+@RequestMapping("/workflow/config")
 public class GlobalConfigController {
 
   @Autowired
