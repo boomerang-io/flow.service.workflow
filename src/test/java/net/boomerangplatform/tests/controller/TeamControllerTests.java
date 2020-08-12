@@ -36,7 +36,6 @@ public class TeamControllerTests extends FlowTests {
   public void testGetTeams() {
     assertEquals(3, controller.getTeams().size());
     assertEquals(Integer.valueOf(9), controller.getTeams().get(0).getWorkflowQuotas().getCurrentWorkflowCount());
-    assertEquals(Integer.valueOf(10), controller.getTeams().get(0).getWorkflowQuotas().getMaxWorkflowCount());
   }
 
   @Test
@@ -110,6 +109,7 @@ public class TeamControllerTests extends FlowTests {
     assertEquals(Integer.valueOf(100), quotas.getMaxWorkflowExecutionMonthly());
     assertEquals(Integer.valueOf(5), quotas.getMaxWorkflowStorage());
     assertEquals(Integer.valueOf(30), quotas.getMaxWorkflowExecutionTime());
+    assertEquals(Integer.valueOf(2) ,quotas.getCurrentWorkflowsPersistentStorage());
     assertEquals(firstOfNextMonth(), quotas.getResetDate());
   }
   
@@ -125,6 +125,7 @@ public class TeamControllerTests extends FlowTests {
     assertEquals(Integer.valueOf(100), updatedQuotas.getMaxWorkflowExecutionMonthly());
     assertEquals(Integer.valueOf(5), updatedQuotas.getMaxWorkflowStorage());
     assertEquals(Integer.valueOf(30), updatedQuotas.getMaxWorkflowExecutionTime());
+    assertEquals(Integer.valueOf(2) ,updatedQuotas.getCurrentWorkflowsPersistentStorage());
     assertEquals(firstOfNextMonth(), updatedQuotas.getResetDate());
     
     firstOfNextMonth();

@@ -419,6 +419,13 @@ public class TeamServiceImpl implements TeamService {
     quotas.setCurrentWorkflowCount(workflows.size());
     quotas.setCurrentConcurrentWorkflows(concurrentActivities.size());
     quotas.setCurrentWorkflowExecutionMonthly(activitiesMonthly.getContent().size());
+    Integer currentWorkflowsPersistentStorage = 0;
+    for(WorkflowSummary workflow : workflows) {
+      if(workflow.isEnablePersistentStorage()) {
+        currentWorkflowsPersistentStorage += 1;
+      }
+    }
+    quotas.setCurrentWorkflowsPersistentStorage(currentWorkflowsPersistentStorage);
     Calendar nextMonth = Calendar.getInstance();
     nextMonth.add(Calendar.MONTH, 1);
     nextMonth.set(Calendar.DAY_OF_MONTH, 1);
