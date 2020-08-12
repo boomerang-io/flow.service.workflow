@@ -95,8 +95,17 @@ public class TeamServiceImpl implements TeamService {
     flowTeamEntity = flowTeamService.save(flowTeamEntity);
     flowTeamEntity.setHigherLevelGroupId(flowTeamEntity.getId());
     flowTeamEntity.setIsActive(true);
+    if(flowTeamEntity.getQuotas() == null) {
+      Quotas quotas = new Quotas();
+      quotas.setMaxWorkflowCount(maxWorkflowCount);
+      quotas.setMaxWorkflowExecutionMonthly(maxWorkflowExecutionMonthly);
+      quotas.setMaxWorkflowStorage(maxWorkflowStorage);
+      quotas.setMaxWorkflowExecutionTime(maxWorkflowExecutionTime);
+      quotas.setMaxConcurrentWorkflows(maxConcurrentWorkflows);
+      flowTeamEntity.setQuotas(quotas);
+    }
     flowTeamEntity = flowTeamService.save(flowTeamEntity);
-
+    
     FlowTeam team = new FlowTeam();
 
     BeanUtils.copyProperties(flowTeamEntity, team);
@@ -112,6 +121,15 @@ public class TeamServiceImpl implements TeamService {
     flowTeamEntity.setName(name);
     flowTeamEntity.setHigherLevelGroupId(higherLevelGroupId);
     flowTeamEntity.setIsActive(true);
+    if(flowTeamEntity.getQuotas() == null) {
+      Quotas quotas = new Quotas();
+      quotas.setMaxWorkflowCount(maxWorkflowCount);
+      quotas.setMaxWorkflowExecutionMonthly(maxWorkflowExecutionMonthly);
+      quotas.setMaxWorkflowStorage(maxWorkflowStorage);
+      quotas.setMaxWorkflowExecutionTime(maxWorkflowExecutionTime);
+      quotas.setMaxConcurrentWorkflows(maxConcurrentWorkflows);
+      flowTeamEntity.setQuotas(quotas);
+    }
     flowTeamService.save(flowTeamEntity);
   }
 
