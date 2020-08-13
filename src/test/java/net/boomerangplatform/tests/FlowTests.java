@@ -45,12 +45,14 @@ public class FlowTests extends AbstractFlowTests {
 
     data.put("core_groups_higher_level",
         Arrays.asList("db/core_groups_higher_level/highlevelgroup.json",
-            "db/core_groups_higher_level/highlevelgroup2.json"));
+            "db/core_groups_higher_level/highlevelgroup2.json", "db/core_groups_higher_level/highlevelgroup3.json"));
     data.put("core_groups_lower_level",
         Arrays.asList("db/core_groups_lower_level/lowerlevelgroup.json"));
 
     data.put("flow_workflows_activity", Arrays.asList("db/flow_workflows_activity/activity1.json",
-        "db/flow_workflows_activity/activity2.json"));
+        "db/flow_workflows_activity/activity2.json", "db/flow_workflows_activity/activity3.json",
+        "db/flow_workflows_activity/activity4.json", "db/flow_workflows_activity/activity5.json",
+        "db/flow_workflows_activity/activity6.json"));
 
     data.put("flow_workflows_activity_task",
         Arrays.asList("db/flow_workflows_activity_task/activityTask1.json"));
@@ -62,7 +64,8 @@ public class FlowTests extends AbstractFlowTests {
             "db/flow_task_templates/template6.json", "scenarios/heyjoe/tasks/sendslack.json",
             "scenarios/heyjoe/tasks/slack.json", "scenarios/heyjoe/tasks/richslack.json"));
 
-    data.put("flow_teams", Arrays.asList("db/flow_teams/team1.json", "db/flow_teams/team2.json"));
+    data.put("flow_teams", Arrays.asList("db/flow_teams/team1.json", "db/flow_teams/team2.json",
+        "db/flow_teams/team3.json"));
 
     data.put("flow_workflows",
         Arrays.asList("db/flow_workflows/workflow1.json", "db/flow_workflows/workflow2.json",
@@ -71,8 +74,10 @@ public class FlowTests extends AbstractFlowTests {
             "db/flow_workflows/workflow7.json", "db/flow_workflows/workflow8.json",
             "db/flow_workflows/workflow9.json", "db/flow_workflows/workflow10.json",
             "db/flow_workflows/workflow11.json", "db/flow_workflows/workflow12.json",
-            "db/flow_workflows/workflow13.json", "scenarios/complex/workflow.json",
-            "scenarios/emptySwitchCondition/workflow.json", "scenarios/heyjoe/workflow.json"));
+            "db/flow_workflows/workflow13.json", "db/flow_workflows/workflow14.json",
+            "db/flow_workflows/workflow15.json", "db/flow_workflows/workflow16.json",
+            "scenarios/complex/workflow.json", "scenarios/emptySwitchCondition/workflow.json",
+            "scenarios/heyjoe/workflow.json"));
 
     data.put("flow_workflows_revisions", Arrays.asList("db/flow_workflows_revisions/revision1.json",
         "db/flow_workflows_revisions/revision2.json", "db/flow_workflows_revisions/revision3.json",

@@ -5,6 +5,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import net.boomerangplatform.mongo.model.Quotas;
 import net.boomerangplatform.mongo.model.Settings;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -21,6 +22,8 @@ public class FlowTeamEntity {
   private String name;
 
   private Settings settings;
+  
+  private Quotas quotas;
 
   public String getHigherLevelGroupId() {
     return higherLevelGroupId;
@@ -60,5 +63,13 @@ public class FlowTeamEntity {
 
   public void setSettings(Settings settings) {
     this.settings = settings;
+  }
+
+  public Quotas getQuotas() {
+    return quotas;
+  }
+
+  public void setQuotas(Quotas quotas) {
+    this.quotas = quotas;
   }
 }

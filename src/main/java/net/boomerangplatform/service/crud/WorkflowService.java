@@ -28,5 +28,7 @@ public interface WorkflowService {
   ResponseEntity<InputStreamResource> exportWorkflow(String workFlowId);
 
   void importWorkflow(WorkflowExport export, Boolean update, String flowTeamId);
+  
+  boolean canExecuteWorkflow(String teamId);
 
 }
