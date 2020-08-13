@@ -91,11 +91,12 @@ public class CreateTaskLifecycleService {
     if (task.getRevision() != null) {
       Revision revision = task.getRevision();
       request.setArguments(revision.getArguments());
+      
       if (revision.getImage() != null && !revision.getImage().isBlank()) {
         request.setImage(revision.getImage());
       }
       else {
-        String workerImage = this.flowSettinigs.getConfiguration("controller", "worker.image.name").getValue();
+        String workerImage = this.flowSettinigs.getConfiguration("controller", "worker.image").getValue();
         request.setImage(workerImage);
       }
 
@@ -106,7 +107,6 @@ public class CreateTaskLifecycleService {
       taskResult.setStatus(FlowTaskStatus.invalid);
       return taskResult;
     }
-
 
     final Date startDate = new Date();
 

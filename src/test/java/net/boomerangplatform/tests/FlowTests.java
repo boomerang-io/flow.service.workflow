@@ -34,7 +34,7 @@ public class FlowTests extends AbstractFlowTests {
         "core_settings", "core_audit", "requests_creategroup", "requests_createtool",
         "requests_removegroup", "requests_leavetool", "flow_teams", "flow_workflows",
         "flow_workflows_activity", "flow_workflows_activity_task", "flow_workflows_revisions",
-        "flow_task_templates"};
+        "flow_task_templates", "flow_settings"};
   }
 
   @Override

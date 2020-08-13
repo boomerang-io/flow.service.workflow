@@ -10,7 +10,7 @@
             "key" : "enable.debug",
             "label" : "Enable Debug",
             "type" : "boolean",
-            "value" : false
+            "value" : true
         }, 
         {
             "description" : "Default container image to be used by the Worker including version",
@@ -41,7 +41,7 @@
                     "value" : "Always"
                 }
             ],
-            "value" : "Never",
+            "value" : "Always",
             "readOnly" : false
         }
     ]
