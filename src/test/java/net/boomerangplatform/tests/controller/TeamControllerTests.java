@@ -46,6 +46,12 @@ public class TeamControllerTests extends FlowTests {
 
     controller.createCiTeam(request);
     assertEquals(4, controller.getTeams().size());
+    assertEquals("WDC2 ISE Dev", controller.getTeams().get(3).getName());
+    assertEquals(Integer.valueOf(10), controller.getTeams().get(3).getQuotas().getMaxWorkflowCount());
+    assertEquals(Integer.valueOf(4), controller.getTeams().get(3).getQuotas().getMaxConcurrentWorkflows());
+    assertEquals(Integer.valueOf(100), controller.getTeams().get(3).getQuotas().getMaxWorkflowExecutionMonthly());
+    assertEquals(Integer.valueOf(5), controller.getTeams().get(3).getQuotas().getMaxWorkflowStorage());
+    assertEquals(Integer.valueOf(30), controller.getTeams().get(3).getQuotas().getMaxWorkflowExecutionTime());
   }
 
   @Test
