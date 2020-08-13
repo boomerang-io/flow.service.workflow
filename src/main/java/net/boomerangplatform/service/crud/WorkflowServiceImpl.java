@@ -28,7 +28,7 @@ import net.boomerangplatform.mongo.entity.FlowWorkflowEntity;
 import net.boomerangplatform.mongo.entity.FlowWorkflowRevisionEntity;
 import net.boomerangplatform.mongo.model.Event;
 import net.boomerangplatform.mongo.model.FlowProperty;
-import net.boomerangplatform.mongo.model.Quotas;
+import net.boomerangplatform.mongo.model.QuotasResponse;
 import net.boomerangplatform.mongo.model.Scheduler;
 import net.boomerangplatform.mongo.model.TaskType;
 import net.boomerangplatform.mongo.model.Triggers;
@@ -498,10 +498,10 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   @Override
   public boolean canExecuteWorkflow(String teamId) {
-    Quotas quotas = teamService.getTeamQuotas(teamId);
-    if(quotas.getCurrentWorkflowCount() > maxWorkflowCount || 
-        quotas.getCurrentConcurrentWorkflows() > maxConcurrentWorkflows ||
-        quotas.getCurrentWorkflowExecutionMonthly() > maxWorkflowExecutionMonthly) {
+    QuotasResponse quotas = teamService.getTeamQuotas(teamId);
+    if(quotas.getQuotas().getCurrentWorkflowCount() > maxWorkflowCount || 
+        quotas.getQuotas().getCurrentConcurrentWorkflows() > maxConcurrentWorkflows ||
+        quotas.getQuotas().getCurrentWorkflowExecutionMonthly() > maxWorkflowExecutionMonthly) {
       return false;
     } else {
       return true;

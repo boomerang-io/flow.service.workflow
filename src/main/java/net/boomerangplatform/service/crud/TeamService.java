@@ -7,7 +7,7 @@ import net.boomerangplatform.model.TeamQueryResult;
 import net.boomerangplatform.model.TeamWorkflowSummary;
 import net.boomerangplatform.mongo.entity.FlowTeamConfiguration;
 import net.boomerangplatform.mongo.entity.FlowUserEntity;
-import net.boomerangplatform.mongo.model.Quotas;
+import net.boomerangplatform.mongo.model.QuotasResponse;
 
 public interface TeamService {
 
@@ -37,7 +37,7 @@ public interface TeamService {
 
   void updateTeam(String teamId, FlowTeam flow);
 
-  Quotas getTeamQuotas(String teamId);
+  QuotasResponse getTeamQuotas(String teamId);
 
-  Quotas resetTeamQuotas(String teamId);
+  QuotasResponse resetTeamQuotas(String teamId);
 }

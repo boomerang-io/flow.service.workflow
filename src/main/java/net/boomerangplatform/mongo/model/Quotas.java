@@ -1,7 +1,5 @@
 package net.boomerangplatform.mongo.model;
 
-import java.util.Date;
-
 public class Quotas {
 
   private Integer maxWorkflowCount;
@@ -9,11 +7,6 @@ public class Quotas {
   private Integer maxWorkflowStorage;
   private Integer maxWorkflowExecutionTime;
   private Integer maxConcurrentWorkflows;
-  private Integer currentWorkflowCount;
-  private Integer currentConcurrentWorkflows;
-  private Integer currentWorkflowExecutionMonthly;
-  private Integer currentWorkflowsPersistentStorage;
-  private Date monthlyResetDate;
   
   public Integer getMaxWorkflowCount() {
     return maxWorkflowCount;
@@ -44,35 +37,5 @@ public class Quotas {
   }
   public void setMaxConcurrentWorkflows(Integer maxConcurrentWorkflows) {
     this.maxConcurrentWorkflows = maxConcurrentWorkflows;
-  }
-  public Integer getCurrentWorkflowCount() {
-    return currentWorkflowCount;
-  }
-  public void setCurrentWorkflowCount(Integer currentWorkflowCount) {
-    this.currentWorkflowCount = currentWorkflowCount;
-  }
-  public Integer getCurrentConcurrentWorkflows() {
-    return currentConcurrentWorkflows;
-  }
-  public void setCurrentConcurrentWorkflows(Integer currentConcurrentWorkflows) {
-    this.currentConcurrentWorkflows = currentConcurrentWorkflows;
-  }
-  public Integer getCurrentWorkflowExecutionMonthly() {
-    return currentWorkflowExecutionMonthly;
-  }
-  public void setCurrentWorkflowExecutionMonthly(Integer currentWorkflowExecutionMonthly) {
-    this.currentWorkflowExecutionMonthly = currentWorkflowExecutionMonthly;
-  }
-  public Integer getCurrentWorkflowsPersistentStorage() {
-    return currentWorkflowsPersistentStorage;
-  }
-  public void setCurrentWorkflowsPersistentStorage(Integer currentWorkflowsPersistentStorage) {
-    this.currentWorkflowsPersistentStorage = currentWorkflowsPersistentStorage;
-  }
-  public Date getMonthlyResetDate() {
-    return monthlyResetDate;
-  }
-  public void setMonthlyResetDate(Date monthlyResetDate) {
-    this.monthlyResetDate = monthlyResetDate;
   }
 }
