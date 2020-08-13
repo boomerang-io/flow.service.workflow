@@ -37,17 +37,7 @@ public class ConfigurationServiceImpl implements ConfigurationService {
 
   @Override
   public List<FlowSettings> getAllSettings() {
-    UserDetails userDetails = userDetailsService.getUserDetails();
-    FlowUserEntity userEntity =
-        userDetails != null ? userService.getUserWithEmail(userDetails.getEmail()) : null;
-
-    if (userEntity == null || (!userEntity.getType().equals(UserType.admin)
-        && !userEntity.getType().equals(UserType.operator))
-
-    ) {
-
-      throw new HttpClientErrorException(HttpStatus.UNAUTHORIZED);
-    }
+    validateUser();
 
     final List<FlowSettings> settingList = new LinkedList<>();
     final List<FlowSettingsEntity> entityList = serviceSettings.getAllConfigurations();
@@ -61,17 +51,7 @@ public class ConfigurationServiceImpl implements ConfigurationService {
 
   @Override
   public List<FlowSettings> updateSettings(List<FlowSettings> settings) {
-    UserDetails userDetails = userDetailsService.getUserDetails();
-    FlowUserEntity userEntity =
-        userDetails != null ? userService.getUserWithEmail(userDetails.getEmail()) : null;
-
-    if (userEntity == null || (!userEntity.getType().equals(UserType.admin)
-        && !userEntity.getType().equals(UserType.operator))
-
-    ) {
-
-      throw new HttpClientErrorException(HttpStatus.UNAUTHORIZED);
-    }
+    validateUser();
     for (final FlowSettings setting : settings) {
       final FlowSettingsEntity entity = serviceSettings.getConfigurationById(setting.getId());
       if (entity.getType() == ConfigurationType.ValuesList) {
@@ -83,6 +63,20 @@ public class ConfigurationServiceImpl implements ConfigurationService {
     }
 
     return this.getAllSettings();
+  }
+
+  protected void validateUser() {
+    UserDetails userDetails = userDetailsService.getUserDetails();
+    FlowUserEntity userEntity =
+        userDetails != null ? userService.getUserWithEmail(userDetails.getEmail()) : null;
+
+    if (userEntity == null || (!userEntity.getType().equals(UserType.admin)
+        && !userEntity.getType().equals(UserType.operator))
+
+    ) {
+
+      throw new HttpClientErrorException(HttpStatus.FORBIDDEN);
+    }
   }
 
   private void setConfigsValue(final FlowSettings setting, final FlowSettingsEntity entity) {
