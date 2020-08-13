@@ -18,6 +18,7 @@ import net.boomerangplatform.mongo.service.FlowSettingsService;
 import net.boomerangplatform.mongo.service.FlowUserService;
 import net.boomerangplatform.security.model.UserDetails;
 import net.boomerangplatform.security.service.UserDetailsService;
+import net.boomerangplatform.service.UserIdentityService;
 import net.boomerangplatform.util.DateUtil;
 
 @Service
@@ -31,6 +32,9 @@ public class ConfigurationServiceImpl implements ConfigurationService {
 
   @Autowired
   private FlowUserService userService;
+
+  @Autowired
+  UserIdentityService service;
 
   @Override
   public List<FlowSettings> getAllSettings() {
@@ -63,14 +67,10 @@ public class ConfigurationServiceImpl implements ConfigurationService {
   }
 
   protected void validateUser() {
-    UserDetails userDetails = userDetailsService.getUserDetails();
-    FlowUserEntity userEntity =
-        userDetails != null ? userService.getUserWithEmail(userDetails.getEmail()) : null;
 
+    FlowUserEntity userEntity = service.getCurrentUser();
     if (userEntity == null || (!userEntity.getType().equals(UserType.admin)
-        && !userEntity.getType().equals(UserType.operator))
-
-    ) {
+        && !userEntity.getType().equals(UserType.operator))) {
 
       throw new HttpClientErrorException(HttpStatus.FORBIDDEN);
     }
