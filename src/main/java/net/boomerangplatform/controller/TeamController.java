@@ -24,7 +24,7 @@ import net.boomerangplatform.model.TeamWorkflowSummary;
 import net.boomerangplatform.model.profile.SortSummary;
 import net.boomerangplatform.mongo.entity.FlowTeamConfiguration;
 import net.boomerangplatform.mongo.entity.FlowUserEntity;
-import net.boomerangplatform.mongo.model.FlowTeamQuotas;
+import net.boomerangplatform.mongo.model.Quotas;
 import net.boomerangplatform.mongo.model.UserType;
 import net.boomerangplatform.service.UserIdentityService;
 import net.boomerangplatform.service.crud.TeamService;
@@ -80,12 +80,12 @@ public class TeamController {
   }
 
   @GetMapping(value = "/teams/{teamId}/quotas")
-  public FlowTeamQuotas getTeamQuotas(@PathVariable String teamId) {
+  public Quotas getTeamQuotas(@PathVariable String teamId) {
     return flowTeamService.getTeamQuotas(teamId);
   }
   
   @PutMapping(value = "/teams/{teamId}/quotas/default")
-  public FlowTeamQuotas resetTeamQuotas(@PathVariable String teamId) {
+  public Quotas resetTeamQuotas(@PathVariable String teamId) {
     return flowTeamService.resetTeamQuotas(teamId);
   }
   
