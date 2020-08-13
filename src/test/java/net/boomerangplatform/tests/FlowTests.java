@@ -34,7 +34,7 @@ public class FlowTests extends AbstractFlowTests {
         "core_settings", "core_audit", "requests_creategroup", "requests_createtool",
         "requests_removegroup", "requests_leavetool", "flow_teams", "flow_workflows",
         "flow_workflows_activity", "flow_workflows_activity_task", "flow_workflows_revisions",
-        "flow_task_templates"};
+        "flow_task_templates", "flow_settings"};
   }
 
   @Override
@@ -67,6 +67,8 @@ public class FlowTests extends AbstractFlowTests {
     data.put("flow_teams", Arrays.asList("db/flow_teams/team1.json", "db/flow_teams/team2.json",
         "db/flow_teams/team3.json"));
 
+    data.put("flow_settings", Arrays.asList("db/flow_settings/setting1.json"));
+    
     data.put("flow_workflows",
         Arrays.asList("db/flow_workflows/workflow1.json", "db/flow_workflows/workflow2.json",
             "db/flow_workflows/workflow3.json", "db/flow_workflows/workflow4.json",
