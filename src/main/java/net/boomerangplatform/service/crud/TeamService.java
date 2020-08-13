@@ -3,11 +3,11 @@ package net.boomerangplatform.service.crud;
 import java.util.List;
 import org.springframework.data.domain.Pageable;
 import net.boomerangplatform.model.FlowTeam;
-import net.boomerangplatform.model.QuotasResponse;
 import net.boomerangplatform.model.TeamQueryResult;
 import net.boomerangplatform.model.TeamWorkflowSummary;
 import net.boomerangplatform.mongo.entity.FlowTeamConfiguration;
 import net.boomerangplatform.mongo.entity.FlowUserEntity;
+import net.boomerangplatform.mongo.model.WorkflowQuotas;
 
 public interface TeamService {
 
@@ -37,7 +37,7 @@ public interface TeamService {
 
   void updateTeam(String teamId, FlowTeam flow);
 
-  QuotasResponse getTeamQuotas(String teamId);
+  WorkflowQuotas getTeamQuotas(String teamId);
 
-  QuotasResponse resetTeamQuotas(String teamId);
+  WorkflowQuotas resetTeamQuotas(String teamId);
 }
