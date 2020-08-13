@@ -190,6 +190,11 @@ public class TeamServiceImpl implements TeamService {
     Pageable page = Pageable.unpaged();
     Page<FlowWorkflowActivityEntity> activitiesMonthly = getMonthlyWorkflowActivities(page);
     WorkflowQuotas workflowQuotas = new WorkflowQuotas();
+    workflowQuotas.setMaxWorkflowCount(maxWorkflowCount);
+    workflowQuotas.setMaxWorkflowExecutionMonthly(maxWorkflowExecutionMonthly);
+    workflowQuotas.setMaxWorkflowStorage(maxWorkflowStorage);
+    workflowQuotas.setMaxWorkflowExecutionTime(maxWorkflowExecutionTime);
+    workflowQuotas.setMaxConcurrentWorkflows(maxConcurrentWorkflows);
     workflowQuotas.setCurrentWorkflowCount(workflowSummary.size());
     workflowQuotas.setCurrentConcurrentWorkflows(concurrentActivities.size());
     workflowQuotas.setCurrentWorkflowExecutionMonthly(activitiesMonthly.getContent().size());
@@ -408,7 +413,7 @@ public class TeamServiceImpl implements TeamService {
     Page<FlowWorkflowActivityEntity> activitiesMonthly = getMonthlyWorkflowActivities(page);
     
     QuotasResponse quotas = new QuotasResponse();
-    setCurrentQuotaValues(workflows, concurrentActivities, activitiesMonthly, quotas);
+    setWorkflowQuotasValues(workflows, concurrentActivities, activitiesMonthly, quotas);
     return quotas;
   }
   
@@ -430,7 +435,7 @@ public class TeamServiceImpl implements TeamService {
     this.flowTeamService.save(team);
     
     QuotasResponse quotas = new QuotasResponse();
-    setCurrentQuotaValues(workflows, concurrentActivities, activitiesMonthly, quotas);
+    setWorkflowQuotasValues(workflows, concurrentActivities, activitiesMonthly, quotas);
     return quotas;
   }
   
@@ -450,7 +455,7 @@ public class TeamServiceImpl implements TeamService {
     return flowWorkflowActivityService.findbyWorkflowIdsAndStatus(workflowIds, FlowTaskStatus.inProgress);
   }
   
-  private void setCurrentQuotaValues(List<WorkflowSummary> workflows,
+  private void setWorkflowQuotasValues(List<WorkflowSummary> workflows,
       List<FlowWorkflowActivityEntity> concurrentActivities,
       Page<FlowWorkflowActivityEntity> activitiesMonthly, QuotasResponse quotasResponse) {
     WorkflowQuotas workflowQuotas = new WorkflowQuotas();
