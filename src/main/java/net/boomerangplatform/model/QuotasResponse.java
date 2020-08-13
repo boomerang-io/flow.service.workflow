@@ -1,4 +1,6 @@
-package net.boomerangplatform.mongo.model;
+package net.boomerangplatform.model;
+
+import net.boomerangplatform.mongo.model.WorkflowQuotas;
 
 public class QuotasResponse {
 

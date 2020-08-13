@@ -21,6 +21,7 @@ import net.boomerangplatform.client.model.Team;
 import net.boomerangplatform.client.model.UserProfile;
 import net.boomerangplatform.model.FlowTeam;
 import net.boomerangplatform.model.FlowWorkflowRevision;
+import net.boomerangplatform.model.QuotasResponse;
 import net.boomerangplatform.model.TeamQueryResult;
 import net.boomerangplatform.model.TeamWorkflowSummary;
 import net.boomerangplatform.model.WorkflowSummary;
@@ -31,7 +32,6 @@ import net.boomerangplatform.mongo.entity.FlowWorkflowActivityEntity;
 import net.boomerangplatform.mongo.entity.FlowWorkflowEntity;
 import net.boomerangplatform.mongo.model.FlowTaskStatus;
 import net.boomerangplatform.mongo.model.Quotas;
-import net.boomerangplatform.mongo.model.QuotasResponse;
 import net.boomerangplatform.mongo.model.Settings;
 import net.boomerangplatform.mongo.model.WorkflowQuotas;
 import net.boomerangplatform.mongo.service.FlowTeamService;
@@ -459,6 +459,11 @@ public class TeamServiceImpl implements TeamService {
       List<FlowWorkflowActivityEntity> concurrentActivities,
       Page<FlowWorkflowActivityEntity> activitiesMonthly, QuotasResponse quotasResponse) {
     WorkflowQuotas workflowQuotas = new WorkflowQuotas();
+    workflowQuotas.setMaxWorkflowCount(maxWorkflowCount);
+    workflowQuotas.setMaxWorkflowExecutionMonthly(maxWorkflowExecutionMonthly);
+    workflowQuotas.setMaxWorkflowStorage(maxWorkflowStorage);
+    workflowQuotas.setMaxWorkflowExecutionTime(maxWorkflowExecutionTime);
+    workflowQuotas.setMaxConcurrentWorkflows(maxConcurrentWorkflows);
     workflowQuotas.setCurrentWorkflowCount(workflows.size());
     workflowQuotas.setCurrentConcurrentWorkflows(concurrentActivities.size());
     workflowQuotas.setCurrentWorkflowExecutionMonthly(activitiesMonthly.getContent().size());

@@ -3,11 +3,11 @@ package net.boomerangplatform.service.crud;
 import java.util.List;
 import org.springframework.data.domain.Pageable;
 import net.boomerangplatform.model.FlowTeam;
+import net.boomerangplatform.model.QuotasResponse;
 import net.boomerangplatform.model.TeamQueryResult;
 import net.boomerangplatform.model.TeamWorkflowSummary;
 import net.boomerangplatform.mongo.entity.FlowTeamConfiguration;
 import net.boomerangplatform.mongo.entity.FlowUserEntity;
-import net.boomerangplatform.mongo.model.QuotasResponse;
 
 public interface TeamService {
 
