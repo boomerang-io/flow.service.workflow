@@ -67,6 +67,8 @@ public class FlowTests extends AbstractFlowTests {
     data.put("flow_teams", Arrays.asList("db/flow_teams/team1.json", "db/flow_teams/team2.json",
         "db/flow_teams/team3.json"));
 
+    data.put("flow_settings", Arrays.asList("db/flow_settings/setting1.json"));
+    
     data.put("flow_workflows",
         Arrays.asList("db/flow_workflows/workflow1.json", "db/flow_workflows/workflow2.json",
             "db/flow_workflows/workflow3.json", "db/flow_workflows/workflow4.json",

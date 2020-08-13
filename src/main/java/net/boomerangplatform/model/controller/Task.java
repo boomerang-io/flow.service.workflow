@@ -1,18 +1,25 @@
 package net.boomerangplatform.model.controller;
 
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "taskType")
-@JsonSubTypes({@Type(value = TaskCustom.class, name = "custom"),
-    @Type(value = TaskTemplate.class, name = "template"),
-    @Type(value = TaskCICD.class, name = "cicd")})
+@JsonTypeInfo(
+		  use = JsonTypeInfo.Id.NAME, 
+		  include = JsonTypeInfo.As.PROPERTY, 
+		  property = "taskType")
+		@JsonSubTypes({ 
+		  @Type(value = TaskCustom.class, name = "custom"), 
+		  @Type(value = TaskTemplate.class, name = "template"), 
+		  @Type(value = TaskCICD.class, name = "cicd") 
+		})
 @JsonIgnoreProperties
 public abstract class Task {
 
@@ -34,10 +41,14 @@ public abstract class Task {
   @JsonProperty("command")
   private String command;
 
-  @JsonProperty
+  @JsonProperty("properties")
   private Map<String, String> properties = new HashMap<>();
 
+  @JsonProperty("arguments")
   private List<String> arguments;
+
+  @JsonProperty("configuration")
+  private TaskConfiguration configuration;
 
   public String getWorkflowName() {
     return workflowName;
@@ -126,4 +137,13 @@ public abstract class Task {
   public void setCommand(String command) {
     this.command = command;
   }
+
+  public TaskConfiguration getConfiguration() {
+	return configuration;
+  }
+
+  public void setConfiguration(TaskConfiguration configuration) {
+	this.configuration = configuration;
+  }
+
 }

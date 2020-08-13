@@ -16,10 +16,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import net.boomerangplatform.model.Task;
 import net.boomerangplatform.model.TaskResponse;
 import net.boomerangplatform.model.TaskResult;
+import net.boomerangplatform.model.controller.TaskConfiguration;
+import net.boomerangplatform.model.controller.TaskDeletion;
 import net.boomerangplatform.model.controller.TaskTemplate;
 import net.boomerangplatform.mongo.entity.FlowTaskExecutionEntity;
 import net.boomerangplatform.mongo.model.FlowTaskStatus;
 import net.boomerangplatform.mongo.model.Revision;
+
+import net.boomerangplatform.mongo.service.FlowSettingsService;
 import net.boomerangplatform.mongo.service.FlowWorkflowActivityTaskService;
 
 @Service
@@ -33,6 +37,9 @@ public class CreateTaskLifecycleService {
 
   @Autowired
   public FlowWorkflowActivityTaskService taskService;
+  
+  @Autowired
+  private FlowSettingsService flowSettinigs;
 
   @Value("${controller.createtask.url}")
   public String createTaskURL;
@@ -59,12 +66,38 @@ public class CreateTaskLifecycleService {
     }
 
     request.setProperties(map);
+    
+    /* Population task configuration details. */
+    TaskDeletion taskDeletion = TaskDeletion.Never; 
+    
+    TaskConfiguration taskConfiguration = new TaskConfiguration();
+           
+    String settingsPolicy = this.flowSettinigs.getConfiguration("controller", "job.deletion.policy").getValue();
+    if (settingsPolicy != null) {
+      taskDeletion = TaskDeletion.valueOf(settingsPolicy);
+    }
+    taskConfiguration.setDeletion(taskDeletion);
+    boolean enableDebug = false;
+    
+    String enableDebugFlag = this.flowSettinigs.getConfiguration("controller", "enable.debug").getValue();
+    
+    if (settingsPolicy != null) {
+      enableDebug = Boolean.valueOf(enableDebugFlag).booleanValue();
+    }
+    taskConfiguration.setDebug(Boolean.valueOf(enableDebug));
+        
+    request.setConfiguration(taskConfiguration);
 
     if (task.getRevision() != null) {
       Revision revision = task.getRevision();
-
       request.setArguments(revision.getArguments());
-      request.setImage(revision.getImage());
+      if (revision.getImage() != null && !revision.getImage().isBlank()) {
+        request.setImage(revision.getImage());
+      }
+      else {
+        String workerImage = this.flowSettinigs.getConfiguration("controller", "worker.image.name").getValue();
+        request.setImage(workerImage);
+      }
 
       if (revision.getCommand() != null && !revision.getCommand().isBlank()) {
         request.setCommand(revision.getCommand());
