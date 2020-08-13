@@ -8,7 +8,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import net.boomerangplatform.mongo.entity.FlowUserEntity;
-import net.boomerangplatform.mongo.entity.UserEntity;
 import net.boomerangplatform.mongo.model.UserStatus;
 import net.boomerangplatform.mongo.model.UserType;
 import net.boomerangplatform.mongo.repository.FlowUserRepository;
