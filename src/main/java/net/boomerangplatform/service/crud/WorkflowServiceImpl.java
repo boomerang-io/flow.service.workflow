@@ -21,6 +21,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import net.boomerangplatform.model.GenerateTokenResponse;
+import net.boomerangplatform.model.QuotasResponse;
 import net.boomerangplatform.model.WorkflowExport;
 import net.boomerangplatform.model.WorkflowSummary;
 import net.boomerangplatform.mongo.entity.FlowTaskTemplateEntity;
@@ -28,7 +29,6 @@ import net.boomerangplatform.mongo.entity.FlowWorkflowEntity;
 import net.boomerangplatform.mongo.entity.FlowWorkflowRevisionEntity;
 import net.boomerangplatform.mongo.model.Event;
 import net.boomerangplatform.mongo.model.FlowProperty;
-import net.boomerangplatform.mongo.model.FlowTeamQuotas;
 import net.boomerangplatform.mongo.model.Scheduler;
 import net.boomerangplatform.mongo.model.TaskType;
 import net.boomerangplatform.mongo.model.Triggers;
@@ -498,10 +498,10 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   @Override
   public boolean canExecuteWorkflow(String teamId) {
-    FlowTeamQuotas quotas = teamService.getTeamQuotas(teamId);
-    if(quotas.getCurrentWorkflowCount() > maxWorkflowCount || 
-        quotas.getCurrentConcurrentWorkflows() > maxConcurrentWorkflows ||
-        quotas.getCurrentWorkflowExecutionMonthly() > maxWorkflowExecutionMonthly) {
+    QuotasResponse quotas = teamService.getTeamQuotas(teamId);
+    if(quotas.getQuotas().getCurrentWorkflowCount() > maxWorkflowCount || 
+        quotas.getQuotas().getCurrentConcurrentWorkflows() > maxConcurrentWorkflows ||
+        quotas.getQuotas().getCurrentWorkflowExecutionMonthly() > maxWorkflowExecutionMonthly) {
       return false;
     } else {
       return true;

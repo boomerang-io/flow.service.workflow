@@ -1,7 +1,7 @@
 package net.boomerangplatform.mongo.model;
 
 public class Quotas {
-  
+
   private Integer maxWorkflowCount;
   private Integer maxWorkflowExecutionMonthly;
   private Integer maxWorkflowStorage;
@@ -38,5 +38,4 @@ public class Quotas {
   public void setMaxConcurrentWorkflows(Integer maxConcurrentWorkflows) {
     this.maxConcurrentWorkflows = maxConcurrentWorkflows;
   }
-
 }
