@@ -8,6 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import net.boomerangplatform.mongo.entity.FlowUserEntity;
+import net.boomerangplatform.mongo.entity.UserEntity;
 import net.boomerangplatform.mongo.model.UserStatus;
 import net.boomerangplatform.mongo.model.UserType;
 import net.boomerangplatform.mongo.repository.FlowUserRepository;
@@ -63,5 +64,15 @@ public class FlowUserServiceImpl implements FlowUserService {
   @Override
   public FlowUserEntity save(FlowUserEntity user) {
     return flowUserRepository.save(user);
+  }
+  
+  @Override
+  @NoLogging
+  public FlowUserEntity getUserWithEmail(String userEmail) {
+
+    if (userEmail != null) {
+    return flowUserRepository.findByEmailIgnoreCase(userEmail);
+    }
+    return null;
   }
 }

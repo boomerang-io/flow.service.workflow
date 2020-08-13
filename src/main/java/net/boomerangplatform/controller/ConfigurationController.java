@@ -2,7 +2,6 @@ package net.boomerangplatform.controller;
 
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -13,13 +12,11 @@ import net.boomerangplatform.service.crud.ConfigurationService;
 
 @RestController
 @RequestMapping("/workflow/settings")
-@Secured({"ROLE_admin"})
 public class ConfigurationController {
 
   @Autowired
   private ConfigurationService configurationService;
 
-  @Secured({"ROLE_operator", "ROLE_admin"})
   @GetMapping(value = "")
   public List<FlowSettings> getAppConfiguration() {
     return configurationService.getAllSettings();
