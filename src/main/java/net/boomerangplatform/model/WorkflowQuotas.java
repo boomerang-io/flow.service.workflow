@@ -1,4 +1,4 @@
-package net.boomerangplatform.mongo.model;
+package net.boomerangplatform.model;
 
 import java.util.Date;
 

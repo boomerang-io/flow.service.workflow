@@ -17,8 +17,8 @@ import net.boomerangplatform.Application;
 import net.boomerangplatform.MongoConfig;
 import net.boomerangplatform.controller.TeamController;
 import net.boomerangplatform.model.CreateFlowTeam;
-import net.boomerangplatform.model.QuotasResponse;
 import net.boomerangplatform.mongo.entity.FlowTeamConfiguration;
+import net.boomerangplatform.model.WorkflowQuotas;
 import net.boomerangplatform.tests.FlowTests;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -124,35 +124,36 @@ public class TeamControllerTests extends FlowTests {
   
   @Test
   public void testGetTeamQuotas() {
-    QuotasResponse quotas = controller.getTeamQuotas("5d1a1841f6ca2c00014c4309");
-    assertEquals(Integer.valueOf(10), quotas.getQuotas().getMaxWorkflowCount());
-    assertEquals(Integer.valueOf(100), quotas.getQuotas().getMaxWorkflowExecutionMonthly());
-    assertEquals(Integer.valueOf(5), quotas.getQuotas().getMaxWorkflowStorage());
-    assertEquals(Integer.valueOf(30), quotas.getQuotas().getMaxWorkflowExecutionTime());
-    assertEquals(Integer.valueOf(4), quotas.getQuotas().getMaxConcurrentWorkflows());
+    WorkflowQuotas quotas = controller.getTeamQuotas("5d1a1841f6ca2c00014c4309");
+    assertEquals(Integer.valueOf(10), quotas.getMaxWorkflowCount());
+    assertEquals(Integer.valueOf(100), quotas.getMaxWorkflowExecutionMonthly());
+    assertEquals(Integer.valueOf(5), quotas.getMaxWorkflowStorage());
+    assertEquals(Integer.valueOf(30), quotas.getMaxWorkflowExecutionTime());
+    assertEquals(Integer.valueOf(4), quotas.getMaxConcurrentWorkflows());
     
-    assertEquals(Integer.valueOf(9), quotas.getQuotas().getCurrentWorkflowCount());
-    assertEquals(Integer.valueOf(3), quotas.getQuotas().getCurrentConcurrentWorkflows());
-    assertEquals(Integer.valueOf(0), quotas.getQuotas().getCurrentWorkflowExecutionMonthly());
-    assertEquals(Integer.valueOf(2) ,quotas.getQuotas().getCurrentWorkflowsPersistentStorage());
-    assertEquals(firstOfNextMonth(), quotas.getQuotas().getMonthlyResetDate());
+    assertEquals(Integer.valueOf(9), quotas.getCurrentWorkflowCount());
+    assertEquals(Integer.valueOf(3), quotas.getCurrentConcurrentWorkflows());
+    assertEquals(Integer.valueOf(0), quotas.getCurrentWorkflowExecutionMonthly());
+    assertEquals(Integer.valueOf(2) ,quotas.getCurrentWorkflowsPersistentStorage());
+    assertEquals(firstOfNextMonth(), quotas.getMonthlyResetDate());
   }
   
   @Test
   public void testResetTeamQuotas() {
     controller.resetTeamQuotas("5d1a1841f6ca2c00014c4309");
-    QuotasResponse updatedQuotas = controller.getTeamQuotas("5d1a1841f6ca2c00014c4309");
-    assertEquals(Integer.valueOf(10), updatedQuotas.getQuotas().getMaxWorkflowCount());
-    assertEquals(Integer.valueOf(100), updatedQuotas.getQuotas().getMaxWorkflowExecutionMonthly());
-    assertEquals(Integer.valueOf(5), updatedQuotas.getQuotas().getMaxWorkflowStorage());
-    assertEquals(Integer.valueOf(30), updatedQuotas.getQuotas().getMaxWorkflowExecutionTime());
-    assertEquals(Integer.valueOf(4), updatedQuotas.getQuotas().getMaxConcurrentWorkflows());
+    WorkflowQuotas updatedQuotas = controller.getTeamQuotas("5d1a1841f6ca2c00014c4309");
     
-    assertEquals(Integer.valueOf(9), updatedQuotas.getQuotas().getCurrentWorkflowCount());
-    assertEquals(Integer.valueOf(3), updatedQuotas.getQuotas().getCurrentConcurrentWorkflows());
-    assertEquals(Integer.valueOf(0), updatedQuotas.getQuotas().getCurrentWorkflowExecutionMonthly());
-    assertEquals(Integer.valueOf(2) ,updatedQuotas.getQuotas().getCurrentWorkflowsPersistentStorage());
-    assertEquals(firstOfNextMonth(), updatedQuotas.getQuotas().getMonthlyResetDate());
+    assertEquals(Integer.valueOf(10), updatedQuotas.getMaxWorkflowCount());
+    assertEquals(Integer.valueOf(100), updatedQuotas.getMaxWorkflowExecutionMonthly());
+    assertEquals(Integer.valueOf(5), updatedQuotas.getMaxWorkflowStorage());
+    assertEquals(Integer.valueOf(30), updatedQuotas.getMaxWorkflowExecutionTime());
+    assertEquals(Integer.valueOf(4), updatedQuotas.getMaxConcurrentWorkflows());
+    
+    assertEquals(Integer.valueOf(9), updatedQuotas.getCurrentWorkflowCount());
+    assertEquals(Integer.valueOf(3), updatedQuotas.getCurrentConcurrentWorkflows());
+    assertEquals(Integer.valueOf(0), updatedQuotas.getCurrentWorkflowExecutionMonthly());
+    assertEquals(Integer.valueOf(2) ,updatedQuotas.getCurrentWorkflowsPersistentStorage());
+    assertEquals(firstOfNextMonth(), updatedQuotas.getMonthlyResetDate());
   }
 
   private Date firstOfNextMonth() {

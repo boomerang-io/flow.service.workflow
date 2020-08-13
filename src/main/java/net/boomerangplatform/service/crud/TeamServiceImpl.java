@@ -21,7 +21,6 @@ import net.boomerangplatform.client.model.Team;
 import net.boomerangplatform.client.model.UserProfile;
 import net.boomerangplatform.model.FlowTeam;
 import net.boomerangplatform.model.FlowWorkflowRevision;
-import net.boomerangplatform.model.QuotasResponse;
 import net.boomerangplatform.model.TeamQueryResult;
 import net.boomerangplatform.model.TeamWorkflowSummary;
 import net.boomerangplatform.model.WorkflowSummary;
@@ -33,7 +32,7 @@ import net.boomerangplatform.mongo.entity.FlowWorkflowEntity;
 import net.boomerangplatform.mongo.model.FlowTaskStatus;
 import net.boomerangplatform.mongo.model.Quotas;
 import net.boomerangplatform.mongo.model.Settings;
-import net.boomerangplatform.mongo.model.WorkflowQuotas;
+import net.boomerangplatform.model.WorkflowQuotas;
 import net.boomerangplatform.mongo.service.FlowTeamService;
 import net.boomerangplatform.mongo.service.FlowUserService;
 import net.boomerangplatform.mongo.service.FlowWorkflowActivityService;
@@ -405,20 +404,18 @@ public class TeamServiceImpl implements TeamService {
   }
 
   @Override
-  public QuotasResponse getTeamQuotas(String teamId) {
+  public WorkflowQuotas getTeamQuotas(String teamId) {
     FlowTeamEntity team = flowTeamService.findById(teamId);
     List<WorkflowSummary> workflows = workflowService.getWorkflowsForTeam(team.getId());
     Pageable page = Pageable.unpaged();
     List<FlowWorkflowActivityEntity> concurrentActivities = getConcurrentWorkflowActivities(teamId);
     Page<FlowWorkflowActivityEntity> activitiesMonthly = getMonthlyWorkflowActivities(page);
     
-    QuotasResponse quotas = new QuotasResponse();
-    setWorkflowQuotasValues(workflows, concurrentActivities, activitiesMonthly, quotas);
-    return quotas;
+    return setWorkflowQuotasValues(workflows, concurrentActivities, activitiesMonthly);
   }
   
   @Override
-  public QuotasResponse resetTeamQuotas(String teamId) {
+  public WorkflowQuotas resetTeamQuotas(String teamId) {
     FlowTeamEntity team = flowTeamService.findById(teamId);
     List<WorkflowSummary> workflows = workflowService.getWorkflowsForTeam(team.getId());
     Pageable page = Pageable.unpaged();
@@ -434,9 +431,7 @@ public class TeamServiceImpl implements TeamService {
     team.setQuotas(teamQuotas);
     this.flowTeamService.save(team);
     
-    QuotasResponse quotas = new QuotasResponse();
-    setWorkflowQuotasValues(workflows, concurrentActivities, activitiesMonthly, quotas);
-    return quotas;
+    return setWorkflowQuotasValues(workflows, concurrentActivities, activitiesMonthly);
   }
   
   private Page<FlowWorkflowActivityEntity> getMonthlyWorkflowActivities(Pageable page) {
@@ -455,9 +450,9 @@ public class TeamServiceImpl implements TeamService {
     return flowWorkflowActivityService.findbyWorkflowIdsAndStatus(workflowIds, FlowTaskStatus.inProgress);
   }
   
-  private void setWorkflowQuotasValues(List<WorkflowSummary> workflows,
+  private WorkflowQuotas setWorkflowQuotasValues(List<WorkflowSummary> workflows,
       List<FlowWorkflowActivityEntity> concurrentActivities,
-      Page<FlowWorkflowActivityEntity> activitiesMonthly, QuotasResponse quotasResponse) {
+      Page<FlowWorkflowActivityEntity> activitiesMonthly) {
     WorkflowQuotas workflowQuotas = new WorkflowQuotas();
     workflowQuotas.setMaxWorkflowCount(maxWorkflowCount);
     workflowQuotas.setMaxWorkflowExecutionMonthly(maxWorkflowExecutionMonthly);
@@ -482,6 +477,6 @@ public class TeamServiceImpl implements TeamService {
     nextMonth.set(Calendar.SECOND, 0);
     nextMonth.set(Calendar.MILLISECOND, 0);
     workflowQuotas.setMonthlyResetDate(nextMonth.getTime());
-    quotasResponse.setQuotas(workflowQuotas);
+    return workflowQuotas;
   }
 }
