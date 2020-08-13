@@ -7,7 +7,7 @@ import net.boomerangplatform.model.TeamQueryResult;
 import net.boomerangplatform.model.TeamWorkflowSummary;
 import net.boomerangplatform.mongo.entity.FlowTeamConfiguration;
 import net.boomerangplatform.mongo.entity.FlowUserEntity;
-import net.boomerangplatform.mongo.model.WorkflowQuotas;
+import net.boomerangplatform.model.WorkflowQuotas;
 
 public interface TeamService {
 

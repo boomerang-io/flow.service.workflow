@@ -25,7 +25,7 @@ import net.boomerangplatform.model.profile.SortSummary;
 import net.boomerangplatform.mongo.entity.FlowTeamConfiguration;
 import net.boomerangplatform.mongo.entity.FlowUserEntity;
 import net.boomerangplatform.mongo.model.UserType;
-import net.boomerangplatform.mongo.model.WorkflowQuotas;
+import net.boomerangplatform.model.WorkflowQuotas;
 import net.boomerangplatform.service.UserIdentityService;
 import net.boomerangplatform.service.crud.TeamService;
 
