@@ -3,7 +3,6 @@ package net.boomerangplatform.model;
 import java.util.List;
 import org.springframework.beans.BeanUtils;
 import net.boomerangplatform.mongo.entity.FlowTeamEntity;
-import net.boomerangplatform.mongo.model.WorkflowQuotas;
 
 public class TeamWorkflowSummary extends FlowTeamEntity {
 
