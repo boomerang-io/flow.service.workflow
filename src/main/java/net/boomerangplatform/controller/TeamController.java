@@ -27,11 +27,12 @@ import net.boomerangplatform.mongo.entity.FlowTeamConfiguration;
 import net.boomerangplatform.mongo.entity.FlowUserEntity;
 import net.boomerangplatform.mongo.model.Quotas;
 import net.boomerangplatform.mongo.model.UserType;
+import net.boomerangplatform.model.WorkflowQuotas;
 import net.boomerangplatform.service.UserIdentityService;
 import net.boomerangplatform.service.crud.TeamService;
 
 @RestController
-@RequestMapping("/flow")
+@RequestMapping("/workflow")
 public class TeamController {
 
   @Autowired

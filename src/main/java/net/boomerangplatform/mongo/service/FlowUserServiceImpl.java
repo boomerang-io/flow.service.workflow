@@ -64,4 +64,14 @@ public class FlowUserServiceImpl implements FlowUserService {
   public FlowUserEntity save(FlowUserEntity user) {
     return flowUserRepository.save(user);
   }
+  
+  @Override
+  @NoLogging
+  public FlowUserEntity getUserWithEmail(String userEmail) {
+
+    if (userEmail != null) {
+    return flowUserRepository.findByEmailIgnoreCase(userEmail);
+    }
+    return null;
+  }
 }
