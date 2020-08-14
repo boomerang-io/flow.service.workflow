@@ -15,6 +15,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import net.boomerangplatform.client.BoomerangTeamService;
 import net.boomerangplatform.client.BoomerangUserService;
 import net.boomerangplatform.client.model.Team;
@@ -484,26 +486,37 @@ public class TeamServiceImpl implements TeamService {
   public Quotas updateTeamQuotas(String teamId, Quotas quotas) {
     FlowTeamEntity team = flowTeamService.findById(teamId);
     
+    Quotas updatedQuotas = new Quotas();
+    
     if(team.getQuotas() == null) {
-      team.setQuotas(new Quotas());
+      team.setQuotas(updatedQuotas);
     }
     if(quotas.getMaxWorkflowCount() != null) {
-      team.getQuotas().setMaxWorkflowCount(quotas.getMaxWorkflowCount());
+      updatedQuotas.setMaxWorkflowCount(quotas.getMaxWorkflowCount());
     }
     if(quotas.getMaxConcurrentWorkflows() != null) {
-      team.getQuotas().setMaxConcurrentWorkflows(quotas.getMaxConcurrentWorkflows());
+      updatedQuotas.setMaxConcurrentWorkflows(quotas.getMaxConcurrentWorkflows());
     }
     if(quotas.getMaxWorkflowExecutionMonthly() != null) {
-      team.getQuotas().setMaxWorkflowExecutionMonthly(quotas.getMaxWorkflowExecutionMonthly());
+      updatedQuotas.setMaxWorkflowExecutionMonthly(quotas.getMaxWorkflowExecutionMonthly());
     }
     if(quotas.getMaxWorkflowExecutionTime() != null) {
-      team.getQuotas().setMaxWorkflowExecutionTime(quotas.getMaxWorkflowExecutionTime());
+      updatedQuotas.setMaxWorkflowExecutionTime(quotas.getMaxWorkflowExecutionTime());
     }
     if(quotas.getMaxWorkflowStorage() != null) {
-      team.getQuotas().setMaxWorkflowStorage(quotas.getMaxWorkflowStorage());
+      updatedQuotas.setMaxWorkflowStorage(quotas.getMaxWorkflowStorage());
     }
     
-    flowTeamService.save(team);
-    return quotas;
+    team.setQuotas(updatedQuotas);
+    
+    ObjectMapper objectMapper = new ObjectMapper();
+    try {
+      System.out.println(objectMapper.writeValueAsString(flowTeamService.save(team)));
+      System.out.println(objectMapper.writeValueAsString(getTeamQuotas(teamId)));
+    } catch (JsonProcessingException e) {
+      // log an error
+    }
+    
+    return flowTeamService.save(team).getQuotas();
   }
 }
