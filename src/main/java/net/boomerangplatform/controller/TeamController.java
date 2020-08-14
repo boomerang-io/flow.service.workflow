@@ -21,11 +21,12 @@ import org.springframework.web.bind.annotation.RestController;
 import net.boomerangplatform.model.CreateFlowTeam;
 import net.boomerangplatform.model.TeamQueryResult;
 import net.boomerangplatform.model.TeamWorkflowSummary;
+import net.boomerangplatform.model.WorkflowQuotas;
 import net.boomerangplatform.model.profile.SortSummary;
 import net.boomerangplatform.mongo.entity.FlowTeamConfiguration;
 import net.boomerangplatform.mongo.entity.FlowUserEntity;
+import net.boomerangplatform.mongo.model.Quotas;
 import net.boomerangplatform.mongo.model.UserType;
-import net.boomerangplatform.model.WorkflowQuotas;
 import net.boomerangplatform.service.UserIdentityService;
 import net.boomerangplatform.service.crud.TeamService;
 
@@ -87,6 +88,12 @@ public class TeamController {
   @PutMapping(value = "/teams/{teamId}/quotas/default")
   public WorkflowQuotas resetTeamQuotas(@PathVariable String teamId) {
     return flowTeamService.resetTeamQuotas(teamId);
+  }
+  
+  @PatchMapping(value = "/teams/{teamId}/quotas")
+  public Quotas updateTeamQuotas(@PathVariable String teamId,
+      @RequestBody Quotas quotas) {
+    return flowTeamService.updateTeamQuotas(teamId, quotas);
   }
   
   @GetMapping(value = "/manage/teams")

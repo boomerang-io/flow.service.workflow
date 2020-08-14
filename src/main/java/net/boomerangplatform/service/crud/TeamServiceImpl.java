@@ -23,6 +23,7 @@ import net.boomerangplatform.model.FlowTeam;
 import net.boomerangplatform.model.FlowWorkflowRevision;
 import net.boomerangplatform.model.TeamQueryResult;
 import net.boomerangplatform.model.TeamWorkflowSummary;
+import net.boomerangplatform.model.WorkflowQuotas;
 import net.boomerangplatform.model.WorkflowSummary;
 import net.boomerangplatform.mongo.entity.FlowTeamConfiguration;
 import net.boomerangplatform.mongo.entity.FlowTeamEntity;
@@ -32,7 +33,6 @@ import net.boomerangplatform.mongo.entity.FlowWorkflowEntity;
 import net.boomerangplatform.mongo.model.FlowTaskStatus;
 import net.boomerangplatform.mongo.model.Quotas;
 import net.boomerangplatform.mongo.model.Settings;
-import net.boomerangplatform.model.WorkflowQuotas;
 import net.boomerangplatform.mongo.service.FlowTeamService;
 import net.boomerangplatform.mongo.service.FlowUserService;
 import net.boomerangplatform.mongo.service.FlowWorkflowActivityService;
@@ -478,5 +478,32 @@ public class TeamServiceImpl implements TeamService {
     nextMonth.set(Calendar.MILLISECOND, 0);
     workflowQuotas.setMonthlyResetDate(nextMonth.getTime());
     return workflowQuotas;
+  }
+
+  @Override
+  public Quotas updateTeamQuotas(String teamId, Quotas quotas) {
+    FlowTeamEntity team = flowTeamService.findById(teamId);
+    
+    if(team.getQuotas() == null) {
+      team.setQuotas(new Quotas());
+    }
+    if(quotas.getMaxWorkflowCount() != null) {
+      team.getQuotas().setMaxWorkflowCount(quotas.getMaxWorkflowCount());
+    }
+    if(quotas.getMaxConcurrentWorkflows() != null) {
+      team.getQuotas().setMaxConcurrentWorkflows(quotas.getMaxConcurrentWorkflows());
+    }
+    if(quotas.getMaxWorkflowExecutionMonthly() != null) {
+      team.getQuotas().setMaxWorkflowExecutionMonthly(quotas.getMaxWorkflowExecutionMonthly());
+    }
+    if(quotas.getMaxWorkflowExecutionTime() != null) {
+      team.getQuotas().setMaxWorkflowExecutionTime(quotas.getMaxWorkflowExecutionTime());
+    }
+    if(quotas.getMaxWorkflowStorage() != null) {
+      team.getQuotas().setMaxWorkflowStorage(quotas.getMaxWorkflowStorage());
+    }
+    
+    flowTeamService.save(team);
+    return quotas;
   }
 }
