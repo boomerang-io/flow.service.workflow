@@ -15,8 +15,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import net.boomerangplatform.client.BoomerangTeamService;
 import net.boomerangplatform.client.BoomerangUserService;
 import net.boomerangplatform.client.model.Team;
@@ -413,7 +411,18 @@ public class TeamServiceImpl implements TeamService {
     List<FlowWorkflowActivityEntity> concurrentActivities = getConcurrentWorkflowActivities(teamId);
     Page<FlowWorkflowActivityEntity> activitiesMonthly = getMonthlyWorkflowActivities(page);
     
-    return setWorkflowQuotasValues(workflows, concurrentActivities, activitiesMonthly);
+    if(team.getQuotas() == null) {
+      team.setQuotas(new Quotas());
+    }
+    Quotas teamQuotas = new Quotas();
+    teamQuotas.setMaxWorkflowCount(team.getQuotas().getMaxWorkflowCount());
+    teamQuotas.setMaxWorkflowExecutionMonthly(team.getQuotas().getMaxWorkflowExecutionMonthly());
+    teamQuotas.setMaxWorkflowStorage(team.getQuotas().getMaxWorkflowStorage());
+    teamQuotas.setMaxWorkflowExecutionTime(team.getQuotas().getMaxWorkflowExecutionTime());
+    teamQuotas.setMaxConcurrentWorkflows(team.getQuotas().getMaxConcurrentWorkflows());
+    team.setQuotas(teamQuotas);
+    
+    return setWorkflowQuotasValues(workflows, concurrentActivities, activitiesMonthly, teamQuotas);
   }
   
   @Override
@@ -433,7 +442,7 @@ public class TeamServiceImpl implements TeamService {
     team.setQuotas(teamQuotas);
     this.flowTeamService.save(team);
     
-    return setWorkflowQuotasValues(workflows, concurrentActivities, activitiesMonthly);
+    return setWorkflowQuotasValues(workflows, concurrentActivities, activitiesMonthly, teamQuotas);
   }
   
   private Page<FlowWorkflowActivityEntity> getMonthlyWorkflowActivities(Pageable page) {
@@ -454,13 +463,14 @@ public class TeamServiceImpl implements TeamService {
   
   private WorkflowQuotas setWorkflowQuotasValues(List<WorkflowSummary> workflows,
       List<FlowWorkflowActivityEntity> concurrentActivities,
-      Page<FlowWorkflowActivityEntity> activitiesMonthly) {
+      Page<FlowWorkflowActivityEntity> activitiesMonthly,
+      Quotas teamQuotas) {
     WorkflowQuotas workflowQuotas = new WorkflowQuotas();
-    workflowQuotas.setMaxWorkflowCount(maxWorkflowCount);
-    workflowQuotas.setMaxWorkflowExecutionMonthly(maxWorkflowExecutionMonthly);
-    workflowQuotas.setMaxWorkflowStorage(maxWorkflowStorage);
-    workflowQuotas.setMaxWorkflowExecutionTime(maxWorkflowExecutionTime);
-    workflowQuotas.setMaxConcurrentWorkflows(maxConcurrentWorkflows);
+    workflowQuotas.setMaxWorkflowCount(teamQuotas.getMaxWorkflowCount());
+    workflowQuotas.setMaxWorkflowExecutionMonthly(teamQuotas.getMaxWorkflowExecutionMonthly());
+    workflowQuotas.setMaxWorkflowStorage(teamQuotas.getMaxWorkflowStorage());
+    workflowQuotas.setMaxWorkflowExecutionTime(teamQuotas.getMaxWorkflowExecutionTime());
+    workflowQuotas.setMaxConcurrentWorkflows(teamQuotas.getMaxConcurrentWorkflows());
     workflowQuotas.setCurrentWorkflowCount(workflows.size());
     workflowQuotas.setCurrentConcurrentWorkflows(concurrentActivities.size());
     workflowQuotas.setCurrentWorkflowExecutionMonthly(activitiesMonthly.getContent().size());
@@ -508,14 +518,6 @@ public class TeamServiceImpl implements TeamService {
     }
     
     team.setQuotas(updatedQuotas);
-    
-    ObjectMapper objectMapper = new ObjectMapper();
-    try {
-      System.out.println(objectMapper.writeValueAsString(flowTeamService.save(team)));
-      System.out.println(objectMapper.writeValueAsString(getTeamQuotas(teamId)));
-    } catch (JsonProcessingException e) {
-      // log an error
-    }
     
     return flowTeamService.save(team).getQuotas();
   }
