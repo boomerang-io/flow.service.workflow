@@ -5,5 +5,12 @@
     "name" : "Test Team",
     "settings" : {
 		"properties" : null
+	},
+	"quotas":{
+      "maxWorkflowCount":15,
+      "maxWorkflowExecutionMonthly":150,
+      "maxWorkflowStorage":10,
+      "maxWorkflowExecutionTime":60,
+      "maxConcurrentWorkflows":10
 	}
 }

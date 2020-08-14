@@ -5,12 +5,5 @@
     "name" : "Dylan Test Team",
     "settings" : {
 		"properties" : null
-	},
-	"quotas":{
-      "maxWorkflowCount":10000,
-      "maxWorkflowExecutionMonthly":100000,
-      "maxWorkflowStorage":5000,
-      "maxWorkflowExecutionTime":30000,
-      "maxConcurrentWorkflows":4000
 	}
 }
