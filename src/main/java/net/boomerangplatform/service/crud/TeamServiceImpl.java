@@ -481,8 +481,29 @@ public class TeamServiceImpl implements TeamService {
   }
 
   @Override
-  public WorkflowQuotas updateTeamQuotas(String teamId) {
-    // TODO Auto-generated method stub
+  public Quotas updateTeamQuotas(String teamId, Quotas quotas) {
+    FlowTeamEntity team = flowTeamService.findById(teamId);
+    if(team.getQuotas() != null) {
+      Quotas newQuotas = new Quotas();
+      if(quotas.getMaxWorkflowCount() != null) {
+        newQuotas.setMaxWorkflowCount(quotas.getMaxWorkflowCount());
+      }
+      if(quotas.getMaxConcurrentWorkflows() != null) {
+        newQuotas.setMaxConcurrentWorkflows(quotas.getMaxConcurrentWorkflows());
+      }
+      if(quotas.getMaxWorkflowExecutionMonthly() != null) {
+        newQuotas.setMaxWorkflowExecutionMonthly(quotas.getMaxWorkflowExecutionMonthly());
+      }
+      if(quotas.getMaxWorkflowExecutionTime() != null) {
+        newQuotas.setMaxWorkflowExecutionTime(quotas.getMaxWorkflowExecutionTime());
+      }
+      if(quotas.getMaxWorkflowStorage() != null) {
+        newQuotas.setMaxWorkflowStorage(quotas.getMaxWorkflowStorage());
+      }
+      team.setQuotas(newQuotas);
+      flowTeamService.save(team);
+      return quotas;
+    }
     return null;
   }
 }

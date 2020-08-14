@@ -7,6 +7,7 @@ import net.boomerangplatform.model.TeamQueryResult;
 import net.boomerangplatform.model.TeamWorkflowSummary;
 import net.boomerangplatform.mongo.entity.FlowTeamConfiguration;
 import net.boomerangplatform.mongo.entity.FlowUserEntity;
+import net.boomerangplatform.mongo.model.Quotas;
 import net.boomerangplatform.mongo.model.WorkflowQuotas;
 
 public interface TeamService {
@@ -41,5 +42,5 @@ public interface TeamService {
 
   WorkflowQuotas resetTeamQuotas(String teamId);
 
-  WorkflowQuotas updateTeamQuotas(String teamId);
+  Quotas updateTeamQuotas(String teamId, Quotas quotas);
 }
