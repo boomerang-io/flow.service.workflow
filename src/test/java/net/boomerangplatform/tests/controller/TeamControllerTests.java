@@ -141,7 +141,16 @@ public class TeamControllerTests extends FlowTests {
   
   @Test
   public void testResetTeamQuotas() {
+    WorkflowQuotas previousQuotas = controller.getTeamQuotas("5d1a1841f6ca2c00014c4309");
+    
+    assertEquals(Integer.valueOf(15), previousQuotas.getMaxWorkflowCount());
+    assertEquals(Integer.valueOf(150), previousQuotas.getMaxWorkflowExecutionMonthly());
+    assertEquals(Integer.valueOf(10), previousQuotas.getMaxWorkflowStorage());
+    assertEquals(Integer.valueOf(60), previousQuotas.getMaxWorkflowExecutionTime());
+    assertEquals(Integer.valueOf(10), previousQuotas.getMaxConcurrentWorkflows());
+    
     controller.resetTeamQuotas("5d1a1841f6ca2c00014c4309");
+    
     WorkflowQuotas updatedQuotas = controller.getTeamQuotas("5d1a1841f6ca2c00014c4309");
     
     assertEquals(Integer.valueOf(10), updatedQuotas.getMaxWorkflowCount());
