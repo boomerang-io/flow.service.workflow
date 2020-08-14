@@ -69,7 +69,9 @@ public class SucessFlowExecutionTests extends FlowExecutionTest {
         .andExpect(method(HttpMethod.POST))
         .andExpect(jsonPath("$.workflowName").value("Unit Test Demo"))
         .andExpect(jsonPath("$.taskType").value("template"))
-        .andExpect(jsonPath("$.image").value("shell-script:1"))
+        .andExpect(jsonPath("$.image").value("boomerangio/worker-flow:2.1.1"))
+        .andExpect(jsonPath("$.configuration.debug").value(true))
+        .andExpect(jsonPath("$.configuration.deletion").value("Always"))
         .andExpect(jsonPath("$.command").value("bash"))
         .andExpect(jsonPath("$.properties['script']").value("echo \"Done\""))
         .andExpect(jsonPath("$.taskName").value("Echo Test")).andRespond(withStatus(HttpStatus.OK));
@@ -79,6 +81,9 @@ public class SucessFlowExecutionTests extends FlowExecutionTest {
         .andExpect(method(HttpMethod.POST))
         .andExpect(jsonPath("$.workflowName").value("Unit Test Demo"))
         .andExpect(jsonPath("$.taskType").value("template"))
+        .andExpect(jsonPath("$.image").value("boomerangio/worker-flow:2.1.1"))
+        .andExpect(jsonPath("$.configuration.debug").value(true))
+        .andExpect(jsonPath("$.configuration.deletion").value("Always"))
         .andExpect(jsonPath("$.taskName").value("Sleep 1")).andRespond(withStatus(HttpStatus.OK));
 
 
