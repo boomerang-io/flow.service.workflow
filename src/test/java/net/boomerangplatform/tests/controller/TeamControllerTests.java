@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -198,7 +199,7 @@ public class TeamControllerTests extends FlowTests {
   }
 
   private Date firstOfNextMonth() {
-    Calendar nextMonth = Calendar.getInstance();
+    Calendar nextMonth = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
     nextMonth.add(Calendar.MONTH, 1);
     nextMonth.set(Calendar.DAY_OF_MONTH, 1);
     nextMonth.set(Calendar.HOUR_OF_DAY, 0);
