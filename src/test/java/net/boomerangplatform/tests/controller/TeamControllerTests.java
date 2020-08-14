@@ -17,9 +17,9 @@ import net.boomerangplatform.Application;
 import net.boomerangplatform.MongoConfig;
 import net.boomerangplatform.controller.TeamController;
 import net.boomerangplatform.model.CreateFlowTeam;
+import net.boomerangplatform.model.WorkflowQuotas;
 import net.boomerangplatform.mongo.entity.FlowTeamConfiguration;
 import net.boomerangplatform.mongo.model.Quotas;
-import net.boomerangplatform.mongo.model.WorkflowQuotas;
 import net.boomerangplatform.tests.FlowTests;
 
 @RunWith(SpringJUnit4ClassRunner.class)
