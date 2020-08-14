@@ -17,8 +17,9 @@ import net.boomerangplatform.Application;
 import net.boomerangplatform.MongoConfig;
 import net.boomerangplatform.controller.TeamController;
 import net.boomerangplatform.model.CreateFlowTeam;
-import net.boomerangplatform.mongo.entity.FlowTeamConfiguration;
 import net.boomerangplatform.model.WorkflowQuotas;
+import net.boomerangplatform.mongo.entity.FlowTeamConfiguration;
+import net.boomerangplatform.mongo.model.Quotas;
 import net.boomerangplatform.tests.FlowTests;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -154,6 +155,30 @@ public class TeamControllerTests extends FlowTests {
     assertEquals(Integer.valueOf(0), updatedQuotas.getCurrentWorkflowExecutionMonthly());
     assertEquals(Integer.valueOf(2) ,updatedQuotas.getCurrentWorkflowsPersistentStorage());
     assertEquals(firstOfNextMonth(), updatedQuotas.getMonthlyResetDate());
+  }
+  
+  @Test
+  public void testUpdateQuotas() {
+    WorkflowQuotas current = controller.getTeamQuotas("5d1a1841f6ca2c00014c4309");
+    assertEquals(Integer.valueOf(10), current.getMaxWorkflowCount());
+    assertEquals(Integer.valueOf(4), current.getMaxConcurrentWorkflows());
+    assertEquals(Integer.valueOf(100), current.getMaxWorkflowExecutionMonthly());
+    assertEquals(Integer.valueOf(30), current.getMaxWorkflowExecutionTime());
+    assertEquals(Integer.valueOf(5), current.getMaxWorkflowStorage());
+    
+    Quotas quotas = new Quotas();
+    quotas.setMaxWorkflowCount(20);
+    quotas.setMaxConcurrentWorkflows(8);
+    quotas.setMaxWorkflowExecutionMonthly(200);
+    quotas.setMaxWorkflowExecutionTime(60);
+    quotas.setMaxWorkflowStorage(10);
+    
+    Quotas updated = controller.updateTeamQuotas("5d1a1841f6ca2c00014c4309", quotas);
+    assertEquals(Integer.valueOf(20), updated.getMaxWorkflowCount());
+    assertEquals(Integer.valueOf(8), updated.getMaxConcurrentWorkflows());
+    assertEquals(Integer.valueOf(200), updated.getMaxWorkflowExecutionMonthly());
+    assertEquals(Integer.valueOf(60), updated.getMaxWorkflowExecutionTime());
+    assertEquals(Integer.valueOf(10), updated.getMaxWorkflowStorage());
   }
 
   private Date firstOfNextMonth() {
