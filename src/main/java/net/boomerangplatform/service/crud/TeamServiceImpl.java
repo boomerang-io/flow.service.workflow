@@ -484,6 +484,9 @@ public class TeamServiceImpl implements TeamService {
   public Quotas updateTeamQuotas(String teamId, Quotas quotas) {
     FlowTeamEntity team = flowTeamService.findById(teamId);
     
+    if(team.getQuotas() == null) {
+      team.setQuotas(new Quotas());
+    }
     if(quotas.getMaxWorkflowCount() != null) {
       team.getQuotas().setMaxWorkflowCount(quotas.getMaxWorkflowCount());
     }
