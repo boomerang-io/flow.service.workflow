@@ -76,7 +76,9 @@ public class ActivityController {
 
       if (order.isPresent()) {
         direction = order.get();
+
       }
+
       pagingSort = Sort.by(new Order(direction, sortByKey));
     }
 
@@ -87,7 +89,7 @@ public class ActivityController {
       return null;
     } else {
       return flowActivityService.getAllActivites(from, to, pageable, workflowIds, teamIds, statuses,
-          triggers);
+          triggers,sort.get(), order.get());
     }
   }
 
