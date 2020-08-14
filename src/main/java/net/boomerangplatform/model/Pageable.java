@@ -1,10 +1,12 @@
 package net.boomerangplatform.model;
 
+import java.util.List;
+
 public class Pageable {
 
   private Integer number;
   private Integer size;
-  private Sort sort;
+  private List<Sort> sort;
   private Long totalElements;
   private boolean first;
   private boolean last;
@@ -27,11 +29,11 @@ public class Pageable {
     this.size = size;
   }
 
-  public Sort getSort() {
+  public List<Sort> getSort() {
     return sort;
   }
 
-  public void setSort(Sort sort) {
+  public void setSort(List<Sort> sort) {
     this.sort = sort;
   }
 

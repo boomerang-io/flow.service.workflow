@@ -148,7 +148,8 @@ public class FlowActivityServiceImpl implements FlowActivityService {
   @Override
   public ListActivityResponse getAllActivites(Optional<Date> from, Optional<Date> to, Pageable page,
       Optional<List<String>> workflowIds, Optional<List<String>> teamIds,
-      Optional<List<String>> statuses, Optional<List<String>> triggers, String property, Direction direction) {
+      Optional<List<String>> statuses, Optional<List<String>> triggers, String property,
+      Direction direction) {
 
     ListActivityResponse response = new ListActivityResponse();
     Page<FlowWorkflowActivityEntity> records =
@@ -271,11 +272,13 @@ public class FlowActivityServiceImpl implements FlowActivityService {
     pageable.setLast(records.isLast());
     pageable.setTotalPages(records.getTotalPages());
     pageable.setNumberOfElements(records.getNumberOfElements());
-    
+
+    List<Sort> listSort = new ArrayList<>();
     Sort sort = new Sort();
     sort.setDirection(direction);
     sort.setProperty(property);
-    pageable.setSort(sort);
+    listSort.add(sort);
+    pageable.setSort(listSort);
 
     return pageable;
   }
