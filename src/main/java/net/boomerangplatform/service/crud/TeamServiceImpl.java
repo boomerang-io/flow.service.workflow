@@ -197,21 +197,7 @@ public class TeamServiceImpl implements TeamService {
     workflowQuotas.setCurrentWorkflowCount(workflowSummary.size());
     workflowQuotas.setCurrentConcurrentWorkflows(concurrentActivities.size());
     workflowQuotas.setCurrentWorkflowExecutionMonthly(activitiesMonthly.getContent().size());
-    Integer currentWorkflowsPersistentStorage = 0;
-    for(WorkflowSummary workflow : workflowSummary) {
-      if(workflow.isEnablePersistentStorage()) {
-        currentWorkflowsPersistentStorage += 1;
-      }
-    }
-    workflowQuotas.setCurrentWorkflowsPersistentStorage(currentWorkflowsPersistentStorage);
-    Calendar nextMonth = Calendar.getInstance();
-    nextMonth.add(Calendar.MONTH, 1);
-    nextMonth.set(Calendar.DAY_OF_MONTH, 1);
-    nextMonth.set(Calendar.HOUR_OF_DAY, 0);
-    nextMonth.set(Calendar.MINUTE, 0);
-    nextMonth.set(Calendar.SECOND, 0);
-    nextMonth.set(Calendar.MILLISECOND, 0);
-    workflowQuotas.setMonthlyResetDate(nextMonth.getTime());
+    setStorageAndResetDate(workflowSummary, workflowQuotas);
     teamWorkFlow.setWorkflowQuotas(workflowQuotas);
   }
 
@@ -424,21 +410,7 @@ public class TeamServiceImpl implements TeamService {
     workflowQuotas.setCurrentWorkflowCount(workflows.size());
     workflowQuotas.setCurrentConcurrentWorkflows(concurrentActivities.size());
     workflowQuotas.setCurrentWorkflowExecutionMonthly(activitiesMonthly.getContent().size());
-    Integer currentWorkflowsPersistentStorage = 0;
-    for(WorkflowSummary workflow : workflows) {
-      if(workflow.isEnablePersistentStorage()) {
-        currentWorkflowsPersistentStorage += 1;
-      }
-    }
-    workflowQuotas.setCurrentWorkflowsPersistentStorage(currentWorkflowsPersistentStorage);
-    Calendar nextMonth = Calendar.getInstance();
-    nextMonth.add(Calendar.MONTH, 1);
-    nextMonth.set(Calendar.DAY_OF_MONTH, 1);
-    nextMonth.set(Calendar.HOUR_OF_DAY, 0);
-    nextMonth.set(Calendar.MINUTE, 0);
-    nextMonth.set(Calendar.SECOND, 0);
-    nextMonth.set(Calendar.MILLISECOND, 0);
-    workflowQuotas.setMonthlyResetDate(nextMonth.getTime());
+    setStorageAndResetDate(workflows, workflowQuotas);
     return workflowQuotas;
   }
   
@@ -468,6 +440,12 @@ public class TeamServiceImpl implements TeamService {
     workflowQuotas.setCurrentWorkflowCount(workflows.size());
     workflowQuotas.setCurrentConcurrentWorkflows(concurrentActivities.size());
     workflowQuotas.setCurrentWorkflowExecutionMonthly(activitiesMonthly.getContent().size());
+    setStorageAndResetDate(workflows, workflowQuotas);
+    return workflowQuotas;
+  }
+
+  private void setStorageAndResetDate(List<WorkflowSummary> workflows,
+      WorkflowQuotas workflowQuotas) {
     Integer currentWorkflowsPersistentStorage = 0;
     for(WorkflowSummary workflow : workflows) {
       if(workflow.isEnablePersistentStorage()) {
@@ -483,7 +461,6 @@ public class TeamServiceImpl implements TeamService {
     nextMonth.set(Calendar.SECOND, 0);
     nextMonth.set(Calendar.MILLISECOND, 0);
     workflowQuotas.setMonthlyResetDate(nextMonth.getTime());
-    return workflowQuotas;
   }
   
   private Page<FlowWorkflowActivityEntity> getMonthlyWorkflowActivities(Pageable page) {
