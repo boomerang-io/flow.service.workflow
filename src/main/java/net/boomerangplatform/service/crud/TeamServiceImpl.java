@@ -7,6 +7,7 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
+import java.util.TimeZone;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import org.springframework.beans.BeanUtils;
@@ -447,7 +448,7 @@ public class TeamServiceImpl implements TeamService {
   }
 
   private void setWorkflowResetDate(WorkflowQuotas workflowQuotas) {
-    Calendar nextMonth = Calendar.getInstance();
+    Calendar nextMonth = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
     nextMonth.add(Calendar.MONTH, 1);
     nextMonth.set(Calendar.DAY_OF_MONTH, 1);
     nextMonth.set(Calendar.HOUR_OF_DAY, 0);
