@@ -89,6 +89,12 @@ public class TeamController {
     return flowTeamService.resetTeamQuotas(teamId);
   }
   
+  @PatchMapping(value = "/teams/{teamId}/quotas")
+  public WorkflowQuotas updateTeamQuotas(@PathVariable String teamId,
+      @RequestBody WorkflowQuotas workflowQuotas) {
+    return flowTeamService.updateTeamQuotas(teamId);
+  }
+  
   @GetMapping(value = "/manage/teams")
   public TeamQueryResult getTeams(@RequestParam(required = false) String query,
       @RequestParam(defaultValue = "ASC") Direction order,

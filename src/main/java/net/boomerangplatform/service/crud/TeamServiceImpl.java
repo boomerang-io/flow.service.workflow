@@ -479,4 +479,10 @@ public class TeamServiceImpl implements TeamService {
     workflowQuotas.setMonthlyResetDate(nextMonth.getTime());
     return workflowQuotas;
   }
+
+  @Override
+  public WorkflowQuotas updateTeamQuotas(String teamId) {
+    // TODO Auto-generated method stub
+    return null;
+  }
 }

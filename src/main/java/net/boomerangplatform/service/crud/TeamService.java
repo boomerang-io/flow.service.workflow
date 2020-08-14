@@ -40,4 +40,6 @@ public interface TeamService {
   WorkflowQuotas getTeamQuotas(String teamId);
 
   WorkflowQuotas resetTeamQuotas(String teamId);
+
+  WorkflowQuotas updateTeamQuotas(String teamId);
 }
