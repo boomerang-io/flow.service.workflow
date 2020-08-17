@@ -43,4 +43,6 @@ public interface TeamService {
   WorkflowQuotas resetTeamQuotas(String teamId);
 
   Quotas updateTeamQuotas(String teamId, Quotas quotas);
+
+  Quotas updateQuotasForTeam(String teamId, Quotas quotas);
 }

@@ -170,11 +170,11 @@ public class TeamControllerTests extends FlowTests {
   @Test
   public void testUpdateQuotas() {
     WorkflowQuotas current = controller.getTeamQuotas("5d1a1841f6ca2c00014c4303"); // team3.json
-    assertEquals(null, current.getMaxWorkflowCount());
-    assertEquals(null, current.getMaxConcurrentWorkflows());
-    assertEquals(null, current.getMaxWorkflowExecutionMonthly());
-    assertEquals(null, current.getMaxWorkflowExecutionTime());
-    assertEquals(null, current.getMaxWorkflowStorage());
+    assertEquals(Integer.valueOf(10), current.getMaxWorkflowCount());
+    assertEquals(Integer.valueOf(4), current.getMaxConcurrentWorkflows());
+    assertEquals(Integer.valueOf(100), current.getMaxWorkflowExecutionMonthly());
+    assertEquals(Integer.valueOf(30), current.getMaxWorkflowExecutionTime());
+    assertEquals(Integer.valueOf(5), current.getMaxWorkflowStorage());
     
     Quotas quotas = new Quotas();
     quotas.setMaxWorkflowCount(20);
@@ -196,6 +196,31 @@ public class TeamControllerTests extends FlowTests {
     assertEquals(updateQuotas.getMaxWorkflowExecutionMonthly(), updated.getMaxWorkflowExecutionMonthly());
     assertEquals(updateQuotas.getMaxWorkflowExecutionTime(), updated.getMaxWorkflowExecutionTime());
     assertEquals(updateQuotas.getMaxWorkflowStorage(), updated.getMaxWorkflowStorage());
+  }
+  
+  @Test
+  public void testUpdateQuotasForTeam() {
+   Quotas quotas = new Quotas();
+   quotas.setMaxWorkflowCount(25);
+   quotas.setMaxConcurrentWorkflows(11);
+   quotas.setMaxWorkflowExecutionMonthly(250);
+   quotas.setMaxWorkflowExecutionTime(74);
+   quotas.setMaxWorkflowStorage(8);
+   
+   Quotas newQuotas = controller.updateQuotasForTeam("5d1a1841f6ca2c00014c4302", quotas);
+   
+   assertEquals(Integer.valueOf(25), newQuotas.getMaxWorkflowCount());
+   assertEquals(Integer.valueOf(11), newQuotas.getMaxConcurrentWorkflows());
+   assertEquals(Integer.valueOf(250), newQuotas.getMaxWorkflowExecutionMonthly());
+   assertEquals(Integer.valueOf(74), newQuotas.getMaxWorkflowExecutionTime());
+   assertEquals(Integer.valueOf(8), newQuotas.getMaxWorkflowStorage());
+   
+   WorkflowQuotas updated = controller.getTeamQuotas("5d1a1841f6ca2c00014c4302");
+   assertEquals(newQuotas.getMaxWorkflowCount(), updated.getMaxWorkflowCount());
+   assertEquals(newQuotas.getMaxConcurrentWorkflows(), updated.getMaxConcurrentWorkflows());
+   assertEquals(newQuotas.getMaxWorkflowExecutionMonthly(), updated.getMaxWorkflowExecutionMonthly());
+   assertEquals(newQuotas.getMaxWorkflowExecutionTime(), updated.getMaxWorkflowExecutionTime());
+   assertEquals(newQuotas.getMaxWorkflowStorage(), updated.getMaxWorkflowStorage());
   }
 
   private Date firstOfNextMonth() {

@@ -404,11 +404,31 @@ public class TeamServiceImpl implements TeamService {
     }
     
     WorkflowQuotas workflowQuotas = new WorkflowQuotas();
-    workflowQuotas.setMaxWorkflowCount(team.getQuotas().getMaxWorkflowCount());
-    workflowQuotas.setMaxWorkflowExecutionMonthly(team.getQuotas().getMaxWorkflowExecutionMonthly());
-    workflowQuotas.setMaxWorkflowStorage(team.getQuotas().getMaxWorkflowStorage());
-    workflowQuotas.setMaxWorkflowExecutionTime(team.getQuotas().getMaxWorkflowExecutionTime());
-    workflowQuotas.setMaxConcurrentWorkflows(team.getQuotas().getMaxConcurrentWorkflows());
+    if(team.getQuotas().getMaxWorkflowCount() != null) {
+      workflowQuotas.setMaxWorkflowCount(team.getQuotas().getMaxWorkflowCount());
+    } else {
+      workflowQuotas.setMaxWorkflowCount(maxWorkflowCount);
+    }
+    if(team.getQuotas().getMaxWorkflowExecutionMonthly() != null) {
+      workflowQuotas.setMaxWorkflowExecutionMonthly(team.getQuotas().getMaxWorkflowExecutionMonthly());
+    } else {
+      workflowQuotas.setMaxWorkflowExecutionMonthly(maxWorkflowExecutionMonthly);
+    }
+    if(team.getQuotas().getMaxWorkflowStorage() != null) {
+      workflowQuotas.setMaxWorkflowStorage(team.getQuotas().getMaxWorkflowStorage());
+    } else {
+      workflowQuotas.setMaxWorkflowStorage(maxWorkflowStorage);
+    }
+    if(team.getQuotas().getMaxWorkflowExecutionTime() != null) {
+      workflowQuotas.setMaxWorkflowExecutionTime(team.getQuotas().getMaxWorkflowExecutionTime());
+    } else {
+      workflowQuotas.setMaxWorkflowExecutionTime(maxWorkflowExecutionTime);
+    }
+    if(team.getQuotas().getMaxConcurrentWorkflows() != null) {
+      workflowQuotas.setMaxConcurrentWorkflows(team.getQuotas().getMaxConcurrentWorkflows());
+    } else {
+      workflowQuotas.setMaxConcurrentWorkflows(maxConcurrentWorkflows);
+    }
     workflowQuotas.setCurrentWorkflowCount(workflows.size());
     workflowQuotas.setCurrentConcurrentWorkflows(concurrentActivities.size());
     workflowQuotas.setCurrentWorkflowExecutionMonthly(activitiesMonthly.getContent().size());
@@ -507,6 +527,13 @@ public class TeamServiceImpl implements TeamService {
       team.getQuotas().setMaxWorkflowStorage(quotas.getMaxWorkflowStorage());
     }
     
+    return flowTeamService.save(team).getQuotas();
+  }
+
+  @Override
+  public Quotas updateQuotasForTeam(String teamId, Quotas quotas) {
+    FlowTeamEntity team = flowTeamService.findById(teamId);
+    team.setQuotas(quotas);
     return flowTeamService.save(team).getQuotas();
   }
 }
