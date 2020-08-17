@@ -170,11 +170,11 @@ public class TeamControllerTests extends FlowTests {
   @Test
   public void testUpdateQuotas() {
     WorkflowQuotas current = controller.getTeamQuotas("5d1a1841f6ca2c00014c4303"); // team3.json
-    assertEquals(null, current.getMaxWorkflowCount());
-    assertEquals(null, current.getMaxConcurrentWorkflows());
-    assertEquals(null, current.getMaxWorkflowExecutionMonthly());
-    assertEquals(null, current.getMaxWorkflowExecutionTime());
-    assertEquals(null, current.getMaxWorkflowStorage());
+    assertEquals(Integer.valueOf(10), current.getMaxWorkflowCount());
+    assertEquals(Integer.valueOf(4), current.getMaxConcurrentWorkflows());
+    assertEquals(Integer.valueOf(100), current.getMaxWorkflowExecutionMonthly());
+    assertEquals(Integer.valueOf(30), current.getMaxWorkflowExecutionTime());
+    assertEquals(Integer.valueOf(5), current.getMaxWorkflowStorage());
     
     Quotas quotas = new Quotas();
     quotas.setMaxWorkflowCount(20);
@@ -197,6 +197,11 @@ public class TeamControllerTests extends FlowTests {
     assertEquals(updateQuotas.getMaxWorkflowExecutionTime(), updated.getMaxWorkflowExecutionTime());
     assertEquals(updateQuotas.getMaxWorkflowStorage(), updated.getMaxWorkflowStorage());
   }
+  
+//  @Test
+//  public void testUpdateQuotasForTeam() {
+//   controller.updateQuotasForTeam(teamId, quotas);
+//  }
 
   private Date firstOfNextMonth() {
     Calendar nextMonth = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
