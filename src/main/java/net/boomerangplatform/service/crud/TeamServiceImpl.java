@@ -179,7 +179,7 @@ public class TeamServiceImpl implements TeamService {
   private void updateSummaryWithQuotas(final FlowTeamEntity entity,
       final List<WorkflowSummary> workflowSummary, final TeamWorkflowSummary teamWorkFlow) {
 
-    Quotas quotas = teamQuotasNullCheck(entity);
+    Quotas quotas = setTeamQuotas(entity);
     
     teamWorkFlow.setQuotas(quotas);
     
@@ -398,7 +398,7 @@ public class TeamServiceImpl implements TeamService {
     List<FlowWorkflowActivityEntity> concurrentActivities = getConcurrentWorkflowActivities(teamId);
     Page<FlowWorkflowActivityEntity> activitiesMonthly = getMonthlyWorkflowActivities(page);
     
-    Quotas quotas = teamQuotasNullCheck(team);
+    Quotas quotas = setTeamQuotas(team);
     
     team.setQuotas(quotas);
     FlowTeamEntity updatedTeam = this.flowTeamService.save(team);
@@ -418,7 +418,7 @@ public class TeamServiceImpl implements TeamService {
     return workflowQuotas;
   }
 
-  private Quotas teamQuotasNullCheck(FlowTeamEntity team) {
+  private Quotas setTeamQuotas(FlowTeamEntity team) {
     if(team.getQuotas() == null) {
       team.setQuotas(new Quotas());
     }
