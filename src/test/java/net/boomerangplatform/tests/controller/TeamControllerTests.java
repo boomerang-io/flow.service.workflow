@@ -38,11 +38,11 @@ public class TeamControllerTests extends FlowTests {
   public void testGetTeams() {
     assertEquals(3, controller.getTeams().size());
     
-    assertEquals(Integer.valueOf(10), controller.getTeams().get(0).getQuotas().getMaxWorkflowCount());
-    assertEquals(Integer.valueOf(100), controller.getTeams().get(0).getQuotas().getMaxWorkflowExecutionMonthly());
-    assertEquals(Integer.valueOf(5), controller.getTeams().get(0).getQuotas().getMaxWorkflowStorage());
-    assertEquals(Integer.valueOf(30), controller.getTeams().get(0).getQuotas().getMaxWorkflowExecutionTime());
-    assertEquals(Integer.valueOf(4), controller.getTeams().get(0).getQuotas().getMaxConcurrentWorkflows());
+    assertEquals(Integer.valueOf(15), controller.getTeams().get(0).getQuotas().getMaxWorkflowCount());
+    assertEquals(Integer.valueOf(150), controller.getTeams().get(0).getQuotas().getMaxWorkflowExecutionMonthly());
+    assertEquals(Integer.valueOf(10), controller.getTeams().get(0).getQuotas().getMaxWorkflowStorage());
+    assertEquals(Integer.valueOf(60), controller.getTeams().get(0).getQuotas().getMaxWorkflowExecutionTime());
+    assertEquals(Integer.valueOf(10), controller.getTeams().get(0).getQuotas().getMaxConcurrentWorkflows());
 
     assertEquals(Integer.valueOf(9), controller.getTeams().get(0).getWorkflowQuotas().getCurrentWorkflowCount());
     assertEquals(Integer.valueOf(3), controller.getTeams().get(0).getWorkflowQuotas().getCurrentConcurrentWorkflows());
@@ -138,6 +138,14 @@ public class TeamControllerTests extends FlowTests {
     assertEquals(Integer.valueOf(0), quotas.getCurrentWorkflowExecutionMonthly());
     assertEquals(Integer.valueOf(2) ,quotas.getCurrentWorkflowsPersistentStorage());
     assertEquals(firstOfNextMonth(), quotas.getMonthlyResetDate());
+    
+    assertEquals("5d1a1841f6ca2c00014c4309", controller.getTeams().get(0).getId());
+    assertEquals(quotas.getMaxWorkflowCount(), controller.getTeams().get(0).getQuotas().getMaxWorkflowCount());
+    assertEquals(quotas.getMaxConcurrentWorkflows(), controller.getTeams().get(0).getQuotas().getMaxConcurrentWorkflows());
+    assertEquals(quotas.getMaxWorkflowExecutionMonthly(), controller.getTeams().get(0).getQuotas().getMaxWorkflowExecutionMonthly());
+    assertEquals(quotas.getMaxWorkflowExecutionTime(), controller.getTeams().get(0).getQuotas().getMaxWorkflowExecutionTime());
+    assertEquals(quotas.getMaxWorkflowStorage(), controller.getTeams().get(0).getQuotas().getMaxWorkflowStorage());
+    
   }
   
   @Test
