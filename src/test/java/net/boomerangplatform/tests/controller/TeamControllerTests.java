@@ -14,6 +14,8 @@ import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import net.boomerangplatform.Application;
 import net.boomerangplatform.MongoConfig;
 import net.boomerangplatform.controller.TeamController;
@@ -138,6 +140,14 @@ public class TeamControllerTests extends FlowTests {
     assertEquals(Integer.valueOf(0), quotas.getCurrentWorkflowExecutionMonthly());
     assertEquals(Integer.valueOf(2) ,quotas.getCurrentWorkflowsPersistentStorage());
     assertEquals(firstOfNextMonth(), quotas.getMonthlyResetDate());
+    
+    ObjectMapper objectMapper = new ObjectMapper();
+    try {
+      System.out.println(objectMapper.writeValueAsString(controller.getTeams()));
+    } catch (JsonProcessingException e) {
+      // log an error
+    }
+    
   }
   
   @Test

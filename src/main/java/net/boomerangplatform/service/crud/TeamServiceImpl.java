@@ -403,32 +403,44 @@ public class TeamServiceImpl implements TeamService {
       team.setQuotas(new Quotas());
     }
     
-    WorkflowQuotas workflowQuotas = new WorkflowQuotas();
+    Quotas quotas = new Quotas();
     if(team.getQuotas().getMaxWorkflowCount() != null) {
-      workflowQuotas.setMaxWorkflowCount(team.getQuotas().getMaxWorkflowCount());
+      quotas.setMaxWorkflowCount(team.getQuotas().getMaxWorkflowCount());
     } else {
-      workflowQuotas.setMaxWorkflowCount(maxWorkflowCount);
+      quotas.setMaxWorkflowCount(maxWorkflowCount);
     }
     if(team.getQuotas().getMaxWorkflowExecutionMonthly() != null) {
-      workflowQuotas.setMaxWorkflowExecutionMonthly(team.getQuotas().getMaxWorkflowExecutionMonthly());
+      quotas.setMaxWorkflowExecutionMonthly(team.getQuotas().getMaxWorkflowExecutionMonthly());
     } else {
-      workflowQuotas.setMaxWorkflowExecutionMonthly(maxWorkflowExecutionMonthly);
+      quotas.setMaxWorkflowExecutionMonthly(maxWorkflowExecutionMonthly);
     }
     if(team.getQuotas().getMaxWorkflowStorage() != null) {
-      workflowQuotas.setMaxWorkflowStorage(team.getQuotas().getMaxWorkflowStorage());
+      quotas.setMaxWorkflowStorage(team.getQuotas().getMaxWorkflowStorage());
     } else {
-      workflowQuotas.setMaxWorkflowStorage(maxWorkflowStorage);
+      quotas.setMaxWorkflowStorage(maxWorkflowStorage);
     }
     if(team.getQuotas().getMaxWorkflowExecutionTime() != null) {
-      workflowQuotas.setMaxWorkflowExecutionTime(team.getQuotas().getMaxWorkflowExecutionTime());
+      quotas.setMaxWorkflowExecutionTime(team.getQuotas().getMaxWorkflowExecutionTime());
     } else {
-      workflowQuotas.setMaxWorkflowExecutionTime(maxWorkflowExecutionTime);
+      quotas.setMaxWorkflowExecutionTime(maxWorkflowExecutionTime);
     }
     if(team.getQuotas().getMaxConcurrentWorkflows() != null) {
-      workflowQuotas.setMaxConcurrentWorkflows(team.getQuotas().getMaxConcurrentWorkflows());
+      quotas.setMaxConcurrentWorkflows(team.getQuotas().getMaxConcurrentWorkflows());
     } else {
-      workflowQuotas.setMaxConcurrentWorkflows(maxConcurrentWorkflows);
+      quotas.setMaxConcurrentWorkflows(maxConcurrentWorkflows);
     }
+    
+    team.setQuotas(quotas);
+    FlowTeamEntity updatedTeam = this.flowTeamService.save(team);
+    
+    
+    WorkflowQuotas workflowQuotas = new WorkflowQuotas();
+    workflowQuotas.setMaxWorkflowCount(updatedTeam.getQuotas().getMaxWorkflowCount());
+    workflowQuotas.setMaxWorkflowExecutionMonthly(updatedTeam.getQuotas().getMaxWorkflowExecutionMonthly());
+    workflowQuotas.setMaxWorkflowStorage(updatedTeam.getQuotas().getMaxWorkflowStorage());
+    workflowQuotas.setMaxWorkflowExecutionTime(updatedTeam.getQuotas().getMaxWorkflowExecutionTime());
+    workflowQuotas.setMaxConcurrentWorkflows(updatedTeam.getQuotas().getMaxConcurrentWorkflows());
+    
     workflowQuotas.setCurrentWorkflowCount(workflows.size());
     workflowQuotas.setCurrentConcurrentWorkflows(concurrentActivities.size());
     workflowQuotas.setCurrentWorkflowExecutionMonthly(activitiesMonthly.getContent().size());
