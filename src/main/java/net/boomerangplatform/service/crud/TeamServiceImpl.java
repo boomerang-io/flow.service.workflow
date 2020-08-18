@@ -178,13 +178,10 @@ public class TeamServiceImpl implements TeamService {
 
   private void updateSummaryWithQuotas(final FlowTeamEntity entity,
       final List<WorkflowSummary> workflowSummary, final TeamWorkflowSummary teamWorkFlow) {
-    
-    
-    
+
     if(entity.getQuotas() == null) {
       entity.setQuotas(new Quotas());
     }
-    
 
     Quotas quotas = new Quotas();
     
@@ -214,22 +211,19 @@ public class TeamServiceImpl implements TeamService {
       quotas.setMaxConcurrentWorkflows(maxConcurrentWorkflows);
     }
     
-//    quotas.setMaxWorkflowCount(entity.getQuotas().getMaxWorkflowCount());
-//    quotas.setMaxWorkflowExecutionMonthly(entity.getQuotas().getMaxWorkflowExecutionMonthly());
-//    quotas.setMaxWorkflowStorage(entity.getQuotas().getMaxWorkflowStorage());
-//    quotas.setMaxWorkflowExecutionTime(entity.getQuotas().getMaxWorkflowExecutionTime());
-//    quotas.setMaxConcurrentWorkflows(entity.getQuotas().getMaxConcurrentWorkflows());
     teamWorkFlow.setQuotas(quotas);
     
     List<FlowWorkflowActivityEntity> concurrentActivities = getConcurrentWorkflowActivities(entity.getId());
     Pageable page = Pageable.unpaged();
     Page<FlowWorkflowActivityEntity> activitiesMonthly = getMonthlyWorkflowActivities(page);
+    
     WorkflowQuotas workflowQuotas = new WorkflowQuotas();
     workflowQuotas.setMaxWorkflowCount(quotas.getMaxWorkflowCount());
     workflowQuotas.setMaxWorkflowExecutionMonthly(quotas.getMaxWorkflowExecutionMonthly());
     workflowQuotas.setMaxWorkflowStorage(quotas.getMaxWorkflowStorage());
     workflowQuotas.setMaxWorkflowExecutionTime(quotas.getMaxWorkflowExecutionTime());
     workflowQuotas.setMaxConcurrentWorkflows(quotas.getMaxConcurrentWorkflows());
+    
     workflowQuotas.setCurrentWorkflowCount(workflowSummary.size());
     workflowQuotas.setCurrentConcurrentWorkflows(concurrentActivities.size());
     workflowQuotas.setCurrentWorkflowExecutionMonthly(activitiesMonthly.getContent().size());
