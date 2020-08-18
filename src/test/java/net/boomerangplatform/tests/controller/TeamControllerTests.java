@@ -148,6 +148,9 @@ public class TeamControllerTests extends FlowTests {
       // log an error
     }
     
+    assertEquals("5d1a1841f6ca2c00014c4309", controller.getTeams().get(0).getId());
+    assertEquals(quotas.getMaxWorkflowCount(), controller.getTeams().get(0).getQuotas().getMaxWorkflowCount());
+    
   }
   
   @Test
