@@ -102,7 +102,7 @@ public class TeamController {
     return flowTeamService.updateQuotasForTeam(teamId, quotas);
   }
   
-  @GetMapping(value = "/teams/quotas/default")
+  @GetMapping(value = "/quotas/default")
   public Quotas getDefaultQuotas() {
     return flowTeamService.getDefaultQuotas();
   }
