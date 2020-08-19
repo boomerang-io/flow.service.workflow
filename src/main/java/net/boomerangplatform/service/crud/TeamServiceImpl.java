@@ -552,4 +552,16 @@ public class TeamServiceImpl implements TeamService {
     team.setQuotas(quotas);
     return flowTeamService.save(team).getQuotas();
   }
+
+  @Override
+  public Quotas getDefaultQuotas() {
+   Quotas quota = new Quotas();
+   quota.setMaxConcurrentWorkflows(maxConcurrentWorkflows);
+   quota.setMaxWorkflowCount(maxWorkflowCount);
+   quota.setMaxWorkflowExecutionMonthly(maxWorkflowExecutionMonthly);
+   quota.setMaxWorkflowExecutionTime(maxWorkflowExecutionTime);
+   quota.setMaxWorkflowStorage(maxWorkflowStorage);
+   return quota;
+   
+  }
 }

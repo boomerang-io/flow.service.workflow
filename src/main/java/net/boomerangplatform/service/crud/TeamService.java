@@ -45,4 +45,6 @@ public interface TeamService {
   Quotas updateTeamQuotas(String teamId, Quotas quotas);
 
   Quotas updateQuotasForTeam(String teamId, Quotas quotas);
+
+  Quotas getDefaultQuotas();
 }

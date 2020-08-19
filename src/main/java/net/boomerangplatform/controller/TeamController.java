@@ -102,6 +102,11 @@ public class TeamController {
     return flowTeamService.updateQuotasForTeam(teamId, quotas);
   }
   
+  @GetMapping(value = "/teams/quotas/default")
+  public Quotas getDefaultQuotas() {
+    return flowTeamService.getDefaultQuotas();
+  }
+  
   @GetMapping(value = "/manage/teams")
   public TeamQueryResult getTeams(@RequestParam(required = false) String query,
       @RequestParam(defaultValue = "ASC") Direction order,
