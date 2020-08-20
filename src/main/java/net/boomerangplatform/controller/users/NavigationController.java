@@ -12,7 +12,7 @@ import net.boomerangplatform.service.UserIdentityService;
 import net.boomerangplatform.service.profile.LaunchpadNavigationService;
 
 @RestController
-@RequestMapping("/flow/users/navigation")
+@RequestMapping("/workflow/users/navigation")
 @ConditionalOnProperty(value = "boomerang.standalone", havingValue = "true", matchIfMissing = false)
 public class NavigationController {
 
