@@ -37,7 +37,7 @@ public class WebSecurity extends WebSecurityConfigurerAdapter {
   private boolean boomerangAuthorization;
 
   @Autowired
-  @Value("${core.authorization.basic.password:}")
+  @Value("${boomerang.authorization.basic.password:}")
   private String basicPassword;
 
   @Override
