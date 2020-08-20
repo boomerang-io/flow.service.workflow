@@ -500,9 +500,9 @@ public class WorkflowServiceImpl implements WorkflowService {
   @Override
   public boolean canExecuteWorkflow(String teamId) {
     WorkflowQuotas workflowQuotas = teamService.getTeamQuotas(teamId);
-    if(workflowQuotas.getCurrentWorkflowCount() > maxWorkflowCount || 
-        workflowQuotas.getCurrentConcurrentWorkflows() > maxConcurrentWorkflows ||
-        workflowQuotas.getCurrentWorkflowExecutionMonthly() > maxWorkflowExecutionMonthly) {
+    if(
+        workflowQuotas.getCurrentConcurrentWorkflows() > workflowQuotas.getMaxConcurrentWorkflows() ||
+        workflowQuotas.getCurrentWorkflowExecutionMonthly() > workflowQuotas.getMaxWorkflowExecutionMonthly()) {
       return false;
     } else {
       return true;
