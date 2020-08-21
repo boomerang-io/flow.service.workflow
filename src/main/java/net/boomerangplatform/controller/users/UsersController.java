@@ -16,7 +16,7 @@ import net.boomerangplatform.mongo.entity.FlowUserEntity;
 import net.boomerangplatform.service.UserIdentityService;
 
 @RestController
-@RequestMapping("/flow/users")
+@RequestMapping("/workflow/users")
 @ConditionalOnProperty(value = "boomerang.standalone", havingValue = "true", matchIfMissing = false)
 public class UsersController {
 

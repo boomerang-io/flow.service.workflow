@@ -68,5 +68,16 @@ public class FlowUserServiceImpl implements FlowUserService {
   @Override
   public Long getUserCount() {
     return flowUserRepository.count();
+}
+  
+  @Override
+  @NoLogging
+  public FlowUserEntity getUserWithEmail(String userEmail) {
+
+    if (userEmail != null) {
+    return flowUserRepository.findByEmailIgnoreCase(userEmail);
+    }
+    return null;
+
   }
 }

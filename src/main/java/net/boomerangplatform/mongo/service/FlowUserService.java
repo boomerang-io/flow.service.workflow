@@ -22,5 +22,7 @@ public interface FlowUserService {
 
   List<FlowUserEntity> getUsersforTeams(List<String> teamIds);
 
+  FlowUserEntity getUserWithEmail(String userEmail);
+
 
 }

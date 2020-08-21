@@ -8,6 +8,7 @@
     "category": "utilities",
     "nodetype": "custom",
     "status": "active",
+    "verified":true,
     "revisions": [{
         "version" : 1
         "image": "image",

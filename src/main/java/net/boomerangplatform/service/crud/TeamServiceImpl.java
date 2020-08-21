@@ -1,9 +1,13 @@
 package net.boomerangplatform.service.crud;
 
+import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
+import java.util.TimeZone;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import org.springframework.beans.BeanUtils;
@@ -20,13 +24,20 @@ import net.boomerangplatform.model.FlowTeam;
 import net.boomerangplatform.model.FlowWorkflowRevision;
 import net.boomerangplatform.model.TeamQueryResult;
 import net.boomerangplatform.model.TeamWorkflowSummary;
+import net.boomerangplatform.model.WorkflowQuotas;
 import net.boomerangplatform.model.WorkflowSummary;
 import net.boomerangplatform.mongo.entity.FlowTeamConfiguration;
 import net.boomerangplatform.mongo.entity.FlowTeamEntity;
 import net.boomerangplatform.mongo.entity.FlowUserEntity;
+import net.boomerangplatform.mongo.entity.FlowWorkflowActivityEntity;
+import net.boomerangplatform.mongo.entity.FlowWorkflowEntity;
+import net.boomerangplatform.mongo.model.FlowTaskStatus;
+import net.boomerangplatform.mongo.model.Quotas;
 import net.boomerangplatform.mongo.model.Settings;
 import net.boomerangplatform.mongo.service.FlowTeamService;
 import net.boomerangplatform.mongo.service.FlowUserService;
+import net.boomerangplatform.mongo.service.FlowWorkflowActivityService;
+import net.boomerangplatform.mongo.service.FlowWorkflowService;
 import net.boomerangplatform.service.UserIdentityService;
 
 @Service
@@ -49,9 +60,30 @@ public class TeamServiceImpl implements TeamService {
 
   @Autowired
   private UserIdentityService userIdentiyService;
+  
+  @Autowired
+  private FlowWorkflowActivityService flowWorkflowActivityService;
+  
+  @Autowired
+  private FlowWorkflowService flowWorkflowService;
 
   @Value("${boomerang.standalone}")
   private boolean standAloneMode;
+  
+  @Value("${max.workflow.count}")
+  private Integer maxWorkflowCount;
+  
+  @Value("${max.workflow.execution.monthly}")
+  private Integer maxWorkflowExecutionMonthly;
+  
+  @Value("${max.workflow.storage}")
+  private Integer maxWorkflowStorage;
+  
+  @Value("${max.workflow.execution.time}")
+  private Integer maxWorkflowExecutionTime;
+  
+  @Value("${max.concurrent.workflows}")
+  private Integer maxConcurrentWorkflows;
 
   @Autowired
   private FlowUserService flowUserService;
@@ -63,8 +95,17 @@ public class TeamServiceImpl implements TeamService {
     flowTeamEntity = flowTeamService.save(flowTeamEntity);
     flowTeamEntity.setHigherLevelGroupId(flowTeamEntity.getId());
     flowTeamEntity.setIsActive(true);
+    if(flowTeamEntity.getQuotas() == null) {
+      Quotas quotas = new Quotas();
+      quotas.setMaxWorkflowCount(maxWorkflowCount);
+      quotas.setMaxWorkflowExecutionMonthly(maxWorkflowExecutionMonthly);
+      quotas.setMaxWorkflowStorage(maxWorkflowStorage);
+      quotas.setMaxWorkflowExecutionTime(maxWorkflowExecutionTime);
+      quotas.setMaxConcurrentWorkflows(maxConcurrentWorkflows);
+      flowTeamEntity.setQuotas(quotas);
+    }
     flowTeamEntity = flowTeamService.save(flowTeamEntity);
-
+    
     FlowTeam team = new FlowTeam();
 
     BeanUtils.copyProperties(flowTeamEntity, team);
@@ -80,6 +121,15 @@ public class TeamServiceImpl implements TeamService {
     flowTeamEntity.setName(name);
     flowTeamEntity.setHigherLevelGroupId(higherLevelGroupId);
     flowTeamEntity.setIsActive(true);
+    if(flowTeamEntity.getQuotas() == null) {
+      Quotas quotas = new Quotas();
+      quotas.setMaxWorkflowCount(maxWorkflowCount);
+      quotas.setMaxWorkflowExecutionMonthly(maxWorkflowExecutionMonthly);
+      quotas.setMaxWorkflowStorage(maxWorkflowStorage);
+      quotas.setMaxWorkflowExecutionTime(maxWorkflowExecutionTime);
+      quotas.setMaxConcurrentWorkflows(maxConcurrentWorkflows);
+      flowTeamEntity.setQuotas(quotas);
+    }
     flowTeamService.save(flowTeamEntity);
   }
 
@@ -92,6 +142,7 @@ public class TeamServiceImpl implements TeamService {
           workflowService.getWorkflowsForTeam(entity.getId());
       final TeamWorkflowSummary teamWorkFlow = new TeamWorkflowSummary(entity, workflowSummary);
       updateSummaryWithUpgradeFlags(teamWorkFlow);
+      updateSummaryWithQuotas(entity, workflowSummary, teamWorkFlow);
       teamWorkFlowSummary.add(teamWorkFlow);
     }
     return teamWorkFlowSummary;
@@ -119,10 +170,36 @@ public class TeamServiceImpl implements TeamService {
           workflowService.getWorkflowsForTeam(entity.getId());
       final TeamWorkflowSummary teamWorkFlow = new TeamWorkflowSummary(entity, workflowSummary);
       updateSummaryWithUpgradeFlags(teamWorkFlow);
+      updateSummaryWithQuotas(entity, workflowSummary, teamWorkFlow);
       teamWorkFlowSummary.add(teamWorkFlow);
     }
-
     return teamWorkFlowSummary;
+  }
+
+  private void updateSummaryWithQuotas(final FlowTeamEntity entity,
+      final List<WorkflowSummary> workflowSummary, final TeamWorkflowSummary teamWorkFlow) {
+
+    Quotas quotas = setTeamQuotas(entity);
+    
+    teamWorkFlow.setQuotas(quotas);
+    
+    List<FlowWorkflowActivityEntity> concurrentActivities = getConcurrentWorkflowActivities(entity.getId());
+    Pageable page = Pageable.unpaged();
+    Page<FlowWorkflowActivityEntity> activitiesMonthly = getMonthlyWorkflowActivities(page);
+    
+    WorkflowQuotas workflowQuotas = new WorkflowQuotas();
+    workflowQuotas.setMaxWorkflowCount(quotas.getMaxWorkflowCount());
+    workflowQuotas.setMaxWorkflowExecutionMonthly(quotas.getMaxWorkflowExecutionMonthly());
+    workflowQuotas.setMaxWorkflowStorage(quotas.getMaxWorkflowStorage());
+    workflowQuotas.setMaxWorkflowExecutionTime(quotas.getMaxWorkflowExecutionTime());
+    workflowQuotas.setMaxConcurrentWorkflows(quotas.getMaxConcurrentWorkflows());
+    
+    workflowQuotas.setCurrentWorkflowCount(workflowSummary.size());
+    workflowQuotas.setCurrentConcurrentWorkflows(concurrentActivities.size());
+    workflowQuotas.setCurrentWorkflowExecutionMonthly(activitiesMonthly.getContent().size());
+    setWorkflowStorage(workflowSummary, workflowQuotas);
+    setWorkflowResetDate(workflowQuotas);
+    teamWorkFlow.setWorkflowQuotas(workflowQuotas);
   }
 
   private void updateSummaryWithUpgradeFlags(TeamWorkflowSummary teamSummary) {
@@ -309,6 +386,182 @@ public class TeamServiceImpl implements TeamService {
     if (flow.getIsActive() != null) {
       team.setIsActive(flow.getIsActive());
     }
+    
     this.flowTeamService.save(team);
+  }
+
+  @Override
+  public WorkflowQuotas getTeamQuotas(String teamId) {
+    FlowTeamEntity team = flowTeamService.findById(teamId);
+    List<WorkflowSummary> workflows = workflowService.getWorkflowsForTeam(team.getId());
+    Pageable page = Pageable.unpaged();
+    List<FlowWorkflowActivityEntity> concurrentActivities = getConcurrentWorkflowActivities(teamId);
+    Page<FlowWorkflowActivityEntity> activitiesMonthly = getMonthlyWorkflowActivities(page);
+    
+    Quotas quotas = setTeamQuotas(team);
+    
+    team.setQuotas(quotas);
+    FlowTeamEntity updatedTeam = this.flowTeamService.save(team);
+    
+    WorkflowQuotas workflowQuotas = new WorkflowQuotas();
+    workflowQuotas.setMaxWorkflowCount(updatedTeam.getQuotas().getMaxWorkflowCount());
+    workflowQuotas.setMaxWorkflowExecutionMonthly(updatedTeam.getQuotas().getMaxWorkflowExecutionMonthly());
+    workflowQuotas.setMaxWorkflowStorage(updatedTeam.getQuotas().getMaxWorkflowStorage());
+    workflowQuotas.setMaxWorkflowExecutionTime(updatedTeam.getQuotas().getMaxWorkflowExecutionTime());
+    workflowQuotas.setMaxConcurrentWorkflows(updatedTeam.getQuotas().getMaxConcurrentWorkflows());
+    
+    workflowQuotas.setCurrentWorkflowCount(workflows.size());
+    workflowQuotas.setCurrentConcurrentWorkflows(concurrentActivities.size());
+    workflowQuotas.setCurrentWorkflowExecutionMonthly(activitiesMonthly.getContent().size());
+    setWorkflowStorage(workflows, workflowQuotas);
+    setWorkflowResetDate(workflowQuotas);
+    return workflowQuotas;
+  }
+
+  private Quotas setTeamQuotas(FlowTeamEntity team) {
+    if(team.getQuotas() == null) {
+      team.setQuotas(new Quotas());
+    }
+    
+    Quotas quotas = new Quotas();
+    
+    if(team.getQuotas().getMaxWorkflowCount() != null) {
+      quotas.setMaxWorkflowCount(team.getQuotas().getMaxWorkflowCount());
+    } else {
+      quotas.setMaxWorkflowCount(maxWorkflowCount);
+    }
+    if(team.getQuotas().getMaxWorkflowExecutionMonthly() != null) {
+      quotas.setMaxWorkflowExecutionMonthly(team.getQuotas().getMaxWorkflowExecutionMonthly());
+    } else {
+      quotas.setMaxWorkflowExecutionMonthly(maxWorkflowExecutionMonthly);
+    }
+    if(team.getQuotas().getMaxWorkflowStorage() != null) {
+      quotas.setMaxWorkflowStorage(team.getQuotas().getMaxWorkflowStorage());
+    } else {
+      quotas.setMaxWorkflowStorage(maxWorkflowStorage);
+    }
+    if(team.getQuotas().getMaxWorkflowExecutionTime() != null) {
+      quotas.setMaxWorkflowExecutionTime(team.getQuotas().getMaxWorkflowExecutionTime());
+    } else {
+      quotas.setMaxWorkflowExecutionTime(maxWorkflowExecutionTime);
+    }
+    if(team.getQuotas().getMaxConcurrentWorkflows() != null) {
+      quotas.setMaxConcurrentWorkflows(team.getQuotas().getMaxConcurrentWorkflows());
+    } else {
+      quotas.setMaxConcurrentWorkflows(maxConcurrentWorkflows);
+    }
+    return quotas;
+  }
+  
+  @Override
+  public WorkflowQuotas resetTeamQuotas(String teamId) {
+    FlowTeamEntity team = flowTeamService.findById(teamId);
+    List<WorkflowSummary> workflows = workflowService.getWorkflowsForTeam(team.getId());
+    Pageable page = Pageable.unpaged();
+    List<FlowWorkflowActivityEntity> concurrentActivities = getConcurrentWorkflowActivities(teamId);
+    Page<FlowWorkflowActivityEntity> activitiesMonthly = getMonthlyWorkflowActivities(page);
+    
+    Quotas teamQuotas = team.getQuotas();
+    teamQuotas.setMaxWorkflowCount(maxWorkflowCount);
+    teamQuotas.setMaxWorkflowExecutionMonthly(maxWorkflowExecutionMonthly);
+    teamQuotas.setMaxWorkflowStorage(maxWorkflowStorage);
+    teamQuotas.setMaxWorkflowExecutionTime(maxWorkflowExecutionTime);
+    teamQuotas.setMaxConcurrentWorkflows(maxConcurrentWorkflows);
+    FlowTeamEntity updatedTeam = this.flowTeamService.save(team);
+    
+    WorkflowQuotas workflowQuotas = new WorkflowQuotas();
+    workflowQuotas.setMaxWorkflowCount(updatedTeam.getQuotas().getMaxWorkflowCount());
+    workflowQuotas.setMaxWorkflowExecutionMonthly(updatedTeam.getQuotas().getMaxWorkflowExecutionMonthly());
+    workflowQuotas.setMaxWorkflowStorage(updatedTeam.getQuotas().getMaxWorkflowStorage());
+    workflowQuotas.setMaxWorkflowExecutionTime(updatedTeam.getQuotas().getMaxWorkflowExecutionTime());
+    workflowQuotas.setMaxConcurrentWorkflows(updatedTeam.getQuotas().getMaxConcurrentWorkflows());
+    workflowQuotas.setCurrentWorkflowCount(workflows.size());
+    workflowQuotas.setCurrentConcurrentWorkflows(concurrentActivities.size());
+    workflowQuotas.setCurrentWorkflowExecutionMonthly(activitiesMonthly.getContent().size());
+    setWorkflowStorage(workflows, workflowQuotas);
+    setWorkflowResetDate(workflowQuotas);
+    return workflowQuotas;
+  }
+
+  private void setWorkflowResetDate(WorkflowQuotas workflowQuotas) {
+    Calendar nextMonth = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+    nextMonth.add(Calendar.MONTH, 1);
+    nextMonth.set(Calendar.DAY_OF_MONTH, 1);
+    nextMonth.set(Calendar.HOUR_OF_DAY, 0);
+    nextMonth.set(Calendar.MINUTE, 0);
+    nextMonth.set(Calendar.SECOND, 0);
+    nextMonth.set(Calendar.MILLISECOND, 0);
+    workflowQuotas.setMonthlyResetDate(nextMonth.getTime());
+  }
+
+  private void setWorkflowStorage(List<WorkflowSummary> workflows, WorkflowQuotas workflowQuotas) {
+    Integer currentWorkflowsPersistentStorage = 0;
+    for(WorkflowSummary workflow : workflows) {
+      if(workflow.isEnablePersistentStorage()) {
+        currentWorkflowsPersistentStorage += 1;
+      }
+    }
+    workflowQuotas.setCurrentWorkflowsPersistentStorage(currentWorkflowsPersistentStorage);
+  }
+  
+  private Page<FlowWorkflowActivityEntity> getMonthlyWorkflowActivities(Pageable page) {
+    Calendar c = Calendar.getInstance();   
+    c.set(Calendar.DAY_OF_MONTH, 1);
+    return flowWorkflowActivityService.findAllActivities(
+            Optional.of(c.getTime()), Optional.of(new Date()), page);
+  }
+
+  private List<FlowWorkflowActivityEntity> getConcurrentWorkflowActivities(String teamId) {
+    List<FlowWorkflowEntity> teamWorkflows = flowWorkflowService.getWorkflowsForTeams(teamId);
+    List<String> workflowIds = new ArrayList<>();
+    for(FlowWorkflowEntity workflow : teamWorkflows) {
+      workflowIds.add(workflow.getId());
+    }
+    return flowWorkflowActivityService.findbyWorkflowIdsAndStatus(workflowIds, FlowTaskStatus.inProgress);
+  }
+
+  @Override
+  public Quotas updateTeamQuotas(String teamId, Quotas quotas) {
+    FlowTeamEntity team = flowTeamService.findById(teamId);
+    
+    if(team.getQuotas() == null) {
+      team.setQuotas(new Quotas());
+    }
+    if(quotas.getMaxWorkflowCount() != null) {
+      team.getQuotas().setMaxWorkflowCount(quotas.getMaxWorkflowCount());
+    }
+    if(quotas.getMaxConcurrentWorkflows() != null) {
+      team.getQuotas().setMaxConcurrentWorkflows(quotas.getMaxConcurrentWorkflows());
+    }
+    if(quotas.getMaxWorkflowExecutionMonthly() != null) {
+      team.getQuotas().setMaxWorkflowExecutionMonthly(quotas.getMaxWorkflowExecutionMonthly());
+    }
+    if(quotas.getMaxWorkflowExecutionTime() != null) {
+      team.getQuotas().setMaxWorkflowExecutionTime(quotas.getMaxWorkflowExecutionTime());
+    }
+    if(quotas.getMaxWorkflowStorage() != null) {
+      team.getQuotas().setMaxWorkflowStorage(quotas.getMaxWorkflowStorage());
+    }
+    
+    return flowTeamService.save(team).getQuotas();
+  }
+
+  @Override
+  public Quotas updateQuotasForTeam(String teamId, Quotas quotas) {
+    FlowTeamEntity team = flowTeamService.findById(teamId);
+    team.setQuotas(quotas);
+    return flowTeamService.save(team).getQuotas();
+  }
+
+  @Override
+  public Quotas getDefaultQuotas() {
+   Quotas quota = new Quotas();
+   quota.setMaxConcurrentWorkflows(maxConcurrentWorkflows);
+   quota.setMaxWorkflowCount(maxWorkflowCount);
+   quota.setMaxWorkflowExecutionMonthly(maxWorkflowExecutionMonthly);
+   quota.setMaxWorkflowExecutionTime(maxWorkflowExecutionTime);
+   quota.setMaxWorkflowStorage(maxWorkflowStorage);
+   return quota;
+   
   }
 }

@@ -13,6 +13,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.quartz.SchedulerException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -21,6 +22,7 @@ import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import net.boomerangplatform.model.GenerateTokenResponse;
 import net.boomerangplatform.model.WorkflowExport;
+import net.boomerangplatform.model.WorkflowQuotas;
 import net.boomerangplatform.model.WorkflowSummary;
 import net.boomerangplatform.mongo.entity.FlowTaskTemplateEntity;
 import net.boomerangplatform.mongo.entity.FlowWorkflowEntity;
@@ -31,6 +33,7 @@ import net.boomerangplatform.mongo.model.Scheduler;
 import net.boomerangplatform.mongo.model.TaskType;
 import net.boomerangplatform.mongo.model.Triggers;
 import net.boomerangplatform.mongo.model.Webhook;
+import net.boomerangplatform.model.WorkflowQuotas;
 import net.boomerangplatform.mongo.model.WorkflowStatus;
 import net.boomerangplatform.mongo.model.next.DAGTask;
 import net.boomerangplatform.mongo.service.FlowTaskTemplateService;
@@ -52,6 +55,18 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   @Autowired
   private FlowTaskTemplateService templateService;
+  
+  @Autowired
+  private TeamService teamService;
+  
+  @Value("${max.workflow.count}")
+  private Integer maxWorkflowCount;
+  
+  @Value("${max.workflow.execution.monthly}")
+  private Integer maxWorkflowExecutionMonthly;
+  
+  @Value("${max.concurrent.workflows}")
+  private Integer maxConcurrentWorkflows;
 
   private final Logger logger = LogManager.getLogger(getClass());
 
@@ -480,6 +495,18 @@ public class WorkflowServiceImpl implements WorkflowService {
     }
 
     return newProperties;
+  }
+
+  @Override
+  public boolean canExecuteWorkflow(String teamId) {
+    WorkflowQuotas workflowQuotas = teamService.getTeamQuotas(teamId);
+    if(
+        workflowQuotas.getCurrentConcurrentWorkflows() > workflowQuotas.getMaxConcurrentWorkflows() ||
+        workflowQuotas.getCurrentWorkflowExecutionMonthly() > workflowQuotas.getMaxWorkflowExecutionMonthly()) {
+      return false;
+    } else {
+      return true;
+    }
   }
 
 }

@@ -5,8 +5,10 @@ import org.springframework.data.domain.Pageable;
 import net.boomerangplatform.model.FlowTeam;
 import net.boomerangplatform.model.TeamQueryResult;
 import net.boomerangplatform.model.TeamWorkflowSummary;
+import net.boomerangplatform.model.WorkflowQuotas;
 import net.boomerangplatform.mongo.entity.FlowTeamConfiguration;
 import net.boomerangplatform.mongo.entity.FlowUserEntity;
+import net.boomerangplatform.mongo.model.Quotas;
 
 public interface TeamService {
 
@@ -35,4 +37,14 @@ public interface TeamService {
   FlowTeam getTeamById(String teamId);
 
   void updateTeam(String teamId, FlowTeam flow);
+
+  WorkflowQuotas getTeamQuotas(String teamId);
+
+  WorkflowQuotas resetTeamQuotas(String teamId);
+
+  Quotas updateTeamQuotas(String teamId, Quotas quotas);
+
+  Quotas updateQuotasForTeam(String teamId, Quotas quotas);
+
+  Quotas getDefaultQuotas();
 }

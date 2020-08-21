@@ -30,7 +30,7 @@ import net.boomerangplatform.service.crud.WorkflowService;
 import net.boomerangplatform.service.crud.WorkflowVersionService;
 
 @RestController
-@RequestMapping("/flow/workflow")
+@RequestMapping("/workflow/workflow")
 public class WorkflowController {
 
   @Autowired

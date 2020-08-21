@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import net.boomerangplatform.model.FlowExecutionRequest;
 import net.boomerangplatform.model.InsightsSummary;
@@ -23,11 +24,11 @@ public interface FlowActivityService {
 
   ListActivityResponse getAllActivites(Optional<Date> from, Optional<Date> to, Pageable page,
       Optional<List<String>> workflowIds, Optional<List<String>> teamIds,
-      Optional<List<String>> statuses, Optional<List<String>> triggers);
+      Optional<List<String>> statuses, Optional<List<String>> triggers, String property, Direction direction);
 
   ListActivityResponse getAllActivitesForUser(FlowUserEntity user, Optional<Date> from,
-      Optional<Date> to, Pageable page);
-
+      Optional<Date> to, Pageable page, String property, Direction direction);
+  
   List<FlowTaskExecutionEntity> getTaskExecutions(String activityId);
 
   FlowTaskExecutionEntity saveTaskExecution(FlowTaskExecutionEntity task);
@@ -39,4 +40,6 @@ public interface FlowActivityService {
 
   Map<String, Long> getActivitySummary(Pageable pageable, List<String> teamIds,
       List<String> triggers, Long fromDate, Long toDate);
+
+
 }

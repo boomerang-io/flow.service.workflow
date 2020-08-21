@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import net.boomerangplatform.mongo.entity.FlowWorkflowActivityEntity;
+import net.boomerangplatform.mongo.model.FlowTaskStatus;
 
 public interface FlowWorkflowActivityService {
 
@@ -28,5 +29,7 @@ public interface FlowWorkflowActivityService {
   Page<FlowWorkflowActivityEntity> getAllActivites(Optional<Date> from, Optional<Date> to,
       Pageable page, Optional<List<String>> workflowIds, Optional<List<String>> statuses,
       Optional<List<String>> triggers);
+  
+  List<FlowWorkflowActivityEntity> findbyWorkflowIdsAndStatus(List<String> workflowIds, FlowTaskStatus status);
 
 }

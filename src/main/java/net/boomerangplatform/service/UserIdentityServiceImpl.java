@@ -77,9 +77,11 @@ public class UserIdentityServiceImpl implements UserIdentityService {
     } else {
       UserProfile userProfile = coreUserService.getUserProfileById(userId);
       FlowUserEntity flowUser = new FlowUserEntity();
-      BeanUtils.copyProperties(userProfile, flowUser);
-      flowUser.setType(UserType.valueOf(userProfile.getType()));
-      return flowUser;
+      if (userProfile != null) {
+        BeanUtils.copyProperties(userProfile, flowUser);
+        flowUser.setType(UserType.valueOf(userProfile.getType()));
+        return flowUser;
+      }
     }
     return null;
   }
@@ -125,7 +127,7 @@ public class UserIdentityServiceImpl implements UserIdentityService {
     Optional<FlowUserEntity> userOptional = this.flowUserService.getUserById(userId);
     if (userOptional.isPresent()) {
       FlowUserEntity user = userOptional.get();
-      user.setType(updatedFlowUser.getType()); 
+      user.setType(updatedFlowUser.getType());
       this.flowUserService.save(user);
     }
   }

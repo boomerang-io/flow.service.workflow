@@ -23,3 +23,4 @@ blog/bin/
 **/.idea
 **/.gradle
 
+/bin/

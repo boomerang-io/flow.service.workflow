@@ -34,7 +34,7 @@ import net.boomerangplatform.service.UserIdentityService;
 import net.boomerangplatform.service.crud.FlowActivityService;
 
 @RestController
-@RequestMapping("/flow/")
+@RequestMapping("/workflow/")
 public class ActivityController {
 
   @Autowired
@@ -76,7 +76,9 @@ public class ActivityController {
 
       if (order.isPresent()) {
         direction = order.get();
+
       }
+
       pagingSort = Sort.by(new Order(direction, sortByKey));
     }
 
@@ -87,7 +89,7 @@ public class ActivityController {
       return null;
     } else {
       return flowActivityService.getAllActivites(from, to, pageable, workflowIds, teamIds, statuses,
-          triggers);
+          triggers,sort.get(), order.get());
     }
   }
 

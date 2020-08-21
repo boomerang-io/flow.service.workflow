@@ -13,9 +13,12 @@ import org.springframework.web.client.RestTemplate;
 import net.boomerangplatform.model.Task;
 import net.boomerangplatform.model.TaskResponse;
 import net.boomerangplatform.model.TaskResult;
+import net.boomerangplatform.model.controller.TaskConfiguration;
 import net.boomerangplatform.model.controller.TaskCustom;
+import net.boomerangplatform.model.controller.TaskDeletion;
 import net.boomerangplatform.mongo.entity.FlowTaskExecutionEntity;
 import net.boomerangplatform.mongo.model.FlowTaskStatus;
+import net.boomerangplatform.mongo.service.FlowSettingsService;
 import net.boomerangplatform.mongo.service.FlowWorkflowActivityTaskService;
 
 @Service
@@ -30,6 +33,9 @@ public class CustomTaskLifecycleService {
 
   @Value("${controller.createtask.url}")
   public String createURL;
+  
+  @Autowired
+  private FlowSettingsService flowSettinigs;
 
   public TaskResult submitCustomTask(Task task, String activityId, String workflowName) {
 
@@ -69,6 +75,27 @@ public class CustomTaskLifecycleService {
     taskExecution.setStartTime(startDate);
     taskExecution.setFlowTaskStatus(FlowTaskStatus.inProgress);
     taskExecution = taskService.save(taskExecution);
+    
+    /* Population task configuration details. */
+    TaskDeletion taskDeletion = TaskDeletion.Never; 
+    
+    TaskConfiguration taskConfiguration = new TaskConfiguration();
+           
+    String settingsPolicy = this.flowSettinigs.getConfiguration("controller", "job.deletion.policy").getValue();
+    if (settingsPolicy != null) {
+      taskDeletion = TaskDeletion.valueOf(settingsPolicy);
+    }
+    taskConfiguration.setDeletion(taskDeletion);
+    boolean enableDebug = false;
+    
+    String enableDebugFlag = this.flowSettinigs.getConfiguration("controller", "enable.debug").getValue();
+    
+    if (settingsPolicy != null) {
+      enableDebug = Boolean.valueOf(enableDebugFlag).booleanValue();
+    }
+    taskConfiguration.setDebug(Boolean.valueOf(enableDebug));
+        
+    request.setConfiguration(taskConfiguration);
 
     try {
 
