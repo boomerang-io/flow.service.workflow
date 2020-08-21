@@ -11,6 +11,6 @@
       "maxWorkflowExecutionMonthly":150,
       "maxWorkflowStorage":10,
       "maxWorkflowExecutionTime":60,
-      "maxConcurrentWorkflows":10
+      "maxConcurrentWorkflows":2
 	}
 }
