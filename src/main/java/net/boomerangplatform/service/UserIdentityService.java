@@ -9,6 +9,7 @@ import net.boomerangplatform.mongo.entity.FlowUserEntity;
 
 public interface UserIdentityService {
 
+  public FlowUserEntity getOrRegisterCurrentUser();
 
   public FlowUserEntity getCurrentUser();
 

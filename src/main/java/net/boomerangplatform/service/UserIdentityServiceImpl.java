@@ -43,12 +43,10 @@ public class UserIdentityServiceImpl implements UserIdentityService {
   @Override
   public FlowUserEntity getCurrentUser() {
     if (standAloneMode) {
+      UserDetails user = usertDetailsService.getUserDetails();
+      String email = user.getEmail();
+      return flowUserService.getUserWithEmail(email);
       
-      if (flowUserService.getUserCount() == 0) {
-        throw new HttpClientErrorException(HttpStatus.LOCKED);
-      }
-      
-      return getOrRegisterUser();
     } else {
       UserProfile userProfile = coreUserService.getInternalUserProfile();
       FlowUserEntity flowUser = new FlowUserEntity();
@@ -141,4 +139,24 @@ public class UserIdentityServiceImpl implements UserIdentityService {
     }
     return false;
   }
+
+  @Override
+  public FlowUserEntity getOrRegisterCurrentUser() {
+    
+    if (standAloneMode) {
+      
+      if (flowUserService.getUserCount() == 0) {
+        throw new HttpClientErrorException(HttpStatus.LOCKED);
+      }
+      
+      return getOrRegisterUser();
+    } else {
+      UserProfile userProfile = coreUserService.getInternalUserProfile();
+      FlowUserEntity flowUser = new FlowUserEntity();
+      BeanUtils.copyProperties(userProfile, flowUser);
+      flowUser.setType(UserType.valueOf(userProfile.getType()));
+      return flowUser;
+    }
+  }
+
 }
