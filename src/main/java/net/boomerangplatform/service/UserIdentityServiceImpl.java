@@ -38,7 +38,7 @@ public class UserIdentityServiceImpl implements UserIdentityService {
   @Autowired
   private FlowUserService flowUserService;
   
-  @Value("${core.platform.otc}")
+  @Value("${boomerang.otc}")
   private String corePlatformOTC;
 
   @Override
