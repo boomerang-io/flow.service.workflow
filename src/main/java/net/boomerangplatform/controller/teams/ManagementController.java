@@ -130,12 +130,4 @@ public class ManagementController {
     teamService.updateTeam(teamId, flow);
   }
   
-  @PostMapping(value = "/activate")
-  public ResponseEntity<Boolean> validateSetup(@RequestBody OneTimeCode otc) {
-    if (userIdentityService.activateSetup(otc)) {
-      return new ResponseEntity<>(true, HttpStatus.OK);
-    } else {
-      return new ResponseEntity<>(false, HttpStatus.FORBIDDEN);
-    }
-  }
 }
