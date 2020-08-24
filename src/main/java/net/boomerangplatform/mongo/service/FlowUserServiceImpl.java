@@ -64,6 +64,11 @@ public class FlowUserServiceImpl implements FlowUserService {
   public FlowUserEntity save(FlowUserEntity user) {
     return flowUserRepository.save(user);
   }
+
+  @Override
+  public Long getUserCount() {
+    return flowUserRepository.count();
+}
   
   @Override
   @NoLogging
@@ -73,5 +78,6 @@ public class FlowUserServiceImpl implements FlowUserService {
     return flowUserRepository.findByEmailIgnoreCase(userEmail);
     }
     return null;
+
   }
 }

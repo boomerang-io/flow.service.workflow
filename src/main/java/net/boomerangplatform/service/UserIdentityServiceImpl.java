@@ -8,10 +8,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import net.boomerangplatform.client.BoomerangUserService;
 import net.boomerangplatform.client.model.UserProfile;
 import net.boomerangplatform.model.FlowUser;
+import net.boomerangplatform.model.OneTimeCode;
 import net.boomerangplatform.model.UserQueryResult;
 import net.boomerangplatform.mongo.entity.FlowUserEntity;
 import net.boomerangplatform.mongo.model.UserType;
@@ -33,16 +36,19 @@ public class UserIdentityServiceImpl implements UserIdentityService {
 
   @Autowired
   private FlowUserService flowUserService;
+  
+  @Value("${core.platform.otc}")
+  private String corePlatformOTC;
 
   @Override
   public FlowUserEntity getCurrentUser() {
     if (standAloneMode) {
-      UserDetails userDetails = usertDetailsService.getUserDetails();
-      String email = userDetails.getEmail();
-
-      String firstName = userDetails.getFirstName();
-      String lastName = userDetails.getLastName();
-      return flowUserService.getOrRegisterUser(email, firstName, lastName);
+      
+      if (flowUserService.getUserCount() == 0) {
+        throw new HttpClientErrorException(HttpStatus.LOCKED);
+      }
+      
+      return getOrRegisterUser();
     } else {
       UserProfile userProfile = coreUserService.getInternalUserProfile();
       FlowUserEntity flowUser = new FlowUserEntity();
@@ -50,6 +56,15 @@ public class UserIdentityServiceImpl implements UserIdentityService {
       flowUser.setType(UserType.valueOf(userProfile.getType()));
       return flowUser;
     }
+  }
+
+  private FlowUserEntity getOrRegisterUser() {
+    UserDetails userDetails = usertDetailsService.getUserDetails();
+    String email = userDetails.getEmail();
+
+    String firstName = userDetails.getFirstName();
+    String lastName = userDetails.getLastName();
+    return flowUserService.getOrRegisterUser(email, firstName, lastName);
   }
 
   @Override
@@ -115,5 +130,15 @@ public class UserIdentityServiceImpl implements UserIdentityService {
       user.setType(updatedFlowUser.getType());
       this.flowUserService.save(user);
     }
+  }
+
+  @Override
+  public boolean activateSetup(OneTimeCode otc) {
+    
+    if (corePlatformOTC.equals(otc.getOtc())) {
+      getOrRegisterUser();
+      return true;
+    }
+    return false;
   }
 }
