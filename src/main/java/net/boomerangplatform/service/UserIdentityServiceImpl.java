@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import net.boomerangplatform.client.BoomerangUserService;
@@ -131,13 +132,13 @@ public class UserIdentityServiceImpl implements UserIdentityService {
   }
 
   @Override
-  public boolean activateSetup(OneTimeCode otc) {
+  public ResponseEntity<Boolean> activateSetup(OneTimeCode otc) {
     
     if (corePlatformOTC.equals(otc.getOtc())) {
       getOrRegisterUser();
-      return true;
+      return new ResponseEntity<>(HttpStatus.OK);
     }
-    return false;
+    return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
   }
 
   @Override

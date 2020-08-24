@@ -48,7 +48,7 @@ public class UsersController {
   }
   
   @PutMapping(value = "/register")
-  public void register(@RequestBody(required = false) OneTimeCode otc) {
-    userIdentiyService.activateSetup(otc);
+  public ResponseEntity<Boolean> register(@RequestBody(required = false) OneTimeCode otc) {
+    return userIdentiyService.activateSetup(otc);
   }
 }
