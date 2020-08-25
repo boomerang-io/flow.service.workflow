@@ -78,46 +78,14 @@ public class ManagementController {
       return result;
     }
   }
-
-  @GetMapping(value = "/teams")
-  public TeamQueryResult getTeams(@RequestParam(required = false) String query,
-      @RequestParam(defaultValue = "ASC") Direction order,
-      @RequestParam(required = false) String sort, @RequestParam(defaultValue = "0") int page,
-      @RequestParam(defaultValue = "100") int size) {
-
-    SortSummary sortSummary = new SortSummary();
-    sortSummary.setProperty("name");
-    sortSummary.setDirection(Direction.ASC.toString());
-
-    Sort pagingSort = Sort.by(Direction.ASC, "name");
-
-    if (StringUtils.isNotBlank(sort)) {
-      Direction direction = order == null ? Direction.ASC : order;
-      sortSummary.setDirection(direction.toString());
-      sortSummary.setProperty(sort);
-
-      pagingSort = Sort.by(direction, sort);
-    }
-
-    final Pageable pageable = PageRequest.of(page, size, pagingSort);
-
-    TeamQueryResult response = teamService.getAllAdminTeams(pageable);
-    response.setupSortSummary(sortSummary);
-    return response;
-  }
-  
-  
-
+    
   @PostMapping(value = "/teams")
   public FlowTeam addTeam(FlowTeam flowTeam) {
     String teamName = flowTeam.getName();
     return teamService.createStandaloneTeam(teamName);
   }
 
-  @GetMapping(value = "/teams/{teamId}")
-  public FlowTeam getTeam(@PathVariable String teamId) {
-    return teamService.getTeamById(teamId);
-  }
+
 
   @PatchMapping(value = "/teams/{teamId}/members")
   public void updateTeamMembers(@PathVariable String teamId,

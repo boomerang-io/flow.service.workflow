@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import net.boomerangplatform.model.CreateFlowTeam;
+import net.boomerangplatform.model.FlowTeam;
 import net.boomerangplatform.model.TeamQueryResult;
 import net.boomerangplatform.model.TeamWorkflowSummary;
 import net.boomerangplatform.model.WorkflowQuotas;
@@ -105,6 +106,11 @@ public class TeamController {
   @GetMapping(value = "/quotas/default")
   public Quotas getDefaultQuotas() {
     return flowTeamService.getDefaultQuotas();
+  }
+  
+  @GetMapping(value = "/manage/teams/{teamId}")
+  public FlowTeam getTeam(@PathVariable String teamId) {
+    return flowTeamService.getTeamById(teamId);
   }
   
   @GetMapping(value = "/manage/teams")
