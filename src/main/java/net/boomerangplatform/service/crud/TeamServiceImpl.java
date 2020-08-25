@@ -392,7 +392,7 @@ public class TeamServiceImpl implements TeamService {
 
     FlowTeam flowTeam = new FlowTeam();
     BeanUtils.copyProperties(team, flowTeam);
-    return flow;
+    return flowTeam;
   }
 
   @Override
