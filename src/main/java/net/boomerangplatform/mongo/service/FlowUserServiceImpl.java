@@ -19,7 +19,7 @@ public class FlowUserServiceImpl implements FlowUserService {
   private FlowUserRepository flowUserRepository;
 
   @Override
-  public FlowUserEntity getOrRegisterUser(String userNane, String firstName, String lastName) {
+  public FlowUserEntity getOrRegisterUser(String userNane, String firstName, String lastName, UserType usertype) {
 
     Long count = this.flowUserRepository.countByEmailIgnoreCase(userNane);
     if (count == 1) {
@@ -35,7 +35,7 @@ public class FlowUserServiceImpl implements FlowUserService {
     userEntity.setIsFirstVisit(true);
     userEntity.setLastLoginDate(new Date());
     userEntity.setStatus(UserStatus.active);
-    userEntity.setType(UserType.admin);
+    userEntity.setType(usertype);
 
     return flowUserRepository.save(userEntity);
   }

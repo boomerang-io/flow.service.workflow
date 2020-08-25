@@ -52,18 +52,20 @@ public class UserIdentityServiceImpl implements UserIdentityService {
       UserProfile userProfile = coreUserService.getInternalUserProfile();
       FlowUserEntity flowUser = new FlowUserEntity();
       BeanUtils.copyProperties(userProfile, flowUser);
-      flowUser.setType(UserType.valueOf(userProfile.getType()));
+
       return flowUser;
     }
   }
 
-  private FlowUserEntity getOrRegisterUser() {
+  
+  private FlowUserEntity getOrRegisterUser(UserType userType) {
     UserDetails userDetails = usertDetailsService.getUserDetails();
     String email = userDetails.getEmail();
 
     String firstName = userDetails.getFirstName();
     String lastName = userDetails.getLastName();
-    return flowUserService.getOrRegisterUser(email, firstName, lastName);
+
+    return flowUserService.getOrRegisterUser(email, firstName, lastName, userType);
   }
 
   @Override
@@ -78,7 +80,7 @@ public class UserIdentityServiceImpl implements UserIdentityService {
       FlowUserEntity flowUser = new FlowUserEntity();
       if (userProfile != null) {
         BeanUtils.copyProperties(userProfile, flowUser);
-        flowUser.setType(UserType.valueOf(userProfile.getType()));
+        flowUser.setType(userProfile.getType());
         return flowUser;
       }
     }
@@ -135,7 +137,7 @@ public class UserIdentityServiceImpl implements UserIdentityService {
   public ResponseEntity<Boolean> activateSetup(OneTimeCode otc) {
     
     if (corePlatformOTC.equals(otc.getOtc())) {
-      getOrRegisterUser();
+      getOrRegisterUser(UserType.admin);
       return new ResponseEntity<>(HttpStatus.OK);
     }
     return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
@@ -150,12 +152,11 @@ public class UserIdentityServiceImpl implements UserIdentityService {
         throw new HttpClientErrorException(HttpStatus.LOCKED);
       }
       
-      return getOrRegisterUser();
+      return getOrRegisterUser(UserType.user);
     } else {
       UserProfile userProfile = coreUserService.getInternalUserProfile();
       FlowUserEntity flowUser = new FlowUserEntity();
       BeanUtils.copyProperties(userProfile, flowUser);
-      flowUser.setType(UserType.valueOf(userProfile.getType()));
       return flowUser;
     }
   }

@@ -5,6 +5,7 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import net.boomerangplatform.mongo.model.UserType;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({"id", "email", "name", "isFirstVisit", "type", "isShowHelp", "firstLoginDate",
@@ -21,7 +22,7 @@ public class UserProfile {
   @JsonProperty("isFirstVisit")
   private Boolean isFirstVisit;
   @JsonProperty("type")
-  private String type;
+  private UserType type;
   @JsonProperty("isShowHelp")
   private Boolean isShowHelp;
   @JsonProperty("firstLoginDate")
@@ -83,12 +84,12 @@ public class UserProfile {
   }
 
   @JsonProperty("type")
-  public String getType() {
+  public UserType getType() {
     return type;
   }
 
   @JsonProperty("type")
-  public void setType(String type) {
+  public void setType(UserType type) {
     this.type = type;
   }
 

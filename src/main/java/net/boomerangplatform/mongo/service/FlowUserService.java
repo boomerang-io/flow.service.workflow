@@ -5,6 +5,7 @@ import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import net.boomerangplatform.mongo.entity.FlowUserEntity;
+import net.boomerangplatform.mongo.model.UserType;
 
 public interface FlowUserService {
 
@@ -14,7 +15,7 @@ public interface FlowUserService {
 
   public Optional<FlowUserEntity> getUserById(String id);
 
-  public FlowUserEntity getOrRegisterUser(String userNane, String firstName, String lastName);
+  public FlowUserEntity getOrRegisterUser(String userNane, String firstName, String lastName, UserType userType);
 
   Page<FlowUserEntity> findBySearchTerm(String term, Pageable pageable);
 
