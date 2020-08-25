@@ -36,7 +36,7 @@ public interface TeamService {
 
   FlowTeam getTeamById(String teamId);
 
-  void updateTeam(String teamId, FlowTeam flow);
+  FlowTeam updateTeam(String teamId, FlowTeam flow);
 
   WorkflowQuotas getTeamQuotas(String teamId);
 
