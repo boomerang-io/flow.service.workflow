@@ -31,7 +31,7 @@ import net.boomerangplatform.service.crud.TeamService;
 
 @RestController
 @ConditionalOnProperty(value = "boomerang.standalone", havingValue = "true", matchIfMissing = false)
-@RequestMapping("/flow/manage")
+@RequestMapping("/workflow/manage")
 public class ManagementController {
 
   @Autowired
