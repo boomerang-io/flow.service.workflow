@@ -27,13 +27,10 @@ public class LaunchpadNavigationServiceImpl implements LaunchpadNavigationServic
   @Value("${core.platform.version}")
   private String platformVersion;
 
-  @Value("${core.platform.signOutUrl}")
+  @Value("${boomerang.signOutUrl}")
   private String platformSignOutUrl;
 
-  @Value("${core.platform.baseEnvUrl}")
-  private String platformBaseEnvUrl;
-
-  @Value("${core.platform.baseUrl}")
+  @Value("${boomerang.baseUrl}")
   private String platformBaseUrl;
 
   @Override
