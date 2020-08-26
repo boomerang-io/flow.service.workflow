@@ -53,22 +53,22 @@ public class ExecutionController {
       @RequestBody Optional<FlowExecutionRequest> executionRequest) {
 
     final FlowWorkflowEntity newEntity = workflowService.getWorkflow(workflowId);
-    
-    if(!workflowService.canExecuteWorkflow(newEntity.getFlowTeamId())) {
+
+    if (!workflowService.canExecuteWorkflow(newEntity.getFlowTeamId())) {
       throw new BoomerangException(BoomerangError.TOO_MANY_REQUESTS);
     } else {
-      
+
       if (newEntity != null && newEntity.getStatus() == WorkflowStatus.active) {
-        
+
         FlowExecutionRequest request = null;
-  
+
         if (executionRequest.isPresent()) {
           request = executionRequest.get();
           logPayload(request);
         } else {
           request = new FlowExecutionRequest();
         }
-  
+
         final FlowWorkflowRevisionEntity entity =
             this.flowRevisionService.getLatestWorkflowVersion(workflowId);
         if (entity != null) {
@@ -77,17 +77,17 @@ public class ExecutionController {
           flowExecutionService.executeWorkflowVersion(entity.getId(), activity.getId());
           final List<FlowTaskExecutionEntity> steps =
               activityService.getTaskExecutions(activity.getId());
-  
+
           final FlowActivity response = new FlowActivity(activity);
           response.setSteps(steps);
-  
+
           return response;
         } else {
           LOGGER.error("No revision to execute");
         }
-  
+
         return null;
-  
+
       } else {
         LOGGER.error("The workflow status is not active");
         return null;

@@ -37,7 +37,7 @@ public class UserIdentityServiceImpl implements UserIdentityService {
 
   @Autowired
   private FlowUserService flowUserService;
-  
+
   @Value("${boomerang.otc}")
   private String corePlatformOTC;
 
@@ -47,7 +47,7 @@ public class UserIdentityServiceImpl implements UserIdentityService {
       UserDetails user = usertDetailsService.getUserDetails();
       String email = user.getEmail();
       return flowUserService.getUserWithEmail(email);
-      
+
     } else {
       UserProfile userProfile = coreUserService.getInternalUserProfile();
       FlowUserEntity flowUser = new FlowUserEntity();
@@ -57,7 +57,7 @@ public class UserIdentityServiceImpl implements UserIdentityService {
     }
   }
 
-  
+
   private FlowUserEntity getOrRegisterUser(UserType userType) {
     UserDetails userDetails = usertDetailsService.getUserDetails();
     String email = userDetails.getEmail();
@@ -135,7 +135,7 @@ public class UserIdentityServiceImpl implements UserIdentityService {
 
   @Override
   public ResponseEntity<Boolean> activateSetup(OneTimeCode otc) {
-    
+
     if (corePlatformOTC.equals(otc.getOtc())) {
       getOrRegisterUser(UserType.admin);
       return new ResponseEntity<>(HttpStatus.OK);
@@ -145,13 +145,13 @@ public class UserIdentityServiceImpl implements UserIdentityService {
 
   @Override
   public FlowUserEntity getOrRegisterCurrentUser() {
-    
+
     if (standAloneMode) {
-      
+
       if (flowUserService.getUserCount() == 0) {
         throw new HttpClientErrorException(HttpStatus.LOCKED);
       }
-      
+
       return getOrRegisterUser(UserType.user);
     } else {
       UserProfile userProfile = coreUserService.getInternalUserProfile();

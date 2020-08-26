@@ -22,7 +22,7 @@ public class FlowTeamEntity {
   private String name;
 
   private Settings settings;
-  
+
   private Quotas quotas;
 
   public String getHigherLevelGroupId() {

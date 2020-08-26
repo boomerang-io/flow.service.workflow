@@ -26,7 +26,7 @@ public class ListActivityResponse {
   public void setPageable(Pageable pageable) {
     this.pageable = pageable;
   }
-  
-  
+
+
 
 }

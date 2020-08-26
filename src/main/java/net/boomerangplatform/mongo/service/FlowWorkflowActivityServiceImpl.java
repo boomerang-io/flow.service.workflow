@@ -277,8 +277,9 @@ public class FlowWorkflowActivityServiceImpl implements FlowWorkflowActivityServ
       String value) {
     return repository.findByWorkflowAndProperty(workflowId, key, value);
   }
-  
-  public List<FlowWorkflowActivityEntity> findbyWorkflowIdsAndStatus(List<String> workflowIds, FlowTaskStatus status){
+
+  public List<FlowWorkflowActivityEntity> findbyWorkflowIdsAndStatus(List<String> workflowIds,
+      FlowTaskStatus status) {
     return repository.findByWorkflowIdInAndStatus(workflowIds, status);
   }
 }

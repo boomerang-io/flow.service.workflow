@@ -372,14 +372,12 @@ public class TeamServiceImpl implements TeamService {
   @Override
   public FlowTeam getTeamById(String teamId) {
     FlowTeamEntity flowEntity = flowTeamService.findById(teamId);
-    FlowTeam flowTeam = new FlowTeam();
-    BeanUtils.copyProperties(flowEntity, flowTeam);
-
+    FlowTeam flowTeam = createFlowTeam(flowEntity);
     return flowTeam;
   }
 
   @Override
-  public FlowTeam updateTeam(String teamId, FlowTeam flow) {
+  public void updateTeam(String teamId, FlowTeam flow) {
     FlowTeamEntity team = flowTeamService.findById(teamId);
     if (flow.getName() != null) {
       team.setName(flow.getName());
@@ -388,11 +386,7 @@ public class TeamServiceImpl implements TeamService {
       team.setIsActive(flow.getIsActive());
     }
 
-    team = flowTeamService.save(team);
-
-    FlowTeam flowTeam = new FlowTeam();
-    BeanUtils.copyProperties(team, flowTeam);
-    return flowTeam;
+    flowTeamService.save(team);
   }
 
   @Override

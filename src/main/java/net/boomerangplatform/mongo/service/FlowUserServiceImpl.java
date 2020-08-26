@@ -19,7 +19,8 @@ public class FlowUserServiceImpl implements FlowUserService {
   private FlowUserRepository flowUserRepository;
 
   @Override
-  public FlowUserEntity getOrRegisterUser(String userNane, String firstName, String lastName, UserType usertype) {
+  public FlowUserEntity getOrRegisterUser(String userNane, String firstName, String lastName,
+      UserType usertype) {
 
     Long count = this.flowUserRepository.countByEmailIgnoreCase(userNane);
     if (count == 1) {
@@ -68,14 +69,14 @@ public class FlowUserServiceImpl implements FlowUserService {
   @Override
   public Long getUserCount() {
     return flowUserRepository.count();
-}
-  
+  }
+
   @Override
   @NoLogging
   public FlowUserEntity getUserWithEmail(String userEmail) {
 
     if (userEmail != null) {
-    return flowUserRepository.findByEmailIgnoreCase(userEmail);
+      return flowUserRepository.findByEmailIgnoreCase(userEmail);
     }
     return null;
 

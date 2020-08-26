@@ -4,7 +4,7 @@ import org.springframework.beans.BeanUtils;
 import net.boomerangplatform.mongo.entity.FlowSettingsEntity;
 
 
-public class FlowSettings extends FlowSettingsEntity{
+public class FlowSettings extends FlowSettingsEntity {
 
   public FlowSettings() {
     super();

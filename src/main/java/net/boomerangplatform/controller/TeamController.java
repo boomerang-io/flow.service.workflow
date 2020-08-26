@@ -40,7 +40,7 @@ public class TeamController {
 
   @Autowired
   private UserIdentityService userIdentityService;
-  
+
   @PostMapping(value = "/teams")
   public void createCiTeam(@RequestBody CreateFlowTeam createCiTeamRequest) {
     flowTeamService.createFlowTeam(createCiTeamRequest.getCreatedGroupId());
@@ -85,34 +85,32 @@ public class TeamController {
   public WorkflowQuotas getTeamQuotas(@PathVariable String teamId) {
     return flowTeamService.getTeamQuotas(teamId);
   }
-  
+
   @PutMapping(value = "/teams/{teamId}/quotas/default")
   public WorkflowQuotas resetTeamQuotas(@PathVariable String teamId) {
     return flowTeamService.resetTeamQuotas(teamId);
   }
-  
+
   @PatchMapping(value = "/teams/{teamId}/quotas")
-  public Quotas updateTeamQuotas(@PathVariable String teamId,
-      @RequestBody Quotas quotas) {
+  public Quotas updateTeamQuotas(@PathVariable String teamId, @RequestBody Quotas quotas) {
     return flowTeamService.updateTeamQuotas(teamId, quotas);
   }
-  
+
   @PutMapping(value = "/teams/{teamId}/quotas")
-  public Quotas updateQuotasForTeam(@PathVariable String teamId,
-      @RequestBody Quotas quotas) {
+  public Quotas updateQuotasForTeam(@PathVariable String teamId, @RequestBody Quotas quotas) {
     return flowTeamService.updateQuotasForTeam(teamId, quotas);
   }
-  
+
   @GetMapping(value = "/quotas/default")
   public Quotas getDefaultQuotas() {
     return flowTeamService.getDefaultQuotas();
   }
-  
+
   @GetMapping(value = "/manage/teams/{teamId}")
   public FlowTeam getTeam(@PathVariable String teamId) {
     return flowTeamService.getTeamById(teamId);
   }
-  
+
   @GetMapping(value = "/manage/teams")
   public TeamQueryResult getTeams(@RequestParam(required = false) String query,
       @RequestParam(defaultValue = "ASC") Direction order,
@@ -139,5 +137,5 @@ public class TeamController {
     response.setupSortSummary(sortSummary);
     return response;
   }
-  
+
 }

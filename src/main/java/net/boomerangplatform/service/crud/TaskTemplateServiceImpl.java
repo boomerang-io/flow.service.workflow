@@ -80,7 +80,8 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
     updateChangeLog(flowTaskTemplateEntity);
 
     flowTaskTemplateEntity.setLastModified(new Date());
-    flowTaskTemplateEntity.setVerified(flowTaskTemplateService.getTaskTemplateWithId(flowTaskTemplateEntity.getId()).isVerified());
+    flowTaskTemplateEntity.setVerified(
+        flowTaskTemplateService.getTaskTemplateWithId(flowTaskTemplateEntity.getId()).isVerified());
     return new FlowTaskTemplate(flowTaskTemplateService.updateTaskTemplate(flowTaskTemplateEntity));
   }
 

@@ -29,7 +29,7 @@ public class UsersController {
 
   @Autowired
   private UserIdentityService userIdentiyService;
-  
+
 
   @GetMapping(value = "/profile")
   public ResponseEntity<UserProfile> getUserWithEmail() {
@@ -46,7 +46,7 @@ public class UsersController {
       return new ResponseEntity<>(e.getStatusCode());
     }
   }
-  
+
   @PutMapping(value = "/register")
   public ResponseEntity<Boolean> register(@RequestBody(required = false) OneTimeCode otc) {
     return userIdentiyService.activateSetup(otc);

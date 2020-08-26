@@ -5,11 +5,11 @@ import org.springframework.http.HttpStatus;
 public class BoomerangException extends RuntimeException {
 
   private static final long serialVersionUID = 1L;
-  
+
   private final int code;
   private final String description;
   private final HttpStatus httpStatus;
-  
+
   public BoomerangException(int code, String description, HttpStatus httpStatus) {
     super();
     this.code = code;
@@ -23,7 +23,7 @@ public class BoomerangException extends RuntimeException {
     this.description = error.getDescription();
     this.httpStatus = error.getHttpStatus();
   }
-  
+
   public int getCode() {
     return code;
   }

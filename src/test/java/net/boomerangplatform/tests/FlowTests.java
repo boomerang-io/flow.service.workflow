@@ -45,7 +45,8 @@ public class FlowTests extends AbstractFlowTests {
 
     data.put("core_groups_higher_level",
         Arrays.asList("db/core_groups_higher_level/highlevelgroup.json",
-            "db/core_groups_higher_level/highlevelgroup2.json", "db/core_groups_higher_level/highlevelgroup3.json"));
+            "db/core_groups_higher_level/highlevelgroup2.json",
+            "db/core_groups_higher_level/highlevelgroup3.json"));
     data.put("core_groups_lower_level",
         Arrays.asList("db/core_groups_lower_level/lowerlevelgroup.json"));
 
@@ -68,7 +69,7 @@ public class FlowTests extends AbstractFlowTests {
         "db/flow_teams/team3.json"));
 
     data.put("flow_settings", Arrays.asList("db/flow_settings/setting1.json"));
-    
+
     data.put("flow_workflows",
         Arrays.asList("db/flow_workflows/workflow1.json", "db/flow_workflows/workflow2.json",
             "db/flow_workflows/workflow3.json", "db/flow_workflows/workflow4.json",

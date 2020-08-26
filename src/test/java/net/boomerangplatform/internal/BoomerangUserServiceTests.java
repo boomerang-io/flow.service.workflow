@@ -40,7 +40,7 @@ public class BoomerangUserServiceTests extends FlowTests {
   @Test
   public void testGetUserProfile() {
     UserProfile userProfile = userService.getInternalUserProfile();
-    assertEquals( "mdroy@us.ibm.com", userProfile.getEmail());
+    assertEquals("mdroy@us.ibm.com", userProfile.getEmail());
   }
 
   @Override

@@ -29,7 +29,8 @@ public interface FlowWorkflowActivityService {
   Page<FlowWorkflowActivityEntity> getAllActivites(Optional<Date> from, Optional<Date> to,
       Pageable page, Optional<List<String>> workflowIds, Optional<List<String>> statuses,
       Optional<List<String>> triggers);
-  
-  List<FlowWorkflowActivityEntity> findbyWorkflowIdsAndStatus(List<String> workflowIds, FlowTaskStatus status);
+
+  List<FlowWorkflowActivityEntity> findbyWorkflowIdsAndStatus(List<String> workflowIds,
+      FlowTaskStatus status);
 
 }

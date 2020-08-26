@@ -33,7 +33,7 @@ public class CustomTaskLifecycleService {
 
   @Value("${controller.createtask.url}")
   public String createURL;
-  
+
   @Autowired
   private FlowSettingsService flowSettinigs;
 
@@ -75,26 +75,28 @@ public class CustomTaskLifecycleService {
     taskExecution.setStartTime(startDate);
     taskExecution.setFlowTaskStatus(FlowTaskStatus.inProgress);
     taskExecution = taskService.save(taskExecution);
-    
+
     /* Population task configuration details. */
-    TaskDeletion taskDeletion = TaskDeletion.Never; 
-    
+    TaskDeletion taskDeletion = TaskDeletion.Never;
+
     TaskConfiguration taskConfiguration = new TaskConfiguration();
-           
-    String settingsPolicy = this.flowSettinigs.getConfiguration("controller", "job.deletion.policy").getValue();
+
+    String settingsPolicy =
+        this.flowSettinigs.getConfiguration("controller", "job.deletion.policy").getValue();
     if (settingsPolicy != null) {
       taskDeletion = TaskDeletion.valueOf(settingsPolicy);
     }
     taskConfiguration.setDeletion(taskDeletion);
     boolean enableDebug = false;
-    
-    String enableDebugFlag = this.flowSettinigs.getConfiguration("controller", "enable.debug").getValue();
-    
+
+    String enableDebugFlag =
+        this.flowSettinigs.getConfiguration("controller", "enable.debug").getValue();
+
     if (settingsPolicy != null) {
       enableDebug = Boolean.valueOf(enableDebugFlag).booleanValue();
     }
     taskConfiguration.setDebug(Boolean.valueOf(enableDebug));
-        
+
     request.setConfiguration(taskConfiguration);
 
     try {

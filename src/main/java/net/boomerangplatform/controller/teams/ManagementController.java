@@ -36,14 +36,13 @@ public class ManagementController {
   @Autowired
   private UserIdentityService userIdentityService;
 
-  
+
   @PatchMapping(value = "/users/{userId}")
-  public void updateFlowUser(@PathVariable String userId,
-      @RequestBody FlowUser flowUser) {
+  public void updateFlowUser(@PathVariable String userId, @RequestBody FlowUser flowUser) {
     userIdentityService.updateFlowUser(userId, flowUser);
   }
-  
-  
+
+
   @GetMapping(value = "/users")
   public UserQueryResult getUsers(@RequestParam(required = false) String query,
       @RequestParam(defaultValue = "ASC") Direction order,
@@ -74,11 +73,11 @@ public class ManagementController {
       return result;
     }
   }
-    
+
   @PostMapping(value = "/teams")
   public FlowTeam addTeam(@RequestBody FlowTeam flowTeam) {
     String teamName = flowTeam.getName();
-    
+
     System.out.println("Team name: " + teamName);
     return teamService.createStandaloneTeam(teamName);
   }
@@ -90,10 +89,10 @@ public class ManagementController {
       @RequestBody List<String> teamMembers) {
     teamService.updateTeamMembers(teamId, teamMembers);
   }
-  
+
   @PutMapping(value = "/teams/{teamId}")
-  public FlowTeam updateTeamMembers(@PathVariable String teamId, @RequestBody FlowTeam flow) {
-    return teamService.updateTeam(teamId, flow);
+  public void updateTeamMembers(@PathVariable String teamId, @RequestBody FlowTeam flow) {
+    teamService.updateTeam(teamId, flow);
   }
-  
+
 }

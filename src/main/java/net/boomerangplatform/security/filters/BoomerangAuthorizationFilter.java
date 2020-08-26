@@ -36,9 +36,9 @@ public class BoomerangAuthorizationFilter extends BasicAuthenticationFilter {
 
   @Value("${core.authorization.basic.password:}")
   private String basicPassword;
-  
+
   private static final String WEBHEADER = "X-WEBAUTH-EMAIL";
-  
+
 
   public BoomerangAuthorizationFilter(ApiTokenService tokenService,
       AuthenticationManager authManager, String jwtSecret, boolean checkJwt, String basicPassword) {

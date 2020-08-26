@@ -21,24 +21,23 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
   @Autowired
   private MessageSource messageSource;
 
-  @ExceptionHandler({ BoomerangException.class })
-  public ResponseEntity<Object> handleBoomerangException(
-      BoomerangException ex, WebRequest request) {
-    
+  @ExceptionHandler({BoomerangException.class})
+  public ResponseEntity<Object> handleBoomerangException(BoomerangException ex,
+      WebRequest request) {
+
     BoomerangError error = new BoomerangError();
     ErrorDetail errorDetail = new ErrorDetail();
     errorDetail.setCode(ex.getCode());
     errorDetail.setDescription(ex.getDescription());
-    
+
 
     String message = messageSource.getMessage(errorDetail.getDescription(), null, Locale.ENGLISH);
     errorDetail.setMessage(message);
-    
+
     error.setError(errorDetail);
-  
-    
-    return new ResponseEntity<Object>(
-        error, new HttpHeaders(), ex.getHttpStatus()); 
+
+
+    return new ResponseEntity<Object>(error, new HttpHeaders(), ex.getHttpStatus());
   }
 
 

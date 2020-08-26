@@ -42,7 +42,7 @@ public class ExecutionControllerTests extends FlowTests {
 
     assertNull(activity);
   }
-  
+
   @Test
   public void testExecuteWorkflowExceedQuotaMax() {
     try {

@@ -33,7 +33,7 @@ public final class AESAlgorithm {
       SecretKeySpec secretKey = getSecretKeySpec(secret, salt.getBytes(StandardCharsets.UTF_8));
 
       // AES initialization
-      Cipher cipher = Cipher.getInstance(ENCRYPT_ALGORITHM); //NOSONAR
+      Cipher cipher = Cipher.getInstance(ENCRYPT_ALGORITHM); // NOSONAR
       IvParameterSpec ivSpec = new IvParameterSpec(IV);
       cipher.init(Cipher.ENCRYPT_MODE, secretKey, ivSpec);
 
@@ -50,7 +50,7 @@ public final class AESAlgorithm {
     try {
       SecretKeySpec secretKey = getSecretKeySpec(secret, salt.getBytes(StandardCharsets.UTF_8));
 
-      Cipher cipher = Cipher.getInstance(ENCRYPT_ALGORITHM);  //NOSONAR
+      Cipher cipher = Cipher.getInstance(ENCRYPT_ALGORITHM); // NOSONAR
       IvParameterSpec ivSpec = new IvParameterSpec(IV);
       cipher.init(Cipher.DECRYPT_MODE, secretKey, ivSpec);
 

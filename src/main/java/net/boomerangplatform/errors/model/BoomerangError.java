@@ -2,7 +2,7 @@ package net.boomerangplatform.errors.model;
 
 
 public class BoomerangError {
-  
+
   private ErrorDetail error;
 
   public ErrorDetail getError() {

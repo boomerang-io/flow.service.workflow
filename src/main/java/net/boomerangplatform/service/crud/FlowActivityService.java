@@ -24,11 +24,12 @@ public interface FlowActivityService {
 
   ListActivityResponse getAllActivites(Optional<Date> from, Optional<Date> to, Pageable page,
       Optional<List<String>> workflowIds, Optional<List<String>> teamIds,
-      Optional<List<String>> statuses, Optional<List<String>> triggers, String property, Direction direction);
+      Optional<List<String>> statuses, Optional<List<String>> triggers, String property,
+      Direction direction);
 
   ListActivityResponse getAllActivitesForUser(FlowUserEntity user, Optional<Date> from,
       Optional<Date> to, Pageable page, String property, Direction direction);
-  
+
   List<FlowTaskExecutionEntity> getTaskExecutions(String activityId);
 
   FlowTaskExecutionEntity saveTaskExecution(FlowTaskExecutionEntity task);

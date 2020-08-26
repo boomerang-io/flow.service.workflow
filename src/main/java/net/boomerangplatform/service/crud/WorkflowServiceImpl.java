@@ -33,7 +33,6 @@ import net.boomerangplatform.mongo.model.Scheduler;
 import net.boomerangplatform.mongo.model.TaskType;
 import net.boomerangplatform.mongo.model.Triggers;
 import net.boomerangplatform.mongo.model.Webhook;
-import net.boomerangplatform.model.WorkflowQuotas;
 import net.boomerangplatform.mongo.model.WorkflowStatus;
 import net.boomerangplatform.mongo.model.next.DAGTask;
 import net.boomerangplatform.mongo.service.FlowTaskTemplateService;
@@ -55,16 +54,16 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   @Autowired
   private FlowTaskTemplateService templateService;
-  
+
   @Autowired
   private TeamService teamService;
-  
+
   @Value("${max.workflow.count}")
   private Integer maxWorkflowCount;
-  
+
   @Value("${max.workflow.execution.monthly}")
   private Integer maxWorkflowExecutionMonthly;
-  
+
   @Value("${max.concurrent.workflows}")
   private Integer maxConcurrentWorkflows;
 
@@ -500,9 +499,9 @@ public class WorkflowServiceImpl implements WorkflowService {
   @Override
   public boolean canExecuteWorkflow(String teamId) {
     WorkflowQuotas workflowQuotas = teamService.getTeamQuotas(teamId);
-    if(
-        workflowQuotas.getCurrentConcurrentWorkflows() > workflowQuotas.getMaxConcurrentWorkflows() ||
-        workflowQuotas.getCurrentWorkflowExecutionMonthly() > workflowQuotas.getMaxWorkflowExecutionMonthly()) {
+    if (workflowQuotas.getCurrentConcurrentWorkflows() > workflowQuotas.getMaxConcurrentWorkflows()
+        || workflowQuotas.getCurrentWorkflowExecutionMonthly() > workflowQuotas
+            .getMaxWorkflowExecutionMonthly()) {
       return false;
     } else {
       return true;

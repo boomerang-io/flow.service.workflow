@@ -89,7 +89,7 @@ public class ActivityController {
       return null;
     } else {
       return flowActivityService.getAllActivites(from, to, pageable, workflowIds, teamIds, statuses,
-          triggers,sort.get(), order.get());
+          triggers, sort.get(), order.get());
     }
   }
 

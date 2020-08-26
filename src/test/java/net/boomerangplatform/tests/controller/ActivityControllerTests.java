@@ -90,12 +90,12 @@ public class ActivityControllerTests extends FlowTests {
         Optional.empty(), Optional.empty());
 
     assertEquals(6, summary.getExecutions().size());
-    Long executiontime = (summary.getExecutions().get(0).getDuration()
-        + summary.getExecutions().get(1).getDuration()
-        + summary.getExecutions().get(2).getDuration()
-        + summary.getExecutions().get(3).getDuration()
-        + summary.getExecutions().get(4).getDuration()
-        + summary.getExecutions().get(5).getDuration()) / summary.getExecutions().size();
+    Long executiontime =
+        (summary.getExecutions().get(0).getDuration() + summary.getExecutions().get(1).getDuration()
+            + summary.getExecutions().get(2).getDuration()
+            + summary.getExecutions().get(3).getDuration()
+            + summary.getExecutions().get(4).getDuration()
+            + summary.getExecutions().get(5).getDuration()) / summary.getExecutions().size();
     assertEquals(executiontime, summary.getMedianExecutionTime());
     assertEquals(6, summary.getTotalActivitiesExecuted().intValue());
 

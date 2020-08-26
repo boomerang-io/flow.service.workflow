@@ -10,19 +10,19 @@ public class TaskConfiguration {
 
   private TaskDeletion deletion;
 
-	public Boolean getDebug() {
-		return debug ;
-	}
+  public Boolean getDebug() {
+    return debug;
+  }
 
-	public void setDebug(Boolean debug) {
-		this.debug = debug;
-	}
+  public void setDebug(Boolean debug) {
+    this.debug = debug;
+  }
 
-	public TaskDeletion getDeletion() {
-		return deletion ;
-	}
+  public TaskDeletion getDeletion() {
+    return deletion;
+  }
 
-	public void setDeletion(TaskDeletion deletion) {
-		this.deletion = deletion;
-	}
+  public void setDeletion(TaskDeletion deletion) {
+    this.deletion = deletion;
+  }
 }
