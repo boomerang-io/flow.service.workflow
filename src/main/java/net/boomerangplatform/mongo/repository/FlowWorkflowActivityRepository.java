@@ -6,112 +6,112 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
-import net.boomerangplatform.mongo.entity.FlowWorkflowActivityEntity;
-import net.boomerangplatform.mongo.model.FlowTaskStatus;
+import net.boomerangplatform.mongo.entity.ActivityEntity;
+import net.boomerangplatform.mongo.model.TaskStatus;
 import net.boomerangplatform.mongo.model.FlowTriggerEnum;
 
 public interface FlowWorkflowActivityRepository
-    extends MongoRepository<FlowWorkflowActivityEntity, String> {
+    extends MongoRepository<ActivityEntity, String> {
 
   @Query(value = "{'creationDate':{ $lt: ?1, $gte: ?0}}")
-  Page<FlowWorkflowActivityEntity> findAll(Date fromDate, Date toDate, Pageable pageable);
+  Page<ActivityEntity> findAll(Date fromDate, Date toDate, Pageable pageable);
 
-  Page<FlowWorkflowActivityEntity> findByworkflowId(String workflowId, Pageable page);
+  Page<ActivityEntity> findByworkflowId(String workflowId, Pageable page);
 
-  Page<FlowWorkflowActivityEntity> findByWorkflowIdInAndStatusInAndTriggerIn(
-      List<String> workflowIds, List<FlowTaskStatus> statuses, List<FlowTriggerEnum> triggers,
+  Page<ActivityEntity> findByWorkflowIdInAndStatusInAndTriggerIn(
+      List<String> workflowIds, List<TaskStatus> statuses, List<FlowTriggerEnum> triggers,
       Pageable page);
 
-  Page<FlowWorkflowActivityEntity> findByTriggerIn(List<FlowTriggerEnum> triggers, Pageable page);
+  Page<ActivityEntity> findByTriggerIn(List<FlowTriggerEnum> triggers, Pageable page);
 
-  Page<FlowWorkflowActivityEntity> findByStatusIn(List<FlowTaskStatus> statuses, Pageable page);
+  Page<ActivityEntity> findByStatusIn(List<TaskStatus> statuses, Pageable page);
 
-  Page<FlowWorkflowActivityEntity> findByStatusInAndTriggerIn(List<FlowTaskStatus> statuses,
+  Page<ActivityEntity> findByStatusInAndTriggerIn(List<TaskStatus> statuses,
       List<FlowTriggerEnum> triggers, Pageable page);
 
-  Page<FlowWorkflowActivityEntity> findByWorkflowIdIn(List<String> workflowIds, Pageable page);
+  Page<ActivityEntity> findByWorkflowIdIn(List<String> workflowIds, Pageable page);
 
-  Page<FlowWorkflowActivityEntity> findByWorkflowIdInAndTriggerIn(List<String> workflowIds,
+  Page<ActivityEntity> findByWorkflowIdInAndTriggerIn(List<String> workflowIds,
       List<FlowTriggerEnum> triggers, Pageable page);
 
-  Page<FlowWorkflowActivityEntity> findByWorkflowIdInAndStatusIn(List<String> workflowIds,
-      List<FlowTaskStatus> statuses, Pageable page);
+  Page<ActivityEntity> findByWorkflowIdInAndStatusIn(List<String> workflowIds,
+      List<TaskStatus> statuses, Pageable page);
 
-  Page<FlowWorkflowActivityEntity> findByWorkflowIdInAndStatusInAndTriggerInAndCreationDateAfter(
-      List<String> workflowIds, List<FlowTaskStatus> statuses, List<FlowTriggerEnum> triggers,
+  Page<ActivityEntity> findByWorkflowIdInAndStatusInAndTriggerInAndCreationDateAfter(
+      List<String> workflowIds, List<TaskStatus> statuses, List<FlowTriggerEnum> triggers,
       Date from, Pageable page);
 
-  Page<FlowWorkflowActivityEntity> findByTriggerInAndCreationDateAfter(
+  Page<ActivityEntity> findByTriggerInAndCreationDateAfter(
       List<FlowTriggerEnum> triggers, Date from, Pageable page);
 
-  Page<FlowWorkflowActivityEntity> findByStatusInAndCreationDateAfter(List<FlowTaskStatus> statuses,
+  Page<ActivityEntity> findByStatusInAndCreationDateAfter(List<TaskStatus> statuses,
       Date date, Pageable page);
 
-  Page<FlowWorkflowActivityEntity> findByStatusInAndTriggerInAndCreationDateAfter(
-      List<FlowTaskStatus> statuses, List<FlowTriggerEnum> triggers, Date date, Pageable page);
+  Page<ActivityEntity> findByStatusInAndTriggerInAndCreationDateAfter(
+      List<TaskStatus> statuses, List<FlowTriggerEnum> triggers, Date date, Pageable page);
 
-  Page<FlowWorkflowActivityEntity> findByWorkflowIdInAndCreationDateAfter(List<String> workflowIds,
+  Page<ActivityEntity> findByWorkflowIdInAndCreationDateAfter(List<String> workflowIds,
       Date from, Pageable page);
 
-  Page<FlowWorkflowActivityEntity> findByWorkflowIdInAndTriggerInAndCreationDateAfter(
+  Page<ActivityEntity> findByWorkflowIdInAndTriggerInAndCreationDateAfter(
       List<String> workflowIds, List<FlowTriggerEnum> triggers, Date from, Pageable page);
 
-  Page<FlowWorkflowActivityEntity> findByWorkflowIdInAndStatusInAndCreationDateAfter(
-      List<String> workflowIds, List<FlowTaskStatus> statuses, Date from, Pageable page);
+  Page<ActivityEntity> findByWorkflowIdInAndStatusInAndCreationDateAfter(
+      List<String> workflowIds, List<TaskStatus> statuses, Date from, Pageable page);
 
-  Page<FlowWorkflowActivityEntity> findByWorkflowIdInAndStatusInAndTriggerInAndCreationDateBetween(
-      List<String> workflowIds, List<FlowTaskStatus> statuses, List<FlowTriggerEnum> triggers,
+  Page<ActivityEntity> findByWorkflowIdInAndStatusInAndTriggerInAndCreationDateBetween(
+      List<String> workflowIds, List<TaskStatus> statuses, List<FlowTriggerEnum> triggers,
       Date from, Date to, Pageable page);
 
-  Page<FlowWorkflowActivityEntity> findByTriggerInAndCreationDateBetween(
+  Page<ActivityEntity> findByTriggerInAndCreationDateBetween(
       List<FlowTriggerEnum> triggers, Date from, Date to, Pageable page);
 
-  Page<FlowWorkflowActivityEntity> findByStatusInAndCreationDateBetween(
-      List<FlowTaskStatus> statuses, Date from, Date to, Pageable page);
+  Page<ActivityEntity> findByStatusInAndCreationDateBetween(
+      List<TaskStatus> statuses, Date from, Date to, Pageable page);
 
-  Page<FlowWorkflowActivityEntity> findByStatusInAndTriggerInAndCreationDateBetween(
-      List<FlowTaskStatus> statuses, List<FlowTriggerEnum> triggers, Date from, Date to,
+  Page<ActivityEntity> findByStatusInAndTriggerInAndCreationDateBetween(
+      List<TaskStatus> statuses, List<FlowTriggerEnum> triggers, Date from, Date to,
       Pageable page);
 
-  Page<FlowWorkflowActivityEntity> findByWorkflowIdInAndCreationDateBetween(
+  Page<ActivityEntity> findByWorkflowIdInAndCreationDateBetween(
       List<String> workflowIds, Date from, Date to, Pageable page);
 
-  Page<FlowWorkflowActivityEntity> findByWorkflowIdInAndTriggerInAndCreationDateBetween(
+  Page<ActivityEntity> findByWorkflowIdInAndTriggerInAndCreationDateBetween(
       List<String> workflowIds, List<FlowTriggerEnum> triggers, Date from, Date to, Pageable page);
 
-  Page<FlowWorkflowActivityEntity> findByWorkflowIdInAndStatusInAndCreationDateBetween(
-      List<String> workflowIds, List<FlowTaskStatus> statuses, Date from, Date to, Pageable page);
+  Page<ActivityEntity> findByWorkflowIdInAndStatusInAndCreationDateBetween(
+      List<String> workflowIds, List<TaskStatus> statuses, Date from, Date to, Pageable page);
 
-  Page<FlowWorkflowActivityEntity> findByCreationDateAfter(Date from, Pageable page);
+  Page<ActivityEntity> findByCreationDateAfter(Date from, Pageable page);
 
-  Page<FlowWorkflowActivityEntity> findByCreationDateBetween(Date from, Date to, Pageable page);
+  Page<ActivityEntity> findByCreationDateBetween(Date from, Date to, Pageable page);
 
-  Page<FlowWorkflowActivityEntity> findByWorkflowIdInAndStatusInAndTriggerInAndCreationDateBefore(
-      List<String> workflowIds, List<FlowTaskStatus> statuses, List<FlowTriggerEnum> triggers,
+  Page<ActivityEntity> findByWorkflowIdInAndStatusInAndTriggerInAndCreationDateBefore(
+      List<String> workflowIds, List<TaskStatus> statuses, List<FlowTriggerEnum> triggers,
       Date to, Pageable page);
 
-  Page<FlowWorkflowActivityEntity> findByTriggerInAndCreationDateBefore(
+  Page<ActivityEntity> findByTriggerInAndCreationDateBefore(
       List<FlowTriggerEnum> triggers, Date to, Pageable page);
 
-  Page<FlowWorkflowActivityEntity> findByStatusInAndCreationDateBefore(
-      List<FlowTaskStatus> statuses, Date to, Pageable page);
+  Page<ActivityEntity> findByStatusInAndCreationDateBefore(
+      List<TaskStatus> statuses, Date to, Pageable page);
 
-  Page<FlowWorkflowActivityEntity> findByStatusInAndTriggerInAndCreationDateBefore(
-      List<FlowTaskStatus> statuses, List<FlowTriggerEnum> triggers, Date to, Pageable page);
+  Page<ActivityEntity> findByStatusInAndTriggerInAndCreationDateBefore(
+      List<TaskStatus> statuses, List<FlowTriggerEnum> triggers, Date to, Pageable page);
 
-  Page<FlowWorkflowActivityEntity> findByWorkflowIdInAndCreationDateBefore(List<String> workflowIds,
+  Page<ActivityEntity> findByWorkflowIdInAndCreationDateBefore(List<String> workflowIds,
       Date to, Pageable page);
 
-  Page<FlowWorkflowActivityEntity> findByWorkflowIdInAndTriggerInAndCreationDateBefore(
+  Page<ActivityEntity> findByWorkflowIdInAndTriggerInAndCreationDateBefore(
       List<String> workflowIds, List<FlowTriggerEnum> triggers, Date to, Pageable page);
 
-  Page<FlowWorkflowActivityEntity> findByWorkflowIdInAndStatusInAndCreationDateBefore(
-      List<String> workflowIds, List<FlowTaskStatus> statuses, Date to, Pageable page);
+  Page<ActivityEntity> findByWorkflowIdInAndStatusInAndCreationDateBefore(
+      List<String> workflowIds, List<TaskStatus> statuses, Date to, Pageable page);
 
-  Page<FlowWorkflowActivityEntity> findByCreationDateBefore(Date to, Pageable page);
+  Page<ActivityEntity> findByCreationDateBefore(Date to, Pageable page);
   
-  List<FlowWorkflowActivityEntity> findByWorkflowIdInAndStatus(List<String> workflowIds, FlowTaskStatus status);
+  List<ActivityEntity> findByWorkflowIdInAndStatus(List<String> workflowIds, TaskStatus status);
 
   @Query("{'workflowId' : ?0, 'properties.key' : ?1, 'properties.value' : ?2}")
-  FlowWorkflowActivityEntity findByWorkflowAndProperty(String workflowId, String key, String value);
+  ActivityEntity findByWorkflowAndProperty(String workflowId, String key, String value);
 }

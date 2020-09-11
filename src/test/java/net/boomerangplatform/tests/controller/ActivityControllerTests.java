@@ -33,7 +33,7 @@ import net.boomerangplatform.controller.ActivityController;
 import net.boomerangplatform.model.FlowActivity;
 import net.boomerangplatform.model.InsightsSummary;
 import net.boomerangplatform.model.ListActivityResponse;
-import net.boomerangplatform.mongo.model.FlowTaskStatus;
+import net.boomerangplatform.mongo.model.TaskStatus;
 import net.boomerangplatform.tests.FlowTests;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -107,8 +107,8 @@ public class ActivityControllerTests extends FlowTests {
         2147483647, null, null, null, null, null);
 
     assertEquals(6, activitySummary.get("all").longValue());
-    assertEquals(3, activitySummary.get(FlowTaskStatus.completed.getStatus()).longValue());
-    assertEquals(3, activitySummary.get(FlowTaskStatus.inProgress.getStatus()).longValue());
+    assertEquals(3, activitySummary.get(TaskStatus.completed.getStatus()).longValue());
+    assertEquals(3, activitySummary.get(TaskStatus.inProgress.getStatus()).longValue());
   }
 
   Optional<String> getOptionalString(String string) {

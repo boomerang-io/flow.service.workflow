@@ -36,8 +36,8 @@ import net.boomerangplatform.model.RevisionResponse;
 import net.boomerangplatform.model.WorkflowExport;
 import net.boomerangplatform.model.WorkflowSummary;
 import net.boomerangplatform.model.projectstormv5.RestConfig;
-import net.boomerangplatform.mongo.entity.FlowWorkflowEntity;
-import net.boomerangplatform.mongo.entity.FlowWorkflowRevisionEntity;
+import net.boomerangplatform.mongo.entity.WorkflowEntity;
+import net.boomerangplatform.mongo.entity.RevisionEntity;
 import net.boomerangplatform.mongo.model.Event;
 import net.boomerangplatform.mongo.model.FlowProperty;
 import net.boomerangplatform.mongo.model.Scheduler;
@@ -127,7 +127,7 @@ public class WorkflowControllerTests extends FlowTests {
     List<FlowProperty> properties = new ArrayList<>();
     properties.add(property);
 
-    FlowWorkflowEntity entity =
+    WorkflowEntity entity =
         controller.updateWorkflowProperties("5d1a188af6ca2c00014c4314", properties);
 
     assertNotNull(entity.getProperties());
@@ -166,8 +166,8 @@ public class WorkflowControllerTests extends FlowTests {
     File resource = new ClassPathResource("json/json-sample.json").getFile();
     String json = new String(Files.readAllBytes(resource.toPath()));
     ObjectMapper objectMapper = new ObjectMapper();
-    FlowWorkflowRevisionEntity revision =
-        objectMapper.readValue(json, FlowWorkflowRevisionEntity.class);
+    RevisionEntity revision =
+        objectMapper.readValue(json, RevisionEntity.class);
 
     export.setLatestRevision(revision);
 

@@ -11,7 +11,7 @@ import net.boomerangplatform.mongo.model.Dag;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(Include.NON_NULL)
 @Document(collection = "flow_workflows_revisions")
-public class FlowWorkflowRevisionEntity {
+public class RevisionEntity {
 
   private Dag dag;
 

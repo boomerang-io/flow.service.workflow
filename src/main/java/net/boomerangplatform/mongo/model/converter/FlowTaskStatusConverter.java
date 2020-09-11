@@ -4,16 +4,16 @@ import java.util.ArrayList;
 import java.util.List;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.ReadingConverter;
-import net.boomerangplatform.mongo.model.FlowTaskStatus;
+import net.boomerangplatform.mongo.model.TaskStatus;
 
 @ReadingConverter
-public interface FlowTaskStatusConverter extends Converter<String, FlowTaskStatus> {
+public interface FlowTaskStatusConverter extends Converter<String, TaskStatus> {
 
-  public static List<FlowTaskStatus> convert(List<String> sources) {
-    List<FlowTaskStatus> enums = new ArrayList<>();
+  public static List<TaskStatus> convert(List<String> sources) {
+    List<TaskStatus> enums = new ArrayList<>();
 
     for (String source : sources) {
-      FlowTaskStatus statusEnum = FlowTaskStatus.getFlowTaskStatus(source);
+      TaskStatus statusEnum = TaskStatus.getFlowTaskStatus(source);
       enums.add(statusEnum);
     }
     return enums;

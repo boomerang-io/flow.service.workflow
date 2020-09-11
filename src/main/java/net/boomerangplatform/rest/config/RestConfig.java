@@ -74,6 +74,16 @@ public class RestConfig {
     setRestTemplateInterceptors(template);
     return template;
   }
+  
+  @Bean
+  @Qualifier("selfRestTemplate")
+  public RestTemplate selfRestTemplate() {
+    final HttpComponentsClientHttpRequestFactory requestFactory =
+        new HttpComponentsClientHttpRequestFactory();
+    final RestTemplate template = new RestTemplate(requestFactory);
+    setRestTemplateInterceptors(template);
+    return template;
+  }
 
   private void setRestTemplateInterceptors(RestTemplate restTemplate) {
     List<ClientHttpRequestInterceptor> interceptors = restTemplate.getInterceptors();

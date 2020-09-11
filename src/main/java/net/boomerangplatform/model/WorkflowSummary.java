@@ -1,9 +1,9 @@
 package net.boomerangplatform.model;
 
 import org.springframework.beans.BeanUtils;
-import net.boomerangplatform.mongo.entity.FlowWorkflowEntity;
+import net.boomerangplatform.mongo.entity.WorkflowEntity;
 
-public class WorkflowSummary extends FlowWorkflowEntity {
+public class WorkflowSummary extends WorkflowEntity {
 
   private long revisionCount;
 
@@ -11,7 +11,7 @@ public class WorkflowSummary extends FlowWorkflowEntity {
   private boolean templateUpgradesAvailable;
 
 
-  public WorkflowSummary(FlowWorkflowEntity entity) {
+  public WorkflowSummary(WorkflowEntity entity) {
     BeanUtils.copyProperties(entity, this);
   }
 

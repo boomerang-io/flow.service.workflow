@@ -26,8 +26,8 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.web.client.MockRestServiceServer;
 import net.boomerangplatform.Application;
 import net.boomerangplatform.MongoConfig;
-import net.boomerangplatform.mongo.entity.FlowTaskExecutionEntity;
-import net.boomerangplatform.mongo.entity.FlowWorkflowActivityEntity;
+import net.boomerangplatform.mongo.entity.TaskExecutionEntity;
+import net.boomerangplatform.mongo.entity.ActivityEntity;
 import net.boomerangplatform.service.crud.FlowActivityService;
 import net.boomerangplatform.tests.execution.FlowExecutionTest;
 
@@ -43,9 +43,9 @@ public class HeyJoeErrorTest extends FlowExecutionTest {
   @Test
   public void testExecuteFlow() throws InterruptedException, ExecutionException {
 
-    FlowWorkflowActivityEntity activity = this.testFailedExecuteFlow("5e17a4b1e638b70001fae9ca");
+    ActivityEntity activity = this.testFailedExecuteFlow("5e17a4b1e638b70001fae9ca");
 
-    List<FlowTaskExecutionEntity> tasks = activityService.getTaskExecutions(activity.getId());
+    List<TaskExecutionEntity> tasks = activityService.getTaskExecutions(activity.getId());
     assertEquals(5, tasks.size());
 
 

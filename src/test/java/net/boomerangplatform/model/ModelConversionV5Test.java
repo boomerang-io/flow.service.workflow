@@ -9,7 +9,7 @@ import org.springframework.core.io.ClassPathResource;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import net.boomerangplatform.model.projectstormv5.WorkflowRevision;
-import net.boomerangplatform.mongo.entity.FlowWorkflowRevisionEntity;
+import net.boomerangplatform.mongo.entity.RevisionEntity;
 import net.boomerangplatform.util.ModelConverterV5;
 
 public class ModelConversionV5Test {
@@ -22,8 +22,8 @@ public class ModelConversionV5Test {
 
     String json = new String(Files.readAllBytes(resource.toPath()));
     ObjectMapper objectMapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
-    FlowWorkflowRevisionEntity entity =
-        objectMapper.readValue(json, FlowWorkflowRevisionEntity.class);
+    RevisionEntity entity =
+        objectMapper.readValue(json, RevisionEntity.class);
 
     WorkflowRevision convertedRevision = ModelConverterV5.convertToRestModel(entity);
 
@@ -42,7 +42,7 @@ public class ModelConversionV5Test {
     String json = new String(Files.readAllBytes(resource.toPath()));
     ObjectMapper objectMapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
     WorkflowRevision revision = objectMapper.readValue(json, WorkflowRevision.class);
-    FlowWorkflowRevisionEntity convertedRevision = ModelConverterV5.convertToEntityModel(revision);
+    RevisionEntity convertedRevision = ModelConverterV5.convertToEntityModel(revision);
 
     String restString = objectMapper.writeValueAsString(convertedRevision);
     assertNotNull(restString);
@@ -56,7 +56,7 @@ public class ModelConversionV5Test {
     String json = new String(Files.readAllBytes(resource.toPath()));
     ObjectMapper objectMapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
     WorkflowRevision revision = objectMapper.readValue(json, WorkflowRevision.class);
-    FlowWorkflowRevisionEntity convertedRevision = ModelConverterV5.convertToEntityModel(revision);
+    RevisionEntity convertedRevision = ModelConverterV5.convertToEntityModel(revision);
     assertNotNull(convertedRevision);
 
     WorkflowRevision rest = ModelConverterV5.convertToRestModel(convertedRevision);
@@ -73,7 +73,7 @@ public class ModelConversionV5Test {
     String json = new String(Files.readAllBytes(resource.toPath()));
     ObjectMapper objectMapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
     WorkflowRevision revision = objectMapper.readValue(json, WorkflowRevision.class);
-    FlowWorkflowRevisionEntity convertedRevision = ModelConverterV5.convertToEntityModel(revision);
+    RevisionEntity convertedRevision = ModelConverterV5.convertToEntityModel(revision);
     assertNotNull(convertedRevision);
 
     WorkflowRevision rest = ModelConverterV5.convertToRestModel(convertedRevision);
@@ -89,7 +89,7 @@ public class ModelConversionV5Test {
     String json = new String(Files.readAllBytes(resource.toPath()));
     ObjectMapper objectMapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
     WorkflowRevision revision = objectMapper.readValue(json, WorkflowRevision.class);
-    FlowWorkflowRevisionEntity convertedRevision = ModelConverterV5.convertToEntityModel(revision);
+    RevisionEntity convertedRevision = ModelConverterV5.convertToEntityModel(revision);
     assertNotNull(convertedRevision);
 
 
@@ -113,7 +113,7 @@ public class ModelConversionV5Test {
     String json = new String(Files.readAllBytes(resource.toPath()));
     ObjectMapper objectMapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
     WorkflowRevision revision = objectMapper.readValue(json, WorkflowRevision.class);
-    FlowWorkflowRevisionEntity convertedRevision = ModelConverterV5.convertToEntityModel(revision);
+    RevisionEntity convertedRevision = ModelConverterV5.convertToEntityModel(revision);
     assertNotNull(convertedRevision);
 
 

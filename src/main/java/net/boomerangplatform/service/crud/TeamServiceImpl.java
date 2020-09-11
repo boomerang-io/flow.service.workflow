@@ -29,9 +29,9 @@ import net.boomerangplatform.model.WorkflowSummary;
 import net.boomerangplatform.mongo.entity.FlowTeamConfiguration;
 import net.boomerangplatform.mongo.entity.FlowTeamEntity;
 import net.boomerangplatform.mongo.entity.FlowUserEntity;
-import net.boomerangplatform.mongo.entity.FlowWorkflowActivityEntity;
-import net.boomerangplatform.mongo.entity.FlowWorkflowEntity;
-import net.boomerangplatform.mongo.model.FlowTaskStatus;
+import net.boomerangplatform.mongo.entity.ActivityEntity;
+import net.boomerangplatform.mongo.entity.WorkflowEntity;
+import net.boomerangplatform.mongo.model.TaskStatus;
 import net.boomerangplatform.mongo.model.Quotas;
 import net.boomerangplatform.mongo.model.Settings;
 import net.boomerangplatform.mongo.service.FlowTeamService;
@@ -183,9 +183,9 @@ public class TeamServiceImpl implements TeamService {
     
     teamWorkFlow.setQuotas(quotas);
     
-    List<FlowWorkflowActivityEntity> concurrentActivities = getConcurrentWorkflowActivities(entity.getId());
+    List<ActivityEntity> concurrentActivities = getConcurrentWorkflowActivities(entity.getId());
     Pageable page = Pageable.unpaged();
-    Page<FlowWorkflowActivityEntity> activitiesMonthly = getMonthlyWorkflowActivities(page);
+    Page<ActivityEntity> activitiesMonthly = getMonthlyWorkflowActivities(page);
     
     WorkflowQuotas workflowQuotas = new WorkflowQuotas();
     workflowQuotas.setMaxWorkflowCount(quotas.getMaxWorkflowCount());
@@ -395,8 +395,8 @@ public class TeamServiceImpl implements TeamService {
     FlowTeamEntity team = flowTeamService.findById(teamId);
     List<WorkflowSummary> workflows = workflowService.getWorkflowsForTeam(team.getId());
     Pageable page = Pageable.unpaged();
-    List<FlowWorkflowActivityEntity> concurrentActivities = getConcurrentWorkflowActivities(teamId);
-    Page<FlowWorkflowActivityEntity> activitiesMonthly = getMonthlyWorkflowActivities(page);
+    List<ActivityEntity> concurrentActivities = getConcurrentWorkflowActivities(teamId);
+    Page<ActivityEntity> activitiesMonthly = getMonthlyWorkflowActivities(page);
     
     Quotas quotas = setTeamQuotas(team);
     
@@ -458,8 +458,8 @@ public class TeamServiceImpl implements TeamService {
     FlowTeamEntity team = flowTeamService.findById(teamId);
     List<WorkflowSummary> workflows = workflowService.getWorkflowsForTeam(team.getId());
     Pageable page = Pageable.unpaged();
-    List<FlowWorkflowActivityEntity> concurrentActivities = getConcurrentWorkflowActivities(teamId);
-    Page<FlowWorkflowActivityEntity> activitiesMonthly = getMonthlyWorkflowActivities(page);
+    List<ActivityEntity> concurrentActivities = getConcurrentWorkflowActivities(teamId);
+    Page<ActivityEntity> activitiesMonthly = getMonthlyWorkflowActivities(page);
     
     Quotas teamQuotas = team.getQuotas();
     teamQuotas.setMaxWorkflowCount(maxWorkflowCount);
@@ -504,20 +504,20 @@ public class TeamServiceImpl implements TeamService {
     workflowQuotas.setCurrentWorkflowsPersistentStorage(currentWorkflowsPersistentStorage);
   }
   
-  private Page<FlowWorkflowActivityEntity> getMonthlyWorkflowActivities(Pageable page) {
+  private Page<ActivityEntity> getMonthlyWorkflowActivities(Pageable page) {
     Calendar c = Calendar.getInstance();   
     c.set(Calendar.DAY_OF_MONTH, 1);
     return flowWorkflowActivityService.findAllActivities(
             Optional.of(c.getTime()), Optional.of(new Date()), page);
   }
 
-  private List<FlowWorkflowActivityEntity> getConcurrentWorkflowActivities(String teamId) {
-    List<FlowWorkflowEntity> teamWorkflows = flowWorkflowService.getWorkflowsForTeams(teamId);
+  private List<ActivityEntity> getConcurrentWorkflowActivities(String teamId) {
+    List<WorkflowEntity> teamWorkflows = flowWorkflowService.getWorkflowsForTeams(teamId);
     List<String> workflowIds = new ArrayList<>();
-    for(FlowWorkflowEntity workflow : teamWorkflows) {
+    for(WorkflowEntity workflow : teamWorkflows) {
       workflowIds.add(workflow.getId());
     }
-    return flowWorkflowActivityService.findbyWorkflowIdsAndStatus(workflowIds, FlowTaskStatus.inProgress);
+    return flowWorkflowActivityService.findbyWorkflowIdsAndStatus(workflowIds, TaskStatus.inProgress);
   }
 
   @Override

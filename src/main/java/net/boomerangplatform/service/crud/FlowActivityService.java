@@ -10,17 +10,17 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 import net.boomerangplatform.model.FlowExecutionRequest;
 import net.boomerangplatform.model.InsightsSummary;
 import net.boomerangplatform.model.ListActivityResponse;
-import net.boomerangplatform.mongo.entity.FlowTaskExecutionEntity;
+import net.boomerangplatform.mongo.entity.TaskExecutionEntity;
 import net.boomerangplatform.mongo.entity.FlowUserEntity;
-import net.boomerangplatform.mongo.entity.FlowWorkflowActivityEntity;
+import net.boomerangplatform.mongo.entity.ActivityEntity;
 import net.boomerangplatform.mongo.model.FlowTriggerEnum;
 
 public interface FlowActivityService {
 
-  FlowWorkflowActivityEntity createFlowActivity(String workflowVersionId,
+  ActivityEntity createFlowActivity(String workflowVersionId,
       Optional<FlowTriggerEnum> trigger, FlowExecutionRequest request);
 
-  FlowWorkflowActivityEntity findWorkflowActivity(String id);
+  ActivityEntity findWorkflowActivity(String id);
 
   ListActivityResponse getAllActivites(Optional<Date> from, Optional<Date> to, Pageable page,
       Optional<List<String>> workflowIds, Optional<List<String>> teamIds,
@@ -29,9 +29,9 @@ public interface FlowActivityService {
   ListActivityResponse getAllActivitesForUser(FlowUserEntity user, Optional<Date> from,
       Optional<Date> to, Pageable page, String property, Direction direction);
   
-  List<FlowTaskExecutionEntity> getTaskExecutions(String activityId);
+  List<TaskExecutionEntity> getTaskExecutions(String activityId);
 
-  FlowTaskExecutionEntity saveTaskExecution(FlowTaskExecutionEntity task);
+  TaskExecutionEntity saveTaskExecution(TaskExecutionEntity task);
 
   InsightsSummary getInsightsSummary(Optional<Date> from, Optional<Date> to, Pageable pageable,
       Optional<String> teamId);

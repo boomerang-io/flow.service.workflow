@@ -7,8 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import net.boomerangplatform.mongo.entity.FlowWorkflowActivityEntity;
-import net.boomerangplatform.mongo.model.FlowTaskStatus;
+import net.boomerangplatform.mongo.entity.ActivityEntity;
+import net.boomerangplatform.mongo.model.TaskStatus;
 import net.boomerangplatform.mongo.model.converter.FlowTaskStatusConverter;
 import net.boomerangplatform.mongo.model.converter.FlowTriggerEnumConverter;
 import net.boomerangplatform.mongo.repository.FlowWorkflowActivityRepository;
@@ -20,7 +20,7 @@ public class FlowWorkflowActivityServiceImpl implements FlowWorkflowActivityServ
   private FlowWorkflowActivityRepository repository;
 
   @Override
-  public Page<FlowWorkflowActivityEntity> findAllActivities(Optional<Date> fromDate,
+  public Page<ActivityEntity> findAllActivities(Optional<Date> fromDate,
       Optional<Date> toDate, Pageable page, Optional<String> workflowId) {
     if (workflowId.isPresent()) {
       return repository.findByworkflowId(workflowId.get(), page);
@@ -32,7 +32,7 @@ public class FlowWorkflowActivityServiceImpl implements FlowWorkflowActivityServ
   }
 
   @Override
-  public Page<FlowWorkflowActivityEntity> findAllActivities(Optional<Date> fromDate,
+  public Page<ActivityEntity> findAllActivities(Optional<Date> fromDate,
       Optional<Date> toDate, Pageable page) {
     if (fromDate.isPresent() && toDate.isPresent()) {
       return repository.findAll(fromDate.get(), toDate.get(), page);
@@ -42,24 +42,24 @@ public class FlowWorkflowActivityServiceImpl implements FlowWorkflowActivityServ
   }
 
   @Override
-  public Page<FlowWorkflowActivityEntity> findAllActivitiesForWorkflows(Optional<Date> fromDate,
+  public Page<ActivityEntity> findAllActivitiesForWorkflows(Optional<Date> fromDate,
       Optional<Date> toDate, List<String> workflows, Pageable page) {
     return repository.findAll(page);
   }
 
   @Override
-  public FlowWorkflowActivityEntity findWorkflowActiivtyById(String id) {
+  public ActivityEntity findWorkflowActiivtyById(String id) {
     return repository.findById(id).orElse(null);
   }
 
   @Override
-  public FlowWorkflowActivityEntity saveWorkflowActivity(FlowWorkflowActivityEntity entity) {
+  public ActivityEntity saveWorkflowActivity(ActivityEntity entity) {
     return repository.save(entity);
 
   }
 
   @Override
-  public Page<FlowWorkflowActivityEntity> getAllActivites(Optional<Date> from, Optional<Date> to,
+  public Page<ActivityEntity> getAllActivites(Optional<Date> from, Optional<Date> to,
       Pageable page, Optional<List<String>> workflowIds, Optional<List<String>> statuses,
       Optional<List<String>> triggers) {
 
@@ -73,7 +73,7 @@ public class FlowWorkflowActivityServiceImpl implements FlowWorkflowActivityServ
 
   }
 
-  private Page<FlowWorkflowActivityEntity> findActivityWithWorkflowIds(Optional<Date> from,
+  private Page<ActivityEntity> findActivityWithWorkflowIds(Optional<Date> from,
       Optional<Date> to, Pageable page, List<String> workflowIds, Optional<List<String>> statuses,
       Optional<List<String>> triggers) {
 
@@ -85,7 +85,7 @@ public class FlowWorkflowActivityServiceImpl implements FlowWorkflowActivityServ
     }
   }
 
-  private Page<FlowWorkflowActivityEntity> findActivityWithWorkflowIdsAndWithoutStatuses(
+  private Page<ActivityEntity> findActivityWithWorkflowIdsAndWithoutStatuses(
       Optional<Date> from, Optional<Date> to, Pageable page, List<String> workflowIds,
       Optional<List<String>> triggers) {
     if (triggers.isPresent() && !from.isPresent() && !to.isPresent()) {
@@ -113,7 +113,7 @@ public class FlowWorkflowActivityServiceImpl implements FlowWorkflowActivityServ
 
   }
 
-  private Page<FlowWorkflowActivityEntity> findActivityWithWorkflowIdsAndStatuses(
+  private Page<ActivityEntity> findActivityWithWorkflowIdsAndStatuses(
       Optional<Date> from, Optional<Date> to, Pageable page, List<String> workflowIds,
       List<String> statuses, Optional<List<String>> triggers) {
 
@@ -128,7 +128,7 @@ public class FlowWorkflowActivityServiceImpl implements FlowWorkflowActivityServ
     }
   }
 
-  private Page<FlowWorkflowActivityEntity> findActivityWithWorkflowIdsAndStatusesAndWithoutTriggers(
+  private Page<ActivityEntity> findActivityWithWorkflowIdsAndStatusesAndWithoutTriggers(
       Optional<Date> from, Optional<Date> to, Pageable page, List<String> workflowIds,
       List<String> statuses) {
     if (!from.isPresent() && !to.isPresent()) {
@@ -146,7 +146,7 @@ public class FlowWorkflowActivityServiceImpl implements FlowWorkflowActivityServ
     }
   }
 
-  private Page<FlowWorkflowActivityEntity> findActivityWithWorkflowIdsAndStatusesAndTriggers(
+  private Page<ActivityEntity> findActivityWithWorkflowIdsAndStatusesAndTriggers(
       Optional<Date> from, Optional<Date> to, Pageable page, List<String> workflowIds,
       List<String> statuses, List<String> triggers) {
     if (!from.isPresent() && to.isPresent()) {
@@ -170,7 +170,7 @@ public class FlowWorkflowActivityServiceImpl implements FlowWorkflowActivityServ
     }
   }
 
-  private Page<FlowWorkflowActivityEntity> findActivityWithoutWorkflowIds(Optional<Date> from,
+  private Page<ActivityEntity> findActivityWithoutWorkflowIds(Optional<Date> from,
       Optional<Date> to, Pageable page, Optional<List<String>> statuses,
       Optional<List<String>> triggers) {
     if (statuses.isPresent()) {
@@ -182,7 +182,7 @@ public class FlowWorkflowActivityServiceImpl implements FlowWorkflowActivityServ
   }
 
 
-  private Page<FlowWorkflowActivityEntity> findActivityWithoutWorkflowIdsAndWithStatuses(
+  private Page<ActivityEntity> findActivityWithoutWorkflowIdsAndWithStatuses(
       Optional<Date> from, Optional<Date> to, Pageable page, List<String> statuses,
       Optional<List<String>> triggers) {
     if (triggers.isPresent()) {
@@ -194,7 +194,7 @@ public class FlowWorkflowActivityServiceImpl implements FlowWorkflowActivityServ
     }
   }
 
-  private Page<FlowWorkflowActivityEntity> findActivityWithoutWorkflowIdsandWithStatusAndWithoutTriggers(
+  private Page<ActivityEntity> findActivityWithoutWorkflowIdsandWithStatusAndWithoutTriggers(
       Optional<Date> from, Optional<Date> to, Pageable page, List<String> statuses) {
     if (!from.isPresent() && !to.isPresent()) {
       return repository.findByStatusIn(FlowTaskStatusConverter.convert(statuses), page);
@@ -210,7 +210,7 @@ public class FlowWorkflowActivityServiceImpl implements FlowWorkflowActivityServ
     }
   }
 
-  private Page<FlowWorkflowActivityEntity> findActivityWithoutWorkflowIdsAndWithStatusesAndWithTriggers(
+  private Page<ActivityEntity> findActivityWithoutWorkflowIdsAndWithStatusesAndWithTriggers(
       Optional<Date> from, Optional<Date> to, Pageable page, List<String> statuses,
       List<String> triggers) {
     if (from.isPresent() && !to.isPresent()) {
@@ -231,7 +231,7 @@ public class FlowWorkflowActivityServiceImpl implements FlowWorkflowActivityServ
     }
   }
 
-  private Page<FlowWorkflowActivityEntity> findActivityWithoutWorkflowIdsAndWithoutStatuses(
+  private Page<ActivityEntity> findActivityWithoutWorkflowIdsAndWithoutStatuses(
       Optional<Date> from, Optional<Date> to, Pageable page, Optional<List<String>> triggers) {
 
     if (triggers.isPresent()) {
@@ -243,7 +243,7 @@ public class FlowWorkflowActivityServiceImpl implements FlowWorkflowActivityServ
 
   }
 
-  private Page<FlowWorkflowActivityEntity> findActivityWithoutWorkflowIdsAndWithoutStatusesAndWithoutTriggers(
+  private Page<ActivityEntity> findActivityWithoutWorkflowIdsAndWithoutStatusesAndWithoutTriggers(
       Optional<Date> from, Optional<Date> to, Pageable page) {
     if (from.isPresent() && !to.isPresent()) {
       return repository.findByCreationDateAfter(from.get(), page);
@@ -256,7 +256,7 @@ public class FlowWorkflowActivityServiceImpl implements FlowWorkflowActivityServ
     }
   }
 
-  private Page<FlowWorkflowActivityEntity> findActivityWithoutWorkflowIdsAndWithoutStatusesAndWithTriggers(
+  private Page<ActivityEntity> findActivityWithoutWorkflowIdsAndWithoutStatusesAndWithTriggers(
       Optional<Date> from, Optional<Date> to, Pageable page, List<String> triggers) {
     if (from.isPresent() && !to.isPresent()) {
       return repository.findByTriggerInAndCreationDateAfter(
@@ -273,12 +273,12 @@ public class FlowWorkflowActivityServiceImpl implements FlowWorkflowActivityServ
   }
 
   @Override
-  public FlowWorkflowActivityEntity findByWorkflowAndProperty(String workflowId, String key,
+  public ActivityEntity findByWorkflowAndProperty(String workflowId, String key,
       String value) {
     return repository.findByWorkflowAndProperty(workflowId, key, value);
   }
   
-  public List<FlowWorkflowActivityEntity> findbyWorkflowIdsAndStatus(List<String> workflowIds, FlowTaskStatus status){
+  public List<ActivityEntity> findbyWorkflowIdsAndStatus(List<String> workflowIds, TaskStatus status){
     return repository.findByWorkflowIdInAndStatus(workflowIds, status);
   }
 }

@@ -26,9 +26,9 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.web.client.MockRestServiceServer;
 import net.boomerangplatform.Application;
 import net.boomerangplatform.MongoConfig;
-import net.boomerangplatform.mongo.entity.FlowTaskExecutionEntity;
-import net.boomerangplatform.mongo.entity.FlowWorkflowActivityEntity;
-import net.boomerangplatform.mongo.model.FlowTaskStatus;
+import net.boomerangplatform.mongo.entity.TaskExecutionEntity;
+import net.boomerangplatform.mongo.entity.ActivityEntity;
+import net.boomerangplatform.mongo.model.TaskStatus;
 import net.boomerangplatform.service.crud.FlowActivityService;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -42,13 +42,13 @@ public class FailureFlowExecutionTests extends FlowExecutionTest {
 
   @Test
   public void testExecuteFlow() throws InterruptedException, ExecutionException {
-    FlowWorkflowActivityEntity activity = this.testFailedExecuteFlow("5d7877af2c57250007e3d7a5");
+    ActivityEntity activity = this.testFailedExecuteFlow("5d7877af2c57250007e3d7a5");
 
-    List<FlowTaskExecutionEntity> tasks = activityService.getTaskExecutions(activity.getId());
+    List<TaskExecutionEntity> tasks = activityService.getTaskExecutions(activity.getId());
     assertEquals(2, tasks.size());
 
-    assertEquals(FlowTaskStatus.failure, tasks.get(0).getFlowTaskStatus());
-    assertEquals(FlowTaskStatus.skipped, tasks.get(1).getFlowTaskStatus());
+    assertEquals(TaskStatus.failure, tasks.get(0).getFlowTaskStatus());
+    assertEquals(TaskStatus.skipped, tasks.get(1).getFlowTaskStatus());
   }
 
   @Override

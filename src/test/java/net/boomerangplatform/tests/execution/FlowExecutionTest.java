@@ -10,12 +10,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import net.boomerangplatform.controller.ExecutionController;
 import net.boomerangplatform.controller.WorkflowController;
 import net.boomerangplatform.model.FlowExecutionRequest;
-import net.boomerangplatform.mongo.entity.FlowWorkflowActivityEntity;
-import net.boomerangplatform.mongo.entity.FlowWorkflowEntity;
-import net.boomerangplatform.mongo.entity.FlowWorkflowRevisionEntity;
-import net.boomerangplatform.mongo.model.FlowTaskStatus;
+import net.boomerangplatform.mongo.entity.ActivityEntity;
+import net.boomerangplatform.mongo.entity.WorkflowEntity;
+import net.boomerangplatform.mongo.entity.RevisionEntity;
+import net.boomerangplatform.mongo.model.TaskStatus;
 import net.boomerangplatform.mongo.model.FlowTriggerEnum;
-import net.boomerangplatform.mongo.service.FlowWorkflowVersionService;
+import net.boomerangplatform.mongo.service.RevisionService;
 import net.boomerangplatform.service.FlowExecutionService;
 import net.boomerangplatform.service.crud.FlowActivityService;
 import net.boomerangplatform.tests.FlowTests;
@@ -29,7 +29,7 @@ public abstract class FlowExecutionTest extends FlowTests {
   protected FlowActivityService activityService;
 
   @Autowired
-  protected FlowWorkflowVersionService flowRevisionService;
+  protected RevisionService flowRevisionService;
 
   @Autowired
   protected FlowExecutionService flowExecutionService;
@@ -40,13 +40,13 @@ public abstract class FlowExecutionTest extends FlowTests {
   public void testInvalidExecutionFlow(String workflowId)
       throws InterruptedException, ExecutionException {
     /* Retrieve workflow and revision. */
-    FlowWorkflowEntity workflow = controller.getWorkflowWithId(workflowId);
-    FlowWorkflowRevisionEntity latestRevision =
+    WorkflowEntity workflow = controller.getWorkflowWithId(workflowId);
+    RevisionEntity latestRevision =
         this.flowRevisionService.getLatestWorkflowVersion(workflow.getId());
     assertNotNull(workflow);
     /* Prepare a request. */
     FlowExecutionRequest flowExecutionRequest = new FlowExecutionRequest();
-    final FlowWorkflowActivityEntity activity = activityService.createFlowActivity(
+    final ActivityEntity activity = activityService.createFlowActivity(
         latestRevision.getId(), Optional.of(FlowTriggerEnum.manual), flowExecutionRequest);
     assertNotNull(activity);
 
@@ -55,26 +55,26 @@ public abstract class FlowExecutionTest extends FlowTests {
 
   }
 
-  public FlowWorkflowActivityEntity testFailedExecuteFlow(String workflowId)
+  public ActivityEntity testFailedExecuteFlow(String workflowId)
       throws InterruptedException, ExecutionException {
     return this.testSuccessExecuteFlow(workflowId, new FlowExecutionRequest(),
-        FlowTaskStatus.failure);
+        TaskStatus.failure);
   }
 
-  public FlowWorkflowActivityEntity testSuccessExecuteFlow(String workflowId)
+  public ActivityEntity testSuccessExecuteFlow(String workflowId)
       throws InterruptedException, ExecutionException {
     return this.testSuccessExecuteFlow(workflowId, new FlowExecutionRequest(),
-        FlowTaskStatus.completed);
+        TaskStatus.completed);
   }
 
-  public FlowWorkflowActivityEntity testSuccessExecuteFlow(String workflowId,
-      FlowExecutionRequest flowExecutionRequest, FlowTaskStatus matchStatus)
+  public ActivityEntity testSuccessExecuteFlow(String workflowId,
+      FlowExecutionRequest flowExecutionRequest, TaskStatus matchStatus)
       throws InterruptedException, ExecutionException {
-    FlowWorkflowEntity workflow = controller.getWorkflowWithId(workflowId);
-    FlowWorkflowRevisionEntity latestRevision =
+    WorkflowEntity workflow = controller.getWorkflowWithId(workflowId);
+    RevisionEntity latestRevision =
         this.flowRevisionService.getLatestWorkflowVersion(workflow.getId());
 
-    final FlowWorkflowActivityEntity activity = activityService.createFlowActivity(
+    final ActivityEntity activity = activityService.createFlowActivity(
         latestRevision.getId(), Optional.of(FlowTriggerEnum.manual), flowExecutionRequest);
 
     CompletableFuture<Boolean> executionFuture =
@@ -84,7 +84,7 @@ public abstract class FlowExecutionTest extends FlowTests {
     assertNotNull(result);
     assertTrue(result.booleanValue());
 
-    final FlowWorkflowActivityEntity updatedActivity =
+    final ActivityEntity updatedActivity =
         activityService.findWorkflowActivity(activity.getId());
 
     assertEquals(matchStatus, updatedActivity.getStatus());

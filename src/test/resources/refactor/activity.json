@@ -1,0 +1,13 @@
+{
+    "_id" : ObjectId("5f4fd3095683833cf0b1335e"),
+    "creationDate" : ISODate("2020-09-02T17:14:49.799Z"),
+    "duration" : NumberLong(12743),
+    "initiatedByUserId" : "5e736fb0a97b78000125ebe3",
+    "initiatedByUserName" : "Marcus Roy",
+    "status" : "completed",
+    "workflowId" : "5f4fc9e95683833cf0b1335b",
+    "workflowRevisionid" : "5f4fd0475683833cf0b1335d",
+    "trigger" : "manual",
+    "properties" : [],
+    "_class" : "net.boomerangplatform.mongo.entity.FlowWorkflowActivityEntity"
+}

@@ -7,18 +7,18 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import net.boomerangplatform.mongo.model.FlowTaskStatus;
+import net.boomerangplatform.mongo.model.TaskStatus;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(Include.NON_NULL)
 @Document(collection = "flow_workflows_activity_task")
-public class FlowTaskExecutionEntity {
+public class TaskExecutionEntity {
 
   private String activityId;
 
   private long duration;
 
-  private FlowTaskStatus flowTaskStatus;
+  private TaskStatus flowTaskStatus;
 
   @Id
   private String id;
@@ -43,7 +43,7 @@ public class FlowTaskExecutionEntity {
     return duration;
   }
 
-  public FlowTaskStatus getFlowTaskStatus() {
+  public TaskStatus getFlowTaskStatus() {
     return flowTaskStatus;
   }
 
@@ -83,7 +83,7 @@ public class FlowTaskExecutionEntity {
     this.duration = duration;
   }
 
-  public void setFlowTaskStatus(FlowTaskStatus flowTaskStatus) {
+  public void setFlowTaskStatus(TaskStatus flowTaskStatus) {
     this.flowTaskStatus = flowTaskStatus;
   }
 

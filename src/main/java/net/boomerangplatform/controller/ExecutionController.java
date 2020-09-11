@@ -18,13 +18,13 @@ import net.boomerangplatform.error.BoomerangError;
 import net.boomerangplatform.error.BoomerangException;
 import net.boomerangplatform.model.FlowActivity;
 import net.boomerangplatform.model.FlowExecutionRequest;
-import net.boomerangplatform.mongo.entity.FlowTaskExecutionEntity;
-import net.boomerangplatform.mongo.entity.FlowWorkflowActivityEntity;
-import net.boomerangplatform.mongo.entity.FlowWorkflowEntity;
-import net.boomerangplatform.mongo.entity.FlowWorkflowRevisionEntity;
+import net.boomerangplatform.mongo.entity.TaskExecutionEntity;
+import net.boomerangplatform.mongo.entity.ActivityEntity;
+import net.boomerangplatform.mongo.entity.WorkflowEntity;
+import net.boomerangplatform.mongo.entity.RevisionEntity;
 import net.boomerangplatform.mongo.model.FlowTriggerEnum;
 import net.boomerangplatform.mongo.model.WorkflowStatus;
-import net.boomerangplatform.mongo.service.FlowWorkflowVersionService;
+import net.boomerangplatform.mongo.service.RevisionService;
 import net.boomerangplatform.service.FlowExecutionService;
 import net.boomerangplatform.service.crud.FlowActivityService;
 import net.boomerangplatform.service.crud.WorkflowService;
@@ -42,7 +42,7 @@ public class ExecutionController {
   private FlowExecutionService flowExecutionService;
 
   @Autowired
-  private FlowWorkflowVersionService flowRevisionService;
+  private RevisionService flowRevisionService;
 
   @Autowired
   private WorkflowService workflowService;
@@ -52,7 +52,7 @@ public class ExecutionController {
       @RequestParam Optional<FlowTriggerEnum> trigger,
       @RequestBody Optional<FlowExecutionRequest> executionRequest) {
 
-    final FlowWorkflowEntity newEntity = workflowService.getWorkflow(workflowId);
+    final WorkflowEntity newEntity = workflowService.getWorkflow(workflowId);
     
     if(!workflowService.canExecuteWorkflow(newEntity.getFlowTeamId())) {
       throw new BoomerangException(BoomerangError.TOO_MANY_REQUESTS);
@@ -69,13 +69,13 @@ public class ExecutionController {
           request = new FlowExecutionRequest();
         }
   
-        final FlowWorkflowRevisionEntity entity =
+        final RevisionEntity entity =
             this.flowRevisionService.getLatestWorkflowVersion(workflowId);
         if (entity != null) {
-          final FlowWorkflowActivityEntity activity =
+          final ActivityEntity activity =
               activityService.createFlowActivity(entity.getId(), trigger, request);
           flowExecutionService.executeWorkflowVersion(entity.getId(), activity.getId());
-          final List<FlowTaskExecutionEntity> steps =
+          final List<TaskExecutionEntity> steps =
               activityService.getTaskExecutions(activity.getId());
   
           final FlowActivity response = new FlowActivity(activity);

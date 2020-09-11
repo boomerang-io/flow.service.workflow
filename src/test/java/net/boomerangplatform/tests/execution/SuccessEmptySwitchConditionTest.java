@@ -31,10 +31,10 @@ import org.springframework.test.web.client.MockRestServiceServer;
 import net.boomerangplatform.Application;
 import net.boomerangplatform.MongoConfig;
 import net.boomerangplatform.model.FlowExecutionRequest;
-import net.boomerangplatform.mongo.entity.FlowWorkflowActivityEntity;
-import net.boomerangplatform.mongo.entity.FlowWorkflowEntity;
-import net.boomerangplatform.mongo.entity.FlowWorkflowRevisionEntity;
-import net.boomerangplatform.mongo.model.FlowTaskStatus;
+import net.boomerangplatform.mongo.entity.ActivityEntity;
+import net.boomerangplatform.mongo.entity.WorkflowEntity;
+import net.boomerangplatform.mongo.entity.RevisionEntity;
+import net.boomerangplatform.mongo.model.TaskStatus;
 import net.boomerangplatform.mongo.model.FlowTriggerEnum;
 import net.boomerangplatform.service.crud.FlowActivityService;
 
@@ -53,11 +53,11 @@ public class SuccessEmptySwitchConditionTest extends FlowExecutionTest {
 
     FlowExecutionRequest request = new FlowExecutionRequest();
 
-    FlowWorkflowEntity workflow = controller.getWorkflowWithId("5d800606e5959c00075c5b9c");
-    FlowWorkflowRevisionEntity latestRevision =
+    WorkflowEntity workflow = controller.getWorkflowWithId("5d800606e5959c00075c5b9c");
+    RevisionEntity latestRevision =
         this.flowRevisionService.getLatestWorkflowVersion(workflow.getId());
 
-    final FlowWorkflowActivityEntity activity = activityService
+    final ActivityEntity activity = activityService
         .createFlowActivity(latestRevision.getId(), Optional.of(FlowTriggerEnum.manual), request);
 
     CompletableFuture<Boolean> executionFuture =
@@ -68,10 +68,10 @@ public class SuccessEmptySwitchConditionTest extends FlowExecutionTest {
     assertTrue(result.booleanValue());
 
 
-    final FlowWorkflowActivityEntity updatedActivity =
+    final ActivityEntity updatedActivity =
         activityService.findWorkflowActivity(activity.getId());
 
-    assertEquals(FlowTaskStatus.completed, updatedActivity.getStatus());
+    assertEquals(TaskStatus.completed, updatedActivity.getStatus());
 
   }
 

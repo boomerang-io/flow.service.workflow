@@ -1,13 +1,13 @@
 package net.boomerangplatform.model;
 
 import java.util.Date;
-import net.boomerangplatform.mongo.model.FlowTaskStatus;
+import net.boomerangplatform.mongo.model.TaskStatus;
 
 public class Execution {
 
   private String activityId;
   private Long duration;
-  private FlowTaskStatus status;
+  private TaskStatus status;
   private Date creationDate;
   private String teamName;
   private String workflowName;
@@ -29,11 +29,11 @@ public class Execution {
     this.duration = duration;
   }
 
-  public FlowTaskStatus getStatus() {
+  public TaskStatus getStatus() {
     return status;
   }
 
-  public void setStatus(FlowTaskStatus status) {
+  public void setStatus(TaskStatus status) {
     this.status = status;
   }
 

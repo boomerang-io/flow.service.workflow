@@ -2,10 +2,10 @@ package net.boomerangplatform.model;
 
 import java.util.List;
 import org.springframework.beans.BeanUtils;
-import net.boomerangplatform.mongo.entity.FlowTaskExecutionEntity;
-import net.boomerangplatform.mongo.entity.FlowWorkflowActivityEntity;
+import net.boomerangplatform.mongo.entity.TaskExecutionEntity;
+import net.boomerangplatform.mongo.entity.ActivityEntity;
 
-public class FlowActivity extends FlowWorkflowActivityEntity {
+public class FlowActivity extends ActivityEntity {
 
   private String description;
 
@@ -13,15 +13,19 @@ public class FlowActivity extends FlowWorkflowActivityEntity {
 
   private String shortDescription;
 
-  private List<FlowTaskExecutionEntity> steps;
+  private List<TaskExecutionEntity> steps;
 
   private String userName;
 
   private String workflowName;
 
   private String teamName;
+  
+  public FlowActivity() {
+    
+  }
 
-  public FlowActivity(FlowWorkflowActivityEntity entity) {
+  public FlowActivity(ActivityEntity entity) {
     BeanUtils.copyProperties(entity, this);
   }
 
@@ -33,7 +37,7 @@ public class FlowActivity extends FlowWorkflowActivityEntity {
     this.teamName = teamName;
   }
 
-  public List<FlowTaskExecutionEntity> getSteps() {
+  public List<TaskExecutionEntity> getSteps() {
     return steps;
   }
 
@@ -45,7 +49,7 @@ public class FlowActivity extends FlowWorkflowActivityEntity {
     return workflowName;
   }
 
-  public void setSteps(List<FlowTaskExecutionEntity> steps) {
+  public void setSteps(List<TaskExecutionEntity> steps) {
     this.steps = steps;
   }
 

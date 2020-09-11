@@ -25,8 +25,8 @@ import net.boomerangplatform.model.WorkflowExport;
 import net.boomerangplatform.model.WorkflowQuotas;
 import net.boomerangplatform.model.WorkflowSummary;
 import net.boomerangplatform.mongo.entity.FlowTaskTemplateEntity;
-import net.boomerangplatform.mongo.entity.FlowWorkflowEntity;
-import net.boomerangplatform.mongo.entity.FlowWorkflowRevisionEntity;
+import net.boomerangplatform.mongo.entity.WorkflowEntity;
+import net.boomerangplatform.mongo.entity.RevisionEntity;
 import net.boomerangplatform.mongo.model.Event;
 import net.boomerangplatform.mongo.model.FlowProperty;
 import net.boomerangplatform.mongo.model.Scheduler;
@@ -38,7 +38,7 @@ import net.boomerangplatform.mongo.model.WorkflowStatus;
 import net.boomerangplatform.mongo.model.next.DAGTask;
 import net.boomerangplatform.mongo.service.FlowTaskTemplateService;
 import net.boomerangplatform.mongo.service.FlowWorkflowService;
-import net.boomerangplatform.mongo.service.FlowWorkflowVersionService;
+import net.boomerangplatform.mongo.service.RevisionService;
 import net.boomerangplatform.scheduler.ScheduledTasks;
 
 @Service
@@ -51,7 +51,7 @@ public class WorkflowServiceImpl implements WorkflowService {
   private FlowWorkflowService workFlowRepository;
 
   @Autowired
-  private FlowWorkflowVersionService workflowVersionService;
+  private RevisionService workflowVersionService;
 
   @Autowired
   private FlowTaskTemplateService templateService;
@@ -72,7 +72,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   @Override
   public void deleteWorkflow(String workFlowid) {
-    final FlowWorkflowEntity entity = workFlowRepository.getWorkflow(workFlowid);
+    final WorkflowEntity entity = workFlowRepository.getWorkflow(workFlowid);
     entity.setStatus(WorkflowStatus.deleted);
     workFlowRepository.saveWorkflow(entity);
 
@@ -95,7 +95,7 @@ public class WorkflowServiceImpl implements WorkflowService {
   @Override
   public WorkflowSummary getWorkflow(String workflowId) {
 
-    final FlowWorkflowEntity entity = workFlowRepository.getWorkflow(workflowId);
+    final WorkflowEntity entity = workFlowRepository.getWorkflow(workflowId);
 
     if (entity.getTriggers().getEvent() == null) {
       Event event = new Event();
@@ -110,9 +110,9 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   @Override
   public List<WorkflowSummary> getWorkflowsForTeam(String flowTeamId) {
-    final List<FlowWorkflowEntity> list = workFlowRepository.getWorkflowsForTeams(flowTeamId);
+    final List<WorkflowEntity> list = workFlowRepository.getWorkflowsForTeams(flowTeamId);
     final List<WorkflowSummary> newList = new LinkedList<>();
-    for (final FlowWorkflowEntity entity : list) {
+    for (final WorkflowEntity entity : list) {
       final WorkflowSummary summary = new WorkflowSummary(entity);
       updateSummaryInformation(summary);
 
@@ -125,9 +125,9 @@ public class WorkflowServiceImpl implements WorkflowService {
   }
 
   @Override
-  public WorkflowSummary saveWorkflow(final FlowWorkflowEntity flowWorkflowEntity) {
+  public WorkflowSummary saveWorkflow(final WorkflowEntity flowWorkflowEntity) {
 
-    final FlowWorkflowEntity entity = workFlowRepository.saveWorkflow(flowWorkflowEntity);
+    final WorkflowEntity entity = workFlowRepository.saveWorkflow(flowWorkflowEntity);
     final WorkflowSummary summary = new WorkflowSummary(entity);
 
     if (summary.getTriggers() != null) {
@@ -151,7 +151,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   @Override
   public WorkflowSummary updateWorkflow(WorkflowSummary summary) {
-    final FlowWorkflowEntity entity = workFlowRepository.getWorkflow(summary.getId());
+    final WorkflowEntity entity = workFlowRepository.getWorkflow(summary.getId());
 
     entity.setFlowTeamId(summary.getFlowTeamId());
     entity.setName(summary.getName());
@@ -177,7 +177,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   }
 
-  private void updateTriggers(final FlowWorkflowEntity entity, Triggers previousTriggers,
+  private void updateTriggers(final WorkflowEntity entity, Triggers previousTriggers,
       Triggers trigger) {
     if (trigger != null) {
 
@@ -211,7 +211,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     }
   }
 
-  private void updateEvent(final FlowWorkflowEntity entity, String currentTopic, Event event) {
+  private void updateEvent(final WorkflowEntity entity, String currentTopic, Event event) {
     if (event != null) {
       String topic = event.getTopic();
 
@@ -232,7 +232,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     }
   }
 
-  private void updateWebhook(final FlowWorkflowEntity entity, String currentToken,
+  private void updateWebhook(final WorkflowEntity entity, String currentToken,
       Webhook webhook) {
     if (webhook != null) {
       boolean enabled = webhook.getEnable();
@@ -247,7 +247,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     }
   }
 
-  private void updateSchedule(final FlowWorkflowEntity entity, Triggers previousTriggers,
+  private void updateSchedule(final WorkflowEntity entity, Triggers previousTriggers,
       String currentTimezone, boolean previous, Scheduler scheduler) {
     if (scheduler != null) {
 
@@ -269,7 +269,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     }
   }
 
-  private void scheduleWorkflow(final FlowWorkflowEntity entity, boolean previous,
+  private void scheduleWorkflow(final WorkflowEntity entity, boolean previous,
       boolean current) {
     if (!previous && current) {
       this.taskScheduler.scheduleWorkflow(entity);
@@ -295,7 +295,7 @@ public class WorkflowServiceImpl implements WorkflowService {
   @Override
   public WorkflowSummary updateWorkflowProperties(String workflowId,
       List<FlowProperty> properties) {
-    final FlowWorkflowEntity entity = workFlowRepository.getWorkflow(workflowId);
+    final WorkflowEntity entity = workFlowRepository.getWorkflow(workflowId);
     entity.setProperties(properties);
 
     workFlowRepository.saveWorkflow(entity);
@@ -306,7 +306,7 @@ public class WorkflowServiceImpl implements WorkflowService {
   @Override
   public GenerateTokenResponse generateWebhookToken(String id) {
     GenerateTokenResponse tokenResponse = new GenerateTokenResponse();
-    FlowWorkflowEntity entity = workFlowRepository.getWorkflow(id);
+    WorkflowEntity entity = workFlowRepository.getWorkflow(id);
     Triggers trigger = entity.getTriggers();
     if (trigger != null) {
       String newToken = createUUID();
@@ -348,7 +348,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   @Override
   public ResponseEntity<InputStreamResource> exportWorkflow(String workFlowId) {
-    final FlowWorkflowEntity entity = workFlowRepository.getWorkflow(workFlowId);
+    final WorkflowEntity entity = workFlowRepository.getWorkflow(workFlowId);
     WorkflowExport export = new WorkflowExport(entity);
 
     export.setLatestRevision(workflowVersionService.getLatestWorkflowVersion(workFlowId));
@@ -389,7 +389,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
     }
 
-    FlowWorkflowRevisionEntity revision = export.getLatestRevision();
+    RevisionEntity revision = export.getLatestRevision();
     List<DAGTask> nodes = revision.getDag().getTasks();
     List<String> importTemplateIds = new ArrayList<>();
 
@@ -402,7 +402,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     if (templateIds.containsAll(importTemplateIds)) {
 
       if (update.equals(true)) {
-        final FlowWorkflowEntity entity = workFlowRepository.getWorkflow(export.getId());
+        final WorkflowEntity entity = workFlowRepository.getWorkflow(export.getId());
 
         entity.setName(export.getName());
         entity.setDescription(export.getDescription());
@@ -422,7 +422,7 @@ public class WorkflowServiceImpl implements WorkflowService {
         workflowVersionService.insertWorkflow(revision);
 
       } else {
-        FlowWorkflowEntity entity = new FlowWorkflowEntity();
+        WorkflowEntity entity = new WorkflowEntity();
         entity.setProperties(export.getProperties());
         entity.setDescription(export.getDescription());
 
@@ -439,7 +439,7 @@ public class WorkflowServiceImpl implements WorkflowService {
         entity.setEnablePersistentStorage(export.isEnablePersistentStorage());
         entity.setIcon(export.getIcon());
 
-        FlowWorkflowEntity savedEntity = workFlowRepository.saveWorkflow(entity);
+        WorkflowEntity savedEntity = workFlowRepository.saveWorkflow(entity);
 
         revision.setId(null);
         revision.setVersion(1);
@@ -455,7 +455,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   }
 
-  private List<FlowProperty> setupDefaultProperties(FlowWorkflowEntity workflowSummary) {
+  private List<FlowProperty> setupDefaultProperties(WorkflowEntity workflowSummary) {
 
     String[] iamKeys = {"execution_id"};
 

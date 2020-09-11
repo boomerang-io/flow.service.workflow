@@ -6,7 +6,7 @@ import org.springframework.http.ResponseEntity;
 import net.boomerangplatform.model.GenerateTokenResponse;
 import net.boomerangplatform.model.WorkflowExport;
 import net.boomerangplatform.model.WorkflowSummary;
-import net.boomerangplatform.mongo.entity.FlowWorkflowEntity;
+import net.boomerangplatform.mongo.entity.WorkflowEntity;
 import net.boomerangplatform.mongo.model.FlowProperty;
 
 public interface WorkflowService {
@@ -17,7 +17,7 @@ public interface WorkflowService {
 
   List<WorkflowSummary> getWorkflowsForTeam(String flowTeamId);
 
-  WorkflowSummary saveWorkflow(FlowWorkflowEntity flowWorkflowEntity);
+  WorkflowSummary saveWorkflow(WorkflowEntity flowWorkflowEntity);
 
   WorkflowSummary updateWorkflow(WorkflowSummary summary);
 

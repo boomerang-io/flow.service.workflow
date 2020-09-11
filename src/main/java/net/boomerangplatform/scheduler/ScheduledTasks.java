@@ -17,7 +17,7 @@ import org.quartz.TriggerBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.quartz.SchedulerFactoryBean;
 import org.springframework.stereotype.Component;
-import net.boomerangplatform.mongo.entity.FlowWorkflowEntity;
+import net.boomerangplatform.mongo.entity.WorkflowEntity;
 import net.boomerangplatform.mongo.model.WorkflowStatus;
 import net.boomerangplatform.mongo.service.FlowWorkflowService;
 
@@ -38,9 +38,9 @@ public class ScheduledTasks {
   }
 
   public void cancelJob(String workflowId) throws SchedulerException {
-    List<FlowWorkflowEntity> scheduledWorkflows = flowWorkflowService.getScheduledWorkflows();
+    List<WorkflowEntity> scheduledWorkflows = flowWorkflowService.getScheduledWorkflows();
     Scheduler scheduler = schedulerFactoryBean.getScheduler();
-    Predicate<FlowWorkflowEntity> p1 = e -> workflowId.equals(e.getId());
+    Predicate<WorkflowEntity> p1 = e -> workflowId.equals(e.getId());
     boolean exists = scheduledWorkflows.stream().anyMatch(p1);
     JobKey jobkey = new JobKey(workflowId, "flow");
 
@@ -52,8 +52,8 @@ public class ScheduledTasks {
   }
 
   private void setupJobs() {
-    List<FlowWorkflowEntity> scheduledWorkflows = flowWorkflowService.getScheduledWorkflows();
-    for (FlowWorkflowEntity workflow : scheduledWorkflows) {
+    List<WorkflowEntity> scheduledWorkflows = flowWorkflowService.getScheduledWorkflows();
+    for (WorkflowEntity workflow : scheduledWorkflows) {
       if (workflow.getStatus() == WorkflowStatus.active) {
         logger.info("Picked up scheduled job: {}", workflow.getName());
         try {
@@ -65,7 +65,7 @@ public class ScheduledTasks {
     }
   }
 
-  public void scheduleWorkflow(FlowWorkflowEntity workflow) {
+  public void scheduleWorkflow(WorkflowEntity workflow) {
     if (workflow.getTriggers() != null && workflow.getTriggers().getScheduler() != null) {
       String cronString = workflow.getTriggers().getScheduler().getSchedule();
       String timezone = workflow.getTriggers().getScheduler().getTimezone();

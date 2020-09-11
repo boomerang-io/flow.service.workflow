@@ -26,7 +26,7 @@ import org.springframework.test.web.client.MockRestServiceServer;
 import net.boomerangplatform.Application;
 import net.boomerangplatform.MongoConfig;
 import net.boomerangplatform.model.FlowExecutionRequest;
-import net.boomerangplatform.mongo.model.FlowTaskStatus;
+import net.boomerangplatform.mongo.model.TaskStatus;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = {Application.class, MongoConfig.class})
@@ -41,7 +41,7 @@ public class SucessRedBranchFlowExecutionTest extends FlowExecutionTest {
     inputs.put("color", "red");
     flowExecutionRequest.setProperties(inputs);
     this.testSuccessExecuteFlow("5d72be2ce7a4aa00072f9ee3", flowExecutionRequest,
-        FlowTaskStatus.completed);
+        TaskStatus.completed);
   }
 
   @Override

@@ -8,13 +8,13 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import net.boomerangplatform.mongo.model.CoreProperty;
-import net.boomerangplatform.mongo.model.FlowTaskStatus;
+import net.boomerangplatform.mongo.model.TaskStatus;
 import net.boomerangplatform.mongo.model.FlowTriggerEnum;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(Include.NON_NULL)
 @Document(collection = "flow_workflows_activity")
-public class FlowWorkflowActivityEntity {
+public class ActivityEntity {
 
   private Date creationDate;
 
@@ -27,7 +27,7 @@ public class FlowWorkflowActivityEntity {
 
   private String initiatedByUserName;
 
-  private FlowTaskStatus status;
+  private TaskStatus status;
 
   private String statusMessage;
 
@@ -55,7 +55,7 @@ public class FlowWorkflowActivityEntity {
     return initiatedByUserName;
   }
 
-  public FlowTaskStatus getStatus() {
+  public TaskStatus getStatus() {
     return status;
   }
 
@@ -83,7 +83,7 @@ public class FlowWorkflowActivityEntity {
     this.initiatedByUserName = initiatedByUserName;
   }
 
-  public void setStatus(FlowTaskStatus status) {
+  public void setStatus(TaskStatus status) {
     this.status = status;
   }
 

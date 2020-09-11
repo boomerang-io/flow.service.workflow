@@ -27,9 +27,9 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.web.client.MockRestServiceServer;
 import net.boomerangplatform.Application;
 import net.boomerangplatform.MongoConfig;
-import net.boomerangplatform.mongo.entity.FlowTaskExecutionEntity;
-import net.boomerangplatform.mongo.entity.FlowWorkflowActivityEntity;
-import net.boomerangplatform.mongo.model.FlowTaskStatus;
+import net.boomerangplatform.mongo.entity.TaskExecutionEntity;
+import net.boomerangplatform.mongo.entity.ActivityEntity;
+import net.boomerangplatform.mongo.model.TaskStatus;
 import net.boomerangplatform.service.crud.FlowActivityService;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -44,12 +44,12 @@ public class SuccessCompleSwitchConditionTest extends FlowExecutionTest {
 
   @Test
   public void testExecuteFlow() throws InterruptedException, ExecutionException {
-    FlowWorkflowActivityEntity activity = this.testSuccessExecuteFlow("5d7fa2386e155c0007549480");
+    ActivityEntity activity = this.testSuccessExecuteFlow("5d7fa2386e155c0007549480");
 
-    List<FlowTaskExecutionEntity> tasks = activityService.getTaskExecutions(activity.getId());
+    List<TaskExecutionEntity> tasks = activityService.getTaskExecutions(activity.getId());
     assertEquals(3, tasks.size());
-    for (FlowTaskExecutionEntity task : tasks) {
-      assertEquals(FlowTaskStatus.completed, task.getFlowTaskStatus());
+    for (TaskExecutionEntity task : tasks) {
+      assertEquals(TaskStatus.completed, task.getFlowTaskStatus());
     }
   }
 

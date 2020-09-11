@@ -5,29 +5,29 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import net.boomerangplatform.mongo.entity.FlowWorkflowRevisionEntity;
+import net.boomerangplatform.mongo.entity.RevisionEntity;
 import net.boomerangplatform.mongo.repository.FlowWorkflowVersionRepository;
 
 @Service
-public class FlowWorkflowVersionServiceImpl implements FlowWorkflowVersionService {
+public class RevisionServiceImpl implements RevisionService {
 
   @Autowired
   private FlowWorkflowVersionRepository workFlowVersionRepository;
 
   @Override
   @NoLogging
-  public void deleteWorkflow(FlowWorkflowRevisionEntity flowWorkflowVersionEntity) {
+  public void deleteWorkflow(RevisionEntity flowWorkflowVersionEntity) {
     workFlowVersionRepository.delete(flowWorkflowVersionEntity);
   }
 
   @Override
-  public FlowWorkflowRevisionEntity getLatestWorkflowVersion(String workflowId) {
+  public RevisionEntity getLatestWorkflowVersion(String workflowId) {
     final long versionCount = workFlowVersionRepository.countByworkFlowId(workflowId);
     return workFlowVersionRepository.findByworkFlowIdAndVersion(workflowId, versionCount);
   }
 
   @Override
-  public FlowWorkflowRevisionEntity getLatestWorkflowVersion(String workflowId, long version) {
+  public RevisionEntity getLatestWorkflowVersion(String workflowId, long version) {
     return workFlowVersionRepository.findByworkFlowIdAndVersion(workflowId, version);
   }
 
@@ -38,27 +38,27 @@ public class FlowWorkflowVersionServiceImpl implements FlowWorkflowVersionServic
 
   @Override
   @NoLogging
-  public FlowWorkflowRevisionEntity getWorkflowlWithId(String id) {
+  public RevisionEntity getWorkflowlWithId(String id) {
     return workFlowVersionRepository.findById(id).orElse(null);
   }
 
   @Override
   @NoLogging
-  public FlowWorkflowRevisionEntity insertWorkflow(
-      FlowWorkflowRevisionEntity flowWorkflowVersionEntity) {
+  public RevisionEntity insertWorkflow(
+      RevisionEntity flowWorkflowVersionEntity) {
     return workFlowVersionRepository.insert(flowWorkflowVersionEntity);
   }
 
   @Override
   @NoLogging
-  public FlowWorkflowRevisionEntity updateWorkflow(
-      FlowWorkflowRevisionEntity flowWorkflowVersionEntity) {
+  public RevisionEntity updateWorkflow(
+      RevisionEntity flowWorkflowVersionEntity) {
     return workFlowVersionRepository.save(flowWorkflowVersionEntity);
   }
 
 
   @Override
-  public Page<FlowWorkflowRevisionEntity> getAllWorkflowVersions(Optional<String> workFlowId,
+  public Page<RevisionEntity> getAllWorkflowVersions(Optional<String> workFlowId,
       Pageable pageable) {
     if (workFlowId.isPresent()) {
       return workFlowVersionRepository.findByworkFlowId(workFlowId.get(), pageable);
