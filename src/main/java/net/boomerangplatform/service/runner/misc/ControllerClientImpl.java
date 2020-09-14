@@ -2,6 +2,7 @@ package net.boomerangplatform.service.runner.misc;
 
 import java.util.Arrays;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -62,6 +63,7 @@ public class ControllerClientImpl implements ControllerClient {
   @Value("${controller.terminateworkflow.url}")
   private String terminateWorkflowURL;
 
+  @Override
   @Async
   public void submitTemplateTask(Task task, String activityId, String workflowName) {
 
@@ -178,6 +180,7 @@ public class ControllerClientImpl implements ControllerClient {
     flowTaskClient.endTask(response);
   }
   
+  @Override
   @Async
   public void submitCustomTask(Task task, String activityId, String workflowName) {
 
@@ -207,6 +210,7 @@ public class ControllerClientImpl implements ControllerClient {
       String arguments = map.get("arguments");
       if (!arguments.isBlank()) {
         String[] lines = arguments.split("\\r?\\n");
+        args  = new LinkedList<>();
         args.addAll(Arrays.asList(lines));
       }
     }
@@ -239,6 +243,15 @@ public class ControllerClientImpl implements ControllerClient {
         
     request.setConfiguration(taskConfiguration);
 
+    ObjectMapper objectMapper = new ObjectMapper();
+    try {
+      String payload = objectMapper.writeValueAsString(request);
+      System.out.println(payload);
+    } catch (JsonProcessingException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+    
     try {
 
       TaskResponse response = restTemplate.postForObject(createTaskURL, request, TaskResponse.class);
@@ -320,4 +333,5 @@ public class ControllerClientImpl implements ControllerClient {
     restTemplate.postForObject(terminateWorkflowURL, request, String.class);
     return true;
   }
+  
 }

@@ -278,6 +278,7 @@ public class FlowWorkflowActivityServiceImpl implements FlowWorkflowActivityServ
     return repository.findByWorkflowAndProperty(workflowId, key, value);
   }
   
+  @Override
   public List<ActivityEntity> findbyWorkflowIdsAndStatus(List<String> workflowIds, TaskStatus status){
     return repository.findByWorkflowIdInAndStatus(workflowIds, status);
   }

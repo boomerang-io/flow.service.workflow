@@ -74,11 +74,11 @@ public class FlowTaskTemplateEntity {
     this.category = category;
   }
 
-  public String getNodeType() {
+  public String getNodetype() {
     return nodetype;
   }
 
-  public void setNodeType(String nodetype) {
+  public void setNodetype(String nodetype) {
     this.nodetype = nodetype;
   }
 

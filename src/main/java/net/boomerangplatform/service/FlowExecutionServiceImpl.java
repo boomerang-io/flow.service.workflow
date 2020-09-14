@@ -21,7 +21,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import net.boomerangplatform.exceptions.RunWorkflowException;
 import net.boomerangplatform.model.Task;
-import net.boomerangplatform.model.controller.Workflow;
 import net.boomerangplatform.mongo.entity.TaskExecutionEntity;
 import net.boomerangplatform.mongo.entity.WorkflowEntity;
 import net.boomerangplatform.mongo.entity.FlowTaskTemplateEntity;
@@ -173,6 +172,7 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
       taskExecution.setFlowTaskStatus(TaskStatus.notstarted);
       taskExecution.setOrder(order);
       taskExecution.setTaskName(task.getTaskName());
+      
       if (taskTemplateEntity != null) {
         taskExecution.setTaskName(taskTemplateEntity.getName());
       }

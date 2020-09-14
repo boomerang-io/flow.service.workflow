@@ -8,9 +8,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.retry.support.RetryTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import com.github.alturkovic.lock.Lock;
+import com.github.alturkovic.lock.exception.LockNotAvailableException;
 import net.boomerangplatform.model.Task;
 import net.boomerangplatform.mongo.entity.ActivityEntity;
 import net.boomerangplatform.mongo.entity.FlowTaskTemplateEntity;
@@ -65,6 +69,9 @@ public class TaskServiceImpl implements TaskService {
 
   @Autowired
   private DAGUtility dagUtility;
+  
+  @Autowired
+  private Lock lock;
 
   @Override
   @Async
@@ -95,6 +102,7 @@ public class TaskServiceImpl implements TaskService {
     if (canRunTask) {
       if (taskType == TaskType.decision) {
         InternalTaskResponse response = new InternalTaskResponse();
+        response.setActivityId(taskExecution.getId());
         response.setStatus(TaskStatus.completed);
         this.endTask(response);
       } else if (taskType == TaskType.template) {
@@ -107,6 +115,8 @@ public class TaskServiceImpl implements TaskService {
     } else {
       InternalTaskResponse response = new InternalTaskResponse();
       response.setStatus(TaskStatus.skipped);
+      response.setActivityId(taskExecution.getId());
+
       endTask(response);
     }
   }
@@ -115,19 +125,44 @@ public class TaskServiceImpl implements TaskService {
   public void endTask(InternalTaskResponse request) {
     String activityId = request.getActivityId();
     TaskExecutionEntity activity = taskActivityService.findById(activityId);
+ 
     activity.setFlowTaskStatus(request.getStatus());
     long duration = new Date().getTime() - activity.getStartTime().getTime();
     activity.setDuration(duration);
     activity = taskActivityService.save(activity);
-
-    WorkflowEntity workflow = workflowService.getWorkflow(activity.getId());
     ActivityEntity workflowActivity =
         this.activityService.findWorkflowActiivtyById(activity.getActivityId());
+
+    WorkflowEntity workflow = workflowService.getWorkflow(workflowActivity.getWorkflowId());
     RevisionEntity revision =
         workflowVersionService.getWorkflowlWithId(workflowActivity.getWorkflowRevisionid());
+    
+    long timeout = 105000;
+    String storeId =  workflow.getId();
+
+    List<String> keys = new LinkedList<>();
+    keys.add(storeId);
+
+    System.out.println("Acquring lock: " + storeId);
+    
+
+    RetryTemplate retryTemplate = new RetryTemplate();
+    String tokenId = retryTemplate.execute(ctx -> {
+      final String token = lock.acquire(keys, storeId, timeout);
+      if (StringUtils.isEmpty(token)) {
+        throw new LockNotAvailableException(String.format("Lock not available for keys: %s in store %s", keys, storeId));
+      }
+      return token;
+    });
+  
+    System.out.println("Token: " + tokenId);
+    
     Task currentTask = getTask(activity, workflow);
     List<Task> tasks = this.createTaskList(revision, workflowActivity);
     executeNextStep(workflowActivity, tasks, currentTask);
+    System.out.println("Release");
+    lock.release(keys, storeId, tokenId);
+    System.out.println("Released");
   }
 
   private void finishWorkflow(ActivityEntity activity) {
@@ -175,8 +210,11 @@ public class TaskServiceImpl implements TaskService {
       
       boolean executeTask = canExecuteTask(workflowActivity, next, tasks);
       if (executeTask) {
+        TaskExecutionEntity task =
+            this.taskActivityService.findByTaskIdAndActiityId(next.getTaskId(), workflowActivity.getId());
+        
         InternalTaskRequest taskRequest = new InternalTaskRequest();
-        taskRequest.setActivityId(next.getTaskId());
+        taskRequest.setActivityId(task.getId());
         flowClient.startTask(taskRequest);
       }
     }

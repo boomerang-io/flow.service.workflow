@@ -16,7 +16,6 @@ import net.boomerangplatform.mongo.model.ConfigurationType;
 import net.boomerangplatform.mongo.model.UserType;
 import net.boomerangplatform.mongo.service.FlowSettingsService;
 import net.boomerangplatform.mongo.service.FlowUserService;
-import net.boomerangplatform.security.model.UserDetails;
 import net.boomerangplatform.security.service.UserDetailsService;
 import net.boomerangplatform.service.UserIdentityService;
 import net.boomerangplatform.util.DateUtil;
