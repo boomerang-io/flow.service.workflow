@@ -4,7 +4,6 @@ import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.client.ExpectedCount.times;
-import static org.springframework.test.web.client.match.MockRestRequestMatchers.jsonPath;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withStatus;
@@ -36,22 +35,19 @@ import org.springframework.test.web.client.MockRestServiceServer;
 @ContextConfiguration(classes = {Application.class, MongoConfig.class})
 @ActiveProfiles("local")
 
-public class FailureExecuteTests extends IntegrationTests {
+public class ComplexExecuteTests extends IntegrationTests {
 
   @Test
   public void testExecution() throws Exception {
-    String workflowId = "5d7877af2c57250007e3d7a5";
+    String workflowId = "5f5fddd25683833cf0b133ff";
 
     FlowActivity activity = submitWorkflow(workflowId);
 
     String id = activity.getId();
     Thread.sleep(15000);
     FlowActivity finalActivity = this.checkWorkflowActivity(id);
-    assertEquals(TaskStatus.failure, finalActivity.getStatus());
+    assertEquals(TaskStatus.completed, finalActivity.getStatus());
     assertNotNull(finalActivity.getDuration());
-    
-    assertEquals(TaskStatus.failure, finalActivity.getSteps().get(0).getFlowTaskStatus());
-    assertEquals(TaskStatus.skipped, finalActivity.getSteps().get(1).getFlowTaskStatus());
     mockServer.verify();
   }
 
@@ -66,12 +62,9 @@ public class FailureExecuteTests extends IntegrationTests {
             withSuccess(getMockFile("mock/launchpad/users.json"), MediaType.APPLICATION_JSON));
     mockServer.expect(times(1), requestTo(containsString("controller/workflow/create")))
         .andExpect(method(HttpMethod.POST)).andRespond(withStatus(HttpStatus.OK));
-    
-    mockServer.expect(times(1), requestTo(containsString("controller/task/execute")))
-        .andExpect(method(HttpMethod.POST))
-        .andExpect(jsonPath("$.workflowName").value("Unit Test Demo"))
-        .andExpect(jsonPath("$.taskName").value("Echo Test"))
-        .andRespond(withStatus(HttpStatus.INTERNAL_SERVER_ERROR));
+
+    mockServer.expect(times(5), requestTo(containsString("controller/task/execute")))
+        .andExpect(method(HttpMethod.POST)).andRespond(withStatus(HttpStatus.OK));
 
     mockServer.expect(times(1), requestTo(containsString("controller/workflow/terminate")))
         .andExpect(method(HttpMethod.POST)).andRespond(withStatus(HttpStatus.OK));
@@ -79,9 +72,10 @@ public class FailureExecuteTests extends IntegrationTests {
 
   @Override
   protected void getTestCaseData(Map<String, List<String>> data) {
-    data.put("flow_workflows", Arrays.asList("tests/scenarios/failure/failure-workflow.json"));
+    data.put("flow_workflows", Arrays.asList("tests/scenarios/complex/complex-workflow.json"));
     data.put("flow_workflows_revisions",
-        Arrays.asList("tests/scenarios/failure/failure-revision1.json"));
+        Arrays.asList(
+            "tests/scenarios/complex/complex-revision1.json"));
   }
 
 }

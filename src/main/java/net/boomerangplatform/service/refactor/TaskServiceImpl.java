@@ -10,6 +10,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.retry.backoff.FixedBackOffPolicy;
+import org.springframework.retry.policy.SimpleRetryPolicy;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -69,7 +71,7 @@ public class TaskServiceImpl implements TaskService {
 
   @Autowired
   private DAGUtility dagUtility;
-  
+
   @Autowired
   private Lock lock;
 
@@ -98,7 +100,7 @@ public class TaskServiceImpl implements TaskService {
     boolean canRunTask = dagUtility.canCompleteTask(activity, task.getTaskId());
 
     String activityId = activity.getId();
-    
+
     if (canRunTask) {
       if (taskType == TaskType.decision) {
         InternalTaskResponse response = new InternalTaskResponse();
@@ -125,50 +127,67 @@ public class TaskServiceImpl implements TaskService {
   public void endTask(InternalTaskResponse request) {
     String activityId = request.getActivityId();
     TaskExecutionEntity activity = taskActivityService.findById(activityId);
- 
-    activity.setFlowTaskStatus(request.getStatus());
-    long duration = new Date().getTime() - activity.getStartTime().getTime();
-    activity.setDuration(duration);
-    activity = taskActivityService.save(activity);
+
+
     ActivityEntity workflowActivity =
         this.activityService.findWorkflowActiivtyById(activity.getActivityId());
 
     WorkflowEntity workflow = workflowService.getWorkflow(workflowActivity.getWorkflowId());
     RevisionEntity revision =
         workflowVersionService.getWorkflowlWithId(workflowActivity.getWorkflowRevisionid());
+    Task currentTask = getTask(activity, workflow);
+    List<Task> tasks = this.createTaskList(revision, workflowActivity);
     
     long timeout = 105000;
-    String storeId =  workflow.getId();
+    String storeId = workflow.getId();
 
     List<String> keys = new LinkedList<>();
     keys.add(storeId);
 
-    System.out.println("Acquring lock: " + storeId);
-    
+    boolean finishedAll = this.finishedAll(workflowActivity, tasks, currentTask);
 
-    RetryTemplate retryTemplate = new RetryTemplate();
+    RetryTemplate retryTemplate = getRetryTemplate();
+    System.out.println("Try to get lock");
     String tokenId = retryTemplate.execute(ctx -> {
-      final String token = lock.acquire(keys, storeId, timeout);
+      final String token = lock.acquire(keys, "locks", timeout);
       if (StringUtils.isEmpty(token)) {
-        throw new LockNotAvailableException(String.format("Lock not available for keys: %s in store %s", keys, storeId));
+        throw new LockNotAvailableException(
+            String.format("Lock not available for keys: %s in store %s", keys, storeId));
       }
       return token;
     });
-  
-    System.out.println("Token: " + tokenId);
-    
-    Task currentTask = getTask(activity, workflow);
-    List<Task> tasks = this.createTaskList(revision, workflowActivity);
-    executeNextStep(workflowActivity, tasks, currentTask);
-    System.out.println("Release");
-    lock.release(keys, storeId, tokenId);
-    System.out.println("Released");
+
+    System.out.println("Acquired lock: " + tokenId);
+
+    workflowActivity = this.activityService.findWorkflowActiivtyById(activity.getActivityId());
+
+    activity.setFlowTaskStatus(request.getStatus());
+    long duration = new Date().getTime() - activity.getStartTime().getTime();
+    activity.setDuration(duration);
+    activity = taskActivityService.save(activity);
+
+    executeNextStep(workflowActivity, tasks, currentTask, finishedAll);
+    lock.release(keys, "locks", tokenId);
+    System.out.println("Released lock");
+  }
+
+  private RetryTemplate getRetryTemplate() {
+    RetryTemplate retryTemplate = new RetryTemplate();
+    FixedBackOffPolicy fixedBackOffPolicy = new FixedBackOffPolicy();
+    fixedBackOffPolicy.setBackOffPeriod(2000l);
+    retryTemplate.setBackOffPolicy(fixedBackOffPolicy);
+
+    SimpleRetryPolicy retryPolicy = new SimpleRetryPolicy();
+    retryPolicy.setMaxAttempts(100);
+    retryTemplate.setRetryPolicy(retryPolicy);
+    return retryTemplate;
   }
 
   private void finishWorkflow(ActivityEntity activity) {
-    
+
     WorkflowEntity workflow = workflowService.getWorkflow(activity.getWorkflowId());
-    
+
+
     this.controllerClient.terminateFlow(workflow.getId(), workflow.getName(), activity.getId());
     boolean workflowCompleted = dagUtility.validateWorkflow(activity);
     if (workflowCompleted) {
@@ -176,48 +195,71 @@ public class TaskServiceImpl implements TaskService {
     } else {
       activity.setStatus(TaskStatus.failure);
     }
-    final Date finishDate = new Date(); 
-    final long duration = finishDate.getTime() - activity.getCreationDate().getTime(); 
+    final Date finishDate = new Date();
+    final long duration = finishDate.getTime() - activity.getCreationDate().getTime();
     activity.setDuration(duration);
-    
-    
+
+
     this.activityService.saveWorkflowActivity(activity);
-  
+
   }
 
-  private void executeNextStep(ActivityEntity workflowActivity, List<Task> tasks,
-      Task currentTask) {
+  private void executeNextStep(ActivityEntity workflowActivity, List<Task> tasks, Task currentTask,
+      boolean finishedAll) {
+    System.out.println("Current Task: " + currentTask.getTaskName());
+
     List<Task> nextNodes = this.getTasksDependants(tasks, currentTask);
     for (Task next : nextNodes) {
-      
+
       if (next.getTaskType() == TaskType.end) {
-        List<String> deps = next.getDependencies();
-        boolean finishedAll = true;
-        for (String dep : deps) {
-         
-          TaskExecutionEntity task =
-              this.taskActivityService.findByTaskIdAndActiityId(dep, workflowActivity.getId());
-          TaskStatus status = task.getFlowTaskStatus();
-          if (status == TaskStatus.inProgress || status == TaskStatus.notstarted) {
-            finishedAll = false;
-          }
-        }
+
         if (finishedAll) {
+          System.out.println("All finished");
           this.finishWorkflow(workflowActivity);
-          return;
+  
         }
+        return;
       }
-      
+
       boolean executeTask = canExecuteTask(workflowActivity, next, tasks);
       if (executeTask) {
-        TaskExecutionEntity task =
-            this.taskActivityService.findByTaskIdAndActiityId(next.getTaskId(), workflowActivity.getId());
         
+        TaskExecutionEntity task = this.taskActivityService
+            .findByTaskIdAndActiityId(next.getTaskId(), workflowActivity.getId());
+
         InternalTaskRequest taskRequest = new InternalTaskRequest();
         taskRequest.setActivityId(task.getId());
         flowClient.startTask(taskRequest);
       }
     }
+  }
+
+  private boolean finishedAll(ActivityEntity workflowActivity, List<Task> tasks, Task currentTask) {
+    boolean finishedAll = true;
+
+    List<Task> nextNodes = this.getTasksDependants(tasks, currentTask);
+    for (Task next : nextNodes) {
+
+      if (next.getTaskType() == TaskType.end) {
+        List<String> deps = next.getDependencies();
+
+        for (String dep : deps) {
+
+          TaskExecutionEntity task =
+              this.taskActivityService.findByTaskIdAndActiityId(dep, workflowActivity.getId());
+
+          System.out.println("Examining: " + task.getTaskName() + " - " + task.getFlowTaskStatus());
+
+          TaskStatus status = task.getFlowTaskStatus();
+          if (status == TaskStatus.inProgress || status == TaskStatus.notstarted) {
+            finishedAll = false;
+          }
+        }
+
+      }
+    }
+
+    return finishedAll;
   }
 
   private boolean canExecuteTask(ActivityEntity workflowActivity, Task next, List<Task> tasks) {
@@ -245,7 +287,7 @@ public class TaskServiceImpl implements TaskService {
         this.activityService.findWorkflowActiivtyById(taskActivity.getActivityId());
     RevisionEntity revision =
         workflowVersionService.getWorkflowlWithId(activity.getWorkflowRevisionid());
-    List<Task> tasks = this.createTaskList(revision,activity);
+    List<Task> tasks = this.createTaskList(revision, activity);
     String taskId = taskActivity.getTaskId();
     final Task task =
         tasks.stream().filter(tsk -> taskId.equals(tsk.getTaskId())).findAny().orElse(null);
@@ -257,7 +299,7 @@ public class TaskServiceImpl implements TaskService {
 
     final Dag dag = revisionEntity.getDag();
 
-   
+
     final List<Task> taskList = new LinkedList<>();
     for (final DAGTask dagTask : dag.getTasks()) {
 
@@ -266,17 +308,17 @@ public class TaskServiceImpl implements TaskService {
       newTask.setTaskType(dagTask.getType());
       newTask.setTaskName(dagTask.getLabel());
 
-      
-   
+
+
       final String workFlowId = revisionEntity.getWorkFlowId();
       newTask.setWorkflowId(workFlowId);
 
       if (dagTask.getType() == TaskType.template || dagTask.getType() == TaskType.customtask) {
-        
+
         TaskExecutionEntity task =
             taskActivityService.findByTaskIdAndActiityId(dagTask.getTaskId(), activity.getId());
         newTask.setTaskActivityId(task.getId());
-        
+
         String templateId = dagTask.getTemplateId();
         final FlowTaskTemplateEntity flowTaskTemplate =
             templateService.getTaskTemplateWithId(templateId);

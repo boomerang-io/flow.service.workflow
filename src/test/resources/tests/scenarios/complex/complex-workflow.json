@@ -1,0 +1,31 @@
+{
+    "_id" : ObjectId("5f5fddd25683833cf0b133ff"),
+    "revisionCount" : NumberLong(0),
+    "templateUpgradesAvailable" : false,
+    "properties" : [],
+    "description" : "",
+    "flowTeamId" : "5eebc4b3aea46a0d8238fbe5",
+    "icon" : "api",
+    "name" : "Complex Test",
+    "shortDescription" : "Complex Test",
+    "status" : "active",
+    "triggers" : {
+        "scheduler" : {
+            "enable" : false,
+            "schedule" : "",
+            "timezone" : "",
+            "advancedCron" : false
+        },
+        "webhook" : {
+            "enable" : false,
+            "token" : ""
+        },
+        "event" : {
+            "enable" : false,
+            "topic" : ""
+        }
+    },
+    "enablePersistentStorage" : false,
+    "enableACCIntegration" : false,
+    "_class" : "net.boomerangplatform.model.WorkflowSummary"
+}
