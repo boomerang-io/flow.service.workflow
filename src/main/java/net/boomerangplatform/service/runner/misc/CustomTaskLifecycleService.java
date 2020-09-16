@@ -69,8 +69,11 @@ public class CustomTaskLifecycleService {
         args.addAll(Arrays.asList(lines));
       }
     }
-    request.setArguments(args);
-
+    
+    if (!args.isEmpty()) {
+      request.setArguments(args);
+    }
+ 
     final Date startDate = new Date();
 
     taskExecution.setStartTime(startDate);
