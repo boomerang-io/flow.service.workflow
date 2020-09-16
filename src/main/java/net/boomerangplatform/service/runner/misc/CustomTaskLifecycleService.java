@@ -2,6 +2,7 @@ package net.boomerangplatform.service.runner.misc;
 
 import java.util.Arrays;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,7 +60,7 @@ public class CustomTaskLifecycleService {
     request.setImage(map.get("image"));
     request.setCommand(map.get("command"));
 
-    List<String> args = task.getRevision().getArguments();
+    List<String> args = new LinkedList<>();
 
     if (map.get("arguments") != null) {
       String arguments = map.get("arguments");
