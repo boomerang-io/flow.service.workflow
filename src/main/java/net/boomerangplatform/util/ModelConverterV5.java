@@ -503,6 +503,9 @@ public class ModelConverterV5 {
     } else if (dagType == TaskType.decision) {
       type = DECISIONKEY;
     }
+    else if (dagType == TaskType.setwfproperty) {
+      type = "setwfproperty";
+    }
 
     return type;
   }
