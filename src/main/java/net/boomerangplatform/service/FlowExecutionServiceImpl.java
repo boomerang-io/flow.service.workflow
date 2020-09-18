@@ -34,6 +34,7 @@ import net.boomerangplatform.mongo.model.TaskType;
 import net.boomerangplatform.mongo.model.internal.InternalTaskRequest;
 import net.boomerangplatform.mongo.model.next.DAGTask;
 import net.boomerangplatform.mongo.model.next.Dependency;
+import net.boomerangplatform.mongo.service.ActivityTaskService;
 import net.boomerangplatform.mongo.service.FlowTaskTemplateService;
 import net.boomerangplatform.mongo.service.FlowWorkflowActivityService;
 import net.boomerangplatform.mongo.service.RevisionService;
@@ -72,6 +73,9 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
   private WorkflowService workflowService;
   
   @Autowired
+  private ActivityTaskService taskActivityService;
+  
+  @Autowired
   private ControllerClient controllerClient;
 
   private static final Logger LOGGER = LogManager.getLogger(FlowExecutionServiceImpl.class);
@@ -95,6 +99,7 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
         String templateId = dagTask.getTemplateId();
         final FlowTaskTemplateEntity flowTaskTemplate =
             templateService.getTaskTemplateWithId(templateId);
+     
         Integer templateVersion = dagTask.getTemplateVersion();
         List<Revision> revisions = flowTaskTemplate.getRevisions();
         if (revisions != null) {
@@ -180,6 +185,7 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
       taskExecution = this.flowActivityService.saveTaskExecution(taskExecution);
 
       task.setTaskActivityId(taskExecution.getId());
+
       order++;
     }
   }
@@ -222,25 +228,36 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
     controllerClient.createFlow(workflowId, workflowName, activityId, enablePVC, executionProperties);
     
     final Task startTask =  tasksToRun.stream().filter(tsk -> TaskType.start.equals(tsk.getTaskType())).findAny().orElse(null);
-    executeNextStep(activityEntity, tasksToRun, startTask);
+    executeNextStep(activityEntity, tasksToRun,startTask, start, end, graph);
   }
   
   private void executeNextStep(ActivityEntity workflowActivity, List<Task> tasks,
-      Task currentTask) {
-    List<Task> nextNodes = this.getTasksDependants(tasks, currentTask);
-    for (Task next : nextNodes) {
-
-        InternalTaskRequest taskRequest = new InternalTaskRequest();
-        taskRequest.setActivityId(next.getTaskActivityId());
-        taskClient.startTask(taskRequest);
+      Task currentTask, final Task start, final Task end,
+      final Graph<String, DefaultEdge> graph) {
+    
+    try {
+      List<Task> nextNodes = this.getTasksDependants(tasks, currentTask);
+      for (Task next : nextNodes) {
+     
+        final List<String> nodes =
+            GraphProcessor.createOrderedTaskList(graph, start.getTaskId(), end.getTaskId());
+        
+        if (nodes.contains(next.getTaskId())) {
+          InternalTaskRequest taskRequest = new InternalTaskRequest();
+          taskRequest.setActivityId(next.getTaskActivityId());
+          taskClient.startTask(taskRequest);
+        }       
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
     }
+   
   }
   
   private List<Task> getTasksDependants(List<Task> tasks, Task currentTask) {
-    List<Task> dep =
+   return
         tasks.stream().filter(c -> c.getDependencies().contains(currentTask.getTaskId()))
             .collect(Collectors.toList());
-    return dep;
   }
 
 

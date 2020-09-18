@@ -316,8 +316,11 @@ public class TaskServiceImpl implements TaskService {
 
         TaskExecutionEntity task =
             taskActivityService.findByTaskIdAndActiityId(dagTask.getTaskId(), activity.getId());
-        newTask.setTaskActivityId(task.getId());
-
+        if (task != null) {
+          newTask.setTaskActivityId(task.getId());
+        }
+        
+       
         String templateId = dagTask.getTemplateId();
         final FlowTaskTemplateEntity flowTaskTemplate =
             templateService.getTaskTemplateWithId(templateId);

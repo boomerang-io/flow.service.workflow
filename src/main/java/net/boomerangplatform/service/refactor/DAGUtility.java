@@ -114,6 +114,10 @@ public class DAGUtility {
       final String taskId = orderIterator.next();
       Task currentTask = this.getTaskByid(tasks, taskId);
       if (TaskType.start != currentTask.getTaskType() && TaskType.end != currentTask.getTaskType()) {
+        if (currentTask.getTaskActivityId() == null) {
+          continue;
+        }
+        
         TaskExecutionEntity taskExecution =
             taskActivityService.findById(currentTask.getTaskActivityId());
         if (taskExecution == null) {
