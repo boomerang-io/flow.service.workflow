@@ -7,6 +7,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import net.boomerangplatform.mongo.model.FlowTaskTemplateStatus;
 import net.boomerangplatform.mongo.model.Revision;
 
@@ -23,7 +24,10 @@ public class FlowTaskTemplateEntity {
   private Date lastModified;
   private String name;
   private String category;
+  
+  @JsonProperty("nodeType")
   private String nodetype;
+  
   private List<Revision> revisions;
   private FlowTaskTemplateStatus status;
   private Date createdDate;
@@ -74,6 +78,7 @@ public class FlowTaskTemplateEntity {
     this.category = category;
   }
 
+  @JsonProperty("nodeType")
   public String getNodetype() {
     return nodetype;
   }
