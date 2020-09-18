@@ -204,7 +204,7 @@ public class ControllerClientImpl implements ControllerClient {
     request.setImage(map.get("image"));
     request.setCommand(map.get("command"));
 
-    List<String> args = task.getRevision().getArguments();
+    List<String> args = new LinkedList<>();
 
     if (map.get("arguments") != null) {
       String arguments = map.get("arguments");
