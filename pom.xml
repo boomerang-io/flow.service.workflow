@@ -296,8 +296,8 @@
 
 	<repositories>
 		<repository>
-			<id>github</id>
-			<url>https://maven.pkg.github.com/marcusdroy/distributed-lock</url>
+			<id>boomeranglib-maven</id>
+			<url>https://tools.boomerangplatform.net/artifactory/boomeranglib-maven</url>
 		</repository>
 	</repositories>
 
