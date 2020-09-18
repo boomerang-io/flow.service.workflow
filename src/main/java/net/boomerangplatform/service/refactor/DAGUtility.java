@@ -442,4 +442,32 @@ public class DAGUtility {
   }
 
 
+  
+  public String getOutputProperty(String expression, ActivityEntity activity) {
+    
+    WorkflowEntity workflow = this.flowWorkflowService.getWorkflow(activity.getWorkflowId());
+    final Map<String, String> executionProperties = buildExecutionProperties(activity, workflow);
+    String regex = "\\$\\{p:(.*?)\\}";
+    Pattern pattern = Pattern.compile(regex);
+    Matcher matcher = pattern.matcher(expression);
+    if (matcher.find()) {
+      String group = matcher.group(1);
+      String[] components = group.split("/");
+      if (components.length == 1) {
+        if (executionProperties.get(components[0]) != null) {
+          return executionProperties.get(components[0]);
+        }
+      } else if (components.length == 2) {
+        String taskName = components[0];
+        String outputProperty = components[1];
+        TaskExecutionEntity taskExecution =
+            taskActivityService.findByTaskNameAndActiityId(taskName, activity.getId());
+        if (taskExecution != null && taskExecution.getOutputs() != null
+            && taskExecution.getOutputs().get(outputProperty) != null) {
+          return taskExecution.getOutputs().get(outputProperty);
+        }
+      }
+    }
+    return null;
+  }
 }

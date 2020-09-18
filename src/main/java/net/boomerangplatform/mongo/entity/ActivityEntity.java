@@ -39,6 +39,8 @@ public class ActivityEntity {
 
   private List<CoreProperty> properties;
 
+  private List<CoreProperty> outputProperties;
+  
   public Date getCreationDate() {
     return creationDate;
   }
@@ -125,6 +127,14 @@ public class ActivityEntity {
 
   public void setDuration(Long duration) {
     this.duration = duration;
+  }
+
+  public List<CoreProperty> getOutputProperties() {
+    return outputProperties;
+  }
+
+  public void setOutputProperties(List<CoreProperty> outputProperties) {
+    this.outputProperties = outputProperties;
   }
 
 }
