@@ -390,7 +390,7 @@ public class ModelConverterV5 {
     port.setSelected(false);
     port.setParentNode(taskId);
 
-    if (CUSTOMTASKNAME.equals(type) || TEMPLATETASKNAME.equals(type)) {
+    if (CUSTOMTASKNAME.equals(type) || TEMPLATETASKNAME.equals(type) || "setwfproperty".equals(type)) {
       port.setType("task");
     } else {
       port.setType(type);
