@@ -176,12 +176,57 @@ public class FlowActivityServiceImpl implements FlowActivityService {
       addTeamInformation(teamIds, allactivitiesFiltered, activity, workFlowId);
     }
 
+    if(!teamIds.isPresent()){
     net.boomerangplatform.model.Pageable pageablefinal = createPageable(records, property,
         direction, activitiesFiltered, allactivitiesFiltered.size());
     response.setPageable(pageablefinal);
     response.setRecords(activitiesFiltered);
+    }
+    else {
+      net.boomerangplatform.model.Pageable pageablefinal =
+          createPageable(records, property, direction, activitiesFiltered, allactivitiesFiltered);
+      
+      int fromIndex = pageablefinal.getSize() * pageablefinal.getNumber();
+      int toIndex =
+         pageablefinal.getSize() * (pageablefinal.getNumber() +1);
+      
+      response.setRecords(
+          toIndex > allactivitiesFiltered.size() ? allactivitiesFiltered.subList(fromIndex, allactivitiesFiltered.size())
+              : allactivitiesFiltered.subList(fromIndex, toIndex));
+      
+      pageablefinal.setNumberOfElements(response.getRecords().size());
+      response.setPageable(pageablefinal);
+
+    }
 
     return response;
+  }
+  
+  protected net.boomerangplatform.model.Pageable createPageable(
+      final Page<FlowWorkflowActivityEntity> records, String property, Direction direction,
+      List<FlowActivity> activities, List<FlowActivity> totalElements) {
+    net.boomerangplatform.model.Pageable pageable = new net.boomerangplatform.model.Pageable();
+
+    pageable.setNumberOfElements(
+        records.getSize() * records.getNumber() + 1 <= activities.size() ? totalElements.size()
+            : totalElements.size() % records.getSize());
+    pageable.setNumber(records.getNumber());
+    pageable.setSize(records.getSize());
+    pageable.setTotalElements((long) totalElements.size());
+
+    pageable.setTotalPages((int) Math
+        .ceil((Double.valueOf(totalElements.size()) / Double.valueOf(records.getSize()))));
+    pageable.setFirst(records.isFirst());
+    pageable.setLast(records.isLast());
+
+    List<Sort> listSort = new ArrayList<>();
+    Sort sort = new Sort();
+    sort.setDirection(direction);
+    sort.setProperty(property);
+    listSort.add(sort);
+    pageable.setSort(listSort);
+
+    return pageable;
   }
 
   @Override
@@ -282,15 +327,13 @@ public class FlowActivityServiceImpl implements FlowActivityService {
       List<FlowActivity> activities, int totalElements) {
     net.boomerangplatform.model.Pageable pageable = new net.boomerangplatform.model.Pageable();
 
-    pageable.setNumberOfElements(
-        records.getSize() * records.getNumber() + 1 <= activities.size() ? activities.size()
-            : activities.size() % records.getSize());
+    pageable.setNumberOfElements(records.getNumberOfElements());
     pageable.setNumber(records.getNumber());
     pageable.setSize(records.getSize());
-    pageable.setTotalElements((long) totalElements);
+    pageable.setTotalElements(records.getTotalElements());
 
     pageable.setTotalPages(
-        (int) Math.ceil((Double.valueOf(totalElements) / Double.valueOf(records.getSize()))));
+       records.getTotalPages());
     pageable.setFirst(records.isFirst());
     pageable.setLast(records.isLast());
 
