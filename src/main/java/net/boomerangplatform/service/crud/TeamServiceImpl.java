@@ -372,7 +372,10 @@ public class TeamServiceImpl implements TeamService {
   public FlowTeam getTeamById(String teamId) {
     FlowTeamEntity flowEntity = flowTeamService.findById(teamId);
     FlowTeam flowTeam = new FlowTeam();
-    BeanUtils.copyProperties(flowEntity, flowTeam);
+    if (flowEntity != null) {
+      BeanUtils.copyProperties(flowEntity, flowTeam);
+    }
+    
 
     return flowTeam;
   }

@@ -20,6 +20,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import net.boomerangplatform.model.FlowTeam;
 import net.boomerangplatform.model.GenerateTokenResponse;
 import net.boomerangplatform.model.WorkflowExport;
 import net.boomerangplatform.model.WorkflowQuotas;
@@ -514,9 +515,12 @@ public class WorkflowServiceImpl implements WorkflowService {
     List<WorkflowShortSummary> summaryList = new LinkedList<>();
     List<WorkflowEntity> workfows = workFlowRepository.getAllWorkflows();
     for (WorkflowEntity workflow : workfows) {
-      String id = workflow.getId();
+    
       String workflowName = workflow.getName();
       boolean webhookEnabled = false;
+      
+      String flowTeamId = workflow.getFlowTeamId();
+      
       String token = null;
       
       if (workflow.getTriggers() != null) {
@@ -531,7 +535,15 @@ public class WorkflowServiceImpl implements WorkflowService {
       summary.setToken(token);
       summary.setWebHookEnabled(webhookEnabled);
       summary.setWorkflowName(workflowName);
-      summary.setId(id);
+      summary.setWorkflowId(workflow.getId());
+      
+      summary.setTeamId(flowTeamId);
+      
+      FlowTeam flowTeam = teamService.getTeamById(flowTeamId);
+      if (flowTeam != null) {
+        summary.setTeamName(flowTeam.getName());
+      }
+     
       summaryList.add(summary);
     } 
     return summaryList;

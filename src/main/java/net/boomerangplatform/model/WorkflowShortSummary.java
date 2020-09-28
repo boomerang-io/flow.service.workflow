@@ -2,22 +2,29 @@ package net.boomerangplatform.model;
 
 public class WorkflowShortSummary {
   
-  private String id;
-  private String workflowName;
-  private String token;
-  private boolean webHookEnabled;
-  
-  public String getId() {
-    return id;
+  public String getWorkflowId() {
+    return workflowId;
   }
-  public void setId(String id) {
-    this.id = id;
+  public void setWorkflowId(String workflowId) {
+    this.workflowId = workflowId;
   }
   public String getWorkflowName() {
     return workflowName;
   }
   public void setWorkflowName(String workflowName) {
     this.workflowName = workflowName;
+  }
+  public String getTeamId() {
+    return teamId;
+  }
+  public void setTeamId(String teamId) {
+    this.teamId = teamId;
+  }
+  public String getTeamName() {
+    return teamName;
+  }
+  public void setTeamName(String teamName) {
+    this.teamName = teamName;
   }
   public String getToken() {
     return token;
@@ -31,5 +38,11 @@ public class WorkflowShortSummary {
   public void setWebHookEnabled(boolean webHookEnabled) {
     this.webHookEnabled = webHookEnabled;
   }
-
+  private String workflowId;
+  private String workflowName;
+  private String teamId;
+  private String teamName;
+  private String token;
+  private boolean webHookEnabled;
+  
 }
