@@ -57,5 +57,8 @@ public class FlowWorkflowServiceImpl implements FlowWorkflowService {
     return workFlowRepository.findAllEventWorkflowsForTopic(topic);
   }
 
-
+  @Override
+  public List<WorkflowEntity> getAllWorkflows() {
+    return workFlowRepository.findAll();
+  }
 }

@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import net.boomerangplatform.model.GenerateTokenResponse;
 import net.boomerangplatform.model.WorkflowExport;
 import net.boomerangplatform.model.WorkflowQuotas;
+import net.boomerangplatform.model.WorkflowShortSummary;
 import net.boomerangplatform.model.WorkflowSummary;
 import net.boomerangplatform.mongo.entity.FlowTaskTemplateEntity;
 import net.boomerangplatform.mongo.entity.WorkflowEntity;
@@ -508,4 +509,31 @@ public class WorkflowServiceImpl implements WorkflowService {
     }
   }
 
+  @Override
+  public List<WorkflowShortSummary> getWorkflowShortSummaryList() {
+    List<WorkflowShortSummary> summaryList = new LinkedList<>();
+    List<WorkflowEntity> workfows = workFlowRepository.getAllWorkflows();
+    for (WorkflowEntity workflow : workfows) {
+      String id = workflow.getId();
+      String workflowName = workflow.getName();
+      boolean webhookEnabled = false;
+      String token = null;
+      
+      if (workflow.getTriggers() != null) {
+        Triggers triggers = workflow.getTriggers();
+        Webhook webhook = triggers.getWebhook();
+        if (webhook != null) {
+          webhookEnabled = webhook.getEnable();
+          token = webhook.getToken();
+        }
+      }
+      WorkflowShortSummary summary = new WorkflowShortSummary();
+      summary.setToken(token);
+      summary.setWebHookEnabled(webhookEnabled);
+      summary.setWorkflowName(workflowName);
+      summary.setId(id);
+      summaryList.add(summary);
+    } 
+    return summaryList;
+  }
 }

@@ -29,12 +29,14 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import net.boomerangplatform.Application;
+import net.boomerangplatform.controller.InternalController;
 import net.boomerangplatform.controller.WorkflowController;
 import net.boomerangplatform.misc.FlowTests;
 import net.boomerangplatform.model.FlowWorkflowRevision;
 import net.boomerangplatform.model.GenerateTokenResponse;
 import net.boomerangplatform.model.RevisionResponse;
 import net.boomerangplatform.model.WorkflowExport;
+import net.boomerangplatform.model.WorkflowShortSummary;
 import net.boomerangplatform.model.WorkflowSummary;
 import net.boomerangplatform.model.projectstormv5.RestConfig;
 import net.boomerangplatform.mongo.entity.WorkflowEntity;
@@ -60,6 +62,17 @@ public class WorkflowControllerTests extends FlowTests {
 
   @Autowired
   private WorkflowController controller;
+  
+  @Autowired
+  private InternalController internalController;
+  
+  @Test
+  public void testInternalWorkflowListing() {
+    List<WorkflowShortSummary> summaryList = internalController.getAllWorkflows();
+    
+    assertNotNull(summaryList);
+    assertEquals(18, summaryList.size());
+  }
 
   @Test
   public void testGetWorkflowLatestVersion() {

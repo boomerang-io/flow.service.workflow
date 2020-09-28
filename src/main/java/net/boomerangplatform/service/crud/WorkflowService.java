@@ -5,6 +5,7 @@ import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.ResponseEntity;
 import net.boomerangplatform.model.GenerateTokenResponse;
 import net.boomerangplatform.model.WorkflowExport;
+import net.boomerangplatform.model.WorkflowShortSummary;
 import net.boomerangplatform.model.WorkflowSummary;
 import net.boomerangplatform.mongo.entity.WorkflowEntity;
 import net.boomerangplatform.mongo.model.FlowProperty;
@@ -31,4 +32,5 @@ public interface WorkflowService {
   
   boolean canExecuteWorkflow(String teamId);
 
+  public List<WorkflowShortSummary> getWorkflowShortSummaryList();
 }

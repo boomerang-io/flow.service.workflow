@@ -9,6 +9,8 @@ public interface FlowWorkflowService {
 
   WorkflowEntity getWorkflow(String id);
 
+  List<WorkflowEntity> getAllWorkflows();
+  
   List<WorkflowEntity> getWorkflowsForTeams(String flowId);
 
   List<WorkflowEntity> getWorkflowsForTeams(List<String> flowTeamIds);
