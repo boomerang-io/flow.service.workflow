@@ -32,17 +32,17 @@ public class WorkflowShortSummary {
   public void setToken(String token) {
     this.token = token;
   }
-  public boolean isWebHookEnabled() {
-    return webHookEnabled;
+  public boolean isWebhookEnabled() {
+    return webhookEnabled;
   }
-  public void setWebHookEnabled(boolean webHookEnabled) {
-    this.webHookEnabled = webHookEnabled;
+  public void setWebhookEnabled(boolean webHookEnabled) {
+    this.webhookEnabled = webHookEnabled;
   }
   private String workflowId;
   private String workflowName;
   private String teamId;
   private String teamName;
   private String token;
-  private boolean webHookEnabled;
+  private boolean webhookEnabled;
   
 }

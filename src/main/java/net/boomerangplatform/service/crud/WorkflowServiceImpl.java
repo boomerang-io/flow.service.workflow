@@ -533,7 +533,7 @@ public class WorkflowServiceImpl implements WorkflowService {
       }
       WorkflowShortSummary summary = new WorkflowShortSummary();
       summary.setToken(token);
-      summary.setWebHookEnabled(webhookEnabled);
+      summary.setWebhookEnabled(webhookEnabled);
       summary.setWorkflowName(workflowName);
       summary.setWorkflowId(workflow.getId());
       
