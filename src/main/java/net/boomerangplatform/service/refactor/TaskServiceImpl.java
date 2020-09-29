@@ -19,6 +19,7 @@ import com.github.alturkovic.lock.Lock;
 import com.github.alturkovic.lock.exception.LockNotAvailableException;
 import net.boomerangplatform.model.Task;
 import net.boomerangplatform.mongo.entity.ActivityEntity;
+import net.boomerangplatform.mongo.entity.ApprovalEntity;
 import net.boomerangplatform.mongo.entity.FlowTaskTemplateEntity;
 import net.boomerangplatform.mongo.entity.RevisionEntity;
 import net.boomerangplatform.mongo.entity.TaskExecutionEntity;
@@ -35,6 +36,7 @@ import net.boomerangplatform.mongo.model.next.Dependency;
 import net.boomerangplatform.mongo.service.FlowTaskTemplateService;
 import net.boomerangplatform.mongo.service.FlowWorkflowActivityService;
 import net.boomerangplatform.mongo.service.ActivityTaskService;
+import net.boomerangplatform.mongo.service.ApprovalService;
 import net.boomerangplatform.mongo.service.FlowWorkflowService;
 import net.boomerangplatform.mongo.service.RevisionService;
 import net.boomerangplatform.service.runner.misc.ControllerClient;
@@ -68,6 +70,9 @@ public class TaskServiceImpl implements TaskService {
 
   @Autowired
   private Lock lock;
+  
+  @Autowired
+  private ApprovalService approvalService;
 
   @Override
   @Async
@@ -111,9 +116,8 @@ public class TaskServiceImpl implements TaskService {
         response.setActivityId(taskExecution.getId());
         response.setStatus(TaskStatus.completed);
         this.endTask(response);
-        
       } else if (taskType == TaskType.approval) {
-        throw new IllegalArgumentException("Approvals not implemented");
+        createApprovalNotification(taskExecution, activity, workflow);
       }
     } else {
       InternalTaskResponse response = new InternalTaskResponse();
@@ -122,6 +126,18 @@ public class TaskServiceImpl implements TaskService {
 
       endTask(response);
     }
+  }
+
+  private void createApprovalNotification(TaskExecutionEntity taskExecution,
+      ActivityEntity activity, WorkflowEntity workflow) {
+    taskExecution.setFlowTaskStatus(TaskStatus.waiting);
+    taskExecution = taskActivityService.save(taskExecution);
+    ApprovalEntity approval = new ApprovalEntity();
+    approval.setTaskActivityId(taskExecution.getId());
+    approval.setActivityId(activity.getId());
+    approval.setWorkflowId(workflow.getId());
+    approval.setTeamId(workflow.getFlowTeamId());
+    approvalService.createApproval(approval);
   }
 
   private void saveWorkflowProperty(Task task, ActivityEntity activity) {

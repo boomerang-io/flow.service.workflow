@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -30,8 +31,10 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import net.boomerangplatform.model.Approval;
 import net.boomerangplatform.model.FlowActivity;
 import net.boomerangplatform.model.FlowExecutionRequest;
+import net.boomerangplatform.model.WorkflowShortSummary;
 
 
 public abstract class IntegrationTests extends AbstractFlowTests {
@@ -90,7 +93,7 @@ public abstract class IntegrationTests extends AbstractFlowTests {
             "tests/setup/templates/21.json", "tests/setup/templates/23.json",
             "tests/setup/templates/24.json", "tests/setup/templates/26.json",
             "tests/setup/templates/27.json", "tests/setup/templates/28.json",
-            "tests/setup/templates/29.json"));
+            "tests/setup/templates/29.json", "tests/setup/templates/31.json"));
     data.put("flow_teams", Arrays.asList("tests/setup/teams/team1.json"));
     data.put("flow_settings", Arrays.asList("db/flow_settings/setting1.json"));
 
@@ -109,6 +112,39 @@ public abstract class IntegrationTests extends AbstractFlowTests {
 
   protected FlowActivity submitWorkflow(String workflowId) throws RestClientException {
     return this.submitWorkflow(workflowId, new FlowExecutionRequest());
+  }
+
+  protected void approveWorkflow(boolean status, String activityId) {
+    try {
+      
+      HttpHeaders headers = new HttpHeaders();
+      headers.add(AUTHORIZATION_HEADER, TOKEN_PREFIX + BEARER_TOKEN);
+      headers.add("Content-type", "application/json");
+      HttpEntity<String> requestUpdate = new HttpEntity<>("", headers);
+      
+      String url = "http://localhost:" + port + "/workflow/approvals/action?id="
+          + activityId + "&approved=" + status;
+      
+      ResponseEntity<String> response =
+          testRestTemplate.exchange(url, HttpMethod.PUT, requestUpdate, String.class);
+      
+    } catch (RestClientException e) {
+    }
+  }
+  
+  protected List<Approval> getApprovals() {
+
+    HttpHeaders headers = new HttpHeaders();
+    headers.add(AUTHORIZATION_HEADER, TOKEN_PREFIX + BEARER_TOKEN);
+    headers.add("Content-type", "application/json");
+    HttpEntity<String> requestUpdate = new HttpEntity<>("", headers);
+
+    final ResponseEntity<List<Approval>> latestActivity =
+        testRestTemplate.exchange("http://localhost:" + port + "/workflow/approvals/mine",
+            HttpMethod.GET, requestUpdate, new ParameterizedTypeReference<List<Approval>>() {});
+    List<Approval> approvalList = latestActivity.getBody();
+
+    return approvalList;
   }
 
   protected FlowActivity submitWorkflow(String workflowId, FlowExecutionRequest request)
