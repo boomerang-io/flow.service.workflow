@@ -141,6 +141,9 @@ public class TaskServiceImpl implements TaskService {
     approval.setStatus(ApprovalStatus.submitted);
     
     approvalService.save(approval);
+    
+    activity.setAwaitingApproval(true);
+    this.activityService.saveWorkflowActivity(activity);
   }
 
   private void saveWorkflowProperty(Task task, ActivityEntity activity) {
@@ -168,10 +171,10 @@ public class TaskServiceImpl implements TaskService {
     String activityId = request.getActivityId();
     TaskExecutionEntity activity = taskActivityService.findById(activityId);
 
-
     ActivityEntity workflowActivity =
         this.activityService.findWorkflowActiivtyById(activity.getActivityId());
 
+   
     WorkflowEntity workflow = workflowService.getWorkflow(workflowActivity.getWorkflowId());
     RevisionEntity revision =
         workflowVersionService.getWorkflowlWithId(workflowActivity.getWorkflowRevisionid());
@@ -195,9 +198,18 @@ public class TaskServiceImpl implements TaskService {
     String tokenId = getLock(storeId, keys);
 
     workflowActivity = this.activityService.findWorkflowActiivtyById(activity.getActivityId());
+    updatePendingAprovalStatus(workflowActivity);
+    
     activity.setFlowTaskStatus(request.getStatus());
     executeNextStep(workflowActivity, tasks, currentTask, finishedAll);
     lock.release(keys, "locks", tokenId);
+  }
+
+  private void updatePendingAprovalStatus(ActivityEntity workflowActivity) {
+    long count = approvalService.getApprovalCountForActivity(workflowActivity.getId(), ApprovalStatus.submitted);
+    boolean existingApprovals = (count > 0);
+    workflowActivity.setAwaitingApproval(existingApprovals);
+    this.activityService.saveWorkflowActivity(workflowActivity);
   }
 
   private String getLock(String storeId, List<String> keys) {

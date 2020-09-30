@@ -58,6 +58,7 @@ public class ActivityController {
       @RequestParam Optional<List<String>> teamIds, @RequestParam(defaultValue = "0") int page,
       @RequestParam(defaultValue = "2147483647") int size, @RequestParam Optional<Long> fromDate,
       @RequestParam Optional<Long> toDate, @RequestParam Optional<List<String>> statuses,
+      @RequestParam Optional<Boolean> awaitingApproval,
       @RequestParam Optional<List<String>> triggers) {
 
     Optional<Date> from = Optional.empty();

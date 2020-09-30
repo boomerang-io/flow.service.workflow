@@ -41,6 +41,8 @@ public class ActivityEntity {
 
   private List<CoreProperty> outputProperties;
   
+  private boolean isAwaitingApproval;
+  
   public Date getCreationDate() {
     return creationDate;
   }
@@ -135,6 +137,14 @@ public class ActivityEntity {
 
   public void setOutputProperties(List<CoreProperty> outputProperties) {
     this.outputProperties = outputProperties;
+  }
+
+  public boolean isAwaitingApproval() {
+    return isAwaitingApproval;
+  }
+
+  public void setAwaitingApproval(boolean isAwaitingApproval) {
+    this.isAwaitingApproval = isAwaitingApproval;
   }
 
 }
