@@ -28,11 +28,11 @@ import net.boomerangplatform.model.controller.TaskTemplate;
 import net.boomerangplatform.model.controller.Workflow;
 import net.boomerangplatform.model.controller.WorkflowStorage;
 import net.boomerangplatform.mongo.entity.TaskExecutionEntity;
-import net.boomerangplatform.mongo.model.TaskStatus;
 import net.boomerangplatform.mongo.model.Revision;
+import net.boomerangplatform.mongo.model.TaskStatus;
 import net.boomerangplatform.mongo.model.internal.InternalTaskResponse;
-import net.boomerangplatform.mongo.service.FlowSettingsService;
 import net.boomerangplatform.mongo.service.ActivityTaskService;
+import net.boomerangplatform.mongo.service.FlowSettingsService;
 import net.boomerangplatform.service.refactor.TaskClient;
 
 @Service
@@ -290,7 +290,7 @@ public class ControllerClientImpl implements ControllerClient {
     try {
       ObjectMapper objectMapper = new ObjectMapper();
       String payload = objectMapper.writeValueAsString(request);
-      LOGGER.info("Received Request :{}", payloadName);
+      LOGGER.info("Received Request: {}", payloadName);
       LOGGER.info(payload);
     } catch (JsonProcessingException e) {
       LOGGER.error(ExceptionUtils.getStackTrace(e));

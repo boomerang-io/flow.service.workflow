@@ -9,8 +9,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.quartz.SchedulerFactoryBean;
-import net.boomerangplatform.scheduler.AutowiringSpringBeanJobFactory;
 import com.github.alturkovic.lock.mongo.configuration.EnableMongoDistributedLock;
+import net.boomerangplatform.scheduler.AutowiringSpringBeanJobFactory;
 
 @SpringBootApplication
 @EnableScheduling

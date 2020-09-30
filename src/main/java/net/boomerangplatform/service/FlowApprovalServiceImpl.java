@@ -18,9 +18,9 @@ import net.boomerangplatform.mongo.model.TaskStatus;
 import net.boomerangplatform.mongo.model.internal.InternalTaskResponse;
 import net.boomerangplatform.mongo.service.ActivityTaskService;
 import net.boomerangplatform.mongo.service.ApprovalService;
-import net.boomerangplatform.service.refactor.TaskClient;
 import net.boomerangplatform.service.crud.TeamService;
 import net.boomerangplatform.service.crud.WorkflowService;
+import net.boomerangplatform.service.refactor.TaskClient;
 
 @Service
 public class FlowApprovalServiceImpl implements FlowApprovalService {

@@ -10,9 +10,9 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 import net.boomerangplatform.model.FlowExecutionRequest;
 import net.boomerangplatform.model.InsightsSummary;
 import net.boomerangplatform.model.ListActivityResponse;
-import net.boomerangplatform.mongo.entity.TaskExecutionEntity;
-import net.boomerangplatform.mongo.entity.FlowUserEntity;
 import net.boomerangplatform.mongo.entity.ActivityEntity;
+import net.boomerangplatform.mongo.entity.FlowUserEntity;
+import net.boomerangplatform.mongo.entity.TaskExecutionEntity;
 import net.boomerangplatform.mongo.model.FlowTriggerEnum;
 
 public interface FlowActivityService {

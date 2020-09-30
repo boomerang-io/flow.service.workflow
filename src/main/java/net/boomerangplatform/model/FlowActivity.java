@@ -2,8 +2,8 @@ package net.boomerangplatform.model;
 
 import java.util.List;
 import org.springframework.beans.BeanUtils;
-import net.boomerangplatform.mongo.entity.TaskExecutionEntity;
 import net.boomerangplatform.mongo.entity.ActivityEntity;
+import net.boomerangplatform.mongo.entity.TaskExecutionEntity;
 
 public class FlowActivity extends ActivityEntity {
 

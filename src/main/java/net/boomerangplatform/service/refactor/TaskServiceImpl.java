@@ -9,6 +9,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.retry.backoff.FixedBackOffPolicy;
 import org.springframework.retry.policy.SimpleRetryPolicy;
@@ -27,17 +29,17 @@ import net.boomerangplatform.mongo.entity.TaskExecutionEntity;
 import net.boomerangplatform.mongo.entity.WorkflowEntity;
 import net.boomerangplatform.mongo.model.CoreProperty;
 import net.boomerangplatform.mongo.model.Dag;
-import net.boomerangplatform.mongo.model.TaskStatus;
 import net.boomerangplatform.mongo.model.Revision;
+import net.boomerangplatform.mongo.model.TaskStatus;
 import net.boomerangplatform.mongo.model.TaskType;
 import net.boomerangplatform.mongo.model.internal.InternalTaskRequest;
 import net.boomerangplatform.mongo.model.internal.InternalTaskResponse;
 import net.boomerangplatform.mongo.model.next.DAGTask;
 import net.boomerangplatform.mongo.model.next.Dependency;
-import net.boomerangplatform.mongo.service.FlowTaskTemplateService;
-import net.boomerangplatform.mongo.service.FlowWorkflowActivityService;
 import net.boomerangplatform.mongo.service.ActivityTaskService;
 import net.boomerangplatform.mongo.service.ApprovalService;
+import net.boomerangplatform.mongo.service.FlowTaskTemplateService;
+import net.boomerangplatform.mongo.service.FlowWorkflowActivityService;
 import net.boomerangplatform.mongo.service.FlowWorkflowService;
 import net.boomerangplatform.mongo.service.RevisionService;
 import net.boomerangplatform.service.runner.misc.ControllerClient;
@@ -75,11 +77,15 @@ public class TaskServiceImpl implements TaskService {
   @Autowired
   private ApprovalService approvalService;
 
+  private static final Logger LOGGER = LogManager.getLogger(TaskServiceImpl.class);
+  
   @Override
   @Async
   public void createTask(InternalTaskRequest request) {
 
     String taskId = request.getActivityId();
+    LOGGER.debug("[{}] Recieved creating task request", taskId);
+    
     TaskExecutionEntity taskExecution = taskActivityService.findById(taskId);
     ActivityEntity activity =
         activityService.findWorkflowActiivtyById(taskExecution.getActivityId());
@@ -89,6 +95,7 @@ public class TaskServiceImpl implements TaskService {
     Task task = getTask(taskExecution);
   
     if (task == null || taskExecution.getFlowTaskStatus() != TaskStatus.notstarted) {
+      LOGGER.debug("Task is null or hasn't started yet");
       return;
     }
     
@@ -101,7 +108,11 @@ public class TaskServiceImpl implements TaskService {
 
     String activityId = activity.getId();
 
+    LOGGER.debug("[{}] Examining task type: {}", taskId, taskType);
+    
     if (canRunTask) {
+      LOGGER.debug("[{}] Can run task? {}",taskId,canRunTask);
+      
       if (taskType == TaskType.decision) {
         InternalTaskResponse response = new InternalTaskResponse();
         response.setActivityId(taskExecution.getId());
@@ -121,6 +132,7 @@ public class TaskServiceImpl implements TaskService {
         createApprovalNotification(taskExecution, activity, workflow);
       }
     } else {
+      LOGGER.debug("[{}] Skipping task",taskId);
       InternalTaskResponse response = new InternalTaskResponse();
       response.setStatus(TaskStatus.skipped);
       response.setActivityId(taskExecution.getId());
@@ -168,7 +180,9 @@ public class TaskServiceImpl implements TaskService {
   @Override
   @Async
   public void endTask(InternalTaskResponse request) {
+
     String activityId = request.getActivityId();
+    LOGGER.debug("[{}] Recieved end task request",activityId);
     TaskExecutionEntity activity = taskActivityService.findById(activityId);
 
     ActivityEntity workflowActivity =
@@ -195,7 +209,12 @@ public class TaskServiceImpl implements TaskService {
 
     boolean finishedAll = this.finishedAll(workflowActivity, tasks, currentTask);
  
+    LOGGER.debug("[{}] Finished all previous tasks? {}", activityId, finishedAll);
+
+    
+    LOGGER.debug("[{}] Attempting to get lock", activityId);
     String tokenId = getLock(storeId, keys);
+    LOGGER.debug("[{}] Obtained lock",activityId);
 
     workflowActivity = this.activityService.findWorkflowActiivtyById(activity.getActivityId());
     updatePendingAprovalStatus(workflowActivity);
@@ -203,6 +222,7 @@ public class TaskServiceImpl implements TaskService {
     activity.setFlowTaskStatus(request.getStatus());
     executeNextStep(workflowActivity, tasks, currentTask, finishedAll);
     lock.release(keys, "locks", tokenId);
+    LOGGER.debug("[{}] Released lock",activityId);
   }
 
   private void updatePendingAprovalStatus(ActivityEntity workflowActivity) {
@@ -268,7 +288,7 @@ public class TaskServiceImpl implements TaskService {
         return;
       }
 
-      boolean executeTask = canExecuteTask(workflowActivity, next, tasks);
+      boolean executeTask = canExecuteTask(workflowActivity, next);
       if (executeTask) {
         TaskExecutionEntity task = this.taskActivityService
             .findByTaskIdAndActiityId(next.getTaskId(), workflowActivity.getId());
@@ -300,7 +320,7 @@ public class TaskServiceImpl implements TaskService {
     return finishedAll;
   }
 
-  private boolean canExecuteTask(ActivityEntity workflowActivity, Task next, List<Task> tasks) {
+  private boolean canExecuteTask(ActivityEntity workflowActivity, Task next) {
     List<String> deps = next.getDependencies();
     for (String dep : deps) {
       TaskExecutionEntity task =

@@ -7,8 +7,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 import net.boomerangplatform.mongo.entity.ActivityEntity;
-import net.boomerangplatform.mongo.model.TaskStatus;
 import net.boomerangplatform.mongo.model.FlowTriggerEnum;
+import net.boomerangplatform.mongo.model.TaskStatus;
 
 public interface FlowWorkflowActivityRepository
     extends MongoRepository<ActivityEntity, String> {
