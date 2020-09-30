@@ -2,10 +2,11 @@ package net.boomerangplatform.service;
 
 import java.util.List;
 import net.boomerangplatform.model.Approval;
+import net.boomerangplatform.model.ApprovalRequest;
 
 public interface FlowApprovalService {
   
-  public void actionApproval(String id, Boolean approved);
+  public void actionApproval(ApprovalRequest request);
 
   public List<Approval> getApprovalsForUser();
 

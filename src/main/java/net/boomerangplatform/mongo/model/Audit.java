@@ -10,6 +10,7 @@ public class Audit {
   private String approverId;
   private String approverEmail;
   private String approverName;
+  private String comments;
 
   public String getApproverEmail() {
     return approverEmail;
@@ -43,5 +44,13 @@ public class Audit {
 
   public void setActionDate(Date actionDate) {
     this.actionDate = actionDate;
+  }
+
+  public String getComments() {
+    return comments;
+  }
+
+  public void setComments(String comments) {
+    this.comments = comments;
   }
 }

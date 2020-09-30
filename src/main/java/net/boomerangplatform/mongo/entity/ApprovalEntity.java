@@ -55,6 +55,7 @@ public class ApprovalEntity {
   public void setStatus(ApprovalStatus status) {
     this.status = status;
   }
+ 
   private String activityId;
   
   private String taskActivityId;

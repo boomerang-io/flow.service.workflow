@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import net.boomerangplatform.model.Approval;
+import net.boomerangplatform.model.ApprovalRequest;
 import net.boomerangplatform.model.ApprovalStatus;
 import net.boomerangplatform.model.FlowTeam;
 import net.boomerangplatform.model.TeamWorkflowSummary;
@@ -45,22 +46,23 @@ public class FlowApprovalServiceImpl implements FlowApprovalService {
   
   
   @Override
-  public void actionApproval(String id, Boolean approved) {
+  public void actionApproval(ApprovalRequest request) {
     
     FlowUserEntity flowUser = userIdentityService.getCurrentUser();
-    ApprovalEntity approvalEntity = approvalService.findById(id);
+    ApprovalEntity approvalEntity = approvalService.findById(request.getId());
    
     if (approvalEntity != null && flowUser != null) {
       
       Audit audit = new Audit();
       audit.setActionDate(new Date());
       audit.setApproverId(flowUser.getId());
-    
+      audit.setComments(request.getComments());
+
       approvalEntity.setAudit(audit);
             
       InternalTaskResponse actionApprovalResponse = new InternalTaskResponse();
       actionApprovalResponse.setActivityId(approvalEntity.getTaskActivityId());
-      if (approved.booleanValue()) {
+      if (request.isApproved()) {
         approvalEntity.setStatus(ApprovalStatus.approved);
         actionApprovalResponse.setStatus(TaskStatus.completed);
       }
@@ -68,9 +70,7 @@ public class FlowApprovalServiceImpl implements FlowApprovalService {
         approvalEntity.setStatus(ApprovalStatus.rejected);
         actionApprovalResponse.setStatus(TaskStatus.failure);
       }
-      
-      approvalEntity = approvalService.save(approvalEntity);
-      
+      approvalService.save(approvalEntity);
       taskClient.endTask(actionApprovalResponse);
     }
   }
@@ -111,7 +111,6 @@ public class FlowApprovalServiceImpl implements FlowApprovalService {
     
     if (approval.getAudit() != null) {
       Audit audit = approval.getAudit();
-      
       FlowUserEntity flowUser = userIdentityService.getUserByID(audit.getApproverId());
       audit.setApproverEmail(flowUser.getEmail());
       audit.setApproverName(flowUser.getName());

@@ -32,6 +32,7 @@ import org.springframework.web.client.RestTemplate;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import net.boomerangplatform.model.Approval;
+import net.boomerangplatform.model.ApprovalRequest;
 import net.boomerangplatform.model.FlowActivity;
 import net.boomerangplatform.model.FlowExecutionRequest;
 import net.boomerangplatform.model.WorkflowShortSummary;
@@ -117,10 +118,15 @@ public abstract class IntegrationTests extends AbstractFlowTests {
   protected void approveWorkflow(boolean status, String activityId) {
     try {
       
+      ApprovalRequest request = new ApprovalRequest();
+      request.setApproved(status);
+      request.setComments("Test comment");
+      request.setId(activityId);
+      
       HttpHeaders headers = new HttpHeaders();
       headers.add(AUTHORIZATION_HEADER, TOKEN_PREFIX + BEARER_TOKEN);
       headers.add("Content-type", "application/json");
-      HttpEntity<String> requestUpdate = new HttpEntity<>("", headers);
+      HttpEntity<ApprovalRequest> requestUpdate = new HttpEntity<>(request, headers);
       
       String url = "http://localhost:" + port + "/workflow/approvals/action?id="
           + activityId + "&approved=" + status;
