@@ -28,6 +28,7 @@ import org.springframework.web.client.RequestCallback;
 import org.springframework.web.client.ResponseExtractor;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
+import net.boomerangplatform.model.Approval;
 import net.boomerangplatform.model.Execution;
 import net.boomerangplatform.model.FlowActivity;
 import net.boomerangplatform.model.FlowExecutionRequest;
@@ -38,16 +39,20 @@ import net.boomerangplatform.mongo.entity.TaskExecutionEntity;
 import net.boomerangplatform.mongo.entity.FlowTeamEntity;
 import net.boomerangplatform.mongo.entity.FlowUserEntity;
 import net.boomerangplatform.mongo.entity.ActivityEntity;
+import net.boomerangplatform.mongo.entity.ApprovalEntity;
 import net.boomerangplatform.mongo.entity.WorkflowEntity;
 import net.boomerangplatform.mongo.entity.RevisionEntity;
 import net.boomerangplatform.mongo.model.CoreProperty;
 import net.boomerangplatform.mongo.model.TaskStatus;
+import net.boomerangplatform.mongo.model.TaskType;
 import net.boomerangplatform.mongo.model.FlowTriggerEnum;
 import net.boomerangplatform.mongo.service.FlowTeamService;
 import net.boomerangplatform.mongo.service.FlowWorkflowActivityService;
 import net.boomerangplatform.mongo.service.ActivityTaskService;
+import net.boomerangplatform.mongo.service.ApprovalService;
 import net.boomerangplatform.mongo.service.FlowWorkflowService;
 import net.boomerangplatform.mongo.service.RevisionService;
+import net.boomerangplatform.service.FlowApprovalService;
 import net.boomerangplatform.service.UserIdentityService;
 import net.boomerangplatform.util.DateUtil;
 
@@ -81,6 +86,9 @@ public class FlowActivityServiceImpl implements FlowActivityService {
   @Autowired
   @Qualifier("internalRestTemplate")
   private RestTemplate restTemplate;
+  
+  @Autowired
+  private FlowApprovalService approvalService;
 
   private List<FlowActivity> convert(List<ActivityEntity> records) {
 
@@ -346,7 +354,16 @@ public class FlowActivityServiceImpl implements FlowActivityService {
 
   @Override
   public List<TaskExecutionEntity> getTaskExecutions(String activityId) {
-    return taskService.findTaskActiivtyForActivity(activityId);
+    
+    List<TaskExecutionEntity> activites = taskService.findTaskActiivtyForActivity(activityId);
+    for (TaskExecutionEntity task : activites) {
+      if (TaskType.approval.equals(task.getTaskType())) {
+        ApprovalEntity approval = approvalService.getApprovalByTaskActivityId(task.getId());
+        task.setApproval(approval);
+      }
+    }
+    
+    return activites;
   }
 
   @Override

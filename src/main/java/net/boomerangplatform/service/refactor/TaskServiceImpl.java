@@ -137,7 +137,7 @@ public class TaskServiceImpl implements TaskService {
     approval.setActivityId(activity.getId());
     approval.setWorkflowId(workflow.getId());
     approval.setTeamId(workflow.getFlowTeamId());
-    approvalService.createApproval(approval);
+    approvalService.save(approval);
   }
 
   private void saveWorkflowProperty(Task task, ActivityEntity activity) {

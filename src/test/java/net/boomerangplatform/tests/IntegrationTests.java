@@ -143,6 +143,15 @@ public abstract class IntegrationTests extends AbstractFlowTests {
         testRestTemplate.exchange("http://localhost:" + port + "/workflow/approvals/mine",
             HttpMethod.GET, requestUpdate, new ParameterizedTypeReference<List<Approval>>() {});
     List<Approval> approvalList = latestActivity.getBody();
+    
+    try {
+      ObjectMapper objectMapper = new ObjectMapper();
+      String payload = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(approvalList);
+      LOGGER.info("Logging Approval Activity: ");
+      LOGGER.info(payload);
+    } catch (JsonProcessingException e) {
+      LOGGER.error(ExceptionUtils.getStackTrace(e));
+    }
 
     return approvalList;
   }

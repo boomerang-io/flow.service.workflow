@@ -1,7 +1,6 @@
 package net.boomerangplatform.scenarios;
 
 import static org.hamcrest.CoreMatchers.containsString;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.client.ExpectedCount.times;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
@@ -35,22 +34,20 @@ import org.springframework.test.web.client.MockRestServiceServer;
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = {Application.class, MongoConfig.class})
 @ActiveProfiles("local")
-
 public class ApproveExecuteTests extends IntegrationTests {
 
-  
   @Test
   public void testExecution() throws Exception {
     String workflowId = "5f4fc9e95683833cf0b1335b";
     FlowActivity activity = submitWorkflow(workflowId);
     String id = activity.getId();
-    Thread.sleep(2000);
+    Thread.sleep(5000);
     FlowActivity waitingAprpoval = this.checkWorkflowActivity(id);
     assertEquals(TaskStatus.inProgress, waitingAprpoval.getStatus());
     List<Approval> approvals = this.getApprovals();
     this.approveWorkflow(true, approvals.get(0).getId());
-    assertEquals(1, approvals.size());
-    Thread.sleep(2000);
+  
+    Thread.sleep(5000);
     FlowActivity finalActivity = this.checkWorkflowActivity(id);
     assertEquals(TaskStatus.completed, finalActivity.getStatus());
     mockServer.verify();

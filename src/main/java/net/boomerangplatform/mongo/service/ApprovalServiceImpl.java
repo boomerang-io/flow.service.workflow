@@ -18,12 +18,17 @@ public class ApprovalServiceImpl implements ApprovalService {
   }
 
   @Override
-  public ApprovalEntity createApproval(ApprovalEntity approval) {
+  public ApprovalEntity save(ApprovalEntity approval) {
     return flowRepository.save(approval);
   }
 
   @Override
   public ApprovalEntity findById(String id) {
     return flowRepository.findById(id).orElse(null);
+  }
+
+  @Override
+  public ApprovalEntity findByTaskActivityId(String id) {
+    return flowRepository.findByTaskActivityId(id);
   }  
 }

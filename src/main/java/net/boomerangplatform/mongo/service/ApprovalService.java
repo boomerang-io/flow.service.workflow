@@ -7,9 +7,11 @@ public interface ApprovalService {
    
   public List<ApprovalEntity> getActiivtyForTeam(String flowTeamId);
   
-  public ApprovalEntity createApproval(ApprovalEntity approval);
+  public ApprovalEntity save(ApprovalEntity approval);
   
   public ApprovalEntity findById(String id);
+
+  public ApprovalEntity findByTaskActivityId(String id);
   
 
 }

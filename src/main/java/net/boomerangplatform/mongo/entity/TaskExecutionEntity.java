@@ -7,7 +7,9 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import net.boomerangplatform.model.Approval;
 import net.boomerangplatform.mongo.model.TaskStatus;
+import net.boomerangplatform.mongo.model.TaskType;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(Include.NON_NULL)
@@ -32,6 +34,17 @@ public class TaskExecutionEntity {
   private String taskName;
 
   private String workflowId;
+  private TaskType taskType;
+  
+  private ApprovalEntity approval;
+
+  public TaskType getTaskType() {
+    return taskType;
+  }
+
+  public void setTaskType(TaskType taskType) {
+    this.taskType = taskType;
+  }
 
   private Map<String, String> outputs;
 
@@ -121,5 +134,13 @@ public class TaskExecutionEntity {
 
   public void setOutputs(Map<String, String> outputs) {
     this.outputs = outputs;
+  }
+
+  public ApprovalEntity getApproval() {
+    return approval;
+  }
+
+  public void setApproval(ApprovalEntity approval) {
+    this.approval = approval;
   }
 }

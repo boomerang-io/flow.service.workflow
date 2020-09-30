@@ -55,6 +55,11 @@ public class FlowApprovalServiceImpl implements FlowApprovalService {
       audit.setApproverId(flowUser.getId());
       audit.setResult(approved);
       
+      approvalEntity.setAudit(audit);
+      
+      
+      approvalEntity = approvalService.save(approvalEntity);
+      
       InternalTaskResponse actionApprovalResponse = new InternalTaskResponse();
       actionApprovalResponse.setActivityId(approvalEntity.getTaskActivityId());
       if (approved.booleanValue()) {
@@ -86,27 +91,46 @@ public class FlowApprovalServiceImpl implements FlowApprovalService {
     List<ApprovalEntity> approvalsList = approvalService.getActiivtyForTeam(teamId);
     List<Approval> approvals = new LinkedList<>();
     for (ApprovalEntity approvalEntity :approvalsList ) {
-      Approval approval = new Approval();
-      approval.setId(approvalEntity.getId());
-      approval.setAudit(approvalEntity.getAudit());
-      approval.setActivityId(approvalEntity.getActivityId());
-      approval.setTaskActivityId(approvalEntity.getTaskActivityId());
-      approval.setWorkflowId(approvalEntity.getWorkflowId());
-      approval.setTeamId(approvalEntity.getTeamId());
-  
-      
-      WorkflowSummary workflowSummary = workflowService.getWorkflow(approval.getWorkflowId());
-      approval.setWorkflowName(workflowSummary.getName());
-      
-      FlowTeam flowTeam = teamService.getTeamById(approval.getTeamId());
-      approval.setTeamName(flowTeam.getName());
-      approval.setTaskName("");
-      
-      TaskExecutionEntity taskExecution = activityTaskService.findById(approval.getTaskActivityId());
-      approval.setTaskName(taskExecution.getTaskName());
+      Approval approval = convertToApproval(approvalEntity);
       approvals.add(approval);
     }
     return approvals;
   }
-  
+
+  private Approval convertToApproval(ApprovalEntity approvalEntity) {
+    Approval approval = new Approval();
+    approval.setId(approvalEntity.getId());
+    approval.setAudit(approvalEntity.getAudit());
+    approval.setActivityId(approvalEntity.getActivityId());
+    approval.setTaskActivityId(approvalEntity.getTaskActivityId());
+    approval.setWorkflowId(approvalEntity.getWorkflowId());
+    approval.setTeamId(approvalEntity.getTeamId());
+ 
+    
+    WorkflowSummary workflowSummary = workflowService.getWorkflow(approval.getWorkflowId());
+    approval.setWorkflowName(workflowSummary.getName());
+    
+    FlowTeam flowTeam = teamService.getTeamById(approval.getTeamId());
+    approval.setTeamName(flowTeam.getName());
+    approval.setTaskName("");
+    
+    TaskExecutionEntity taskExecution = activityTaskService.findById(approval.getTaskActivityId());
+    approval.setTaskName(taskExecution.getTaskName());
+    return approval;
+  }
+
+  @Override
+  public Approval getApprovalById(String id) {
+    ApprovalEntity approvalEntity = this.approvalService.findById(id);
+    return this.convertToApproval(approvalEntity);
+  }
+
+  @Override
+  public ApprovalEntity getApprovalByTaskActivityId(String id) {
+    ApprovalEntity approvalEntity = this.approvalService.findByTaskActivityId(id);
+    if (approvalEntity == null) {
+      return null;
+    }
+    return approvalEntity;
+  }
 }

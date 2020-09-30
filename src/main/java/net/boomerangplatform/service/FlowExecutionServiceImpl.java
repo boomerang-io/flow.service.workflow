@@ -177,6 +177,7 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
       taskExecution.setFlowTaskStatus(TaskStatus.notstarted);
       taskExecution.setOrder(order);
       taskExecution.setTaskName(task.getTaskName());
+      taskExecution.setTaskType(task.getTaskType());
       
       if (taskTemplateEntity != null) {
         taskExecution.setTaskName(taskTemplateEntity.getName());

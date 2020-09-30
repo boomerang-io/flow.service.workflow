@@ -8,6 +8,8 @@ import net.boomerangplatform.mongo.entity.ApprovalEntity;
 public interface FlowApprovalRepository extends MongoRepository<ApprovalEntity, String> {
 
   List<ApprovalEntity> findByTeamId(String teamId);
+
+  ApprovalEntity findByTaskActivityId(String id);
   
 }
 
