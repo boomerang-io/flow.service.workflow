@@ -17,6 +17,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import com.github.alturkovic.lock.Lock;
 import com.github.alturkovic.lock.exception.LockNotAvailableException;
+import net.boomerangplatform.model.ApprovalStatus;
 import net.boomerangplatform.model.Task;
 import net.boomerangplatform.mongo.entity.ActivityEntity;
 import net.boomerangplatform.mongo.entity.ApprovalEntity;
@@ -137,6 +138,8 @@ public class TaskServiceImpl implements TaskService {
     approval.setActivityId(activity.getId());
     approval.setWorkflowId(workflow.getId());
     approval.setTeamId(workflow.getFlowTeamId());
+    approval.setStatus(ApprovalStatus.submitted);
+    
     approvalService.save(approval);
   }
 

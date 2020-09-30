@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import net.boomerangplatform.model.Approval;
+import net.boomerangplatform.model.ApprovalStatus;
 import net.boomerangplatform.model.FlowTeam;
 import net.boomerangplatform.model.TeamWorkflowSummary;
 import net.boomerangplatform.model.WorkflowSummary;
@@ -42,6 +43,7 @@ public class FlowApprovalServiceImpl implements FlowApprovalService {
   @Autowired
   private ActivityTaskService activityTaskService;
   
+  
   @Override
   public void actionApproval(String id, Boolean approved) {
     
@@ -53,21 +55,21 @@ public class FlowApprovalServiceImpl implements FlowApprovalService {
       Audit audit = new Audit();
       audit.setActionDate(new Date());
       audit.setApproverId(flowUser.getId());
-      audit.setResult(approved);
-      
+    
       approvalEntity.setAudit(audit);
-      
-      
-      approvalEntity = approvalService.save(approvalEntity);
-      
+            
       InternalTaskResponse actionApprovalResponse = new InternalTaskResponse();
       actionApprovalResponse.setActivityId(approvalEntity.getTaskActivityId());
       if (approved.booleanValue()) {
+        approvalEntity.setStatus(ApprovalStatus.approved);
         actionApprovalResponse.setStatus(TaskStatus.completed);
       }
       else {
+        approvalEntity.setStatus(ApprovalStatus.rejected);
         actionApprovalResponse.setStatus(TaskStatus.failure);
       }
+      
+      approvalEntity = approvalService.save(approvalEntity);
       
       taskClient.endTask(actionApprovalResponse);
     }
@@ -105,8 +107,15 @@ public class FlowApprovalServiceImpl implements FlowApprovalService {
     approval.setTaskActivityId(approvalEntity.getTaskActivityId());
     approval.setWorkflowId(approvalEntity.getWorkflowId());
     approval.setTeamId(approvalEntity.getTeamId());
- 
+    approval.setStatus(approvalEntity.getStatus());
     
+    if (approval.getAudit() != null) {
+      Audit audit = approval.getAudit();
+      
+      FlowUserEntity flowUser = userIdentityService.getUserByID(audit.getApproverId());
+      audit.setApproverEmail(flowUser.getEmail());
+      audit.setApproverName(flowUser.getName());
+    }
     WorkflowSummary workflowSummary = workflowService.getWorkflow(approval.getWorkflowId());
     approval.setWorkflowName(workflowSummary.getName());
     
@@ -126,11 +135,11 @@ public class FlowApprovalServiceImpl implements FlowApprovalService {
   }
 
   @Override
-  public ApprovalEntity getApprovalByTaskActivityId(String id) {
+  public Approval getApprovalByTaskActivityId(String id) {
     ApprovalEntity approvalEntity = this.approvalService.findByTaskActivityId(id);
     if (approvalEntity == null) {
       return null;
     }
-    return approvalEntity;
+    return convertToApproval(approvalEntity);
   }
 }

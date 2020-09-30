@@ -3,12 +3,10 @@ package net.boomerangplatform.mongo.entity;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import net.boomerangplatform.model.ApprovalStatus;
 import net.boomerangplatform.mongo.model.Audit;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonInclude(Include.NON_NULL)
 @Document(collection = "flow_workflows_activity_approval")
 public class ApprovalEntity {
   
@@ -51,13 +49,19 @@ public class ApprovalEntity {
   public void setTeamId(String teamId) {
     this.teamId = teamId;
   }
+  public ApprovalStatus getStatus() {
+    return status;
+  }
+  public void setStatus(ApprovalStatus status) {
+    this.status = status;
+  }
   private String activityId;
   
   private String taskActivityId;
   private String workflowId;
   private String teamId;
   private Audit audit;
-  
-  
+  private ApprovalStatus status;
 
+ 
 }

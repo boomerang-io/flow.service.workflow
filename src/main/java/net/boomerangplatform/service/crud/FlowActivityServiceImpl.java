@@ -358,7 +358,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
     List<TaskExecutionEntity> activites = taskService.findTaskActiivtyForActivity(activityId);
     for (TaskExecutionEntity task : activites) {
       if (TaskType.approval.equals(task.getTaskType())) {
-        ApprovalEntity approval = approvalService.getApprovalByTaskActivityId(task.getId());
+        Approval approval = approvalService.getApprovalByTaskActivityId(task.getId());
         task.setApproval(approval);
       }
     }

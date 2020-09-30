@@ -69,6 +69,13 @@ public class ApproveExecuteTests extends IntegrationTests {
     .andExpect(method(HttpMethod.GET)).andRespond(
         withSuccess(getMockFile("mock/launchpad/users.json"), MediaType.APPLICATION_JSON));
     
+    mockServer.expect(times(1), requestTo(containsString("users/user/5e736fb0a97b78000125ebe3")))
+    .andExpect(method(HttpMethod.GET)).andRespond(
+        withSuccess(getMockFile("mock/launchpad/users.json"), MediaType.APPLICATION_JSON));
+    
+    
+    
+    
     mockServer.expect(times(1), requestTo(containsString("controller/workflow/terminate")))
     .andExpect(method(HttpMethod.POST)).andRespond(withStatus(HttpStatus.OK));
 
