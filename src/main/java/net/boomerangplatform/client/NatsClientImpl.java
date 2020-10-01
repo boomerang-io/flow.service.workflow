@@ -11,6 +11,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.v1.AttributesImpl;
 import io.cloudevents.v1.http.Unmarshallers;
@@ -62,6 +65,11 @@ public class NatsClientImpl implements NatsClient {
 	  String trigger = event.getAttributes().getType().replace(TYPE_PREFIX, "");
 	  if (trigger.equals(workflowService.getWorkflow(workflowId).getTriggers().getEvent().getTopic())) {
 	    logger.info("Process Message - Trigger(" + trigger + ") is allowed.");
+	    
+	    ObjectMapper objectMapper = new ObjectMapper();
+	    Map<String, Object> properties = objectMapper.convertValue(event.getData().toString(), new TypeReference<Map<String, Object>>(){});
+	    
+	    properties.forEach((k, v) -> {System.out.println(k + " = " + v);});
 	  }
 	  
 	}
