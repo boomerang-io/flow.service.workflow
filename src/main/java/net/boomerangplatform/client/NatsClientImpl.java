@@ -38,7 +38,7 @@ public class NatsClientImpl implements NatsClient {
 
 	private final Logger logger = LogManager.getLogger();
 
-	public void processMessage(String payload) {  
+	private void processMessage(String payload) {  
 	  Map<String, Object> httpHeaders = new HashMap<>();
 	  httpHeaders.put("Content-Type", "application/cloudevents+json");
 	  
