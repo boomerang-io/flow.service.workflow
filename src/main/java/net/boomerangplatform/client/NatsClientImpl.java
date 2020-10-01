@@ -69,7 +69,7 @@ public class NatsClientImpl implements NatsClient {
 	    ObjectMapper objectMapper = new ObjectMapper();
 	    Map<String, Object> properties = objectMapper.convertValue(event.getData().toString(), new TypeReference<Map<String, Object>>(){});
 	    
-	    properties.forEach((k, v) -> {System.out.println(k + " = " + v);});
+	    properties.forEach((k, v) -> {logger.info(k + " = " + v);});
 	  }
 	  
 	}
