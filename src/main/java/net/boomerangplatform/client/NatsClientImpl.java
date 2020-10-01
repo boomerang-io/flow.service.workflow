@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.concurrent.TimeoutException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
@@ -20,6 +21,7 @@ import io.nats.streaming.StreamingConnection;
 import io.nats.streaming.StreamingConnectionFactory;
 import io.nats.streaming.Subscription;
 import io.nats.streaming.SubscriptionOptions;
+import net.boomerangplatform.mongo.service.FlowWorkflowService;
 
 @Component
 public class NatsClientImpl implements NatsClient {
@@ -29,14 +31,19 @@ public class NatsClientImpl implements NatsClient {
 
 	@Value("${eventing.nats.cluster}")
 	private String natsCluster;
-	  
-	  protected static final String SUBJECT = "flow-workflow-execute";
-	  
-	  protected static final String QUEUE = "flow-workflow";
+
+    protected static final String SUBJECT = "flow-workflow-execute";
+
+    protected static final String QUEUE = "flow-workflow";
+
+    protected static final String TYPE_PREFIX = "io.boomerang.eventing.";
 
 	private StreamingConnection streamingConnection;
 
 	private final Logger logger = LogManager.getLogger();
+
+    @Autowired
+    private FlowWorkflowService workflowService;
 
 	private void processMessage(String payload) {  
 	  Map<String, Object> httpHeaders = new HashMap<>();
@@ -48,8 +55,14 @@ public class NatsClientImpl implements NatsClient {
 	            .withPayload(() -> payload)
 	            .unmarshal();
 	  
-	  logger.info("Recieved Message - Attributes: " + event.getAttributes().toString());
-	  logger.info("Recieved Message - Payload: " + event.getData().toString());
+	  logger.info("Process Message - Attributes: " + event.getAttributes().toString());
+	  logger.info("Process Message - Payload: " + event.getData().toString());
+	  
+	  String workflowId = event.getAttributes().getSubject().orElse("");
+	  String trigger = event.getAttributes().getType().replace(TYPE_PREFIX, "");
+	  if (trigger.equals(workflowService.getWorkflow(workflowId).getTriggers().getEvent().getTopic())) {
+	    logger.info("Process Message - Trigger(" + trigger + ") is allowed.");
+	  }
 	  
 	}
 
