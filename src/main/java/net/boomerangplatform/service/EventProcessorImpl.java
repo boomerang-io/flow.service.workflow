@@ -96,7 +96,7 @@ public class EventProcessorImpl implements EventProcessor {
         inputProperties.forEach(inputProperty -> {
           String propertyKey = "$." + inputProperty.getKey();
           logger.info("Process Message - Property Key: " + propertyKey);
-          JsonNode propertyValue = JsonPath.using(jacksonConfig).parse(payload).read(propertyKey, JsonNode.class);
+          JsonNode propertyValue = JsonPath.using(jacksonConfig).parse(payload.toString()).read(propertyKey, JsonNode.class);
           logger.info("Process Message - Property Value: " + propertyValue.toPrettyString());
 
           if (propertyValue != null) {

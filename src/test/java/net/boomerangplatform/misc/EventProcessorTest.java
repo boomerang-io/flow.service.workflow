@@ -6,7 +6,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import org.junit.Test;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.spi.json.JacksonJsonProvider;
@@ -24,6 +27,9 @@ public class EventProcessorTest {
         .jsonProvider( new JacksonJsonProvider() )
         .build();
       String payload = TestUtil.getMockFile("json/event-dockerhub-payload.json");
+      ObjectMapper mapper = new ObjectMapper();
+
+      JsonNode nodePayload = mapper.readTree(payload);
       List<FlowProperty> inputProperties = new LinkedList<>();
       FlowProperty flowProperty1 = new FlowProperty();
       flowProperty1.setKey("callback_url");
@@ -35,7 +41,7 @@ public class EventProcessorTest {
       if (inputProperties != null) {
         inputProperties.forEach(inputProperty -> {
           String propertyKey = "$." + inputProperty.getKey();
-          JsonNode propertyValue = JsonPath.using(jacksonConfig).parse(payload).read(propertyKey, JsonNode.class);
+          JsonNode propertyValue = JsonPath.using(jacksonConfig).parse(nodePayload.toString()).read(propertyKey, JsonNode.class);
           
           System.out.println(propertyValue);
 
