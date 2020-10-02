@@ -68,13 +68,19 @@ public class EventProcessorImpl implements EventProcessor {
     logger.info("processCloudEvent() - Subject: " + subject);
     if (!subject.startsWith("/")) {
 //      TODO make error
-      logger.error("processCloudEvent() - Error: subject does not start with /");
+      logger.error("processCloudEvent() - Error: subject does not conform to required standard of /{workflowId} followed by /{topic} if custom event");
     }
     // Reference 0 will be an empty string as it is the left hand side of the split
     String[] splitArr = subject.split("/");
-    workflowId = splitArr[1].toString();
+    if (splitArr.length > 1) {
+      workflowId = splitArr[1].toString();
+    } else {
+      logger.error("processCloudEvent() - Error: No workflow ID found in event");
+    }
     logger.info("processCloudEvent() - WorkflowId: " + workflowId);
-    topic = splitArr[2].toString();
+    if (splitArr.length > 2) {
+      topic = splitArr[2].toString();
+    }
     String trigger = event.getAttributes().getType().replace(TYPE_PREFIX, "");
     logger.info("processCloudEvent() - Trigger: " + trigger + "Topic: " + topic);
 
