@@ -1,9 +1,6 @@
 package net.boomerangplatform.client;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeoutException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -12,12 +9,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.jayway.jsonpath.JsonPath;
-import com.jayway.jsonpath.ReadContext;
-import io.cloudevents.CloudEvent;
-import io.cloudevents.v1.AttributesImpl;
-import io.cloudevents.v1.http.Unmarshallers;
 import io.nats.streaming.Message;
 import io.nats.streaming.MessageHandler;
 import io.nats.streaming.Options;
@@ -25,8 +16,7 @@ import io.nats.streaming.StreamingConnection;
 import io.nats.streaming.StreamingConnectionFactory;
 import io.nats.streaming.Subscription;
 import io.nats.streaming.SubscriptionOptions;
-import net.boomerangplatform.mongo.model.FlowProperty;
-import net.boomerangplatform.mongo.service.FlowWorkflowService;
+import net.boomerangplatform.service.EventProcessor;
 
 @Component
 public class NatsClientImpl implements NatsClient {
@@ -48,40 +38,7 @@ public class NatsClientImpl implements NatsClient {
 	private final Logger logger = LogManager.getLogger();
 
     @Autowired
-    private FlowWorkflowService workflowService;
-
-//    TODO: better return management
-	private void processMessage(String payload) {  
-	  Map<String, Object> httpHeaders = new HashMap<>();
-	  httpHeaders.put("Content-Type", "application/cloudevents+json");
-	  
-	  CloudEvent<AttributesImpl, Map> event =
-	        Unmarshallers.structured(Map.class)
-	            .withHeaders(() -> httpHeaders)
-	            .withPayload(() -> payload)
-	            .unmarshal();
-	  
-	  logger.info("Process Message - Attributes: " + event.getAttributes().toString());
-	  logger.info("Process Message - Payload: " + event.getData().toString());
-	  
-//	  TODO determine the trigger implementation
-	  String workflowId = event.getAttributes().getSubject().orElse("");
-	  String trigger = event.getAttributes().getType().replace(TYPE_PREFIX, "");
-	  if (trigger.equals(workflowService.getWorkflow(workflowId).getTriggers().getEvent().getTopic())) {
-	    logger.info("Process Message - Trigger(" + trigger + ") is allowed.");
-	    
-	    ReadContext ctx = JsonPath.parse(payload);
-        List<FlowProperty> properties = workflowService.getWorkflow(workflowId).getProperties();
-        if (properties != null) {
-          properties.forEach(FlowProperty -> {
-            String propertyKey = "$."+FlowProperty.getKey();
-            logger.info("Process Message - Property Key: " + propertyKey);
-            JsonNode propertyValue = ctx.read(propertyKey);
-            logger.info("Process Message - Property Value: " + propertyValue.toPrettyString());
-          });
-        }
-	  }
-	}
+    private EventProcessor eventProcessor;
 
 //	TODO IF eventing enabled, start this on application startup OR is this what @EventListener is doing?
 	@EventListener
@@ -101,7 +58,8 @@ public class NatsClientImpl implements NatsClient {
               streamingConnection.subscribe(SUBJECT, QUEUE, new MessageHandler() { // NOSONAR
                 @Override
                 public void onMessage(Message m) {
-                  processMessage(new String(m.getData()));
+                  
+                  eventProcessor.processMessage(new String(m.getData()));
                 }
               }, new SubscriptionOptions.Builder().durableName("durable").build());
         } catch (IOException ex) {
