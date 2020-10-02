@@ -2,6 +2,7 @@ package net.boomerangplatform.client;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
 import org.apache.logging.log4j.LogManager;
@@ -11,9 +12,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.jayway.jsonpath.JsonPath;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.v1.AttributesImpl;
 import io.cloudevents.v1.http.Unmarshallers;
@@ -24,6 +24,7 @@ import io.nats.streaming.StreamingConnection;
 import io.nats.streaming.StreamingConnectionFactory;
 import io.nats.streaming.Subscription;
 import io.nats.streaming.SubscriptionOptions;
+import net.boomerangplatform.mongo.model.FlowProperty;
 import net.boomerangplatform.mongo.service.FlowWorkflowService;
 
 @Component
@@ -61,15 +62,19 @@ public class NatsClientImpl implements NatsClient {
 	  logger.info("Process Message - Attributes: " + event.getAttributes().toString());
 	  logger.info("Process Message - Payload: " + event.getData().toString());
 	  
+//	  TODO determine the trigger implementation
 	  String workflowId = event.getAttributes().getSubject().orElse("");
 	  String trigger = event.getAttributes().getType().replace(TYPE_PREFIX, "");
 	  if (trigger.equals(workflowService.getWorkflow(workflowId).getTriggers().getEvent().getTopic())) {
 	    logger.info("Process Message - Trigger(" + trigger + ") is allowed.");
 	    
-	    ObjectMapper objectMapper = new ObjectMapper();
-	    Map<String, Object> properties = objectMapper.convertValue(event.getData().toString(), new TypeReference<Map<String, Object>>(){});
-	    
-	    properties.forEach((k, v) -> {logger.info(k + " = " + v);});
+        List<FlowProperty> properties = workflowService.getWorkflow(workflowId).getProperties();
+        if (properties != null) {
+          properties.forEach(FlowProperty -> {
+            JsonNode propertyValue = JsonPath.parse(payload).read("$"+FlowProperty.getKey(), JsonNode.class);
+            logger.info("Process Message - Property Found: key=" + FlowProperty.getKey() + ",value=" + propertyValue);
+          });
+        }
 	  }
 	  
 	}
@@ -100,6 +105,7 @@ public class NatsClientImpl implements NatsClient {
         } catch (InterruptedException ex) {
           Thread.currentThread().interrupt();
         }
+//        TODO do we close connection and subscription?
 	}
 
 }
