@@ -62,7 +62,7 @@ public class NatsClientImpl implements NatsClient {
                 @Override
                 public void onMessage(Message m) {
                   
-                  eventProcessor.processMessage(new String(m.getData()));
+                  eventProcessor.processJSONMessage(new String(m.getData()));
                 }
               }, new SubscriptionOptions.Builder().durableName("durable").build());
         } catch (IOException ex) {

@@ -18,6 +18,7 @@ import io.cloudevents.v1.AttributesImpl;
 import io.cloudevents.v1.http.Unmarshallers;
 import net.boomerangplatform.model.FlowExecutionRequest;
 import net.boomerangplatform.mongo.model.FlowProperty;
+import net.boomerangplatform.mongo.model.FlowTriggerEnum;
 import net.boomerangplatform.mongo.model.Triggers;
 import net.boomerangplatform.service.crud.WorkflowService;
 
@@ -37,24 +38,17 @@ public class EventProcessorImpl implements EventProcessor {
 
   // TODO: better return management
   @Override
-  public void processEvent(Map<String, Object> headers, JsonNode payload) {
+  public void processHTTPEvent(Map<String, Object> headers, JsonNode payload) {
 
     CloudEvent<AttributesImpl, JsonNode> event = Unmarshallers.structured(JsonNode.class)
         .withHeaders(() -> headers).withPayload(() -> payload.toString()).unmarshal();
-
-    logger.info("Process Message - Attributes: " + event.getAttributes().toString());
-    JsonNode eventData = event.getData().get();
-    logger.info("Process Message - Data: " + eventData.toPrettyString());
-
-    String workflowId = event.getAttributes().getSubject().orElse("");
-    String trigger = event.getAttributes().getType().replace(TYPE_PREFIX, "");
-
-    processTrigger(eventData, workflowId, trigger);
+    
+    processCloudEvent(event);
   }
 
   // TODO: better return management
   @Override
-  public void processMessage(String message) {
+  public void processJSONMessage(String message) {
     Map<String, Object> headers = new HashMap<>();
     headers.put("Content-Type", "application/cloudevents+json");
 
@@ -62,7 +56,11 @@ public class EventProcessorImpl implements EventProcessor {
 
     CloudEvent<AttributesImpl, JsonNode> event = Unmarshallers.structured(JsonNode.class)
         .withHeaders(() -> headers).withPayload(() -> message).unmarshal();
-
+    
+    processCloudEvent(event);
+  }
+  
+  private void processCloudEvent(CloudEvent<AttributesImpl, JsonNode> event) {
     logger.info("Process Message - Attributes: " + event.getAttributes().toString());
     JsonNode eventData = event.getData().get();
     logger.info("Process Message - Data: " + eventData.toPrettyString());
@@ -71,52 +69,56 @@ public class EventProcessorImpl implements EventProcessor {
     String topic = "";
     String subject = event.getAttributes().getSubject().orElse("");
     String[] splitArr = subject.split("/");
-    for (Integer i=0; i < splitArr.length; i++) {
-      System.out.println(splitArr[i]);
+    if (!subject.startsWith("/")) {
+//      TODO make error
+      logger.error("processCloudEvent() - Error: subject does not start with /");
     }
-    workflowId = splitArr[0].toString();
-    topic = splitArr[1].toString();
-    logger.info("Process Message - WorkflowId: " + workflowId + ", Topic: " + topic);
+    // Reference 0 will be an empty string as it is the left hand side of the split
+    workflowId = splitArr[1].toString();
+    topic = splitArr[2].toString();
+    logger.info("processCloudEvent() - WorkflowId: " + workflowId + ", Topic: " + topic);
     String trigger = event.getAttributes().getType().replace(TYPE_PREFIX, "");
 
-    processTrigger(eventData, workflowId, trigger);
-  }
-
-  private void processTrigger(JsonNode eventData, String workflowId, String trigger) {
-
-    if (isTriggerEnabled(trigger, workflowId)) {
-      logger.info("Process Message - Trigger(" + trigger + ") is allowed.");
-      Configuration jacksonConfig =
-          Configuration.builder().mappingProvider(new JacksonMappingProvider())
-              .jsonProvider(new JacksonJsonProvider()).build();
-      List<FlowProperty> inputProperties = workflowService.getWorkflow(workflowId).getProperties();
-      Map<String, String> properties = new HashMap<>();
-      if (inputProperties != null) {
-        inputProperties.forEach(inputProperty -> {
-          logger.info("Process Message - Property Key: " + inputProperty.getKey());
-          JsonNode propertyValue = JsonPath.using(jacksonConfig).parse(eventData.toString())
-              .read("$." + inputProperty.getKey(), JsonNode.class);
-          logger.info("Process Message - Property Value: " + propertyValue.toString());
-
-          if (propertyValue != null) {
-            properties.put(inputProperty.getKey(), propertyValue.toString());
-          }
-
-          properties.forEach((k, v) -> {
-            logger.info("Process Message - " + k + "=" + v);
-          });
-        });
-      }
+    if (isTriggerEnabled(trigger, workflowId, topic)) {
+      logger.info("processCloudEvent() - Trigger(" + trigger + ") is allowed.");
 
       FlowExecutionRequest executionRequest = new FlowExecutionRequest();
-      executionRequest.setProperties(properties);
+      executionRequest.setProperties(processProperties(eventData, workflowId));
 
-      executionService.executeWorkflow(workflowId, Optional.empty(), Optional.of(executionRequest));
+      executionService.executeWorkflow(workflowId, Optional.of(FlowTriggerEnum.getFlowTriggerEnum(trigger)), Optional.of(executionRequest));
+    } else {
+//    TODO make error
+    logger.error("processCloudEvent() - No trigger enabled.");
     }
   }
+  
+  private Map<String, String> processProperties(JsonNode eventData, String workflowId) {
+    Configuration jacksonConfig =
+        Configuration.builder().mappingProvider(new JacksonMappingProvider())
+            .jsonProvider(new JacksonJsonProvider()).build();
+    List<FlowProperty> inputProperties = workflowService.getWorkflow(workflowId).getProperties();
+    Map<String, String> properties = new HashMap<>();
+    if (inputProperties != null) {
+      inputProperties.forEach(inputProperty -> {
+        logger.info("Process Message - Property Key: " + inputProperty.getKey());
+        JsonNode propertyValue = JsonPath.using(jacksonConfig).parse(eventData.toString())
+            .read("$." + inputProperty.getKey(), JsonNode.class);
+        logger.info("Process Message - Property Value: " + propertyValue.toString());
 
+        if (propertyValue != null) {
+          properties.put(inputProperty.getKey(), propertyValue.toString());
+        }
 
-  private Boolean isTriggerEnabled(String trigger, String workflowId) {
+        properties.forEach((k, v) -> {
+          logger.info("Process Message - " + k + "=" + v);
+        });
+      });
+    }
+    
+    return properties;    
+  }
+
+  private Boolean isTriggerEnabled(String trigger, String workflowId, String topic) {
 
     Triggers triggers = workflowService.getWorkflow(workflowId).getTriggers();
 
@@ -132,12 +134,10 @@ public class EventProcessorImpl implements EventProcessor {
       case "slack":
         return triggers.getSlack().getEnable();
       case "custom":
-        return triggers.getSlack().getEnable();
-//      default:
-//        if (triggers.getCustom().getEnable()) {
-//          return trigger
-//              .equals(workflowService.getWorkflow(workflowId).getTriggers().getCustom().getTopic());
-//        } ;
+        if (triggers.getCustom().getEnable()) {
+          return topic
+              .equals(workflowService.getWorkflow(workflowId).getTriggers().getCustom().getTopic());
+        } ;
     }
     return false;
   }

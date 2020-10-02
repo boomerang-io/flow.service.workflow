@@ -52,7 +52,7 @@ public class InternalController {
   
   @PutMapping(value = "/execute", consumes = "application/cloudevents+json; charset=utf-8")
   public ResponseEntity<HttpStatus> acceptWebhookEvent(@RequestHeader Map<String, Object> headers, @RequestBody JsonNode payload) {
-    eventProcessor.processEvent(headers, payload);
+    eventProcessor.processHTTPEvent(headers, payload);
 
     return ResponseEntity.ok(HttpStatus.OK);
   }

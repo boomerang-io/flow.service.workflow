@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 public interface EventProcessor {
 
-  void processEvent(Map<String, Object> headers, JsonNode payload);
+  void processHTTPEvent(Map<String, Object> headers, JsonNode payload);
 
-  void processMessage(String payload);
+  void processJSONMessage(String payload);
 }
