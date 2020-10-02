@@ -48,7 +48,10 @@ public class EventProcessorImpl implements EventProcessor {
     logger.info("Process Message - Attributes: " + event.getAttributes().toString());
     logger.info("Process Message - Payload: " + event.getData().toString());
 
-    processTrigger(payload, event);
+    String workflowId = event.getAttributes().getSubject().orElse("");
+    String trigger = event.getAttributes().getType().replace(TYPE_PREFIX, "");
+
+    processTrigger(payload.toString(), workflowId, trigger);
   }
 
   // TODO: better return management
@@ -63,25 +66,13 @@ public class EventProcessorImpl implements EventProcessor {
     logger.info("Process Message - Attributes: " + event.getAttributes().toString());
     logger.info("Process Message - Payload: " + event.getData().toString());
 
-    ObjectMapper mapper = new ObjectMapper();
-
-    try {
-      processTrigger(mapper.readTree(payload), event);
-    } catch (JsonMappingException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-    } catch (JsonProcessingException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-    }
-  }
-
-  private void processTrigger(JsonNode payload, CloudEvent<AttributesImpl, Map> event) {
-    // TODO determine the trigger implementation
     String workflowId = event.getAttributes().getSubject().orElse("");
     String trigger = event.getAttributes().getType().replace(TYPE_PREFIX, "");
 
+    processTrigger(payload, workflowId, trigger);
+  }
 
+  private void processTrigger(String payload, String workflowId, String trigger) {
     if (trigger
         .equals(workflowService.getWorkflow(workflowId).getTriggers().getEvent().getTopic())) {
       logger.info("Process Message - Trigger(" + trigger + ") is allowed.");
@@ -94,14 +85,15 @@ public class EventProcessorImpl implements EventProcessor {
       Map<String, String> properties = new HashMap<>();
       if (inputProperties != null) {
         inputProperties.forEach(inputProperty -> {
-          String propertyKey = "$." + inputProperty.getKey();
-          logger.info("Process Message - Property Key: " + propertyKey);
-          JsonNode propertyValue = JsonPath.using(jacksonConfig).parse(payload.toString()).read(propertyKey, JsonNode.class);
-          logger.info("Process Message - Property Value: " + propertyValue.toPrettyString());
+          logger.info("Process Message - Property Key: " + inputProperty.getKey());
+          JsonNode propertyValue = JsonPath.using(jacksonConfig).parse(payload).read("$." + inputProperty.getKey(), JsonNode.class);
+          logger.info("Process Message - Property Value: " + propertyValue.toString());
 
           if (propertyValue != null) {
-            properties.put(propertyKey, propertyValue.toString());
+            properties.put(inputProperty.getKey(), propertyValue.toString());
           }
+          
+          properties.forEach((k, v) -> {logger.info("Process Message - " + k + "=" + v);});
         });
       }
 
