@@ -12,8 +12,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.ReadContext;
+import com.jayway.jsonpath.spi.json.JacksonJsonProvider;
+import com.jayway.jsonpath.spi.mapper.JacksonMappingProvider;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.v1.AttributesImpl;
 import io.cloudevents.v1.http.Unmarshallers;
@@ -83,14 +86,17 @@ public class EventProcessorImpl implements EventProcessor {
         .equals(workflowService.getWorkflow(workflowId).getTriggers().getEvent().getTopic())) {
       logger.info("Process Message - Trigger(" + trigger + ") is allowed.");
 
-      ReadContext ctx = JsonPath.parse(payload);
+      Configuration jacksonConfig = Configuration.builder()
+          .mappingProvider( new JacksonMappingProvider() )
+          .jsonProvider( new JacksonJsonProvider() )
+          .build();
       List<FlowProperty> inputProperties = workflowService.getWorkflow(workflowId).getProperties();
       Map<String, String> properties = new HashMap<>();
       if (inputProperties != null) {
         inputProperties.forEach(inputProperty -> {
           String propertyKey = "$." + inputProperty.getKey();
           logger.info("Process Message - Property Key: " + propertyKey);
-          JsonNode propertyValue = ctx.read(propertyKey);
+          JsonNode propertyValue = JsonPath.using(jacksonConfig).parse(payload).read(propertyKey, JsonNode.class);
           logger.info("Process Message - Property Value: " + propertyValue.toPrettyString());
 
           if (propertyValue != null) {
