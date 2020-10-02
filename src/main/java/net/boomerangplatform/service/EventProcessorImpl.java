@@ -8,13 +8,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.JsonPath;
-import com.jayway.jsonpath.ReadContext;
 import com.jayway.jsonpath.spi.json.JacksonJsonProvider;
 import com.jayway.jsonpath.spi.mapper.JacksonMappingProvider;
 import io.cloudevents.CloudEvent;
@@ -42,37 +38,41 @@ public class EventProcessorImpl implements EventProcessor {
   @Override
   public void processEvent(Map<String, Object> headers, JsonNode payload) {
 
-    CloudEvent<AttributesImpl, Map> event = Unmarshallers.structured(Map.class)
+    CloudEvent<AttributesImpl, JsonNode> event = Unmarshallers.structured(JsonNode.class)
         .withHeaders(() -> headers).withPayload(() -> payload.toString()).unmarshal();
 
     logger.info("Process Message - Attributes: " + event.getAttributes().toString());
-    logger.info("Process Message - Payload: " + event.getData().toString());
+    JsonNode eventData = event.getData().get();
+    logger.info("Process Message - Data: " + eventData.toPrettyString());
 
     String workflowId = event.getAttributes().getSubject().orElse("");
     String trigger = event.getAttributes().getType().replace(TYPE_PREFIX, "");
 
-    processTrigger(payload.toString(), workflowId, trigger);
+    processTrigger(eventData, workflowId, trigger);
   }
 
   // TODO: better return management
   @Override
-  public void processMessage(String payload) {
+  public void processMessage(String message) {
     Map<String, Object> headers = new HashMap<>();
     headers.put("Content-Type", "application/cloudevents+json");
 
-    CloudEvent<AttributesImpl, Map> event = Unmarshallers.structured(Map.class)
-        .withHeaders(() -> headers).withPayload(() -> payload).unmarshal();
+    logger.info("Process Message - Event as Message String: " + message);
+
+    CloudEvent<AttributesImpl, JsonNode> event = Unmarshallers.structured(JsonNode.class)
+        .withHeaders(() -> headers).withPayload(() -> message).unmarshal();
 
     logger.info("Process Message - Attributes: " + event.getAttributes().toString());
-    logger.info("Process Message - Payload: " + event.getData().toString());
+    JsonNode eventData = event.getData().get();
+    logger.info("Process Message - Data: " + eventData.toPrettyString());
 
     String workflowId = event.getAttributes().getSubject().orElse("");
     String trigger = event.getAttributes().getType().replace(TYPE_PREFIX, "");
 
-    processTrigger(payload, workflowId, trigger);
+    processTrigger(eventData, workflowId, trigger);
   }
 
-  private void processTrigger(String payload, String workflowId, String trigger) {
+  private void processTrigger(JsonNode eventData, String workflowId, String trigger) {
     if (trigger
         .equals(workflowService.getWorkflow(workflowId).getTriggers().getEvent().getTopic())) {
       logger.info("Process Message - Trigger(" + trigger + ") is allowed.");
@@ -86,7 +86,7 @@ public class EventProcessorImpl implements EventProcessor {
       if (inputProperties != null) {
         inputProperties.forEach(inputProperty -> {
           logger.info("Process Message - Property Key: " + inputProperty.getKey());
-          JsonNode propertyValue = JsonPath.using(jacksonConfig).parse(payload).read("$." + inputProperty.getKey(), JsonNode.class);
+          JsonNode propertyValue = JsonPath.using(jacksonConfig).parse(eventData.toString()).read("$." + inputProperty.getKey(), JsonNode.class);
           logger.info("Process Message - Property Value: " + propertyValue.toString());
 
           if (propertyValue != null) {
