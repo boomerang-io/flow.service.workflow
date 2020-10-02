@@ -13,7 +13,6 @@ import io.cloudevents.json.Json;
 import io.cloudevents.v1.CloudEventBuilder;
 import io.cloudevents.v1.CloudEventImpl;
 import net.boomerangplatform.client.NatsClient;
-import net.boomerangplatform.client.WorkflowClient;
 
 @Service
 public class EventProcessorImpl implements EventProcessor {
@@ -52,7 +51,7 @@ public class EventProcessorImpl implements EventProcessor {
     final String jsonPayload = Json.encode(cloudEvent);
     LOGGER.info("CloudEvent Object - " + jsonPayload);
     if (eventingEnabled) {
-      natsClient.publishMessage(SUBJECT, jsonPayload);
+//      natsClient.publishMessage(SUBJECT, jsonPayload);
     } else {
 //      wfClient.executeWorkflowPut(SUBJECT, cloudEvent, workflowId);
     }
