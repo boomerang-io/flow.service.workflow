@@ -71,8 +71,10 @@ public class NatsClientImpl implements NatsClient {
         List<FlowProperty> properties = workflowService.getWorkflow(workflowId).getProperties();
         if (properties != null) {
           properties.forEach(FlowProperty -> {
-            JsonNode propertyValue = JsonPath.parse(payload).read("$."+FlowProperty.getKey(), JsonNode.class);
-            logger.info("Process Message - Property Found: key=" + FlowProperty.getKey() + ",value=" + propertyValue);
+            String propertyKey = "$."+FlowProperty.getKey();
+            logger.info("Process Message - Property Key: " + propertyKey);
+            JsonNode propertyValue = JsonPath.parse(payload).read(propertyKey, JsonNode.class);
+            logger.info("Process Message - Property Value: " + propertyValue.toPrettyString());
           });
         }
 	  }
