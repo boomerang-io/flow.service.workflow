@@ -14,6 +14,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.jayway.jsonpath.JsonPath;
+import com.jayway.jsonpath.ReadContext;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.v1.AttributesImpl;
 import io.cloudevents.v1.http.Unmarshallers;
@@ -49,6 +50,7 @@ public class NatsClientImpl implements NatsClient {
     @Autowired
     private FlowWorkflowService workflowService;
 
+//    TODO: better return management
 	private void processMessage(String payload) {  
 	  Map<String, Object> httpHeaders = new HashMap<>();
 	  httpHeaders.put("Content-Type", "application/cloudevents+json");
@@ -68,22 +70,22 @@ public class NatsClientImpl implements NatsClient {
 	  if (trigger.equals(workflowService.getWorkflow(workflowId).getTriggers().getEvent().getTopic())) {
 	    logger.info("Process Message - Trigger(" + trigger + ") is allowed.");
 	    
+	    ReadContext ctx = JsonPath.parse(payload);
         List<FlowProperty> properties = workflowService.getWorkflow(workflowId).getProperties();
         if (properties != null) {
           properties.forEach(FlowProperty -> {
             String propertyKey = "$."+FlowProperty.getKey();
             logger.info("Process Message - Property Key: " + propertyKey);
-            JsonNode propertyValue = JsonPath.parse(payload).read(propertyKey, JsonNode.class);
+            JsonNode propertyValue = ctx.read(propertyKey);
             logger.info("Process Message - Property Value: " + propertyValue.toPrettyString());
           });
         }
 	  }
-	  
 	}
 
 //	TODO IF eventing enabled, start this on application startup OR is this what @EventListener is doing?
 	@EventListener
-	public void handleContextRefresh(ContextRefreshedEvent event) throws TimeoutException {
+	public void subscribe(ContextRefreshedEvent event) throws TimeoutException {
 
 		logger.info("Initializng subscriptions to NATS");
 
