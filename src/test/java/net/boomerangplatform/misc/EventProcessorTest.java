@@ -1,5 +1,6 @@
 package net.boomerangplatform.misc;
 
+import static org.junit.Assert.assertNotNull;
 import java.io.IOException;
 import java.net.URI;
 import java.time.ZonedDateTime;
@@ -23,8 +24,6 @@ import io.cloudevents.v1.CloudEventImpl;
 import io.cloudevents.v1.http.Unmarshallers;
 import net.boomerangplatform.mongo.model.FlowProperty;
 import net.boomerangplatform.tests.TestUtil;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class EventProcessorTest {
 

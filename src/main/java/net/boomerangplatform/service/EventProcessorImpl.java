@@ -67,7 +67,16 @@ public class EventProcessorImpl implements EventProcessor {
     JsonNode eventData = event.getData().get();
     logger.info("Process Message - Data: " + eventData.toPrettyString());
 
-    String workflowId = event.getAttributes().getSubject().orElse("");
+    String workflowId = "";
+    String topic = "";
+    String subject = event.getAttributes().getSubject().orElse("");
+    String[] splitArr = subject.split("/");
+    for (Integer i=0; i < splitArr.length; i++) {
+      System.out.println(splitArr[i]);
+    }
+    workflowId = splitArr[0].toString();
+    topic = splitArr[1].toString();
+    logger.info("Process Message - WorkflowId: " + workflowId + ", Topic: " + topic);
     String trigger = event.getAttributes().getType().replace(TYPE_PREFIX, "");
 
     processTrigger(eventData, workflowId, trigger);
@@ -122,11 +131,13 @@ public class EventProcessorImpl implements EventProcessor {
         return triggers.getDockerhub().getEnable();
       case "slack":
         return triggers.getSlack().getEnable();
-      default:
-        if (triggers.getCustom().getEnable()) {
-          return trigger
-              .equals(workflowService.getWorkflow(workflowId).getTriggers().getCustom().getTopic());
-        } ;
+      case "custom":
+        return triggers.getSlack().getEnable();
+//      default:
+//        if (triggers.getCustom().getEnable()) {
+//          return trigger
+//              .equals(workflowService.getWorkflow(workflowId).getTriggers().getCustom().getTopic());
+//        } ;
     }
     return false;
   }
