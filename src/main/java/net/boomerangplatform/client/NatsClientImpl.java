@@ -16,6 +16,7 @@ import io.nats.streaming.StreamingConnection;
 import io.nats.streaming.StreamingConnectionFactory;
 import io.nats.streaming.Subscription;
 import io.nats.streaming.SubscriptionOptions;
+
 import net.boomerangplatform.service.EventProcessor;
 
 @Component
@@ -39,6 +40,8 @@ public class NatsClientImpl implements NatsClient {
 
     @Autowired
     private EventProcessor eventProcessor;
+
+//    TODO: better return management
 
 //	TODO IF eventing enabled, start this on application startup OR is this what @EventListener is doing?
 	@EventListener
@@ -69,5 +72,5 @@ public class NatsClientImpl implements NatsClient {
         }
 //        TODO do we close connection and subscription?
 	}
-
+	
 }

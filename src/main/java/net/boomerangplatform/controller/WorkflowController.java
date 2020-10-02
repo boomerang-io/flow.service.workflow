@@ -25,6 +25,7 @@ import net.boomerangplatform.model.RevisionResponse;
 import net.boomerangplatform.model.WorkflowExport;
 import net.boomerangplatform.model.WorkflowSummary;
 import net.boomerangplatform.mongo.model.FlowProperty;
+import net.boomerangplatform.mongo.model.FlowTriggerEnum;
 import net.boomerangplatform.mongo.model.WorkflowStatus;
 import net.boomerangplatform.service.crud.WorkflowService;
 import net.boomerangplatform.service.crud.WorkflowVersionService;
@@ -44,9 +45,9 @@ public class WorkflowController {
     workFlowService.deleteWorkflow(id);
   }
 
-  @PostMapping(value = "{id}/webhook-token")
-  public GenerateTokenResponse generateWebhookToken(@PathVariable String id) {
-    return workFlowService.generateWebhookToken(id);
+  @PostMapping(value = "{id}/trigger-token")
+  public GenerateTokenResponse generateWebhookToken(@PathVariable String id, @RequestParam FlowTriggerEnum type) {
+    return workFlowService.generateTriggerToken(id, type);
   }
 
   @GetMapping(value = "/{workFlowId}/revision")

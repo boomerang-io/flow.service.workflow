@@ -9,6 +9,7 @@ import net.boomerangplatform.model.WorkflowShortSummary;
 import net.boomerangplatform.model.WorkflowSummary;
 import net.boomerangplatform.mongo.entity.WorkflowEntity;
 import net.boomerangplatform.mongo.model.FlowProperty;
+import net.boomerangplatform.mongo.model.FlowTriggerEnum;
 
 public interface WorkflowService {
 
@@ -24,7 +25,7 @@ public interface WorkflowService {
 
   WorkflowSummary updateWorkflowProperties(String workflowId, List<FlowProperty> properties);
 
-  GenerateTokenResponse generateWebhookToken(String id);
+  GenerateTokenResponse generateTriggerToken(String id, FlowTriggerEnum triggerType);
 
   ResponseEntity<InputStreamResource> exportWorkflow(String workFlowId);
 

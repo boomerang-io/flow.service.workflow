@@ -13,10 +13,6 @@
         "webhook": {
             "enable": false,
             "token": ""
-        },
-        "event": {
-            "enable": false,
-            "topic": ""
         }
     },
     "enablePersistentStorage": false,

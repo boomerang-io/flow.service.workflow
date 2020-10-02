@@ -18,6 +18,7 @@ import io.cloudevents.v1.AttributesImpl;
 import io.cloudevents.v1.http.Unmarshallers;
 import net.boomerangplatform.model.FlowExecutionRequest;
 import net.boomerangplatform.mongo.model.FlowProperty;
+import net.boomerangplatform.mongo.model.Triggers;
 import net.boomerangplatform.service.crud.WorkflowService;
 
 @Service
@@ -73,27 +74,28 @@ public class EventProcessorImpl implements EventProcessor {
   }
 
   private void processTrigger(JsonNode eventData, String workflowId, String trigger) {
-    if (trigger
-        .equals(workflowService.getWorkflow(workflowId).getTriggers().getEvent().getTopic())) {
-      logger.info("Process Message - Trigger(" + trigger + ") is allowed.");
 
-      Configuration jacksonConfig = Configuration.builder()
-          .mappingProvider( new JacksonMappingProvider() )
-          .jsonProvider( new JacksonJsonProvider() )
-          .build();
+    if (isTriggerEnabled(trigger, workflowId)) {
+      logger.info("Process Message - Trigger(" + trigger + ") is allowed.");
+      Configuration jacksonConfig =
+          Configuration.builder().mappingProvider(new JacksonMappingProvider())
+              .jsonProvider(new JacksonJsonProvider()).build();
       List<FlowProperty> inputProperties = workflowService.getWorkflow(workflowId).getProperties();
       Map<String, String> properties = new HashMap<>();
       if (inputProperties != null) {
         inputProperties.forEach(inputProperty -> {
           logger.info("Process Message - Property Key: " + inputProperty.getKey());
-          JsonNode propertyValue = JsonPath.using(jacksonConfig).parse(eventData.toString()).read("$." + inputProperty.getKey(), JsonNode.class);
+          JsonNode propertyValue = JsonPath.using(jacksonConfig).parse(eventData.toString())
+              .read("$." + inputProperty.getKey(), JsonNode.class);
           logger.info("Process Message - Property Value: " + propertyValue.toString());
 
           if (propertyValue != null) {
             properties.put(inputProperty.getKey(), propertyValue.toString());
           }
-          
-          properties.forEach((k, v) -> {logger.info("Process Message - " + k + "=" + v);});
+
+          properties.forEach((k, v) -> {
+            logger.info("Process Message - " + k + "=" + v);
+          });
         });
       }
 
@@ -102,5 +104,30 @@ public class EventProcessorImpl implements EventProcessor {
 
       executionService.executeWorkflow(workflowId, Optional.empty(), Optional.of(executionRequest));
     }
+  }
+
+
+  private Boolean isTriggerEnabled(String trigger, String workflowId) {
+
+    Triggers triggers = workflowService.getWorkflow(workflowId).getTriggers();
+
+    switch (trigger) {
+      case "manual":
+        return triggers.getManual().getEnable();
+      case "scheduler":
+        return triggers.getScheduler().getEnable();
+      case "webhook":
+        return triggers.getWebhook().getEnable();
+      case "dockerhub":
+        return triggers.getDockerhub().getEnable();
+      case "slack":
+        return triggers.getSlack().getEnable();
+      default:
+        if (triggers.getCustom().getEnable()) {
+          return trigger
+              .equals(workflowService.getWorkflow(workflowId).getTriggers().getCustom().getTopic());
+        } ;
+    }
+    return false;
   }
 }
