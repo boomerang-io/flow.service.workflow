@@ -62,25 +62,18 @@ public class EventProcessorImpl implements EventProcessor {
     JsonNode eventData = event.getData().get();
     logger.info("processCloudEvent() - Data: " + eventData.toPrettyString());
 
-    String workflowId = "";
-    String topic = "";
     String subject = event.getAttributes().getSubject().orElse("");
     logger.info("processCloudEvent() - Subject: " + subject);
     if (!subject.startsWith("/")) {
 //      TODO make error
       logger.error("processCloudEvent() - Error: subject does not conform to required standard of /{workflowId} followed by /{topic} if custom event");
     }
-    // Reference 0 will be an empty string as it is the left hand side of the split
-    String[] splitArr = subject.split("/");
-    if (splitArr.length > 1) {
-      workflowId = splitArr[1].toString();
-    } else {
-      logger.error("processCloudEvent() - Error: No workflow ID found in event");
-    }
+    String workflowId = getWorkflowIdFromSubject(subject);
     logger.info("processCloudEvent() - WorkflowId: " + workflowId);
-    if (splitArr.length > 2) {
-      topic = splitArr[2].toString();
-    }
+    
+    String topic = getTopicFromSubject(subject);
+    logger.info("processCloudEvent() - WorkflowId: " + workflowId);
+
     String trigger = event.getAttributes().getType().replace(TYPE_PREFIX, "");
     logger.info("processCloudEvent() - Trigger: " + trigger + "Topic: " + topic);
 
@@ -147,5 +140,27 @@ public class EventProcessorImpl implements EventProcessor {
         } ;
     }
     return false;
+  }
+  
+  private String getWorkflowIdFromSubject(String subject) {
+    // Reference 0 will be an empty string as it is the left hand side of the split
+    String[] splitArr = subject.split("/");
+    if (splitArr.length >= 2) {
+      return splitArr[1].toString();
+    } else {
+      logger.error("processCloudEvent() - Error: No workflow ID found in event");
+      return "";
+    }
+  }
+  
+  private String getTopicFromSubject(String subject) {
+    // Reference 0 will be an empty string as it is the left hand side of the split
+    String[] splitArr = subject.split("/");
+    if (splitArr.length >= 3) {
+      return splitArr[2].toString();
+    } else {
+      logger.error("processCloudEvent() - Warning: No topic found in event");
+      return "";
+    }
   }
 }

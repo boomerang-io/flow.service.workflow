@@ -59,7 +59,7 @@ public class InternalController {
     return ResponseEntity.ok(HttpStatus.OK);
   }
   
-  @GetMapping(value = "/workflow/{id}/trigger/{trigger}/validateToken", consumes = "application/json; charset=utf-8")
+  @PostMapping(value = "/workflow/{id}/trigger/{trigger}/validateToken", consumes = "application/json; charset=utf-8")
   public ResponseEntity<HttpStatus> validateToken(@PathVariable String id, @PathVariable String trigger, @RequestBody GenerateTokenResponse tokenPayload){ 
     return workflowService.validateTriggerToken(id, trigger, tokenPayload);
   }
