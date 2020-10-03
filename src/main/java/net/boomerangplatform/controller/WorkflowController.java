@@ -35,19 +35,19 @@ import net.boomerangplatform.service.crud.WorkflowVersionService;
 public class WorkflowController {
 
   @Autowired
-  private WorkflowService workFlowService;
+  private WorkflowService workflowService;
 
   @Autowired
   private WorkflowVersionService workflowVersionService;
 
   @DeleteMapping(value = "{id}")
   public void deleteWorkflowWithId(@PathVariable String id) {
-    workFlowService.deleteWorkflow(id);
+    workflowService.deleteWorkflow(id);
   }
 
   @PostMapping(value = "{id}/trigger-token")
-  public GenerateTokenResponse generateWebhookToken(@PathVariable String id, @RequestParam FlowTriggerEnum type) {
-    return workFlowService.generateTriggerToken(id, type);
+  public GenerateTokenResponse generateTriggerToken(@PathVariable String id, @RequestParam FlowTriggerEnum type) {
+    return workflowService.generateTriggerToken(id, type);
   }
 
   @GetMapping(value = "/{workFlowId}/revision")
@@ -63,13 +63,13 @@ public class WorkflowController {
 
   @GetMapping(value = "{id}/summary")
   public WorkflowSummary getWorkflowWithId(@PathVariable String id) {
-    return workFlowService.getWorkflow(id);
+    return workflowService.getWorkflow(id);
   }
 
   @PostMapping(value = "")
   public WorkflowSummary insertWorkflow(@RequestBody WorkflowSummary workflowSummaryEntity) {
     workflowSummaryEntity.setStatus(WorkflowStatus.active);
-    return workFlowService.saveWorkflow(workflowSummaryEntity);
+    return workflowService.saveWorkflow(workflowSummaryEntity);
   }
 
   @PostMapping(value = "/{workFlowId}/revision")
@@ -82,13 +82,13 @@ public class WorkflowController {
 
   @PatchMapping(value = "")
   public WorkflowSummary updateWorkflow(@RequestBody WorkflowSummary workflowSummaryEntity) {
-    return workFlowService.updateWorkflow(workflowSummaryEntity);
+    return workflowService.updateWorkflow(workflowSummaryEntity);
   }
 
   @PatchMapping(value = "/{workFlowId}/properties")
   public WorkflowSummary updateWorkflowProperties(@PathVariable String workFlowId,
       @RequestBody List<FlowProperty> properties) {
-    return workFlowService.updateWorkflowProperties(workFlowId, properties);
+    return workflowService.updateWorkflowProperties(workFlowId, properties);
   }
 
   @GetMapping(value = "/{workFlowId}/changelog")
@@ -117,13 +117,13 @@ public class WorkflowController {
 
   @GetMapping(value = "/export/{workFlowId}", produces = "application/json")
   public ResponseEntity<InputStreamResource> exportWorkflow(@PathVariable String workFlowId) {
-    return workFlowService.exportWorkflow(workFlowId);
+    return workflowService.exportWorkflow(workFlowId);
   }
 
   @PostMapping(value = "/import")
   public void importWorkflow(@RequestBody WorkflowExport export, @RequestParam Boolean update,
       @RequestParam(defaultValue = "") String flowTeamId) {
-    workFlowService.importWorkflow(export, update, flowTeamId);
+    workflowService.importWorkflow(export, update, flowTeamId);
   }
 
 }

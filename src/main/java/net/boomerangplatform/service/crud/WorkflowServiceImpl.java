@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -31,9 +32,9 @@ import net.boomerangplatform.mongo.entity.RevisionEntity;
 import net.boomerangplatform.mongo.entity.WorkflowEntity;
 import net.boomerangplatform.mongo.model.FlowProperty;
 import net.boomerangplatform.mongo.model.FlowTriggerEnum;
-import net.boomerangplatform.mongo.model.TriggerScheduler;
 import net.boomerangplatform.mongo.model.TaskType;
 import net.boomerangplatform.mongo.model.TriggerEvent;
+import net.boomerangplatform.mongo.model.TriggerScheduler;
 import net.boomerangplatform.mongo.model.Triggers;
 import net.boomerangplatform.mongo.model.WorkflowStatus;
 import net.boomerangplatform.mongo.model.next.DAGTask;
@@ -330,6 +331,38 @@ public class WorkflowServiceImpl implements WorkflowService {
     }
     workFlowRepository.saveWorkflow(entity);
     return tokenResponse;
+  }
+  
+  @Override
+  public ResponseEntity<HttpStatus> validateTriggerToken(String id, String trigger, GenerateTokenResponse tokenPayload) {
+    WorkflowEntity entity = workFlowRepository.getWorkflow(id);
+    Triggers triggers = entity.getTriggers();
+    
+    FlowTriggerEnum triggerType = FlowTriggerEnum.getFlowTriggerEnum(trigger);
+    
+    String triggerToken = "";
+    
+    switch (triggerType)
+    {
+      case webhook: 
+        triggerToken = triggers.getWebhook().getToken();
+        break;
+      case dockerhub:
+        triggerToken = triggers.getDockerhub().getToken();
+        break;
+      case slack:
+        triggerToken = triggers.getSlack().getToken();
+        break;
+      default:
+        triggerToken = "";
+        break;
+    }
+    
+    if (triggerToken.equals(tokenPayload.getToken())) {
+      return ResponseEntity.ok(HttpStatus.OK);
+    }
+    
+    return ResponseEntity.ok(HttpStatus.FORBIDDEN);
   }
   
   private TriggerEvent getTriggerForType(Triggers triggers, FlowTriggerEnum type) {

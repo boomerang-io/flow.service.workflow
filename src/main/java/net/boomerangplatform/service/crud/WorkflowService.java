@@ -2,6 +2,7 @@ package net.boomerangplatform.service.crud;
 
 import java.util.List;
 import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import net.boomerangplatform.model.GenerateTokenResponse;
 import net.boomerangplatform.model.WorkflowExport;
@@ -34,4 +35,7 @@ public interface WorkflowService {
   boolean canExecuteWorkflow(String teamId);
 
   public List<WorkflowShortSummary> getWorkflowShortSummaryList();
+
+  ResponseEntity<HttpStatus> validateTriggerToken(String id, String trigger,
+      GenerateTokenResponse tokenPayload);
 }

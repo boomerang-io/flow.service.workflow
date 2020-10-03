@@ -113,6 +113,8 @@ public class EventProcessorImpl implements EventProcessor {
         if (propertyValue != null) {
           properties.put(inputProperty.getKey(), propertyValue.toString());
         }
+        
+        properties.put("event.data", eventData.toString());
 
         properties.forEach((k, v) -> {
           logger.info("processProperties() - " + k + "=" + v);
