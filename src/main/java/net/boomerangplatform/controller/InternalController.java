@@ -12,13 +12,18 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.fasterxml.jackson.databind.JsonNode;
+import net.boomerangplatform.model.FlowActivity;
+import net.boomerangplatform.model.FlowWebhookResponse;
 import net.boomerangplatform.model.GenerateTokenResponse;
+import net.boomerangplatform.model.RequestFlowExecution;
 import net.boomerangplatform.model.WorkflowShortSummary;
 import net.boomerangplatform.mongo.model.internal.InternalTaskRequest;
 import net.boomerangplatform.mongo.model.internal.InternalTaskResponse;
 import net.boomerangplatform.service.EventProcessor;
+import net.boomerangplatform.service.WebhookService;
 import net.boomerangplatform.service.crud.WorkflowService;
 import net.boomerangplatform.service.refactor.TaskService;
 
@@ -34,11 +39,13 @@ public class InternalController {
 
   @Autowired
   private EventProcessor eventProcessor;
+  
+  @Autowired
+  private WebhookService webhookService;
 
   @PostMapping(value = "/task/start")
   public void startTask(@RequestBody InternalTaskRequest request) {
     taskService.createTask(request);
-
   }
 
   @PostMapping(value = "/task/end")
@@ -62,5 +69,17 @@ public class InternalController {
   @PostMapping(value = "/workflow/{id}/trigger/{trigger}/validateToken", consumes = "application/json; charset=utf-8")
   public ResponseEntity<HttpStatus> validateToken(@PathVariable String id, @PathVariable String trigger, @RequestBody GenerateTokenResponse tokenPayload){ 
     return workflowService.validateTriggerToken(id, trigger, tokenPayload);
+  }
+  
+  @PostMapping(value = "/webhook/payload", consumes = "application/json; charset=utf-8")
+  public FlowWebhookResponse submitWebhookEvent(@RequestBody RequestFlowExecution request) {
+    return webhookService.submitWebhookEvent(request);
+  }
+  
+
+  @GetMapping(value = "/webhook/status/{activityId}", consumes = "application/json; charset=utf-8")
+  public FlowActivity getWebhookStatus(@PathVariable String activityId,
+      @RequestParam String token) {
+    return webhookService.getFlowActivity(token, activityId);
   }
 }
