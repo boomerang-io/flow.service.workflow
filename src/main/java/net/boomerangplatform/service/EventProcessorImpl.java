@@ -1,9 +1,12 @@
 package net.boomerangplatform.service;
 
+import java.net.URI;
+import java.time.ZonedDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,8 +19,12 @@ import com.jayway.jsonpath.spi.json.JacksonJsonNodeJsonProvider;
 import com.jayway.jsonpath.spi.mapper.JacksonMappingProvider;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.v1.AttributesImpl;
+import io.cloudevents.v1.CloudEventBuilder;
+import io.cloudevents.v1.CloudEventImpl;
 import io.cloudevents.v1.http.Unmarshallers;
+import net.boomerangplatform.model.FlowActivity;
 import net.boomerangplatform.model.FlowExecutionRequest;
+import net.boomerangplatform.model.eventing.EventResponse;
 import net.boomerangplatform.mongo.model.FlowProperty;
 import net.boomerangplatform.mongo.model.FlowTriggerEnum;
 import net.boomerangplatform.mongo.model.Triggers;
@@ -39,55 +46,87 @@ public class EventProcessorImpl implements EventProcessor {
 
   // TODO: better return management
   @Override
-  public void processHTTPEvent(Map<String, Object> headers, JsonNode payload) {
+  public CloudEventImpl<EventResponse> processHTTPEvent(Map<String, Object> headers, JsonNode payload) {
     CloudEvent<AttributesImpl, JsonNode> event = Unmarshallers.structured(JsonNode.class)
         .withHeaders(() -> headers).withPayload(() -> payload.toString()).unmarshal();
     
-    processCloudEvent(event);
+    return createResponseEvent(event.getAttributes().getId(), event.getAttributes().getType(), event.getAttributes().getSource(), event.getAttributes().getSubject().orElse(""), event.getAttributes().getTime().orElse(ZonedDateTime.now()), processEvent(event));
   }
 
   // TODO: better return management
   @Override
-  public void processJSONMessage(String message) {
+  public void processNATSMessage(String message) {
     Map<String, Object> headers = new HashMap<>();
     headers.put("Content-Type", "application/cloudevents+json");
 
     CloudEvent<AttributesImpl, JsonNode> event = Unmarshallers.structured(JsonNode.class)
         .withHeaders(() -> headers).withPayload(() -> message).unmarshal();
     
-    processCloudEvent(event);
+//    TODO return message to another queue for picking up?
+//    return createResponseEvent(event.getAttributes().getId(), event.getAttributes().getType(), event.getAttributes().getSource(), event.getAttributes().getSubject().orElse(""), event.getAttributes().getTime().orElse(ZonedDateTime.now()), processEvent(event));
   }
   
-  private void processCloudEvent(CloudEvent<AttributesImpl, JsonNode> event) {
+  private CloudEventImpl<EventResponse> createResponseEvent(String id, String type, URI source, String subject, ZonedDateTime time, EventResponse responseData) {
+    final CloudEventImpl<EventResponse> response =
+    CloudEventBuilder.<EventResponse>builder()
+      .withId(id)
+      .withType(type)
+      .withSource(source)
+      .withData(responseData)
+      .withSubject(subject)
+      .withTime(time)
+      .build();
+    
+    return response;
+  }
+  
+  private EventResponse processEvent(CloudEvent<AttributesImpl, JsonNode> event) {
     logger.info("processCloudEvent() - Attributes: " + event.getAttributes().toString());
     JsonNode eventData = event.getData().get();
     logger.info("processCloudEvent() - Data: " + eventData.toPrettyString());
+    
+    EventResponse response = new EventResponse();
 
     String subject = event.getAttributes().getSubject().orElse("");
     logger.info("processCloudEvent() - Subject: " + subject);
     if (!subject.startsWith("/")) {
-//      TODO make error
       logger.error("processCloudEvent() - Error: subject does not conform to required standard of /{workflowId} followed by /{topic} if custom event");
+      response.setStatusCode(HttpStatus.SC_BAD_REQUEST);
+      response.setStatusMessage("Event subject does not conform to required standard of /{workflowId} followed by /{topic} if custom event");
+      return response;
     }
+    
     String workflowId = getWorkflowIdFromSubject(subject);
+    if (workflowId.isBlank()) {
+      logger.error("processCloudEvent() - Error: unable to retrieve workflowId from Event subject");
+      response.setStatusCode(HttpStatus.SC_BAD_REQUEST);
+      response.setStatusMessage("unable to retrieve workflowId from Event subject");
+      return response;
+      
+    }
     logger.info("processCloudEvent() - WorkflowId: " + workflowId);
     
     String topic = getTopicFromSubject(subject);
-    logger.info("processCloudEvent() - WorkflowId: " + workflowId);
-
     String trigger = event.getAttributes().getType().replace(TYPE_PREFIX, "");
     logger.info("processCloudEvent() - Trigger: " + trigger + ", Topic: " + topic);
 
     if (isTriggerEnabled(trigger, workflowId, topic)) {
-      logger.info("processCloudEvent() - Trigger(" + trigger + ") is allowed.");
+      logger.info("processCloudEvent() - Trigger(" + trigger + ") is enabled");
 
       FlowExecutionRequest executionRequest = new FlowExecutionRequest();
       executionRequest.setProperties(processProperties(eventData, workflowId));
-
-      executionService.executeWorkflow(workflowId, Optional.of(FlowTriggerEnum.getFlowTriggerEnum(trigger)), Optional.of(executionRequest));
+      
+      FlowActivity activity = executionService.executeWorkflow(workflowId, Optional.of(FlowTriggerEnum.getFlowTriggerEnum(trigger)), Optional.of(executionRequest));
+      
+      response.setActivityId(activity.getId());
+      response.setStatusCode(HttpStatus.SC_OK);
+      return response;
     } else {
 //    TODO make error
       logger.error("processCloudEvent() - No matching trigger enabled.");
+      response.setStatusCode(HttpStatus.SC_FORBIDDEN);
+      response.setStatusMessage("Event did not match enabled workflow trigger.");
+      return response;
     }
   }
   
@@ -100,6 +139,7 @@ public class EventProcessorImpl implements EventProcessor {
     List<FlowProperty> inputProperties = workflowService.getWorkflow(workflowId).getProperties();
     Map<String, String> properties = new HashMap<>();
     if (inputProperties != null) {
+      try {
       inputProperties.forEach(inputProperty -> {
 //        TODO change to not parse the document every time
         JsonNode propertyValue = JsonPath.using(jacksonConfig).parse(eventData).read("$." + inputProperty.getKey());
@@ -111,9 +151,13 @@ public class EventProcessorImpl implements EventProcessor {
           logger.info("processProperties() - Skipping property Key: " + inputProperty.getKey());
         }
       });
+      } catch (Exception e) {
+//        TODO deal with exception
+          logger.error(e.toString());
+      }
     }
     
-    properties.put("io.boomerang.triggers.data", eventData.toString());
+    properties.put("io.boomerang.eventing.data", eventData.toString());
 
     properties.forEach((k, v) -> {
       logger.info("processProperties() - " + k + "=" + v);
@@ -152,7 +196,6 @@ public class EventProcessorImpl implements EventProcessor {
     if (splitArr.length >= 2) {
       return splitArr[1].toString();
     } else {
-      logger.error("processCloudEvent() - Error: No workflow ID found in event");
       return "";
     }
   }
@@ -163,7 +206,6 @@ public class EventProcessorImpl implements EventProcessor {
     if (splitArr.length >= 3) {
       return splitArr[2].toString();
     } else {
-      logger.error("processCloudEvent() - Warning: No topic found in event");
       return "";
     }
   }

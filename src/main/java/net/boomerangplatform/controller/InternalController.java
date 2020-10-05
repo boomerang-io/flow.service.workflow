@@ -15,11 +15,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.fasterxml.jackson.databind.JsonNode;
+import io.cloudevents.v1.CloudEventImpl;
 import net.boomerangplatform.model.FlowActivity;
 import net.boomerangplatform.model.FlowWebhookResponse;
 import net.boomerangplatform.model.GenerateTokenResponse;
 import net.boomerangplatform.model.RequestFlowExecution;
 import net.boomerangplatform.model.WorkflowShortSummary;
+import net.boomerangplatform.model.eventing.EventResponse;
 import net.boomerangplatform.mongo.model.internal.InternalTaskRequest;
 import net.boomerangplatform.mongo.model.internal.InternalTaskResponse;
 import net.boomerangplatform.service.EventProcessor;
@@ -60,10 +62,10 @@ public class InternalController {
   }
   
   @PutMapping(value = "/execute", consumes = "application/cloudevents+json; charset=utf-8")
-  public ResponseEntity<HttpStatus> acceptWebhookEvent(@RequestHeader Map<String, Object> headers, @RequestBody JsonNode payload) {
+  public ResponseEntity<CloudEventImpl<EventResponse>> acceptEvent(@RequestHeader Map<String, Object> headers, @RequestBody JsonNode payload) {
     eventProcessor.processHTTPEvent(headers, payload);
 
-    return ResponseEntity.ok(HttpStatus.OK);
+    return ResponseEntity.ok(eventProcessor.processHTTPEvent(headers, payload));
   }
   
   @PostMapping(value = "/workflow/{id}/trigger/{trigger}/validateToken", consumes = "application/json; charset=utf-8")
