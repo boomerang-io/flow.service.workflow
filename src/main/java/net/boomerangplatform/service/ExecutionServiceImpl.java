@@ -45,7 +45,10 @@ public class ExecutionServiceImpl implements ExecutionService {
     
     final WorkflowEntity workflow = workflowService.getWorkflow(workflowId);
 
-    if (!workflowService.canExecuteWorkflow(workflow.getFlowTeamId())) {
+    if (!workflowService.canExecuteWorkflow(workflowId,trigger)) {
+      throw new BoomerangException(BoomerangError.WORKLOAD_MANUAL_DISABLED);
+    }
+    else if (!workflowService.canExecuteWorkflowForQuotas(workflow.getFlowTeamId())) {
       throw new BoomerangException(BoomerangError.TOO_MANY_REQUESTS);
     } else {
       if (workflow.getStatus() == WorkflowStatus.active) {

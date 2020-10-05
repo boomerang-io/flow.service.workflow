@@ -16,7 +16,10 @@ public class Triggers {
     custom = new TriggerEvent();
     manual = new TriggerEvent();
     scheduler = new TriggerScheduler();
+    
+    manual.setEnable(Boolean.TRUE);
   }
+  
   
   public Trigger getManual() {
     return manual;

@@ -8,6 +8,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -33,6 +34,7 @@ import net.boomerangplatform.mongo.entity.WorkflowEntity;
 import net.boomerangplatform.mongo.model.FlowProperty;
 import net.boomerangplatform.mongo.model.FlowTriggerEnum;
 import net.boomerangplatform.mongo.model.TaskType;
+import net.boomerangplatform.mongo.model.Trigger;
 import net.boomerangplatform.mongo.model.TriggerEvent;
 import net.boomerangplatform.mongo.model.TriggerScheduler;
 import net.boomerangplatform.mongo.model.Triggers;
@@ -158,7 +160,8 @@ public class WorkflowServiceImpl implements WorkflowService {
     }
     if (flowWorkflowEntity.getTriggers().getManual() == null) {
       TriggerEvent manual = new TriggerEvent();
-      manual.setEnable(true);
+      manual.setEnable(Boolean.TRUE);
+
       flowWorkflowEntity.getTriggers().setManual(manual);
     }
     
@@ -559,7 +562,7 @@ public class WorkflowServiceImpl implements WorkflowService {
   }
 
   @Override
-  public boolean canExecuteWorkflow(String teamId) {
+  public boolean canExecuteWorkflowForQuotas(String teamId) {
     WorkflowQuotas workflowQuotas = teamService.getTeamQuotas(teamId);
     if(
         workflowQuotas.getCurrentConcurrentWorkflows() > workflowQuotas.getMaxConcurrentWorkflows() ||
@@ -604,5 +607,29 @@ public class WorkflowServiceImpl implements WorkflowService {
       summaryList.add(summary);
     } 
     return summaryList;
+  }
+
+  @Override
+  public boolean canExecuteWorkflow(String workFlowId,Optional<FlowTriggerEnum> trigger) {
+    
+    if (!trigger.isPresent() || !FlowTriggerEnum.manual.equals(trigger.get())) {
+      return true;
+    }
+    
+   
+    WorkflowEntity workflow = workFlowRepository.getWorkflow(workFlowId);
+    if (workflow != null) {
+      if (workflow.getTriggers() != null) {
+        Triggers triggers = workflow.getTriggers();
+        if (triggers.getManual() != null) {
+          Trigger manualTrigger = triggers.getManual();
+          if (manualTrigger != null) {
+            return manualTrigger.getEnable();
+          }
+        }
+        
+      }
+    }
+    return true;
   }
 }
