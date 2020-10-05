@@ -14,7 +14,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.JsonPath;
-import com.jayway.jsonpath.spi.json.JacksonJsonProvider;
+import com.jayway.jsonpath.Option;
+import com.jayway.jsonpath.spi.json.JacksonJsonNodeJsonProvider;
 import com.jayway.jsonpath.spi.mapper.JacksonMappingProvider;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.json.Json;
@@ -49,7 +50,7 @@ public class EventProcessorTest {
       System.out.println("Process Message - data as JsonNode: " + cloudEventData);
     };
     
-    processTrigger(cloudEventData.toString(), "1234", "dockerhub");
+    processTrigger(cloudEventData, "1234", "dockerhub");
   }
   
   private String buildEvent() throws IOException {
@@ -78,32 +79,52 @@ public class EventProcessorTest {
     return jsonPayload;
   }
 
-  private void processTrigger(String payload, String workflowId, String trigger) {
+  private void processTrigger(JsonNode payload, String workflowId, String trigger) {
+    System.out.println("processTrigger() - Starting");
+
+//    ObjectMapper mapper = new ObjectMapper(); 
+//    JsonNode jsonPayload = mapper.convertValue(payload, JsonNode.class);
     Configuration jacksonConfig =
         Configuration.builder().mappingProvider(new JacksonMappingProvider())
-            .jsonProvider(new JacksonJsonProvider()).build();
+        .jsonProvider(new JacksonJsonNodeJsonProvider())
+        .options(Option.DEFAULT_PATH_LEAF_TO_NULL)
+        .build();
     List<FlowProperty> inputProperties = new LinkedList<>();
+//  Test String property that exists
     FlowProperty flowProperty1 = new FlowProperty();
     flowProperty1.setKey("callback_url");
     inputProperties.add(flowProperty1);
+//    Test Array property that exists
     FlowProperty flowProperty2 = new FlowProperty();
     flowProperty2.setKey("push_data.images");
     inputProperties.add(flowProperty2);
+//  Test String property that does not exist
+  FlowProperty flowProperty3 = new FlowProperty();
+  flowProperty3.setKey("notPresent");
+  inputProperties.add(flowProperty3);
     Map<String, String> properties = new HashMap<>();
     if (inputProperties != null) {
+//      JsonNode parsedEventData = JsonPath.using(jacksonConfig).parse(payload);
       assertNotNull(inputProperties);
+      try {
       inputProperties.forEach(inputProperty -> {
         JsonNode propertyValue =
-            JsonPath.using(jacksonConfig).parse(payload).read("$." + inputProperty.getKey(), JsonNode.class);
+            JsonPath.using(jacksonConfig).parse(payload).read("$." + inputProperty.getKey());
+//            JsonPath.read(parsedEventData, "$." + inputProperty.getKey());
 
-        if (propertyValue != null) {
+        if (!propertyValue.isNull()) {
           properties.put(inputProperty.getKey(), propertyValue.toString());
         }
-        
-        properties.forEach((k, v) -> {System.out.println(k + "=" + v);});
       });
+      } catch (Exception e) {
+        System.out.println("processTrigger() - Error: " + e.toString());
+      }
       
 //      assertEquals(properties.get("callback_url").toString(), "https://registry.hub.docker.com/u/svendowideit/testhook/hook/2141b5bi5i5b02bec211i4eeih0242eg11000a/");
     }
+    
+    properties.put("io.boomerang.triggers.data", payload.toString());
+
+    properties.forEach((k, v) -> {System.out.println(k + "=" + v);});
   }
 }

@@ -100,14 +100,15 @@ public class EventProcessorImpl implements EventProcessor {
     List<FlowProperty> inputProperties = workflowService.getWorkflow(workflowId).getProperties();
     Map<String, String> properties = new HashMap<>();
     if (inputProperties != null) {
-      Object parsedEventData = JsonPath.using(jacksonConfig).parse(eventData.toString());
       inputProperties.forEach(inputProperty -> {
-        logger.info("processProperties() - Property Key: " + inputProperty.getKey());
-        JsonNode propertyValue = JsonPath.read(parsedEventData, "$." + inputProperty.getKey());
+//        TODO change to not parse the document every time
+        JsonNode propertyValue = JsonPath.using(jacksonConfig).parse(eventData).read("$." + inputProperty.getKey());
 
-        if (propertyValue != null) {
-          logger.info("processProperties() - Property Value: " + propertyValue.toString());
+        if (!propertyValue.isNull()) {
+          logger.info("processProperties() - Property Key: " + inputProperty.getKey() + ", Value: " + propertyValue.toString());
           properties.put(inputProperty.getKey(), propertyValue.toString());
+        } else {
+          logger.info("processProperties() - Skipping property Key: " + inputProperty.getKey());
         }
       });
     }
