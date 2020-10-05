@@ -472,6 +472,10 @@ public class DAGUtility {
         }
       }
     }
+    
+    if (expression != null && !expression.isBlank()) {
+      return expression;
+    }
     return null;
   }
 }
