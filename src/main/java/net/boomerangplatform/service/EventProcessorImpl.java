@@ -101,13 +101,13 @@ public class EventProcessorImpl implements EventProcessor {
         logger.info("processProperties() - Property Key: " + inputProperty.getKey());
         JsonNode propertyValue = JsonPath.using(jacksonConfig).parse(eventData.toString())
             .read("$." + inputProperty.getKey(), JsonNode.class);
-        logger.info("processProperties() - Property Value: " + propertyValue.toString());
 
         if (propertyValue != null) {
+          logger.info("processProperties() - Property Value: " + propertyValue.toString());
           properties.put(inputProperty.getKey(), propertyValue.toString());
         }
         
-        properties.put("event.data", eventData.toString());
+        properties.put("io.boomerang.triggers.data", eventData.toString());
 
         properties.forEach((k, v) -> {
           logger.info("processProperties() - " + k + "=" + v);
