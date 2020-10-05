@@ -11,7 +11,8 @@ import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.JsonPath;
-import com.jayway.jsonpath.spi.json.JacksonJsonProvider;
+import com.jayway.jsonpath.Option;
+import com.jayway.jsonpath.spi.json.JacksonJsonNodeJsonProvider;
 import com.jayway.jsonpath.spi.mapper.JacksonMappingProvider;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.v1.AttributesImpl;
@@ -75,7 +76,7 @@ public class EventProcessorImpl implements EventProcessor {
     logger.info("processCloudEvent() - WorkflowId: " + workflowId);
 
     String trigger = event.getAttributes().getType().replace(TYPE_PREFIX, "");
-    logger.info("processCloudEvent() - Trigger: " + trigger + "Topic: " + topic);
+    logger.info("processCloudEvent() - Trigger: " + trigger + ", Topic: " + topic);
 
     if (isTriggerEnabled(trigger, workflowId, topic)) {
       logger.info("processCloudEvent() - Trigger(" + trigger + ") is allowed.");
@@ -93,7 +94,9 @@ public class EventProcessorImpl implements EventProcessor {
   private Map<String, String> processProperties(JsonNode eventData, String workflowId) {
     Configuration jacksonConfig =
         Configuration.builder().mappingProvider(new JacksonMappingProvider())
-            .jsonProvider(new JacksonJsonProvider()).build();
+            .jsonProvider(new JacksonJsonNodeJsonProvider())
+            .options(Option.DEFAULT_PATH_LEAF_TO_NULL)
+            .build();
     List<FlowProperty> inputProperties = workflowService.getWorkflow(workflowId).getProperties();
     Map<String, String> properties = new HashMap<>();
     if (inputProperties != null) {
