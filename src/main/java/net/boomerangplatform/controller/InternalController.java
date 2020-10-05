@@ -61,7 +61,7 @@ public class InternalController {
     return workflowService.getWorkflowShortSummaryList();
   }
   
-  @PutMapping(value = "/execute", consumes = "application/cloudevents+json; charset=utf-8")
+  @PutMapping(value = "/workflow/execute", consumes = "application/cloudevents+json; charset=utf-8")
   public ResponseEntity<CloudEventImpl<EventResponse>> acceptEvent(@RequestHeader Map<String, Object> headers, @RequestBody JsonNode payload) {
     eventProcessor.processHTTPEvent(headers, payload);
 
