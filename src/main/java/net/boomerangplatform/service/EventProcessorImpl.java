@@ -97,23 +97,23 @@ public class EventProcessorImpl implements EventProcessor {
     List<FlowProperty> inputProperties = workflowService.getWorkflow(workflowId).getProperties();
     Map<String, String> properties = new HashMap<>();
     if (inputProperties != null) {
+      Object parsedEventData = JsonPath.using(jacksonConfig).parse(eventData.toString());
       inputProperties.forEach(inputProperty -> {
         logger.info("processProperties() - Property Key: " + inputProperty.getKey());
-        JsonNode propertyValue = JsonPath.using(jacksonConfig).parse(eventData.toString())
-            .read("$." + inputProperty.getKey(), JsonNode.class);
+        JsonNode propertyValue = JsonPath.read(parsedEventData, "$." + inputProperty.getKey());
 
         if (propertyValue != null) {
           logger.info("processProperties() - Property Value: " + propertyValue.toString());
           properties.put(inputProperty.getKey(), propertyValue.toString());
         }
-        
-        properties.put("io.boomerang.triggers.data", eventData.toString());
-
-        properties.forEach((k, v) -> {
-          logger.info("processProperties() - " + k + "=" + v);
-        });
       });
     }
+    
+    properties.put("io.boomerang.triggers.data", eventData.toString());
+
+    properties.forEach((k, v) -> {
+      logger.info("processProperties() - " + k + "=" + v);
+    });
     
     return properties;    
   }
