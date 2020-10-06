@@ -279,16 +279,26 @@ public class TaskServiceImpl implements TaskService {
 
   private void executeNextStep(ActivityEntity workflowActivity, List<Task> tasks, Task currentTask,
       boolean finishedAll) {
+    LOGGER.debug("[{}] Looking at next tasks",workflowActivity.getId());
+    LOGGER.debug("Testing at next tasks");
     List<Task> nextNodes = this.getTasksDependants(tasks, currentTask);
+    LOGGER.debug("Testing at next tasks: {}" + nextNodes.size());
+    
     for (Task next : nextNodes) {
+      
       if (next.getTaskType() == TaskType.end) {
         if (finishedAll) {
+          LOGGER.debug("FINISHED ALL");
           this.finishWorkflow(workflowActivity);
+          return;
         }
-        return;
+        continue;
       }
 
       boolean executeTask = canExecuteTask(workflowActivity, next);
+      LOGGER.debug("[{}] Task: {}",workflowActivity.getId(), next.getTaskName());
+      
+      
       if (executeTask) {
         TaskExecutionEntity task = this.taskActivityService
             .findByTaskIdAndActiityId(next.getTaskId(), workflowActivity.getId());
