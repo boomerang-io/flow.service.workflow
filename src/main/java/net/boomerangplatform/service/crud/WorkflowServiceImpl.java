@@ -143,6 +143,13 @@ public class WorkflowServiceImpl implements WorkflowService {
     if (summary.getTriggers() != null) {
       Triggers trigger = summary.getTriggers();
 
+      if (trigger.getWebhook() != null) {
+        TriggerEvent webhookTrigger = trigger.getWebhook();
+        if (webhookTrigger.getEnable().booleanValue() && entity.getTokens().isEmpty()) {
+          this.generateTriggerToken(entity.getId(), "default");
+        }
+      }
+
       TriggerScheduler scheduler = trigger.getScheduler();
       if (scheduler != null && scheduler.getEnable()) {
         logger.info("Scheduling workflow: {}", scheduler.getSchedule());
