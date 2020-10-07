@@ -131,6 +131,9 @@ public class TaskServiceImpl implements TaskService {
       } else if (taskType == TaskType.approval) {
         createApprovalNotification(taskExecution, activity, workflow);
       }
+      else if (taskType == TaskType.eventwait) {
+        createWaitForEventTask(taskExecution);
+      }
     } else {
       LOGGER.debug("[{}] Skipping task",taskId);
       InternalTaskResponse response = new InternalTaskResponse();
@@ -139,6 +142,14 @@ public class TaskServiceImpl implements TaskService {
 
       endTask(response);
     }
+  }
+
+  private void createWaitForEventTask(TaskExecutionEntity taskExecution) {
+    
+    LOGGER.debug("[{}] Creating wait for event task",taskExecution.getActivityId());
+    
+    taskExecution.setFlowTaskStatus(TaskStatus.waiting);
+    taskActivityService.save(taskExecution);
   }
 
   private void createApprovalNotification(TaskExecutionEntity taskExecution,
