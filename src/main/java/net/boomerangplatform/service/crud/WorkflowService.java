@@ -39,6 +39,5 @@ public interface WorkflowService {
   
   public List<WorkflowShortSummary> getWorkflowShortSummaryList();
 
-  ResponseEntity<HttpStatus> validateTriggerToken(String id, String trigger,
-      GenerateTokenResponse tokenPayload);
+  ResponseEntity<HttpStatus> validateWorkflowToken(String id, GenerateTokenResponse tokenPayload);
 }

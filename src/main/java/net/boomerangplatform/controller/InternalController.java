@@ -61,16 +61,16 @@ public class InternalController {
     return workflowService.getWorkflowShortSummaryList();
   }
   
-  @PutMapping(value = "/workflow/execute", consumes = "application/cloudevents+json; charset=utf-8")
+  @PutMapping(value = "/workflow/event", consumes = "application/cloudevents+json; charset=utf-8")
   public ResponseEntity<CloudEventImpl<EventResponse>> acceptEvent(@RequestHeader Map<String, Object> headers, @RequestBody JsonNode payload) {
     eventProcessor.processHTTPEvent(headers, payload);
 
     return ResponseEntity.ok(eventProcessor.processHTTPEvent(headers, payload));
   }
   
-  @PostMapping(value = "/workflow/{id}/trigger/{trigger}/validateToken", consumes = "application/json; charset=utf-8")
-  public ResponseEntity<HttpStatus> validateToken(@PathVariable String id, @PathVariable String trigger, @RequestBody GenerateTokenResponse tokenPayload){ 
-    return workflowService.validateTriggerToken(id, trigger, tokenPayload);
+  @PostMapping(value = "/workflow/{id}/validateToken", consumes = "application/json; charset=utf-8")
+  public ResponseEntity<HttpStatus> validateToken(@PathVariable String id, @RequestBody GenerateTokenResponse tokenPayload){ 
+    return workflowService.validateWorkflowToken(id, tokenPayload);
   }
   
   @PostMapping(value = "/webhook/payload", consumes = "application/json; charset=utf-8")

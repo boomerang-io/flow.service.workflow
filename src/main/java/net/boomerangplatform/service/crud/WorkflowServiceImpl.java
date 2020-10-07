@@ -337,8 +337,10 @@ public class WorkflowServiceImpl implements WorkflowService {
   }
   
   @Override
-  public ResponseEntity<HttpStatus> validateTriggerToken(String id, String trigger, GenerateTokenResponse tokenPayload) {
+  public ResponseEntity<HttpStatus> validateWorkflowToken(String id, GenerateTokenResponse tokenPayload) {
     WorkflowEntity entity = workFlowRepository.getWorkflow(id);
+    
+//    TODO update to retrieve Tokens from Workflow and then verify.
     setupTriggerDefaults(entity);
     
     Triggers triggers = entity.getTriggers();
