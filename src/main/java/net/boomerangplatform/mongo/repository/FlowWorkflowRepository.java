@@ -11,7 +11,7 @@ public interface FlowWorkflowRepository extends MongoRepository<WorkflowEntity, 
 
   List<WorkflowEntity> findByFlowTeamIdIn(List<String> flowTeamIds);
 
-  @Query("{ 'triggers.webhook.token' : ?0 }")
+  @Query("{ 'tokens.token' : ?0 }")
   WorkflowEntity findByToken(String tokenString);
 
   @Query("{ 'triggers.scheduler.enable' : true }")

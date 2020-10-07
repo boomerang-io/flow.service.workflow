@@ -6,6 +6,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import net.boomerangplatform.model.WorkflowToken;
 import net.boomerangplatform.mongo.model.FlowProperty;
 import net.boomerangplatform.mongo.model.Triggers;
 import net.boomerangplatform.mongo.model.WorkflowStatus;
@@ -31,9 +32,18 @@ public class WorkflowEntity {
   private WorkflowStatus status;
 
   private Triggers triggers;
+  
+  private List<WorkflowToken> tokens;
 
   private boolean enablePersistentStorage;
 
+  public List<WorkflowToken> getTokens() {
+    return tokens;
+  }
+
+  public void setTokens(List<WorkflowToken> tokens) {
+    this.tokens = tokens;
+  }
 
   private boolean enableACCIntegration;
 

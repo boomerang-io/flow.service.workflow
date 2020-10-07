@@ -207,7 +207,7 @@ public class WorkflowControllerTests extends FlowTests {
   @Test
   public void testGenerateWebhookToken() {
 
-    GenerateTokenResponse response = controller.generateTriggerToken("5d1a188af6ca2c00014c4314", FlowTriggerEnum.webhook);
+    GenerateTokenResponse response = controller.createToken("5d1a188af6ca2c00014c4314", "Token");
     assertNotEquals("", response.getToken());
   }
 

@@ -28,6 +28,7 @@ import net.boomerangplatform.model.WorkflowExport;
 import net.boomerangplatform.model.WorkflowQuotas;
 import net.boomerangplatform.model.WorkflowShortSummary;
 import net.boomerangplatform.model.WorkflowSummary;
+import net.boomerangplatform.model.WorkflowToken;
 import net.boomerangplatform.mongo.entity.FlowTaskTemplateEntity;
 import net.boomerangplatform.mongo.entity.RevisionEntity;
 import net.boomerangplatform.mongo.entity.WorkflowEntity;
@@ -59,16 +60,16 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   @Autowired
   private FlowTaskTemplateService templateService;
-  
+
   @Autowired
   private TeamService teamService;
-  
+
   @Value("${max.workflow.count}")
   private Integer maxWorkflowCount;
-  
+
   @Value("${max.workflow.execution.monthly}")
   private Integer maxWorkflowExecutionMonthly;
-  
+
   @Value("${max.concurrent.workflows}")
   private Integer maxConcurrentWorkflows;
 
@@ -102,8 +103,8 @@ public class WorkflowServiceImpl implements WorkflowService {
     final WorkflowEntity entity = workFlowRepository.getWorkflow(workflowId);
 
     setupTriggerDefaults(entity);
-    
-    
+
+
     final WorkflowSummary summary = new WorkflowSummary(entity);
     updateSummaryInformation(summary);
     return summary;
@@ -114,9 +115,9 @@ public class WorkflowServiceImpl implements WorkflowService {
     final List<WorkflowEntity> list = workFlowRepository.getWorkflowsForTeams(flowTeamId);
     final List<WorkflowSummary> newList = new LinkedList<>();
     for (final WorkflowEntity entity : list) {
-      
+
       setupTriggerDefaults(entity);
-      
+
       final WorkflowSummary summary = new WorkflowSummary(entity);
       updateSummaryInformation(summary);
 
@@ -132,13 +133,13 @@ public class WorkflowServiceImpl implements WorkflowService {
   public WorkflowSummary saveWorkflow(final WorkflowEntity flowWorkflowEntity) {
 
     setupTriggerDefaults(flowWorkflowEntity);
-    
+
     final WorkflowEntity entity = workFlowRepository.saveWorkflow(flowWorkflowEntity);
-    
-    
+
+
     final WorkflowSummary summary = new WorkflowSummary(entity);
 
-    
+
     if (summary.getTriggers() != null) {
       Triggers trigger = summary.getTriggers();
 
@@ -153,7 +154,11 @@ public class WorkflowServiceImpl implements WorkflowService {
   }
 
   private void setupTriggerDefaults(final WorkflowEntity flowWorkflowEntity) {
-    
+
+    if (flowWorkflowEntity.getTokens() == null) {
+      flowWorkflowEntity.setTokens(new LinkedList<>());
+    }
+
     if (flowWorkflowEntity.getTriggers() == null) {
       flowWorkflowEntity.setTriggers(new Triggers());
       flowWorkflowEntity.getTriggers().getManual().setEnable(true);
@@ -164,26 +169,26 @@ public class WorkflowServiceImpl implements WorkflowService {
 
       flowWorkflowEntity.getTriggers().setManual(manual);
     }
-    
+
     if (flowWorkflowEntity.getTriggers().getSlack() == null) {
       TriggerEvent slack = new TriggerEvent();
       flowWorkflowEntity.getTriggers().setSlack(slack);
     }
-    
+
     if (flowWorkflowEntity.getTriggers().getDockerhub() == null) {
       TriggerEvent dockerhub = new TriggerEvent();
       flowWorkflowEntity.getTriggers().setDockerhub(dockerhub);
     }
-    
+
     if (flowWorkflowEntity.getTriggers().getCustom() == null) {
       TriggerEvent custom = new TriggerEvent();
       flowWorkflowEntity.getTriggers().setCustom(custom);
     }
-    
+
     if (flowWorkflowEntity.getTriggers().getWebhook() == null) {
       TriggerEvent webhook = new TriggerEvent();
       flowWorkflowEntity.getTriggers().setWebhook(webhook);
-    }  
+    }
   }
 
   private void updateSummaryInformation(final WorkflowSummary entity) {
@@ -229,7 +234,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     if (updatedTriggers != null) {
       String currentTimezone = null;
       boolean previous = false;
-      
+
       if (currentTriggers.getScheduler() != null) {
         currentTimezone = currentTriggers.getScheduler().getTimezone();
         previous = currentTriggers.getScheduler().getEnable();
@@ -237,20 +242,20 @@ public class WorkflowServiceImpl implements WorkflowService {
 
       TriggerScheduler scheduler = updatedTriggers.getScheduler();
       updateSchedule(entity, currentTriggers, currentTimezone, previous, scheduler);
-      
+
       /* Save new triggers. */
-      currentTriggers.setSlack(updatedTriggers.getSlack()); 
+      currentTriggers.setSlack(updatedTriggers.getSlack());
       currentTriggers.setWebhook(updatedTriggers.getWebhook());
       currentTriggers.setManual(updatedTriggers.getManual());
       currentTriggers.setDockerhub(updatedTriggers.getDockerhub());
       currentTriggers.setCustom(updatedTriggers.getCustom());
-      
+
       /* Set new tokens if needed. */
       updateTokenForTrigger(updatedTriggers.getSlack());
       updateTokenForTrigger(updatedTriggers.getWebhook());
       updateTokenForTrigger(updatedTriggers.getDockerhub());
       updateTokenForTrigger(updatedTriggers.getCustom());
-      
+
     }
   }
 
@@ -285,8 +290,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     }
   }
 
-  private void scheduleWorkflow(final WorkflowEntity entity, boolean previous,
-      boolean current) {
+  private void scheduleWorkflow(final WorkflowEntity entity, boolean previous, boolean current) {
     if (!previous && current) {
       this.taskScheduler.scheduleWorkflow(entity);
     } else if (previous && !current) {
@@ -320,71 +324,34 @@ public class WorkflowServiceImpl implements WorkflowService {
   }
 
   @Override
-  public GenerateTokenResponse generateTriggerToken(String id, FlowTriggerEnum triggerType) {
+  public GenerateTokenResponse generateTriggerToken(String id, String label) {
     GenerateTokenResponse tokenResponse = new GenerateTokenResponse();
     WorkflowEntity entity = workFlowRepository.getWorkflow(id);
-    Triggers trigger = entity.getTriggers();
-    
-    if (trigger != null) {
-
-      TriggerEvent event = this.getTriggerForType(trigger, triggerType);
-      String newToken = createUUID();
-      event.setToken(newToken);
-      tokenResponse.setToken(newToken);
+    List<WorkflowToken> tokens = entity.getTokens();
+    if (tokens == null) {
+      tokens = new LinkedList<>();
+      entity.setTokens(tokens);
     }
+    WorkflowToken newToken = new WorkflowToken();
+    newToken.setLabel(label);
+    newToken.setToken(createUUID());
+    tokens.add(newToken);
     workFlowRepository.saveWorkflow(entity);
     return tokenResponse;
   }
-  
+
   @Override
-  public ResponseEntity<HttpStatus> validateWorkflowToken(String id, GenerateTokenResponse tokenPayload) {
-    WorkflowEntity entity = workFlowRepository.getWorkflow(id);
-    
-//    TODO update to retrieve Tokens from Workflow and then verify.
-    setupTriggerDefaults(entity);
-    
-    Triggers triggers = entity.getTriggers();
-    
-    FlowTriggerEnum triggerType = FlowTriggerEnum.getFlowTriggerEnum(trigger);
-    
-    String triggerToken = "";
-    
-    switch (triggerType)
-    {
-      case webhook: 
-        triggerToken = triggers.getWebhook().getToken();
-        break;
-      case dockerhub:
-        triggerToken = triggers.getDockerhub().getToken();
-        break;
-      case slack:
-        triggerToken = triggers.getSlack().getToken();
-        break;
-      default:
-        triggerToken = "";
-        break;
-    }
-    
-    if (triggerToken.equals(tokenPayload.getToken())) {
+  public ResponseEntity<HttpStatus> validateWorkflowToken(String id,
+      GenerateTokenResponse tokenPayload) {
+    WorkflowEntity workflow = workFlowRepository.getWorkflow(id);
+    setupTriggerDefaults(workflow);
+    String token = tokenPayload.getToken();
+    WorkflowToken workflowToken = workflow.getTokens().stream()
+        .filter(customer -> token.equals(customer.getToken())).findAny().orElse(null);
+    if (workflowToken != null) {
       return ResponseEntity.ok(HttpStatus.OK);
     }
-    
     return ResponseEntity.ok(HttpStatus.FORBIDDEN);
-  }
-  
-  private TriggerEvent getTriggerForType(Triggers triggers, FlowTriggerEnum type) {
-    
-    switch (type )
-    {
-      case webhook: 
-        return triggers.getWebhook();
-      case dockerhub:
-        return triggers.getDockerhub();
-      case slack: 
-        return triggers.getSlack();
-      default:
-        throw new IllegalArgumentException("Token generation unsupported for this trigger type");
-    }
   }
 
   private static final char[] hexArray = "0123456789ABCDEF".toCharArray();
@@ -566,9 +533,9 @@ public class WorkflowServiceImpl implements WorkflowService {
   @Override
   public boolean canExecuteWorkflowForQuotas(String teamId) {
     WorkflowQuotas workflowQuotas = teamService.getTeamQuotas(teamId);
-    if(
-        workflowQuotas.getCurrentConcurrentWorkflows() > workflowQuotas.getMaxConcurrentWorkflows() ||
-        workflowQuotas.getCurrentWorkflowExecutionMonthly() > workflowQuotas.getMaxWorkflowExecutionMonthly()) {
+    if (workflowQuotas.getCurrentConcurrentWorkflows() > workflowQuotas.getMaxConcurrentWorkflows()
+        || workflowQuotas.getCurrentWorkflowExecutionMonthly() > workflowQuotas
+            .getMaxWorkflowExecutionMonthly()) {
       return false;
     } else {
       return true;
@@ -587,7 +554,7 @@ public class WorkflowServiceImpl implements WorkflowService {
       if (workflow.getTriggers() != null) {
         Triggers triggers = workflow.getTriggers();
         TriggerEvent webhook = triggers.getWebhook();
-        
+
         if (webhook != null) {
           webhookEnabled = webhook.getEnable();
           token = webhook.getToken();
@@ -598,27 +565,27 @@ public class WorkflowServiceImpl implements WorkflowService {
       summary.setWebhookEnabled(webhookEnabled);
       summary.setWorkflowName(workflowName);
       summary.setWorkflowId(workflow.getId());
-      
+
       summary.setTeamId(flowTeamId);
-      
+
       FlowTeam flowTeam = teamService.getTeamById(flowTeamId);
       if (flowTeam != null) {
         summary.setTeamName(flowTeam.getName());
       }
-     
+
       summaryList.add(summary);
-    } 
+    }
     return summaryList;
   }
 
   @Override
-  public boolean canExecuteWorkflow(String workFlowId,Optional<FlowTriggerEnum> trigger) {
-    
+  public boolean canExecuteWorkflow(String workFlowId, Optional<FlowTriggerEnum> trigger) {
+
     if (!trigger.isPresent() || !FlowTriggerEnum.manual.equals(trigger.get())) {
       return true;
     }
-    
-   
+
+
     WorkflowEntity workflow = workFlowRepository.getWorkflow(workFlowId);
     if (workflow != null) {
       if (workflow.getTriggers() != null) {
@@ -629,9 +596,28 @@ public class WorkflowServiceImpl implements WorkflowService {
             return manualTrigger.getEnable();
           }
         }
-        
+
       }
     }
     return true;
+  }
+
+  @Override
+  public void deleteToken(String id, String label) {
+    WorkflowEntity entity = workFlowRepository.getWorkflow(id);
+    List<WorkflowToken> tokens = entity.getTokens();
+    if (tokens == null) {
+      tokens = new LinkedList<>();
+      entity.setTokens(tokens);
+    }
+
+    WorkflowToken token = tokens.stream().filter(customer -> label.equals(customer.getLabel()))
+        .findAny().orElse(null);
+
+    if (token != null) {
+      tokens.remove(token);
+    }
+
+    workFlowRepository.saveWorkflow(entity);
   }
 }

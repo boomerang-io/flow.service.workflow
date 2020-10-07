@@ -27,7 +27,7 @@ public interface WorkflowService {
 
   WorkflowSummary updateWorkflowProperties(String workflowId, List<FlowProperty> properties);
 
-  GenerateTokenResponse generateTriggerToken(String id, FlowTriggerEnum triggerType);
+  GenerateTokenResponse generateTriggerToken(String id, String label);
 
   ResponseEntity<InputStreamResource> exportWorkflow(String workFlowId);
 
@@ -40,4 +40,6 @@ public interface WorkflowService {
   public List<WorkflowShortSummary> getWorkflowShortSummaryList();
 
   ResponseEntity<HttpStatus> validateWorkflowToken(String id, GenerateTokenResponse tokenPayload);
+
+  void deleteToken(String id, String label);
 }

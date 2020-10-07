@@ -133,6 +133,9 @@ public class EventProcessorImpl implements EventProcessor {
       response.setStatusMessage("Event did not match enabled workflow trigger.");
       return response;
     }
+    
+    // TODO returning null to fix compilation errors
+    return null;
   }
 
   private Map<String, String> processProperties(JsonNode eventData, String workflowId) {
