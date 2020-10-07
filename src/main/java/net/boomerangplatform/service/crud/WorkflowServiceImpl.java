@@ -131,25 +131,19 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   @Override
   public WorkflowSummary saveWorkflow(final WorkflowEntity flowWorkflowEntity) {
-
+   
     setupTriggerDefaults(flowWorkflowEntity);
 
     final WorkflowEntity entity = workFlowRepository.saveWorkflow(flowWorkflowEntity);
 
-
     final WorkflowSummary summary = new WorkflowSummary(entity);
 
-
+    if (flowWorkflowEntity.getId() == null) {
+      this.generateTriggerToken(flowWorkflowEntity.getId(), "default");
+    }
+    
     if (summary.getTriggers() != null) {
       Triggers trigger = summary.getTriggers();
-
-      if (trigger.getWebhook() != null) {
-        TriggerEvent webhookTrigger = trigger.getWebhook();
-        if (webhookTrigger.getEnable().booleanValue() && entity.getTokens().isEmpty()) {
-          this.generateTriggerToken(entity.getId(), "default");
-        }
-      }
-
       TriggerScheduler scheduler = trigger.getScheduler();
       if (scheduler != null && scheduler.getEnable()) {
         logger.info("Scheduling workflow: {}", scheduler.getSchedule());
