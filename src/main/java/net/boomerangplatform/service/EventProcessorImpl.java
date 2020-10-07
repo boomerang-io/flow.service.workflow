@@ -133,7 +133,7 @@ public class EventProcessorImpl implements EventProcessor {
       logger.info("processCloudEvent() - Wait For Event System Task");
       // TODO get actual activity id
       
-      String workflowActivityId = "?";
+      String workflowActivityId = getWorkflowActivityIdFromSubject(subject);
       String taskActivityId = taskService.getTaskActivityForTopic(workflowActivityId, topic);
       InternalTaskResponse request = new InternalTaskResponse();
       request.setActivityId(taskActivityId);
@@ -223,12 +223,24 @@ public class EventProcessorImpl implements EventProcessor {
       return "";
     }
   }
-
-  private String getTopicFromSubject(String subject) {
+  
+  private String getWorkflowActivityIdFromSubject(String subject) {
     // Reference 0 will be an empty string as it is the left hand side of the split
     String[] splitArr = subject.split("/");
     if (splitArr.length >= 3) {
       return splitArr[2].toString();
+    } else {
+      return "";
+    }
+  }
+
+  private String getTopicFromSubject(String subject) {
+    // Reference 0 will be an empty string as it is the left hand side of the split
+    String[] splitArr = subject.split("/");
+    if (splitArr.length >= 4) {
+      return splitArr[3].toString();
+    } else if (splitArr.length >= 3) {
+        return splitArr[2].toString();
     } else {
       return "";
     }
