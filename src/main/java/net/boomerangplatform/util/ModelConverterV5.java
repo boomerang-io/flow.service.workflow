@@ -390,7 +390,7 @@ public class ModelConverterV5 {
     port.setSelected(false);
     port.setParentNode(taskId);
 
-    if (CUSTOMTASKNAME.equals(type) || TEMPLATETASKNAME.equals(type) ||  "approval".equals(type) || "manual".equals(type) || "setwfproperty".equals(type)) {
+    if (CUSTOMTASKNAME.equals(type) || TEMPLATETASKNAME.equals(type) ||  "approval".equals(type) || "manual".equals(type) || "setwfproperty".equals(type) || "eventwait".equals(type)) {
       port.setType("task");
     } else {
       port.setType(type);
@@ -510,6 +510,9 @@ public class ModelConverterV5 {
       type = "manual";
     } else if (dagType == TaskType.approval) {
       type = "approval";
+    }
+    else if (dagType == TaskType.eventwait) {
+      type = "eventwait";
     }
 
     return type;

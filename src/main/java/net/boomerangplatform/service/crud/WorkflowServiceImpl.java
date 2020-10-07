@@ -567,7 +567,6 @@ public class WorkflowServiceImpl implements WorkflowService {
 
         if (webhook != null) {
           webhookEnabled = webhook.getEnable();
-          token = webhook.getToken();
         }
       }
       WorkflowShortSummary summary = new WorkflowShortSummary();

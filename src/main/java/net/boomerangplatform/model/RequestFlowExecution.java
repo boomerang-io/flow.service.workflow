@@ -5,6 +5,7 @@ import java.util.Map;
 public class RequestFlowExecution {
 
 	private String token;
+	private String workflowId;
 
 	public String getToken() {
 		return token;
@@ -23,5 +24,13 @@ public class RequestFlowExecution {
 	public void setProperties(Map<String, String> properties) {
 		this.properties = properties;
 	}
+
+  public String getWorkflowId() {
+    return workflowId;
+  }
+
+  public void setWorkflowId(String workflowId) {
+    this.workflowId = workflowId;
+  }
 
 }

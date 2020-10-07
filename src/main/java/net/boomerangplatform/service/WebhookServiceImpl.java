@@ -27,9 +27,15 @@ public class WebhookServiceImpl implements WebhookService {
   
   @Override
   public FlowWebhookResponse submitWebhookEvent(RequestFlowExecution request) {
-    String tokenId = request.getToken();
-    WorkflowEntity entity = flowWorkflowService.findByTokenString(tokenId);
-    String workflowId = entity.getId(); 
+    
+    String workflowId = request.getWorkflowId();
+    
+    if (workflowId == null) {
+      String tokenId = request.getToken();
+      WorkflowEntity entity = flowWorkflowService.findByTokenString(tokenId);
+      workflowId = entity.getId();
+    }
+
     FlowExecutionRequest executionRequest = new FlowExecutionRequest();
     executionRequest.setProperties(request.getProperties());
 
