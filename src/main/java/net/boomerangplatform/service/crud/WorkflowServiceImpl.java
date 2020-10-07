@@ -344,6 +344,9 @@ public class WorkflowServiceImpl implements WorkflowService {
     newToken.setToken(createUUID());
     tokens.add(newToken);
     workFlowRepository.saveWorkflow(entity);
+    
+    tokenResponse.setToken(newToken.getToken());
+    
     return tokenResponse;
   }
 
