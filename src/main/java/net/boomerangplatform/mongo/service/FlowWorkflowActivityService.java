@@ -19,7 +19,7 @@ public interface FlowWorkflowActivityService {
   Page<ActivityEntity> findAllActivitiesForWorkflows(Optional<Date> from,
       Optional<Date> to, List<String> workflows, Pageable page);
 
-  ActivityEntity findWorkflowActiivtyById(String id);
+  ActivityEntity findWorkflowActivtyById(String id);
 
 
   ActivityEntity findByWorkflowAndProperty(String workflowId, String key, String value);

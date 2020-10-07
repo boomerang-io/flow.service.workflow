@@ -27,8 +27,12 @@ import net.boomerangplatform.model.FlowExecutionRequest;
 import net.boomerangplatform.model.eventing.EventResponse;
 import net.boomerangplatform.mongo.model.FlowProperty;
 import net.boomerangplatform.mongo.model.FlowTriggerEnum;
+import net.boomerangplatform.mongo.model.TaskStatus;
 import net.boomerangplatform.mongo.model.Triggers;
+import net.boomerangplatform.mongo.model.internal.InternalTaskRequest;
+import net.boomerangplatform.mongo.model.internal.InternalTaskResponse;
 import net.boomerangplatform.service.crud.WorkflowService;
+import net.boomerangplatform.service.refactor.TaskService;
 
 @Service
 public class EventProcessorImpl implements EventProcessor {
@@ -43,7 +47,9 @@ public class EventProcessorImpl implements EventProcessor {
   @Autowired
   private ExecutionService executionService;
 
-
+  @Autowired
+  private TaskService taskService;
+  
   // TODO: better return management
   @Override
   public CloudEventImpl<EventResponse> processHTTPEvent(Map<String, Object> headers,
@@ -125,7 +131,16 @@ public class EventProcessorImpl implements EventProcessor {
       return response;
     } else if ("wfe".equals(trigger)) {
       logger.info("processCloudEvent() - Wait For Event System Task");
-      // TODO call other internal service impl
+      // TODO get actual activity id
+      
+      String workflowActivityId = "?";
+      String taskActivityId = taskService.getTaskActivityForTopic(workflowActivityId, topic);
+      InternalTaskResponse request = new InternalTaskResponse();
+      request.setActivityId(taskActivityId);
+      request.setStatus(TaskStatus.completed);
+      
+      this.taskService.endTask(request);
+      
     } else {
       // TODO make error
       logger.error("processCloudEvent() - No matching trigger enabled.");

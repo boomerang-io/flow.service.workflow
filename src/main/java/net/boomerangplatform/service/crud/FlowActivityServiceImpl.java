@@ -149,7 +149,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
 
   @Override
   public ActivityEntity findWorkflowActivity(String id) {
-    return flowActivityService.findWorkflowActiivtyById(id);
+    return flowActivityService.findWorkflowActivtyById(id);
   }
 
   @Override
@@ -465,7 +465,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
     return outputStream -> {
       Map<String, String> requestParams = new HashMap<>();
       requestParams.put("workflowId",
-          flowActivityService.findWorkflowActiivtyById(activityId).getWorkflowId());
+          flowActivityService.findWorkflowActivtyById(activityId).getWorkflowId());
       requestParams.put("workflowActivityId", activityId);
       requestParams.put("taskActivityId", executionEntity.getId());
       requestParams.put("taskId", taskId);

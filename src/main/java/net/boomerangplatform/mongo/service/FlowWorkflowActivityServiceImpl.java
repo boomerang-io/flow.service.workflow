@@ -48,7 +48,7 @@ public class FlowWorkflowActivityServiceImpl implements FlowWorkflowActivityServ
   }
 
   @Override
-  public ActivityEntity findWorkflowActiivtyById(String id) {
+  public ActivityEntity findWorkflowActivtyById(String id) {
     return repository.findById(id).orElse(null);
   }
 

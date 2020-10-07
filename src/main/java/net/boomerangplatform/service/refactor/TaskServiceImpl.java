@@ -88,7 +88,7 @@ public class TaskServiceImpl implements TaskService {
     
     TaskExecutionEntity taskExecution = taskActivityService.findById(taskId);
     ActivityEntity activity =
-        activityService.findWorkflowActiivtyById(taskExecution.getActivityId());
+        activityService.findWorkflowActivtyById(taskExecution.getActivityId());
     WorkflowEntity workflow = workflowService.getWorkflow(activity.getWorkflowId());
     String workflowName = workflow.getName();
 
@@ -197,7 +197,7 @@ public class TaskServiceImpl implements TaskService {
     TaskExecutionEntity activity = taskActivityService.findById(activityId);
 
     ActivityEntity workflowActivity =
-        this.activityService.findWorkflowActiivtyById(activity.getActivityId());
+        this.activityService.findWorkflowActivtyById(activity.getActivityId());
 
    
     WorkflowEntity workflow = workflowService.getWorkflow(workflowActivity.getWorkflowId());
@@ -211,7 +211,7 @@ public class TaskServiceImpl implements TaskService {
     List<String> keys = new LinkedList<>();
     keys.add(storeId);
 
-    workflowActivity = this.activityService.findWorkflowActiivtyById(activity.getActivityId());
+    workflowActivity = this.activityService.findWorkflowActivtyById(activity.getActivityId());
 
     activity.setFlowTaskStatus(request.getStatus());
     long duration = new Date().getTime() - activity.getStartTime().getTime();
@@ -227,7 +227,7 @@ public class TaskServiceImpl implements TaskService {
     String tokenId = getLock(storeId, keys);
     LOGGER.debug("[{}] Obtained lock",activityId);
 
-    workflowActivity = this.activityService.findWorkflowActiivtyById(activity.getActivityId());
+    workflowActivity = this.activityService.findWorkflowActivtyById(activity.getActivityId());
     updatePendingAprovalStatus(workflowActivity);
     
     activity.setFlowTaskStatus(request.getStatus());
@@ -362,7 +362,7 @@ public class TaskServiceImpl implements TaskService {
 
   private Task getTask(TaskExecutionEntity taskActivity) {
     ActivityEntity activity =
-        activityService.findWorkflowActiivtyById(taskActivity.getActivityId());
+        activityService.findWorkflowActivtyById(taskActivity.getActivityId());
     RevisionEntity revision =
         workflowVersionService.getWorkflowlWithId(activity.getWorkflowRevisionid());
     List<Task> tasks = createTaskList(revision, activity);
@@ -444,5 +444,13 @@ public class TaskServiceImpl implements TaskService {
       taskList.add(newTask);
     }
     return taskList;
+  }
+
+  @Override
+  public String getTaskActivityForTopic(String activityId, String topic) {
+    // TODO @mdroy to complete this implmenetaiton
+    
+
+    return null;
   }
 }

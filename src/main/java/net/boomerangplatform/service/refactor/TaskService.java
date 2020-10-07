@@ -9,4 +9,5 @@ public interface TaskService {
 
   void endTask(InternalTaskResponse request);
 
+  String getTaskActivityForTopic(String activityId, String topic);
 }

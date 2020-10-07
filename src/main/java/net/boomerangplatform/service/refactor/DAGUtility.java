@@ -415,7 +415,7 @@ public class DAGUtility {
   public void validateWorkflow(String activityId, final Task start, final Task end,
       final Graph<String, DefaultEdge> graph) {
 
-    final ActivityEntity activityEntity = activityService.findWorkflowActiivtyById(activityId);
+    final ActivityEntity activityEntity = activityService.findWorkflowActivtyById(activityId);
 
     if (start == null || end == null) {
       activityEntity.setStatus(TaskStatus.invalid);
