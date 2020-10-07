@@ -48,12 +48,7 @@ public class WebhookServiceImpl implements WebhookService {
   }
 
   @Override
-  public FlowActivity getFlowActivity(String token, String activityId) {
-    String tokenId = token;
-    WorkflowEntity entity = flowWorkflowService.findByTokenString(tokenId);
-    if (entity == null) {
-      return null;
-    }
+  public FlowActivity getFlowActivity( String activityId) {
     return activityController.getFlowActivity(activityId);
   }
 }

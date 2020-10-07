@@ -79,9 +79,9 @@ public class InternalController {
   }
   
 
-  @GetMapping(value = "/webhook/status/{activityId}", consumes = "application/json; charset=utf-8")
-  public FlowActivity getWebhookStatus(@PathVariable String activityId,
-      @RequestParam String token) {
-    return webhookService.getFlowActivity(token, activityId);
+  @GetMapping(value = "/webhook/status/{activityId}")
+  public FlowActivity getWebhookStatus(@PathVariable String activityId
+    ) {
+    return webhookService.getFlowActivity(activityId);
   }
 }
