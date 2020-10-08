@@ -35,6 +35,8 @@ public class TaskExecutionEntity {
   private String workflowId;
   private TaskType taskType;
   
+  private boolean preApproved;
+  
   private ApprovalEntity approval;
 
   public TaskType getTaskType() {
@@ -141,5 +143,13 @@ public class TaskExecutionEntity {
 
   public void setApproval(ApprovalEntity approval) {
     this.approval = approval;
+  }
+
+  public boolean isPreApproved() {
+    return preApproved;
+  }
+
+  public void setPreApproved(boolean preApproved) {
+    this.preApproved = preApproved;
   }
 }

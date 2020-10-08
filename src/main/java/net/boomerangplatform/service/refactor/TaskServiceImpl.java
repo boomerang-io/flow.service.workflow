@@ -146,6 +146,13 @@ public class TaskServiceImpl implements TaskService {
 
   private void createWaitForEventTask(TaskExecutionEntity taskExecution) {
     
+    if (taskExecution.isPreApproved()) {
+      InternalTaskResponse response = new InternalTaskResponse();
+      response.setActivityId(taskExecution.getId());
+      response.setStatus(TaskStatus.completed);
+      this.endTask(response);
+    }
+    
     LOGGER.debug("[{}] Creating wait for event task",taskExecution.getActivityId());
     
     taskExecution.setFlowTaskStatus(TaskStatus.waiting);
@@ -447,7 +454,10 @@ public class TaskServiceImpl implements TaskService {
   }
 
   @Override
-  public String getTaskActivityForTopic(String activityId, String topic) {
+  public List<String> updateTaskActivityForTopic(String activityId, String topic) {
+    
+    List<String> ids = new LinkedList<>();
+    
     LOGGER.info("[{}] Fidning task actiivty id based on topic.", activityId);
     ActivityEntity activity =
         activityService.findWorkflowActivtyById(activityId);
@@ -460,19 +470,34 @@ public class TaskServiceImpl implements TaskService {
         if (coreProperties != null) {
           CoreProperty coreProperty = coreProperties.stream().filter(c -> "topic".contains(c.getKey())).findAny().orElse(null);
 
-          if (coreProperty != null) {
+          if (coreProperty != null && topic.equals(coreProperty.getValue())) {
+            
             String taskId = task.getTaskId();
             TaskExecutionEntity taskExecution = this.taskActivityService.findByTaskIdAndActiityId(taskId, activityId);
             if (taskExecution != null) {
               LOGGER.info("[{}] Found task id: {} ", activityId, taskExecution.getId());
-              return taskExecution.getId();
+              taskExecution.setPreApproved(true);
+              this.taskActivityService.save(taskExecution);
+
+              ids.add(taskExecution.getId());
             }
           }
         }
       }
     }
     LOGGER.info("[{}] No task activity ids found for topic: {}", activityId, topic);
-   
-    return null;
+    return ids;
+  }
+
+  @Override
+  @Async
+  public void submitActivity(String taskActivityId) {
+    TaskExecutionEntity taskExecution = this.taskActivityService.findById(taskActivityId);
+    if (taskExecution != null && !taskExecution.getFlowTaskStatus().equals(TaskStatus.notstarted)) {
+      InternalTaskResponse request = new InternalTaskResponse();
+      request.setActivityId(taskActivityId);
+      request.setStatus(TaskStatus.completed);
+      endTask(request);
+    }
   }
 }

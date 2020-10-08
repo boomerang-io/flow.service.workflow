@@ -132,20 +132,10 @@ public class EventProcessorImpl implements EventProcessor {
       return response;
     } else if ("wfe".equals(trigger)) {
       logger.info("processCloudEvent() - Wait For Event System Task");
-      // TODO get actual activity id
-      
       String workflowActivityId = getWorkflowActivityIdFromSubject(subject);
-      String taskActivityId = taskService.getTaskActivityForTopic(workflowActivityId, topic);
-      
-      if (taskActivityId != null) {
-        InternalTaskResponse request = new InternalTaskResponse();
-        request.setActivityId(taskActivityId);
-        request.setStatus(TaskStatus.completed);
-        
-        this.taskService.endTask(request);
-      }
-      else {
-        // TODO Make error
+      List<String> taskActivityId = taskService.updateTaskActivityForTopic(workflowActivityId, topic);
+      for (String id : taskActivityId) {
+        taskService.submitActivity(id);
       }
       
     } else {
