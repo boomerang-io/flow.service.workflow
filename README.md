@@ -12,7 +12,9 @@ Flow service provides APIs for:
 2. Springboot 2.3 
 3. Maven
 
-## NATS Integration
+## Testing Locally
+
+### NATS Integration
 
 If eventing is enabled on this service it will attempt to connect to, and subscribe to events. If you want to test this locally run
 
