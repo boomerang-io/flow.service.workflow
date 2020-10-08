@@ -136,11 +136,17 @@ public class EventProcessorImpl implements EventProcessor {
       
       String workflowActivityId = getWorkflowActivityIdFromSubject(subject);
       String taskActivityId = taskService.getTaskActivityForTopic(workflowActivityId, topic);
-      InternalTaskResponse request = new InternalTaskResponse();
-      request.setActivityId(taskActivityId);
-      request.setStatus(TaskStatus.completed);
       
-      this.taskService.endTask(request);
+      if (taskActivityId != null) {
+        InternalTaskResponse request = new InternalTaskResponse();
+        request.setActivityId(taskActivityId);
+        request.setStatus(TaskStatus.completed);
+        
+        this.taskService.endTask(request);
+      }
+      else {
+        // TODO Make error
+      }
       
     } else {
       // TODO make error

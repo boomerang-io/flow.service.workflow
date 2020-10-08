@@ -448,9 +448,31 @@ public class TaskServiceImpl implements TaskService {
 
   @Override
   public String getTaskActivityForTopic(String activityId, String topic) {
-    // TODO @mdroy to complete this implmenetaiton
-    
+    LOGGER.info("[{}] Fidning task actiivty id based on topic.", activityId);
+    ActivityEntity activity =
+        activityService.findWorkflowActivtyById(activityId);
+    RevisionEntity revision =
+        workflowVersionService.getWorkflowlWithId(activity.getWorkflowRevisionid());
+    List<DAGTask> tasks = revision.getDag().getTasks();
+    for (DAGTask task : tasks) {
+      if (TaskType.eventwait.equals(task.getType())) {
+        List<CoreProperty> coreProperties = task.getProperties();
+        if (coreProperties != null) {
+          CoreProperty coreProperty = coreProperties.stream().filter(c -> "topic".contains(c.getKey())).findAny().orElse(null);
 
+          if (coreProperty != null) {
+            String taskId = task.getTaskId();
+            TaskExecutionEntity taskExecution = this.taskActivityService.findByTaskIdAndActiityId(taskId, activityId);
+            if (taskExecution != null) {
+              LOGGER.info("[{}] Found task id: {} ", activityId, taskExecution.getId());
+              return taskExecution.getId();
+            }
+          }
+        }
+      }
+    }
+    LOGGER.info("[{}] No task activity ids found for topic: {}", activityId, topic);
+   
     return null;
   }
 }
