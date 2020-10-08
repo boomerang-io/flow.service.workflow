@@ -29,7 +29,6 @@ import net.boomerangplatform.mongo.model.FlowProperty;
 import net.boomerangplatform.mongo.model.FlowTriggerEnum;
 import net.boomerangplatform.mongo.model.TaskStatus;
 import net.boomerangplatform.mongo.model.Triggers;
-import net.boomerangplatform.mongo.model.internal.InternalTaskRequest;
 import net.boomerangplatform.mongo.model.internal.InternalTaskResponse;
 import net.boomerangplatform.service.crud.WorkflowService;
 import net.boomerangplatform.service.refactor.TaskService;
@@ -65,6 +64,8 @@ public class EventProcessorImpl implements EventProcessor {
   // TODO: better return management
   @Override
   public void processNATSMessage(String message) {
+
+    logger.info("processNATSMessage() - Message: " + message);
     Map<String, Object> headers = new HashMap<>();
     headers.put("Content-Type", "application/cloudevents+json");
 
@@ -72,9 +73,9 @@ public class EventProcessorImpl implements EventProcessor {
         .withHeaders(() -> headers).withPayload(() -> message).unmarshal();
 
     // TODO return message to another queue for picking up?
-    // return createResponseEvent(event.getAttributes().getId(), event.getAttributes().getType(),
-    // event.getAttributes().getSource(), event.getAttributes().getSubject().orElse(""),
-    // event.getAttributes().getTime().orElse(ZonedDateTime.now()), processEvent(event));
+     createResponseEvent(event.getAttributes().getId(), event.getAttributes().getType(),
+     event.getAttributes().getSource(), event.getAttributes().getSubject().orElse(""),
+     event.getAttributes().getTime().orElse(ZonedDateTime.now()), processEvent(event));
   }
 
   private CloudEventImpl<EventResponse> createResponseEvent(String id, String type, URI source,

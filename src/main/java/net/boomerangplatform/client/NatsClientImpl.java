@@ -46,10 +46,10 @@ public class NatsClientImpl implements NatsClient {
 //	TODO IF eventing enabled, start this on application startup OR is this what @EventListener is doing?
 	@EventListener
 	public void subscribe(ContextRefreshedEvent event) throws TimeoutException {
+	    
+	    int random = (int) (Math.random() * 10000 + 1); // NOSONAR
 
-		logger.info("Initializng subscriptions to NATS");
-
-		int random = (int) (Math.random() * 10000 + 1); // NOSONAR
+	      logger.info("Initializng subscriptions to NATS with URL: " + natsUrl + ", Cluster: " + natsCluster + ", Client ID: " + "flow-workflow-" + random);
 
         Options cfOptions = new Options.Builder().natsUrl(natsUrl).clusterId(natsCluster).clientId("flow-workflow-" + random).build();
         StreamingConnectionFactory cf = new StreamingConnectionFactory(cfOptions);
@@ -61,7 +61,6 @@ public class NatsClientImpl implements NatsClient {
               streamingConnection.subscribe(SUBJECT, QUEUE, new MessageHandler() { // NOSONAR
                 @Override
                 public void onMessage(Message m) {
-                  
                   eventProcessor.processNATSMessage(new String(m.getData()));
                 }
               }, new SubscriptionOptions.Builder().durableName("durable").build());
