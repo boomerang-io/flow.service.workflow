@@ -28,11 +28,10 @@ public class NatsClientImpl implements NatsClient {
 	@Value("${eventing.nats.cluster}")
 	private String natsCluster;
 
-    protected static final String SUBJECT = "flow-workflow-execute";
+    @Value("${eventing.nats.channel}")
+    private String natsChannel;
 
     protected static final String QUEUE = "flow-workflow";
-
-    protected static final String TYPE_PREFIX = "io.boomerang.eventing.";
 
 	private StreamingConnection streamingConnection;
 
@@ -58,7 +57,7 @@ public class NatsClientImpl implements NatsClient {
           this.streamingConnection = cf.createConnection();
 
           Subscription subscription =
-              streamingConnection.subscribe(SUBJECT, QUEUE, new MessageHandler() { // NOSONAR
+              streamingConnection.subscribe(natsChannel, QUEUE, new MessageHandler() { // NOSONAR
                 @Override
                 public void onMessage(Message m) {
                   eventProcessor.processNATSMessage(new String(m.getData()));
