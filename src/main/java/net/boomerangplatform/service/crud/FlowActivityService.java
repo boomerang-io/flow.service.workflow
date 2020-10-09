@@ -18,7 +18,7 @@ import net.boomerangplatform.mongo.model.FlowTriggerEnum;
 public interface FlowActivityService {
 
   ActivityEntity createFlowActivity(String workflowVersionId,
-      Optional<FlowTriggerEnum> trigger, FlowExecutionRequest request);
+      Optional<String> trigger, FlowExecutionRequest request);
 
   ActivityEntity findWorkflowActivity(String id);
 

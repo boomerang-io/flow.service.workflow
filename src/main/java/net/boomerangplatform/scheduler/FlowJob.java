@@ -25,6 +25,6 @@ public class FlowJob implements Job {
     request.setProperties(properties);
 
     String workflowId = jobExecutionContext.getJobDetail().getKey().getName();
-    controller.executeWorkflow(workflowId, Optional.of(FlowTriggerEnum.scheduler), Optional.of(request));
+    controller.executeWorkflow(workflowId, Optional.of(FlowTriggerEnum.scheduler.toString()), Optional.of(request));
   }
 }

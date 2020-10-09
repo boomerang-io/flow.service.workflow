@@ -40,7 +40,7 @@ public class ExecutionServiceImpl implements ExecutionService {
   private WorkflowService workflowService;
 
   public FlowActivity executeWorkflow(String workflowId,
-      Optional<FlowTriggerEnum> trigger,
+      Optional<String> trigger,
       Optional<FlowExecutionRequest> executionRequest) {
     
     final WorkflowEntity workflow = workflowService.getWorkflow(workflowId);

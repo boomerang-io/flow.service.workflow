@@ -35,7 +35,7 @@ public interface WorkflowService {
   
   boolean canExecuteWorkflowForQuotas(String teamId);
 
-  boolean canExecuteWorkflow(String workFlowId, Optional<FlowTriggerEnum> trigger);
+  boolean canExecuteWorkflow(String workFlowId, Optional<String> trigger);
   
   public List<WorkflowShortSummary> getWorkflowShortSummaryList();
 

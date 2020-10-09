@@ -110,7 +110,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
 
   @Override
   public ActivityEntity createFlowActivity(String workflowVersionId,
-      Optional<FlowTriggerEnum> trigger, FlowExecutionRequest request) {
+      Optional<String> trigger, FlowExecutionRequest request) {
     /* Create new one based of work flow version id. */
     final RevisionEntity entity = versionService.getWorkflowlWithId(workflowVersionId);
 
@@ -124,11 +124,11 @@ public class FlowActivityServiceImpl implements FlowActivityService {
       activity.setTrigger(trigger.get());
     }
 
-    if (!trigger.isPresent() || FlowTriggerEnum.manual == trigger.get()) {
+    if (!trigger.isPresent() || "manual".equals(trigger.get())) {
       final FlowUserEntity userEntity = userIdentityService.getCurrentUser();
       activity.setInitiatedByUserId(userEntity.getId());
       activity.setInitiatedByUserName(userEntity.getName());
-      activity.setTrigger(FlowTriggerEnum.manual);
+      activity.setTrigger(FlowTriggerEnum.manual.toString());
     }
 
     if (request.getProperties() != null) {

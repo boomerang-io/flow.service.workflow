@@ -39,7 +39,7 @@ public class WebhookServiceImpl implements WebhookService {
     FlowExecutionRequest executionRequest = new FlowExecutionRequest();
     executionRequest.setProperties(request.getProperties());
 
-    FlowActivity activity =  executionService.executeWorkflow(workflowId, Optional.of(FlowTriggerEnum.webhook), Optional.of(executionRequest));
+    FlowActivity activity =  executionService.executeWorkflow(workflowId, Optional.of(FlowTriggerEnum.webhook.toString()), Optional.of(executionRequest));
     FlowWebhookResponse response = new FlowWebhookResponse();
     if (activity != null) {
       response.setActivityId(activity.getId());

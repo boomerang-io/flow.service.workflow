@@ -7,6 +7,6 @@ import net.boomerangplatform.mongo.model.FlowTriggerEnum;
 
 public interface ExecutionService {
   public FlowActivity executeWorkflow(String workflowId,
-      Optional<FlowTriggerEnum> trigger,
+      Optional<String> trigger,
       Optional<FlowExecutionRequest> executionRequest);
 }

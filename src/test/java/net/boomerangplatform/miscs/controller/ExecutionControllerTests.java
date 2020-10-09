@@ -36,7 +36,7 @@ public class ExecutionControllerTests extends FlowTests {
     String workflowId = "5d1a188af6ca2c00014c4369"; // workflow13.json
 
     FlowActivity activity = executionController.executeWorkflow(workflowId,
-        Optional.of(FlowTriggerEnum.manual), Optional.of(new FlowExecutionRequest()));
+        Optional.of(FlowTriggerEnum.manual.toString()), Optional.of(new FlowExecutionRequest()));
 
     assertNull(activity);
   }
@@ -45,7 +45,7 @@ public class ExecutionControllerTests extends FlowTests {
   public void testExecuteWorkflowExceedQuotaMax() {
     try {
       executionController.executeWorkflow("5d1a188af6ca2c00014c4314", // workflow1.json
-          Optional.of(FlowTriggerEnum.manual), Optional.of(new FlowExecutionRequest()));
+          Optional.of(FlowTriggerEnum.manual.toString()), Optional.of(new FlowExecutionRequest()));
     } catch (BoomerangException e) {
       assertEquals(429, e.getCode());
       assertEquals("TOO_MANY_REQUESTS", e.getDescription());

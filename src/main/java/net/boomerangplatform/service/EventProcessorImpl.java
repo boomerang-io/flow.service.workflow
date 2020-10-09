@@ -124,7 +124,7 @@ public class EventProcessorImpl implements EventProcessor {
       executionRequest.setProperties(processProperties(eventData, workflowId));
 
       FlowActivity activity = executionService.executeWorkflow(workflowId,
-          Optional.of(FlowTriggerEnum.getFlowTriggerEnum(trigger)), Optional.of(executionRequest));
+          Optional.of(trigger), Optional.of(executionRequest));
       response.setActivityId(activity.getId());
       response.setStatusCode(HttpStatus.SC_OK);
       return response;

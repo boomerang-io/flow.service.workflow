@@ -22,7 +22,7 @@ public class ExecutionController {
 
   @PostMapping(value = "/execute/{workflowId}")
   public FlowActivity executeWorkflow(@PathVariable String workflowId,
-      @RequestParam Optional<FlowTriggerEnum> trigger,
+      @RequestParam Optional<String> trigger,
       @RequestBody Optional<FlowExecutionRequest> executionRequest) {
 
     return executionService.executeWorkflow(workflowId, trigger, executionRequest);

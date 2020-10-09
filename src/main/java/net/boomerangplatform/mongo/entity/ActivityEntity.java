@@ -8,7 +8,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import net.boomerangplatform.mongo.model.CoreProperty;
-import net.boomerangplatform.mongo.model.FlowTriggerEnum;
 import net.boomerangplatform.mongo.model.TaskStatus;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -35,7 +34,7 @@ public class ActivityEntity {
 
   private String workflowRevisionid;
 
-  private FlowTriggerEnum trigger;
+  private String trigger;
 
   private List<CoreProperty> properties;
 
@@ -99,11 +98,11 @@ public class ActivityEntity {
     this.workflowRevisionid = workflowRevisionid;
   }
 
-  public FlowTriggerEnum getTrigger() {
+  public String getTrigger() {
     return trigger;
   }
 
-  public void setTrigger(FlowTriggerEnum trigger) {
+  public void setTrigger(String trigger) {
     this.trigger = trigger;
   }
 
