@@ -27,9 +27,7 @@ import net.boomerangplatform.model.FlowExecutionRequest;
 import net.boomerangplatform.model.eventing.EventResponse;
 import net.boomerangplatform.mongo.model.FlowProperty;
 import net.boomerangplatform.mongo.model.FlowTriggerEnum;
-import net.boomerangplatform.mongo.model.TaskStatus;
 import net.boomerangplatform.mongo.model.Triggers;
-import net.boomerangplatform.mongo.model.internal.InternalTaskResponse;
 import net.boomerangplatform.service.crud.WorkflowService;
 import net.boomerangplatform.service.refactor.TaskService;
 
@@ -161,15 +159,17 @@ public class EventProcessorImpl implements EventProcessor {
       try {
         inputProperties.forEach(inputProperty -> {
           // TODO change to not parse the document every time
-          JsonNode propertyValue =
-              JsonPath.using(jacksonConfig).parse(eventData).read("$." + inputProperty.getKey());
-
-          if (!propertyValue.isNull()) {
-            logger.info("processProperties() - Property Key: " + inputProperty.getKey()
-                + ", Value: " + propertyValue.toString());
-            properties.put(inputProperty.getKey(), propertyValue.toString());
-          } else {
-            logger.info("processProperties() - Skipping property Key: " + inputProperty.getKey());
+          if (inputProperty.getJsonPath() != null && !inputProperty.getJsonPath().isBlank()) {
+            JsonNode propertyValue =
+                JsonPath.using(jacksonConfig).parse(eventData).read(inputProperty.getJsonPath());
+  
+            if (!propertyValue.isNull()) {
+              logger.info("processProperties() - Property: " + inputProperty.getKey() + ", Json Path: " + inputProperty.getJsonPath()
+                  + ", Value: " + propertyValue.toString());
+              properties.put(inputProperty.getKey(), propertyValue.toString());
+            } else {
+              logger.info("processProperties() - Skipping property: " + inputProperty.getKey());
+            }
           }
         });
       } catch (Exception e) {
@@ -197,11 +197,9 @@ public class EventProcessorImpl implements EventProcessor {
       case "scheduler":
         return triggers.getScheduler().getEnable();
       case "webhook":
-        return triggers.getWebhook().getEnable();
       case "dockerhub":
-        return triggers.getDockerhub().getEnable();
       case "slack":
-        return triggers.getSlack().getEnable();
+        return triggers.getWebhook().getEnable();
       case "custom":
         if (triggers.getCustom().getEnable()) {
           return topic
