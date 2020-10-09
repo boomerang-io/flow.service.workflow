@@ -159,7 +159,7 @@ public class EventProcessorImpl implements EventProcessor {
       try {
         inputProperties.forEach(inputProperty -> {
           // TODO change to not parse the document every time
-          if (!inputProperty.getJsonPath().isBlank()) {
+          if (inputProperty.getJsonPath() != null && !inputProperty.getJsonPath().isBlank()) {
             JsonNode propertyValue =
                 JsonPath.using(jacksonConfig).parse(eventData).read(inputProperty.getJsonPath());
   
