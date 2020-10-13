@@ -78,8 +78,6 @@ public class ManagementController {
   @PostMapping(value = "/teams")
   public FlowTeam addTeam(@RequestBody FlowTeam flowTeam) {
     String teamName = flowTeam.getName();
-    
-    System.out.println("Team name: " + teamName);
     return teamService.createStandaloneTeam(teamName);
   }
 

@@ -567,4 +567,25 @@ public class TeamServiceImpl implements TeamService {
    return quota;
    
   }
+
+  @Override
+  public FlowTeam getTeamByIdDetailed(String teamId) {
+    FlowTeamEntity flowEntity = flowTeamService.findById(teamId);
+    FlowTeam flowTeam = new FlowTeam();
+    if (flowEntity != null) {
+      BeanUtils.copyProperties(flowEntity, flowTeam);
+    }
+    
+    final List<WorkflowSummary> workflowSummary =
+        workflowService.getWorkflowsForTeam(teamId);
+    flowTeam.setWorkflows(workflowSummary);
+    
+    List<String> teamIds = new LinkedList<>();
+    teamIds.add(teamId);
+    
+    List<FlowUserEntity> existingUsers = this.userIdentiyService.getUsersForTeams(teamIds);
+    flowTeam.setUsers(existingUsers);
+   
+    return flowTeam;
+  }
 }
