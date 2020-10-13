@@ -110,7 +110,7 @@ public class TeamController {
   
   @GetMapping(value = "/manage/teams/{teamId}")
   public FlowTeam getTeam(@PathVariable String teamId) {
-    return flowTeamService.getTeamById(teamId);
+    return flowTeamService.getTeamByIdDetailed(teamId);
   }
   
   @GetMapping(value = "/manage/teams")
