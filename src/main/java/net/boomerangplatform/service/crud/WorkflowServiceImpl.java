@@ -577,11 +577,12 @@ public class WorkflowServiceImpl implements WorkflowService {
         FlowTeam flowTeam = teamService.getTeamById(flowTeamId);
         if (flowTeam != null) {
           summary.setTeamName(flowTeam.getName());
+          summaryList.add(summary);
         }
       }
   
 
-      summaryList.add(summary);
+
     }
     return summaryList;
   }
