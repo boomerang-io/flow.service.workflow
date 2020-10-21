@@ -400,53 +400,54 @@ public class WorkflowServiceImpl implements WorkflowService {
 
     if (templateIds.containsAll(importTemplateIds)) {
 
-      if (update.equals(true)) {
+
         final FlowWorkflowEntity entity = workFlowRepository.getWorkflow(export.getId());
 
-        entity.setName(export.getName());
-        entity.setDescription(export.getDescription());
-        entity.setIcon(export.getIcon());
-        entity.setShortDescription(export.getShortDescription());
-        entity.setStatus(export.getStatus());
-        entity.setEnablePersistentStorage(export.isEnablePersistentStorage());
-        entity.setProperties(export.getProperties());
-        entity.setTriggers(export.getTriggers());
+        if (entity != null) {
+          entity.setName(export.getName());
+          entity.setDescription(export.getDescription());
+          entity.setIcon(export.getIcon());
+          entity.setShortDescription(export.getShortDescription());
+          entity.setStatus(export.getStatus());
+          entity.setEnablePersistentStorage(export.isEnablePersistentStorage());
+          entity.setProperties(export.getProperties());
+          entity.setTriggers(export.getTriggers());
 
-        workFlowRepository.saveWorkflow(entity);
+          workFlowRepository.saveWorkflow(entity);
 
-        revision.setId(null);
-        revision.setVersion(
-            workflowVersionService.getLatestWorkflowVersion(export.getId()).getVersion() + 1);
+          revision.setId(null);
+          revision.setVersion(
+              workflowVersionService.getLatestWorkflowVersion(export.getId()).getVersion() + 1);
 
-        workflowVersionService.insertWorkflow(revision);
-
-      } else {
-        FlowWorkflowEntity entity = new FlowWorkflowEntity();
-        entity.setProperties(export.getProperties());
-        entity.setDescription(export.getDescription());
-
-        if (flowTeamId != null && flowTeamId.length() != 0) {
-          entity.setFlowTeamId(flowTeamId);
-        } else {
-          entity.setFlowTeamId(export.getFlowTeamId());
+          workflowVersionService.insertWorkflow(revision);
         }
+        else {
+          FlowWorkflowEntity newEntity = new FlowWorkflowEntity();
+          newEntity.setProperties(export.getProperties());
+          newEntity.setDescription(export.getDescription());
 
-        entity.setName(export.getName());
-        entity.setShortDescription(export.getShortDescription());
-        entity.setStatus(export.getStatus());
-        entity.setTriggers(export.getTriggers());
-        entity.setEnablePersistentStorage(export.isEnablePersistentStorage());
-        entity.setIcon(export.getIcon());
+          if (flowTeamId != null && flowTeamId.length() != 0) {
+            newEntity.setFlowTeamId(flowTeamId);
+          } else {
+            newEntity.setFlowTeamId(export.getFlowTeamId());
+          }
 
-        FlowWorkflowEntity savedEntity = workFlowRepository.saveWorkflow(entity);
+          newEntity.setName(export.getName());
+          newEntity.setShortDescription(export.getShortDescription());
+          newEntity.setStatus(export.getStatus());
+          newEntity.setTriggers(export.getTriggers());
+          newEntity.setEnablePersistentStorage(export.isEnablePersistentStorage());
+          newEntity.setIcon(export.getIcon());
 
-        revision.setId(null);
-        revision.setVersion(1);
-        revision.setWorkFlowId(savedEntity.getId());
+          FlowWorkflowEntity savedEntity = workFlowRepository.saveWorkflow(newEntity);
 
-        workflowVersionService.insertWorkflow(revision);
+          revision.setId(null);
+          revision.setVersion(1);
+          revision.setWorkFlowId(savedEntity.getId());
 
-      }
+          workflowVersionService.insertWorkflow(revision);
+        }
+        
     } else {
       logger.info("Workflow not imported - template(s) not found");
       throw new IllegalArgumentException("Workflow not imported - template(s) not found");
