@@ -555,36 +555,38 @@ public class WorkflowServiceImpl implements WorkflowService {
     List<WorkflowShortSummary> summaryList = new LinkedList<>();
     List<WorkflowEntity> workfows = workFlowRepository.getAllWorkflows();
     for (WorkflowEntity workflow : workfows) {
-      String workflowName = workflow.getName();
-      boolean webhookEnabled = false;
-      String flowTeamId = workflow.getFlowTeamId();
-      String token = null;
-      if (workflow.getTriggers() != null) {
-        Triggers triggers = workflow.getTriggers();
-        TriggerEvent webhook = triggers.getWebhook();
 
-        if (webhook != null) {
-          webhookEnabled = webhook.getEnable();
+      if (WorkflowStatus.active.equals(workflow.getStatus())) {
+
+
+        String workflowName = workflow.getName();
+        boolean webhookEnabled = false;
+        String flowTeamId = workflow.getFlowTeamId();
+        String token = null;
+        if (workflow.getTriggers() != null) {
+          Triggers triggers = workflow.getTriggers();
+          TriggerEvent webhook = triggers.getWebhook();
+
+          if (webhook != null) {
+            webhookEnabled = webhook.getEnable();
+          }
+        }
+        WorkflowShortSummary summary = new WorkflowShortSummary();
+        summary.setToken(token);
+        summary.setWebhookEnabled(webhookEnabled);
+        summary.setWorkflowName(workflowName);
+        summary.setWorkflowId(workflow.getId());
+
+        summary.setTeamId(flowTeamId);
+
+        if (flowTeamId != null) {
+          FlowTeam flowTeam = teamService.getTeamById(flowTeamId);
+          if (flowTeam != null) {
+            summary.setTeamName(flowTeam.getName());
+            summaryList.add(summary);
+          }
         }
       }
-      WorkflowShortSummary summary = new WorkflowShortSummary();
-      summary.setToken(token);
-      summary.setWebhookEnabled(webhookEnabled);
-      summary.setWorkflowName(workflowName);
-      summary.setWorkflowId(workflow.getId());
-
-      summary.setTeamId(flowTeamId);
-
-      if (flowTeamId != null) {
-        FlowTeam flowTeam = teamService.getTeamById(flowTeamId);
-        if (flowTeam != null) {
-          summary.setTeamName(flowTeam.getName());
-          summaryList.add(summary);
-        }
-      }
-
-
-
     }
     return summaryList;
   }
