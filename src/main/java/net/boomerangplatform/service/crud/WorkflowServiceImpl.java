@@ -131,16 +131,16 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   @Override
   public WorkflowSummary saveWorkflow(final WorkflowEntity flowWorkflowEntity) {
-   
+
     boolean isNewWorkflow = flowWorkflowEntity.getId() == null;
     setupTriggerDefaults(flowWorkflowEntity);
     WorkflowEntity entity = workFlowRepository.saveWorkflow(flowWorkflowEntity);
     if (isNewWorkflow) {
       this.generateTriggerToken(entity.getId(), "default");
     }
-      
+
     entity = workFlowRepository.getWorkflow(entity.getId());
-    
+
     final WorkflowSummary summary = new WorkflowSummary(entity);
 
 
@@ -340,9 +340,9 @@ public class WorkflowServiceImpl implements WorkflowService {
     newToken.setToken(createUUID());
     tokens.add(newToken);
     workFlowRepository.saveWorkflow(entity);
-    
+
     tokenResponse.setToken(newToken.getToken());
-    
+
     return tokenResponse;
   }
 
@@ -440,8 +440,10 @@ public class WorkflowServiceImpl implements WorkflowService {
 
     if (templateIds.containsAll(importTemplateIds)) {
 
-      if (update.equals(true)) {
-        final WorkflowEntity entity = workFlowRepository.getWorkflow(export.getId());
+
+      final WorkflowEntity entity = workFlowRepository.getWorkflow(export.getId());
+
+      if (entity != null) {
 
         entity.setName(export.getName());
         entity.setDescription(export.getDescription());
@@ -459,26 +461,26 @@ public class WorkflowServiceImpl implements WorkflowService {
             workflowVersionService.getLatestWorkflowVersion(export.getId()).getVersion() + 1);
 
         workflowVersionService.insertWorkflow(revision);
-
       } else {
-        WorkflowEntity entity = new WorkflowEntity();
-        entity.setProperties(export.getProperties());
-        entity.setDescription(export.getDescription());
+
+        WorkflowEntity newEntity = new WorkflowEntity();
+        newEntity.setProperties(export.getProperties());
+        newEntity.setDescription(export.getDescription());
 
         if (flowTeamId != null && flowTeamId.length() != 0) {
-          entity.setFlowTeamId(flowTeamId);
+          newEntity.setFlowTeamId(flowTeamId);
         } else {
-          entity.setFlowTeamId(export.getFlowTeamId());
+          newEntity.setFlowTeamId(export.getFlowTeamId());
         }
 
-        entity.setName(export.getName());
-        entity.setShortDescription(export.getShortDescription());
-        entity.setStatus(export.getStatus());
-        entity.setTriggers(export.getTriggers());
-        entity.setEnablePersistentStorage(export.isEnablePersistentStorage());
-        entity.setIcon(export.getIcon());
+        newEntity.setName(export.getName());
+        newEntity.setShortDescription(export.getShortDescription());
+        newEntity.setStatus(export.getStatus());
+        newEntity.setTriggers(export.getTriggers());
+        newEntity.setEnablePersistentStorage(export.isEnablePersistentStorage());
+        newEntity.setIcon(export.getIcon());
 
-        WorkflowEntity savedEntity = workFlowRepository.saveWorkflow(entity);
+        WorkflowEntity savedEntity = workFlowRepository.saveWorkflow(newEntity);
 
         revision.setId(null);
         revision.setVersion(1);
@@ -580,7 +582,7 @@ public class WorkflowServiceImpl implements WorkflowService {
           summaryList.add(summary);
         }
       }
-  
+
 
 
     }
