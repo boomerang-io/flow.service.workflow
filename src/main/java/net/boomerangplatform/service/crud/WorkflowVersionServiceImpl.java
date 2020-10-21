@@ -16,20 +16,20 @@ import net.boomerangplatform.model.projectstormv5.RestConfig;
 import net.boomerangplatform.model.projectstormv5.TaskNode;
 import net.boomerangplatform.mongo.entity.FlowTaskTemplateEntity;
 import net.boomerangplatform.mongo.entity.FlowUserEntity;
-import net.boomerangplatform.mongo.entity.FlowWorkflowRevisionEntity;
+import net.boomerangplatform.mongo.entity.RevisionEntity;
 import net.boomerangplatform.mongo.model.ChangeLog;
 import net.boomerangplatform.mongo.model.Dag;
 import net.boomerangplatform.mongo.model.Revision;
 import net.boomerangplatform.mongo.model.next.DAGTask;
 import net.boomerangplatform.mongo.service.FlowTaskTemplateService;
-import net.boomerangplatform.mongo.service.FlowWorkflowVersionService;
+import net.boomerangplatform.mongo.service.RevisionService;
 import net.boomerangplatform.service.UserIdentityService;
 
 @Service
 public class WorkflowVersionServiceImpl implements WorkflowVersionService {
 
   @Autowired
-  private FlowWorkflowVersionService flowWorkflowService;
+  private RevisionService flowWorkflowService;
 
   @Autowired
   private UserIdentityService userIdentityService;
@@ -44,7 +44,7 @@ public class WorkflowVersionServiceImpl implements WorkflowVersionService {
 
   @Override
   public FlowWorkflowRevision getLatestWorkflowVersion(String workflowId) {
-    FlowWorkflowRevisionEntity revision = flowWorkflowService.getLatestWorkflowVersion(workflowId);
+    RevisionEntity revision = flowWorkflowService.getLatestWorkflowVersion(workflowId);
     if (revision == null) {
       return null;
     }
@@ -65,7 +65,7 @@ public class WorkflowVersionServiceImpl implements WorkflowVersionService {
 
   @Override
   public FlowWorkflowRevision getWorkflowVersion(String workflowId, long verison) {
-    FlowWorkflowRevisionEntity revision =
+    RevisionEntity revision =
         flowWorkflowService.getLatestWorkflowVersion(workflowId, verison);
 
     updateTemplateVersions(revision);
@@ -76,7 +76,7 @@ public class WorkflowVersionServiceImpl implements WorkflowVersionService {
     return flowRevision;
   }
 
-  private void updateTemplateVersions(FlowWorkflowRevisionEntity revision) { // NOSONAR
+  private void updateTemplateVersions(RevisionEntity revision) { // NOSONAR
     Dag dag = revision.getDag();
     if (dag != null) {
       List<DAGTask> dagTasks = dag.getTasks();
@@ -168,7 +168,7 @@ public class WorkflowVersionServiceImpl implements WorkflowVersionService {
     flowWorkflowEntity.setChangelog(changelog);
     flowWorkflowEntity.setId(null);
     flowWorkflowEntity.setVersion(currentCount + 1);
-    FlowWorkflowRevisionEntity revisionEntity = flowWorkflowEntity.convertToEntity();
+    RevisionEntity revisionEntity = flowWorkflowEntity.convertToEntity();
     this.updateTemplateVersions(revisionEntity);
 
     FlowWorkflowRevision newRevision = new FlowWorkflowRevision(
@@ -180,12 +180,12 @@ public class WorkflowVersionServiceImpl implements WorkflowVersionService {
 
   @Override
   public List<RevisionResponse> viewChangelog(Optional<String> workFlowId, Pageable pageable) {
-    final Page<FlowWorkflowRevisionEntity> revisions =
+    final Page<RevisionEntity> revisions =
         flowWorkflowService.getAllWorkflowVersions(workFlowId, pageable);
 
     final List<RevisionResponse> revisionResponse = new ArrayList<>();
 
-    for (final FlowWorkflowRevisionEntity revision : revisions) {
+    for (final RevisionEntity revision : revisions) {
       final RevisionResponse rs = new RevisionResponse();
       String userId;
       String userName;

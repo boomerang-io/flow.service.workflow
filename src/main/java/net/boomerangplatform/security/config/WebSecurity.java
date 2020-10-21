@@ -28,7 +28,7 @@ public class WebSecurity extends WebSecurityConfigurerAdapter {
 
   private static final String HEALTH = "/health";
 
-  private static final String INTERNAL = "/internal";
+  private static final String INTERNAL = "/internal/**";
 
   @Autowired
   private ApiTokenService tokenService;

@@ -19,7 +19,7 @@ import net.boomerangplatform.model.projectstormv5.RestConfig;
 import net.boomerangplatform.model.projectstormv5.RestDag;
 import net.boomerangplatform.model.projectstormv5.TaskNode;
 import net.boomerangplatform.model.projectstormv5.WorkflowRevision;
-import net.boomerangplatform.mongo.entity.FlowWorkflowRevisionEntity;
+import net.boomerangplatform.mongo.entity.RevisionEntity;
 import net.boomerangplatform.mongo.model.CoreProperty;
 import net.boomerangplatform.mongo.model.Dag;
 import net.boomerangplatform.mongo.model.TaskType;
@@ -137,8 +137,8 @@ public class ModelConverterV5 {
     return dependency;
   }
 
-  public static FlowWorkflowRevisionEntity convertToEntityModel(WorkflowRevision revision) {
-    FlowWorkflowRevisionEntity entity = new FlowWorkflowRevisionEntity();
+  public static RevisionEntity convertToEntityModel(WorkflowRevision revision) {
+    RevisionEntity entity = new RevisionEntity();
     entity.setVersion(revision.getVersion());
 
     if (revision.getDag() == null) {
@@ -190,7 +190,7 @@ public class ModelConverterV5 {
     return entity;
   }
 
-  public static WorkflowRevision convertToRestModel(FlowWorkflowRevisionEntity convertedRevision) {
+  public static WorkflowRevision convertToRestModel(RevisionEntity convertedRevision) {
 
     WorkflowRevision revision = new WorkflowRevision();
 
@@ -390,7 +390,7 @@ public class ModelConverterV5 {
     port.setSelected(false);
     port.setParentNode(taskId);
 
-    if (CUSTOMTASKNAME.equals(type) || TEMPLATETASKNAME.equals(type)) {
+    if (CUSTOMTASKNAME.equals(type) || TEMPLATETASKNAME.equals(type) ||  "approval".equals(type) || "manual".equals(type) || "setwfproperty".equals(type) || "eventwait".equals(type)) {
       port.setType("task");
     } else {
       port.setType(type);
@@ -503,11 +503,22 @@ public class ModelConverterV5 {
     } else if (dagType == TaskType.decision) {
       type = DECISIONKEY;
     }
+    else if (dagType == TaskType.setwfproperty) {
+      type = "setwfproperty";
+    }
+    else if (dagType == TaskType.manual) {
+      type = "manual";
+    } else if (dagType == TaskType.approval) {
+      type = "approval";
+    }
+    else if (dagType == TaskType.eventwait) {
+      type = "eventwait";
+    }
 
     return type;
   }
 
-  private static void mapBaseData(WorkflowRevision revision, FlowWorkflowRevisionEntity entity) {
+  private static void mapBaseData(WorkflowRevision revision, RevisionEntity entity) {
     entity.setId(revision.getId());
     entity.setChangelog(revision.getChangelog());
     entity.setVersion(revision.getVersion());

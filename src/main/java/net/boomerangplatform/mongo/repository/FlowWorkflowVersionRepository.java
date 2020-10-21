@@ -4,18 +4,18 @@ import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
-import net.boomerangplatform.mongo.entity.FlowWorkflowRevisionEntity;
+import net.boomerangplatform.mongo.entity.RevisionEntity;
 
 public interface FlowWorkflowVersionRepository
-    extends MongoRepository<FlowWorkflowRevisionEntity, String> {
+    extends MongoRepository<RevisionEntity, String> {
 
   long countByworkFlowId(String workFlowId);
 
   @Override
-  Optional<FlowWorkflowRevisionEntity> findById(String id);
+  Optional<RevisionEntity> findById(String id);
 
-  FlowWorkflowRevisionEntity findByworkFlowIdAndVersion(String workFlowId, long version);
+  RevisionEntity findByworkFlowIdAndVersion(String workFlowId, long version);
 
-  Page<FlowWorkflowRevisionEntity> findByworkFlowId(String string, Pageable pageable);
+  Page<RevisionEntity> findByworkFlowId(String string, Pageable pageable);
 
 }

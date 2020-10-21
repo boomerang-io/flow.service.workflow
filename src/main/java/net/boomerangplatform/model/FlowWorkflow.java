@@ -1,15 +1,15 @@
 package net.boomerangplatform.model;
 
 import org.springframework.beans.BeanUtils;
-import net.boomerangplatform.mongo.entity.FlowWorkflowEntity;
+import net.boomerangplatform.mongo.entity.WorkflowEntity;
 
-public class FlowWorkflow extends FlowWorkflowEntity {
+public class FlowWorkflow extends WorkflowEntity {
 
   public FlowWorkflow() {
 
   }
 
-  public FlowWorkflow(FlowWorkflowEntity entity) {
+  public FlowWorkflow(WorkflowEntity entity) {
     BeanUtils.copyProperties(entity, this);
   }
 

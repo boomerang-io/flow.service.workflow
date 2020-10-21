@@ -1,6 +1,7 @@
 package net.boomerangplatform.service;
 
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -15,31 +16,33 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jgrapht.Graph;
-import org.jgrapht.alg.interfaces.ShortestPathAlgorithm.SingleSourcePaths;
-import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
 import org.jgrapht.graph.DefaultEdge;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import net.boomerangplatform.exceptions.InvalidWorkflowRuntimeException;
 import net.boomerangplatform.exceptions.RunWorkflowException;
 import net.boomerangplatform.model.Task;
-import net.boomerangplatform.model.TaskResult;
-import net.boomerangplatform.mongo.entity.FlowTaskExecutionEntity;
+import net.boomerangplatform.mongo.entity.ActivityEntity;
 import net.boomerangplatform.mongo.entity.FlowTaskTemplateEntity;
-import net.boomerangplatform.mongo.entity.FlowWorkflowActivityEntity;
-import net.boomerangplatform.mongo.entity.FlowWorkflowRevisionEntity;
+import net.boomerangplatform.mongo.entity.RevisionEntity;
+import net.boomerangplatform.mongo.entity.TaskExecutionEntity;
+import net.boomerangplatform.mongo.entity.WorkflowEntity;
 import net.boomerangplatform.mongo.model.CoreProperty;
 import net.boomerangplatform.mongo.model.Dag;
-import net.boomerangplatform.mongo.model.FlowTaskStatus;
 import net.boomerangplatform.mongo.model.Revision;
+import net.boomerangplatform.mongo.model.TaskStatus;
 import net.boomerangplatform.mongo.model.TaskType;
+import net.boomerangplatform.mongo.model.internal.InternalTaskRequest;
 import net.boomerangplatform.mongo.model.next.DAGTask;
 import net.boomerangplatform.mongo.model.next.Dependency;
+import net.boomerangplatform.mongo.service.ActivityTaskService;
 import net.boomerangplatform.mongo.service.FlowTaskTemplateService;
 import net.boomerangplatform.mongo.service.FlowWorkflowActivityService;
-import net.boomerangplatform.mongo.service.FlowWorkflowVersionService;
+import net.boomerangplatform.mongo.service.RevisionService;
 import net.boomerangplatform.service.crud.FlowActivityService;
-import net.boomerangplatform.service.runner.FlowTaskRunnerService;
+import net.boomerangplatform.service.crud.WorkflowService;
+import net.boomerangplatform.service.refactor.DAGUtility;
+import net.boomerangplatform.service.refactor.TaskClient;
+import net.boomerangplatform.service.runner.misc.ControllerClient;
 import net.boomerangplatform.util.GraphProcessor;
 
 @Service
@@ -49,23 +52,35 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
   private FlowActivityService flowActivityService;
 
   @Autowired
-  private FlowWorkflowVersionService flowRevisionService;
-
-  @Autowired
-  private FlowTaskRunnerService taskRunnerService;
+  private RevisionService flowRevisionService;
 
   @Autowired
   private FlowTaskTemplateService taskTemplateService;
 
   @Autowired
   private FlowTaskTemplateService templateService;
+  
+  @Autowired
+  private FlowWorkflowActivityService activityService;
 
   @Autowired
-  private FlowWorkflowActivityService flowWorkflowActivityService;
+  private TaskClient taskClient;
+  
+  @Autowired
+  private DAGUtility dagUtility;
+  
+  @Autowired
+  private WorkflowService workflowService;
+  
+  @Autowired
+  private ActivityTaskService taskActivityService;
+  
+  @Autowired
+  private ControllerClient controllerClient;
 
   private static final Logger LOGGER = LogManager.getLogger(FlowExecutionServiceImpl.class);
 
-  private List<Task> createTaskList(FlowWorkflowRevisionEntity revisionEntity) { // NOSONAR
+  private List<Task> createTaskList(RevisionEntity revisionEntity) { // NOSONAR
 
     final Dag dag = revisionEntity.getDag();
 
@@ -84,6 +99,7 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
         String templateId = dagTask.getTemplateId();
         final FlowTaskTemplateEntity flowTaskTemplate =
             templateService.getTaskTemplateWithId(templateId);
+     
         Integer templateVersion = dagTask.getTemplateVersion();
         List<Revision> revisions = flowTaskTemplate.getRevisions();
         if (revisions != null) {
@@ -133,44 +149,11 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
     final Task start = getTaskByName(tasks, TaskType.start);
     final Task end = getTaskByName(tasks, TaskType.end);
     final Graph<String, DefaultEdge> graph = createGraph(tasks);
-    validateWorkflow(activityId, start, end, graph);
+    dagUtility.validateWorkflow(activityId, start, end, graph);
     createTaskPlan(tasks, activityId, start, end, graph);
   }
 
-  private void validateWorkflow(String activityId, final Task start, final Task end,
-      final Graph<String, DefaultEdge> graph) {
-
-    final FlowWorkflowActivityEntity activityEntity =
-        this.flowWorkflowActivityService.findWorkflowActiivtyById(activityId);
-
-    if (start == null || end == null) {
-      activityEntity.setStatus(FlowTaskStatus.invalid);
-      flowWorkflowActivityService.saveWorkflowActivity(activityEntity);
-      throw new InvalidWorkflowRuntimeException();
-    }
-
-    final List<String> nodes =
-        GraphProcessor.createOrderedTaskList(graph, start.getTaskId(), end.getTaskId());
-
-    if (nodes.isEmpty()) {
-      activityEntity.setStatus(FlowTaskStatus.invalid);
-      flowWorkflowActivityService.saveWorkflowActivity(activityEntity);
-      throw new InvalidWorkflowRuntimeException();
-    }
-
-    final DijkstraShortestPath<String, DefaultEdge> dijkstraAlg = new DijkstraShortestPath<>(graph);
-    final SingleSourcePaths<String, DefaultEdge> pathFromStart =
-        dijkstraAlg.getPaths(start.getTaskId());
-    final boolean singlePathExists = (pathFromStart.getPath(end.getTaskId()) != null);
-    if (!singlePathExists) {
-
-      activityEntity.setStatus(FlowTaskStatus.invalid);
-      activityEntity.setStatusMessage("Failed to run workflow: Incomplete workflow");
-      this.flowWorkflowActivityService.saveWorkflowActivity(activityEntity);
-      throw new InvalidWorkflowRuntimeException();
-    }
-  }
-
+ 
   private void createTaskPlan(List<Task> tasks, String activityId, final Task start, final Task end,
       final Graph<String, DefaultEdge> graph) {
 
@@ -188,19 +171,24 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
 
       final FlowTaskTemplateEntity taskTemplateEntity =
           taskTemplateService.getTaskTemplateWithId(task.getTaskId());
-      FlowTaskExecutionEntity taskExecution = new FlowTaskExecutionEntity();
+      TaskExecutionEntity taskExecution = new TaskExecutionEntity();
       taskExecution.setActivityId(activityId);
       taskExecution.setTaskId(task.getTaskId());
-      taskExecution.setFlowTaskStatus(FlowTaskStatus.notstarted);
+      taskExecution.setFlowTaskStatus(TaskStatus.notstarted);
       taskExecution.setOrder(order);
       taskExecution.setTaskName(task.getTaskName());
+      taskExecution.setTaskType(task.getTaskType());
+      
       if (taskTemplateEntity != null) {
         taskExecution.setTaskName(taskTemplateEntity.getName());
       }
+      
+      
 
       taskExecution = this.flowActivityService.saveTaskExecution(taskExecution);
 
       task.setTaskActivityId(taskExecution.getId());
+
       order++;
     }
   }
@@ -226,19 +214,59 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
       final Graph<String, DefaultEdge> graph, final List<Task> tasksToRun)
       throws ExecutionException {
 
-    CompletableFuture<TaskResult> result = taskRunnerService.runTasks(graph, tasksToRun, activityId,
-        start.getTaskId(), end.getTaskId());
-    try {
-      result.get();
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-      LOGGER.error(e);
-    }
+    
+    final ActivityEntity activityEntity =
+        this.flowActivityService.findWorkflowActivity(activityId);
+    activityEntity.setStatus(TaskStatus.inProgress);
+    activityEntity.setCreationDate(new Date());
+    activityService.saveWorkflowActivity(activityEntity);
+    
+    WorkflowEntity workflow = workflowService.getWorkflow(activityEntity.getWorkflowId());
+    
+    boolean enablePVC = workflow.isEnablePersistentStorage();
+    String workflowName = workflow.getName();
+    String workflowId = workflow.getId();
+    
+    Map<String, String> executionProperties = dagUtility.buildExecutionProperties(activityEntity, workflow);
+    controllerClient.createFlow(workflowId, workflowName, activityId, enablePVC, executionProperties);
+    
+    final Task startTask =  tasksToRun.stream().filter(tsk -> TaskType.start.equals(tsk.getTaskType())).findAny().orElse(null);
+    executeNextStep(activityEntity, tasksToRun,startTask, start, end, graph);
   }
+  
+  private void executeNextStep(ActivityEntity workflowActivity, List<Task> tasks,
+      Task currentTask, final Task start, final Task end,
+      final Graph<String, DefaultEdge> graph) {
+    
+    try {
+      List<Task> nextNodes = this.getTasksDependants(tasks, currentTask);
+      for (Task next : nextNodes) {
+     
+        final List<String> nodes =
+            GraphProcessor.createOrderedTaskList(graph, start.getTaskId(), end.getTaskId());
+        
+        if (nodes.contains(next.getTaskId())) {
+          InternalTaskRequest taskRequest = new InternalTaskRequest();
+          taskRequest.setActivityId(next.getTaskActivityId());
+          taskClient.startTask(taskRequest);
+        }       
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+   
+  }
+  
+  private List<Task> getTasksDependants(List<Task> tasks, Task currentTask) {
+   return
+        tasks.stream().filter(c -> c.getDependencies().contains(currentTask.getTaskId()))
+            .collect(Collectors.toList());
+  }
+
 
   @Override
   public CompletableFuture<Boolean> executeWorkflowVersion(String workFlowId, String activityId) {
-    final FlowWorkflowRevisionEntity entity =
+    final RevisionEntity entity =
         this.flowRevisionService.getWorkflowlWithId(workFlowId);
     final List<Task> tasks = createTaskList(entity);
     prepareExecution(tasks, activityId);
@@ -251,6 +279,7 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
       final Task end = getTaskByName(tasks, TaskType.end);
       final Graph<String, DefaultEdge> graph = createGraph(tasks);
       try {
+ 
         executeWorkflowAsync(activityId, start, end, graph, tasks);
       } catch (ExecutionException e) {
         LOGGER.error(ExceptionUtils.getStackTrace(e));

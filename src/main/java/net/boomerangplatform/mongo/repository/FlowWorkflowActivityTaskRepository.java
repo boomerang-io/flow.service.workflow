@@ -2,14 +2,14 @@ package net.boomerangplatform.mongo.repository;
 
 import java.util.List;
 import org.springframework.data.mongodb.repository.MongoRepository;
-import net.boomerangplatform.mongo.entity.FlowTaskExecutionEntity;
+import net.boomerangplatform.mongo.entity.TaskExecutionEntity;
 
 public interface FlowWorkflowActivityTaskRepository
-    extends MongoRepository<FlowTaskExecutionEntity, String> {
+    extends MongoRepository<TaskExecutionEntity, String> {
 
-  List<FlowTaskExecutionEntity> findByactivityId(String activityId);
+  List<TaskExecutionEntity> findByactivityId(String activityId);
 
-  FlowTaskExecutionEntity findByActivityIdAndTaskId(String activityId, String taskId);
+  TaskExecutionEntity findByActivityIdAndTaskId(String activityId, String taskId);
 
-  FlowTaskExecutionEntity findByActivityIdAndTaskName(String activityId, String taskName);
+  TaskExecutionEntity findByActivityIdAndTaskName(String activityId, String taskName);
 }

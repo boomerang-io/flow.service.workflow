@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.http.HttpMethod;
@@ -27,26 +28,29 @@ import org.springframework.web.client.RequestCallback;
 import org.springframework.web.client.ResponseExtractor;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
+import net.boomerangplatform.model.Approval;
 import net.boomerangplatform.model.Execution;
 import net.boomerangplatform.model.FlowActivity;
 import net.boomerangplatform.model.FlowExecutionRequest;
 import net.boomerangplatform.model.InsightsSummary;
 import net.boomerangplatform.model.ListActivityResponse;
 import net.boomerangplatform.model.Sort;
-import net.boomerangplatform.mongo.entity.FlowTaskExecutionEntity;
+import net.boomerangplatform.mongo.entity.ActivityEntity;
 import net.boomerangplatform.mongo.entity.FlowTeamEntity;
 import net.boomerangplatform.mongo.entity.FlowUserEntity;
-import net.boomerangplatform.mongo.entity.FlowWorkflowActivityEntity;
-import net.boomerangplatform.mongo.entity.FlowWorkflowEntity;
-import net.boomerangplatform.mongo.entity.FlowWorkflowRevisionEntity;
+import net.boomerangplatform.mongo.entity.RevisionEntity;
+import net.boomerangplatform.mongo.entity.TaskExecutionEntity;
+import net.boomerangplatform.mongo.entity.WorkflowEntity;
 import net.boomerangplatform.mongo.model.CoreProperty;
-import net.boomerangplatform.mongo.model.FlowTaskStatus;
 import net.boomerangplatform.mongo.model.FlowTriggerEnum;
+import net.boomerangplatform.mongo.model.TaskStatus;
+import net.boomerangplatform.mongo.model.TaskType;
+import net.boomerangplatform.mongo.service.ActivityTaskService;
 import net.boomerangplatform.mongo.service.FlowTeamService;
 import net.boomerangplatform.mongo.service.FlowWorkflowActivityService;
-import net.boomerangplatform.mongo.service.FlowWorkflowActivityTaskService;
 import net.boomerangplatform.mongo.service.FlowWorkflowService;
-import net.boomerangplatform.mongo.service.FlowWorkflowVersionService;
+import net.boomerangplatform.mongo.service.RevisionService;
+import net.boomerangplatform.service.FlowApprovalService;
 import net.boomerangplatform.service.UserIdentityService;
 import net.boomerangplatform.util.DateUtil;
 
@@ -57,13 +61,13 @@ public class FlowActivityServiceImpl implements FlowActivityService {
   private FlowWorkflowActivityService flowActivityService;
 
   @Autowired
-  private FlowWorkflowActivityTaskService taskService;
+  private ActivityTaskService taskService;
 
   @Autowired
   private UserIdentityService userIdentityService;
 
   @Autowired
-  private FlowWorkflowVersionService versionService;
+  private RevisionService versionService;
 
   @Autowired
   private FlowWorkflowService workflowService;
@@ -80,14 +84,17 @@ public class FlowActivityServiceImpl implements FlowActivityService {
   @Autowired
   @Qualifier("internalRestTemplate")
   private RestTemplate restTemplate;
+  
+  @Autowired
+  private FlowApprovalService approvalService;
 
-  private List<FlowActivity> convert(List<FlowWorkflowActivityEntity> records) {
+  private List<FlowActivity> convert(List<ActivityEntity> records) {
 
     final List<FlowActivity> flowActivities = new LinkedList<>();
 
-    for (final FlowWorkflowActivityEntity record : records) {
+    for (final ActivityEntity record : records) {
       final FlowActivity flow = new FlowActivity(record);
-      final FlowWorkflowEntity workflow = workflowService.getWorkflow(record.getWorkflowId());
+      final WorkflowEntity workflow = workflowService.getWorkflow(record.getWorkflowId());
 
       if (workflow != null) {
         flow.setWorkflowName(workflow.getName());
@@ -102,12 +109,12 @@ public class FlowActivityServiceImpl implements FlowActivityService {
   }
 
   @Override
-  public FlowWorkflowActivityEntity createFlowActivity(String workflowVersionId,
-      Optional<FlowTriggerEnum> trigger, FlowExecutionRequest request) {
+  public ActivityEntity createFlowActivity(String workflowVersionId,
+      Optional<String> trigger, FlowExecutionRequest request) {
     /* Create new one based of work flow version id. */
-    final FlowWorkflowRevisionEntity entity = versionService.getWorkflowlWithId(workflowVersionId);
+    final RevisionEntity entity = versionService.getWorkflowlWithId(workflowVersionId);
 
-    final FlowWorkflowActivityEntity activity = new FlowWorkflowActivityEntity();
+    final ActivityEntity activity = new ActivityEntity();
     activity.setWorkflowRevisionid(workflowVersionId);
     activity.setWorkflowId(entity.getWorkFlowId());
     activity.setCreationDate(new Date());
@@ -117,11 +124,11 @@ public class FlowActivityServiceImpl implements FlowActivityService {
       activity.setTrigger(trigger.get());
     }
 
-    if (!trigger.isPresent() || FlowTriggerEnum.manual == trigger.get()) {
+    if (!trigger.isPresent() || "manual".equals(trigger.get())) {
       final FlowUserEntity userEntity = userIdentityService.getCurrentUser();
       activity.setInitiatedByUserId(userEntity.getId());
       activity.setInitiatedByUserName(userEntity.getName());
-      activity.setTrigger(FlowTriggerEnum.manual);
+      activity.setTrigger(FlowTriggerEnum.manual.toString());
     }
 
     if (request.getProperties() != null) {
@@ -141,8 +148,8 @@ public class FlowActivityServiceImpl implements FlowActivityService {
   }
 
   @Override
-  public FlowWorkflowActivityEntity findWorkflowActivity(String id) {
-    return flowActivityService.findWorkflowActiivtyById(id);
+  public ActivityEntity findWorkflowActivity(String id) {
+    return flowActivityService.findWorkflowActivtyById(id);
   }
 
   @Override
@@ -152,7 +159,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
       Direction direction) {
 
     ListActivityResponse response = new ListActivityResponse();
-    Page<FlowWorkflowActivityEntity> records =
+    Page<ActivityEntity> records =
         flowActivityService.getAllActivites(from, to, page, workflowIds, statuses, triggers);
 
     final List<FlowActivity> activities = convert(records.getContent());
@@ -163,11 +170,66 @@ public class FlowActivityServiceImpl implements FlowActivityService {
       addTeamInformation(teamIds, activitiesFiltered, activity, workFlowId);
     }
 
-    net.boomerangplatform.model.Pageable pageable = createPageable(records, property, direction);
-    response.setPageable(pageable);
-    response.setRecords(activitiesFiltered);
+
+
+    if (!teamIds.isPresent()) {
+      net.boomerangplatform.model.Pageable pageablefinal =
+          createPageable(records, property, direction);
+      response.setPageable(pageablefinal);
+      response.setRecords(activitiesFiltered);
+    } else {
+
+      Pageable pageable = PageRequest.of(0, 2147483647, page.getSort());
+      Page<ActivityEntity> allrecords =
+          flowActivityService.getAllActivites(from, to, pageable, workflowIds, statuses, triggers);
+
+      final List<FlowActivity> allactivities = convert(allrecords.getContent());
+      List<FlowActivity> allactivitiesFiltered = new ArrayList<>();
+
+      for (FlowActivity activity : allactivities) {
+        String workFlowId = activity.getWorkflowId();
+        addTeamInformation(teamIds, allactivitiesFiltered, activity, workFlowId);
+      }
+      net.boomerangplatform.model.Pageable pageablefinal =
+          createPageable(records, property, direction, activitiesFiltered, allactivitiesFiltered);
+
+      int fromIndex = pageablefinal.getSize() * pageablefinal.getNumber();
+      int toIndex = pageablefinal.getSize() * (pageablefinal.getNumber() + 1);
+
+      response.setRecords(toIndex > allactivitiesFiltered.size()
+          ? allactivitiesFiltered.subList(fromIndex, allactivitiesFiltered.size())
+          : allactivitiesFiltered.subList(fromIndex, toIndex));
+
+      pageablefinal.setNumberOfElements(response.getRecords().size());
+      response.setPageable(pageablefinal);
+
+    }
 
     return response;
+  }
+
+
+  protected net.boomerangplatform.model.Pageable createPageable(final Page<ActivityEntity> records,
+      String property, Direction direction) {
+    net.boomerangplatform.model.Pageable pageable = new net.boomerangplatform.model.Pageable();
+
+    pageable.setNumberOfElements(records.getNumberOfElements());
+    pageable.setNumber(records.getNumber());
+    pageable.setSize(records.getSize());
+    pageable.setTotalElements(records.getTotalElements());
+
+    pageable.setTotalPages(records.getTotalPages());
+    pageable.setFirst(records.isFirst());
+    pageable.setLast(records.isLast());
+
+    List<Sort> listSort = new ArrayList<>();
+    Sort sort = new Sort();
+    sort.setDirection(direction);
+    sort.setProperty(property);
+    listSort.add(sort);
+    pageable.setSort(listSort);
+
+    return pageable;
   }
 
   @Override
@@ -181,17 +243,17 @@ public class FlowActivityServiceImpl implements FlowActivityService {
     List<String> workflowIds = new ArrayList<>();
     if (teamIds != null && !teamIds.isEmpty()) {
       workflowIds = workflowService.getWorkflowsForTeams(teamIds).stream()
-          .map(FlowWorkflowEntity::getId).collect(Collectors.toList());
+          .map(WorkflowEntity::getId).collect(Collectors.toList());
     }
 
-    List<FlowWorkflowActivityEntity> flowWorkflowActivityEntities =
+    List<ActivityEntity> flowWorkflowActivityEntities =
         flowActivityService.getAllActivites(from, to, pageable, getOptional(workflowIds),
             Optional.empty(), getOptional(triggers)).getContent();
     Map<String, Long> result = flowWorkflowActivityEntities.stream()
         .collect(groupingBy(v -> getStatusValue(v), Collectors.counting())); // NOSONAR
     result.put("all", Long.valueOf(flowWorkflowActivityEntities.size()));
 
-    Arrays.stream(FlowTaskStatus.values()).forEach(v -> initializeValue(v.getStatus(), result));
+    Arrays.stream(TaskStatus.values()).forEach(v -> initializeValue(v.getStatus(), result));
     return result;
   }
 
@@ -208,7 +270,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
     return Optional.of(list);
   }
 
-  private String getStatusValue(FlowWorkflowActivityEntity v) {
+  private String getStatusValue(ActivityEntity v) {
     return v.getStatus() == null ? "no_status" : v.getStatus().getStatus();
   }
 
@@ -250,8 +312,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
   public ListActivityResponse getAllActivitesForUser(FlowUserEntity user, Optional<Date> from,
       Optional<Date> to, Pageable page, String property, Direction direction) {
 
-    final Page<FlowWorkflowActivityEntity> records =
-        flowActivityService.findAllActivities(from, to, page);
+    final Page<ActivityEntity> records = flowActivityService.findAllActivities(from, to, page);
     final ListActivityResponse response = new ListActivityResponse();
 
     final List<FlowActivity> activities = convert(records.getContent());
@@ -262,16 +323,22 @@ public class FlowActivityServiceImpl implements FlowActivityService {
     return response;
   }
 
-  protected net.boomerangplatform.model.Pageable createPageable(
-      final Page<FlowWorkflowActivityEntity> records, String property, Direction direction) {
+  protected net.boomerangplatform.model.Pageable createPageable(final Page<ActivityEntity> records,
+      String property, Direction direction, List<FlowActivity> activities,
+      List<FlowActivity> totalElements) {
     net.boomerangplatform.model.Pageable pageable = new net.boomerangplatform.model.Pageable();
+
+    pageable.setNumberOfElements(
+        records.getSize() * records.getNumber() + 1 <= activities.size() ? totalElements.size()
+            : totalElements.size() % records.getSize());
     pageable.setNumber(records.getNumber());
     pageable.setSize(records.getSize());
-    pageable.setTotalElements(records.getTotalElements());
+    pageable.setTotalElements((long) totalElements.size());
+
+    pageable.setTotalPages((int) Math
+        .ceil((Double.valueOf(totalElements.size()) / Double.valueOf(records.getSize()))));
     pageable.setFirst(records.isFirst());
     pageable.setLast(records.isLast());
-    pageable.setTotalPages(records.getTotalPages());
-    pageable.setNumberOfElements(records.getNumberOfElements());
 
     List<Sort> listSort = new ArrayList<>();
     Sort sort = new Sort();
@@ -284,12 +351,21 @@ public class FlowActivityServiceImpl implements FlowActivityService {
   }
 
   @Override
-  public List<FlowTaskExecutionEntity> getTaskExecutions(String activityId) {
-    return taskService.findTaskActiivtyForActivity(activityId);
+  public List<TaskExecutionEntity> getTaskExecutions(String activityId) {
+    
+    List<TaskExecutionEntity> activites = taskService.findTaskActiivtyForActivity(activityId);
+    for (TaskExecutionEntity task : activites) {
+      if (TaskType.approval.equals(task.getTaskType())) {
+        Approval approval = approvalService.getApprovalByTaskActivityId(task.getId());
+        task.setApproval(approval);
+      }
+    }
+    
+    return activites;
   }
 
   @Override
-  public FlowTaskExecutionEntity saveTaskExecution(FlowTaskExecutionEntity task) {
+  public TaskExecutionEntity saveTaskExecution(TaskExecutionEntity task) {
     return taskService.save(task);
   }
 
@@ -297,8 +373,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
   public InsightsSummary getInsightsSummary(Optional<Date> from, Optional<Date> to,
       Pageable pageable, Optional<String> teamId) {
 
-    final Page<FlowWorkflowActivityEntity> records =
-        flowActivityService.findAllActivities(from, to, pageable);
+    final Page<ActivityEntity> records = flowActivityService.findAllActivities(from, to, pageable);
     final InsightsSummary response = new InsightsSummary();
     final List<FlowActivity> activities = convert(records.getContent());
     List<Execution> executions = new ArrayList<>();
@@ -382,8 +457,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
   @Override
   public StreamingResponseBody getTaskLog(String activityId, String taskId) {
 
-    FlowTaskExecutionEntity executionEntity =
-        taskService.findByTaskIdAndActiityId(taskId, activityId);
+    TaskExecutionEntity executionEntity = taskService.findByTaskIdAndActiityId(taskId, activityId);
     if (executionEntity == null) {
       return null;
     }
@@ -391,7 +465,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
     return outputStream -> {
       Map<String, String> requestParams = new HashMap<>();
       requestParams.put("workflowId",
-          flowActivityService.findWorkflowActiivtyById(activityId).getWorkflowId());
+          flowActivityService.findWorkflowActivtyById(activityId).getWorkflowId());
       requestParams.put("workflowActivityId", activityId);
       requestParams.put("taskActivityId", executionEntity.getId());
       requestParams.put("taskId", taskId);

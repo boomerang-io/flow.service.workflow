@@ -5,31 +5,31 @@ import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import net.boomerangplatform.mongo.entity.FlowWorkflowActivityEntity;
-import net.boomerangplatform.mongo.model.FlowTaskStatus;
+import net.boomerangplatform.mongo.entity.ActivityEntity;
+import net.boomerangplatform.mongo.model.TaskStatus;
 
 public interface FlowWorkflowActivityService {
 
-  Page<FlowWorkflowActivityEntity> findAllActivities(Optional<Date> from, Optional<Date> to,
+  Page<ActivityEntity> findAllActivities(Optional<Date> from, Optional<Date> to,
       Pageable page, Optional<String> query);
 
-  Page<FlowWorkflowActivityEntity> findAllActivities(Optional<Date> from, Optional<Date> to,
+  Page<ActivityEntity> findAllActivities(Optional<Date> from, Optional<Date> to,
       Pageable page);
 
-  Page<FlowWorkflowActivityEntity> findAllActivitiesForWorkflows(Optional<Date> from,
+  Page<ActivityEntity> findAllActivitiesForWorkflows(Optional<Date> from,
       Optional<Date> to, List<String> workflows, Pageable page);
 
-  FlowWorkflowActivityEntity findWorkflowActiivtyById(String id);
+  ActivityEntity findWorkflowActivtyById(String id);
 
 
-  FlowWorkflowActivityEntity findByWorkflowAndProperty(String workflowId, String key, String value);
+  ActivityEntity findByWorkflowAndProperty(String workflowId, String key, String value);
 
-  FlowWorkflowActivityEntity saveWorkflowActivity(FlowWorkflowActivityEntity entity);
+  ActivityEntity saveWorkflowActivity(ActivityEntity entity);
 
-  Page<FlowWorkflowActivityEntity> getAllActivites(Optional<Date> from, Optional<Date> to,
+  Page<ActivityEntity> getAllActivites(Optional<Date> from, Optional<Date> to,
       Pageable page, Optional<List<String>> workflowIds, Optional<List<String>> statuses,
       Optional<List<String>> triggers);
   
-  List<FlowWorkflowActivityEntity> findbyWorkflowIdsAndStatus(List<String> workflowIds, FlowTaskStatus status);
+  List<ActivityEntity> findbyWorkflowIdsAndStatus(List<String> workflowIds, TaskStatus status);
 
 }

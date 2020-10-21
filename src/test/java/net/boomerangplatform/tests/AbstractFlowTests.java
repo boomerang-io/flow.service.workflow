@@ -13,8 +13,6 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import net.boomerangplatform.TestUtil;
-import net.boomerangplatform.config.BoomerangTestConfiguration;
 
 public abstract class AbstractFlowTests {
 

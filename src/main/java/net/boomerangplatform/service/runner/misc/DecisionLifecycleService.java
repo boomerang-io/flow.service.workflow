@@ -15,29 +15,29 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import net.boomerangplatform.model.Task;
 import net.boomerangplatform.model.TaskResult;
-import net.boomerangplatform.mongo.entity.FlowTaskExecutionEntity;
-import net.boomerangplatform.mongo.model.FlowTaskStatus;
+import net.boomerangplatform.mongo.entity.TaskExecutionEntity;
+import net.boomerangplatform.mongo.model.TaskStatus;
 import net.boomerangplatform.mongo.model.next.Dependency;
-import net.boomerangplatform.mongo.service.FlowWorkflowActivityTaskService;
+import net.boomerangplatform.mongo.service.ActivityTaskService;
 
 @Service
 public class DecisionLifecycleService {
 
   @Autowired
-  private FlowWorkflowActivityTaskService taskService;
+  private ActivityTaskService taskService;
 
   public TaskResult submitDecision(Task task, String activityId) {
     TaskResult taskResult = new TaskResult();
-    FlowTaskExecutionEntity taskExecution =
+    TaskExecutionEntity taskExecution =
         taskService.findByTaskIdAndActiityId(task.getTaskId(), activityId);
     final Date startDate = new Date();
     taskExecution.setStartTime(startDate);
-    taskExecution.setFlowTaskStatus(FlowTaskStatus.completed);
+    taskExecution.setFlowTaskStatus(TaskStatus.completed);
 
     final Date finishDate = new Date();
     final long duration = finishDate.getTime() - startDate.getTime();
     taskExecution.setDuration(duration);
-    taskExecution.setFlowTaskStatus(FlowTaskStatus.completed);
+    taskExecution.setFlowTaskStatus(TaskStatus.completed);
     taskResult.setNode(task.getTaskId());
     taskResult.setStatus(taskExecution.getFlowTaskStatus());
     taskService.save(taskExecution);
@@ -135,7 +135,7 @@ public class DecisionLifecycleService {
       } else if (components.length == 2) {
         String taskName = components[0];
         String outputProperty = components[1];
-        FlowTaskExecutionEntity taskExecution =
+        TaskExecutionEntity taskExecution =
             taskService.findByTaskNameAndActiityId(taskName, activityId);
         if (taskExecution != null && taskExecution.getOutputs() != null
             && taskExecution.getOutputs().get(outputProperty) != null) {

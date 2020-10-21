@@ -24,10 +24,10 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 import net.boomerangplatform.model.FlowActivity;
 import net.boomerangplatform.model.InsightsSummary;
 import net.boomerangplatform.model.ListActivityResponse;
-import net.boomerangplatform.mongo.entity.FlowTaskExecutionEntity;
+import net.boomerangplatform.mongo.entity.ActivityEntity;
 import net.boomerangplatform.mongo.entity.FlowTeamEntity;
 import net.boomerangplatform.mongo.entity.FlowUserEntity;
-import net.boomerangplatform.mongo.entity.FlowWorkflowActivityEntity;
+import net.boomerangplatform.mongo.entity.TaskExecutionEntity;
 import net.boomerangplatform.mongo.service.FlowTeamService;
 import net.boomerangplatform.mongo.service.FlowWorkflowService;
 import net.boomerangplatform.service.UserIdentityService;
@@ -58,6 +58,7 @@ public class ActivityController {
       @RequestParam Optional<List<String>> teamIds, @RequestParam(defaultValue = "0") int page,
       @RequestParam(defaultValue = "2147483647") int size, @RequestParam Optional<Long> fromDate,
       @RequestParam Optional<Long> toDate, @RequestParam Optional<List<String>> statuses,
+
       @RequestParam Optional<List<String>> triggers) {
 
     Optional<Date> from = Optional.empty();
@@ -95,7 +96,7 @@ public class ActivityController {
 
   @GetMapping(value = "/activity/{activityId}")
   public FlowActivity getFlowActivity(@PathVariable String activityId) {
-    final FlowWorkflowActivityEntity activity =
+    final ActivityEntity activity =
         flowActivityService.findWorkflowActivity(activityId);
 
     String workFlowId = activity.getWorkflowId();
@@ -115,7 +116,7 @@ public class ActivityController {
       response.setTeamName(teamName);
     }
 
-    final List<FlowTaskExecutionEntity> steps = flowActivityService.getTaskExecutions(activityId);
+    final List<TaskExecutionEntity> steps = flowActivityService.getTaskExecutions(activityId);
 
     response.setSteps(steps);
 

@@ -1,11 +1,11 @@
 package net.boomerangplatform.model;
 
-import net.boomerangplatform.mongo.model.FlowTaskStatus;
+import net.boomerangplatform.mongo.model.TaskStatus;
 
 public class TaskResult {
 
   private String node;
-  private FlowTaskStatus status;
+  private TaskStatus status;
 
   public String getNode() {
     return node;
@@ -15,11 +15,11 @@ public class TaskResult {
     this.node = node;
   }
 
-  public FlowTaskStatus getStatus() {
+  public TaskStatus getStatus() {
     return status;
   }
 
-  public void setStatus(FlowTaskStatus status) {
+  public void setStatus(TaskStatus status) {
     this.status = status;
   }
 
