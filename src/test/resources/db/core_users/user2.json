@@ -8,7 +8,7 @@
     "isShowHelp" : true,
     "firstLoginDate" : ISODate("2017-09-05T22:12:58.000Z"),
     "lastLoginDate" : ISODate("2019-03-14T20:04:18.939Z"),
-    "lowerLevelGroupIds" : [ 
+    "lowerLevelGroups" : [ 
     ],
     "pinnedToolIds" : [],
     "favoritePackages" : [],

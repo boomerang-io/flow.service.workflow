@@ -30,7 +30,7 @@ public class UserProfile {
   @JsonProperty("lastLoginDate")
   private String lastLoginDate;
   @JsonProperty("lowerLevelGroupIds")
-  private List<String> lowerLevelGroupIds = null;
+  private List<LowerLevelGroup> lowerLevelGroups = null;
   @JsonProperty("pinnedToolIds")
   private List<Object> pinnedToolIds = null;
   @JsonProperty("favoritePackages")
@@ -123,14 +123,14 @@ public class UserProfile {
     this.lastLoginDate = lastLoginDate;
   }
 
-  @JsonProperty("lowerLevelGroupIds")
-  public List<String> getLowerLevelGroupIds() {
-    return lowerLevelGroupIds;
+  @JsonProperty("lowerLevelGroups")
+  public List<LowerLevelGroup> getLowerLevelGroups() {
+    return lowerLevelGroups;
   }
 
-  @JsonProperty("lowerLevelGroupIds")
-  public void setLowerLevelGroupIds(List<String> lowerLevelGroupIds) {
-    this.lowerLevelGroupIds = lowerLevelGroupIds;
+  @JsonProperty("lowerLevelGroups")
+  public void setLowerLevelGroups(List<LowerLevelGroup> lowerLevelGroups) {
+    this.lowerLevelGroups = lowerLevelGroups;
   }
 
   @JsonProperty("pinnedToolIds")
