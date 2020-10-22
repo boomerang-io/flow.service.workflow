@@ -1,6 +1,6 @@
 {
     "_id" : ObjectId("59aebd0b7424530fce952fdc"),
-    "lowerLevelGroupIds" : [
+    "lowerLevelGroups" : [
     ],
     "personalizations" : {},
     "lastLoginDate" : ISODate("2017-03-14T21:17:57.562Z"),
