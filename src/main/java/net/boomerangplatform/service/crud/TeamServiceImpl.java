@@ -114,12 +114,13 @@ public class TeamServiceImpl implements TeamService {
   }
 
   @Override
-  public void createFlowTeam(String higherLevelGroupId) {
-    Team team = boomerangTeamService.getTeam(higherLevelGroupId);
-    final String name = team.getName();
+  public void createFlowTeam(String higherLevelGroupId, String teamName) {
+
+
     final FlowTeamEntity flowTeamEntity = new FlowTeamEntity();
-    flowTeamEntity.setName(name);
+    flowTeamEntity.setName(teamName);
     flowTeamEntity.setHigherLevelGroupId(higherLevelGroupId);
+    
     flowTeamEntity.setIsActive(true);
     if(flowTeamEntity.getQuotas() == null) {
       Quotas quotas = new Quotas();
