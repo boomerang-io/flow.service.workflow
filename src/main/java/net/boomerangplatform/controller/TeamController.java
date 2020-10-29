@@ -43,7 +43,7 @@ public class TeamController {
   
   @PostMapping(value = "/teams")
   public void createCiTeam(@RequestBody CreateFlowTeam createCiTeamRequest) {
-    flowTeamService.createFlowTeam(createCiTeamRequest.getCreatedGroupId());
+    flowTeamService.createFlowTeam(createCiTeamRequest.getCreatedGroupId(), createCiTeamRequest.getName());
   }
 
   @GetMapping(value = "/teams")
