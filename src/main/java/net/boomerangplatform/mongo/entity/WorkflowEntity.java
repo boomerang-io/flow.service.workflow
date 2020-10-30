@@ -13,7 +13,7 @@ import net.boomerangplatform.mongo.model.WorkflowStatus;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(Include.NON_NULL)
-@Document(collection = "flow_workflows")
+@Document(collection = "#{@mongoConfiguration.prefix('flow_workflows')}")
 public class WorkflowEntity {
 
   private List<FlowProperty> properties;

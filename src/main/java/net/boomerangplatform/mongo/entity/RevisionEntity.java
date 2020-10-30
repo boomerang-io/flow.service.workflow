@@ -10,7 +10,7 @@ import net.boomerangplatform.mongo.model.Dag;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(Include.NON_NULL)
-@Document(collection = "flow_workflows_revisions")
+@Document(collection = "#{@mongoConfiguration.prefix('flow_workflows_revisions')}")
 public class RevisionEntity {
 
   private Dag dag;
