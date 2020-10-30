@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import net.boomerangplatform.client.BoomerangUserService;
 import net.boomerangplatform.client.model.UserProfile;
+import net.boomerangplatform.model.FlowMode;
 import net.boomerangplatform.model.FlowUser;
 import net.boomerangplatform.model.OneTimeCode;
 import net.boomerangplatform.model.UserQueryResult;
@@ -26,8 +27,8 @@ import net.boomerangplatform.security.service.UserDetailsService;
 @Service
 public class UserIdentityServiceImpl implements UserIdentityService {
 
-  @Value("${boomerang.standalone}")
-  private boolean standAloneMode;
+  @Value("${flow.mode}")
+  private FlowMode flowMode;
 
   @Autowired
   private UserDetailsService usertDetailsService;
@@ -43,7 +44,7 @@ public class UserIdentityServiceImpl implements UserIdentityService {
 
   @Override
   public FlowUserEntity getCurrentUser() {
-    if (standAloneMode) {
+    if (FlowMode.standalone.equals(flowMode)) {
       UserDetails user = usertDetailsService.getUserDetails();
       String email = user.getEmail();
       return flowUserService.getUserWithEmail(email);
@@ -70,7 +71,7 @@ public class UserIdentityServiceImpl implements UserIdentityService {
 
   @Override
   public FlowUserEntity getUserByID(String userId) {
-    if (standAloneMode) {
+    if (FlowMode.standalone.equals(flowMode)) {
       Optional<FlowUserEntity> flowUser = flowUserService.getUserById(userId);
       if (flowUser.isPresent()) {
         return flowUser.get();
@@ -146,7 +147,7 @@ public class UserIdentityServiceImpl implements UserIdentityService {
   @Override
   public FlowUserEntity getOrRegisterCurrentUser() {
     
-    if (standAloneMode) {
+    if (FlowMode.standalone.equals(flowMode)) {
       
       if (flowUserService.getUserCount() == 0) {
         throw new HttpClientErrorException(HttpStatus.LOCKED);

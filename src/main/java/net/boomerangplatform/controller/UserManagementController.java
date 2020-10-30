@@ -4,7 +4,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@ConditionalOnProperty(value = "boomerang.standalone", havingValue = "true", matchIfMissing = false)
+@ConditionalOnProperty(value = "flow.mode", havingValue = "standalone", matchIfMissing = false)
 public class UserManagementController {
 
 
