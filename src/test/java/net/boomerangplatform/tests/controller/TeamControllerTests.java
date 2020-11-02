@@ -71,7 +71,7 @@ public class TeamControllerTests extends FlowTests {
 
     controller.createCiTeam(request);
 
-    assertEquals(4, controller.getTeams().size());
+    assertEquals(3, controller.getTeams().size());
 
     assertEquals("WDC2 ISE Dev", controller.getTeams().get(3).getName());
     assertEquals(Integer.valueOf(10),
