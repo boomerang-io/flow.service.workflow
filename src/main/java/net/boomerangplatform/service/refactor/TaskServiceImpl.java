@@ -320,9 +320,13 @@ public class TaskServiceImpl implements TaskService {
       if (executeTask) {
         TaskExecutionEntity task = this.taskActivityService
             .findByTaskIdAndActiityId(next.getTaskId(), workflowActivity.getId());
-        InternalTaskRequest taskRequest = new InternalTaskRequest();
-        taskRequest.setActivityId(task.getId());
-        flowClient.startTask(taskRequest);
+        if (task == null) {
+          LOGGER.debug("Reached node which should not be executed.");
+        } else {
+          InternalTaskRequest taskRequest = new InternalTaskRequest();
+          taskRequest.setActivityId(task.getId());
+          flowClient.startTask(taskRequest);
+        }
       }
     }
   }
