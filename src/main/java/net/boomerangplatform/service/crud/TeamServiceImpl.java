@@ -15,7 +15,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import net.boomerangplatform.client.BoomerangTeamService;
 import net.boomerangplatform.client.BoomerangUserService;
 import net.boomerangplatform.client.model.Team;
@@ -34,6 +36,7 @@ import net.boomerangplatform.mongo.entity.WorkflowEntity;
 import net.boomerangplatform.mongo.model.Quotas;
 import net.boomerangplatform.mongo.model.Settings;
 import net.boomerangplatform.mongo.model.TaskStatus;
+import net.boomerangplatform.mongo.model.UserType;
 import net.boomerangplatform.mongo.service.FlowTeamService;
 import net.boomerangplatform.mongo.service.FlowUserService;
 import net.boomerangplatform.mongo.service.FlowWorkflowActivityService;
@@ -596,6 +599,7 @@ public class TeamServiceImpl implements TeamService {
 
   @Override
   public FlowTeamEntity deactivateTeam(String teamId) {
+    validateUser();
     FlowTeamEntity entity = flowTeamService.findById(teamId);
     entity.setIsActive(false);
     return flowTeamService.save(entity);
@@ -606,4 +610,15 @@ public class TeamServiceImpl implements TeamService {
     // TODO Auto-generated method stub
     
   }
+  
+  protected void validateUser() {
+
+    FlowUserEntity userEntity = userIdentiyService.getCurrentUser();
+    if (userEntity == null || (!userEntity.getType().equals(UserType.admin)
+        && !userEntity.getType().equals(UserType.operator))) {
+
+      throw new HttpClientErrorException(HttpStatus.FORBIDDEN);
+    }
+  }
+
 }
