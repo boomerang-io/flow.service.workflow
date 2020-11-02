@@ -25,6 +25,7 @@ import net.boomerangplatform.model.TeamWorkflowSummary;
 import net.boomerangplatform.model.WorkflowQuotas;
 import net.boomerangplatform.model.profile.SortSummary;
 import net.boomerangplatform.mongo.entity.FlowTeamConfiguration;
+import net.boomerangplatform.mongo.entity.FlowTeamEntity;
 import net.boomerangplatform.mongo.entity.FlowUserEntity;
 import net.boomerangplatform.mongo.model.Quotas;
 import net.boomerangplatform.mongo.model.UserType;
@@ -40,7 +41,7 @@ public class TeamController {
 
   @Autowired
   private UserIdentityService userIdentityService;
-  
+
   @PostMapping(value = "/teams")
   public void createCiTeam(@RequestBody CreateFlowTeam createCiTeamRequest) {
     flowTeamService.createFlowTeam(createCiTeamRequest.getCreatedGroupId());
@@ -85,34 +86,32 @@ public class TeamController {
   public WorkflowQuotas getTeamQuotas(@PathVariable String teamId) {
     return flowTeamService.getTeamQuotas(teamId);
   }
-  
+
   @PutMapping(value = "/teams/{teamId}/quotas/default")
   public WorkflowQuotas resetTeamQuotas(@PathVariable String teamId) {
     return flowTeamService.resetTeamQuotas(teamId);
   }
-  
+
   @PatchMapping(value = "/teams/{teamId}/quotas")
-  public Quotas updateTeamQuotas(@PathVariable String teamId,
-      @RequestBody Quotas quotas) {
+  public Quotas updateTeamQuotas(@PathVariable String teamId, @RequestBody Quotas quotas) {
     return flowTeamService.updateTeamQuotas(teamId, quotas);
   }
-  
+
   @PutMapping(value = "/teams/{teamId}/quotas")
-  public Quotas updateQuotasForTeam(@PathVariable String teamId,
-      @RequestBody Quotas quotas) {
+  public Quotas updateQuotasForTeam(@PathVariable String teamId, @RequestBody Quotas quotas) {
     return flowTeamService.updateQuotasForTeam(teamId, quotas);
   }
-  
+
   @GetMapping(value = "/quotas/default")
   public Quotas getDefaultQuotas() {
     return flowTeamService.getDefaultQuotas();
   }
-  
+
   @GetMapping(value = "/manage/teams/{teamId}")
   public FlowTeam getTeam(@PathVariable String teamId) {
     return flowTeamService.getTeamByIdDetailed(teamId);
   }
-  
+
   @GetMapping(value = "/manage/teams")
   public TeamQueryResult getTeams(@RequestParam(required = false) String query,
       @RequestParam(defaultValue = "ASC") Direction order,
@@ -139,5 +138,10 @@ public class TeamController {
     response.setupSortSummary(sortSummary);
     return response;
   }
-  
+
+  @DeleteMapping(value = "/teams/{teamId}")
+  public FlowTeamEntity deactivateTeam(@PathVariable String teamId) {
+    return flowTeamService.deactivateTeam(teamId);
+  }
+
 }
