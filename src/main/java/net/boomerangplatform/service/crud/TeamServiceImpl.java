@@ -604,11 +604,6 @@ public class TeamServiceImpl implements TeamService {
     return flowTeamService.save(entity);
   }
 
-  @Override
-  public void createFlowTeam(String higherLevelGroupId) {
-    // TODO Auto-generated method stub
-    
-  }
   
   protected void validateUser() {
 

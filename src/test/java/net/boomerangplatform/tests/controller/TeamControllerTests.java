@@ -71,29 +71,19 @@ public class TeamControllerTests extends FlowTests {
 
     controller.createCiTeam(request);
 
-    assertEquals(3, controller.getTeams().size());
-
-    assertEquals("Dylan Test Team", controller.getTeams().get(2).getName());
-    assertEquals(Integer.valueOf(10),
-        controller.getTeams().get(2).getQuotas().getMaxWorkflowCount());
-    assertEquals(Integer.valueOf(4),
-        controller.getTeams().get(2).getQuotas().getMaxConcurrentWorkflows());
-    assertEquals(Integer.valueOf(100),
-        controller.getTeams().get(2).getQuotas().getMaxWorkflowExecutionMonthly());
-    assertEquals(Integer.valueOf(5),
-        controller.getTeams().get(2).getQuotas().getMaxWorkflowStorage());
-    assertEquals(Integer.valueOf(30),
-        controller.getTeams().get(2).getQuotas().getMaxWorkflowExecutionTime());
-    assertEquals(Integer.valueOf(0),
-        controller.getTeams().get(2).getWorkflowQuotas().getCurrentConcurrentWorkflows());
-    assertEquals(Integer.valueOf(3),
-        controller.getTeams().get(2).getWorkflowQuotas().getCurrentWorkflowCount());
-    assertEquals(Integer.valueOf(0),
-        controller.getTeams().get(2).getWorkflowQuotas().getCurrentWorkflowExecutionMonthly());
-    assertEquals(Integer.valueOf(0),
-        controller.getTeams().get(2).getWorkflowQuotas().getCurrentWorkflowsPersistentStorage());
-    assertEquals(firstOfNextMonth(),
-        controller.getTeams().get(2).getWorkflowQuotas().getMonthlyResetDate());
+    assertEquals(4, controller.getTeams().size());
+    
+    assertEquals("WDC2 ISE Dev", controller.getTeams().get(3).getName());
+    assertEquals(Integer.valueOf(10), controller.getTeams().get(3).getQuotas().getMaxWorkflowCount());
+    assertEquals(Integer.valueOf(4), controller.getTeams().get(3).getQuotas().getMaxConcurrentWorkflows());
+    assertEquals(Integer.valueOf(100), controller.getTeams().get(3).getQuotas().getMaxWorkflowExecutionMonthly());
+    assertEquals(Integer.valueOf(5), controller.getTeams().get(3).getQuotas().getMaxWorkflowStorage());
+    assertEquals(Integer.valueOf(30), controller.getTeams().get(3).getQuotas().getMaxWorkflowExecutionTime());
+    assertEquals(Integer.valueOf(0), controller.getTeams().get(3).getWorkflowQuotas().getCurrentConcurrentWorkflows());
+    assertEquals(Integer.valueOf(0), controller.getTeams().get(3).getWorkflowQuotas().getCurrentWorkflowCount());
+    assertEquals(Integer.valueOf(0), controller.getTeams().get(3).getWorkflowQuotas().getCurrentWorkflowExecutionMonthly());
+    assertEquals(Integer.valueOf(0), controller.getTeams().get(3).getWorkflowQuotas().getCurrentWorkflowsPersistentStorage());
+    assertEquals(firstOfNextMonth(), controller.getTeams().get(3).getWorkflowQuotas().getMonthlyResetDate());
   }
 
   @Test

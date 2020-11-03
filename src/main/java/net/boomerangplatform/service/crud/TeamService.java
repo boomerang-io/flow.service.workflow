@@ -54,5 +54,5 @@ public interface TeamService {
 
   FlowTeamEntity deactivateTeam(String teamId);
   
-  void createFlowTeam(String higherLevelGroupId, String teamName);
+
 }
