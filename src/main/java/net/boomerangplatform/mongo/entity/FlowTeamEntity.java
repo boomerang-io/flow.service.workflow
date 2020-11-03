@@ -10,7 +10,7 @@ import net.boomerangplatform.mongo.model.Settings;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(Include.NON_NULL)
-@Document(collection = "flow_teams")
+@Document(collection = "#{@mongoConfiguration.fullCollectionName('flow_teams')}")
 public class FlowTeamEntity {
 
   private String higherLevelGroupId;
