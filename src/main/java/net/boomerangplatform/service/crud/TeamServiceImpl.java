@@ -119,7 +119,6 @@ public class TeamServiceImpl implements TeamService {
   @Override
   public void createFlowTeam(String higherLevelGroupId, String teamName) {
 
-
     final FlowTeamEntity flowTeamEntity = new FlowTeamEntity();
     flowTeamEntity.setName(teamName);
     flowTeamEntity.setHigherLevelGroupId(higherLevelGroupId);

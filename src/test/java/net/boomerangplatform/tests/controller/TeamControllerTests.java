@@ -66,7 +66,7 @@ public class TeamControllerTests extends FlowTests {
   @Test
   public void testCreateFlowTeam() {
     CreateFlowTeam request = new CreateFlowTeam();
-    request.setName("TestFlowTeam");
+    request.setName("WDC2 ISE Dev");
     request.setCreatedGroupId("5cedb53261a23a0001e4c1b6");
 
     controller.createCiTeam(request);

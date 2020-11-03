@@ -20,7 +20,7 @@ public interface TeamService {
 
   List<TeamWorkflowSummary> getAllTeams();
 
-  void createFlowTeam(String higherLevelGroupId);
+  void createFlowTeam(String higherLevelGroupId, String teamName);
 
 
   List<TeamWorkflowSummary> getUserTeams(FlowUserEntity userEntity);
