@@ -66,7 +66,7 @@ public class TeamServiceImpl implements TeamService {
   private FlowWorkflowService flowWorkflowService;
 
   @Value("${flow.mode}")
-  private FlowMode flowMode;
+  private String flowMode;
   
   @Value("${max.workflow.count}")
   private Integer maxWorkflowCount;
@@ -140,7 +140,7 @@ public class TeamServiceImpl implements TeamService {
     final List<TeamWorkflowSummary> teamWorkFlowSummary = new LinkedList<>();
     
     List<FlowTeamEntity> flowTeams = null;
-    if (FlowMode.embedded.equals(flowMode)) {
+    if (FlowMode.EMBEDDED.getMode().equals(flowMode)) {
       flowTeams = this.cicdService.getCICDTeams();
     }
     else {
@@ -164,7 +164,7 @@ public class TeamServiceImpl implements TeamService {
   public List<TeamWorkflowSummary> getUserTeams(FlowUserEntity userEntity) {
 
     List<String> highLevelGroupIds = new LinkedList<>();
-    if (FlowMode.standalone.equals(flowMode)) {
+    if (FlowMode.STANDALONE.getMode().equals(flowMode)) {
       highLevelGroupIds = userEntity.getFlowTeams();
     } else {
       UserProfile profile = boomerangUserService.getInternalUserProfile();
@@ -177,7 +177,7 @@ public class TeamServiceImpl implements TeamService {
     final List<TeamWorkflowSummary> teamWorkFlowSummary = new LinkedList<>();
     
     List<FlowTeamEntity> flowTeam = null;
-    if (FlowMode.embedded.equals(flowMode)) {
+    if (FlowMode.EMBEDDED.getMode().equals(flowMode)) {
       flowTeam = this.cicdService.getCICDTeams();
     }
     else {

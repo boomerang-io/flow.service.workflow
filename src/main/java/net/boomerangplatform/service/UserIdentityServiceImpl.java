@@ -28,7 +28,7 @@ import net.boomerangplatform.security.service.UserDetailsService;
 public class UserIdentityServiceImpl implements UserIdentityService {
 
   @Value("${flow.mode}")
-  private FlowMode flowMode;
+  private String flowMode;
 
   @Autowired
   private UserDetailsService usertDetailsService;
@@ -44,7 +44,7 @@ public class UserIdentityServiceImpl implements UserIdentityService {
 
   @Override
   public FlowUserEntity getCurrentUser() {
-    if (FlowMode.standalone.equals(flowMode)) {
+    if (FlowMode.STANDALONE.getMode().equals(flowMode)) {
       UserDetails user = usertDetailsService.getUserDetails();
       String email = user.getEmail();
       return flowUserService.getUserWithEmail(email);
@@ -71,7 +71,7 @@ public class UserIdentityServiceImpl implements UserIdentityService {
 
   @Override
   public FlowUserEntity getUserByID(String userId) {
-    if (FlowMode.standalone.equals(flowMode)) {
+    if (FlowMode.STANDALONE.getMode().equals(flowMode)) {
       Optional<FlowUserEntity> flowUser = flowUserService.getUserById(userId);
       if (flowUser.isPresent()) {
         return flowUser.get();
@@ -147,7 +147,7 @@ public class UserIdentityServiceImpl implements UserIdentityService {
   @Override
   public FlowUserEntity getOrRegisterCurrentUser() {
     
-    if (FlowMode.standalone.equals(flowMode)) {
+    if (FlowMode.STANDALONE.getMode().equals(flowMode)) {
       
       if (flowUserService.getUserCount() == 0) {
         throw new HttpClientErrorException(HttpStatus.LOCKED);
