@@ -2,6 +2,8 @@ package net.boomerangplatform.mongo.repository;
 
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import net.boomerangplatform.mongo.entity.FlowTeamEntity;
 
@@ -12,4 +14,6 @@ public interface FlowTeamRepository extends MongoRepository<FlowTeamEntity, Stri
 
   @Override
   Optional<FlowTeamEntity> findById(String id);
+
+  Page<FlowTeamEntity> findByIsActive(Pageable pageable, boolean b);
 }

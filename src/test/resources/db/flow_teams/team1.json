@@ -1,16 +1,17 @@
 {
-    "_id" : ObjectId("5d1a1841f6ca2c00014c4309"),
-    "_class" : "net.boomerangplatform.mongo.entity.FlowTeamEntity",
-    "higherLevelGroupId" : "5a5d2bb7d91eb90007f486ca",
-    "name" : "Test Team",
-    "settings" : {
-		"properties" : null
+	"_id": ObjectId("5d1a1841f6ca2c00014c4309"),
+	"_class": "net.boomerangplatform.mongo.entity.FlowTeamEntity",
+	"higherLevelGroupId": "5a5d2bb7d91eb90007f486ca",
+	"name": "Test Team",
+	"settings": {
+		"properties": null
 	},
-	"quotas":{
-      "maxWorkflowCount":15,
-      "maxWorkflowExecutionMonthly":150,
-      "maxWorkflowStorage":10,
-      "maxWorkflowExecutionTime":60,
-      "maxConcurrentWorkflows":2
-	}
+	"quotas": {
+		"maxWorkflowCount": 15,
+		"maxWorkflowExecutionMonthly": 150,
+		"maxWorkflowStorage": 10,
+		"maxWorkflowExecutionTime": 60,
+		"maxConcurrentWorkflows": 2
+	},
+	"isActive": true
 }

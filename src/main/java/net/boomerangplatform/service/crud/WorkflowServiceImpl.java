@@ -594,11 +594,17 @@ public class WorkflowServiceImpl implements WorkflowService {
   @Override
   public boolean canExecuteWorkflow(String workFlowId, Optional<String> trigger) {
 
+
+    WorkflowEntity workflow = workFlowRepository.getWorkflow(workFlowId);
     if (!trigger.isPresent() || !"manual".equals(trigger.get())) {
       return true;
     }
 
-    WorkflowEntity workflow = workFlowRepository.getWorkflow(workFlowId);
+    Boolean isActive = teamService.getTeamById(workflow.getFlowTeamId()).getIsActive();
+    if (isActive == null || !isActive) {
+      return false;
+    }
+    
     if (workflow != null) {
       if (workflow.getTriggers() != null) {
         Triggers triggers = workflow.getTriggers();
