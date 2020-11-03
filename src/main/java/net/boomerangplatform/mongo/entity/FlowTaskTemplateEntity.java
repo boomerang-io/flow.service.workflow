@@ -13,7 +13,7 @@ import net.boomerangplatform.mongo.model.Revision;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(Include.NON_NULL)
-@Document(collection = "#{@mongoConfiguration.prefix('flow_task_templates')}")
+@Document(collection = "#{@mongoConfiguration.fullCollectionName('flow_task_templates')}")
 public class FlowTaskTemplateEntity {
 
   @Id

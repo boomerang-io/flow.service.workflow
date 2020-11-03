@@ -12,7 +12,7 @@ import net.boomerangplatform.mongo.model.UserType;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(Include.NON_NULL)
-@Document(collection = "#{@mongoConfiguration.prefix('flow_users')}")
+@Document(collection = "#{@mongoConfiguration.fullCollectionName('flow_users')}")
 public class FlowUserEntity {
 
   @Id

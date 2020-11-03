@@ -9,7 +9,7 @@ import net.boomerangplatform.mongo.model.AbstractConfigurationProperty;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(Include.NON_NULL)
-@Document(collection = "#{@mongoConfiguration.prefix('flow_global_config')}")
+@Document(collection = "#{@mongoConfiguration.fullCollectionName('flow_global_config')}")
 public class FlowGlobalConfigEntity extends AbstractConfigurationProperty {
 
   @Id

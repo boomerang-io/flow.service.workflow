@@ -9,7 +9,7 @@ public class MongoConfiguration {
   @Value("${workflow.mongo.collection.prefix}")
   private String workflowCollectionPrefix;
   
-  public String prefix(String collectionName) {
+  public String fullCollectionName(String collectionName) {
     if (workflowCollectionPrefix == null || workflowCollectionPrefix.isBlank()) {
       return "" + collectionName;
     }

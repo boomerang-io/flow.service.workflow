@@ -7,7 +7,7 @@ import net.boomerangplatform.model.ApprovalStatus;
 import net.boomerangplatform.mongo.model.Audit;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Document(collection = "#{@mongoConfiguration.prefix('flow_workflows_activity_approval')}")
+@Document(collection = "#{@mongoConfiguration.fullCollectionName('flow_workflows_activity_approval')}")
 public class ApprovalEntity {
   
   public String getId() {
