@@ -16,10 +16,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import net.boomerangplatform.client.BoomerangTeamService;
+import net.boomerangplatform.client.BoomerangCICDService;
 import net.boomerangplatform.client.BoomerangUserService;
 import net.boomerangplatform.client.model.Team;
 import net.boomerangplatform.client.model.UserProfile;
+import net.boomerangplatform.model.FlowMode;
 import net.boomerangplatform.model.FlowTeam;
 import net.boomerangplatform.model.FlowWorkflowRevision;
 import net.boomerangplatform.model.TeamQueryResult;
@@ -53,9 +54,6 @@ public class TeamServiceImpl implements TeamService {
   private WorkflowVersionService workflowVersionService;
 
   @Autowired
-  private BoomerangTeamService boomerangTeamService;
-
-  @Autowired
   private BoomerangUserService boomerangUserService;
 
   @Autowired
@@ -67,8 +65,8 @@ public class TeamServiceImpl implements TeamService {
   @Autowired
   private FlowWorkflowService flowWorkflowService;
 
-  @Value("${boomerang.standalone}")
-  private boolean standAloneMode;
+  @Value("${flow.mode}")
+  private String flowMode;
   
   @Value("${max.workflow.count}")
   private Integer maxWorkflowCount;
@@ -87,6 +85,9 @@ public class TeamServiceImpl implements TeamService {
 
   @Autowired
   private FlowUserService flowUserService;
+  
+  @Autowired
+  private BoomerangCICDService cicdService;
 
   @Override
   public FlowTeam createStandaloneTeam(String name) {
@@ -137,8 +138,18 @@ public class TeamServiceImpl implements TeamService {
   @Override
   public List<TeamWorkflowSummary> getAllTeams() {
     final List<TeamWorkflowSummary> teamWorkFlowSummary = new LinkedList<>();
-    final Page<FlowTeamEntity> flowTeams = flowTeamService.findAllTeams(Pageable.unpaged());
-    for (final FlowTeamEntity entity : flowTeams.getContent()) {
+    
+    List<FlowTeamEntity> flowTeams = null;
+    if (FlowMode.EMBEDDED.getMode().equals(flowMode)) {
+      flowTeams = this.cicdService.getCICDTeams();
+    }
+    else {
+      final Page<FlowTeamEntity> paginatedTeamList = flowTeamService.findAllTeams(Pageable.unpaged());
+      flowTeams =
+          paginatedTeamList.getContent();
+    }
+    
+    for (final FlowTeamEntity entity : flowTeams) {
       final List<WorkflowSummary> workflowSummary =
           workflowService.getWorkflowsForTeam(entity.getId());
       final TeamWorkflowSummary teamWorkFlow = new TeamWorkflowSummary(entity, workflowSummary);
@@ -153,7 +164,7 @@ public class TeamServiceImpl implements TeamService {
   public List<TeamWorkflowSummary> getUserTeams(FlowUserEntity userEntity) {
 
     List<String> highLevelGroupIds = new LinkedList<>();
-    if (standAloneMode) {
+    if (FlowMode.STANDALONE.getMode().equals(flowMode)) {
       highLevelGroupIds = userEntity.getFlowTeams();
     } else {
       UserProfile profile = boomerangUserService.getInternalUserProfile();
@@ -164,8 +175,16 @@ public class TeamServiceImpl implements TeamService {
     }
 
     final List<TeamWorkflowSummary> teamWorkFlowSummary = new LinkedList<>();
-    final List<FlowTeamEntity> flowTeam =
-        flowTeamService.findTeamsWithHighLevelGroups(highLevelGroupIds);
+    
+    List<FlowTeamEntity> flowTeam = null;
+    if (FlowMode.EMBEDDED.getMode().equals(flowMode)) {
+      flowTeam = this.cicdService.getCICDTeams();
+    }
+    else {
+      flowTeam =
+          flowTeamService.findTeamsWithHighLevelGroups(highLevelGroupIds);
+    }
+    
     for (final FlowTeamEntity entity : flowTeam) {
       final List<WorkflowSummary> workflowSummary =
           workflowService.getWorkflowsForTeam(entity.getId());
@@ -279,7 +298,7 @@ public class TeamServiceImpl implements TeamService {
     }
 
     if (flowTeamEntity.getSettings().getProperties() == null) {
-      flowTeamEntity.getSettings().setProperties(new LinkedList<FlowTeamConfiguration>());
+      flowTeamEntity.getSettings().setProperties(new LinkedList<>());
     }
 
     List<FlowTeamConfiguration> configItems = flowTeamEntity.getSettings().getProperties();

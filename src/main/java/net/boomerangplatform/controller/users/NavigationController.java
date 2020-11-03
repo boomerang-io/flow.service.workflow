@@ -13,7 +13,7 @@ import net.boomerangplatform.service.profile.LaunchpadNavigationService;
 
 @RestController
 @RequestMapping("/workflow/users/navigation")
-@ConditionalOnProperty(value = "boomerang.standalone", havingValue = "true", matchIfMissing = false)
+@ConditionalOnProperty(value = "flow.mode", havingValue = "standalone", matchIfMissing = false)
 public class NavigationController {
 
   @Autowired
