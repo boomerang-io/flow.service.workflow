@@ -29,6 +29,7 @@ import net.boomerangplatform.mongo.entity.TaskExecutionEntity;
 import net.boomerangplatform.mongo.entity.WorkflowEntity;
 import net.boomerangplatform.mongo.model.CoreProperty;
 import net.boomerangplatform.mongo.model.Dag;
+import net.boomerangplatform.mongo.model.ManualType;
 import net.boomerangplatform.mongo.model.Revision;
 import net.boomerangplatform.mongo.model.TaskStatus;
 import net.boomerangplatform.mongo.model.TaskType;
@@ -129,7 +130,10 @@ public class TaskServiceImpl implements TaskService {
         response.setStatus(TaskStatus.completed);
         this.endTask(response);
       } else if (taskType == TaskType.approval) {
-        createApprovalNotification(taskExecution, activity, workflow);
+        createApprovalNotification(taskExecution, activity, workflow, ManualType.approval);
+      }
+      else if (taskType == TaskType.manual) {
+        createApprovalNotification(taskExecution, activity, workflow, ManualType.task);
       }
       else if (taskType == TaskType.eventwait) {
         createWaitForEventTask(taskExecution);
@@ -160,7 +164,7 @@ public class TaskServiceImpl implements TaskService {
   }
 
   private void createApprovalNotification(TaskExecutionEntity taskExecution,
-      ActivityEntity activity, WorkflowEntity workflow) {
+      ActivityEntity activity, WorkflowEntity workflow, ManualType type) {
     taskExecution.setFlowTaskStatus(TaskStatus.waiting);
     taskExecution = taskActivityService.save(taskExecution);
     ApprovalEntity approval = new ApprovalEntity();
@@ -169,6 +173,7 @@ public class TaskServiceImpl implements TaskService {
     approval.setWorkflowId(workflow.getId());
     approval.setTeamId(workflow.getFlowTeamId());
     approval.setStatus(ApprovalStatus.submitted);
+    approval.setType(type);
     
     approvalService.save(approval);
     

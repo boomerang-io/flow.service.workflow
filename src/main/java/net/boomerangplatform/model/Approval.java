@@ -7,6 +7,7 @@ public class Approval extends ApprovalEntity {
   private String taskName;
   private String workflowName;
   private String teamName;
+  private String instructions;
   
   public String getTaskName() {
     return taskName;
@@ -25,6 +26,12 @@ public class Approval extends ApprovalEntity {
   }
   public void setTeamName(String teamName) {
     this.teamName = teamName;
+  }
+  public String getInstructions() {
+    return instructions;
+  }
+  public void setInstructions(String instructions) {
+    this.instructions = instructions;
   }
 
 }

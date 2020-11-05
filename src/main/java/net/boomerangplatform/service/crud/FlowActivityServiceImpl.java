@@ -43,9 +43,12 @@ import net.boomerangplatform.mongo.entity.TaskExecutionEntity;
 import net.boomerangplatform.mongo.entity.WorkflowEntity;
 import net.boomerangplatform.mongo.model.CoreProperty;
 import net.boomerangplatform.mongo.model.FlowTriggerEnum;
+import net.boomerangplatform.mongo.model.Revision;
 import net.boomerangplatform.mongo.model.TaskStatus;
 import net.boomerangplatform.mongo.model.TaskType;
+import net.boomerangplatform.mongo.model.next.DAGTask;
 import net.boomerangplatform.mongo.service.ActivityTaskService;
+import net.boomerangplatform.mongo.service.FlowTaskTemplateService;
 import net.boomerangplatform.mongo.service.FlowTeamService;
 import net.boomerangplatform.mongo.service.FlowWorkflowActivityService;
 import net.boomerangplatform.mongo.service.FlowWorkflowService;
@@ -74,7 +77,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
 
   @Autowired
   private FlowTeamService flowTeamService;
-
+  
   @Value("${controller.rest.url.base}")
   private String controllerBaseUrl;
 
@@ -87,6 +90,9 @@ public class FlowActivityServiceImpl implements FlowActivityService {
   
   @Autowired
   private FlowApprovalService approvalService;
+  
+  @Autowired
+  private FlowTaskTemplateService flowTaskTemplate;
 
   private List<FlowActivity> convert(List<ActivityEntity> records) {
 
@@ -353,9 +359,10 @@ public class FlowActivityServiceImpl implements FlowActivityService {
   @Override
   public List<TaskExecutionEntity> getTaskExecutions(String activityId) {
     
+ 
     List<TaskExecutionEntity> activites = taskService.findTaskActiivtyForActivity(activityId);
     for (TaskExecutionEntity task : activites) {
-      if (TaskType.approval.equals(task.getTaskType())) {
+      if (TaskType.approval.equals(task.getTaskType()) || TaskType.manual.equals(task.getTaskType())) {
         Approval approval = approvalService.getApprovalByTaskActivityId(task.getId());
         task.setApproval(approval);
       }

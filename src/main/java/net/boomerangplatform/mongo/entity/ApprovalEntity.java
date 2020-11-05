@@ -5,10 +5,12 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import net.boomerangplatform.model.ApprovalStatus;
 import net.boomerangplatform.mongo.model.Audit;
+import net.boomerangplatform.mongo.model.ManualType;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Document(collection = "flow_workflows_activity_approval")
 public class ApprovalEntity {
+  
   
   public String getId() {
     return id;
@@ -63,6 +65,14 @@ public class ApprovalEntity {
   private String teamId;
   private Audit audit;
   private ApprovalStatus status;
+  private ManualType type;
+
+  public ManualType getType() {
+    return type;
+  }
+  public void setType(ManualType type) {
+    this.type = type;
+  }
 
  
 }
