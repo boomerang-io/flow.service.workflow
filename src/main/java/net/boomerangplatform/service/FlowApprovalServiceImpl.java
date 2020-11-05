@@ -120,12 +120,6 @@ public class FlowApprovalServiceImpl implements FlowApprovalService {
     approval.setTeamId(approvalEntity.getTeamId());
     approval.setStatus(approvalEntity.getStatus());
 
-    if (approvalEntity.getType() == null) {
-      approval.setType(ManualType.approval);
-    } else {
-      approval.setType(approvalEntity.getType());
-    }
-
     if (approval.getAudit() != null) {
       Audit audit = approval.getAudit();
       FlowUserEntity flowUser = userIdentityService.getUserByID(audit.getApproverId());

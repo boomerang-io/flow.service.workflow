@@ -65,14 +65,6 @@ public class ApprovalEntity {
   private String teamId;
   private Audit audit;
   private ApprovalStatus status;
-  private ManualType type;
-
-  public ManualType getType() {
-    return type;
-  }
-  public void setType(ManualType type) {
-    this.type = type;
-  }
 
  
 }
