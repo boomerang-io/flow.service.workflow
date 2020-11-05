@@ -66,7 +66,7 @@ public abstract class IntegrationTests extends AbstractFlowTests {
         "core_settings", "core_audit", "requests_creategroup", "requests_createtool",
         "requests_removegroup", "requests_leavetool", "flow_teams", "flow_workflows",
         "flow_workflows_activity", "flow_workflows_activity_task", "flow_workflows_revisions",
-        "flow_task_templates", "flow_settings"};
+        "flow_task_templates", "flow_settings", "flow_workflows_activity_approval"};
   }
 
   @Override
@@ -94,7 +94,8 @@ public abstract class IntegrationTests extends AbstractFlowTests {
             "tests/setup/templates/21.json", "tests/setup/templates/23.json",
             "tests/setup/templates/24.json", "tests/setup/templates/26.json",
             "tests/setup/templates/27.json", "tests/setup/templates/28.json",
-            "tests/setup/templates/29.json", "tests/setup/templates/31.json"));
+            "tests/setup/templates/29.json", "tests/setup/templates/31.json",
+            "tests/setup/templates/32.json"));
     data.put("flow_teams", Arrays.asList("tests/setup/teams/team1.json"));
     data.put("flow_settings", Arrays.asList("db/flow_settings/setting1.json"));
 
