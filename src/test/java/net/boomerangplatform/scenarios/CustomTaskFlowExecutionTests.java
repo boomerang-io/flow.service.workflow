@@ -11,6 +11,7 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -29,6 +30,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.web.client.MockRestServiceServer;
 import net.boomerangplatform.Application;
 import net.boomerangplatform.model.FlowActivity;
+import net.boomerangplatform.model.FlowExecutionRequest;
 import net.boomerangplatform.service.crud.FlowActivityService;
 import net.boomerangplatform.tests.IntegrationTests;
 import net.boomerangplatform.tests.MongoConfig;
@@ -48,7 +50,13 @@ public class CustomTaskFlowExecutionTests extends IntegrationTests {
     
     String workflowId = "5d7177af2c57250007e3d7a9";
    
-    FlowActivity activity = submitWorkflow(workflowId);
+    Map<String, String> properties = new HashMap<String, String>();
+    properties.put("foo","hello");
+    properties.put("bar","world");
+    FlowExecutionRequest flowRequest = new FlowExecutionRequest();
+    flowRequest.setProperties(properties);
+    
+    FlowActivity activity = submitWorkflow(workflowId, flowRequest);
 
     String id = activity.getId();
     Thread.sleep(5000);
@@ -81,9 +89,9 @@ public class CustomTaskFlowExecutionTests extends IntegrationTests {
         .andExpect(method(HttpMethod.POST))
         .andExpect(jsonPath("$.workflowName").value("Unit Test Demo"))
         .andExpect(jsonPath("$.taskType").value("custom"))
-        .andExpect(jsonPath("$.command").value("uname"))
+        .andExpect(jsonPath("$.command").value("world"))
         .andExpect(jsonPath("$.image").value("busybox"))
-        .andExpect(jsonPath("$.arguments").value("test"))
+        .andExpect(jsonPath("$.arguments").value("hello"))
         .andExpect(jsonPath("$.taskName").value("Custom Task 1"))
         .andRespond(withStatus(HttpStatus.OK));
 
