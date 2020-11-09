@@ -1,10 +1,11 @@
 package net.boomerangplatform.service.runner.misc;
 
-import java.util.Arrays;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -27,12 +28,17 @@ import net.boomerangplatform.model.controller.TaskDeletion;
 import net.boomerangplatform.model.controller.TaskTemplate;
 import net.boomerangplatform.model.controller.Workflow;
 import net.boomerangplatform.model.controller.WorkflowStorage;
+import net.boomerangplatform.mongo.entity.ActivityEntity;
 import net.boomerangplatform.mongo.entity.TaskExecutionEntity;
+import net.boomerangplatform.mongo.entity.WorkflowEntity;
 import net.boomerangplatform.mongo.model.Revision;
 import net.boomerangplatform.mongo.model.TaskStatus;
 import net.boomerangplatform.mongo.model.internal.InternalTaskResponse;
 import net.boomerangplatform.mongo.service.ActivityTaskService;
 import net.boomerangplatform.mongo.service.FlowSettingsService;
+import net.boomerangplatform.service.crud.FlowActivityService;
+import net.boomerangplatform.service.crud.WorkflowService;
+import net.boomerangplatform.service.refactor.DAGUtility;
 import net.boomerangplatform.service.refactor.TaskClient;
 
 @Service
@@ -62,6 +68,16 @@ public class ControllerClientImpl implements ControllerClient {
 
   @Value("${controller.terminateworkflow.url}")
   private String terminateWorkflowURL;
+  
+  @Autowired
+  private DAGUtility dagUtility;
+  
+  @Autowired
+  private WorkflowService workflowService;
+  
+  @Autowired
+  private FlowActivityService activityService;
+
 
   @Override
   @Async
@@ -180,6 +196,7 @@ public class ControllerClientImpl implements ControllerClient {
     flowTaskClient.endTask(response);
   }
   
+
   @Override
   @Async
   public void submitCustomTask(Task task, String activityId, String workflowName) {
@@ -201,28 +218,37 @@ public class ControllerClientImpl implements ControllerClient {
     final Map<String, String> map = task.getInputs();
 
 
-    request.setImage(map.get("image"));
-    request.setCommand(map.get("command"));
-
+    String imageName = map.get("image");
+    if (imageName != null) {
+      String newValue = this.replaceValueWithProperty(imageName, activityId, task.getWorkflowId());
+      request.setImage(newValue);
+    }
+    
+    String command = map.get("command");
+    if (command != null) {
+      String newValue = this.replaceValueWithProperty(command, activityId, task.getWorkflowId());
+      request.setCommand(newValue);
+    }
+    
     List<String> args = new LinkedList<>();
-
     if (map.get("arguments") != null) {
       String arguments = map.get("arguments");
       if (!arguments.isBlank()) {
         String[] lines = arguments.split("\\r?\\n");
         args  = new LinkedList<>();
-        args.addAll(Arrays.asList(lines));
+        for (String line : lines) {
+          String newValue = this.replaceValueWithProperty(line, activityId, task.getWorkflowId());
+          args.add(newValue);
+        }
       }
     }
     request.setArguments(args);
 
     final Date startDate = new Date();
-
     taskExecution.setStartTime(startDate);
     taskExecution.setFlowTaskStatus(TaskStatus.inProgress);
     taskExecution = taskService.save(taskExecution);
     
-    /* Population task configuration details. */
     TaskDeletion taskDeletion = TaskDeletion.Never; 
     
     TaskConfiguration taskConfiguration = new TaskConfiguration();
@@ -246,10 +272,9 @@ public class ControllerClientImpl implements ControllerClient {
     ObjectMapper objectMapper = new ObjectMapper();
     try {
       String payload = objectMapper.writeValueAsString(request);
-      System.out.println(payload);
+      LOGGER.info(payload);
     } catch (JsonProcessingException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
+      LOGGER.error(ExceptionUtils.getStackTrace(e));
     }
     
     try {
@@ -300,8 +325,6 @@ public class ControllerClientImpl implements ControllerClient {
   @Override
   public boolean createFlow(String workflowId, String workflowName, String activityId,
       boolean enableStorage, Map<String, String> properties) {
-
-    System.out.println("Create flow");
     
     final Workflow request = new Workflow();
     request.setWorkflowActivityId(activityId);
@@ -334,4 +357,36 @@ public class ControllerClientImpl implements ControllerClient {
     return true;
   }
   
+  
+  private String replaceValueWithProperty(String value, 
+      String activityId, String workflowId) {
+   
+    ActivityEntity activity = activityService.findWorkflowActivity(activityId);
+    WorkflowEntity workflowEntity = workflowService.getWorkflow(workflowId);
+    
+    final Map<String, String> executionProperties = this.dagUtility.buildExecutionProperties(activity, workflowEntity);
+    String regex = "\\$\\{p:(.*?)\\}";
+    Pattern pattern = Pattern.compile(regex);
+    Matcher matcher = pattern.matcher(value);
+    if (matcher.find()) {
+      String group = matcher.group(1);
+      String[] components = group.split("/");
+      if (components.length == 1) {
+        if (executionProperties.get(components[0]) != null) {
+
+          return executionProperties.get(components[0]);
+        }
+      } else if (components.length == 2) {
+        String taskName = components[0];
+        String outputProperty = components[1];
+        TaskExecutionEntity taskExecution =
+            taskService.findByTaskNameAndActiityId(taskName, activityId);
+        if (taskExecution != null && taskExecution.getOutputs() != null
+            && taskExecution.getOutputs().get(outputProperty) != null) {
+          return taskExecution.getOutputs().get(outputProperty);
+        }
+      }
+    }
+    return value;
+  }
 }
