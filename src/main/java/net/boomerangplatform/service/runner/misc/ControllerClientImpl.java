@@ -29,17 +29,27 @@ import net.boomerangplatform.model.controller.TaskTemplate;
 import net.boomerangplatform.model.controller.Workflow;
 import net.boomerangplatform.model.controller.WorkflowStorage;
 import net.boomerangplatform.mongo.entity.ActivityEntity;
+import net.boomerangplatform.mongo.entity.FlowGlobalConfigEntity;
+import net.boomerangplatform.mongo.entity.FlowTeamConfiguration;
+import net.boomerangplatform.mongo.entity.FlowTeamEntity;
 import net.boomerangplatform.mongo.entity.TaskExecutionEntity;
 import net.boomerangplatform.mongo.entity.WorkflowEntity;
+import net.boomerangplatform.mongo.model.FlowProperty;
 import net.boomerangplatform.mongo.model.Revision;
 import net.boomerangplatform.mongo.model.TaskStatus;
 import net.boomerangplatform.mongo.model.internal.InternalTaskResponse;
 import net.boomerangplatform.mongo.service.ActivityTaskService;
+import net.boomerangplatform.mongo.service.FlowGlobalConfigService;
 import net.boomerangplatform.mongo.service.FlowSettingsService;
+import net.boomerangplatform.mongo.service.FlowTeamService;
+import net.boomerangplatform.mongo.service.FlowWorkflowService;
+import net.boomerangplatform.mongo.service.RevisionService;
 import net.boomerangplatform.service.crud.FlowActivityService;
 import net.boomerangplatform.service.crud.WorkflowService;
+import net.boomerangplatform.service.refactor.ApplicationProcessRequestProperties;
 import net.boomerangplatform.service.refactor.DAGUtility;
 import net.boomerangplatform.service.refactor.TaskClient;
+
 
 @Service
 @Primary
@@ -53,31 +63,42 @@ public class ControllerClientImpl implements ControllerClient {
 
   @Autowired
   public ActivityTaskService taskService;
-  
+
   @Autowired
   private FlowSettingsService flowSettinigs;
 
   @Value("${controller.createtask.url}")
   public String createTaskURL;
-  
+
   @Autowired
   private TaskClient flowTaskClient;
-  
+
   @Value("${controller.createworkflow.url}")
   private String createWorkflowURL;
 
   @Value("${controller.terminateworkflow.url}")
   private String terminateWorkflowURL;
-  
+
   @Autowired
   private DAGUtility dagUtility;
-  
+
   @Autowired
   private WorkflowService workflowService;
-  
+
   @Autowired
   private FlowActivityService activityService;
 
+  @Autowired
+  private FlowGlobalConfigService flowGlobalConfigService;
+
+  @Autowired
+  private RevisionService revisionService;
+
+  @Autowired
+  private FlowTeamService flowTeamService;
+
+  @Autowired
+  private FlowWorkflowService flowWorkflowService;
 
   @Override
   @Async
@@ -97,43 +118,50 @@ public class ControllerClientImpl implements ControllerClient {
     request.setTaskName(task.getTaskName());
     request.setTaskActivityId(task.getTaskActivityId());
 
-    final Map<String, String> map = task.getInputs();
-    for (final Map.Entry<String, String> pair : map.entrySet()) {
-      map.put(pair.getKey(), pair.getValue());
-    }
+    ApplicationProcessRequestProperties applicationProperties =
+        new ApplicationProcessRequestProperties();
+    Map<String, Object> systemProperties = applicationProperties.getSystemProperties();
+    Map<String, Object> globalProperties = applicationProperties.getGlobalProperties();
+    Map<String, Object> teamProperties = applicationProperties.getTeamProperties();
+    Map<String, Object> workflowProperties = applicationProperties.getWorkflowProperties();
 
-    request.setProperties(map);
-    
+    buildGlobalProperties(globalProperties);
+    buildSystemProperties(task, activityId, task.getWorkflowId(), systemProperties);
+    buildTeamProperties(teamProperties, task.getWorkflowId());
+    buildWorkflowProperties(workflowProperties, task);
+
     /* Population task configuration details. */
-    TaskDeletion taskDeletion = TaskDeletion.Never; 
-    
+    TaskDeletion taskDeletion = TaskDeletion.Never;
+
     TaskConfiguration taskConfiguration = new TaskConfiguration();
-           
-    String settingsPolicy = this.flowSettinigs.getConfiguration("controller", "job.deletion.policy").getValue();
+
+    String settingsPolicy =
+        this.flowSettinigs.getConfiguration("controller", "job.deletion.policy").getValue();
     if (settingsPolicy != null) {
       taskDeletion = TaskDeletion.valueOf(settingsPolicy);
     }
     taskConfiguration.setDeletion(taskDeletion);
     boolean enableDebug = false;
-    
-    String enableDebugFlag = this.flowSettinigs.getConfiguration("controller", "enable.debug").getValue();
-    
+
+    String enableDebugFlag =
+        this.flowSettinigs.getConfiguration("controller", "enable.debug").getValue();
+
     if (settingsPolicy != null) {
       enableDebug = Boolean.valueOf(enableDebugFlag).booleanValue();
     }
     taskConfiguration.setDebug(Boolean.valueOf(enableDebug));
-        
+
     request.setConfiguration(taskConfiguration);
 
     if (task.getRevision() != null) {
       Revision revision = task.getRevision();
       request.setArguments(revision.getArguments());
-      
+
       if (revision.getImage() != null && !revision.getImage().isBlank()) {
         request.setImage(revision.getImage());
-      }
-      else {
-        String workerImage = this.flowSettinigs.getConfiguration("controller", "worker.image").getValue();
+      } else {
+        String workerImage =
+            this.flowSettinigs.getConfiguration("controller", "worker.image").getValue();
         request.setImage(workerImage);
       }
 
@@ -142,7 +170,7 @@ public class ControllerClientImpl implements ControllerClient {
       }
     } else {
       taskResult.setStatus(TaskStatus.invalid);
-     
+
     }
 
     final Date startDate = new Date();
@@ -188,14 +216,65 @@ public class ControllerClientImpl implements ControllerClient {
     }
 
     taskService.save(taskExecution);
-    
-    
+
+
     InternalTaskResponse response = new InternalTaskResponse();
     response.setActivityId(task.getTaskActivityId());
     response.setStatus(taskExecution.getFlowTaskStatus());
     flowTaskClient.endTask(response);
   }
-  
+
+
+  private void buildWorkflowProperties(Map<String, Object> workflowProperties, Task task) {
+    final Map<String, String> map = task.getInputs();
+    for (final Map.Entry<String, String> pair : map.entrySet()) {
+      workflowProperties.put(pair.getKey(), pair.getValue());
+    }
+
+    WorkflowEntity workflow = flowWorkflowService.getWorkflow(task.getWorkflowId());
+    List<FlowProperty> workflowProps = workflow.getProperties();
+    for (FlowProperty prop : workflowProps) {
+      workflowProperties.put(prop.getKey(), prop.getValue());
+    }
+
+  }
+
+
+  private void buildTeamProperties(Map<String, Object> teamProperties, String workflowId) {
+    FlowTeamEntity flowTeamEntity =
+        this.flowTeamService.findById(workflowService.getWorkflow(workflowId).getFlowTeamId());
+    List<FlowTeamConfiguration> teamConfig = null;
+
+    if (flowTeamEntity.getSettings() != null) {
+      teamConfig = flowTeamEntity.getSettings().getProperties();
+    }
+
+    if (teamConfig != null) {
+      for (FlowTeamConfiguration config : teamConfig) {
+        teamProperties.put(config.getKey(), config.getValue());
+      }
+    }
+
+  }
+
+
+  private void buildSystemProperties(Task task, String activityId, String workflowId,
+      Map<String, Object> systemProperties) {
+
+    WorkflowEntity workflow = workflowService.getWorkflow(workflowId);
+    ActivityEntity activity = activityService.findWorkflowActivity(activityId);
+
+    systemProperties.put("workflow.name", workflow.getName());
+    systemProperties.put("workflow.activity.id", activityId);
+    systemProperties.put("workflow.id", workflow.getId());
+    systemProperties.put("task.name", task.getTaskName());
+    systemProperties.put("task.type", task.getTaskType());
+    systemProperties.put("workflow.version",
+        revisionService.getWorkflowlWithId(activity.getWorkflowRevisionid()).getVersion());
+    systemProperties.put("trigger.type", activity.getTrigger());
+    systemProperties.put("workflow.activity.initiator", activity.getInitiatedByUserId());
+  }
+
 
   @Override
   @Async
@@ -215,27 +294,37 @@ public class ControllerClientImpl implements ControllerClient {
     request.setTaskName(task.getTaskName());
     request.setTaskActivityId(task.getTaskActivityId());
 
-    final Map<String, String> map = task.getInputs();
+   
+    ApplicationProcessRequestProperties applicationProperties =
+        new ApplicationProcessRequestProperties();
+    Map<String, Object> systemProperties = applicationProperties.getSystemProperties();
+    Map<String, Object> globalProperties = applicationProperties.getGlobalProperties();
+    Map<String, Object> teamProperties = applicationProperties.getTeamProperties();
+    Map<String, Object> workflowProperties = applicationProperties.getWorkflowProperties();
 
+    buildGlobalProperties(globalProperties);
+    buildSystemProperties(task, activityId, task.getWorkflowId(), systemProperties);
+    buildTeamProperties(teamProperties, task.getWorkflowId());
+    buildWorkflowProperties(workflowProperties, task);
 
-    String imageName = map.get("image");
+    String imageName =applicationProperties.getLayeredProperty("image");
     if (imageName != null) {
       String newValue = this.replaceValueWithProperty(imageName, activityId, task.getWorkflowId());
       request.setImage(newValue);
     }
-    
-    String command = map.get("command");
+
+    String command = applicationProperties.getLayeredProperty("command");
     if (command != null) {
       String newValue = this.replaceValueWithProperty(command, activityId, task.getWorkflowId());
       request.setCommand(newValue);
     }
-    
+
     List<String> args = new LinkedList<>();
-    if (map.get("arguments") != null) {
-      String arguments = map.get("arguments");
+    if (applicationProperties.getLayeredProperty("arguments") != null) {
+      String arguments =applicationProperties.getLayeredProperty("arguments");
       if (!arguments.isBlank()) {
         String[] lines = arguments.split("\\r?\\n");
-        args  = new LinkedList<>();
+        args = new LinkedList<>();
         for (String line : lines) {
           String newValue = this.replaceValueWithProperty(line, activityId, task.getWorkflowId());
           args.add(newValue);
@@ -248,25 +337,27 @@ public class ControllerClientImpl implements ControllerClient {
     taskExecution.setStartTime(startDate);
     taskExecution.setFlowTaskStatus(TaskStatus.inProgress);
     taskExecution = taskService.save(taskExecution);
-    
-    TaskDeletion taskDeletion = TaskDeletion.Never; 
-    
+
+    TaskDeletion taskDeletion = TaskDeletion.Never;
+
     TaskConfiguration taskConfiguration = new TaskConfiguration();
-           
-    String settingsPolicy = this.flowSettinigs.getConfiguration("controller", "job.deletion.policy").getValue();
+
+    String settingsPolicy =
+        this.flowSettinigs.getConfiguration("controller", "job.deletion.policy").getValue();
     if (settingsPolicy != null) {
       taskDeletion = TaskDeletion.valueOf(settingsPolicy);
     }
     taskConfiguration.setDeletion(taskDeletion);
     boolean enableDebug = false;
-    
-    String enableDebugFlag = this.flowSettinigs.getConfiguration("controller", "enable.debug").getValue();
-    
+
+    String enableDebugFlag =
+        this.flowSettinigs.getConfiguration("controller", "enable.debug").getValue();
+
     if (settingsPolicy != null) {
       enableDebug = Boolean.valueOf(enableDebugFlag).booleanValue();
     }
     taskConfiguration.setDebug(Boolean.valueOf(enableDebug));
-        
+
     request.setConfiguration(taskConfiguration);
 
     ObjectMapper objectMapper = new ObjectMapper();
@@ -276,10 +367,11 @@ public class ControllerClientImpl implements ControllerClient {
     } catch (JsonProcessingException e) {
       LOGGER.error(ExceptionUtils.getStackTrace(e));
     }
-    
+
     try {
 
-      TaskResponse response = restTemplate.postForObject(createTaskURL, request, TaskResponse.class);
+      TaskResponse response =
+          restTemplate.postForObject(createTaskURL, request, TaskResponse.class);
 
       if (response != null) {
         taskExecution.setOutputs(response.getOutput());
@@ -303,8 +395,8 @@ public class ControllerClientImpl implements ControllerClient {
     }
 
     taskService.save(taskExecution);
-    
-    
+
+
     InternalTaskResponse response = new InternalTaskResponse();
     response.setActivityId(task.getTaskActivityId());
     response.setStatus(taskExecution.getFlowTaskStatus());
@@ -325,7 +417,7 @@ public class ControllerClientImpl implements ControllerClient {
   @Override
   public boolean createFlow(String workflowId, String workflowName, String activityId,
       boolean enableStorage, Map<String, String> properties) {
-    
+
     final Workflow request = new Workflow();
     request.setWorkflowActivityId(activityId);
     request.setWorkflowName(workflowName);
@@ -356,15 +448,15 @@ public class ControllerClientImpl implements ControllerClient {
     restTemplate.postForObject(terminateWorkflowURL, request, String.class);
     return true;
   }
-  
-  
-  private String replaceValueWithProperty(String value, 
-      String activityId, String workflowId) {
-   
+
+
+  private String replaceValueWithProperty(String value, String activityId, String workflowId) {
+
     ActivityEntity activity = activityService.findWorkflowActivity(activityId);
     WorkflowEntity workflowEntity = workflowService.getWorkflow(workflowId);
-    
-    final Map<String, String> executionProperties = this.dagUtility.buildExecutionProperties(activity, workflowEntity);
+
+    final Map<String, String> executionProperties =
+        this.dagUtility.buildExecutionProperties(activity, workflowEntity);
     String regex = "\\$\\{p:(.*?)\\}";
     Pattern pattern = Pattern.compile(regex);
     Matcher matcher = pattern.matcher(value);
@@ -388,5 +480,14 @@ public class ControllerClientImpl implements ControllerClient {
       }
     }
     return value;
+  }
+
+  private void buildGlobalProperties(Map<String, Object> globalProperties) {
+    List<FlowGlobalConfigEntity> globalConfigs = this.flowGlobalConfigService.getGlobalConfigs();
+    for (FlowGlobalConfigEntity entity : globalConfigs) {
+      if (entity.getValue() != null) {
+        globalProperties.put(entity.getKey(), entity.getValue());
+      }
+    }
   }
 }

@@ -18,7 +18,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
-import net.boomerangplatform.client.BoomerangTeamService;
+import net.boomerangplatform.client.BoomerangCICDService;
 import net.boomerangplatform.client.BoomerangUserService;
 import net.boomerangplatform.client.model.Team;
 import net.boomerangplatform.client.model.UserProfile;
@@ -43,7 +43,6 @@ import net.boomerangplatform.mongo.service.FlowUserService;
 import net.boomerangplatform.mongo.service.FlowWorkflowActivityService;
 import net.boomerangplatform.mongo.service.FlowWorkflowService;
 import net.boomerangplatform.service.UserIdentityService;
-import net.boomerangplatform.client.BoomerangCICDService;
 
 @Service
 public class TeamServiceImpl implements TeamService {
@@ -243,7 +242,7 @@ public class TeamServiceImpl implements TeamService {
   public List<FlowTeamConfiguration> getAllTeamProperties(String teamId) {
     FlowTeamEntity flowTeamEntity = flowTeamService.findById(teamId);
 
-    if (flowTeamEntity.getSettings().getProperties() != null) {
+    if (flowTeamEntity.getSettings() != null && flowTeamEntity.getSettings().getProperties() != null) {
       return flowTeamEntity.getSettings().getProperties();
     } else {
       return Collections.emptyList();
