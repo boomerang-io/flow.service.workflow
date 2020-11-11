@@ -46,7 +46,7 @@ import net.boomerangplatform.mongo.service.FlowWorkflowService;
 import net.boomerangplatform.mongo.service.RevisionService;
 import net.boomerangplatform.service.crud.FlowActivityService;
 import net.boomerangplatform.service.crud.WorkflowService;
-import net.boomerangplatform.service.refactor.ApplicationProcessRequestProperties;
+import net.boomerangplatform.service.refactor.ControllerRequestProperties;
 import net.boomerangplatform.service.refactor.DAGUtility;
 import net.boomerangplatform.service.refactor.TaskClient;
 
@@ -118,8 +118,8 @@ public class ControllerClientImpl implements ControllerClient {
     request.setTaskName(task.getTaskName());
     request.setTaskActivityId(task.getTaskActivityId());
 
-    ApplicationProcessRequestProperties applicationProperties =
-        new ApplicationProcessRequestProperties();
+    ControllerRequestProperties applicationProperties =
+        new ControllerRequestProperties();
     Map<String, Object> systemProperties = applicationProperties.getSystemProperties();
     Map<String, Object> globalProperties = applicationProperties.getGlobalProperties();
     Map<String, Object> teamProperties = applicationProperties.getTeamProperties();
@@ -295,33 +295,34 @@ public class ControllerClientImpl implements ControllerClient {
     request.setTaskActivityId(task.getTaskActivityId());
 
    
-    ApplicationProcessRequestProperties applicationProperties =
-        new ApplicationProcessRequestProperties();
-    Map<String, Object> systemProperties = applicationProperties.getSystemProperties();
-    Map<String, Object> globalProperties = applicationProperties.getGlobalProperties();
-    Map<String, Object> teamProperties = applicationProperties.getTeamProperties();
-    Map<String, Object> workflowProperties = applicationProperties.getWorkflowProperties();
+    ControllerRequestProperties controllerProperties =
+        new ControllerRequestProperties();
+    Map<String, Object> systemProperties = controllerProperties.getSystemProperties();
+    Map<String, Object> globalProperties = controllerProperties.getGlobalProperties();
+    Map<String, Object> teamProperties = controllerProperties.getTeamProperties();
+    Map<String, Object> workflowProperties = controllerProperties.getWorkflowProperties();
 
     buildGlobalProperties(globalProperties);
     buildSystemProperties(task, activityId, task.getWorkflowId(), systemProperties);
     buildTeamProperties(teamProperties, task.getWorkflowId());
     buildWorkflowProperties(workflowProperties, task);
-
-    String imageName =applicationProperties.getLayeredProperty("image");
-    if (imageName != null) {
-      String newValue = this.replaceValueWithProperty(imageName, activityId, task.getWorkflowId());
+    
+    Map<String, Object> map = controllerProperties.getMap();
+   
+    if (map.get("image") != null) {
+      String newValue = this.replaceValueWithProperty(map.get("image").toString(), activityId, task.getWorkflowId());
       request.setImage(newValue);
     }
 
-    String command = applicationProperties.getLayeredProperty("command");
-    if (command != null) {
-      String newValue = this.replaceValueWithProperty(command, activityId, task.getWorkflowId());
+   
+    if (map.get("command") != null) {
+      String newValue = this.replaceValueWithProperty(map.get("command").toString(), activityId, task.getWorkflowId());
       request.setCommand(newValue);
     }
 
     List<String> args = new LinkedList<>();
-    if (applicationProperties.getLayeredProperty("arguments") != null) {
-      String arguments =applicationProperties.getLayeredProperty("arguments");
+    if (  map.get("arguments") != null) {
+      String arguments =controllerProperties.getLayeredProperty("arguments");
       if (!arguments.isBlank()) {
         String[] lines = arguments.split("\\r?\\n");
         args = new LinkedList<>();
