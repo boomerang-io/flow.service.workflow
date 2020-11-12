@@ -3,6 +3,7 @@ package net.boomerangplatform.service;
 import java.util.HashMap;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import net.boomerangplatform.model.FlowFeatures;
 import net.boomerangplatform.mongo.model.Config;
@@ -14,6 +15,36 @@ public class FeatureServiceImpl implements FeatureService {
   private static final String VERIFIED_TASK_EDIT_KEY = "enable.verified.tasks.edit";
   @Autowired
   private FlowSettingsService settingsService;
+  
+  @Value("${flow.feature.workflow.quotas}")
+  private boolean flowFeatureWorkflowQuotas;
+  
+  @Value("${flow.feature.workflow.triggers}")
+  private boolean flowFeatureWorkflowTriggers;
+  
+  @Value("${flow.feature.workflow.tokens}")
+  private boolean flowFeatureWorkflowTokens;
+  
+  @Value("${flow.feature.team.properties}")
+  private boolean flowFeatureTeamProperties;
+  
+  @Value("${flow.feature.global.properties}")
+  private boolean flowFeatureGlobalProperties;
+  
+  @Value("${flow.feature.team.management}")
+  private boolean flowFeatureTeamManagement;
+  
+  @Value("${flow.feature.user.management}")
+  private boolean flowFeatureUserManagement;
+  
+  @Value("${flow.feature.taskManager}")
+  private boolean flowFeatureTaskManager;
+  
+  @Value("${flow.feature.settings}")
+  private boolean flowFeatureSettings;
+  
+  @Value("${boomerang.activation}")
+  private boolean boomerangActivation;
 
   @Override
   public FlowFeatures getFlowFeatures() {
@@ -28,6 +59,16 @@ public class FeatureServiceImpl implements FeatureService {
     else {
       features.put(VERIFIED_TASK_EDIT_KEY, false);
     }
+    features.put("flow.feature.workflow.quotas", flowFeatureWorkflowQuotas);
+    features.put("flow.feature.workflow.triggers", flowFeatureWorkflowTriggers);
+    features.put("flow.feature.workflow.tokens", flowFeatureWorkflowTokens);
+    features.put("flow.feature.team.properties", flowFeatureTeamProperties);
+    features.put("flow.feature.global.properties", flowFeatureGlobalProperties);
+    features.put("flow.feature.team.management", flowFeatureTeamManagement);
+    features.put("flow.feature.user.management", flowFeatureUserManagement);
+    features.put("flow.feature.taskManager", flowFeatureTaskManager);
+    features.put("flow.feature.settings", flowFeatureSettings);
+    features.put("boomerang.activation", boomerangActivation);
     
     flowFeatures.setFeatures(features);
     return flowFeatures;
