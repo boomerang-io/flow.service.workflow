@@ -1,7 +1,10 @@
 package net.boomerangplatform.controller;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.CacheControl;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -22,15 +25,20 @@ public class NavigationController {
   private UserIdentityService userService;
 
   @GetMapping(value = "")
-  List<Navigation> getNavigation() {
+  ResponseEntity<List<Navigation>> getNavigation() {
     boolean isUserAdmin = false;
     final FlowUserEntity userEntity = userService.getCurrentUser();
     if (userEntity != null
         && (userEntity.getType() == UserType.admin || userEntity.getType() == UserType.operator)) {
       isUserAdmin = true;
     }
+    List<Navigation> response = navigationService.getNavigation(isUserAdmin);
+    
+    CacheControl cacheControl = CacheControl.maxAge(1, TimeUnit.HOURS);
 
-    return navigationService.getNavigation(isUserAdmin);
+    return ResponseEntity.ok().cacheControl(cacheControl).body(response);
+
+
   }
 
 }
