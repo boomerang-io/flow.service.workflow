@@ -1,12 +1,16 @@
 package net.boomerangplatform.model;
 
 import java.util.List;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonPropertyOrder({"name", "type", "icon", "link", "childLinks"})
 public class Navigation {
 
   private String name;
   private String icon;
-  private String type;
+  private NavigationType type;
   private String link;
   private List<Navigation> childLinks;
 
@@ -26,11 +30,11 @@ public class Navigation {
     this.icon = icon;
   }
 
-  public String getType() {
+  public NavigationType getType() {
     return type;
   }
 
-  public void setType(String type) {
+  public void setType(NavigationType type) {
     this.type = type;
   }
 
