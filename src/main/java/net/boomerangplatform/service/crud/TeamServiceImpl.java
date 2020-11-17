@@ -22,7 +22,6 @@ import net.boomerangplatform.client.BoomerangCICDService;
 import net.boomerangplatform.client.BoomerangUserService;
 import net.boomerangplatform.client.model.Team;
 import net.boomerangplatform.client.model.UserProfile;
-import net.boomerangplatform.model.FlowMode;
 import net.boomerangplatform.model.FlowTeam;
 import net.boomerangplatform.model.FlowWorkflowRevision;
 import net.boomerangplatform.model.TeamQueryResult;
@@ -70,6 +69,9 @@ public class TeamServiceImpl implements TeamService {
 
   @Value("${flow.mode}")
   private String flowMode;
+  
+  @Value("${flow.externalUrl.team}")
+  private String flowExternalUrlTeam;
   
   @Value("${max.workflow.count}")
   private Integer maxWorkflowCount;
@@ -143,7 +145,7 @@ public class TeamServiceImpl implements TeamService {
     final List<TeamWorkflowSummary> teamWorkFlowSummary = new LinkedList<>();
     
     List<FlowTeamEntity> flowTeams = null;
-    if (FlowMode.EMBEDDED.getMode().equals(flowMode)) {
+    if (flowExternalUrlTeam.isBlank()) {
       flowTeams = this.cicdService.getCICDTeams();
     }
     else {
@@ -167,7 +169,7 @@ public class TeamServiceImpl implements TeamService {
   public List<TeamWorkflowSummary> getUserTeams(FlowUserEntity userEntity) {
 
     List<String> highLevelGroupIds = new LinkedList<>();
-    if (FlowMode.STANDALONE.getMode().equals(flowMode)) {
+    if (flowExternalUrlTeam.isBlank()) {
       highLevelGroupIds = userEntity.getFlowTeams();
     } else {
       UserProfile profile = boomerangUserService.getInternalUserProfile();
@@ -180,7 +182,7 @@ public class TeamServiceImpl implements TeamService {
     final List<TeamWorkflowSummary> teamWorkFlowSummary = new LinkedList<>();
     
     List<FlowTeamEntity> flowTeam = null;
-    if (FlowMode.EMBEDDED.getMode().equals(flowMode)) {
+    if (flowExternalUrlTeam.isBlank()) {
       flowTeam = this.cicdService.getCICDTeams();
     }
     else {
