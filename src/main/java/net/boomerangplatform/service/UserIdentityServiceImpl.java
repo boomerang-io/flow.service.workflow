@@ -43,12 +43,14 @@ public class UserIdentityServiceImpl implements UserIdentityService {
 
   @Override
   public FlowUserEntity getCurrentUser() {
-    if (flowExternalUrlUser.isBlank()) {
+    System.out.println("*****NOT EXTERNAL****"+ flowExternalUrlUser.isBlank());
+    if (flowExternalUrlUser.isBlank()) {;
       UserDetails user = usertDetailsService.getUserDetails();
       String email = user.getEmail();
       return flowUserService.getUserWithEmail(email);
 
     } else {
+      System.out.println("******EXTERNAL***");
       UserProfile userProfile = coreUserService.getInternalUserProfile();
       FlowUserEntity flowUser = new FlowUserEntity();
       BeanUtils.copyProperties(userProfile, flowUser);
