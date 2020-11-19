@@ -59,18 +59,18 @@ public class FeatureServiceImpl implements FeatureService {
     else {
       features.put(VERIFIED_TASK_EDIT_KEY, false);
     }
-    features.put("flow.feature.workflow.quotas", flowFeatureWorkflowQuotas);
-    features.put("flow.feature.workflow.triggers", flowFeatureWorkflowTriggers);
-    features.put("flow.feature.workflow.tokens", flowFeatureWorkflowTokens);
-    features.put("flow.feature.team.properties", flowFeatureTeamProperties);
-    features.put("flow.feature.global.properties", flowFeatureGlobalProperties);
-    features.put("flow.feature.team.management", flowFeatureTeamManagement);
-    features.put("flow.feature.user.management", flowFeatureUserManagement);
-    features.put("flow.feature.taskManager", flowFeatureTaskManager);
-    features.put("flow.feature.settings", flowFeatureSettings);
+    features.put("workflow.quotas", flowFeatureWorkflowQuotas);
+    features.put("workflow.triggers", flowFeatureWorkflowTriggers);
+    features.put("workflow.tokens", flowFeatureWorkflowTokens);
+    features.put("team.properties", flowFeatureTeamProperties);
+    features.put("global.properties", flowFeatureGlobalProperties);
+    features.put("team.management", flowFeatureTeamManagement);
+    features.put("user.management", flowFeatureUserManagement);
+    features.put("taskManager", flowFeatureTaskManager);
+    features.put("settings", flowFeatureSettings);
     features.put("boomerang.activation", boomerangActivation);
     
-    flowFeatures.setFeatures(features);
+    flowFeatures.setFeatures(features); 
     return flowFeatures;
   }
 
