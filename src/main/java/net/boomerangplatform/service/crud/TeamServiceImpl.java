@@ -67,9 +67,6 @@ public class TeamServiceImpl implements TeamService {
   @Autowired
   private FlowWorkflowService flowWorkflowService;
 
-  @Value("${flow.mode}")
-  private String flowMode;
-  
   @Value("${flow.externalUrl.team}")
   private String flowExternalUrlTeam;
   
@@ -145,7 +142,7 @@ public class TeamServiceImpl implements TeamService {
     final List<TeamWorkflowSummary> teamWorkFlowSummary = new LinkedList<>();
     
     List<FlowTeamEntity> flowTeams = null;
-    if (flowExternalUrlTeam.isBlank()) {
+    if (!flowExternalUrlTeam.isBlank()) {
       flowTeams = this.cicdService.getCICDTeams();
     }
     else {
@@ -182,7 +179,7 @@ public class TeamServiceImpl implements TeamService {
     final List<TeamWorkflowSummary> teamWorkFlowSummary = new LinkedList<>();
     
     List<FlowTeamEntity> flowTeam = null;
-    if (flowExternalUrlTeam.isBlank()) {
+    if (!flowExternalUrlTeam.isBlank()) {
       flowTeam = this.cicdService.getCICDTeams();
     }
     else {

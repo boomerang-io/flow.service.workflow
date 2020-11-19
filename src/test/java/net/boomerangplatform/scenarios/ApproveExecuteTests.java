@@ -33,7 +33,7 @@ import org.springframework.test.web.client.MockRestServiceServer;
 @SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT)
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = {Application.class, MongoConfig.class})
-@ActiveProfiles("local")
+@ActiveProfiles("test")
 public class ApproveExecuteTests extends IntegrationTests {
 
   @Test

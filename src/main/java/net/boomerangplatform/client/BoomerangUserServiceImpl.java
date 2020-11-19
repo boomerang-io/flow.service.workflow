@@ -34,8 +34,11 @@ public class BoomerangUserServiceImpl implements BoomerangUserService {
   @Override
   public UserProfile getInternalUserProfile() {
     HttpHeaders headers = new HttpHeaders();
+    
+    System.out.println("******USER TOKEN "+ apiTokenService.getUserToken());
     headers.add(AUTHORIZATION_HEADER, TOKEN_PREFIX + apiTokenService.getUserToken());
-
+    
+    System.out.println("******URL** "+ profileUrl);
     HttpEntity<String> requestUpdate = new HttpEntity<>("", headers);
     ResponseEntity<UserProfile> response =
         restTemplate.exchange(profileUrl, HttpMethod.GET, requestUpdate, UserProfile.class);
