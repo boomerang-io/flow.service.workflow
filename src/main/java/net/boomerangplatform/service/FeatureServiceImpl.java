@@ -43,8 +43,6 @@ public class FeatureServiceImpl implements FeatureService {
   @Value("${flow.feature.settings}")
   private boolean flowFeatureSettings;
   
-  @Value("${boomerang.activation}")
-  private boolean boomerangActivation;
 
   @Override
   public FlowFeatures getFlowFeatures() {
@@ -68,7 +66,6 @@ public class FeatureServiceImpl implements FeatureService {
     features.put("user.management", flowFeatureUserManagement);
     features.put("taskManager", flowFeatureTaskManager);
     features.put("settings", flowFeatureSettings);
-    features.put("boomerang.activation", boomerangActivation);
     
     flowFeatures.setFeatures(features); 
     return flowFeatures;
