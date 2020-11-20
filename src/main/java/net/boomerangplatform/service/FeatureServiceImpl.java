@@ -43,6 +43,12 @@ public class FeatureServiceImpl implements FeatureService {
   @Value("${flow.feature.settings}")
   private boolean flowFeatureSettings;
   
+  @Value("${flow.feature.activity}")
+  private boolean flowFeatureActivity;
+  
+  @Value("${flow.feature.insights}")
+  private boolean flowFeatureInsights;
+  
 
   @Override
   public FlowFeatures getFlowFeatures() {
@@ -66,6 +72,8 @@ public class FeatureServiceImpl implements FeatureService {
     features.put("user.management", flowFeatureUserManagement);
     features.put("taskManager", flowFeatureTaskManager);
     features.put("settings", flowFeatureSettings);
+    features.put("activity",flowFeatureActivity);
+    features.put("insights",flowFeatureInsights);
     
     flowFeatures.setFeatures(features); 
     return flowFeatures;
