@@ -210,7 +210,7 @@ public class TeamServiceImpl implements TeamService {
 
     List<ActivityEntity> concurrentActivities = getConcurrentWorkflowActivities(entity.getId());
     Pageable page = Pageable.unpaged();
-    Page<ActivityEntity> activitiesMonthly = getMonthlyWorkflowActivities(page);
+    List<ActivityEntity> activitiesMonthly = getMonthlyWorkflowActivities(page, entity.getId());
 
     WorkflowQuotas workflowQuotas = new WorkflowQuotas();
     workflowQuotas.setMaxWorkflowCount(quotas.getMaxWorkflowCount());
@@ -221,7 +221,7 @@ public class TeamServiceImpl implements TeamService {
 
     workflowQuotas.setCurrentWorkflowCount(workflowSummary.size());
     workflowQuotas.setCurrentConcurrentWorkflows(concurrentActivities.size());
-    workflowQuotas.setCurrentWorkflowExecutionMonthly(activitiesMonthly.getContent().size());
+    workflowQuotas.setCurrentWorkflowExecutionMonthly(activitiesMonthly.size());
     setWorkflowStorage(workflowSummary, workflowQuotas);
     setWorkflowResetDate(workflowQuotas);
     teamWorkFlow.setWorkflowQuotas(workflowQuotas);
@@ -424,7 +424,7 @@ public class TeamServiceImpl implements TeamService {
     List<WorkflowSummary> workflows = workflowService.getWorkflowsForTeam(team.getId());
     Pageable page = Pageable.unpaged();
     List<ActivityEntity> concurrentActivities = getConcurrentWorkflowActivities(teamId);
-    Page<ActivityEntity> activitiesMonthly = getMonthlyWorkflowActivities(page);
+    List<ActivityEntity> activitiesMonthly = getMonthlyWorkflowActivities(page, teamId);
 
     Quotas quotas = setTeamQuotas(team);
 
@@ -442,7 +442,7 @@ public class TeamServiceImpl implements TeamService {
 
     workflowQuotas.setCurrentWorkflowCount(workflows.size());
     workflowQuotas.setCurrentConcurrentWorkflows(concurrentActivities.size());
-    workflowQuotas.setCurrentWorkflowExecutionMonthly(activitiesMonthly.getContent().size());
+    workflowQuotas.setCurrentWorkflowExecutionMonthly(activitiesMonthly.size());
     setWorkflowStorage(workflows, workflowQuotas);
     setWorkflowResetDate(workflowQuotas);
     return workflowQuotas;
@@ -489,7 +489,7 @@ public class TeamServiceImpl implements TeamService {
     List<WorkflowSummary> workflows = workflowService.getWorkflowsForTeam(team.getId());
     Pageable page = Pageable.unpaged();
     List<ActivityEntity> concurrentActivities = getConcurrentWorkflowActivities(teamId);
-    Page<ActivityEntity> activitiesMonthly = getMonthlyWorkflowActivities(page);
+    List<ActivityEntity> activitiesMonthly = getMonthlyWorkflowActivities(page,teamId);
 
     Quotas teamQuotas = team.getQuotas();
     teamQuotas.setMaxWorkflowCount(maxWorkflowCount);
@@ -509,7 +509,7 @@ public class TeamServiceImpl implements TeamService {
     workflowQuotas.setMaxConcurrentWorkflows(updatedTeam.getQuotas().getMaxConcurrentWorkflows());
     workflowQuotas.setCurrentWorkflowCount(workflows.size());
     workflowQuotas.setCurrentConcurrentWorkflows(concurrentActivities.size());
-    workflowQuotas.setCurrentWorkflowExecutionMonthly(activitiesMonthly.getContent().size());
+    workflowQuotas.setCurrentWorkflowExecutionMonthly(activitiesMonthly.size());
     setWorkflowStorage(workflows, workflowQuotas);
     setWorkflowResetDate(workflowQuotas);
     return workflowQuotas;
@@ -536,11 +536,21 @@ public class TeamServiceImpl implements TeamService {
     workflowQuotas.setCurrentWorkflowsPersistentStorage(currentWorkflowsPersistentStorage);
   }
 
-  private Page<ActivityEntity> getMonthlyWorkflowActivities(Pageable page) {
+  private List<ActivityEntity> getMonthlyWorkflowActivities(Pageable page, String teamId) {
     Calendar c = Calendar.getInstance();
     c.set(Calendar.DAY_OF_MONTH, 1);
-    return flowWorkflowActivityService.findAllActivities(Optional.of(c.getTime()),
-        Optional.of(new Date()), page);
+    List<ActivityEntity> activites = flowWorkflowActivityService
+        .findAllActivities(Optional.of(c.getTime()), Optional.of(new Date()), page).getContent();
+
+    List<ActivityEntity> teamFilteredActivities = new ArrayList<>();
+    for (ActivityEntity activity : activites) {
+
+      if (workflowService.getWorkflow(activity.getWorkflowId()).getFlowTeamId().equals(teamId)) {
+        teamFilteredActivities.add(activity);
+      }
+    }
+    return teamFilteredActivities;
+
   }
 
   private List<ActivityEntity> getConcurrentWorkflowActivities(String teamId) {
@@ -626,7 +636,7 @@ public class TeamServiceImpl implements TeamService {
     return flowTeamService.save(entity);
   }
 
-  
+
   protected void validateUser() {
 
     FlowUserEntity userEntity = userIdentiyService.getCurrentUser();
