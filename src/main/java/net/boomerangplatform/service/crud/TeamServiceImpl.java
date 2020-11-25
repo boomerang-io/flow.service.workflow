@@ -10,6 +10,8 @@ import java.util.Optional;
 import java.util.TimeZone;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -41,10 +43,13 @@ import net.boomerangplatform.mongo.service.FlowTeamService;
 import net.boomerangplatform.mongo.service.FlowUserService;
 import net.boomerangplatform.mongo.service.FlowWorkflowActivityService;
 import net.boomerangplatform.mongo.service.FlowWorkflowService;
+import net.boomerangplatform.service.EventProcessorImpl;
 import net.boomerangplatform.service.UserIdentityService;
 
 @Service
 public class TeamServiceImpl implements TeamService {
+
+  private static final Logger logger = LogManager.getLogger(TeamServiceImpl.class);
 
   @Autowired
   private FlowTeamService flowTeamService;
@@ -143,6 +148,9 @@ public class TeamServiceImpl implements TeamService {
   @Override
   public List<TeamWorkflowSummary> getAllTeams() {
     final List<TeamWorkflowSummary> teamWorkFlowSummary = new LinkedList<>();
+    
+    logger.info("getAllTeams() - flowExternalUrlTeam: " + flowExternalUrlTeam);
+    logger.info("getAllTeams() - flowExternalUrlTeamIsBlank: " + flowExternalUrlTeam.isBlank());
     
     List<FlowTeamEntity> flowTeams = null;
     if (flowExternalUrlTeam.isBlank()) {
