@@ -3,6 +3,8 @@ package net.boomerangplatform.controller;
 import java.util.LinkedList;
 import java.util.List;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -31,10 +33,13 @@ import net.boomerangplatform.mongo.model.Quotas;
 import net.boomerangplatform.mongo.model.UserType;
 import net.boomerangplatform.service.UserIdentityService;
 import net.boomerangplatform.service.crud.TeamService;
+import net.boomerangplatform.service.crud.TeamServiceImpl;
 
 @RestController
 @RequestMapping("/workflow")
 public class TeamController {
+
+  private static final Logger logger = LogManager.getLogger(TeamController.class);
 
   @Autowired
   private TeamService flowTeamService;
@@ -49,12 +54,15 @@ public class TeamController {
 
   @GetMapping(value = "/teams")
   public List<TeamWorkflowSummary> getTeams() {
+    logger.info("getTeams() - Entered.");
     final FlowUserEntity user = userIdentityService.getCurrentUser();
     if (user == null) {
       return new LinkedList<>();
     } else if (user.getType() == UserType.admin) {
+      logger.info("getTeams() - Admin.");
       return flowTeamService.getAllTeams();
     } else {
+      logger.info("getTeams() - User.");
       return flowTeamService.getUserTeams(user);
     }
   }
