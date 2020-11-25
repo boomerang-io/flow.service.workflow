@@ -20,6 +20,9 @@ public class BoomerangUserServiceImpl implements BoomerangUserService {
 
   @Value("${users.profile.url}")
   private String userProfileById;
+  
+  @Value("${flow.externalUrl.user}")
+  private String flowExternalUsersUrl;
 
   @Autowired
   @Qualifier("internalRestTemplate")
@@ -38,7 +41,7 @@ public class BoomerangUserServiceImpl implements BoomerangUserService {
 
     HttpEntity<String> requestUpdate = new HttpEntity<>("", headers);
     ResponseEntity<UserProfile> response =
-        restTemplate.exchange(profileUrl, HttpMethod.GET, requestUpdate, UserProfile.class);
+        restTemplate.exchange(flowExternalUsersUrl, HttpMethod.GET, requestUpdate, UserProfile.class);
     return response.getBody();
   }
 
