@@ -12,6 +12,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.WordUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -39,7 +41,8 @@ public class BoomerangAuthorizationFilter extends BasicAuthenticationFilter {
   
   private static final String WEBHEADER = "X-WEBAUTH-EMAIL";
   
-
+  private static final Logger LOGGER = LogManager.getLogger();
+    
   public BoomerangAuthorizationFilter(ApiTokenService tokenService,
       AuthenticationManager authManager, String jwtSecret, boolean checkJwt, String basicPassword) {
     super(authManager);
@@ -63,6 +66,8 @@ public class BoomerangAuthorizationFilter extends BasicAuthenticationFilter {
 
   private UsernamePasswordAuthenticationToken getAuthentication(HttpServletRequest request) // NOSONAR
   {
+	LOGGER.info("getAuthentication()");
+	LOGGER.info("Headers: " + request.getHeader("Authorization") );
 
     if (request.getHeader("Authorization") != null) {
 
@@ -121,6 +126,9 @@ public class BoomerangAuthorizationFilter extends BasicAuthenticationFilter {
           return authToken;
 
         }
+        
+        LOGGER.info("Returning null for Bearer");
+        
         return null;
 
       } else if (token.startsWith("Basic ")) {
@@ -152,6 +160,9 @@ public class BoomerangAuthorizationFilter extends BasicAuthenticationFilter {
           return authToken;
 
         }
+        
+        
+        LOGGER.info("Returning null for Basic");
         return null;
 
       }
@@ -185,8 +196,12 @@ public class BoomerangAuthorizationFilter extends BasicAuthenticationFilter {
         authToken.setDetails(userDetails);
         return authToken;
       }
+      
+      LOGGER.info("Returning null for WEBAUTH");
       return null;
     }
+    LOGGER.info("Returning none for no matches");
+    
     return null;
   }
 
