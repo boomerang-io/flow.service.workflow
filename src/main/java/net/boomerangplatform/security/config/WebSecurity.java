@@ -33,20 +33,13 @@ public class WebSecurity extends WebSecurityConfigurerAdapter {
   @Autowired
   private ApiTokenService tokenService;
 
-  @Value("${boomerang.authorization.enabled:false}")
-  private boolean boomerangAuthorization;
-
   @Autowired
   @Value("${boomerang.authorization.basic.password:}")
   private String basicPassword;
 
   @Override
   protected void configure(HttpSecurity http) throws Exception {
-    if (boomerangAuthorization) {
-      setupJWT(http, false, null);
-    } else {
-      setupNone(http);
-    }
+     setupJWT(http, false, null);
   }
 
   /**
@@ -61,11 +54,6 @@ public class WebSecurity extends WebSecurityConfigurerAdapter {
         .permitAll().and().authorizeRequests().anyRequest().authenticated().and()
         .addFilterBefore(jwtFilter, BasicAuthenticationFilter.class).sessionManagement()
         .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
-  }
-
-  /** Disable all spring security. */
-  private void setupNone(HttpSecurity http) throws Exception {
-    http.csrf().disable().anonymous().authorities(AuthorityUtils.createAuthorityList("ROLE_admin"));
   }
 
 }
