@@ -145,7 +145,7 @@ public class TeamServiceImpl implements TeamService {
     final List<TeamWorkflowSummary> teamWorkFlowSummary = new LinkedList<>();
     
     List<FlowTeamEntity> flowTeams = null;
-    if (flowExternalUrlTeam.isBlank()) {
+    if (!flowExternalUrlTeam.isBlank()) {
       flowTeams = this.cicdService.getCICDTeams();
     }
     else {
