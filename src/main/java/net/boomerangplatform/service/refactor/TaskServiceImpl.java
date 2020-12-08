@@ -211,13 +211,12 @@ public class TaskServiceImpl implements TaskService {
         this.activityService.findWorkflowActivtyById(activity.getActivityId());
 
    
-    WorkflowEntity workflow = workflowService.getWorkflow(workflowActivity.getWorkflowId());
     RevisionEntity revision =
         workflowVersionService.getWorkflowlWithId(workflowActivity.getWorkflowRevisionid());
     Task currentTask = getTask(activity);
     List<Task> tasks = this.createTaskList(revision, workflowActivity);
     
-    String storeId = workflow.getId();
+    String storeId = workflowActivity.getId();
 
     List<String> keys = new LinkedList<>();
     keys.add(storeId);
