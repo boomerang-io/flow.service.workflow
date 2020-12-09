@@ -9,50 +9,47 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponents;
+import org.springframework.web.util.UriComponentsBuilder;
 import net.boomerangplatform.client.model.UserProfile;
-import net.boomerangplatform.security.service.ApiTokenService;
+import net.boomerangplatform.security.service.UserDetailsService;
 
 @Service
-public class BoomerangUserServiceImpl implements BoomerangUserService {
+public class ExternalUserServiceImpl implements ExernalUserService {
 
-  @Value("${launchpad.profile.url}")
-  private String profileUrl;
-
-  @Value("${users.profile.url}")
-  private String userProfileById;
+  @Value("${flow.externalUrl.user}")
+  private String externalUserUrl;
 
   @Autowired
   @Qualifier("internalRestTemplate")
   private RestTemplate restTemplate;
-
+  
   @Autowired
-  private ApiTokenService apiTokenService;
-
-  private static final String AUTHORIZATION_HEADER = "Authorization";
-  private static final String TOKEN_PREFIX = "Bearer ";
+  private UserDetailsService userDetailsService;
 
   @Override
   public UserProfile getInternalUserProfile() {
+    
+    String userEmail = userDetailsService.getUserDetails().getEmail();
+    UriComponents uriComponents = UriComponentsBuilder.fromHttpUrl(externalUserUrl).
+        queryParam("userEmail", userEmail).build();
     HttpHeaders headers = new HttpHeaders();
-    headers.add(AUTHORIZATION_HEADER, TOKEN_PREFIX + apiTokenService.getUserToken());
-
+  
     HttpEntity<String> requestUpdate = new HttpEntity<>("", headers);
     ResponseEntity<UserProfile> response =
-        restTemplate.exchange(profileUrl, HttpMethod.GET, requestUpdate, UserProfile.class);
+        restTemplate.exchange(uriComponents.toUriString(), HttpMethod.GET, requestUpdate, UserProfile.class);
     return response.getBody();
   }
 
   @Override
   public UserProfile getUserProfileById(String id) {
-
-    String url = userProfileById + "/" + id;
-
+    UriComponents uriComponents = UriComponentsBuilder.fromHttpUrl(externalUserUrl).
+        queryParam("userId", id).build();
     HttpHeaders headers = new HttpHeaders();
-    headers.add(AUTHORIZATION_HEADER, TOKEN_PREFIX + apiTokenService.getUserToken());
-
+  
     HttpEntity<String> requestUpdate = new HttpEntity<>("", headers);
     ResponseEntity<UserProfile> response =
-        restTemplate.exchange(url, HttpMethod.GET, requestUpdate, UserProfile.class);
+        restTemplate.exchange(uriComponents.toUriString(), HttpMethod.GET, requestUpdate, UserProfile.class);
     return response.getBody();
   }
 

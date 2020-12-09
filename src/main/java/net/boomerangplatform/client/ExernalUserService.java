@@ -2,7 +2,7 @@ package net.boomerangplatform.client;
 
 import net.boomerangplatform.client.model.UserProfile;
 
-public interface BoomerangUserService {
+public interface ExernalUserService {
 
   public UserProfile getInternalUserProfile();
 

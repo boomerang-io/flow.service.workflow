@@ -18,7 +18,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
-import net.boomerangplatform.client.BoomerangCICDService;
+import net.boomerangplatform.client.ExternalTeamService;
 import net.boomerangplatform.client.BoomerangUserService;
 import net.boomerangplatform.client.model.Team;
 import net.boomerangplatform.client.model.UserProfile;
@@ -89,7 +89,7 @@ public class TeamServiceImpl implements TeamService {
   private FlowUserService flowUserService;
   
   @Autowired
-  private BoomerangCICDService cicdService;
+  private ExternalTeamService externalTeamService;
 
   @Override
   public FlowTeam createStandaloneTeam(String name) {
@@ -143,7 +143,7 @@ public class TeamServiceImpl implements TeamService {
     
     List<FlowTeamEntity> flowTeams = null;
     if (!flowExternalUrlTeam.isBlank()) {
-      flowTeams = this.cicdService.getCICDTeams();
+      flowTeams = this.externalTeamService.getExternalTeams(flowExternalUrlTeam);
     }
     else {
       final Page<FlowTeamEntity> paginatedTeamList = flowTeamService.findAllTeams(Pageable.unpaged());
@@ -180,7 +180,7 @@ public class TeamServiceImpl implements TeamService {
     
     List<FlowTeamEntity> flowTeam = null;
     if (!flowExternalUrlTeam.isBlank()) {
-      flowTeam = this.cicdService.getCICDTeams();
+      flowTeam = this.externalTeamService.getExternalTeams(flowExternalUrlTeam);
     }
     else {
       flowTeam =

@@ -3,7 +3,7 @@ package net.boomerangplatform.client.model;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class CICDTeam {
+public class ExternalTeam {
     
     public String getName() {
         return name;

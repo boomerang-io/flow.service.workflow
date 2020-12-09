@@ -29,11 +29,7 @@ public class UserProfile {
   private String firstLoginDate;
   @JsonProperty("lastLoginDate")
   private String lastLoginDate;
-<<<<<<< HEAD
-  @JsonProperty("lowerLevelGroupIds")
-=======
   @JsonProperty("lowerLevelGroups")
->>>>>>> release-3.0.1
   private List<LowerLevelGroup> lowerLevelGroups = null;
   @JsonProperty("pinnedToolIds")
   private List<Object> pinnedToolIds = null;
@@ -133,11 +129,7 @@ public class UserProfile {
   }
 
   @JsonProperty("lowerLevelGroups")
-<<<<<<< HEAD
   public void setLowerLevelGroups(List<LowerLevelGroup> lowerLevelGroups) {
-=======
-  public void setLowerLevelGroupIds(List<LowerLevelGroup> lowerLevelGroups) {
->>>>>>> release-3.0.1
     this.lowerLevelGroups = lowerLevelGroups;
   }
 

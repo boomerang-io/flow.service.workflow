@@ -2,6 +2,9 @@ package net.boomerangplatform.client;
 
 import java.util.LinkedList;
 import java.util.List;
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -12,17 +15,15 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
-import net.boomerangplatform.client.model.CICDTeam;
+import net.boomerangplatform.client.model.ExternalTeam;
 import net.boomerangplatform.mongo.entity.FlowTeamEntity;
 import net.boomerangplatform.mongo.model.Quotas;
 import net.boomerangplatform.security.service.ApiTokenService;
 
 @Service
-public class BoomerangCICDServiceImpl implements BoomerangCICDService {
-
-  @Value("${cicd.teams.url}")
-  private String teamUrl;
+public class ExternalTeamServiceImpl implements ExternalTeamService {
 
   @Autowired
   @Qualifier("internalRestTemplate")
@@ -49,37 +50,46 @@ public class BoomerangCICDServiceImpl implements BoomerangCICDService {
   @Value("${max.concurrent.workflows}")
   private Integer maxConcurrentWorkflows;
 
+  private static final Logger LOGGER = LogManager.getLogger(ExternalTeamServiceImpl.class);
+  
   @Override
-  public List<FlowTeamEntity> getCICDTeams() {
-    final HttpHeaders headers = buildHeaders();
-    final HttpEntity<String> request = new HttpEntity<>(headers);
-
-    ResponseEntity<List<CICDTeam>> response = restTemplate.exchange(teamUrl, HttpMethod.GET,
-        request, new ParameterizedTypeReference<List<CICDTeam>>() {});
-    List<CICDTeam> allTeams = response.getBody();
+  public List<FlowTeamEntity> getExternalTeams(String url) {
     
     List<FlowTeamEntity> flowTeams = new LinkedList<>();
     
-    for (CICDTeam team : allTeams) {
-      FlowTeamEntity newTeam = new FlowTeamEntity();
-      newTeam.setId(team.getId());
-      newTeam.setName(team.getName());
-      newTeam.setIsActive(true);
-      newTeam.setHigherLevelGroupId(team.getId());
+    try {
+      final HttpHeaders headers = buildHeaders();
+      final HttpEntity<String> request = new HttpEntity<>(headers);
+
+      ResponseEntity<List<ExternalTeam>> response = restTemplate.exchange(url, HttpMethod.GET,
+          request, new ParameterizedTypeReference<List<ExternalTeam>>() {});
+      List<ExternalTeam> allTeams = response.getBody();
       
-      if(newTeam.getQuotas() == null) {
-        Quotas quotas = new Quotas();
-        quotas.setMaxWorkflowCount(maxWorkflowCount);
-        quotas.setMaxWorkflowExecutionMonthly(maxWorkflowExecutionMonthly);
-        quotas.setMaxWorkflowStorage(maxWorkflowStorage);
-        quotas.setMaxWorkflowExecutionTime(maxWorkflowExecutionTime);
-        quotas.setMaxConcurrentWorkflows(maxConcurrentWorkflows);
-        newTeam.setQuotas(quotas);
-      }
-      
-      flowTeams.add(newTeam);
-    }
     
+      for (ExternalTeam team : allTeams) {
+        FlowTeamEntity newTeam = new FlowTeamEntity();
+        newTeam.setId(team.getId());
+        newTeam.setName(team.getName());
+        newTeam.setIsActive(true);
+        newTeam.setHigherLevelGroupId(team.getId());
+        
+        if(newTeam.getQuotas() == null) {
+          Quotas quotas = new Quotas();
+          quotas.setMaxWorkflowCount(maxWorkflowCount);
+          quotas.setMaxWorkflowExecutionMonthly(maxWorkflowExecutionMonthly);
+          quotas.setMaxWorkflowStorage(maxWorkflowStorage);
+          quotas.setMaxWorkflowExecutionTime(maxWorkflowExecutionTime);
+          quotas.setMaxConcurrentWorkflows(maxConcurrentWorkflows);
+          newTeam.setQuotas(quotas);
+        }
+        
+        flowTeams.add(newTeam);
+      }
+    } catch (RestClientException e) {
+      LOGGER.error("Error retrievign teams");
+      LOGGER.error(ExceptionUtils.getStackTrace(e));
+    }
+   
     return flowTeams;
   }
 
