@@ -12,7 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
-import net.boomerangplatform.client.BoomerangUserService;
+import net.boomerangplatform.client.ExernalUserService;
 import net.boomerangplatform.client.model.UserProfile;
 import net.boomerangplatform.model.FlowUser;
 import net.boomerangplatform.model.OneTimeCode;
@@ -33,7 +33,7 @@ public class UserIdentityServiceImpl implements UserIdentityService {
   private UserDetailsService usertDetailsService;
 
   @Autowired
-  private BoomerangUserService coreUserService;
+  private ExernalUserService coreUserService;
 
   @Autowired
   private FlowUserService flowUserService;

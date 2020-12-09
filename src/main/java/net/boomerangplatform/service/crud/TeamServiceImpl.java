@@ -19,7 +19,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import net.boomerangplatform.client.ExternalTeamService;
-import net.boomerangplatform.client.BoomerangUserService;
+import net.boomerangplatform.client.ExernalUserService;
 import net.boomerangplatform.client.model.Team;
 import net.boomerangplatform.client.model.UserProfile;
 import net.boomerangplatform.model.FlowTeam;
@@ -56,7 +56,7 @@ public class TeamServiceImpl implements TeamService {
   private WorkflowVersionService workflowVersionService;
 
   @Autowired
-  private BoomerangUserService boomerangUserService;
+  private ExernalUserService boomerangUserService;
 
   @Autowired
   private UserIdentityService userIdentiyService;

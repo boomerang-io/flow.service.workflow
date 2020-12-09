@@ -22,7 +22,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.web.client.MockRestServiceServer;
 import net.boomerangplatform.Application;
-import net.boomerangplatform.client.BoomerangUserService;
+import net.boomerangplatform.client.ExernalUserService;
 import net.boomerangplatform.client.model.UserProfile;
 import net.boomerangplatform.misc.FlowTests;
 import net.boomerangplatform.tests.MongoConfig;
@@ -36,7 +36,7 @@ import net.boomerangplatform.tests.MongoConfig;
 public class BoomerangUserServiceTests extends FlowTests {
 
   @Autowired
-  private BoomerangUserService userService;
+  private ExernalUserService userService;
 
   @Test
   public void testGetUserProfile() {
