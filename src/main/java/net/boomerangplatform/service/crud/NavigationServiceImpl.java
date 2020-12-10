@@ -35,7 +35,7 @@ public class NavigationServiceImpl implements NavigationService {
   @Override
   public List<Navigation> getNavigation(boolean isUserAdmin) {
 
-    if (!flowExternalUrlNavigation.isBlank()) {
+    if (flowExternalUrlNavigation.isBlank()) {
       List<Navigation> response = new ArrayList<>();
       Navigation workflows = new Navigation();
       workflows.setName("Workflows");
