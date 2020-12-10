@@ -638,4 +638,24 @@ public class WorkflowServiceImpl implements WorkflowService {
 
     workFlowRepository.saveWorkflow(entity);
   }
+
+  @Override
+  public List<WorkflowSummary> getSystemWorkflows() {
+    final List<WorkflowEntity> list = workFlowRepository.getSystemWorkflows();
+    
+    final List<WorkflowSummary> newList = new LinkedList<>();
+    for (final WorkflowEntity entity : list) {
+
+      setupTriggerDefaults(entity);
+
+      final WorkflowSummary summary = new WorkflowSummary(entity);
+      updateSummaryInformation(summary);
+
+      if (WorkflowStatus.active == entity.getStatus()) {
+        newList.add(summary);
+      }
+
+    }
+    return newList;
+  }
 }

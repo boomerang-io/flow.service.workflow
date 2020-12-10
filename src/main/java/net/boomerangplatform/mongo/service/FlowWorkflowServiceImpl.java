@@ -4,6 +4,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import net.boomerangplatform.mongo.entity.WorkflowEntity;
+import net.boomerangplatform.mongo.model.WorkflowScope;
 import net.boomerangplatform.mongo.repository.FlowWorkflowRepository;
 
 @Service
@@ -60,5 +61,11 @@ public class FlowWorkflowServiceImpl implements FlowWorkflowService {
   @Override
   public List<WorkflowEntity> getAllWorkflows() {
     return workFlowRepository.findAll();
+  }
+
+  @Override
+  public List<WorkflowEntity> getSystemWorkflows() {
+    // TODO Auto-generated method stub
+    return workFlowRepository.findByScope(WorkflowScope.system);
   }
 }

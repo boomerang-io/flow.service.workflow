@@ -42,4 +42,6 @@ public interface WorkflowService {
   ResponseEntity<HttpStatus> validateWorkflowToken(String id, GenerateTokenResponse tokenPayload);
 
   void deleteToken(String id, String label);
+
+  List<WorkflowSummary> getSystemWorkflows();
 }

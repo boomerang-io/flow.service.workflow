@@ -5,6 +5,6 @@ import net.boomerangplatform.model.Navigation;
 
 public interface NavigationService {
 
-  List<Navigation> getNavigation(boolean isUserAdmin);
+  List<Navigation> getNavigation(boolean isUserAdmin, String teamId);
 
 }

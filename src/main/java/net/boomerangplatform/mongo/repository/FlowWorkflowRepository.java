@@ -4,6 +4,7 @@ import java.util.List;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 import net.boomerangplatform.mongo.entity.WorkflowEntity;
+import net.boomerangplatform.mongo.model.WorkflowScope;
 
 public interface FlowWorkflowRepository extends MongoRepository<WorkflowEntity, String> {
 
@@ -22,4 +23,6 @@ public interface FlowWorkflowRepository extends MongoRepository<WorkflowEntity, 
 
   @Query("{ 'triggers.event.enable' : true, 'triggers.event.topic' : ?0 }")
   List<WorkflowEntity> findAllEventWorkflowsForTopic(String topic);
+
+  List<WorkflowEntity> findByScope(WorkflowScope system);
 }

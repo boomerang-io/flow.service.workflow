@@ -7,6 +7,7 @@ import org.springframework.http.CacheControl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import net.boomerangplatform.model.Navigation;
 import net.boomerangplatform.mongo.entity.FlowUserEntity;
@@ -25,14 +26,14 @@ public class NavigationController {
   private UserIdentityService userService;
 
   @GetMapping(value = "")
-  ResponseEntity<List<Navigation>> getNavigation() {
+  ResponseEntity<List<Navigation>> getNavigation(@RequestParam(required = false) String teamId) {
     boolean isUserAdmin = false;
     final FlowUserEntity userEntity = userService.getCurrentUser();
     if (userEntity != null
         && (userEntity.getType() == UserType.admin || userEntity.getType() == UserType.operator)) {
       isUserAdmin = true;
     }
-    List<Navigation> response = navigationService.getNavigation(isUserAdmin);
+    List<Navigation> response = navigationService.getNavigation(isUserAdmin, teamId);
     
     CacheControl cacheControl = CacheControl.maxAge(1, TimeUnit.HOURS);
 

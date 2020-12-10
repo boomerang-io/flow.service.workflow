@@ -12,6 +12,8 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponents;
+import org.springframework.web.util.UriComponentsBuilder;
 import net.boomerangplatform.model.Navigation;
 import net.boomerangplatform.model.NavigationType;
 import net.boomerangplatform.security.service.ApiTokenService;
@@ -33,7 +35,7 @@ public class NavigationServiceImpl implements NavigationService {
   private RestTemplate restTemplate;
 
   @Override
-  public List<Navigation> getNavigation(boolean isUserAdmin) {
+  public List<Navigation> getNavigation(boolean isUserAdmin, String teamId) {
 
     if (flowExternalUrlNavigation.isBlank()) {
       List<Navigation> response = new ArrayList<>();
@@ -123,11 +125,20 @@ public class NavigationServiceImpl implements NavigationService {
 
     else {
 
+      UriComponentsBuilder uriComponentsBuilder =
+          UriComponentsBuilder.fromHttpUrl(flowExternalUrlNavigation);
+      UriComponents uriComponents = null;
+
+      if (teamId == null || teamId.isBlank()) {
+        uriComponents = uriComponentsBuilder.build();
+      } else {
+        uriComponents = uriComponentsBuilder.queryParam("teamId", teamId).build();
+      }
+
       HttpHeaders headers = new HttpHeaders();
       headers.add(AUTHORIZATION_HEADER, TOKEN_PREFIX + apiTokenService.getUserToken());
-
       HttpEntity<String> request = new HttpEntity<>(headers);
-      ResponseEntity<List<Navigation>> response = restTemplate.exchange(flowExternalUrlNavigation,
+      ResponseEntity<List<Navigation>> response = restTemplate.exchange(uriComponents.toUriString(),
           HttpMethod.GET, request, new ParameterizedTypeReference<List<Navigation>>() {});
       return response.getBody();
     }

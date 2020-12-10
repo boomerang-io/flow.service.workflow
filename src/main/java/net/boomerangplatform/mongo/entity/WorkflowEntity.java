@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import net.boomerangplatform.model.WorkflowToken;
 import net.boomerangplatform.mongo.model.FlowProperty;
 import net.boomerangplatform.mongo.model.Triggers;
+import net.boomerangplatform.mongo.model.WorkflowScope;
 import net.boomerangplatform.mongo.model.WorkflowStatus;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -36,6 +37,8 @@ public class WorkflowEntity {
   private List<WorkflowToken> tokens;
 
   private boolean enablePersistentStorage;
+  
+  private WorkflowScope scope;
 
   public List<WorkflowToken> getTokens() {
     return tokens;
@@ -133,6 +136,14 @@ public class WorkflowEntity {
 
   public void setEnableACCIntegration(boolean enableACCIntegration) {
     this.enableACCIntegration = enableACCIntegration;
+  }
+
+  public WorkflowScope getScope() {
+    return scope;
+  }
+
+  public void setScope(WorkflowScope scope) {
+    this.scope = scope;
   }
 
 
