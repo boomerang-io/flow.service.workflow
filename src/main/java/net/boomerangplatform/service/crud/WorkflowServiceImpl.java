@@ -39,6 +39,7 @@ import net.boomerangplatform.mongo.model.Trigger;
 import net.boomerangplatform.mongo.model.TriggerEvent;
 import net.boomerangplatform.mongo.model.TriggerScheduler;
 import net.boomerangplatform.mongo.model.Triggers;
+import net.boomerangplatform.mongo.model.WorkflowScope;
 import net.boomerangplatform.mongo.model.WorkflowStatus;
 import net.boomerangplatform.mongo.model.next.DAGTask;
 import net.boomerangplatform.mongo.service.FlowTaskTemplateService;
@@ -419,7 +420,7 @@ public class WorkflowServiceImpl implements WorkflowService {
   }
 
   @Override
-  public void importWorkflow(WorkflowExport export, Boolean update, String flowTeamId) {
+  public void importWorkflow(WorkflowExport export, Boolean update, String flowTeamId, WorkflowScope scope) {
 
     List<FlowTaskTemplateEntity> templates = templateService.getAllTaskTemplates();
     List<String> templateIds = new ArrayList<>();
@@ -453,6 +454,19 @@ public class WorkflowServiceImpl implements WorkflowService {
         entity.setEnablePersistentStorage(export.isEnablePersistentStorage());
         entity.setProperties(export.getProperties());
         entity.setTriggers(export.getTriggers());
+        entity.setScope(scope);
+        
+        entity.setScope(scope);
+        
+        if (WorkflowScope.team.equals(scope)) {
+          if (flowTeamId != null && flowTeamId.length() != 0) {
+            entity.setFlowTeamId(flowTeamId);
+          } else {
+            entity.setFlowTeamId(export.getFlowTeamId());
+          }
+        } else {
+          entity.setFlowTeamId(null);
+        }
 
         workFlowRepository.saveWorkflow(entity);
 
@@ -467,12 +481,18 @@ public class WorkflowServiceImpl implements WorkflowService {
         newEntity.setProperties(export.getProperties());
         newEntity.setDescription(export.getDescription());
 
-        if (flowTeamId != null && flowTeamId.length() != 0) {
-          newEntity.setFlowTeamId(flowTeamId);
+        
+        newEntity.setScope(scope);
+        if (WorkflowScope.team.equals(scope)) {
+          if (flowTeamId != null && flowTeamId.length() != 0) {
+            newEntity.setFlowTeamId(flowTeamId);
+          } else {
+            newEntity.setFlowTeamId(export.getFlowTeamId());
+          }
         } else {
-          newEntity.setFlowTeamId(export.getFlowTeamId());
+          newEntity.setFlowTeamId(null);
         }
-
+        
         newEntity.setName(export.getName());
         newEntity.setShortDescription(export.getShortDescription());
         newEntity.setStatus(export.getStatus());

@@ -12,6 +12,7 @@ import net.boomerangplatform.model.WorkflowSummary;
 import net.boomerangplatform.mongo.entity.WorkflowEntity;
 import net.boomerangplatform.mongo.model.FlowProperty;
 import net.boomerangplatform.mongo.model.FlowTriggerEnum;
+import net.boomerangplatform.mongo.model.WorkflowScope;
 
 public interface WorkflowService {
 
@@ -31,7 +32,7 @@ public interface WorkflowService {
 
   ResponseEntity<InputStreamResource> exportWorkflow(String workFlowId);
 
-  void importWorkflow(WorkflowExport export, Boolean update, String flowTeamId);
+  void importWorkflow(WorkflowExport export, Boolean update, String flowTeamId, WorkflowScope scope);
   
   boolean canExecuteWorkflowForQuotas(String teamId);
 

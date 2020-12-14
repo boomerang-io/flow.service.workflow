@@ -25,6 +25,7 @@ import net.boomerangplatform.model.RevisionResponse;
 import net.boomerangplatform.model.WorkflowExport;
 import net.boomerangplatform.model.WorkflowSummary;
 import net.boomerangplatform.mongo.model.FlowProperty;
+import net.boomerangplatform.mongo.model.WorkflowScope;
 import net.boomerangplatform.mongo.model.WorkflowStatus;
 import net.boomerangplatform.service.crud.WorkflowService;
 import net.boomerangplatform.service.crud.WorkflowVersionService;
@@ -126,8 +127,8 @@ public class WorkflowController {
 
   @PostMapping(value = "/import")
   public void importWorkflow(@RequestBody WorkflowExport export, @RequestParam Boolean update,
-      @RequestParam(defaultValue = "") String flowTeamId) {
-    workflowService.importWorkflow(export, update, flowTeamId);
+      @RequestParam(required=false) String flowTeamId, @RequestParam(required=true) WorkflowScope scope) {
+    workflowService.importWorkflow(export, update, flowTeamId, scope);
   }
 
 }

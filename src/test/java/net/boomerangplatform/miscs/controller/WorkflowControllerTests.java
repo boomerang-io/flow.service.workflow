@@ -40,15 +40,15 @@ import net.boomerangplatform.model.WorkflowExport;
 import net.boomerangplatform.model.WorkflowShortSummary;
 import net.boomerangplatform.model.WorkflowSummary;
 import net.boomerangplatform.model.projectstormv5.RestConfig;
-import net.boomerangplatform.mongo.entity.WorkflowEntity;
 import net.boomerangplatform.mongo.entity.RevisionEntity;
+import net.boomerangplatform.mongo.entity.WorkflowEntity;
 import net.boomerangplatform.mongo.model.FlowProperty;
-import net.boomerangplatform.mongo.model.FlowTriggerEnum;
-import net.boomerangplatform.mongo.model.TriggerScheduler;
 import net.boomerangplatform.mongo.model.TaskConfigurationNode;
 import net.boomerangplatform.mongo.model.TriggerEvent;
+import net.boomerangplatform.mongo.model.TriggerScheduler;
 import net.boomerangplatform.mongo.model.Triggers;
 import net.boomerangplatform.mongo.model.WorkflowConfiguration;
+import net.boomerangplatform.mongo.model.WorkflowScope;
 import net.boomerangplatform.mongo.model.WorkflowStatus;
 import net.boomerangplatform.tests.MongoConfig;
 
@@ -187,7 +187,7 @@ public class WorkflowControllerTests extends FlowTests {
 
     export.setLatestRevision(revision);
 
-    controller.importWorkflow(export, true, "");
+    controller.importWorkflow(export, true, "", WorkflowScope.team);
 
     WorkflowSummary summary = controller.getWorkflowWithId("5d1a188af6ca2c00014c4314");
     assertEquals("test", summary.getDescription());
@@ -200,7 +200,7 @@ public class WorkflowControllerTests extends FlowTests {
     String json = new String(Files.readAllBytes(resource.toPath()));
     ObjectMapper objectMapper = new ObjectMapper();
     WorkflowExport importedWorkflow = objectMapper.readValue(json, WorkflowExport.class);
-    controller.importWorkflow(importedWorkflow, false, "");
+    controller.importWorkflow(importedWorkflow, false, "", WorkflowScope.team);
     assertTrue(true);
   }
 
