@@ -70,6 +70,9 @@ public class TeamServiceImpl implements TeamService {
   @Value("${flow.externalUrl.team}")
   private String flowExternalUrlTeam;
   
+  @Value("${flow.externalUrl.user}")
+  private String flowExternalUrlUser;
+  
   @Value("${max.workflow.count}")
   private Integer maxWorkflowCount;
 
@@ -166,7 +169,7 @@ public class TeamServiceImpl implements TeamService {
   public List<TeamWorkflowSummary> getUserTeams(FlowUserEntity userEntity) {
 
     List<String> highLevelGroupIds = new LinkedList<>();
-    if (flowExternalUrlTeam.isBlank()) {
+    if (flowExternalUrlUser.isBlank()) {
       highLevelGroupIds = userEntity.getFlowTeams();
     } else {
       UserProfile profile = boomerangUserService.getInternalUserProfile();

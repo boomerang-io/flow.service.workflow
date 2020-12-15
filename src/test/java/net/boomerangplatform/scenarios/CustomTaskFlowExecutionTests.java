@@ -24,22 +24,21 @@ import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.web.client.MockRestServiceServer;
-import net.boomerangplatform.Application;
 import net.boomerangplatform.model.FlowActivity;
 import net.boomerangplatform.model.FlowExecutionRequest;
 import net.boomerangplatform.service.crud.FlowActivityService;
 import net.boomerangplatform.tests.IntegrationTests;
-import net.boomerangplatform.tests.MongoConfig;
 
-@SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT)
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = {Application.class, MongoConfig.class})
+@SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT)
 @ActiveProfiles("local")
-
+@WithMockUser(roles = {"admin"})
+@WithUserDetails("mdroy@us.ibm.com")
 public class CustomTaskFlowExecutionTests extends IntegrationTests {
 
   @Autowired
@@ -73,9 +72,9 @@ public class CustomTaskFlowExecutionTests extends IntegrationTests {
     super.setUp();
     mockServer = MockRestServiceServer.bindTo(restTemplate).ignoreExpectOrder(true).build();
     mockServer
-        .expect(manyTimes(), requestTo(containsString("http://localhost:8084/launchpad/users")))
+        .expect(manyTimes(), requestTo(containsString("http://localhost:8084/internal/users/user")))
         .andExpect(method(HttpMethod.GET)).andRespond(
-            withSuccess(getMockFile("mock/launchpad/users.json"), MediaType.APPLICATION_JSON));
+            withSuccess(getMockFile("mock/users/users.json"), MediaType.APPLICATION_JSON));
     mockServer.expect(times(1), requestTo(containsString("controller/workflow/create")))
         .andExpect(method(HttpMethod.POST)).andRespond(withStatus(HttpStatus.OK));
     

@@ -1,0 +1,64 @@
+{
+    "id": "5fd3a171b571365407e5484a",
+    "email": "trbula@us.ibm.com",
+    "name": "Marcus Roy",
+    "isFirstVisit": false,
+    "type": "admin",
+    "isShowHelp": null,
+    "firstLoginDate": null,
+    "lastLoginDate": "2020-12-14T23:02:29.928+00:00",
+    "lowerLevelGroups": null,
+    "pinnedToolIds": null,
+    "favoritePackages": null,
+    "personalizations": null,
+    "notificationSettings": null,
+    "status": "active",
+    "projects": null,
+	"teams": [
+		{
+			"id": "5eebc45aee818f597e7f7448",
+			"name": "MarcusTest",
+			"shortName": "MarcusTest",
+			"owners": [
+				{
+					"ownerId": "5e736fb0a97b78000125ebe3",
+					"ownerEmail": "mdroy@us.ibm.com",
+					"ownerName": "Marcus Roy"
+				}
+			],
+			"purpose": "MarcusTest",
+			"dateCreated": "2020-04-17T16:02:12.581+00:00",
+			"isActive": true,
+			"newRelicRestApiKey": null,
+			"newRelicQueryKey": null,
+			"newRelicAccountId": null,
+			"autoApproveRequests": false,
+			"privateTeam": true,
+			"ldapName": "MarcusTest",
+			"lowLevelGroupId": "5e99d3043394fa00012a601f"
+		},
+		{
+			"id": "5cedb53261a23a0001e4c1b6",
+			"name": "MarcusTest",
+			"shortName": "MarcusTest",
+			"owners": [
+				{
+					"ownerId": "5e736fb0a97b78000125ebe3",
+					"ownerEmail": "mdroy@us.ibm.com",
+					"ownerName": "Marcus Roy"
+				}
+			],
+			"purpose": "MarcusTest",
+			"dateCreated": "2020-04-17T16:02:12.581+00:00",
+			"isActive": true,
+			"newRelicRestApiKey": null,
+			"newRelicQueryKey": null,
+			"newRelicAccountId": null,
+			"autoApproveRequests": false,
+			"privateTeam": true,
+			"ldapName": "MarcusTest",
+			"lowLevelGroupId": "5e99d3043394fa00012a601f"
+		}
+	],
+    "hasConsented": null
+}

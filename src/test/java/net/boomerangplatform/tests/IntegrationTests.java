@@ -35,7 +35,6 @@ import net.boomerangplatform.model.Approval;
 import net.boomerangplatform.model.ApprovalRequest;
 import net.boomerangplatform.model.FlowActivity;
 import net.boomerangplatform.model.FlowExecutionRequest;
-import net.boomerangplatform.model.WorkflowShortSummary;
 
 
 public abstract class IntegrationTests extends AbstractFlowTests {
@@ -194,12 +193,27 @@ public abstract class IntegrationTests extends AbstractFlowTests {
     headers.add("Content-type", "application/json");
     HttpEntity<String> requestUpdate = new HttpEntity<>("", headers);
 
-    ResponseEntity<FlowActivity> latestActivity =
+    ResponseEntity<String> latestActivity =
         testRestTemplate.exchange("http://localhost:" + port + "/workflow/activity/" + id,
-            HttpMethod.GET, requestUpdate, FlowActivity.class);
-    FlowActivity finalActivity = latestActivity.getBody();
-    logPayload(finalActivity);
-    return finalActivity;
+            HttpMethod.GET, requestUpdate, String.class);
+    
+    String str = latestActivity.getBody();
+    System.out.println(str);
+    
+    ObjectMapper mapper = new ObjectMapper();
+   
+    FlowActivity finalActivity;
+    try {
+      finalActivity = mapper.readValue(str, FlowActivity.class);
+      logPayload(finalActivity);
+      return finalActivity;
+    } catch (JsonProcessingException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+
+    return null;
+
   }
 
   private void logPayload(FlowActivity request) {
@@ -218,9 +232,9 @@ public abstract class IntegrationTests extends AbstractFlowTests {
   public void setUp() throws IOException {
     super.setUp();
     mockServer = MockRestServiceServer.bindTo(this.restTemplate).ignoreExpectOrder(true).build();
-    mockServer.expect(times(1), requestTo(containsString("http://localhost:8084/launchpad/users")))
+    mockServer.expect(times(1), requestTo(containsString("http://localhost:8084/internal/users/user")))
         .andExpect(method(HttpMethod.GET)).andRespond(
-            withSuccess(getMockFile("mock/launchpad/users.json"), MediaType.APPLICATION_JSON));
+            withSuccess(getMockFile("mock/users/users.json"), MediaType.APPLICATION_JSON));
 
     mockServer.expect(times(1), requestTo(containsString("controller/workflow/create")))
         .andExpect(method(HttpMethod.POST)).andRespond(withStatus(HttpStatus.OK));

@@ -17,19 +17,19 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.web.client.MockRestServiceServer;
-import net.boomerangplatform.Application;
 import net.boomerangplatform.model.FlowActivity;
 import net.boomerangplatform.tests.IntegrationTests;
-import net.boomerangplatform.tests.MongoConfig;
 
-@SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT)
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = {Application.class, MongoConfig.class})
+@SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT)
 @ActiveProfiles("local")
+@WithMockUser(roles = {"admin"})
+@WithUserDetails("mdroy@us.ibm.com")
 public class InvalidFlowExecutionTests extends IntegrationTests {
 
   @Test
@@ -47,9 +47,9 @@ public class InvalidFlowExecutionTests extends IntegrationTests {
   public void setUp() throws IOException {
     super.setUp();
     mockServer = MockRestServiceServer.bindTo(this.restTemplate).ignoreExpectOrder(true).build();
-    mockServer.expect(times(1), requestTo(containsString("launchpad/users")))
+    mockServer.expect(times(1), requestTo(containsString("internal/users/user")))
         .andExpect(method(HttpMethod.GET)).andRespond(
-            withSuccess(getMockFile("mock/launchpad/users.json"), MediaType.APPLICATION_JSON));
+            withSuccess(getMockFile("mock/users/users.json"), MediaType.APPLICATION_JSON));
   }
 
   @Override

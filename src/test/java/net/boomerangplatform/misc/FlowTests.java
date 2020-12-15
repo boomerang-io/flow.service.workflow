@@ -109,11 +109,11 @@ public class FlowTests extends AbstractFlowTests {
         .expect(manyTimes(),
             requestTo(containsString("http://localhost:8084/internal/users/user/")))
         .andExpect(method(HttpMethod.GET)).andRespond(
-            withSuccess(getMockFile("mock/launchpad/users.json"), MediaType.APPLICATION_JSON));
+            withSuccess(getMockFile("mock/users/users.json"), MediaType.APPLICATION_JSON));
 
     mockServer
-        .expect(manyTimes(), requestTo(containsString("http://localhost:8084/launchpad/users")))
+        .expect(manyTimes(), requestTo(containsString("http://localhost:8084/internal/users/user")))
         .andExpect(method(HttpMethod.GET)).andRespond(
-            withSuccess(getMockFile("mock/launchpad/users.json"), MediaType.APPLICATION_JSON));
+            withSuccess(getMockFile("mock/users/users.json"), MediaType.APPLICATION_JSON));
   }
 }

@@ -18,17 +18,13 @@ import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.web.client.MockRestServiceServer;
-import net.boomerangplatform.Application;
 import net.boomerangplatform.client.ExernalUserService;
 import net.boomerangplatform.client.model.UserProfile;
 import net.boomerangplatform.misc.FlowTests;
-import net.boomerangplatform.tests.MongoConfig;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = {Application.class, MongoConfig.class})
 @SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT)
 @ActiveProfiles("local")
 @WithMockUser(roles = {"admin"})
@@ -41,7 +37,7 @@ public class BoomerangUserServiceTests extends FlowTests {
   @Test
   public void testGetUserProfile() {
     UserProfile userProfile = userService.getInternalUserProfile();
-    assertEquals( "mdroy@us.ibm.com", userProfile.getEmail());
+    assertEquals( "trbula@us.ibm.com", userProfile.getEmail());
   }
 
   @Override
@@ -52,9 +48,9 @@ public class BoomerangUserServiceTests extends FlowTests {
 
     mockServer = MockRestServiceServer.bindTo(restTemplate).ignoreExpectOrder(true).build();
     mockServer
-        .expect(manyTimes(), requestTo(containsString("http://localhost:8084/launchpad/users")))
+        .expect(manyTimes(), requestTo(containsString("http://localhost:8084/internal/users/user")))
         .andExpect(method(HttpMethod.GET)).andRespond(
-            withSuccess(getMockFile("mock/launchpad/users.json"), MediaType.APPLICATION_JSON));
+            withSuccess(getMockFile("mock/users/users.json"), MediaType.APPLICATION_JSON));
 
   }
 }
