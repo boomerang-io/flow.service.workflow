@@ -115,6 +115,13 @@ public class NavigationServiceImpl implements NavigationService {
         taskManager.setLink("/admin/task-templates");
         taskManager.setType(NavigationType.link);
         admin.getChildLinks().add(taskManager);
+        
+        Navigation systemWorkflows = new Navigation();
+        systemWorkflows.setName("System Workflows");          
+        systemWorkflows.setLink("/admin/system-workflows");
+        systemWorkflows.setType(NavigationType.link);
+        
+        admin.getChildLinks().add(systemWorkflows);
 
         response.add(admin);
 
