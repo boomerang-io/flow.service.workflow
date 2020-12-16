@@ -20,7 +20,6 @@ import net.boomerangplatform.service.UserIdentityService;
 
 @RestController
 @RequestMapping("/workflow/users")
-@ConditionalOnProperty(value = "flow.mode", havingValue = "standalone", matchIfMissing = false)
 public class UsersController {
 
   @Autowired
