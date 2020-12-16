@@ -12,11 +12,11 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.fasterxml.jackson.databind.JsonNode;
 import io.cloudevents.v1.CloudEventImpl;
 import net.boomerangplatform.model.FlowActivity;
+import net.boomerangplatform.model.FlowSettings;
 import net.boomerangplatform.model.FlowWebhookResponse;
 import net.boomerangplatform.model.GenerateTokenResponse;
 import net.boomerangplatform.model.RequestFlowExecution;
@@ -26,6 +26,7 @@ import net.boomerangplatform.mongo.model.internal.InternalTaskRequest;
 import net.boomerangplatform.mongo.model.internal.InternalTaskResponse;
 import net.boomerangplatform.service.EventProcessor;
 import net.boomerangplatform.service.WebhookService;
+import net.boomerangplatform.service.crud.ConfigurationService;
 import net.boomerangplatform.service.crud.WorkflowService;
 import net.boomerangplatform.service.refactor.TaskService;
 
@@ -44,6 +45,9 @@ public class InternalController {
   
   @Autowired
   private WebhookService webhookService;
+  
+  @Autowired
+  private ConfigurationService configurationService;
 
   @PostMapping(value = "/task/start")
   public void startTask(@RequestBody InternalTaskRequest request) {
@@ -59,6 +63,11 @@ public class InternalController {
   @GetMapping(value = "/workflows")
   public List<WorkflowShortSummary> getAllWorkflows() {
     return workflowService.getWorkflowShortSummaryList();
+  }
+  
+  @GetMapping(value = "/system-workflows")
+  public List<WorkflowShortSummary> getAllSystemworkflows() {
+    return workflowService.getSystemWorkflowShortSummaryList();
   }
   
   @PutMapping(value = "/workflow/event", consumes = "application/cloudevents+json; charset=utf-8")
@@ -84,4 +93,15 @@ public class InternalController {
     ) {
     return webhookService.getFlowActivity(activityId);
   }
+  
+  @GetMapping(value = "/workflow/settings")
+  public List<FlowSettings> getAppConfiguration() {
+    return configurationService.getAllSettings();
+  }
+
+  @PutMapping(value = "/workflow/settings")
+  public List<FlowSettings> updateSettings(@RequestBody List<FlowSettings> settings) {
+    return configurationService.updateSettings(settings);
+  }
+  
 }

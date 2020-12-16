@@ -44,4 +44,6 @@ public interface WorkflowService {
   void deleteToken(String id, String label);
 
   List<WorkflowSummary> getSystemWorkflows();
+
+  List<WorkflowShortSummary> getSystemWorkflowShortSummaryList();
 }
