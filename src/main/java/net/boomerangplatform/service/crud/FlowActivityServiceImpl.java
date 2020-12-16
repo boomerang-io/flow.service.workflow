@@ -14,6 +14,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -35,6 +37,7 @@ import net.boomerangplatform.model.FlowExecutionRequest;
 import net.boomerangplatform.model.InsightsSummary;
 import net.boomerangplatform.model.ListActivityResponse;
 import net.boomerangplatform.model.Sort;
+import net.boomerangplatform.model.TeamWorkflowSummary;
 import net.boomerangplatform.mongo.entity.ActivityEntity;
 import net.boomerangplatform.mongo.entity.FlowTeamEntity;
 import net.boomerangplatform.mongo.entity.FlowUserEntity;
@@ -43,12 +46,10 @@ import net.boomerangplatform.mongo.entity.TaskExecutionEntity;
 import net.boomerangplatform.mongo.entity.WorkflowEntity;
 import net.boomerangplatform.mongo.model.CoreProperty;
 import net.boomerangplatform.mongo.model.FlowTriggerEnum;
-import net.boomerangplatform.mongo.model.Revision;
 import net.boomerangplatform.mongo.model.TaskStatus;
 import net.boomerangplatform.mongo.model.TaskType;
-import net.boomerangplatform.mongo.model.next.DAGTask;
+import net.boomerangplatform.mongo.model.UserType;
 import net.boomerangplatform.mongo.service.ActivityTaskService;
-import net.boomerangplatform.mongo.service.FlowTaskTemplateService;
 import net.boomerangplatform.mongo.service.FlowTeamService;
 import net.boomerangplatform.mongo.service.FlowWorkflowActivityService;
 import net.boomerangplatform.mongo.service.FlowWorkflowService;
@@ -77,7 +78,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
 
   @Autowired
   private FlowTeamService flowTeamService;
-  
+
   @Value("${controller.rest.url.base}")
   private String controllerBaseUrl;
 
@@ -87,12 +88,14 @@ public class FlowActivityServiceImpl implements FlowActivityService {
   @Autowired
   @Qualifier("internalRestTemplate")
   private RestTemplate restTemplate;
-  
+
   @Autowired
   private FlowApprovalService approvalService;
   
   @Autowired
-  private FlowTaskTemplateService flowTaskTemplate;
+  private TeamService teamService;
+ 
+  private static final Logger LOGGER = LogManager.getLogger();
 
   private List<FlowActivity> convert(List<ActivityEntity> records) {
 
@@ -115,8 +118,8 @@ public class FlowActivityServiceImpl implements FlowActivityService {
   }
 
   @Override
-  public ActivityEntity createFlowActivity(String workflowVersionId,
-      Optional<String> trigger, FlowExecutionRequest request) {
+  public ActivityEntity createFlowActivity(String workflowVersionId, Optional<String> trigger,
+      FlowExecutionRequest request) {
     /* Create new one based of work flow version id. */
     final RevisionEntity entity = versionService.getWorkflowlWithId(workflowVersionId);
 
@@ -164,10 +167,42 @@ public class FlowActivityServiceImpl implements FlowActivityService {
       Optional<List<String>> statuses, Optional<List<String>> triggers, String property,
       Direction direction) {
 
+    
+    LOGGER.info("Getting activity listing");
+    
+    final FlowUserEntity user = userIdentityService.getCurrentUser();
+    List<String> teamIdList  = new LinkedList<>();
+    List<String> workflowIdsList  = new LinkedList<>();
+    
+    if (teamIds.isEmpty() && workflowIds.isEmpty()) {
+
+      if (user == null) {
+        return null;
+      } else if (user.getType() == UserType.admin) {
+        LOGGER.info("Getting all teams as admin.");
+        
+        List<TeamWorkflowSummary> teams = teamService.getAllTeams();
+        teamIdList =  teams.stream().map(TeamWorkflowSummary::getId).collect(Collectors.toList());
+      } else {
+        List<TeamWorkflowSummary> teams = teamService.getUserTeams(user);
+        LOGGER.info("Found teams: " + teams.size());
+        
+        teamIdList =  teams.stream().map(TeamWorkflowSummary::getId).collect(Collectors.toList());
+      }
+    } else {
+      teamIdList  = teamIds.get();
+    }
+ 
+    if (teamIdList != null) {
+        List<WorkflowEntity> workflows = this.workflowService.getWorkflowsForTeams(teamIdList);
+        LOGGER.info("Found workflows: " + workflows.size());
+        
+        workflowIdsList = workflows.stream().map(WorkflowEntity::getId).collect(Collectors.toList());
+    }
+     
     ListActivityResponse response = new ListActivityResponse();
     Page<ActivityEntity> records =
-        flowActivityService.getAllActivites(from, to, page, workflowIds, statuses, triggers);
-
+        flowActivityService.getAllActivites(from, to, page, Optional.of(workflowIdsList), statuses, triggers);
     final List<FlowActivity> activities = convert(records.getContent());
     List<FlowActivity> activitiesFiltered = new ArrayList<>();
 
@@ -175,8 +210,6 @@ public class FlowActivityServiceImpl implements FlowActivityService {
       String workFlowId = activity.getWorkflowId();
       addTeamInformation(teamIds, activitiesFiltered, activity, workFlowId);
     }
-
-
 
     if (!teamIds.isPresent()) {
       net.boomerangplatform.model.Pageable pageablefinal =
@@ -358,16 +391,17 @@ public class FlowActivityServiceImpl implements FlowActivityService {
 
   @Override
   public List<TaskExecutionEntity> getTaskExecutions(String activityId) {
-    
- 
+
+
     List<TaskExecutionEntity> activites = taskService.findTaskActiivtyForActivity(activityId);
     for (TaskExecutionEntity task : activites) {
-      if (TaskType.approval.equals(task.getTaskType()) || TaskType.manual.equals(task.getTaskType())) {
+      if (TaskType.approval.equals(task.getTaskType())
+          || TaskType.manual.equals(task.getTaskType())) {
         Approval approval = approvalService.getApprovalByTaskActivityId(task.getId());
         task.setApproval(approval);
       }
     }
-    
+
     return activites;
   }
 

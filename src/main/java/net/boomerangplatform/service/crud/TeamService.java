@@ -17,6 +17,9 @@ public interface TeamService {
 
   TeamQueryResult getAllAdminTeams(Pageable pageable);
 
+  List<TeamWorkflowSummary> getTeamListing(FlowUserEntity userEntity);
+  
+  List<TeamWorkflowSummary> getAllTeamListing();
 
   List<TeamWorkflowSummary> getAllTeams();
 

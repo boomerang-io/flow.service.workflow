@@ -26,11 +26,9 @@ import net.boomerangplatform.model.InsightsSummary;
 import net.boomerangplatform.model.ListActivityResponse;
 import net.boomerangplatform.mongo.entity.ActivityEntity;
 import net.boomerangplatform.mongo.entity.FlowTeamEntity;
-import net.boomerangplatform.mongo.entity.FlowUserEntity;
 import net.boomerangplatform.mongo.entity.TaskExecutionEntity;
 import net.boomerangplatform.mongo.service.FlowTeamService;
 import net.boomerangplatform.mongo.service.FlowWorkflowService;
-import net.boomerangplatform.service.UserIdentityService;
 import net.boomerangplatform.service.crud.FlowActivityService;
 
 @RestController
@@ -39,9 +37,6 @@ public class ActivityController {
 
   @Autowired
   private FlowActivityService flowActivityService;
-
-  @Autowired
-  private UserIdentityService userIdentityService;
 
   @Autowired
   private FlowWorkflowService workflowService;
@@ -74,30 +69,20 @@ public class ActivityController {
     if (sort.isPresent()) {
       Direction direction = Direction.ASC;
       final String sortByKey = sort.get();
-
       if (order.isPresent()) {
         direction = order.get();
 
       }
-
       pagingSort = Sort.by(new Order(direction, sortByKey));
     }
-
     final Pageable pageable = PageRequest.of(page, size, pagingSort);
-    final FlowUserEntity user = userIdentityService.getCurrentUser();
-
-    if (user == null) {
-      return null;
-    } else {
-      return flowActivityService.getAllActivites(from, to, pageable, workflowIds, teamIds, statuses,
-          triggers,sort.get(), order.get());
-    }
+    return flowActivityService.getAllActivites(from, to, pageable, workflowIds, teamIds, statuses,
+        triggers, sort.get(), order.get());
   }
 
   @GetMapping(value = "/activity/{activityId}")
   public FlowActivity getFlowActivity(@PathVariable String activityId) {
-    final ActivityEntity activity =
-        flowActivityService.findWorkflowActivity(activityId);
+    final ActivityEntity activity = flowActivityService.findWorkflowActivity(activityId);
 
     String workFlowId = activity.getWorkflowId();
     String teamId;
