@@ -13,7 +13,7 @@ import net.boomerangplatform.service.profile.LaunchpadNavigationService;
 
 @RestController
 @RequestMapping("/workflow/users/navigation")
-public class NavigationController {
+public class UsersNavigationController {
 
   @Autowired
   private LaunchpadNavigationService launchpadNavigationService;
