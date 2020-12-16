@@ -3,6 +3,7 @@ package net.boomerangplatform.service;
 import java.util.List;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import net.boomerangplatform.client.model.UserProfile;
 import net.boomerangplatform.model.FlowUser;
 import net.boomerangplatform.model.OneTimeCode;
 import net.boomerangplatform.model.UserQueryResult;
@@ -10,7 +11,7 @@ import net.boomerangplatform.mongo.entity.FlowUserEntity;
 
 public interface UserIdentityService {
 
-  public FlowUserEntity getOrRegisterCurrentUser();
+  public UserProfile getOrRegisterCurrentUser();
 
   public FlowUserEntity getCurrentUser();
 

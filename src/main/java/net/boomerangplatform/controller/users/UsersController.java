@@ -33,7 +33,7 @@ public class UsersController {
   @GetMapping(value = "/profile")
   public ResponseEntity<UserProfile> getUserWithEmail() {
     try {
-      FlowUserEntity currentUser = userIdentiyService.getOrRegisterCurrentUser();
+      UserProfile currentUser = userIdentiyService.getOrRegisterCurrentUser();
       if (currentUser != null) {
         UserProfile userProfile = new UserProfile();
         BeanUtils.copyProperties(currentUser, userProfile);

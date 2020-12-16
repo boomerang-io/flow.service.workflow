@@ -144,7 +144,7 @@ public class UserIdentityServiceImpl implements UserIdentityService {
   }
 
   @Override
-  public FlowUserEntity getOrRegisterCurrentUser() {
+  public UserProfile getOrRegisterCurrentUser() {
 
     if (flowExternalUrlUser.isBlank()) {
 
@@ -152,12 +152,14 @@ public class UserIdentityServiceImpl implements UserIdentityService {
         throw new HttpClientErrorException(HttpStatus.LOCKED);
       }
 
-      return getOrRegisterUser(UserType.user);
+      FlowUserEntity userEntity = getOrRegisterUser(UserType.user);
+      
+      UserProfile profile = new UserProfile();
+      BeanUtils.copyProperties(userEntity, profile);
+      return profile;
     } else {
       UserProfile userProfile = coreUserService.getInternalUserProfile();
-      FlowUserEntity flowUser = new FlowUserEntity();
-      BeanUtils.copyProperties(userProfile, flowUser);
-      return flowUser;
+      return userProfile;
     }
   }
 
