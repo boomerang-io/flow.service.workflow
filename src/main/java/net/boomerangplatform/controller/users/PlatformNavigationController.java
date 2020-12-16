@@ -1,7 +1,6 @@
 package net.boomerangplatform.controller.users;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -13,7 +12,7 @@ import net.boomerangplatform.service.profile.LaunchpadNavigationService;
 
 @RestController
 @RequestMapping("/workflow/users/navigation")
-public class UsersNavigationController {
+public class PlatformNavigationController {
 
   @Autowired
   private LaunchpadNavigationService launchpadNavigationService;
