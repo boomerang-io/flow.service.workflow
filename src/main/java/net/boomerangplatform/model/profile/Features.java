@@ -12,6 +12,17 @@ public class Features {
 
   @JsonProperty("docs.enabled")
   private Boolean docsEnabled;
+  
+  @JsonProperty("consent.enabled")
+  private Boolean consentEnabled;
+ 
+  public Boolean getConsentEnabled() {
+    return consentEnabled;
+  }
+
+  public void setConsentEnabled(Boolean consentEnabled) {
+    this.consentEnabled = consentEnabled;
+  }
 
   public Boolean getNotificationsEnabled() {
     return notificationsEnabled;

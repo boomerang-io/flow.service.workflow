@@ -44,6 +44,8 @@ public class LaunchpadNavigationServiceImpl implements LaunchpadNavigationServic
     features.setNotificationsEnabled(false);
     features.setDocsEnabled(false);
     features.setSupportEnabled(false);
+    features.setConsentEnabled(false);
+    
     navigationResponse.setFeatures(features);
 
     Platform platform = new Platform();
