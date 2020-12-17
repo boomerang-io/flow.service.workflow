@@ -38,6 +38,9 @@ public class NavigationServiceImpl implements NavigationService {
 
   @Autowired
   private FeatureService featureService;
+  
+  @Value("${flow.apps.url}")
+  private String flowAppsUrl;
 
   @Override
   public List<Navigation> getNavigation(boolean isUserAdmin, String teamId) {
@@ -50,21 +53,21 @@ public class NavigationServiceImpl implements NavigationService {
       workflows.setName("Workflows");
       workflows.setType(NavigationType.link);
       workflows.setIcon("FlowData16");
-      workflows.setLink("/workflows");
+      workflows.setLink(flowAppsUrl + "/workflows");
       response.add(workflows);
 
       Navigation activity = new Navigation();
       activity.setName("Activity");
       activity.setType(NavigationType.link);
       activity.setIcon("Activity16");
-      activity.setLink("/activity");
+      activity.setLink(flowAppsUrl + "/activity");
       response.add(activity);
 
       Navigation insights = new Navigation();
       insights.setName("Insights");
       insights.setType(NavigationType.link);
       insights.setIcon("ChartScatter16");
-      insights.setLink("/insights");
+      insights.setLink(flowAppsUrl + "/insights");
       response.add(insights);
 
       Navigation management = new Navigation();
@@ -75,7 +78,7 @@ public class NavigationServiceImpl implements NavigationService {
 
       Navigation teamProperties = new Navigation();
       teamProperties.setName("Team Properties");
-      teamProperties.setLink("/team-properties");
+      teamProperties.setLink(flowAppsUrl + "/team-properties");
       teamProperties.setType(NavigationType.link);
       management.getChildLinks().add(teamProperties);
       response.add(management);
@@ -90,7 +93,7 @@ public class NavigationServiceImpl implements NavigationService {
         if (((Boolean) features.getFeatures().get("team.management"))) {
           Navigation teams = new Navigation();
           teams.setName("Teams");
-          teams.setLink("/admin/teams");
+          teams.setLink( flowAppsUrl + "/admin/teams");
           teams.setType(NavigationType.link);
           admin.getChildLinks().add(teams);
         }
@@ -98,38 +101,38 @@ public class NavigationServiceImpl implements NavigationService {
         if (((Boolean) features.getFeatures().get("user.management"))) {
           Navigation users = new Navigation();
           users.setName("Users");
-          users.setLink("/admin/users");
+          users.setLink(flowAppsUrl + "/admin/users");
           users.setType(NavigationType.link);
           admin.getChildLinks().add(users);
         }
         
         Navigation properties = new Navigation();
         properties.setName("Properties");
-        properties.setLink("/admin/properties");
+        properties.setLink(flowAppsUrl + "/admin/properties");
         properties.setType(NavigationType.link);
         admin.getChildLinks().add(properties);
 
         Navigation quotas = new Navigation();
         quotas.setName("Quotas");
-        quotas.setLink("/admin/quotas");
+        quotas.setLink(flowAppsUrl + "/admin/quotas");
         quotas.setType(NavigationType.link);
         admin.getChildLinks().add(quotas);
 
         Navigation settings = new Navigation();
         settings.setName("Settings");
-        settings.setLink("/admin/settings");
+        settings.setLink(flowAppsUrl + "/admin/settings");
         settings.setType(NavigationType.link);
         admin.getChildLinks().add(settings);
 
         Navigation taskManager = new Navigation();
         taskManager.setName("Task Manager");
-        taskManager.setLink("/admin/task-templates");
+        taskManager.setLink(flowAppsUrl + "/admin/task-templates");
         taskManager.setType(NavigationType.link);
         admin.getChildLinks().add(taskManager);
 
         Navigation systemWorkflows = new Navigation();
         systemWorkflows.setName("System Workflows");
-        systemWorkflows.setLink("/admin/system-workflows");
+        systemWorkflows.setLink(flowAppsUrl + "/admin/system-workflows");
         systemWorkflows.setType(NavigationType.link);
 
         admin.getChildLinks().add(systemWorkflows);
