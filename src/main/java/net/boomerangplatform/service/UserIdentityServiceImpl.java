@@ -135,10 +135,11 @@ public class UserIdentityServiceImpl implements UserIdentityService {
 
   @Override
   public ResponseEntity<Boolean> activateSetup(OneTimeCode otc) {
-
-    if (corePlatformOTC.equals(otc.getOtc())) {
-      getOrRegisterUser(UserType.admin);
-      return new ResponseEntity<>(HttpStatus.OK);
+    if (flowExternalUrlUser.isBlank()) {
+      if (corePlatformOTC.equals(otc.getOtc())) {
+        getOrRegisterUser(UserType.admin);
+        return new ResponseEntity<>(HttpStatus.OK);
+      }
     }
     return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
   }

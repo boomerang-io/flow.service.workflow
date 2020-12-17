@@ -14,9 +14,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
+import net.boomerangplatform.model.FlowFeatures;
 import net.boomerangplatform.model.Navigation;
 import net.boomerangplatform.model.NavigationType;
 import net.boomerangplatform.security.service.ApiTokenService;
+import net.boomerangplatform.service.FeatureService;
 
 @Service
 public class NavigationServiceImpl implements NavigationService {
@@ -34,8 +36,13 @@ public class NavigationServiceImpl implements NavigationService {
   @Qualifier("internalRestTemplate")
   private RestTemplate restTemplate;
 
+  @Autowired
+  private FeatureService featureService;
+
   @Override
   public List<Navigation> getNavigation(boolean isUserAdmin, String teamId) {
+
+    FlowFeatures features = featureService.getFlowFeatures();
 
     if (flowExternalUrlNavigation.isBlank()) {
       List<Navigation> response = new ArrayList<>();
@@ -80,18 +87,22 @@ public class NavigationServiceImpl implements NavigationService {
         admin.setIcon("Settings16");
         admin.setChildLinks(new ArrayList<>());
 
-        Navigation teams = new Navigation();
-        teams.setName("Teams");
-        teams.setLink("/admin/teams");
-        teams.setType(NavigationType.link);
-        admin.getChildLinks().add(teams);
+        if (((Boolean) features.getFeatures().get("team.management"))) {
+          Navigation teams = new Navigation();
+          teams.setName("Teams");
+          teams.setLink("/admin/teams");
+          teams.setType(NavigationType.link);
+          admin.getChildLinks().add(teams);
+        }
 
-        Navigation users = new Navigation();
-        users.setName("Users");
-        users.setLink("/admin/users");
-        users.setType(NavigationType.link);
-        admin.getChildLinks().add(users);
-
+        if (((Boolean) features.getFeatures().get("user.management"))) {
+          Navigation users = new Navigation();
+          users.setName("Users");
+          users.setLink("/admin/users");
+          users.setType(NavigationType.link);
+          admin.getChildLinks().add(users);
+        }
+        
         Navigation properties = new Navigation();
         properties.setName("Properties");
         properties.setLink("/admin/properties");
@@ -115,12 +126,12 @@ public class NavigationServiceImpl implements NavigationService {
         taskManager.setLink("/admin/task-templates");
         taskManager.setType(NavigationType.link);
         admin.getChildLinks().add(taskManager);
-        
+
         Navigation systemWorkflows = new Navigation();
-        systemWorkflows.setName("System Workflows");          
+        systemWorkflows.setName("System Workflows");
         systemWorkflows.setLink("/admin/system-workflows");
         systemWorkflows.setType(NavigationType.link);
-        
+
         admin.getChildLinks().add(systemWorkflows);
 
         response.add(admin);
