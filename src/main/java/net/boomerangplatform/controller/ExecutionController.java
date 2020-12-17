@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import net.boomerangplatform.model.FlowActivity;
 import net.boomerangplatform.model.FlowExecutionRequest;
-import net.boomerangplatform.mongo.model.FlowTriggerEnum;
 import net.boomerangplatform.service.ExecutionService;
 
 @RestController
