@@ -27,6 +27,8 @@ import net.boomerangplatform.model.ListActivityResponse;
 import net.boomerangplatform.mongo.entity.ActivityEntity;
 import net.boomerangplatform.mongo.entity.FlowTeamEntity;
 import net.boomerangplatform.mongo.entity.TaskExecutionEntity;
+import net.boomerangplatform.mongo.entity.WorkflowEntity;
+import net.boomerangplatform.mongo.model.WorkflowScope;
 import net.boomerangplatform.mongo.service.FlowTeamService;
 import net.boomerangplatform.mongo.service.FlowWorkflowService;
 import net.boomerangplatform.service.crud.FlowActivityService;
@@ -89,6 +91,14 @@ public class ActivityController {
     String teamName;
     final FlowActivity response = new FlowActivity(activity);
 
+    WorkflowEntity entity = this.workflowService.getWorkflow(workFlowId);
+    WorkflowScope scope = entity.getScope();
+    if (scope == null) {
+      scope = WorkflowScope.team;
+    }
+    
+    response.setScope(scope);
+    
     if ((workflowService.getWorkflow(workFlowId) != null)) {
       teamId = workflowService.getWorkflow(workFlowId).getFlowTeamId();
     } else {

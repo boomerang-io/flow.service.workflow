@@ -4,6 +4,7 @@ import java.util.List;
 import org.springframework.beans.BeanUtils;
 import net.boomerangplatform.mongo.entity.ActivityEntity;
 import net.boomerangplatform.mongo.entity.TaskExecutionEntity;
+import net.boomerangplatform.mongo.model.WorkflowScope;
 
 public class FlowActivity extends ActivityEntity {
 
@@ -20,6 +21,8 @@ public class FlowActivity extends ActivityEntity {
   private String workflowName;
 
   private String teamName;
+  
+  private WorkflowScope scope;
   
   public FlowActivity() {
     
@@ -83,5 +86,13 @@ public class FlowActivity extends ActivityEntity {
 
   public void setDescription(String description) {
     this.description = description;
+  }
+
+  public WorkflowScope getScope() {
+    return scope;
+  }
+
+  public void setScope(WorkflowScope scope) {
+    this.scope = scope;
   }
 }
