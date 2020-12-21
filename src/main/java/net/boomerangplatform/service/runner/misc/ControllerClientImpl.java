@@ -99,6 +99,9 @@ public class ControllerClientImpl implements ControllerClient {
 
   @Autowired
   private FlowWorkflowService flowWorkflowService;
+  
+  @Value("${flow.feature.team.properties}")
+  private boolean enabledTeamProperites;
 
   @Override
   @Async
@@ -304,7 +307,11 @@ public class ControllerClientImpl implements ControllerClient {
 
     buildGlobalProperties(globalProperties);
     buildSystemProperties(task, activityId, task.getWorkflowId(), systemProperties);
-    buildTeamProperties(teamProperties, task.getWorkflowId());
+    
+    if (enabledTeamProperites) {
+      buildTeamProperties(teamProperties, task.getWorkflowId());
+    }
+
     buildWorkflowProperties(workflowProperties, task);
     
     Map<String, Object> map = controllerProperties.getMap();
