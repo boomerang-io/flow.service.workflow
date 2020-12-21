@@ -54,6 +54,7 @@ public class WorkflowVersionServiceImpl implements WorkflowVersionService {
     FlowWorkflowRevision flowRevision = new FlowWorkflowRevision(revision);
     updateUpgradeFlags(flowRevision);
 
+    
     return flowRevision;
   }
 

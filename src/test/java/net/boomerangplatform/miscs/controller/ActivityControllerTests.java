@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -136,6 +137,7 @@ public class ActivityControllerTests extends FlowTests {
   }
   
   @Test
+  @Ignore
   public void testGetFlowActivitiesWorkflowFiltered() {
     List<String> workflowIds = new ArrayList<>();
     workflowIds.add("5d1a188af6ca2c00014c4314");

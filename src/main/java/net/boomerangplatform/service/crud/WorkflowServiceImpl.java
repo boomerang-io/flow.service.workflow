@@ -73,6 +73,11 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   @Value("${max.concurrent.workflows}")
   private Integer maxConcurrentWorkflows;
+  
+  @Value("${flow.feature.workflow.quotas}")
+  private boolean enabledQuotaCheck;
+  
+
 
   private final Logger logger = LogManager.getLogger(getClass());
 
@@ -560,6 +565,10 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   @Override
   public boolean canExecuteWorkflowForQuotas(String teamId) {
+    if (!enabledQuotaCheck) {
+      return true;
+    }
+    
     WorkflowQuotas workflowQuotas = teamService.getTeamQuotas(teamId);
     if (workflowQuotas.getCurrentConcurrentWorkflows() > workflowQuotas.getMaxConcurrentWorkflows()
         || workflowQuotas.getCurrentWorkflowExecutionMonthly() > workflowQuotas
