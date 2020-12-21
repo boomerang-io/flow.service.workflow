@@ -39,7 +39,7 @@ public class NavigationServiceImpl implements NavigationService {
   @Autowired
   private FeatureService featureService;
   
-  @Value("${flow.apps.url}")
+  @Value("${flow.apps.flow.url}")
   private String flowAppsUrl;
 
   @Override
