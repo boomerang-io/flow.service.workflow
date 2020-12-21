@@ -107,8 +107,10 @@ public class ActivityController {
 
     if (teamId != null) {
       FlowTeamEntity team = flowTeamService.findById(teamId);
-      teamName = team.getName();
-      response.setTeamName(teamName);
+      if (team != null) {
+        teamName = team.getName();
+        response.setTeamName(teamName);
+      }
     }
 
     final List<TaskExecutionEntity> steps = flowActivityService.getTaskExecutions(activityId);

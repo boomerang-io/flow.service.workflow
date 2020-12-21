@@ -130,7 +130,11 @@ public class ControllerClientImpl implements ControllerClient {
 
     buildGlobalProperties(globalProperties);
     buildSystemProperties(task, activityId, task.getWorkflowId(), systemProperties);
-    buildTeamProperties(teamProperties, task.getWorkflowId());
+    
+    if (enabledTeamProperites) {
+      buildTeamProperties(teamProperties, task.getWorkflowId());
+    }
+   
     buildWorkflowProperties(workflowProperties, task);
 
     /* Population task configuration details. */
