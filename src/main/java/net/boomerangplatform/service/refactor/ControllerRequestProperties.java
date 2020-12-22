@@ -63,11 +63,11 @@ public class ControllerRequestProperties {
   }
 
   @JsonAnyGetter
-  public Map<String, Object> getMap() {
+  public Map<String, String> getMap() {
 
 
 
-    Map<String, Object> finalProperties = new TreeMap<>();
+    Map<String, String> finalProperties = new TreeMap<>();
 
     if (this.includeGlobalProperties) {
       copyProperties(globalProperties, finalProperties, "global");
@@ -89,19 +89,17 @@ public class ControllerRequestProperties {
     }
   }
 
-  private void copyProperties(Map<String, Object> source, Map<String, Object> target,
+  private void copyProperties(Map<String, Object> source, Map<String, String> target,
       String prefix) {
-
     for (Entry<String, Object> entry : source.entrySet()) {
       String key = entry.getKey();
       Object value = entry.getValue();
-
-
-      target.put(prefix + "/" + key, value);
-      target.put(key, value);
+      if (value != null) {
+        target.put(prefix + "/" + key, value.toString());
+        target.put(key, (String) value.toString());
+      }
     }
   }
-
 
   @Override
   public String toString() {

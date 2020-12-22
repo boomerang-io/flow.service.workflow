@@ -10,6 +10,7 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.junit.Before;
@@ -17,6 +18,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import net.boomerangplatform.model.FlowActivity;
+import net.boomerangplatform.model.FlowExecutionRequest;
 import net.boomerangplatform.mongo.model.TaskStatus;
 import net.boomerangplatform.tests.IntegrationTests;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
@@ -40,7 +42,12 @@ public class SimpleExecuteTests extends IntegrationTests {
   public void testExecution() throws Exception {
     String workflowId = "5f4fc9e95683833cf0b1335b";
 
-    FlowActivity activity = submitWorkflow(workflowId);
+    FlowExecutionRequest request = new  FlowExecutionRequest();
+    Map<String, String> map = new HashMap<>();
+    map.put("foobar", "Hello World");
+    request.setProperties(map);
+    
+    FlowActivity activity = submitWorkflow(workflowId,request);
 
     String id = activity.getId();
     Thread.sleep(5000);

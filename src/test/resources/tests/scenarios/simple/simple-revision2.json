@@ -94,7 +94,7 @@
                     }, 
                     {
                         "key" : "shell",
-                        "value" : "/bin/sh"
+                        "value" : "${p:foobar}"
                     }, 
                     {
                         "key" : "script",
