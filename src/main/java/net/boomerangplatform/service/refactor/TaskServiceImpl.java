@@ -406,7 +406,6 @@ public class TaskServiceImpl implements TaskService {
           newTask.setTaskActivityId(task.getId());
         }
         
-       
         String templateId = dagTask.getTemplateId();
         final FlowTaskTemplateEntity flowTaskTemplate =
             templateService.getTaskTemplateWithId(templateId);

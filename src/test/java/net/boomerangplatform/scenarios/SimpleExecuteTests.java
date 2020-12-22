@@ -41,14 +41,11 @@ public class SimpleExecuteTests extends IntegrationTests {
   @Test
   public void testExecution() throws Exception {
     String workflowId = "5f4fc9e95683833cf0b1335b";
-
     FlowExecutionRequest request = new  FlowExecutionRequest();
     Map<String, String> map = new HashMap<>();
     map.put("foobar", "Hello World");
     request.setProperties(map);
-    
     FlowActivity activity = submitWorkflow(workflowId,request);
-
     String id = activity.getId();
     Thread.sleep(5000);
     FlowActivity finalActivity = this.checkWorkflowActivity(id);

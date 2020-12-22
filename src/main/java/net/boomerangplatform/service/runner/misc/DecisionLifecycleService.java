@@ -19,6 +19,8 @@ import net.boomerangplatform.mongo.entity.TaskExecutionEntity;
 import net.boomerangplatform.mongo.model.TaskStatus;
 import net.boomerangplatform.mongo.model.next.Dependency;
 import net.boomerangplatform.mongo.service.ActivityTaskService;
+import net.boomerangplatform.service.PropertyManager;
+import net.boomerangplatform.service.refactor.ControllerRequestProperties;
 
 @Service
 public class DecisionLifecycleService {
@@ -26,6 +28,9 @@ public class DecisionLifecycleService {
   @Autowired
   private ActivityTaskService taskService;
 
+  @Autowired
+  private PropertyManager propertyManager;
+  
   public TaskResult submitDecision(Task task, String activityId) {
     TaskResult taskResult = new TaskResult();
     TaskExecutionEntity taskExecution =
@@ -70,9 +75,11 @@ public class DecisionLifecycleService {
     List<String> matchedNodes = new LinkedList<>();
     List<String> defaultNodes = new LinkedList<>();
 
-    String value = currentTask.getDecisionValue();
-    value = replaceValueWithProperty(value, executionProperties, activityId);
-
+    ControllerRequestProperties properties = propertyManager.buildRequestPropertyLayering(currentTask, activityId);
+    Map<String, String> propertyMap = properties.getMap();
+    String value = currentTask.getDecisionValue(); 
+    value = propertyManager.replaceValueWithProperty(value, activityId, propertyMap);
+   
     for (DefaultEdge edge : outgoingEdges) {
       String destination = graph.getEdgeTarget(edge);
       Task destTask = tasksToRun.stream().filter(t -> t.getTaskId().equals(destination)).findFirst()
@@ -95,11 +102,8 @@ public class DecisionLifecycleService {
     if (optionalDependency.isPresent()) {
       Dependency dependency = optionalDependency.get();
       String linkValue = dependency.getSwitchCondition();
-
       String node = destTask.getTaskId();
-
       boolean matched = false;
-
       if (linkValue != null) {
         String[] lines = linkValue.split("\\r?\\n");
         for (String line : lines) {
@@ -118,32 +122,4 @@ public class DecisionLifecycleService {
       }
     }
   }
-
-  private String replaceValueWithProperty(String value, Map<String, String> executionProperties,
-      String activityId) {
-    String regex = "\\$\\{p:(.*?)\\}";
-    Pattern pattern = Pattern.compile(regex);
-    Matcher matcher = pattern.matcher(value);
-    if (matcher.find()) {
-      String group = matcher.group(1);
-      String[] components = group.split("/");
-      if (components.length == 1) {
-        if (executionProperties.get(components[0]) != null) {
-
-          return executionProperties.get(components[0]);
-        }
-      } else if (components.length == 2) {
-        String taskName = components[0];
-        String outputProperty = components[1];
-        TaskExecutionEntity taskExecution =
-            taskService.findByTaskNameAndActiityId(taskName, activityId);
-        if (taskExecution != null && taskExecution.getOutputs() != null
-            && taskExecution.getOutputs().get(outputProperty) != null) {
-          return taskExecution.getOutputs().get(outputProperty);
-        }
-      }
-    }
-    return value;
-  }
-
 }
