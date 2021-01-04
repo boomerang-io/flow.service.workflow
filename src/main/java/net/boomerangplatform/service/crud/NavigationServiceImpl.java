@@ -77,8 +77,8 @@ public class NavigationServiceImpl implements NavigationService {
       management.setType(NavigationType.category);
 
       Navigation teamProperties = new Navigation();
-      teamProperties.setName("Team Properties");
-      teamProperties.setLink(flowAppsUrl + "/team-properties");
+      teamProperties.setName("Team Parameters");
+      teamProperties.setLink(flowAppsUrl + "/team-parameters");
       teamProperties.setType(NavigationType.link);
       management.getChildLinks().add(teamProperties);
       response.add(management);
@@ -107,8 +107,8 @@ public class NavigationServiceImpl implements NavigationService {
         }
         
         Navigation properties = new Navigation();
-        properties.setName("Properties");
-        properties.setLink(flowAppsUrl + "/admin/properties");
+        properties.setName("Parameters");
+        properties.setLink(flowAppsUrl + "/admin/parameters");
         properties.setType(NavigationType.link);
         admin.getChildLinks().add(properties);
 
