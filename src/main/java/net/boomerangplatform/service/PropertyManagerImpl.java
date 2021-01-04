@@ -197,11 +197,14 @@ public class PropertyManagerImpl implements PropertyManager {
       else if (components.length == 3) {
         String scope = components[0];
         String params = components[1];
+        String name = components[2];
         List<String> reservedList = Arrays.asList(reserved);
         if ("params".equals(params) && reservedList.contains(scope)) {
           if (reservedList.contains(scope)) {
-            if (executionProperties.get(params) != null) {
-              replaceValue = executionProperties.get(scope + "/" + params);
+            String key = scope + "/" + name;
+            
+            if (executionProperties.get(key) != null) {
+              replaceValue = executionProperties.get(key);
             }
           }
         }
