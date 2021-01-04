@@ -124,11 +124,11 @@ public class ControllerClientImpl implements ControllerClient {
    
     Map<String, String> map = applicationProperties.getMap();
     String image = applicationProperties.getLayeredProperty("image");
-    image = propertyManager.replaceValueWithProperty(image, activityId, map); 
+    image = propertyManager.replaceValueWithProperty(image, activityId, applicationProperties); 
     request.setImage(image);
     
     String command = applicationProperties.getLayeredProperty("command");
-    command = propertyManager.replaceValueWithProperty(command, activityId, map);    
+    command = propertyManager.replaceValueWithProperty(command, activityId, applicationProperties);    
     request.setCommand(command);
     
   
@@ -139,7 +139,7 @@ public class ControllerClientImpl implements ControllerClient {
         String[] lines = arguments.split("\\r?\\n");
         args = new LinkedList<>();
         for (String line : lines) {
-          String newValue = propertyManager.replaceValueWithProperty(line, activityId, map);
+          String newValue = propertyManager.replaceValueWithProperty(line, activityId, applicationProperties);
           args.add(newValue);
         }
       }

@@ -76,9 +76,8 @@ public class DecisionLifecycleService {
     List<String> defaultNodes = new LinkedList<>();
 
     ControllerRequestProperties properties = propertyManager.buildRequestPropertyLayering(currentTask, activityId);
-    Map<String, String> propertyMap = properties.getMap();
     String value = currentTask.getDecisionValue(); 
-    value = propertyManager.replaceValueWithProperty(value, activityId, propertyMap);
+    value = propertyManager.replaceValueWithProperty(value, activityId, properties);
    
     for (DefaultEdge edge : outgoingEdges) {
       String destination = graph.getEdgeTarget(edge);

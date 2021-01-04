@@ -94,7 +94,7 @@
                     }, 
                     {
                         "key" : "shell",
-                        "value" : "${p:system/task.type}-${p:foobar}"
+                        "value" : "$(system.params.task-type)-$(params.foobar)"
                     }, 
                     {
                         "key" : "script",
