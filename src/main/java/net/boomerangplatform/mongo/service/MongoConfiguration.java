@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class MongoConfiguration {
 
-  @Value("${workflow.mongo.collection.prefix}")
+  @Value("${flow.mongo.collection.prefix}")
   private String workflowCollectionPrefix;
   
   public String fullCollectionName(String collectionName) {
