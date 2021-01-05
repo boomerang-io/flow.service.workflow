@@ -12,7 +12,7 @@ import net.boomerangplatform.mongo.model.TaskStatus;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(Include.NON_NULL)
-@Document(collection = "#{@mongoConfiguration.fullCollectionName('flow_workflows_activity')}")
+@Document(collection = "#{@mongoConfiguration.fullCollectionName('workflows_activity')}")
 public class ActivityEntity {
 
   private Date creationDate;

@@ -8,7 +8,7 @@ import net.boomerangplatform.mongo.model.Audit;
 import net.boomerangplatform.mongo.model.ManualType;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Document(collection = "#{@mongoConfiguration.fullCollectionName('flow_workflows_activity_approval')}")
+@Document(collection = "#{@mongoConfiguration.fullCollectionName('workflows_activity_approval')}")
 public class ApprovalEntity {
   
   

@@ -12,7 +12,7 @@ import net.boomerangplatform.mongo.model.TaskType;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(Include.NON_NULL)
-@Document(collection = "#{@mongoConfiguration.fullCollectionName('flow_workflows_activity_task')}")
+@Document(collection = "#{@mongoConfiguration.fullCollectionName('workflows_activity_task')}")
 public class TaskExecutionEntity {
 
   private String activityId;

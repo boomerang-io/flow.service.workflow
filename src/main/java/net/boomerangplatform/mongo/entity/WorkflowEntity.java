@@ -14,7 +14,7 @@ import net.boomerangplatform.mongo.model.WorkflowStatus;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(Include.NON_NULL)
-@Document(collection = "#{@mongoConfiguration.fullCollectionName('flow_workflows')}")
+@Document(collection = "#{@mongoConfiguration.fullCollectionName('workflows')}")
 public class WorkflowEntity {
 
   private List<FlowProperty> properties;

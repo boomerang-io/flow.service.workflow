@@ -7,7 +7,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import net.boomerangplatform.mongo.model.Config;
 import net.boomerangplatform.mongo.model.ConfigurationType;
 
-@Document(collection = "#{@mongoConfiguration.fullCollectionName('flow_settings')}")
+@Document(collection = "#{@mongoConfiguration.fullCollectionName('settings')}")
 public class FlowSettingsEntity {
 
   private List<Config> config;
