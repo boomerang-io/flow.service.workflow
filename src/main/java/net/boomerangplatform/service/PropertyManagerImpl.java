@@ -128,7 +128,7 @@ public class PropertyManagerImpl implements PropertyManager {
     systemProperties.put("task-type", task.getTaskType());
     systemProperties.put("workflow-version",
         revisionService.getWorkflowlWithId(activity.getWorkflowRevisionid()).getVersion());
-    systemProperties.put("trigge-type", activity.getTrigger());
+    systemProperties.put("trigger-type", activity.getTrigger());
     systemProperties.put("workflow-activity-initiator", activity.getInitiatedByUserId());
   }
 
@@ -148,7 +148,7 @@ public class PropertyManagerImpl implements PropertyManager {
 
   @Override
   public String replaceValueWithProperty(String value, String activityId,
-    ControllerRequestProperties properties) {
+      ControllerRequestProperties properties) {
     String replacementString = value;
     replacementString = replaceLegacyProperties(value, activityId, properties);
     replacementString = replaceProperties(replacementString, activityId, properties);
@@ -157,9 +157,9 @@ public class PropertyManagerImpl implements PropertyManager {
 
   private String replaceProperties(String value, String activityId,
       ControllerRequestProperties applicationProperties) {
-   
+
     Map<String, String> executionProperties = applicationProperties.getMap();
-    
+
     String regex = "(?<=\\$\\().+?(?=\\))";
     Pattern pattern = Pattern.compile(regex);
     Matcher m = pattern.matcher(value);
@@ -185,16 +185,14 @@ public class PropertyManagerImpl implements PropertyManager {
         String taskName = components[1];
         String results = components[2];
         String outputProperty = components[3];
-        if ( "task".equals(task) && "results".equals(results)) {
-          TaskExecutionEntity taskExecution =
-              taskService.findByTaskNameAndActiityId(taskName, activityId);
+        if ("task".equals(task) && "results".equals(results)) {
+          TaskExecutionEntity taskExecution = getTaskExecutionEntity(activityId, taskName);
           if (taskExecution != null && taskExecution.getOutputs() != null
               && taskExecution.getOutputs().get(outputProperty) != null) {
             replaceValue = taskExecution.getOutputs().get(outputProperty);
           }
         }
-      }
-      else if (components.length == 3) {
+      } else if (components.length == 3) {
         String scope = components[0];
         String params = components[1];
         String name = components[2];
@@ -202,13 +200,13 @@ public class PropertyManagerImpl implements PropertyManager {
         if ("params".equals(params) && reservedList.contains(scope)) {
           if (reservedList.contains(scope)) {
             String key = scope + "/" + name;
-            
+
             if (executionProperties.get(key) != null) {
               replaceValue = executionProperties.get(key);
             }
           }
         }
-      } 
+      }
 
       if (replaceValue != null) {
         String regexStr = value.substring(start, end);
@@ -225,9 +223,9 @@ public class PropertyManagerImpl implements PropertyManager {
 
   private String replaceLegacyProperties(String value, String activityId,
       ControllerRequestProperties applicationProperties) {
-    
+
     Map<String, String> executionProperties = applicationProperties.getMap();
-    
+
     String regex = "\\$\\{p\\:([^{}]*)\\}";
     Pattern pattern = Pattern.compile(regex);
     Matcher m = pattern.matcher(value);
@@ -243,20 +241,17 @@ public class PropertyManagerImpl implements PropertyManager {
         if (executionProperties.get(components[0]) != null) {
           replaceValue = executionProperties.get(components[0]);
         }
-      }
-      else if (components.length == 2) {
+      } else if (components.length == 2) {
         String scope = components[0];
         List<String> reservedList = Arrays.asList(reserved);
         if (reservedList.contains(scope)) {
           if (executionProperties.get(extractedValue) != null) {
             replaceValue = executionProperties.get(extractedValue);
           }
-        }
-        else {
+        } else {
           String taskName = components[0];
           String outputProperty = components[1];
-          TaskExecutionEntity taskExecution =
-              taskService.findByTaskNameAndActiityId(taskName, activityId);
+          TaskExecutionEntity taskExecution = getTaskExecutionEntity(activityId, taskName);
           if (taskExecution != null && taskExecution.getOutputs() != null
               && taskExecution.getOutputs().get(outputProperty) != null) {
             replaceValue = taskExecution.getOutputs().get(outputProperty);
@@ -273,5 +268,19 @@ public class PropertyManagerImpl implements PropertyManager {
     String[] newValuesArray = newValues.toArray(new String[newValues.size()]);
     String updatedString = StringUtils.replaceEach(value, originalValuesArray, newValuesArray);
     return updatedString;
+  }
+
+  private TaskExecutionEntity getTaskExecutionEntity(String activityId, String taskName) {
+
+    List<TaskExecutionEntity> tasks =   taskService.findTaskActiivtyForActivity(activityId);
+    for (TaskExecutionEntity task : tasks) {
+      String entityTaskName = task.getTaskName().toLowerCase().replaceAll("\\s+","");
+      String sanataizedTaskName = taskName.toLowerCase().replaceAll("\\s+","");
+      
+      if (entityTaskName.equals(sanataizedTaskName)) {
+        return task;
+      }
+    }
+    return null;
   }
 }
