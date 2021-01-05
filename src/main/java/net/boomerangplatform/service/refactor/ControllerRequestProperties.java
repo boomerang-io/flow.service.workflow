@@ -28,7 +28,16 @@ public class ControllerRequestProperties {
   @JsonIgnore
   private Map<String, Object> workflowProperties = new HashMap<>();
 
+  @JsonIgnore
+  private Map<String, String> taskInputProperties = new HashMap<>();
 
+  public Map<String, String> getTaskInputProperties() {
+    return taskInputProperties;
+  }
+
+  public void setTaskInputProperties(Map<String, String> taskInputProperties) {
+    this.taskInputProperties = taskInputProperties;
+  }
 
   public Map<String, Object> getGlobalProperties() {
     return globalProperties;
@@ -75,6 +84,7 @@ public class ControllerRequestProperties {
 
     copyProperties(teamProperties, finalProperties, "team");
     copyProperties(workflowProperties, finalProperties, "workflow");
+    copyStringMap(taskInputProperties, finalProperties, "workflow");
     copyProperties(systemProperties, finalProperties, "system");
 
     return finalProperties;
@@ -101,6 +111,19 @@ public class ControllerRequestProperties {
     }
   }
 
+  private void copyStringMap(Map<String, String> source, Map<String, String> target,
+      String prefix) {
+    for (Entry<String, String> entry : source.entrySet()) {
+      String key = entry.getKey();
+      Object value = entry.getValue();
+      if (value != null) {
+        target.put(prefix + "/" + key, value.toString());
+        target.put(key, (String) value.toString());
+      }
+    }
+  }
+
+  
   @Override
   public String toString() {
     ObjectMapper mapper = new ObjectMapper();

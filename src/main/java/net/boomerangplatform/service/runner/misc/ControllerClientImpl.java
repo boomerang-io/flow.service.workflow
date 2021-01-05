@@ -81,6 +81,8 @@ public class ControllerClientImpl implements ControllerClient {
     storage.setEnable(enableStorage);
     request.setWorkflowStorage(storage);
     
+    logPayload("Create Workflow Request", request);
+    
     try {
       restTemplate.postForObject(createWorkflowURL, request, String.class);
     } catch (RestClientException ex) {
@@ -98,7 +100,13 @@ public class ControllerClientImpl implements ControllerClient {
     final WorkflowStorage storage = new WorkflowStorage();
     storage.setEnable(true);
     request.setWorkflowStorage(storage);
-    restTemplate.postForObject(terminateWorkflowURL, request, String.class);
+    logPayload("Terminate Workflow Request", request);
+    
+    try {
+      restTemplate.postForObject(terminateWorkflowURL, request, String.class);
+    } catch (RestClientException e) {
+      return false;
+    }
     return true;
   }
   
@@ -208,7 +216,8 @@ public class ControllerClientImpl implements ControllerClient {
     ControllerRequestProperties applicationProperties =
         propertyManager.buildRequestPropertyLayering(task, activityId);
    
-    Map<String, String> map = applicationProperties.getMap();
+    Map<String, String> map = applicationProperties.getTaskInputProperties();
+    
     request.setProperties(map);
     
     TaskConfiguration taskConfiguration = buildTaskConfiguration();

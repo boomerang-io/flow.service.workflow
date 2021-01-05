@@ -69,7 +69,6 @@ public class PropertyManagerImpl implements PropertyManager {
       buildTeamProperties(teamProperties, task.getWorkflowId());
     }
     buildWorkflowProperties(workflowProperties, activityId);
-
     buildTaskInputProperties(applicationProperties, task, activityId);
 
     return applicationProperties;
@@ -77,7 +76,7 @@ public class PropertyManagerImpl implements PropertyManager {
 
   private void buildTaskInputProperties(ControllerRequestProperties applicationProperties,
       Task task, String activityId) {
-    Map<String, Object> workflowInputProperties = applicationProperties.getWorkflowProperties();
+    Map<String, String> workflowInputProperties = applicationProperties.getTaskInputProperties();
     final Map<String, String> map = task.getInputs();
     if (task.getInputs() != null) {
       for (final Map.Entry<String, String> pair : map.entrySet()) {
@@ -116,7 +115,7 @@ public class PropertyManagerImpl implements PropertyManager {
     }
   }
 
-  private void buildSystemProperties(Task task, String activityId, String workflowId,
+  public void buildSystemProperties(Task task, String activityId, String workflowId,
       Map<String, Object> systemProperties) {
 
     WorkflowEntity workflow = workflowService.getWorkflow(workflowId);
@@ -124,12 +123,16 @@ public class PropertyManagerImpl implements PropertyManager {
     systemProperties.put("workflow-name", workflow.getName());
     systemProperties.put("workflow-activity-id", activityId);
     systemProperties.put("workflow-id", workflow.getId());
-    systemProperties.put("task-name", task.getTaskName());
-    systemProperties.put("task-type", task.getTaskType());
+
     systemProperties.put("workflow-version",
         revisionService.getWorkflowlWithId(activity.getWorkflowRevisionid()).getVersion());
     systemProperties.put("trigger-type", activity.getTrigger());
     systemProperties.put("workflow-activity-initiator", activity.getInitiatedByUserId());
+    
+    if (task != null) {
+      systemProperties.put("task-name", task.getTaskName());
+      systemProperties.put("task-type", task.getTaskType());
+    }
   }
 
   private void buildTeamProperties(Map<String, Object> teamProperties, String workflowId) {

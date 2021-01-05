@@ -6,7 +6,9 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Supplier;
@@ -40,6 +42,7 @@ import net.boomerangplatform.mongo.service.FlowWorkflowActivityService;
 import net.boomerangplatform.mongo.service.RevisionService;
 import net.boomerangplatform.service.crud.FlowActivityService;
 import net.boomerangplatform.service.crud.WorkflowService;
+import net.boomerangplatform.service.refactor.ControllerRequestProperties;
 import net.boomerangplatform.service.refactor.DAGUtility;
 import net.boomerangplatform.service.refactor.TaskClient;
 import net.boomerangplatform.service.runner.misc.ControllerClient;
@@ -73,8 +76,9 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
   private WorkflowService workflowService;
   
   @Autowired
-  private ActivityTaskService taskActivityService;
+  private PropertyManager propertyManager;
   
+ 
   @Autowired
   private ControllerClient controllerClient;
 
@@ -227,7 +231,13 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
     String workflowName = workflow.getName();
     String workflowId = workflow.getId();
     
-    Map<String, String> executionProperties = dagUtility.buildExecutionProperties(activityEntity, workflow);
+    Map<String, String> executionProperties = new HashMap<>();
+    Map<String, Object> inputs = new HashMap<>();
+    propertyManager.buildSystemProperties(null, activityId, workflowId, inputs);
+    for (Entry<String, Object> entry : inputs.entrySet()) {
+      executionProperties.put(entry.getKey(), entry.getValue().toString()); 
+    }
+
     controllerClient.createFlow(workflowId, workflowName, activityId, enablePVC, executionProperties);
     
     final Task startTask =  tasksToRun.stream().filter(tsk -> TaskType.start.equals(tsk.getTaskType())).findAny().orElse(null);
