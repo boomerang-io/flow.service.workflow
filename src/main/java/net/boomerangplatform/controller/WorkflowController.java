@@ -130,5 +130,10 @@ public class WorkflowController {
       @RequestParam(required=false) String flowTeamId, @RequestParam(required=true) WorkflowScope scope) {
     workflowService.importWorkflow(export, update, flowTeamId, scope);
   }
+  
+  @GetMapping(value= "/{workFlowId}/available-parameters")
+  public List<String> getWorkflowParameters(@PathVariable String workFlowId){
+    return workflowService.getWorkflowParameters(workFlowId);
+  }
 
 }

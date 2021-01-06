@@ -46,4 +46,6 @@ public interface WorkflowService {
   List<WorkflowSummary> getSystemWorkflows();
 
   List<WorkflowShortSummary> getSystemWorkflowShortSummaryList();
+
+  List<String> getWorkflowParameters(String workFlowId);
 }

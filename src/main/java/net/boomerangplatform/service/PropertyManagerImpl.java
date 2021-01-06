@@ -68,7 +68,7 @@ public class PropertyManagerImpl implements PropertyManager {
     if (enabledTeamProperites) {
       buildTeamProperties(teamProperties, task.getWorkflowId());
     }
-    buildWorkflowProperties(workflowProperties, activityId);
+    buildWorkflowProperties(workflowProperties, activityId, null);
     buildTaskInputProperties(applicationProperties, task, activityId);
 
     return applicationProperties;
@@ -88,11 +88,18 @@ public class PropertyManagerImpl implements PropertyManager {
     }
   }
 
-  private void buildWorkflowProperties(Map<String, Object> workflowProperties, String activityId) {
+  public void buildWorkflowProperties(Map<String, Object> workflowProperties, String activityId,
+      String workflowId) {
+    WorkflowEntity workflow = new WorkflowEntity();
+    List<CoreProperty> properties = null;
+    if (activityId != null) {
+      ActivityEntity activity = activityService.findWorkflowActivity(activityId);
+      workflow = workflowService.getWorkflow(activity.getWorkflowId());
+      properties = activity.getProperties();
+    } else {
+      workflow = workflowService.getWorkflow(workflowId);
+    }
 
-    ActivityEntity activity = activityService.findWorkflowActivity(activityId);
-    WorkflowEntity workflow = workflowService.getWorkflow(activity.getWorkflowId());
-    List<CoreProperty> properties = activity.getProperties();
     if (workflow.getProperties() != null) {
       for (FlowProperty property : workflow.getProperties()) {
         workflowProperties.put(property.getKey(), property.getDefaultValue());
@@ -106,7 +113,7 @@ public class PropertyManagerImpl implements PropertyManager {
     }
   }
 
-  private void buildGlobalProperties(Map<String, Object> globalProperties) {
+  public void buildGlobalProperties(Map<String, Object> globalProperties) {
     List<FlowGlobalConfigEntity> globalConfigs = this.flowGlobalConfigService.getGlobalConfigs();
     for (FlowGlobalConfigEntity entity : globalConfigs) {
       if (entity.getValue() != null) {
@@ -119,23 +126,25 @@ public class PropertyManagerImpl implements PropertyManager {
       Map<String, Object> systemProperties) {
 
     WorkflowEntity workflow = workflowService.getWorkflow(workflowId);
-    ActivityEntity activity = activityService.findWorkflowActivity(activityId);
+    if (activityId != null) {
+      ActivityEntity activity = activityService.findWorkflowActivity(activityId);
+      systemProperties.put("workflow-version",
+          revisionService.getWorkflowlWithId(activity.getWorkflowRevisionid()).getVersion());
+      systemProperties.put("trigger-type", activity.getTrigger());
+      systemProperties.put("workflow-activity-initiator", activity.getInitiatedByUserId());
+    }
+
     systemProperties.put("workflow-name", workflow.getName());
     systemProperties.put("workflow-activity-id", activityId);
     systemProperties.put("workflow-id", workflow.getId());
 
-    systemProperties.put("workflow-version",
-        revisionService.getWorkflowlWithId(activity.getWorkflowRevisionid()).getVersion());
-    systemProperties.put("trigger-type", activity.getTrigger());
-    systemProperties.put("workflow-activity-initiator", activity.getInitiatedByUserId());
-    
     if (task != null) {
       systemProperties.put("task-name", task.getTaskName());
       systemProperties.put("task-type", task.getTaskType());
     }
   }
 
-  private void buildTeamProperties(Map<String, Object> teamProperties, String workflowId) {
+  public void buildTeamProperties(Map<String, Object> teamProperties, String workflowId) {
     FlowTeamEntity flowTeamEntity =
         this.flowTeamService.findById(workflowService.getWorkflow(workflowId).getFlowTeamId());
     List<FlowTeamConfiguration> teamConfig = null;
@@ -275,11 +284,11 @@ public class PropertyManagerImpl implements PropertyManager {
 
   private TaskExecutionEntity getTaskExecutionEntity(String activityId, String taskName) {
 
-    List<TaskExecutionEntity> tasks =   taskService.findTaskActiivtyForActivity(activityId);
+    List<TaskExecutionEntity> tasks = taskService.findTaskActiivtyForActivity(activityId);
     for (TaskExecutionEntity task : tasks) {
-      String entityTaskName = task.getTaskName().toLowerCase().replaceAll("\\s+","");
-      String sanataizedTaskName = taskName.toLowerCase().replaceAll("\\s+","");
-      
+      String entityTaskName = task.getTaskName().toLowerCase().replaceAll("\\s+", "");
+      String sanataizedTaskName = taskName.toLowerCase().replaceAll("\\s+", "");
+
       if (entityTaskName.equals(sanataizedTaskName)) {
         return task;
       }
