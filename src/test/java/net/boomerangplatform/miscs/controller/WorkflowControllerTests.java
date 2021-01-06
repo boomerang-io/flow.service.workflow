@@ -59,14 +59,14 @@ public class WorkflowControllerTests extends FlowTests {
 
   @Autowired
   private WorkflowController controller;
-  
+
   @Autowired
   private InternalController internalController;
-  
+
   @Test
   public void testInternalWorkflowListing() {
     List<WorkflowShortSummary> summaryList = internalController.getAllWorkflows();
-    
+
     assertNotNull(summaryList);
     assertEquals(18, summaryList.size());
   }
@@ -164,7 +164,7 @@ public class WorkflowControllerTests extends FlowTests {
 
     TriggerEvent manual = new TriggerEvent();
     manual.setEnable(true);
-  
+
     Triggers triggers = new Triggers();
     triggers.setManual(manual);
 
@@ -178,8 +178,7 @@ public class WorkflowControllerTests extends FlowTests {
     File resource = new ClassPathResource("json/json-sample.json").getFile();
     String json = new String(Files.readAllBytes(resource.toPath()));
     ObjectMapper objectMapper = new ObjectMapper();
-    RevisionEntity revision =
-        objectMapper.readValue(json, RevisionEntity.class);
+    RevisionEntity revision = objectMapper.readValue(json, RevisionEntity.class);
 
     export.setLatestRevision(revision);
 
@@ -307,6 +306,20 @@ public class WorkflowControllerTests extends FlowTests {
     FlowWorkflowRevision entity = controller.getWorkflowLatestVersion("5d7177af2c57250007e3d7a1");
     assertNotNull(entity);
     verifyTemplateVersions(entity);
+  }
+
+  @Test
+  public void testAvaliableParameters() {
+    List<String> parameters = controller.getWorkflowParameters("5d1a188af6ca2c00014c4314");
+    assertEquals(8, parameters.size());
+    assertEquals("workflow.params.hello", parameters.get(0));
+    assertEquals("params.hello", parameters.get(1));
+    assertEquals("system.params.workflow-id", parameters.get(2)); 
+    assertEquals("params.workflow-id", parameters.get(3)); 
+    assertEquals("system.params.workflow-name", parameters.get(4));
+    assertEquals("params.workflow-name", parameters.get(5));
+    assertEquals("system.params.workflow-activity-id", parameters.get(6));
+    assertEquals("params.workflow-activity-id", parameters.get(7));
   }
 
   private void verifyTemplateVersions(FlowWorkflowRevision entity) {
