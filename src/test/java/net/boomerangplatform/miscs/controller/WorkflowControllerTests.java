@@ -320,7 +320,6 @@ public class WorkflowControllerTests extends FlowTests {
     assertEquals("params.workflow-name", parameters.get(5));
     assertEquals("system.params.workflow-activity-id", parameters.get(6));
     assertEquals("params.workflow-activity-id", parameters.get(7));
-
   }
 
   private void verifyTemplateVersions(FlowWorkflowRevision entity) {
