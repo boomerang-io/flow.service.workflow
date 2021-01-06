@@ -6,8 +6,10 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import org.apache.logging.log4j.LogManager;
@@ -29,9 +31,7 @@ import net.boomerangplatform.model.WorkflowQuotas;
 import net.boomerangplatform.model.WorkflowShortSummary;
 import net.boomerangplatform.model.WorkflowSummary;
 import net.boomerangplatform.model.WorkflowToken;
-import net.boomerangplatform.mongo.entity.FlowGlobalConfigEntity;
 import net.boomerangplatform.mongo.entity.FlowTaskTemplateEntity;
-import net.boomerangplatform.mongo.entity.FlowTeamConfiguration;
 import net.boomerangplatform.mongo.entity.RevisionEntity;
 import net.boomerangplatform.mongo.entity.WorkflowEntity;
 import net.boomerangplatform.mongo.model.FlowProperty;
@@ -43,11 +43,11 @@ import net.boomerangplatform.mongo.model.Triggers;
 import net.boomerangplatform.mongo.model.WorkflowScope;
 import net.boomerangplatform.mongo.model.WorkflowStatus;
 import net.boomerangplatform.mongo.model.next.DAGTask;
-import net.boomerangplatform.mongo.service.FlowGlobalConfigService;
 import net.boomerangplatform.mongo.service.FlowTaskTemplateService;
 import net.boomerangplatform.mongo.service.FlowWorkflowService;
 import net.boomerangplatform.mongo.service.RevisionService;
 import net.boomerangplatform.scheduler.ScheduledTasks;
+import net.boomerangplatform.service.PropertyManager;
 
 @Service
 public class WorkflowServiceImpl implements WorkflowService {
@@ -65,7 +65,7 @@ public class WorkflowServiceImpl implements WorkflowService {
   private FlowTaskTemplateService templateService;
 
   @Autowired
-  private FlowGlobalConfigService configService;
+  private PropertyManager propertyManager;
 
   @Autowired
   private TeamService teamService;
@@ -732,41 +732,28 @@ public class WorkflowServiceImpl implements WorkflowService {
     List<String> parameters = new ArrayList<>();
     WorkflowEntity workflow = workFlowRepository.getWorkflow(workFlowId);
 
-    List<FlowGlobalConfigEntity> globalProperties = configService.getGlobalConfigs();
-    if (globalProperties != null) {
-      for (FlowGlobalConfigEntity globalProperty : globalProperties) {
-        parameters.add("global.params." + globalProperty.getKey());
+    Map<String, Object> globalProperties = new HashMap<>();
+    propertyManager.buildGlobalProperties(globalProperties);
 
-      }
+    for (Map.Entry<String, Object> globalProperty : globalProperties.entrySet()) {
+      parameters.add("global.params." + globalProperty.getKey());
+    }
+    Map<String, Object> teamProperties = new HashMap<>();
+    propertyManager.buildTeamProperties(teamProperties, workflow.getId());
+
+    for (Map.Entry<String, Object> teamProperty : teamProperties.entrySet()) {
+      parameters.add("team.params." + teamProperty.getKey());
+    }
+    Map<String, Object> workflowProperties = new HashMap<>();
+    propertyManager.buildWorkflowProperties(workflowProperties, null, workflow.getId());
+    for (Map.Entry<String, Object> workflowProperty : workflowProperties.entrySet()) {
+      parameters.add("workflow.params." + workflowProperty.getKey());
     }
 
-    List<FlowTeamConfiguration> teamProperties =
-        teamService.getTeamById(workflow.getFlowTeamId()).getSettings().getProperties();
-    if (teamProperties != null) {
-      for (FlowTeamConfiguration teamProperty : teamProperties) {
-        parameters.add("team.params." + teamProperty.getKey());
-
-      }
-    }
-
-    List<FlowProperty> workflowProperties = workflow.getProperties();
-    if (workflowProperties != null) {
-      for (FlowProperty workflowProperty : workflowProperties) {
-        parameters.add("workflow.params." + workflowProperty.getKey());
-
-      }
-    }
-
-    List<WorkflowEntity> systemWorkflows = workFlowRepository.getSystemWorkflows();
-    if (systemWorkflows != null) {
-      for (WorkflowEntity systemWorkflow : systemWorkflows) {
-        List<FlowProperty> systemProperties = systemWorkflow.getProperties();
-        if (systemProperties != null) {
-          for (FlowProperty systemProperty : systemProperties) {
-            parameters.add("system.params." + systemProperty.getKey());
-          }
-        }
-      }
+    Map<String, Object> systemProperties = new HashMap<>();
+    propertyManager.buildSystemProperties(null, null, workflow.getId(), systemProperties);
+    for (Map.Entry<String, Object> systemProperty : systemProperties.entrySet()) {
+      parameters.add("system.params." + systemProperty.getKey());
     }
     return parameters;
   }

@@ -311,8 +311,12 @@ public class WorkflowControllerTests extends FlowTests {
   @Test
   public void testAvaliableParameters() {
     List<String> parameters = controller.getWorkflowParameters("5d1a188af6ca2c00014c4314");
-    assertEquals(1, parameters.size());
+    assertEquals(4, parameters.size());
     assertEquals("workflow.params.hello", parameters.get(0));
+    assertEquals("system.params.workflow-id", parameters.get(1)); 
+    assertEquals("system.params.workflow-name", parameters.get(2));
+    assertEquals("system.params.workflow-activity-id", parameters.get(3));
+
   }
 
   private void verifyTemplateVersions(FlowWorkflowRevision entity) {
