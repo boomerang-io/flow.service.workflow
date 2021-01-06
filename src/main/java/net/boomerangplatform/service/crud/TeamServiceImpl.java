@@ -403,6 +403,18 @@ public class TeamServiceImpl implements TeamService {
     return teamWorkFlowSummary;
   }
 
+  @Override
+  public void updateFlagsAndQuotas() {
+    for (final FlowTeamEntity entity : getAllTeamsListing()) {
+      final List<WorkflowSummary> workflowSummary =
+          workflowService.getWorkflowsForTeam(entity.getId());
+      final TeamWorkflowSummary teamWorkFlow = new TeamWorkflowSummary(entity, workflowSummary);
+      updateSummaryWithUpgradeFlags(teamWorkFlow);
+      updateSummaryWithQuotas(entity, workflowSummary, teamWorkFlow);
+    }
+
+  }
+
   private List<TeamWorkflowSummary> populateWorkflowSummaryInformation(
       List<FlowTeamEntity> flowTeams) {
     final List<TeamWorkflowSummary> teamWorkFlowSummary = new LinkedList<>();
@@ -410,8 +422,6 @@ public class TeamServiceImpl implements TeamService {
       final List<WorkflowSummary> workflowSummary =
           workflowService.getWorkflowsForTeam(entity.getId());
       final TeamWorkflowSummary teamWorkFlow = new TeamWorkflowSummary(entity, workflowSummary);
-      updateSummaryWithUpgradeFlags(teamWorkFlow);
-      updateSummaryWithQuotas(entity, workflowSummary, teamWorkFlow);
       teamWorkFlowSummary.add(teamWorkFlow);
     }
     return teamWorkFlowSummary;
