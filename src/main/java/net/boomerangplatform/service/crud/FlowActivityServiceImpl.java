@@ -91,10 +91,10 @@ public class FlowActivityServiceImpl implements FlowActivityService {
 
   @Autowired
   private FlowApprovalService approvalService;
-  
+
   @Autowired
   private TeamService teamService;
- 
+
   private static final Logger LOGGER = LogManager.getLogger();
 
   private List<FlowActivity> convert(List<ActivityEntity> records) {
@@ -167,42 +167,42 @@ public class FlowActivityServiceImpl implements FlowActivityService {
       Optional<List<String>> statuses, Optional<List<String>> triggers, String property,
       Direction direction) {
 
-    
+
     LOGGER.info("Getting activity listing");
-    
+
     final FlowUserEntity user = userIdentityService.getCurrentUser();
-    List<String> teamIdList  = new LinkedList<>();
-    List<String> workflowIdsList  = new LinkedList<>();
-    
+    List<String> teamIdList = new LinkedList<>();
+    List<String> workflowIdsList = new LinkedList<>();
+
     if (teamIds.isEmpty() && workflowIds.isEmpty()) {
 
       if (user == null) {
         return null;
       } else if (user.getType() == UserType.admin) {
         LOGGER.info("Getting all teams as admin.");
-        
+
         List<TeamWorkflowSummary> teams = teamService.getAllTeams();
-        teamIdList =  teams.stream().map(TeamWorkflowSummary::getId).collect(Collectors.toList());
+        teamIdList = teams.stream().map(TeamWorkflowSummary::getId).collect(Collectors.toList());
       } else {
         List<TeamWorkflowSummary> teams = teamService.getUserTeams(user);
         LOGGER.info("Found teams: " + teams.size());
-        
-        teamIdList =  teams.stream().map(TeamWorkflowSummary::getId).collect(Collectors.toList());
+
+        teamIdList = teams.stream().map(TeamWorkflowSummary::getId).collect(Collectors.toList());
       }
     } else {
-      teamIdList  = teamIds.get();
+      teamIdList = teamIds.get();
     }
- 
+
     if (teamIdList != null) {
-        List<WorkflowEntity> workflows = this.workflowService.getWorkflowsForTeams(teamIdList);
-        LOGGER.info("Found workflows: " + workflows.size());
-        
-        workflowIdsList = workflows.stream().map(WorkflowEntity::getId).collect(Collectors.toList());
+      List<WorkflowEntity> workflows = this.workflowService.getWorkflowsForTeams(teamIdList);
+      LOGGER.info("Found workflows: " + workflows.size());
+
+      workflowIdsList = workflows.stream().map(WorkflowEntity::getId).collect(Collectors.toList());
     }
-     
+
     ListActivityResponse response = new ListActivityResponse();
-    Page<ActivityEntity> records =
-        flowActivityService.getAllActivites(from, to, page, Optional.of(workflowIdsList), statuses, triggers);
+    Page<ActivityEntity> records = flowActivityService.getAllActivites(from, to, page,
+        Optional.of(workflowIdsList), statuses, triggers);
     final List<FlowActivity> activities = convert(records.getContent());
     List<FlowActivity> activitiesFiltered = new ArrayList<>();
 
@@ -331,18 +331,20 @@ public class FlowActivityServiceImpl implements FlowActivityService {
     if (teamId != null) {
 
       FlowTeamEntity team = flowTeamService.findById(teamId);
-      String teamName = team.getName();
+      if (team != null) {
+        String teamName = team.getName();
 
-      activity.setTeamName(teamName);
+        activity.setTeamName(teamName);
 
-      if (teamIds.isPresent()) {
-        for (String teamID : teamIds.get()) {
-          if (teamId.equals(teamID)) {
-            activitiesFiltered.add(activity);
+        if (teamIds.isPresent()) {
+          for (String teamID : teamIds.get()) {
+            if (teamId.equals(teamID)) {
+              activitiesFiltered.add(activity);
+            }
           }
+        } else {
+          activitiesFiltered.add(activity);
         }
-      } else {
-        activitiesFiltered.add(activity);
       }
     }
   }
