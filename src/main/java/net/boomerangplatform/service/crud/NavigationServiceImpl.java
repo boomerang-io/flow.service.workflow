@@ -107,7 +107,7 @@ public class NavigationServiceImpl implements NavigationService {
         }
         
         Navigation properties = new Navigation();
-        properties.setName("Parameters");
+        properties.setName("Global Parameters");
         properties.setLink(flowAppsUrl + "/admin/parameters");
         properties.setType(NavigationType.link);
         admin.getChildLinks().add(properties);
