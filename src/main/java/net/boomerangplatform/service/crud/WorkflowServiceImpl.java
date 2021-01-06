@@ -29,11 +29,12 @@ import net.boomerangplatform.model.WorkflowQuotas;
 import net.boomerangplatform.model.WorkflowShortSummary;
 import net.boomerangplatform.model.WorkflowSummary;
 import net.boomerangplatform.model.WorkflowToken;
+import net.boomerangplatform.mongo.entity.FlowGlobalConfigEntity;
 import net.boomerangplatform.mongo.entity.FlowTaskTemplateEntity;
+import net.boomerangplatform.mongo.entity.FlowTeamConfiguration;
 import net.boomerangplatform.mongo.entity.RevisionEntity;
 import net.boomerangplatform.mongo.entity.WorkflowEntity;
 import net.boomerangplatform.mongo.model.FlowProperty;
-import net.boomerangplatform.mongo.model.FlowTriggerEnum;
 import net.boomerangplatform.mongo.model.TaskType;
 import net.boomerangplatform.mongo.model.Trigger;
 import net.boomerangplatform.mongo.model.TriggerEvent;
@@ -42,6 +43,7 @@ import net.boomerangplatform.mongo.model.Triggers;
 import net.boomerangplatform.mongo.model.WorkflowScope;
 import net.boomerangplatform.mongo.model.WorkflowStatus;
 import net.boomerangplatform.mongo.model.next.DAGTask;
+import net.boomerangplatform.mongo.service.FlowGlobalConfigService;
 import net.boomerangplatform.mongo.service.FlowTaskTemplateService;
 import net.boomerangplatform.mongo.service.FlowWorkflowService;
 import net.boomerangplatform.mongo.service.RevisionService;
@@ -63,6 +65,9 @@ public class WorkflowServiceImpl implements WorkflowService {
   private FlowTaskTemplateService templateService;
 
   @Autowired
+  private FlowGlobalConfigService configService;
+
+  @Autowired
   private TeamService teamService;
 
   @Value("${max.workflow.count}")
@@ -73,10 +78,10 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   @Value("${max.concurrent.workflows}")
   private Integer maxConcurrentWorkflows;
-  
+
   @Value("${flow.feature.workflow.quotas}")
   private boolean enabledQuotaCheck;
-  
+
 
 
   private final Logger logger = LogManager.getLogger(getClass());
@@ -425,7 +430,8 @@ public class WorkflowServiceImpl implements WorkflowService {
   }
 
   @Override
-  public void importWorkflow(WorkflowExport export, Boolean update, String flowTeamId, WorkflowScope scope) {
+  public void importWorkflow(WorkflowExport export, Boolean update, String flowTeamId,
+      WorkflowScope scope) {
 
     List<FlowTaskTemplateEntity> templates = templateService.getAllTaskTemplates();
     List<String> templateIds = new ArrayList<>();
@@ -460,9 +466,9 @@ public class WorkflowServiceImpl implements WorkflowService {
         entity.setProperties(export.getProperties());
         entity.setTriggers(export.getTriggers());
         entity.setScope(scope);
-        
+
         entity.setScope(scope);
-        
+
         if (WorkflowScope.team.equals(scope)) {
           if (flowTeamId != null && flowTeamId.length() != 0) {
             entity.setFlowTeamId(flowTeamId);
@@ -486,7 +492,7 @@ public class WorkflowServiceImpl implements WorkflowService {
         newEntity.setProperties(export.getProperties());
         newEntity.setDescription(export.getDescription());
 
-        
+
         newEntity.setScope(scope);
         if (WorkflowScope.team.equals(scope)) {
           if (flowTeamId != null && flowTeamId.length() != 0) {
@@ -497,7 +503,7 @@ public class WorkflowServiceImpl implements WorkflowService {
         } else {
           newEntity.setFlowTeamId(null);
         }
-        
+
         newEntity.setName(export.getName());
         newEntity.setShortDescription(export.getShortDescription());
         newEntity.setStatus(export.getStatus());
@@ -568,7 +574,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     if (!enabledQuotaCheck) {
       return true;
     }
-    
+
     WorkflowQuotas workflowQuotas = teamService.getTeamQuotas(teamId);
     if (workflowQuotas.getCurrentConcurrentWorkflows() > workflowQuotas.getMaxConcurrentWorkflows()
         || workflowQuotas.getCurrentWorkflowExecutionMonthly() > workflowQuotas
@@ -633,7 +639,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     if (isActive == null || !isActive) {
       return false;
     }
-    
+
     if (workflow != null) {
       if (workflow.getTriggers() != null) {
         Triggers triggers = workflow.getTriggers();
@@ -671,7 +677,7 @@ public class WorkflowServiceImpl implements WorkflowService {
   @Override
   public List<WorkflowSummary> getSystemWorkflows() {
     final List<WorkflowEntity> list = workFlowRepository.getSystemWorkflows();
-    
+
     final List<WorkflowSummary> newList = new LinkedList<>();
     for (final WorkflowEntity entity : list) {
 
@@ -691,7 +697,7 @@ public class WorkflowServiceImpl implements WorkflowService {
   @Override
   public List<WorkflowShortSummary> getSystemWorkflowShortSummaryList() {
     List<WorkflowShortSummary> summaryList = new LinkedList<>();
-    
+
     List<WorkflowEntity> workfows = workFlowRepository.getSystemWorkflows();
     for (WorkflowEntity workflow : workfows) {
 
@@ -714,10 +720,54 @@ public class WorkflowServiceImpl implements WorkflowService {
         summary.setWebhookEnabled(webhookEnabled);
         summary.setWorkflowName(workflowName);
         summary.setWorkflowId(workflow.getId());
-  
+
         summaryList.add(summary);
       }
     }
     return summaryList;
+  }
+
+  @Override
+  public List<String> getWorkflowParameters(String workFlowId) {
+    List<String> parameters = new ArrayList<>();
+    WorkflowEntity workflow = workFlowRepository.getWorkflow(workFlowId);
+
+    List<FlowGlobalConfigEntity> globalProperties = configService.getGlobalConfigs();
+    if (globalProperties != null) {
+      for (FlowGlobalConfigEntity globalProperty : globalProperties) {
+        parameters.add("global.params." + globalProperty.getKey());
+
+      }
+    }
+
+    List<FlowTeamConfiguration> teamProperties =
+        teamService.getTeamById(workflow.getFlowTeamId()).getSettings().getProperties();
+    if (teamProperties != null) {
+      for (FlowTeamConfiguration teamProperty : teamProperties) {
+        parameters.add("team.params." + teamProperty.getKey());
+
+      }
+    }
+
+    List<FlowProperty> workflowProperties = workflow.getProperties();
+    if (workflowProperties != null) {
+      for (FlowProperty workflowProperty : workflowProperties) {
+        parameters.add("workflow.params." + workflowProperty.getKey());
+
+      }
+    }
+
+    List<WorkflowEntity> systemWorkflows = workFlowRepository.getSystemWorkflows();
+    if (systemWorkflows != null) {
+      for (WorkflowEntity systemWorkflow : systemWorkflows) {
+        List<FlowProperty> systemProperties = systemWorkflow.getProperties();
+        if (systemProperties != null) {
+          for (FlowProperty systemProperty : systemProperties) {
+            parameters.add("system.params." + systemProperty.getKey());
+          }
+        }
+      }
+    }
+    return parameters;
   }
 }
