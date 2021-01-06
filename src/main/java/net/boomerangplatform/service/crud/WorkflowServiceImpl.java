@@ -737,23 +737,27 @@ public class WorkflowServiceImpl implements WorkflowService {
 
     for (Map.Entry<String, Object> globalProperty : globalProperties.entrySet()) {
       parameters.add("global.params." + globalProperty.getKey());
+      parameters.add("params." + globalProperty.getKey());
     }
     Map<String, Object> teamProperties = new HashMap<>();
     propertyManager.buildTeamProperties(teamProperties, workflow.getId());
 
     for (Map.Entry<String, Object> teamProperty : teamProperties.entrySet()) {
       parameters.add("team.params." + teamProperty.getKey());
+      parameters.add("params." + teamProperty.getKey());
     }
     Map<String, Object> workflowProperties = new HashMap<>();
     propertyManager.buildWorkflowProperties(workflowProperties, null, workflow.getId());
     for (Map.Entry<String, Object> workflowProperty : workflowProperties.entrySet()) {
       parameters.add("workflow.params." + workflowProperty.getKey());
+      parameters.add("params." + workflowProperty.getKey());
     }
 
     Map<String, Object> systemProperties = new HashMap<>();
     propertyManager.buildSystemProperties(null, null, workflow.getId(), systemProperties);
     for (Map.Entry<String, Object> systemProperty : systemProperties.entrySet()) {
       parameters.add("system.params." + systemProperty.getKey());
+      parameters.add("params." + systemProperty.getKey());
     }
     return parameters;
   }
