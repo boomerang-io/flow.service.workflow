@@ -15,6 +15,7 @@ import net.boomerangplatform.model.FlowTaskTemplate;
 import net.boomerangplatform.model.Task;
 import net.boomerangplatform.mongo.entity.ActivityEntity;
 import net.boomerangplatform.mongo.entity.FlowGlobalConfigEntity;
+import net.boomerangplatform.mongo.entity.FlowTaskTemplateEntity;
 import net.boomerangplatform.mongo.entity.FlowTeamConfiguration;
 import net.boomerangplatform.mongo.entity.FlowTeamEntity;
 import net.boomerangplatform.mongo.entity.RevisionEntity;
@@ -28,6 +29,7 @@ import net.boomerangplatform.mongo.model.TaskTemplateConfig;
 import net.boomerangplatform.mongo.model.next.DAGTask;
 import net.boomerangplatform.mongo.service.ActivityTaskService;
 import net.boomerangplatform.mongo.service.FlowGlobalConfigService;
+import net.boomerangplatform.mongo.service.FlowTaskTemplateService;
 import net.boomerangplatform.mongo.service.FlowTeamService;
 import net.boomerangplatform.mongo.service.RevisionService;
 import net.boomerangplatform.service.crud.FlowActivityService;
@@ -58,6 +60,9 @@ public class PropertyManagerImpl implements PropertyManager {
 
   @Autowired
   private TaskTemplateService templateService;
+  
+  @Autowired
+  private FlowTaskTemplateService flowTaskTemplateService;
 
 
   @Value("${flow.feature.team.properties}")
@@ -121,7 +126,8 @@ public class PropertyManagerImpl implements PropertyManager {
           if (dagTask != null) {
             String templateId = dagTask.getTemplateId();
             Integer templateVersion = dagTask.getTemplateVersion();
-            FlowTaskTemplate taskTemplate = templateService.getTaskTemplateWithId(templateId);
+            FlowTaskTemplateEntity taskTemplate = flowTaskTemplateService.getTaskTemplateWithId(templateId);
+          
             if (taskTemplate != null) {
               List<Revision> revisions = taskTemplate.getRevisions();
               if (revisions != null) {
