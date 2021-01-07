@@ -4,26 +4,34 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import net.boomerangplatform.model.FlowTaskTemplate;
 import net.boomerangplatform.model.Task;
 import net.boomerangplatform.mongo.entity.ActivityEntity;
 import net.boomerangplatform.mongo.entity.FlowGlobalConfigEntity;
 import net.boomerangplatform.mongo.entity.FlowTeamConfiguration;
 import net.boomerangplatform.mongo.entity.FlowTeamEntity;
+import net.boomerangplatform.mongo.entity.RevisionEntity;
 import net.boomerangplatform.mongo.entity.TaskExecutionEntity;
 import net.boomerangplatform.mongo.entity.WorkflowEntity;
 import net.boomerangplatform.mongo.model.CoreProperty;
+import net.boomerangplatform.mongo.model.Dag;
 import net.boomerangplatform.mongo.model.FlowProperty;
+import net.boomerangplatform.mongo.model.Revision;
+import net.boomerangplatform.mongo.model.TaskTemplateConfig;
+import net.boomerangplatform.mongo.model.next.DAGTask;
 import net.boomerangplatform.mongo.service.ActivityTaskService;
 import net.boomerangplatform.mongo.service.FlowGlobalConfigService;
 import net.boomerangplatform.mongo.service.FlowTeamService;
 import net.boomerangplatform.mongo.service.RevisionService;
 import net.boomerangplatform.service.crud.FlowActivityService;
+import net.boomerangplatform.service.crud.TaskTemplateService;
 import net.boomerangplatform.service.crud.WorkflowService;
 import net.boomerangplatform.service.refactor.ControllerRequestProperties;
 
@@ -47,6 +55,9 @@ public class PropertyManagerImpl implements PropertyManager {
 
   @Autowired
   private FlowGlobalConfigService flowGlobalConfigService;
+
+  @Autowired
+  private TaskTemplateService templateService;
 
 
   @Value("${flow.feature.team.properties}")
@@ -76,16 +87,62 @@ public class PropertyManagerImpl implements PropertyManager {
 
   private void buildTaskInputProperties(ControllerRequestProperties applicationProperties,
       Task task, String activityId) {
+    ActivityEntity activity = activityService.findWorkflowActivity(activityId);
+    Optional<RevisionEntity> revisionOptional =
+        revisionService.getRevision(activity.getWorkflowRevisionid());
+
     Map<String, String> workflowInputProperties = applicationProperties.getTaskInputProperties();
     final Map<String, String> map = task.getInputs();
     if (task.getInputs() != null) {
       for (final Map.Entry<String, String> pair : map.entrySet()) {
         String key = pair.getKey();
         String value = pair.getValue();
+
+        if (value == null || value.isBlank()) {
+          value = getDefaultValue(task, revisionOptional, value, key);
+        }
+
         String newValue = this.replaceValueWithProperty(value, activityId, applicationProperties);
         workflowInputProperties.put(key, newValue);
       }
     }
+  }
+
+  private String getDefaultValue(Task task, Optional<RevisionEntity> revisionOptional, String value,
+      String key) {
+    if (value == null || value.isBlank()) {
+      if (revisionOptional.isPresent()) {
+        RevisionEntity revision = revisionOptional.get();
+        Dag dag = revision.getDag();
+        List<DAGTask> tasks = dag.getTasks();
+        if (tasks != null) {
+          DAGTask dagTask = tasks.stream().filter(e -> e.getTaskId().equals(task.getTaskId()))
+              .findFirst().orElse(null);
+          if (dagTask != null) {
+            String templateId = dagTask.getTemplateId();
+            Integer templateVersion = dagTask.getTemplateVersion();
+            FlowTaskTemplate taskTemplate = templateService.getTaskTemplateWithId(templateId);
+            if (taskTemplate != null) {
+              List<Revision> revisions = taskTemplate.getRevisions();
+              if (revisions != null) {
+                Revision rev = revisions.stream()
+                    .filter(e -> e.getVersion().equals(templateVersion)).findFirst().orElse(null);
+                if (rev != null) {
+                  List<TaskTemplateConfig> configs = rev.getConfig();
+                  TaskTemplateConfig taskTemnplate =
+                      configs.stream().filter(e -> e.getKey().equals(key)).findAny().orElse(null);
+                  if (taskTemnplate != null) {
+                    return taskTemnplate.getDefaultValue();
+                  }
+                }
+              }
+            }
+
+          }
+        }
+      }
+    }
+    return "";
   }
 
   public void buildWorkflowProperties(Map<String, Object> workflowProperties, String activityId,

@@ -9,6 +9,8 @@ public interface RevisionService {
 
   void deleteWorkflow(RevisionEntity flowWorkflowVersionEntity);
 
+  Optional<RevisionEntity> getRevision(String id);
+  
   RevisionEntity getLatestWorkflowVersion(String workflowId);
 
   RevisionEntity getLatestWorkflowVersion(String workflowId, long version);
