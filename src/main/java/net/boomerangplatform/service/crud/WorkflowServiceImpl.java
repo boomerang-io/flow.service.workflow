@@ -746,7 +746,7 @@ public class WorkflowServiceImpl implements WorkflowService {
       }
     }
 
-    if (flowFeatureTeamParameters && workflow.getScope().equals(WorkflowScope.team)) {
+    if (flowFeatureTeamParameters && workflow.getScope() != null && WorkflowScope.team.equals(workflow.getScope())) {
       Map<String, Object> teamProperties = new HashMap<>();
       propertyManager.buildTeamProperties(teamProperties, workflow.getId());
 
