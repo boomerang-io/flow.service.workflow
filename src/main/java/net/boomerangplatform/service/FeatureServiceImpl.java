@@ -25,11 +25,11 @@ public class FeatureServiceImpl implements FeatureService {
   @Value("${flow.feature.workflow.tokens}")
   private boolean flowFeatureWorkflowTokens;
   
-  @Value("${flow.feature.team.properties}")
-  private boolean flowFeatureTeamProperties;
+  @Value("${flow.feature.team.parameters}")
+  private boolean flowFeatureTeamParameters;
   
-  @Value("${flow.feature.global.properties}")
-  private boolean flowFeatureGlobalProperties;
+  @Value("${flow.feature.global.parameters}")
+  private boolean flowFeatureGlobalParameters;
   
   @Value("${flow.feature.team.management}")
   private boolean flowFeatureTeamManagement;
@@ -66,8 +66,8 @@ public class FeatureServiceImpl implements FeatureService {
     features.put("workflow.quotas", flowFeatureWorkflowQuotas);
     features.put("workflow.triggers", flowFeatureWorkflowTriggers);
     features.put("workflow.tokens", flowFeatureWorkflowTokens);
-    features.put("team.properties", flowFeatureTeamProperties);
-    features.put("global.properties", flowFeatureGlobalProperties);
+    features.put("team.parameters", flowFeatureTeamParameters);
+    features.put("global.parameters", flowFeatureGlobalParameters);
     features.put("team.management", flowFeatureTeamManagement);
     features.put("user.management", flowFeatureUserManagement);
     features.put("taskManager", flowFeatureTaskManager);
