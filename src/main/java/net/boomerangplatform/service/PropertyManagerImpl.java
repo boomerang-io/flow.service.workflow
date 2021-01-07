@@ -11,7 +11,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import net.boomerangplatform.model.FlowTaskTemplate;
 import net.boomerangplatform.model.Task;
 import net.boomerangplatform.mongo.entity.ActivityEntity;
 import net.boomerangplatform.mongo.entity.FlowGlobalConfigEntity;
@@ -33,7 +32,6 @@ import net.boomerangplatform.mongo.service.FlowTaskTemplateService;
 import net.boomerangplatform.mongo.service.FlowTeamService;
 import net.boomerangplatform.mongo.service.RevisionService;
 import net.boomerangplatform.service.crud.FlowActivityService;
-import net.boomerangplatform.service.crud.TaskTemplateService;
 import net.boomerangplatform.service.crud.WorkflowService;
 import net.boomerangplatform.service.refactor.ControllerRequestProperties;
 
@@ -57,13 +55,9 @@ public class PropertyManagerImpl implements PropertyManager {
 
   @Autowired
   private FlowGlobalConfigService flowGlobalConfigService;
-
-  @Autowired
-  private TaskTemplateService templateService;
   
   @Autowired
   private FlowTaskTemplateService flowTaskTemplateService;
-
 
   @Value("${flow.feature.team.properties}")
   private boolean enabledTeamProperites;
@@ -151,6 +145,7 @@ public class PropertyManagerImpl implements PropertyManager {
     return "";
   }
 
+  @Override
   public void buildWorkflowProperties(Map<String, Object> workflowProperties, String activityId,
       String workflowId) {
     WorkflowEntity workflow = new WorkflowEntity();
@@ -176,6 +171,7 @@ public class PropertyManagerImpl implements PropertyManager {
     }
   }
 
+  @Override
   public void buildGlobalProperties(Map<String, Object> globalProperties) {
     List<FlowGlobalConfigEntity> globalConfigs = this.flowGlobalConfigService.getGlobalConfigs();
     for (FlowGlobalConfigEntity entity : globalConfigs) {
@@ -185,6 +181,7 @@ public class PropertyManagerImpl implements PropertyManager {
     }
   }
 
+  @Override
   public void buildSystemProperties(Task task, String activityId, String workflowId,
       Map<String, Object> systemProperties) {
 
@@ -207,6 +204,7 @@ public class PropertyManagerImpl implements PropertyManager {
     }
   }
 
+  @Override
   public void buildTeamProperties(Map<String, Object> teamProperties, String workflowId) {
     FlowTeamEntity flowTeamEntity =
         this.flowTeamService.findById(workflowService.getWorkflow(workflowId).getFlowTeamId());
@@ -254,6 +252,9 @@ public class PropertyManagerImpl implements PropertyManager {
           if (executionProperties.get(propertyName) != null) {
             replaceValue = executionProperties.get(propertyName);
           }
+          else {
+            replaceValue = "";
+          }
         }
       } else if (components.length == 4) {
         String task = components[0];
@@ -265,6 +266,9 @@ public class PropertyManagerImpl implements PropertyManager {
           if (taskExecution != null && taskExecution.getOutputs() != null
               && taskExecution.getOutputs().get(outputProperty) != null) {
             replaceValue = taskExecution.getOutputs().get(outputProperty);
+          }
+          else {
+            replaceValue = "";
           }
         }
       } else if (components.length == 3) {
@@ -278,6 +282,9 @@ public class PropertyManagerImpl implements PropertyManager {
 
             if (executionProperties.get(key) != null) {
               replaceValue = executionProperties.get(key);
+            }
+            else {
+              replaceValue = "";
             }
           }
         }
