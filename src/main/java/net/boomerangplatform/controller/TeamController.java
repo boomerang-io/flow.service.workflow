@@ -145,9 +145,9 @@ public class TeamController {
     return flowTeamService.deactivateTeam(teamId);
   }
 
-  @PatchMapping(value = "/teams/update")
-  public void updateTeamFlagsandQuotas() {
-flowTeamService.updateFlagsAndQuotas();
+  @GetMapping(value = "/teams/update")
+  public List<TeamWorkflowSummary> updateTeamFlagsandQuotas() {
+   return flowTeamService.updateFlagsAndQuotas();
 
   }
 
