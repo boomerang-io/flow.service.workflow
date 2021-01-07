@@ -746,7 +746,7 @@ public class WorkflowServiceImpl implements WorkflowService {
       }
     }
 
-    if (flowFeatureTeamParameters) {
+    if (flowFeatureTeamParameters && workflow.getScope().equals(WorkflowScope.team)) {
       Map<String, Object> teamProperties = new HashMap<>();
       propertyManager.buildTeamProperties(teamProperties, workflow.getId());
 
@@ -763,14 +763,13 @@ public class WorkflowServiceImpl implements WorkflowService {
       parameters.add("params." + workflowProperty.getKey());
     }
 
-    if (workflow.getScope().equals(WorkflowScope.system)) {
-      Map<String, Object> systemProperties = new HashMap<>();
-      propertyManager.buildSystemProperties(null, null, workflow.getId(), systemProperties);
-      for (Map.Entry<String, Object> systemProperty : systemProperties.entrySet()) {
-        parameters.add("system.params." + systemProperty.getKey());
-        parameters.add("params." + systemProperty.getKey());
-      }
+    Map<String, Object> systemProperties = new HashMap<>();
+    propertyManager.buildSystemProperties(null, null, workflow.getId(), systemProperties);
+    for (Map.Entry<String, Object> systemProperty : systemProperties.entrySet()) {
+      parameters.add("system.params." + systemProperty.getKey());
+      parameters.add("params." + systemProperty.getKey());
     }
+
     return parameters;
   }
 }
