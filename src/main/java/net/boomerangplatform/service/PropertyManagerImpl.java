@@ -102,6 +102,8 @@ public class PropertyManagerImpl implements PropertyManager {
         }
 
         String newValue = this.replaceValueWithProperty(value, activityId, applicationProperties);
+        newValue = this.replaceValueWithProperty(newValue, activityId, applicationProperties);
+        
         workflowInputProperties.put(key, newValue);
       }
     }
