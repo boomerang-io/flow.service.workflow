@@ -59,7 +59,7 @@ public class PropertyManagerImpl implements PropertyManager {
   @Autowired
   private FlowTaskTemplateService flowTaskTemplateService;
 
-  @Value("${flow.feature.team.properties}")
+  @Value("${flow.feature.team.parameters}")
   private boolean enabledTeamProperites;
 
   final String[] reserved = {"system", "workflow", "global", "team", "workflow"};
