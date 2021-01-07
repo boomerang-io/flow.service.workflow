@@ -75,7 +75,7 @@ public class ControllerClientImpl implements ControllerClient {
     request.setWorkflowActivityId(activityId);
     request.setWorkflowName(workflowName);
     request.setWorkflowId(workflowId);
-    request.setProperties(properties);
+    request.setParameters(properties);
     
     final WorkflowStorage storage = new WorkflowStorage();
     storage.setEnable(enableStorage);

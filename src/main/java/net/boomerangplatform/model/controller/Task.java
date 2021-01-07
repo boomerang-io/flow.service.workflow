@@ -16,8 +16,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 		  property = "taskType")
 		@JsonSubTypes({ 
 		  @Type(value = TaskCustom.class, name = "custom"), 
-		  @Type(value = TaskTemplate.class, name = "template"), 
-		  @Type(value = TaskCICD.class, name = "cicd") 
+		  @Type(value = TaskTemplate.class, name = "template")
 		})
 @JsonIgnoreProperties
 public abstract class Task {
