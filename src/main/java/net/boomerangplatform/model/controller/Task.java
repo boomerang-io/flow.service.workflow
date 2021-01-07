@@ -22,6 +22,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 @JsonIgnoreProperties
 public abstract class Task {
 
+
   private String workflowName;
 
   private String workflowId;
@@ -40,8 +41,8 @@ public abstract class Task {
   @JsonProperty("command")
   private String command;
 
-  @JsonProperty("properties")
-  private Map<String, String> properties = new HashMap<>();
+  @JsonProperty("parameters")
+  private Map<String, String> parameters = new HashMap<>();
 
   @JsonProperty("arguments")
   private List<String> arguments;
@@ -89,16 +90,16 @@ public abstract class Task {
     this.taskName = taskName;
   }
 
-  public void setProperties(Map<String, String> properties) {
-    this.properties = properties;
+  public void setParameters(Map<String, String> parameters) {
+    this.parameters = parameters;
   }
 
-  public Map<String, String> getProperties() {
-    return this.properties;
+  public Map<String, String> getParameters() {
+    return this.parameters;
   }
 
-  public void setProperty(String name, String value) {
-    this.properties.put(name, value);
+  public void setParameter(String name, String value) {
+    this.parameters.put(name, value);
   }
 
   public List<String> getArguments() {
@@ -138,11 +139,11 @@ public abstract class Task {
   }
 
   public TaskConfiguration getConfiguration() {
-	return configuration;
+    return configuration;
   }
 
   public void setConfiguration(TaskConfiguration configuration) {
-	this.configuration = configuration;
+    this.configuration = configuration;
   }
 
 }

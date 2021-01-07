@@ -7,22 +7,22 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class TaskResponse extends Response {
 
-  private Map<String, String> output = new HashMap<>();
+  private Map<String, String> results = new HashMap<>();
 
   public TaskResponse() {
     // Do nothing
   }
 
-  public TaskResponse(String code, String desc, Map<String, String> output) {
+  public TaskResponse(String code, String desc, Map<String, String> results) {
     super(code, desc);
-    this.output = output;
+    this.results = results;
   }
 
-  public Map<String, String> getOutput() {
-    return output;
+  public Map<String, String> getResults() {
+    return results;
   }
 
-  public void setOutput(Map<String, String> output) {
-    this.output = output;
+  public void setResults(Map<String, String> results) {
+    this.results = results;
   }
 }
