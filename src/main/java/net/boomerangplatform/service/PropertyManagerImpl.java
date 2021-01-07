@@ -11,7 +11,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import net.boomerangplatform.model.FlowTaskTemplate;
 import net.boomerangplatform.model.Task;
 import net.boomerangplatform.mongo.entity.ActivityEntity;
 import net.boomerangplatform.mongo.entity.FlowGlobalConfigEntity;
@@ -33,7 +32,6 @@ import net.boomerangplatform.mongo.service.FlowTaskTemplateService;
 import net.boomerangplatform.mongo.service.FlowTeamService;
 import net.boomerangplatform.mongo.service.RevisionService;
 import net.boomerangplatform.service.crud.FlowActivityService;
-import net.boomerangplatform.service.crud.TaskTemplateService;
 import net.boomerangplatform.service.crud.WorkflowService;
 import net.boomerangplatform.service.refactor.ControllerRequestProperties;
 
@@ -57,15 +55,12 @@ public class PropertyManagerImpl implements PropertyManager {
 
   @Autowired
   private FlowGlobalConfigService flowGlobalConfigService;
-
-  @Autowired
-  private TaskTemplateService templateService;
   
   @Autowired
   private FlowTaskTemplateService flowTaskTemplateService;
 
 
-  @Value("${flow.feature.team.properties}")
+  @Value("${flow.feature.team.parameters}")
   private boolean enabledTeamProperites;
 
   final String[] reserved = {"system", "workflow", "global", "team", "workflow"};
