@@ -735,7 +735,7 @@ public class WorkflowServiceImpl implements WorkflowService {
   public List<String> getWorkflowParameters(String workFlowId) {
     List<String> parameters = new ArrayList<>();
     WorkflowEntity workflow = workFlowRepository.getWorkflow(workFlowId);
-    
+
     if (flowFeatureGlobalParameters) {
       Map<String, Object> globalProperties = new HashMap<>();
       propertyManager.buildGlobalProperties(globalProperties);
@@ -763,11 +763,13 @@ public class WorkflowServiceImpl implements WorkflowService {
       parameters.add("params." + workflowProperty.getKey());
     }
 
-    Map<String, Object> systemProperties = new HashMap<>();
-    propertyManager.buildSystemProperties(null, null, workflow.getId(), systemProperties);
-    for (Map.Entry<String, Object> systemProperty : systemProperties.entrySet()) {
-      parameters.add("system.params." + systemProperty.getKey());
-      parameters.add("params." + systemProperty.getKey());
+    if (workflow.getScope().equals(WorkflowScope.system)) {
+      Map<String, Object> systemProperties = new HashMap<>();
+      propertyManager.buildSystemProperties(null, null, workflow.getId(), systemProperties);
+      for (Map.Entry<String, Object> systemProperty : systemProperties.entrySet()) {
+        parameters.add("system.params." + systemProperty.getKey());
+        parameters.add("params." + systemProperty.getKey());
+      }
     }
     return parameters;
   }
