@@ -146,8 +146,8 @@ public class TeamController {
   }
 
   @GetMapping(value = "/teams/update")
-  public List<TeamWorkflowSummary> updateTeamFlagsandQuotas() {
-   return flowTeamService.updateFlagsAndQuotas();
+  public List<TeamWorkflowSummary> getTeamFlagsandQuotas() {
+   return flowTeamService.getFlagsAndQuotas();
 
   }
 

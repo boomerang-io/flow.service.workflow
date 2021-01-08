@@ -253,12 +253,12 @@ public class TeamServiceImpl implements TeamService {
 
   private List<FlowTeamEntity> getAllTeamsListing() {
     List<FlowTeamEntity> flowTeams = null;
-    if (!flowExternalUrlTeam.isBlank()) {
-      flowTeams = this.externalTeamService.getExternalTeams(flowExternalUrlTeam);
-    } else {
+//    if (!flowExternalUrlTeam.isBlank()) {
+//      flowTeams = this.externalTeamService.getExternalTeams(flowExternalUrlTeam);
+//    } else {
 
       flowTeams = flowTeamService.findAllTeams(Pageable.unpaged()).getContent();
-    }
+   // }
     return flowTeams;
   }
 
@@ -404,7 +404,7 @@ public class TeamServiceImpl implements TeamService {
   }
 
   @Override
-  public List<TeamWorkflowSummary> updateFlagsAndQuotas() {
+  public List<TeamWorkflowSummary> getFlagsAndQuotas() {
     final List<TeamWorkflowSummary> teamWorkFlowSummary = new LinkedList<>();
     for (final FlowTeamEntity entity : getAllTeamsListing()) {
       final List<WorkflowSummary> workflowSummary =

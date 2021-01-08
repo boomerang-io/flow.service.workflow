@@ -57,7 +57,7 @@ public interface TeamService {
 
   FlowTeamEntity deactivateTeam(String teamId);
 
-  List<TeamWorkflowSummary> updateFlagsAndQuotas();
+  List<TeamWorkflowSummary> getFlagsAndQuotas();
   
 
 }
