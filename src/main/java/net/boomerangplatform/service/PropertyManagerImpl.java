@@ -87,65 +87,86 @@ public class PropertyManagerImpl implements PropertyManager {
   private void buildTaskInputProperties(ControllerRequestProperties applicationProperties,
       Task task, String activityId) {
     ActivityEntity activity = activityService.findWorkflowActivity(activityId);
-    Optional<RevisionEntity> revisionOptional =
-        revisionService.getRevision(activity.getWorkflowRevisionid());
 
+    List<TaskTemplateConfig> configs = getInputsForTask(task, activity.getWorkflowRevisionid());
+    
     Map<String, String> workflowInputProperties = applicationProperties.getTaskInputProperties();
-    final Map<String, String> map = task.getInputs();
-    if (task.getInputs() != null) {
-      for (final Map.Entry<String, String> pair : map.entrySet()) {
-        String key = pair.getKey();
-        String value = pair.getValue();
-
-        if (value == null || value.isBlank()) {
-          value = getDefaultValue(task, revisionOptional, value, key);
-        }
-
+    for (TaskTemplateConfig config : configs) {
+      String key = config.getKey();
+      String value = this.getInputForTaskKey(task, activity.getWorkflowRevisionid(), key);
+      
+      if (value == null || value.isBlank()) {
+        value = config.getDefaultValue();
+      }
+      
+      if (value != null) {
         String newValue = this.replaceValueWithProperty(value, activityId, applicationProperties);
         newValue = this.replaceValueWithProperty(newValue, activityId, applicationProperties);
-        
         workflowInputProperties.put(key, newValue);
+      }
+      else {
+        workflowInputProperties.put(key, "");
       }
     }
   }
 
-  private String getDefaultValue(Task task, Optional<RevisionEntity> revisionOptional, String value,
-      String key) {
-    if (value == null || value.isBlank()) {
-      if (revisionOptional.isPresent()) {
-        RevisionEntity revision = revisionOptional.get();
-        Dag dag = revision.getDag();
-        List<DAGTask> tasks = dag.getTasks();
-        if (tasks != null) {
-          DAGTask dagTask = tasks.stream().filter(e -> e.getTaskId().equals(task.getTaskId()))
-              .findFirst().orElse(null);
-          if (dagTask != null) {
-            String templateId = dagTask.getTemplateId();
-            Integer templateVersion = dagTask.getTemplateVersion();
-            FlowTaskTemplateEntity taskTemplate = flowTaskTemplateService.getTaskTemplateWithId(templateId);
-          
-            if (taskTemplate != null) {
-              List<Revision> revisions = taskTemplate.getRevisions();
-              if (revisions != null) {
-                Revision rev = revisions.stream()
-                    .filter(e -> e.getVersion().equals(templateVersion)).findFirst().orElse(null);
-                if (rev != null) {
-                  List<TaskTemplateConfig> configs = rev.getConfig();
-                  TaskTemplateConfig taskTemnplate =
-                      configs.stream().filter(e -> e.getKey().equals(key)).findAny().orElse(null);
-                  if (taskTemnplate != null) {
-                    return taskTemnplate.getDefaultValue();
-                  }
-                }
-              }
+  private String getInputForTaskKey(Task task, String revisionId, String key) {
+    Optional<RevisionEntity> revisionOptional =
+        revisionService.getRevision(revisionId);
+    if (revisionOptional.isPresent()) {
+      RevisionEntity revision = revisionOptional.get();
+      Dag dag = revision.getDag();
+      List<DAGTask> tasks = dag.getTasks();
+      if (tasks != null) {
+        DAGTask dagTask = tasks.stream().filter(e -> e.getTaskId().equals(task.getTaskId()))
+            .findFirst().orElse(null);
+        if (dagTask != null) {
+          List<CoreProperty> properties = dagTask.getProperties();
+          if (properties != null) {
+            CoreProperty property = properties.stream().filter(e -> key.equals(e.getKey()))
+            .findFirst().orElse(null);
+            if (property != null) {
+              return property.getValue();
             }
-
           }
         }
       }
     }
-    return "";
+    return null;
   }
+
+
+  private List<TaskTemplateConfig> getInputsForTask(Task task, String revisionId) {
+    Optional<RevisionEntity> revisionOptional =
+        revisionService.getRevision(revisionId);
+    if (revisionOptional.isPresent()) {
+      RevisionEntity revision = revisionOptional.get();
+      Dag dag = revision.getDag();
+      List<DAGTask> tasks = dag.getTasks();
+      if (tasks != null) {
+        DAGTask dagTask = tasks.stream().filter(e -> e.getTaskId().equals(task.getTaskId()))
+            .findFirst().orElse(null);
+        if (dagTask != null) {
+          String templateId = dagTask.getTemplateId();
+          Integer templateVersion = dagTask.getTemplateVersion();
+          FlowTaskTemplateEntity taskTemplate = flowTaskTemplateService.getTaskTemplateWithId(templateId);
+        
+          if (taskTemplate != null) {
+            List<Revision> revisions = taskTemplate.getRevisions();
+            if (revisions != null) {
+              Revision rev = revisions.stream()
+                  .filter(e -> e.getVersion().equals(templateVersion)).findFirst().orElse(null);
+              if (rev != null) {
+                return rev.getConfig();
+              }
+            }
+          }
+        }
+      }
+    }
+    return new LinkedList<>();
+  }
+
 
   @Override
   public void buildWorkflowProperties(Map<String, Object> workflowProperties, String activityId,
