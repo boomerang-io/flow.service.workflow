@@ -19,6 +19,7 @@ import net.boomerangplatform.mongo.entity.TaskExecutionEntity;
 import net.boomerangplatform.mongo.model.Audit;
 import net.boomerangplatform.mongo.model.CoreProperty;
 import net.boomerangplatform.mongo.model.TaskStatus;
+import net.boomerangplatform.mongo.model.TaskType;
 import net.boomerangplatform.mongo.model.internal.InternalTaskResponse;
 import net.boomerangplatform.mongo.model.next.DAGTask;
 import net.boomerangplatform.mongo.service.ActivityTaskService;
@@ -29,6 +30,7 @@ import net.boomerangplatform.service.crud.TeamService;
 import net.boomerangplatform.service.crud.WorkflowService;
 import net.boomerangplatform.service.refactor.ControllerRequestProperties;
 import net.boomerangplatform.service.refactor.TaskClient;
+import net.boomerangplatform.model.Task;
 
 @Service
 public class FlowApprovalServiceImpl implements FlowApprovalService {
@@ -157,6 +159,10 @@ public class FlowApprovalServiceImpl implements FlowApprovalService {
         
         if (instructionText != null) {
           String activityId = activity.getId();
+          Task task = new Task();
+          task.setTaskId(taskExecution.getTaskId());
+          task.setTaskType(taskExecution.getTaskType());
+          task.setTaskName(taskExecution.getTaskName());
           ControllerRequestProperties properties = propertyManager.buildRequestPropertyLayering(null, activityId, activity.getWorkflowId());
           instructionText = propertyManager.replaceValueWithProperty(instructionText, activityId, properties);
         }
