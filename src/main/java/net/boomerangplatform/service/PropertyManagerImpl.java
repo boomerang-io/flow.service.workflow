@@ -65,7 +65,7 @@ public class PropertyManagerImpl implements PropertyManager {
   final String[] reserved = {"system", "workflow", "global", "team", "workflow"};
 
   @Override
-  public ControllerRequestProperties buildRequestPropertyLayering(Task task, String activityId) {
+  public ControllerRequestProperties buildRequestPropertyLayering(Task task, String activityId, String workflowId) {
     ControllerRequestProperties applicationProperties = new ControllerRequestProperties();
     Map<String, Object> systemProperties = applicationProperties.getSystemProperties();
     Map<String, Object> globalProperties = applicationProperties.getGlobalProperties();
@@ -73,14 +73,17 @@ public class PropertyManagerImpl implements PropertyManager {
     Map<String, Object> workflowProperties = applicationProperties.getWorkflowProperties();
 
     buildGlobalProperties(globalProperties);
-    buildSystemProperties(task, activityId, task.getWorkflowId(), systemProperties);
+    buildSystemProperties(task, activityId, workflowId, systemProperties);
 
     if (enabledTeamProperites) {
-      buildTeamProperties(teamProperties, task.getWorkflowId());
+      buildTeamProperties(teamProperties, workflowId);
     }
     buildWorkflowProperties(workflowProperties, activityId, null);
-    buildTaskInputProperties(applicationProperties, task, activityId);
-
+    
+    if (task != null) {
+      buildTaskInputProperties(applicationProperties, task, activityId);
+    }
+  
     return applicationProperties;
   }
 

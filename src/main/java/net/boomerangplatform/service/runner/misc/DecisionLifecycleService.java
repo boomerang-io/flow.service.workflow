@@ -75,7 +75,7 @@ public class DecisionLifecycleService {
     List<String> matchedNodes = new LinkedList<>();
     List<String> defaultNodes = new LinkedList<>();
 
-    ControllerRequestProperties properties = propertyManager.buildRequestPropertyLayering(currentTask, activityId);
+    ControllerRequestProperties properties = propertyManager.buildRequestPropertyLayering(currentTask, activityId, currentTask.getWorkflowId());
     String value = currentTask.getDecisionValue(); 
     value = propertyManager.replaceValueWithProperty(value, activityId, properties);
    

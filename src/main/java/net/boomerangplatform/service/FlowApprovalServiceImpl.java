@@ -18,7 +18,6 @@ import net.boomerangplatform.mongo.entity.RevisionEntity;
 import net.boomerangplatform.mongo.entity.TaskExecutionEntity;
 import net.boomerangplatform.mongo.model.Audit;
 import net.boomerangplatform.mongo.model.CoreProperty;
-import net.boomerangplatform.mongo.model.ManualType;
 import net.boomerangplatform.mongo.model.TaskStatus;
 import net.boomerangplatform.mongo.model.internal.InternalTaskResponse;
 import net.boomerangplatform.mongo.model.next.DAGTask;
@@ -28,6 +27,7 @@ import net.boomerangplatform.mongo.service.RevisionService;
 import net.boomerangplatform.service.crud.FlowActivityService;
 import net.boomerangplatform.service.crud.TeamService;
 import net.boomerangplatform.service.crud.WorkflowService;
+import net.boomerangplatform.service.refactor.ControllerRequestProperties;
 import net.boomerangplatform.service.refactor.TaskClient;
 
 @Service
@@ -56,6 +56,9 @@ public class FlowApprovalServiceImpl implements FlowApprovalService {
 
   @Autowired
   private RevisionService revisionService;
+  
+  @Autowired
+  private PropertyManager propertyManager;
 
   @Override
   public void actionApproval(ApprovalRequest request) {
@@ -150,6 +153,13 @@ public class FlowApprovalServiceImpl implements FlowApprovalService {
       CoreProperty instructionsProperty = dagTask.getProperties().stream()
           .filter(p -> "instructions".equals(p.getKey())).findFirst().orElse(null);
       if (instructionsProperty != null) {
+        String instructionText = instructionsProperty.getValue();
+        
+        if (instructionText != null) {
+          String activityId = activity.getId();
+          ControllerRequestProperties properties = propertyManager.buildRequestPropertyLayering(null, activityId, activity.getWorkflowId());
+          instructionText = propertyManager.replaceValueWithProperty(instructionText, activityId, properties);
+        }
         approval.setInstructions(instructionsProperty.getValue());
       }
     }

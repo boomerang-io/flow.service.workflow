@@ -128,7 +128,7 @@ public class ControllerClientImpl implements ControllerClient {
     request.setTaskActivityId(task.getTaskActivityId());
 
     ControllerRequestProperties applicationProperties =
-        propertyManager.buildRequestPropertyLayering(task, activityId);
+        propertyManager.buildRequestPropertyLayering(task, activityId, task.getWorkflowId());
    
     Map<String, String> map = applicationProperties.getMap();
     String image = applicationProperties.getLayeredProperty("image");
@@ -214,7 +214,7 @@ public class ControllerClientImpl implements ControllerClient {
     request.setTaskActivityId(task.getTaskActivityId());
 
     ControllerRequestProperties applicationProperties =
-        propertyManager.buildRequestPropertyLayering(task, activityId);
+        propertyManager.buildRequestPropertyLayering(task, activityId, task.getWorkflowId());
    
     Map<String, String> map = applicationProperties.getTaskInputProperties();
     
