@@ -90,7 +90,7 @@
                 "properties" : [ 
                     {
                         "key" : "instructions",
-                        "value" : "Mark down here"
+                        "value" : "Mark down here $(params.task-type)"
                     }
                 ],
                 "metadata" : {
