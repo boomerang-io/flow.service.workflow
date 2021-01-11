@@ -35,6 +35,8 @@ import net.boomerangplatform.model.Approval;
 import net.boomerangplatform.model.ApprovalRequest;
 import net.boomerangplatform.model.FlowActivity;
 import net.boomerangplatform.model.FlowExecutionRequest;
+import net.boomerangplatform.model.FlowWebhookResponse;
+import net.boomerangplatform.model.RequestFlowExecution;
 
 
 public abstract class IntegrationTests extends AbstractFlowTests {
@@ -110,6 +112,14 @@ public abstract class IntegrationTests extends AbstractFlowTests {
     HttpEntity<FlowExecutionRequest> requestUpdate = new HttpEntity<>(request, headers);
     return requestUpdate;
   }
+  
+  protected HttpEntity<RequestFlowExecution> createInternalHeaders(RequestFlowExecution request) {
+    HttpHeaders headers = new HttpHeaders();
+    headers.add(AUTHORIZATION_HEADER, TOKEN_PREFIX + BEARER_TOKEN);
+    headers.add("Content-type", "application/json");
+    HttpEntity<RequestFlowExecution> requestUpdate = new HttpEntity<>(request, headers);
+    return requestUpdate;
+  }
 
   protected FlowActivity submitWorkflow(String workflowId) throws RestClientException {
     return this.submitWorkflow(workflowId, new FlowExecutionRequest());
@@ -178,6 +188,31 @@ public abstract class IntegrationTests extends AbstractFlowTests {
           e.printStackTrace();
         }
         logPayload(activity);
+        return activity;
+      }
+    } catch (RestClientException e) {
+      return null;
+    }
+    return null;
+  }
+  
+
+  protected FlowWebhookResponse submitInternalWorkflow(String workflowId, RequestFlowExecution request)
+      throws RestClientException {
+    try {
+      HttpEntity<RequestFlowExecution> headers = createInternalHeaders(request);
+      ResponseEntity<String> response =
+          testRestTemplate.exchange("http://localhost:" + port + "/internal/webhook/payload",
+              HttpMethod.POST, headers, String.class);
+      if (response.getStatusCode() == HttpStatus.OK) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        FlowWebhookResponse activity = null;
+        try {
+          activity = objectMapper.readValue(response.getBody(), FlowWebhookResponse.class);
+        } catch (Exception e) {
+          e.printStackTrace();
+        }
+      
         return activity;
       }
     } catch (RestClientException e) {

@@ -1,5 +1,6 @@
 package net.boomerangplatform.service;
 
+import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -8,6 +9,7 @@ import net.boomerangplatform.model.FlowActivity;
 import net.boomerangplatform.model.FlowExecutionRequest;
 import net.boomerangplatform.model.FlowWebhookResponse;
 import net.boomerangplatform.model.RequestFlowExecution;
+import net.boomerangplatform.model.controller.TaskWorkspace;
 import net.boomerangplatform.mongo.entity.WorkflowEntity;
 import net.boomerangplatform.mongo.model.FlowTriggerEnum;
 import net.boomerangplatform.mongo.service.FlowWorkflowService;
@@ -41,9 +43,15 @@ public class WebhookServiceImpl implements WebhookService {
     FlowExecutionRequest executionRequest = new FlowExecutionRequest();
     executionRequest.setProperties(request.getProperties());
 
+    Optional<List<TaskWorkspace>> workspaces = Optional.empty();
+    
+    if (request.getTaskWorkspaces() != null) {
+      workspaces = Optional.of(request.getTaskWorkspaces());
+      
+    }
     FlowActivity activity = null;
     if(workflowId != null) {
-      activity =executionService.executeWorkflow(workflowId, Optional.of(FlowTriggerEnum.webhook.toString()), Optional.of(executionRequest));
+      activity =executionService.executeWorkflow(workflowId, Optional.of(FlowTriggerEnum.webhook.toString()), Optional.of(executionRequest),workspaces);
     }
     FlowWebhookResponse response = new FlowWebhookResponse();
     if (activity != null) {

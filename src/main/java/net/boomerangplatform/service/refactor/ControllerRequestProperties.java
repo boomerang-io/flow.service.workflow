@@ -95,7 +95,7 @@ public class ControllerRequestProperties {
     if (val instanceof Boolean) {
       return String.valueOf(val);
     } else {
-      return (String) this.getMap().get(key);
+      return this.getMap().get(key);
     }
   }
 
@@ -106,7 +106,7 @@ public class ControllerRequestProperties {
       Object value = entry.getValue();
       if (value != null) {
         target.put(prefix + "/" + key, value.toString());
-        target.put(key, (String) value.toString());
+        target.put(key, value.toString());
       }
     }
   }
@@ -118,7 +118,7 @@ public class ControllerRequestProperties {
       Object value = entry.getValue();
       if (value != null) {
         target.put(prefix + "/" + key, value.toString());
-        target.put(key, (String) value.toString());
+        target.put(key, value.toString());
       }
     }
   }

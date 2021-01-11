@@ -24,6 +24,6 @@ public class ExecutionController {
       @RequestParam Optional<String> trigger,
       @RequestBody Optional<FlowExecutionRequest> executionRequest) {
 
-    return executionService.executeWorkflow(workflowId, trigger, executionRequest);
+    return executionService.executeWorkflow(workflowId, trigger, executionRequest, Optional.empty());
   }
 }

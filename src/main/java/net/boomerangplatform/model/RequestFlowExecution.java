@@ -1,29 +1,44 @@
 package net.boomerangplatform.model;
 
+import java.util.List;
 import java.util.Map;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import net.boomerangplatform.model.controller.TaskWorkspace;
 
 public class RequestFlowExecution {
 
-	private String token;
-	private String workflowId;
+  private String token;
+  
+  private String workflowId;
 
-	public String getToken() {
-		return token;
-	}
+  @JsonProperty("workspaces")
+  private List<TaskWorkspace> taskWorkspaces;
 
-	public void setToken(String token) {
-		this.token = token;
-	}
+  public List<TaskWorkspace> getTaskWorkspaces() {
+    return taskWorkspaces;
+  }
 
-	private Map<String, String> properties;
+  public void setTaskWorkspaces(List<TaskWorkspace> taskWorkspaces) {
+    this.taskWorkspaces = taskWorkspaces;
+  }
 
-	public Map<String, String> getProperties() {
-		return properties;
-	}
+  public String getToken() {
+    return token;
+  }
 
-	public void setProperties(Map<String, String> properties) {
-		this.properties = properties;
-	}
+  public void setToken(String token) {
+    this.token = token;
+  }
+
+  private Map<String, String> properties;
+
+  public Map<String, String> getProperties() {
+    return properties;
+  }
+
+  public void setProperties(Map<String, String> properties) {
+    this.properties = properties;
+  }
 
   public String getWorkflowId() {
     return workflowId;

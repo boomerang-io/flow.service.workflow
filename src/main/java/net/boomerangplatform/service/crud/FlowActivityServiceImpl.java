@@ -38,6 +38,7 @@ import net.boomerangplatform.model.InsightsSummary;
 import net.boomerangplatform.model.ListActivityResponse;
 import net.boomerangplatform.model.Sort;
 import net.boomerangplatform.model.TeamWorkflowSummary;
+import net.boomerangplatform.model.controller.TaskWorkspace;
 import net.boomerangplatform.mongo.entity.ActivityEntity;
 import net.boomerangplatform.mongo.entity.FlowTeamEntity;
 import net.boomerangplatform.mongo.entity.FlowUserEntity;
@@ -119,7 +120,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
 
   @Override
   public ActivityEntity createFlowActivity(String workflowVersionId, Optional<String> trigger,
-      FlowExecutionRequest request) {
+      FlowExecutionRequest request,    Optional<List<TaskWorkspace>> taskWorkspaces) {
     /* Create new one based of work flow version id. */
     final RevisionEntity entity = versionService.getWorkflowlWithId(workflowVersionId);
 
@@ -128,7 +129,10 @@ public class FlowActivityServiceImpl implements FlowActivityService {
     activity.setWorkflowId(entity.getWorkFlowId());
     activity.setCreationDate(new Date());
 
-
+    if (taskWorkspaces.isPresent()) {
+      activity.setTaskWorkspaces(taskWorkspaces.get());
+    }
+    
     if (trigger.isPresent()) {
       activity.setTrigger(trigger.get());
     }
