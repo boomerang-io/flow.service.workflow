@@ -66,4 +66,9 @@ public class RevisionServiceImpl implements RevisionService {
       return workFlowVersionRepository.findAll(pageable);
     }
   }
+
+  @Override
+  public Optional<RevisionEntity> getRevision(String id) {
+    return workFlowVersionRepository.findById(id);
+  }
 }

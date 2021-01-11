@@ -219,8 +219,7 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
       throws ExecutionException {
 
     
-    final ActivityEntity activityEntity =
-        this.flowActivityService.findWorkflowActivity(activityId);
+    final ActivityEntity activityEntity =        this.flowActivityService.findWorkflowActivity(activityId);
     activityEntity.setStatus(TaskStatus.inProgress);
     activityEntity.setCreationDate(new Date());
     activityService.saveWorkflowActivity(activityEntity);
@@ -233,10 +232,21 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
     
     Map<String, String> executionProperties = new HashMap<>();
     Map<String, Object> inputs = new HashMap<>();
-    propertyManager.buildSystemProperties(null, activityId, workflowId, inputs);
-    for (Entry<String, Object> entry : inputs.entrySet()) {
-      executionProperties.put(entry.getKey(), entry.getValue().toString()); 
+    // propertyManager.buildSystemProperties(null, activityId, workflowId, inputs);
+    try {
+      for (Entry<String, Object> entry : inputs.entrySet()) {
+        if (entry.getValue() != null) {
+          executionProperties.put(entry.getKey(), entry.getValue().toString()); 
+        }
+        else {
+          executionProperties.put(entry.getKey(), null); 
+        }
+       
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
     }
+   
 
     controllerClient.createFlow(workflowId, workflowName, activityId, enablePVC, executionProperties);
     

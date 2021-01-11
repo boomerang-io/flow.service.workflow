@@ -82,7 +82,11 @@ public class WorkflowServiceImpl implements WorkflowService {
   @Value("${flow.feature.workflow.quotas}")
   private boolean enabledQuotaCheck;
 
+  @Value("${flow.feature.team.parameters}")
+  private boolean flowFeatureTeamParameters;
 
+  @Value("${flow.feature.global.parameters}")
+  private boolean flowFeatureGlobalParameters;
 
   private final Logger logger = LogManager.getLogger(getClass());
 
@@ -731,21 +735,27 @@ public class WorkflowServiceImpl implements WorkflowService {
   public List<String> getWorkflowParameters(String workFlowId) {
     List<String> parameters = new ArrayList<>();
     WorkflowEntity workflow = workFlowRepository.getWorkflow(workFlowId);
+    
+    if (flowFeatureGlobalParameters) {
+      Map<String, Object> globalProperties = new HashMap<>();
+      propertyManager.buildGlobalProperties(globalProperties);
 
-    Map<String, Object> globalProperties = new HashMap<>();
-    propertyManager.buildGlobalProperties(globalProperties);
-
-    for (Map.Entry<String, Object> globalProperty : globalProperties.entrySet()) {
-      parameters.add("global.params." + globalProperty.getKey());
-      parameters.add("params." + globalProperty.getKey());
+      for (Map.Entry<String, Object> globalProperty : globalProperties.entrySet()) {
+        parameters.add("global.params." + globalProperty.getKey());
+        parameters.add("params." + globalProperty.getKey());
+      }
     }
-    Map<String, Object> teamProperties = new HashMap<>();
-    propertyManager.buildTeamProperties(teamProperties, workflow.getId());
 
-    for (Map.Entry<String, Object> teamProperty : teamProperties.entrySet()) {
-      parameters.add("team.params." + teamProperty.getKey());
-      parameters.add("params." + teamProperty.getKey());
+    if (flowFeatureTeamParameters) {
+      Map<String, Object> teamProperties = new HashMap<>();
+      propertyManager.buildTeamProperties(teamProperties, workflow.getId());
+
+      for (Map.Entry<String, Object> teamProperty : teamProperties.entrySet()) {
+        parameters.add("team.params." + teamProperty.getKey());
+        parameters.add("params." + teamProperty.getKey());
+      }
     }
+
     Map<String, Object> workflowProperties = new HashMap<>();
     propertyManager.buildWorkflowProperties(workflowProperties, null, workflow.getId());
     for (Map.Entry<String, Object> workflowProperty : workflowProperties.entrySet()) {

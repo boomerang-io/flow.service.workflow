@@ -6,7 +6,7 @@ import net.boomerangplatform.service.refactor.ControllerRequestProperties;
 
 public interface PropertyManager {
 
-  ControllerRequestProperties buildRequestPropertyLayering(Task task, String activityId);
+  ControllerRequestProperties buildRequestPropertyLayering(Task task, String activityId, String workflowId);
 
   public String replaceValueWithProperty(String value, String activityId,
       ControllerRequestProperties properties);

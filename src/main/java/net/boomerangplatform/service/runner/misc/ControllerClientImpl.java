@@ -18,11 +18,11 @@ import org.springframework.web.client.RestTemplate;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import net.boomerangplatform.model.Task;
-import net.boomerangplatform.model.TaskResponse;
 import net.boomerangplatform.model.TaskResult;
 import net.boomerangplatform.model.controller.TaskConfiguration;
 import net.boomerangplatform.model.controller.TaskCustom;
 import net.boomerangplatform.model.controller.TaskDeletion;
+import net.boomerangplatform.model.controller.TaskResponse;
 import net.boomerangplatform.model.controller.TaskTemplate;
 import net.boomerangplatform.model.controller.Workflow;
 import net.boomerangplatform.model.controller.WorkflowStorage;
@@ -75,7 +75,7 @@ public class ControllerClientImpl implements ControllerClient {
     request.setWorkflowActivityId(activityId);
     request.setWorkflowName(workflowName);
     request.setWorkflowId(workflowId);
-    request.setProperties(properties);
+    request.setParameters(properties);
     
     final WorkflowStorage storage = new WorkflowStorage();
     storage.setEnable(enableStorage);
@@ -128,7 +128,7 @@ public class ControllerClientImpl implements ControllerClient {
     request.setTaskActivityId(task.getTaskActivityId());
 
     ControllerRequestProperties applicationProperties =
-        propertyManager.buildRequestPropertyLayering(task, activityId);
+        propertyManager.buildRequestPropertyLayering(task, activityId, task.getWorkflowId());
    
     Map<String, String> map = applicationProperties.getMap();
     String image = applicationProperties.getLayeredProperty("image");
@@ -169,7 +169,7 @@ public class ControllerClientImpl implements ControllerClient {
       TaskResponse response =
           restTemplate.postForObject(createTaskURL, request, TaskResponse.class);
       if (response != null) {
-        taskExecution.setOutputs(response.getOutput());
+        taskExecution.setOutputs(response.getResults());
       }
 
       final Date finishDate = new Date();
@@ -214,11 +214,11 @@ public class ControllerClientImpl implements ControllerClient {
     request.setTaskActivityId(task.getTaskActivityId());
 
     ControllerRequestProperties applicationProperties =
-        propertyManager.buildRequestPropertyLayering(task, activityId);
+        propertyManager.buildRequestPropertyLayering(task, activityId, task.getWorkflowId());
    
     Map<String, String> map = applicationProperties.getTaskInputProperties();
     
-    request.setProperties(map);
+    request.setParameters(map);
     
     TaskConfiguration taskConfiguration = buildTaskConfiguration();
     request.setConfiguration(taskConfiguration); 
@@ -253,7 +253,7 @@ public class ControllerClientImpl implements ControllerClient {
       TaskResponse response =
           restTemplate.postForObject(createTaskURL, request, TaskResponse.class);
       if (response != null) {
-        taskExecution.setOutputs(response.getOutput());
+        taskExecution.setOutputs(response.getResults());
         logPayload("Create Task Response", response);
       }
 

@@ -22,7 +22,8 @@
                     "label" : "Directory Path",
                     "type" : "text",
                     "placeholder" : "",
-                    "readOnly" : false
+                    "readOnly" : false,
+                    "defaultValue" : "/usr/bin"
                 }, 
                 {
                     "description" : "",
@@ -62,7 +63,8 @@
                     "label" : "Directory Path",
                     "type" : "text",
                     "placeholder" : "",
-                    "readOnly" : false
+                    "readOnly" : false,
+                     "defaultValue" : "/usr/bin"
                 }, 
                 {
                     "description" : "",

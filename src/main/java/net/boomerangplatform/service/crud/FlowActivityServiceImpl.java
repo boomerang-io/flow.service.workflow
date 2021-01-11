@@ -175,7 +175,6 @@ public class FlowActivityServiceImpl implements FlowActivityService {
     List<String> workflowIdsList = new LinkedList<>();
 
     if (teamIds.isEmpty()) {
-
       if (user == null) {
         return null;
       } else if (user.getType() == UserType.admin) {

@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.commons.lang3.StringUtils;
@@ -13,14 +14,21 @@ import org.springframework.stereotype.Service;
 import net.boomerangplatform.model.Task;
 import net.boomerangplatform.mongo.entity.ActivityEntity;
 import net.boomerangplatform.mongo.entity.FlowGlobalConfigEntity;
+import net.boomerangplatform.mongo.entity.FlowTaskTemplateEntity;
 import net.boomerangplatform.mongo.entity.FlowTeamConfiguration;
 import net.boomerangplatform.mongo.entity.FlowTeamEntity;
+import net.boomerangplatform.mongo.entity.RevisionEntity;
 import net.boomerangplatform.mongo.entity.TaskExecutionEntity;
 import net.boomerangplatform.mongo.entity.WorkflowEntity;
 import net.boomerangplatform.mongo.model.CoreProperty;
+import net.boomerangplatform.mongo.model.Dag;
 import net.boomerangplatform.mongo.model.FlowProperty;
+import net.boomerangplatform.mongo.model.Revision;
+import net.boomerangplatform.mongo.model.TaskTemplateConfig;
+import net.boomerangplatform.mongo.model.next.DAGTask;
 import net.boomerangplatform.mongo.service.ActivityTaskService;
 import net.boomerangplatform.mongo.service.FlowGlobalConfigService;
+import net.boomerangplatform.mongo.service.FlowTaskTemplateService;
 import net.boomerangplatform.mongo.service.FlowTeamService;
 import net.boomerangplatform.mongo.service.RevisionService;
 import net.boomerangplatform.service.crud.FlowActivityService;
@@ -47,15 +55,17 @@ public class PropertyManagerImpl implements PropertyManager {
 
   @Autowired
   private FlowGlobalConfigService flowGlobalConfigService;
+  
+  @Autowired
+  private FlowTaskTemplateService flowTaskTemplateService;
 
-
-  @Value("${flow.feature.team.properties}")
+  @Value("${flow.feature.team.parameters}")
   private boolean enabledTeamProperites;
 
   final String[] reserved = {"system", "workflow", "global", "team", "workflow"};
 
   @Override
-  public ControllerRequestProperties buildRequestPropertyLayering(Task task, String activityId) {
+  public ControllerRequestProperties buildRequestPropertyLayering(Task task, String activityId, String workflowId) {
     ControllerRequestProperties applicationProperties = new ControllerRequestProperties();
     Map<String, Object> systemProperties = applicationProperties.getSystemProperties();
     Map<String, Object> globalProperties = applicationProperties.getGlobalProperties();
@@ -63,31 +73,105 @@ public class PropertyManagerImpl implements PropertyManager {
     Map<String, Object> workflowProperties = applicationProperties.getWorkflowProperties();
 
     buildGlobalProperties(globalProperties);
-    buildSystemProperties(task, activityId, task.getWorkflowId(), systemProperties);
+    buildSystemProperties(task, activityId, workflowId, systemProperties);
 
     if (enabledTeamProperites) {
-      buildTeamProperties(teamProperties, task.getWorkflowId());
+      buildTeamProperties(teamProperties, workflowId);
     }
     buildWorkflowProperties(workflowProperties, activityId, null);
-    buildTaskInputProperties(applicationProperties, task, activityId);
-
+    
+    if (task != null) {
+      buildTaskInputProperties(applicationProperties, task, activityId);
+    }
+  
     return applicationProperties;
   }
 
   private void buildTaskInputProperties(ControllerRequestProperties applicationProperties,
       Task task, String activityId) {
+    ActivityEntity activity = activityService.findWorkflowActivity(activityId);
+
+    List<TaskTemplateConfig> configs = getInputsForTask(task, activity.getWorkflowRevisionid());
+    
     Map<String, String> workflowInputProperties = applicationProperties.getTaskInputProperties();
-    final Map<String, String> map = task.getInputs();
-    if (task.getInputs() != null) {
-      for (final Map.Entry<String, String> pair : map.entrySet()) {
-        String key = pair.getKey();
-        String value = pair.getValue();
+    for (TaskTemplateConfig config : configs) {
+      String key = config.getKey();
+      String value = this.getInputForTaskKey(task, activity.getWorkflowRevisionid(), key);
+      
+      if (value == null || value.isBlank()) {
+        value = config.getDefaultValue();
+      }
+      
+      if (value != null) {
         String newValue = this.replaceValueWithProperty(value, activityId, applicationProperties);
+        newValue = this.replaceValueWithProperty(newValue, activityId, applicationProperties);
         workflowInputProperties.put(key, newValue);
+      }
+      else {
+        workflowInputProperties.put(key, "");
       }
     }
   }
 
+  private String getInputForTaskKey(Task task, String revisionId, String key) {
+    Optional<RevisionEntity> revisionOptional =
+        revisionService.getRevision(revisionId);
+    if (revisionOptional.isPresent()) {
+      RevisionEntity revision = revisionOptional.get();
+      Dag dag = revision.getDag();
+      List<DAGTask> tasks = dag.getTasks();
+      if (tasks != null) {
+        DAGTask dagTask = tasks.stream().filter(e -> e.getTaskId().equals(task.getTaskId()))
+            .findFirst().orElse(null);
+        if (dagTask != null) {
+          List<CoreProperty> properties = dagTask.getProperties();
+          if (properties != null) {
+            CoreProperty property = properties.stream().filter(e -> key.equals(e.getKey()))
+            .findFirst().orElse(null);
+            if (property != null) {
+              return property.getValue();
+            }
+          }
+        }
+      }
+    }
+    return null;
+  }
+
+
+  private List<TaskTemplateConfig> getInputsForTask(Task task, String revisionId) {
+    Optional<RevisionEntity> revisionOptional =
+        revisionService.getRevision(revisionId);
+    if (revisionOptional.isPresent()) {
+      RevisionEntity revision = revisionOptional.get();
+      Dag dag = revision.getDag();
+      List<DAGTask> tasks = dag.getTasks();
+      if (tasks != null) {
+        DAGTask dagTask = tasks.stream().filter(e -> e.getTaskId().equals(task.getTaskId()))
+            .findFirst().orElse(null);
+        if (dagTask != null) {
+          String templateId = dagTask.getTemplateId();
+          Integer templateVersion = dagTask.getTemplateVersion();
+          FlowTaskTemplateEntity taskTemplate = flowTaskTemplateService.getTaskTemplateWithId(templateId);
+        
+          if (taskTemplate != null) {
+            List<Revision> revisions = taskTemplate.getRevisions();
+            if (revisions != null) {
+              Revision rev = revisions.stream()
+                  .filter(e -> e.getVersion().equals(templateVersion)).findFirst().orElse(null);
+              if (rev != null) {
+                return rev.getConfig();
+              }
+            }
+          }
+        }
+      }
+    }
+    return new LinkedList<>();
+  }
+
+
+  @Override
   public void buildWorkflowProperties(Map<String, Object> workflowProperties, String activityId,
       String workflowId) {
     WorkflowEntity workflow = new WorkflowEntity();
@@ -113,6 +197,7 @@ public class PropertyManagerImpl implements PropertyManager {
     }
   }
 
+  @Override
   public void buildGlobalProperties(Map<String, Object> globalProperties) {
     List<FlowGlobalConfigEntity> globalConfigs = this.flowGlobalConfigService.getGlobalConfigs();
     for (FlowGlobalConfigEntity entity : globalConfigs) {
@@ -122,6 +207,7 @@ public class PropertyManagerImpl implements PropertyManager {
     }
   }
 
+  @Override
   public void buildSystemProperties(Task task, String activityId, String workflowId,
       Map<String, Object> systemProperties) {
 
@@ -144,6 +230,7 @@ public class PropertyManagerImpl implements PropertyManager {
     }
   }
 
+  @Override
   public void buildTeamProperties(Map<String, Object> teamProperties, String workflowId) {
     FlowTeamEntity flowTeamEntity =
         this.flowTeamService.findById(workflowService.getWorkflow(workflowId).getFlowTeamId());
@@ -191,6 +278,9 @@ public class PropertyManagerImpl implements PropertyManager {
           if (executionProperties.get(propertyName) != null) {
             replaceValue = executionProperties.get(propertyName);
           }
+          else {
+            replaceValue = "";
+          }
         }
       } else if (components.length == 4) {
         String task = components[0];
@@ -202,6 +292,9 @@ public class PropertyManagerImpl implements PropertyManager {
           if (taskExecution != null && taskExecution.getOutputs() != null
               && taskExecution.getOutputs().get(outputProperty) != null) {
             replaceValue = taskExecution.getOutputs().get(outputProperty);
+          }
+          else {
+            replaceValue = "";
           }
         }
       } else if (components.length == 3) {
@@ -215,6 +308,9 @@ public class PropertyManagerImpl implements PropertyManager {
 
             if (executionProperties.get(key) != null) {
               replaceValue = executionProperties.get(key);
+            }
+            else {
+              replaceValue = "";
             }
           }
         }
