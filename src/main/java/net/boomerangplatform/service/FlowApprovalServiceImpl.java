@@ -160,7 +160,7 @@ public class FlowApprovalServiceImpl implements FlowApprovalService {
           ControllerRequestProperties properties = propertyManager.buildRequestPropertyLayering(null, activityId, activity.getWorkflowId());
           instructionText = propertyManager.replaceValueWithProperty(instructionText, activityId, properties);
         }
-        approval.setInstructions(instructionsProperty.getValue());
+        approval.setInstructions(instructionText);
       }
     }
     
