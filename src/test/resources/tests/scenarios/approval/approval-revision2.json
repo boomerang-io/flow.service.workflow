@@ -88,17 +88,10 @@
                     }
                 ],
                 "properties" : [ 
+                
                     {
-                        "key" : "path",
-                        "value" : "/tmp"
-                    }, 
-                    {
-                        "key" : "shell",
-                        "value" : "/bin/sh"
-                    }, 
-                    {
-                        "key" : "script",
-                        "value" : "echo \"Test\""
+                        "key" : "instructions",
+                        "value" : "Hi"
                     }
                 ],
                 "metadata" : {

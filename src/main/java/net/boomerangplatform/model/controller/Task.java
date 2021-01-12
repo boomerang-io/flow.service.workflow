@@ -10,17 +10,11 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
-@JsonTypeInfo(
-		  use = JsonTypeInfo.Id.NAME, 
-		  include = JsonTypeInfo.As.PROPERTY, 
-		  property = "taskType")
-		@JsonSubTypes({ 
-		  @Type(value = TaskCustom.class, name = "custom"), 
-		  @Type(value = TaskTemplate.class, name = "template")
-		})
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "taskType")
+@JsonSubTypes({@Type(value = TaskCustom.class, name = "custom"),
+    @Type(value = TaskTemplate.class, name = "template")})
 @JsonIgnoreProperties
 public abstract class Task {
-
 
   private String workflowName;
 
@@ -48,6 +42,9 @@ public abstract class Task {
 
   @JsonProperty("configuration")
   private TaskConfiguration configuration;
+
+  @JsonProperty("workspaces")
+  private List<TaskWorkspace> workspaces;
 
   public String getWorkflowName() {
     return workflowName;
@@ -145,4 +142,11 @@ public abstract class Task {
     this.configuration = configuration;
   }
 
+  public List<TaskWorkspace> getWorkspaces() {
+    return workspaces;
+  }
+
+  public void setWorkspaces(List<TaskWorkspace> workspaces) {
+    this.workspaces = workspaces;
+  }
 }

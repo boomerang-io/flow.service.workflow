@@ -26,7 +26,6 @@ import net.boomerangplatform.model.FlowActivity;
 import net.boomerangplatform.model.FlowExecutionRequest;
 import net.boomerangplatform.model.eventing.EventResponse;
 import net.boomerangplatform.mongo.model.FlowProperty;
-import net.boomerangplatform.mongo.model.FlowTriggerEnum;
 import net.boomerangplatform.mongo.model.Triggers;
 import net.boomerangplatform.service.crud.WorkflowService;
 import net.boomerangplatform.service.refactor.TaskService;
@@ -124,7 +123,7 @@ public class EventProcessorImpl implements EventProcessor {
       executionRequest.setProperties(processProperties(eventData, workflowId));
 
       FlowActivity activity = executionService.executeWorkflow(workflowId,
-          Optional.of(trigger), Optional.of(executionRequest));
+          Optional.of(trigger), Optional.of(executionRequest), Optional.empty());
       response.setActivityId(activity.getId());
       response.setStatusCode(HttpStatus.SC_OK);
       return response;

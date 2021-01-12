@@ -45,7 +45,7 @@ public class ManulTaskExecuteTests extends IntegrationTests {
     FlowActivity waitingAprpoval = this.checkWorkflowActivity(id);
     assertEquals(TaskStatus.inProgress, waitingAprpoval.getStatus());
     List<Approval> approvals = this.getApprovals();
-    assertEquals("Mark down here",  approvals.get(0).getInstructions());
+    assertEquals("Mark down here manual",  approvals.get(0).getInstructions());
     
     this.approveWorkflow(true, approvals.get(0).getId());
   

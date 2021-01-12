@@ -138,7 +138,7 @@
                 "properties" : [ 
                     {
                         "key" : "value",
-                        "value" : "${p:Sleep 1/foo}"
+                        "value" : "$(task.sleep 1.results.foo)-beep"
                     },
                     {
                         "key" : "output",

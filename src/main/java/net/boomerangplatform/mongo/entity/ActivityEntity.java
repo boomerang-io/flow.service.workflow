@@ -6,7 +6,9 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import net.boomerangplatform.model.controller.TaskWorkspace;
 import net.boomerangplatform.mongo.model.CoreProperty;
 import net.boomerangplatform.mongo.model.TaskStatus;
 
@@ -28,6 +30,14 @@ public class ActivityEntity {
 
   private TaskStatus status;
 
+  public List<TaskWorkspace> getTaskWorkspaces() {
+    return taskWorkspaces;
+  }
+
+  public void setTaskWorkspaces(List<TaskWorkspace> taskWorkspaces) {
+    this.taskWorkspaces = taskWorkspaces;
+  }
+
   private String statusMessage;
 
   private String workflowId;
@@ -41,6 +51,9 @@ public class ActivityEntity {
   private List<CoreProperty> outputProperties;
   
   private boolean isAwaitingApproval;
+  
+  @JsonProperty("workspaces")
+  private List<TaskWorkspace> taskWorkspaces;
   
   public Date getCreationDate() {
     return creationDate;

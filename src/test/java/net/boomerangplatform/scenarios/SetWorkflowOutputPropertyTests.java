@@ -54,7 +54,7 @@ public class SetWorkflowOutputPropertyTests extends IntegrationTests {
     
     assertEquals(1, outputProperties.size());
     CoreProperty outputProperty = outputProperties.get(0);
-    assertEquals("test",outputProperty.getValue());
+    assertEquals("test-beep",outputProperty.getValue());
     assertEquals("bar",outputProperty.getKey());
   }
 

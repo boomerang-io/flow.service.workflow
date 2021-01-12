@@ -5,7 +5,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import net.boomerangplatform.model.ApprovalStatus;
 import net.boomerangplatform.mongo.model.Audit;
-import net.boomerangplatform.mongo.model.ManualType;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Document(collection = "#{@mongoConfiguration.fullCollectionName('workflows_activity_approval')}")

@@ -735,7 +735,7 @@ public class WorkflowServiceImpl implements WorkflowService {
   public List<String> getWorkflowParameters(String workFlowId) {
     List<String> parameters = new ArrayList<>();
     WorkflowEntity workflow = workFlowRepository.getWorkflow(workFlowId);
-
+    
     if (flowFeatureGlobalParameters) {
       Map<String, Object> globalProperties = new HashMap<>();
       propertyManager.buildGlobalProperties(globalProperties);

@@ -26,6 +26,7 @@ import net.boomerangplatform.model.controller.TaskResponse;
 import net.boomerangplatform.model.controller.TaskTemplate;
 import net.boomerangplatform.model.controller.Workflow;
 import net.boomerangplatform.model.controller.WorkflowStorage;
+import net.boomerangplatform.mongo.entity.ActivityEntity;
 import net.boomerangplatform.mongo.entity.TaskExecutionEntity;
 import net.boomerangplatform.mongo.model.Revision;
 import net.boomerangplatform.mongo.model.TaskStatus;
@@ -33,6 +34,7 @@ import net.boomerangplatform.mongo.model.internal.InternalTaskResponse;
 import net.boomerangplatform.mongo.service.ActivityTaskService;
 import net.boomerangplatform.mongo.service.FlowSettingsService;
 import net.boomerangplatform.service.PropertyManager;
+import net.boomerangplatform.service.crud.FlowActivityService;
 import net.boomerangplatform.service.refactor.ControllerRequestProperties;
 import net.boomerangplatform.service.refactor.TaskClient;
 
@@ -63,6 +65,9 @@ public class ControllerClientImpl implements ControllerClient {
   
   @Autowired
   public ActivityTaskService taskService;
+  
+  @Autowired
+  public FlowActivityService activityService;
 
   @Value("${controller.terminateworkflow.url}")
   private String terminateWorkflowURL;
@@ -118,6 +123,8 @@ public class ControllerClientImpl implements ControllerClient {
     TaskExecutionEntity taskExecution =
         taskService.findByTaskIdAndActiityId(task.getTaskId(), activityId);
 
+    ActivityEntity activity = this.activityService.findWorkflowActivity(activityId);
+    
     taskResult.setNode(task.getTaskId());
     final TaskCustom request = new TaskCustom();
     request.setTaskId(task.getTaskId());
@@ -128,7 +135,7 @@ public class ControllerClientImpl implements ControllerClient {
     request.setTaskActivityId(task.getTaskActivityId());
 
     ControllerRequestProperties applicationProperties =
-        propertyManager.buildRequestPropertyLayering(task, activityId);
+        propertyManager.buildRequestPropertyLayering(task, activityId, task.getWorkflowId());
    
     Map<String, String> map = applicationProperties.getMap();
     String image = applicationProperties.getLayeredProperty("image");
@@ -163,6 +170,8 @@ public class ControllerClientImpl implements ControllerClient {
     TaskConfiguration taskConfiguration = buildTaskConfiguration();
     request.setConfiguration(taskConfiguration);
 
+    request.setWorkspaces(activity.getTaskWorkspaces());
+    
     logPayload("Create Task Request", request);
     
     try {
@@ -199,6 +208,10 @@ public class ControllerClientImpl implements ControllerClient {
   @Async
   public void submitTemplateTask(Task task, String activityId, String workflowName) {
 
+
+    ActivityEntity activity = this.activityService.findWorkflowActivity(activityId);
+   
+
     TaskResult taskResult = new TaskResult();
     TaskExecutionEntity taskExecution =
         taskService.findByTaskIdAndActiityId(task.getTaskId(), activityId);
@@ -214,7 +227,7 @@ public class ControllerClientImpl implements ControllerClient {
     request.setTaskActivityId(task.getTaskActivityId());
 
     ControllerRequestProperties applicationProperties =
-        propertyManager.buildRequestPropertyLayering(task, activityId);
+        propertyManager.buildRequestPropertyLayering(task, activityId, task.getWorkflowId());
    
     Map<String, String> map = applicationProperties.getTaskInputProperties();
     
@@ -248,6 +261,8 @@ public class ControllerClientImpl implements ControllerClient {
     taskExecution.setFlowTaskStatus(TaskStatus.inProgress);
     taskExecution = taskService.save(taskExecution);
 
+    request.setWorkspaces(activity.getTaskWorkspaces());
+    
     logPayload("Create Task Request", request);
     try {
       TaskResponse response =

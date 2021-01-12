@@ -13,11 +13,11 @@ import net.boomerangplatform.error.BoomerangError;
 import net.boomerangplatform.error.BoomerangException;
 import net.boomerangplatform.model.FlowActivity;
 import net.boomerangplatform.model.FlowExecutionRequest;
+import net.boomerangplatform.model.controller.TaskWorkspace;
 import net.boomerangplatform.mongo.entity.ActivityEntity;
 import net.boomerangplatform.mongo.entity.RevisionEntity;
 import net.boomerangplatform.mongo.entity.TaskExecutionEntity;
 import net.boomerangplatform.mongo.entity.WorkflowEntity;
-import net.boomerangplatform.mongo.model.FlowTriggerEnum;
 import net.boomerangplatform.mongo.model.WorkflowStatus;
 import net.boomerangplatform.mongo.service.RevisionService;
 import net.boomerangplatform.service.crud.FlowActivityService;
@@ -39,9 +39,11 @@ public class ExecutionServiceImpl implements ExecutionService {
   @Autowired
   private WorkflowService workflowService;
 
+  @Override
   public FlowActivity executeWorkflow(String workflowId,
       Optional<String> trigger,
-      Optional<FlowExecutionRequest> executionRequest) {
+      Optional<FlowExecutionRequest> executionRequest,
+      Optional<List<TaskWorkspace>> taskWorkspaces) {
     
     final WorkflowEntity workflow = workflowService.getWorkflow(workflowId);
 
@@ -63,8 +65,9 @@ public class ExecutionServiceImpl implements ExecutionService {
         final RevisionEntity entity = this.flowRevisionService.getLatestWorkflowVersion(workflowId);
         if (entity != null) {
           final ActivityEntity activity =
-              activityService.createFlowActivity(entity.getId(), trigger, request);
+              activityService.createFlowActivity(entity.getId(), trigger, request, taskWorkspaces);
           flowExecutionService.executeWorkflowVersion(entity.getId(), activity.getId());
+          
           final List<TaskExecutionEntity> steps =
               activityService.getTaskExecutions(activity.getId());
           final FlowActivity response = new FlowActivity(activity);

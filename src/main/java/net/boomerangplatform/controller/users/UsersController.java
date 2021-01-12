@@ -3,7 +3,6 @@ package net.boomerangplatform.controller.users;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,7 +14,6 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import net.boomerangplatform.client.model.UserProfile;
 import net.boomerangplatform.model.OneTimeCode;
-import net.boomerangplatform.mongo.entity.FlowUserEntity;
 import net.boomerangplatform.service.UserIdentityService;
 
 @RestController

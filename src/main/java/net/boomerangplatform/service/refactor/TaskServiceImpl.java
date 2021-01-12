@@ -43,6 +43,7 @@ import net.boomerangplatform.mongo.service.FlowTaskTemplateService;
 import net.boomerangplatform.mongo.service.FlowWorkflowActivityService;
 import net.boomerangplatform.mongo.service.FlowWorkflowService;
 import net.boomerangplatform.mongo.service.RevisionService;
+import net.boomerangplatform.service.PropertyManager;
 import net.boomerangplatform.service.runner.misc.ControllerClient;
 
 @Service
@@ -77,6 +78,9 @@ public class TaskServiceImpl implements TaskService {
   
   @Autowired
   private ApprovalService approvalService;
+  
+  @Autowired
+  private PropertyManager propertyManager;
 
   private static final Logger LOGGER = LogManager.getLogger(TaskServiceImpl.class);
   
@@ -191,11 +195,12 @@ public class TaskServiceImpl implements TaskService {
     CoreProperty outputProperty = new CoreProperty();
     outputProperty.setKey(output);
     
-    String outputValue = this.dagUtility.getOutputProperty(input, activity);
-    
+    ControllerRequestProperties requestProperties = 
+        propertyManager.buildRequestPropertyLayering(task, activity.getId(), activity.getWorkflowId());
+    String outputValue = propertyManager.replaceValueWithProperty(input, activity.getId(), requestProperties);
+       
     outputProperty.setValue(outputValue);
-    outputProperties.add(outputProperty);
-    
+    outputProperties.add(outputProperty); 
     this.activityService.saveWorkflowActivity(activity);
   }
 
@@ -477,6 +482,10 @@ public class TaskServiceImpl implements TaskService {
           CoreProperty coreProperty = coreProperties.stream().filter(c -> "topic".contains(c.getKey())).findAny().orElse(null);
 
           if (coreProperty != null && topic.equals(coreProperty.getValue())) {
+            
+            String text = coreProperty.getValue();
+            ControllerRequestProperties properties = propertyManager.buildRequestPropertyLayering(null, activityId, activity.getWorkflowId());
+            text = propertyManager.replaceValueWithProperty(text, activityId, properties);
             
             String taskId = task.getTaskId();
             TaskExecutionEntity taskExecution = this.taskActivityService.findByTaskIdAndActiityId(taskId, activityId);

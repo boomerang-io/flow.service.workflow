@@ -11,6 +11,7 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import org.junit.Before;
@@ -18,7 +19,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import net.boomerangplatform.model.FlowActivity;
-import net.boomerangplatform.model.FlowExecutionRequest;
+import net.boomerangplatform.model.FlowWebhookResponse;
+import net.boomerangplatform.model.RequestFlowExecution;
+import net.boomerangplatform.model.controller.TaskWorkspace;
 import net.boomerangplatform.mongo.model.TaskStatus;
 import net.boomerangplatform.tests.IntegrationTests;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
@@ -41,12 +44,27 @@ public class SimpleExecuteTests extends IntegrationTests {
   @Test
   public void testExecution() throws Exception {
     String workflowId = "5f4fc9e95683833cf0b1335b";
-    FlowExecutionRequest request = new  FlowExecutionRequest();
+    RequestFlowExecution request = new  RequestFlowExecution();
+    
+    request.setWorkflowId(workflowId);
+
+    TaskWorkspace taskWorkspace = new TaskWorkspace();
+    taskWorkspace.setOptional(false);
+    taskWorkspace.setReadOnly(false);
+    taskWorkspace.setWorkspaceId("12345");
+    taskWorkspace.setWorkspaceName("Test");
+    
+    List<TaskWorkspace> taskWorkspaceList = new LinkedList<>();
+    taskWorkspaceList.add(taskWorkspace);
+
+    request.setTaskWorkspaces(taskWorkspaceList);
+    
     Map<String, String> map = new HashMap<>();
     map.put("foobar", "Hello World");
     request.setProperties(map);
-    FlowActivity activity = submitWorkflow(workflowId,request);
-    String id = activity.getId();
+    FlowWebhookResponse activity = this.submitInternalWorkflow(workflowId, request);
+    
+    String id = activity.getActivityId();
     Thread.sleep(5000);
     FlowActivity finalActivity = this.checkWorkflowActivity(id);
     assertEquals(TaskStatus.completed, finalActivity.getStatus());
@@ -60,9 +78,6 @@ public class SimpleExecuteTests extends IntegrationTests {
     super.setUp();
     mockServer = MockRestServiceServer.bindTo(this.restTemplate).ignoreExpectOrder(true).build();
 
-    mockServer.expect(times(1), requestTo(containsString("internal/users/user")))
-        .andExpect(method(HttpMethod.GET)).andRespond(
-            withSuccess(getMockFile("mock/users/users.json"), MediaType.APPLICATION_JSON));
     mockServer.expect(times(1), requestTo(containsString("controller/workflow/create")))
         .andExpect(method(HttpMethod.POST)).andRespond(withStatus(HttpStatus.OK));
 
