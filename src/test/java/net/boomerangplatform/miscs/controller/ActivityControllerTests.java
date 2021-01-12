@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -85,17 +84,17 @@ public class ActivityControllerTests extends FlowTests {
     assertEquals(Long.valueOf(5), response.getPageable().getTotalElements());
     assertEquals(Integer.valueOf(1), response.getPageable().getTotalPages());
   }
-  
+
   @Test
   public void testGetFlowActivitiesTeamFiltered() {
- 
+
     List<String> teamIds = new ArrayList<>();
     teamIds.add("5d1a1841f6ca2c00014c4309");
 
-    ListActivityResponse response = activityController.getFlowActivities(
-        getOptionalOrder(Direction.ASC), getOptionalString("sort"),
-        Optional.empty(), getOptionalListString(teamIds), 0, 2147483647,
-        Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
+    ListActivityResponse response =
+        activityController.getFlowActivities(getOptionalOrder(Direction.ASC),
+            getOptionalString("sort"), Optional.empty(), getOptionalListString(teamIds), 0,
+            2147483647, Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
 
     assertEquals(6, response.getRecords().size());
     assertEquals(Integer.valueOf(0), response.getPageable().getNumber());
@@ -104,17 +103,17 @@ public class ActivityControllerTests extends FlowTests {
     assertEquals(Long.valueOf(6), response.getPageable().getTotalElements());
     assertEquals(Integer.valueOf(1), response.getPageable().getTotalPages());
   }
-  
+
   @Test
   public void testGetFlowActivitiesTeamFilter() {
- 
+
     List<String> teamIds = new ArrayList<>();
     teamIds.add("5d1a1841f6ca2c00014c4309");
 
-    ListActivityResponse response = activityController.getFlowActivities(
-        getOptionalOrder(Direction.ASC), getOptionalString("sort"),
-        Optional.empty(), getOptionalListString(teamIds), 0, 4,
-        Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
+    ListActivityResponse response =
+        activityController.getFlowActivities(getOptionalOrder(Direction.ASC),
+            getOptionalString("sort"), Optional.empty(), getOptionalListString(teamIds), 0, 4,
+            Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
 
     assertEquals(4, response.getRecords().size());
     assertEquals(Integer.valueOf(0), response.getPageable().getNumber());
@@ -122,10 +121,9 @@ public class ActivityControllerTests extends FlowTests {
     assertEquals(Integer.valueOf(4), response.getPageable().getNumberOfElements());
     assertEquals(Long.valueOf(6), response.getPageable().getTotalElements());
     assertEquals(Integer.valueOf(2), response.getPageable().getTotalPages());
-    
-    response = activityController.getFlowActivities(
-        getOptionalOrder(Direction.ASC), getOptionalString("sort"),
-        Optional.empty(), getOptionalListString(teamIds), 1, 4,
+
+    response = activityController.getFlowActivities(getOptionalOrder(Direction.ASC),
+        getOptionalString("sort"), Optional.empty(), getOptionalListString(teamIds), 1, 4,
         Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
 
     assertEquals(2, response.getRecords().size());
@@ -135,17 +133,17 @@ public class ActivityControllerTests extends FlowTests {
     assertEquals(Long.valueOf(6), response.getPageable().getTotalElements());
     assertEquals(Integer.valueOf(2), response.getPageable().getTotalPages());
   }
-  
+
+
   @Test
-  @Ignore
   public void testGetFlowActivitiesWorkflowFiltered() {
     List<String> workflowIds = new ArrayList<>();
     workflowIds.add("5d1a188af6ca2c00014c4314");
 
-    ListActivityResponse response = activityController.getFlowActivities(
-        getOptionalOrder(Direction.ASC), getOptionalString("sort"),
-        getOptionalListString(workflowIds), Optional.empty(), 0, 2147483647,
-        Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
+    ListActivityResponse response =
+        activityController.getFlowActivities(getOptionalOrder(Direction.ASC),
+            getOptionalString("sort"), getOptionalListString(workflowIds), Optional.empty(), 0,
+            2147483647, Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
 
     assertEquals(5, response.getRecords().size());
     assertEquals(Integer.valueOf(0), response.getPageable().getNumber());
@@ -153,15 +151,28 @@ public class ActivityControllerTests extends FlowTests {
     assertEquals(Integer.valueOf(5), response.getPageable().getNumberOfElements());
     assertEquals(Long.valueOf(5), response.getPageable().getTotalElements());
     assertEquals(Integer.valueOf(1), response.getPageable().getTotalPages());
-  }
-  
-  @Test
-  public void testGetFlowActivities() {
+
+    workflowIds = new ArrayList<>();
+    workflowIds.add("5d1a188af6ca2c00014c4316");
+
+    response = activityController.getFlowActivities(getOptionalOrder(Direction.ASC),
+        getOptionalString("sort"), getOptionalListString(workflowIds), Optional.empty(), 0,
+        2147483647, Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
+
+    assertEquals(1, response.getRecords().size());
+    assertEquals(Integer.valueOf(0), response.getPageable().getNumber());
+    assertEquals(Integer.valueOf(2147483647), response.getPageable().getSize());
+    assertEquals(Integer.valueOf(1), response.getPageable().getNumberOfElements());
+    assertEquals(Long.valueOf(1), response.getPageable().getTotalElements());
+    assertEquals(Integer.valueOf(1), response.getPageable().getTotalPages());
     
-    ListActivityResponse response = activityController.getFlowActivities(
-        getOptionalOrder(Direction.ASC), getOptionalString("sort"),
-        Optional.empty(), Optional.empty(), 0, 2147483647,
-        Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
+    workflowIds = new ArrayList<>();
+    workflowIds.add("5d1a188af6ca2c00014c4316");
+    workflowIds.add("5d1a188af6ca2c00014c4314");
+
+    response = activityController.getFlowActivities(getOptionalOrder(Direction.ASC),
+        getOptionalString("sort"), getOptionalListString(workflowIds), Optional.empty(), 0,
+        2147483647, Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
 
     assertEquals(6, response.getRecords().size());
     assertEquals(Integer.valueOf(0), response.getPageable().getNumber());
@@ -170,10 +181,26 @@ public class ActivityControllerTests extends FlowTests {
     assertEquals(Long.valueOf(6), response.getPageable().getTotalElements());
     assertEquals(Integer.valueOf(1), response.getPageable().getTotalPages());
     
-    response = activityController.getFlowActivities(
-        getOptionalOrder(Direction.ASC), getOptionalString("sort"),
-        Optional.empty(), Optional.empty(), 0, 1,
-        Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
+  }
+
+  @Test
+  public void testGetFlowActivities() {
+
+    ListActivityResponse response =
+        activityController.getFlowActivities(getOptionalOrder(Direction.ASC),
+            getOptionalString("sort"), Optional.empty(), Optional.empty(), 0, 2147483647,
+            Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
+
+    assertEquals(6, response.getRecords().size());
+    assertEquals(Integer.valueOf(0), response.getPageable().getNumber());
+    assertEquals(Integer.valueOf(2147483647), response.getPageable().getSize());
+    assertEquals(Integer.valueOf(6), response.getPageable().getNumberOfElements());
+    assertEquals(Long.valueOf(6), response.getPageable().getTotalElements());
+    assertEquals(Integer.valueOf(1), response.getPageable().getTotalPages());
+
+    response = activityController.getFlowActivities(getOptionalOrder(Direction.ASC),
+        getOptionalString("sort"), Optional.empty(), Optional.empty(), 0, 1, Optional.empty(),
+        Optional.empty(), Optional.empty(), Optional.empty());
 
     assertEquals(1, response.getRecords().size());
     assertEquals(Integer.valueOf(0), response.getPageable().getNumber());
@@ -190,12 +217,12 @@ public class ActivityControllerTests extends FlowTests {
         Optional.empty(), Optional.empty());
 
     assertEquals(6, summary.getExecutions().size());
-    Long executiontime = (summary.getExecutions().get(0).getDuration()
-        + summary.getExecutions().get(1).getDuration()
-        + summary.getExecutions().get(2).getDuration()
-        + summary.getExecutions().get(3).getDuration()
-        + summary.getExecutions().get(4).getDuration()
-        + summary.getExecutions().get(5).getDuration()) / summary.getExecutions().size();
+    Long executiontime =
+        (summary.getExecutions().get(0).getDuration() + summary.getExecutions().get(1).getDuration()
+            + summary.getExecutions().get(2).getDuration()
+            + summary.getExecutions().get(3).getDuration()
+            + summary.getExecutions().get(4).getDuration()
+            + summary.getExecutions().get(5).getDuration()) / summary.getExecutions().size();
     assertEquals(executiontime, summary.getMedianExecutionTime());
     assertEquals(6, summary.getTotalActivitiesExecuted().intValue());
 

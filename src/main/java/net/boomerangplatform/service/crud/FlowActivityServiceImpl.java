@@ -167,7 +167,6 @@ public class FlowActivityServiceImpl implements FlowActivityService {
       Optional<List<String>> statuses, Optional<List<String>> triggers, String property,
       Direction direction) {
 
-
     LOGGER.info("Getting activity listing");
 
     final FlowUserEntity user = userIdentityService.getCurrentUser();
@@ -193,7 +192,17 @@ public class FlowActivityServiceImpl implements FlowActivityService {
     }
 
     if (teamIdList != null) {
-      List<WorkflowEntity> workflows = this.workflowService.getWorkflowsForTeams(teamIdList);
+      List<WorkflowEntity> workflowsFromIds = new ArrayList<>();
+      if (workflowIds.isPresent()) {
+        for (String workflowId : workflowIds.get()) {
+          workflowsFromIds.add(this.workflowService.getWorkflow(workflowId));
+        }
+      }
+      List<WorkflowEntity> workflows =
+          workflowIds.isEmpty() ? this.workflowService.getWorkflowsForTeams(teamIdList)
+              : workflowsFromIds;
+
+
       LOGGER.info("Found workflows: " + workflows.size());
 
       workflowIdsList = workflows.stream().map(WorkflowEntity::getId).collect(Collectors.toList());
@@ -210,24 +219,25 @@ public class FlowActivityServiceImpl implements FlowActivityService {
       addTeamInformation(teamIds, activitiesFiltered, activity, workFlowId);
     }
 
+    Pageable pageable = PageRequest.of(0, 2147483647, page.getSort());
+    Page<ActivityEntity> allrecords =
+        flowActivityService.getAllActivites(from, to, pageable, workflowIds, statuses, triggers);
+
+    final List<FlowActivity> allactivities = convert(allrecords.getContent());
+    List<FlowActivity> allactivitiesFiltered = new ArrayList<>();
+
+    for (FlowActivity activity : allactivities) {
+      String workFlowId = activity.getWorkflowId();
+      addTeamInformation(teamIds, allactivitiesFiltered, activity, workFlowId);
+    }
+
     if (!teamIds.isPresent()) {
-      net.boomerangplatform.model.Pageable pageablefinal =
-          createPageable(records, property, direction);
+      net.boomerangplatform.model.Pageable pageablefinal = createPageable(records, property,
+          direction, activitiesFiltered, allactivitiesFiltered.size());
       response.setPageable(pageablefinal);
       response.setRecords(activitiesFiltered);
     } else {
 
-      Pageable pageable = PageRequest.of(0, 2147483647, page.getSort());
-      Page<ActivityEntity> allrecords =
-          flowActivityService.getAllActivites(from, to, pageable, workflowIds, statuses, triggers);
-
-      final List<FlowActivity> allactivities = convert(allrecords.getContent());
-      List<FlowActivity> allactivitiesFiltered = new ArrayList<>();
-
-      for (FlowActivity activity : allactivities) {
-        String workFlowId = activity.getWorkflowId();
-        addTeamInformation(teamIds, allactivitiesFiltered, activity, workFlowId);
-      }
       net.boomerangplatform.model.Pageable pageablefinal =
           createPageable(records, property, direction, activitiesFiltered, allactivitiesFiltered);
 
@@ -244,6 +254,29 @@ public class FlowActivityServiceImpl implements FlowActivityService {
     }
 
     return response;
+  }
+
+  protected net.boomerangplatform.model.Pageable createPageable(final Page<ActivityEntity> records,
+      String property, Direction direction, List<FlowActivity> activities, int totalElements) {
+    net.boomerangplatform.model.Pageable pageable = new net.boomerangplatform.model.Pageable();
+
+    pageable.setNumberOfElements(records.getNumberOfElements());
+    pageable.setNumber(records.getNumber());
+    pageable.setSize(records.getSize());
+    pageable.setTotalElements(records.getTotalElements());
+
+    pageable.setTotalPages(records.getTotalPages());
+    pageable.setFirst(records.isFirst());
+    pageable.setLast(records.isLast());
+
+    List<Sort> listSort = new ArrayList<>();
+    Sort sort = new Sort();
+    sort.setDirection(direction);
+    sort.setProperty(property);
+    listSort.add(sort);
+    pageable.setSort(listSort);
+
+    return pageable;
   }
 
 
