@@ -195,11 +195,12 @@ public class TaskServiceImpl implements TaskService {
     CoreProperty outputProperty = new CoreProperty();
     outputProperty.setKey(output);
     
-    String outputValue = this.dagUtility.getOutputProperty(input, activity);
-    
+    ControllerRequestProperties requestProperties = 
+        propertyManager.buildRequestPropertyLayering(task, activity.getId(), activity.getWorkflowId());
+    String outputValue = propertyManager.replaceValueWithProperty(input, activity.getId(), requestProperties);
+       
     outputProperty.setValue(outputValue);
-    outputProperties.add(outputProperty);
-    
+    outputProperties.add(outputProperty); 
     this.activityService.saveWorkflowActivity(activity);
   }
 
