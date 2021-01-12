@@ -297,12 +297,13 @@ public class TeamServiceImpl implements TeamService {
     List<ActivityEntity> teamFilteredActivities = new ArrayList<>();
     for (ActivityEntity activity : activites) {
 
-      if (workflowService.getWorkflow(activity.getWorkflowId()).getFlowTeamId().equals(teamId)) {
+      WorkflowEntity workflow = workflowService.getWorkflow(activity.getWorkflowId());
+      if (teamId.equals(workflow.getFlowTeamId()))
+      {
         teamFilteredActivities.add(activity);
       }
     }
     return teamFilteredActivities;
-
   }
 
   @Override

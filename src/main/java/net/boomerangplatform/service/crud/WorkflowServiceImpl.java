@@ -46,7 +46,7 @@ import net.boomerangplatform.mongo.model.next.DAGTask;
 import net.boomerangplatform.mongo.service.FlowTaskTemplateService;
 import net.boomerangplatform.mongo.service.FlowWorkflowService;
 import net.boomerangplatform.mongo.service.RevisionService;
-import net.boomerangplatform.scheduler.ScheduledTasks;
+import net.boomerangplatform.quartz.ScheduledTasks;
 import net.boomerangplatform.service.PropertyManager;
 
 @Service

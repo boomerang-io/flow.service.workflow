@@ -18,6 +18,11 @@ public class MongoConfiguration {
     
     return newCollectionName;
   }
+  
+  public String collectionPrefix() {
+    return this.workflowCollectionPrefix;
+  }
+  
 }
 
 

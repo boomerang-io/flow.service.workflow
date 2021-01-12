@@ -1,9 +1,10 @@
-package net.boomerangplatform.scheduler;
+package net.boomerangplatform.quartz;
 
 import java.util.List;
 import java.util.TimeZone;
 import java.util.function.Predicate;
 import javax.annotation.PostConstruct;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.quartz.CronScheduleBuilder;
@@ -66,38 +67,42 @@ public class ScheduledTasks {
   }
 
   public void scheduleWorkflow(WorkflowEntity workflow) {
+    
     if (workflow.getTriggers() != null && workflow.getTriggers().getScheduler() != null) {
+      
       String cronString = workflow.getTriggers().getScheduler().getSchedule();
       String timezone = workflow.getTriggers().getScheduler().getTimezone();
-
       if (cronString != null && timezone != null) {
-
-
         boolean validCron = org.quartz.CronExpression.isValidExpression(cronString);
-
         if (!validCron) {
           logger.info("Invalid CRON: {}", cronString);
           return;
         }
-
         TimeZone timeZone = TimeZone.getTimeZone(timezone);
         String workflowId = workflow.getId();
         Scheduler scheduler = schedulerFactoryBean.getScheduler();
         JobDetail jobDetail =
             JobBuilder.newJob(FlowJob.class).withIdentity(workflowId, "flow").build();
-        CronScheduleBuilder scheduleBuilder =
-            CronScheduleBuilder.cronSchedule(cronString).inTimeZone(timeZone);
-
-        CronTrigger trigger = TriggerBuilder.newTrigger().withIdentity(workflowId, "flow")
-            .withSchedule(scheduleBuilder).build();
+       
         try {
-          scheduler.scheduleJob(jobDetail, trigger);
-          logger.info("Scheduled Workflow: {}", workflowId);
-        } catch (SchedulerException e) {
-          logger.error(e);
+          if (!scheduler.checkExists(jobDetail.getKey())) {
+            CronScheduleBuilder scheduleBuilder =
+                CronScheduleBuilder.cronSchedule(cronString).inTimeZone(timeZone);
+
+            CronTrigger trigger = TriggerBuilder.newTrigger().withIdentity(workflowId, "flow")
+                .withSchedule(scheduleBuilder).build();
+            try {
+              scheduler.scheduleJob(jobDetail, trigger);
+              logger.info("Scheduled Workflow: {}", workflowId);
+            } catch (SchedulerException e) {
+              logger.error(e);
+            }
+          }
+        } catch (SchedulerException e1) {
+          logger.error("Unable to schedule workflow");
+          logger.error(ExceptionUtils.getStackTrace(e1));
         }
       }
-
     }
   }
 }

@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.quartz.SchedulerFactoryBean;
+import org.springframework.scheduling.quartz.SpringBeanJobFactory;
 import com.github.alturkovic.lock.mongo.configuration.EnableMongoDistributedLock;
 import net.boomerangplatform.scheduler.AutowiringSpringBeanJobFactory;
 
@@ -24,7 +25,7 @@ public class Application {
 
   @Bean
   public JobFactory jobFactory(ApplicationContext applicationContext) {
-    AutowiringSpringBeanJobFactory jobFactory = new AutowiringSpringBeanJobFactory();
+    SpringBeanJobFactory jobFactory = new AutowiringSpringBeanJobFactory();
     jobFactory.setApplicationContext(applicationContext);
     return jobFactory;
   }
