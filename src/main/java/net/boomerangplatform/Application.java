@@ -24,20 +24,6 @@ public class Application {
   }
 
   @Bean
-  public JobFactory jobFactory(ApplicationContext applicationContext) {
-    SpringBeanJobFactory jobFactory = new AutowiringSpringBeanJobFactory();
-    jobFactory.setApplicationContext(applicationContext);
-    return jobFactory;
-  }
-
-  @Bean
-  public SchedulerFactoryBean schedulerFactoryBean(JobFactory jobFactory) {
-    SchedulerFactoryBean schedulerFactoryBean = new SchedulerFactoryBean();
-    schedulerFactoryBean.setJobFactory(jobFactory);
-    return schedulerFactoryBean;
-  }
-
-  @Bean
   public Clock clock() {
     return Clock.systemDefaultZone();
   }
