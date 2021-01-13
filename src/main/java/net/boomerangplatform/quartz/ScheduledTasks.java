@@ -16,6 +16,7 @@ import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.TriggerBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.quartz.SchedulerFactoryBean;
 import org.springframework.stereotype.Component;
 import net.boomerangplatform.mongo.entity.WorkflowEntity;
@@ -23,6 +24,10 @@ import net.boomerangplatform.mongo.model.WorkflowStatus;
 import net.boomerangplatform.mongo.service.FlowWorkflowService;
 
 @Component
+@ConditionalOnProperty(
+    value="flow.scheduling.enabled", 
+    havingValue = "true", 
+    matchIfMissing = true)
 public class ScheduledTasks {
 
   private final Logger logger = LogManager.getLogger(getClass());
