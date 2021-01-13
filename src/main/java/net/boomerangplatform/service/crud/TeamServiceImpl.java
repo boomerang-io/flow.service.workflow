@@ -354,14 +354,6 @@ public class TeamServiceImpl implements TeamService {
     List<ActivityEntity> concurrentActivities = getConcurrentWorkflowActivities(teamId);
     List<ActivityEntity> activitiesMonthly = getMonthlyWorkflowActivities(page, teamId);
 
-    List<ActivityEntity> filteredActivity = new ArrayList<>();
-
-    for (ActivityEntity activity : activitiesMonthly) {
-      if (activity.getTeamId() != null && activity.getTeamId().equals(teamId)) {
-        filteredActivity.add(activity);
-      }
-    }
-
     Quotas quotas = setTeamQuotas(team);
 
     team.setQuotas(quotas);
@@ -378,7 +370,7 @@ public class TeamServiceImpl implements TeamService {
 
     workflowQuotas.setCurrentWorkflowCount(workflows.size());
     workflowQuotas.setCurrentConcurrentWorkflows(concurrentActivities.size());
-    workflowQuotas.setCurrentWorkflowExecutionMonthly(filteredActivity.size());
+    workflowQuotas.setCurrentWorkflowExecutionMonthly(activitiesMonthly.size());
     setWorkflowStorage(workflows, workflowQuotas);
     setWorkflowResetDate(workflowQuotas);
     return workflowQuotas;
