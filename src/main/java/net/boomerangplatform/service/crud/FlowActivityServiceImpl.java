@@ -184,7 +184,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
       } else if (user.getType() == UserType.admin) {
         LOGGER.info("Getting all teams as admin.");
 
-        List<TeamWorkflowSummary> teams = teamService.getUserTeams(user);
+        List<TeamWorkflowSummary> teams = teamService.getAllTeams();
 
         teamIdList = teams.stream().map(TeamWorkflowSummary::getId).collect(Collectors.toList());
       } else {
@@ -208,7 +208,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
           workflowIds.isEmpty() ? this.workflowService.getWorkflowsForTeams(teamIdList)
               : workflowsFromIds;
 
-
+//TODO
       workflows.addAll(workflowService.getSystemWorkflows());
       LOGGER.info("Found workflows: " + workflows.size());
 
