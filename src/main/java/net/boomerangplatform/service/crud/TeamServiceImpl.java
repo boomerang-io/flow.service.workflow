@@ -288,11 +288,11 @@ public class TeamServiceImpl implements TeamService {
 
   }
 
-  private List<ActivityEntity> getMonthlyWorkflowActivities(Pageable page) {
+  private List<ActivityEntity> getMonthlyWorkflowActivities(Pageable page, String teamId) {
     Calendar c = Calendar.getInstance();
     c.set(Calendar.DAY_OF_MONTH, 1);
     return flowWorkflowActivityService
-        .findAllActivities(Optional.of(c.getTime()), Optional.of(new Date()), page).getContent();
+        .findAllActivitiesForTeam(Optional.of(c.getTime()), Optional.of(new Date()),teamId, page).getContent();
 
 
 
@@ -352,7 +352,7 @@ public class TeamServiceImpl implements TeamService {
     List<WorkflowSummary> workflows = workflowService.getWorkflowsForTeam(team.getId());
     Pageable page = Pageable.unpaged();
     List<ActivityEntity> concurrentActivities = getConcurrentWorkflowActivities(teamId);
-    List<ActivityEntity> activitiesMonthly = getMonthlyWorkflowActivities(page);
+    List<ActivityEntity> activitiesMonthly = getMonthlyWorkflowActivities(page, teamId);
 
     List<ActivityEntity> filteredActivity = new ArrayList<>();
 
@@ -435,7 +435,7 @@ public class TeamServiceImpl implements TeamService {
     List<WorkflowSummary> workflows = workflowService.getWorkflowsForTeam(team.getId());
     Pageable page = Pageable.unpaged();
     List<ActivityEntity> concurrentActivities = getConcurrentWorkflowActivities(teamId);
-    List<ActivityEntity> activitiesMonthly = getMonthlyWorkflowActivities(page);
+    List<ActivityEntity> activitiesMonthly = getMonthlyWorkflowActivities(page, teamId);
 
     Quotas teamQuotas = team.getQuotas();
     teamQuotas.setMaxWorkflowCount(maxWorkflowCount);
@@ -533,7 +533,7 @@ public class TeamServiceImpl implements TeamService {
 
     List<ActivityEntity> concurrentActivities = getConcurrentWorkflowActivities(entity.getId());
     Pageable page = Pageable.unpaged();
-    List<ActivityEntity> activitiesMonthly = getMonthlyWorkflowActivities(page);
+    List<ActivityEntity> activitiesMonthly = getMonthlyWorkflowActivities(page, entity.getId());
 
     WorkflowQuotas workflowQuotas = new WorkflowQuotas();
     workflowQuotas.setMaxWorkflowCount(quotas.getMaxWorkflowCount());
