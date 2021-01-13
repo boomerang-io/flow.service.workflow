@@ -52,6 +52,8 @@ public class ActivityEntity {
   
   private boolean isAwaitingApproval;
   
+  private String teamId;
+  
   @JsonProperty("workspaces")
   private List<TaskWorkspace> taskWorkspaces;
   
@@ -159,4 +161,12 @@ public class ActivityEntity {
     this.isAwaitingApproval = isAwaitingApproval;
   }
 
+  public String getTeamId() {
+    return teamId;
+  }
+
+  public void setTeamId(String teamId) {
+    this.teamId = teamId;
+  }
+  
 }

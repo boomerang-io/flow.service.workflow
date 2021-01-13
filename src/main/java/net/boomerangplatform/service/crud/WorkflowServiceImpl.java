@@ -456,10 +456,12 @@ public class WorkflowServiceImpl implements WorkflowService {
 
     if (templateIds.containsAll(importTemplateIds)) {
 
-
       final WorkflowEntity entity = workFlowRepository.getWorkflow(export.getId());
 
       if (entity != null) {
+        if (update != null && !update) {
+          entity.setId(null);
+        }
 
         entity.setName(export.getName());
         entity.setDescription(export.getDescription());
@@ -735,7 +737,7 @@ public class WorkflowServiceImpl implements WorkflowService {
   public List<String> getWorkflowParameters(String workFlowId) {
     List<String> parameters = new ArrayList<>();
     WorkflowEntity workflow = workFlowRepository.getWorkflow(workFlowId);
-    
+
     if (flowFeatureGlobalParameters) {
       Map<String, Object> globalProperties = new HashMap<>();
       propertyManager.buildGlobalProperties(globalProperties);
@@ -746,7 +748,8 @@ public class WorkflowServiceImpl implements WorkflowService {
       }
     }
 
-    if (flowFeatureTeamParameters && workflow.getScope() != null && WorkflowScope.team.equals(workflow.getScope())) {
+    if (flowFeatureTeamParameters && workflow.getScope() != null
+        && WorkflowScope.team.equals(workflow.getScope())) {
       Map<String, Object> teamProperties = new HashMap<>();
       propertyManager.buildTeamProperties(teamProperties, workflow.getId());
 
