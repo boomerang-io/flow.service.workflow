@@ -7,6 +7,7 @@
     "initiatedByUserName" : "Marcus Roy",
     "status" : "completed",
     "workflowId" : "5d1a188af6ca2c00014c4314",
+    "teamId":"5d1a1841f6ca2c00014c4309",
     "workflowRevisionid" : "5d1a18c1f6ca2c00014c431d",
     "trigger" : "manual",
     "properties" : []

@@ -32,4 +32,7 @@ public interface FlowWorkflowActivityService {
   
   List<ActivityEntity> findbyWorkflowIdsAndStatus(List<String> workflowIds, TaskStatus status);
 
+  Page<ActivityEntity> findAllActivitiesForTeam(Optional<Date> fromDate, Optional<Date> toDate,
+      String teamId, Pageable page);
+
 }
