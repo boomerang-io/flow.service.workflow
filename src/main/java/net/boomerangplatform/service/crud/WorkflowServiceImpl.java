@@ -459,7 +459,7 @@ public class WorkflowServiceImpl implements WorkflowService {
       final WorkflowEntity entity = workFlowRepository.getWorkflow(export.getId());
 
       if (entity != null) {
-        if (update != null && update) {
+        if (update != null && !update) {
           entity.setId(null);
         }
 
