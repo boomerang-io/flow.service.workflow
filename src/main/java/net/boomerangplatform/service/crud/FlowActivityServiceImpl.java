@@ -241,13 +241,6 @@ public class FlowActivityServiceImpl implements FlowActivityService {
       addTeamInformation(teamIds, allactivitiesFiltered, activity, workFlowId);
     }
 
-    ObjectMapper objectMapper = new ObjectMapper();
-    try {
-      System.out.println(objectMapper.writeValueAsString(activities));
-      System.out.println(objectMapper.writeValueAsString(activitiesFiltered));
-    } catch (JsonProcessingException e) {
-      e.printStackTrace();
-    }
     if (!teamIds.isPresent()) {
       net.boomerangplatform.model.Pageable pageablefinal = createPageable(records, property,
           direction, activitiesFiltered, allactivitiesFiltered.size());
