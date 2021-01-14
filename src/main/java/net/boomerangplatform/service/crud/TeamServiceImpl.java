@@ -300,14 +300,30 @@ public class TeamServiceImpl implements TeamService {
 
   @Override
   public FlowTeam getTeamById(String teamId) {
-    FlowTeamEntity flowEntity = flowTeamService.findById(teamId);
-    FlowTeam flowTeam = new FlowTeam();
-    if (flowEntity != null) {
-      BeanUtils.copyProperties(flowEntity, flowTeam);
+    if (!flowExternalUrlTeam.isBlank()) {
+      List<FlowTeamEntity> allFlowteams =
+          this.externalTeamService.getExternalTeams(flowExternalUrlTeam);
+      if (allFlowteams != null) {
+        FlowTeamEntity flowEntity =
+            allFlowteams.stream().filter(t -> teamId.equals(t.getId())).findFirst().orElse(null);
+
+        FlowTeam flowTeam = new FlowTeam();
+        if (flowEntity != null) {
+          BeanUtils.copyProperties(flowEntity, flowTeam);
+        }
+        return flowTeam;
+      }
+
+    } else {
+      FlowTeamEntity flowEntity = flowTeamService.findById(teamId);
+      FlowTeam flowTeam = new FlowTeam();
+      if (flowEntity != null) {
+        BeanUtils.copyProperties(flowEntity, flowTeam);
+      }
+
+      return flowTeam;
     }
-
-
-    return flowTeam;
+    return null;
   }
 
   @Override

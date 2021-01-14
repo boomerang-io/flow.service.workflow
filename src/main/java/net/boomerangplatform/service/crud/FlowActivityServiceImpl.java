@@ -225,7 +225,6 @@ public class FlowActivityServiceImpl implements FlowActivityService {
         Optional.of(workflowIdsList), statuses, triggers);
 
     final List<FlowActivity> activities = convert(records.getContent());
-    System.out.println("****ACTBEFORE****" + activities.size());
     List<FlowActivity> activitiesFiltered = new ArrayList<>();
 
     for (FlowActivity activity : activities) {
@@ -233,25 +232,20 @@ public class FlowActivityServiceImpl implements FlowActivityService {
       addTeamInformation(teamIds, activitiesFiltered, activity, workFlowId);
     }
 
-    System.out.println("***ACT AFTER****" + activitiesFiltered.size());
     Pageable pageable = PageRequest.of(0, 2147483647, page.getSort());
     Page<ActivityEntity> allrecords =
         flowActivityService.getAllActivites(from, to, pageable, workflowIds, statuses, triggers);
 
     final List<FlowActivity> allactivities = convert(allrecords.getContent());
     List<FlowActivity> allactivitiesFiltered = new ArrayList<>();
-    System.out.println("***ALL START****************");
     for (FlowActivity activity : allactivities) {
       String workFlowId = activity.getWorkflowId();
       addTeamInformation(teamIds, allactivitiesFiltered, activity, workFlowId);
     }
-    System.out.println("***ALL END****************");
 
     ObjectMapper objectMapper = new ObjectMapper();
     try {
-      System.out.println("*****ACT****");
       System.out.println(objectMapper.writeValueAsString(activities));
-      System.out.println("*****ACTFITERRED****");
       System.out.println(objectMapper.writeValueAsString(activitiesFiltered));
     } catch (JsonProcessingException e) {
       e.printStackTrace();
@@ -379,11 +373,9 @@ public class FlowActivityServiceImpl implements FlowActivityService {
   private void addTeamInformation(Optional<List<String>> teamIds,
       List<FlowActivity> activitiesFiltered, FlowActivity activity, String workFlowId) {
     String teamId = null;
-    System.out.println("***ACTID****************"+ activity.getId());
-
+    
     WorkflowEntity workflow = workflowService.getWorkflow(workFlowId);
     if (workflow.getScope().equals((WorkflowScope.system))) {
-      System.out.println("******ACTIVITYID***** "+activity.getId() +"added system scope");
       activitiesFiltered.add(activity);
     } else if ((workflow.getScope().equals(WorkflowScope.team))) {
       teamId = workflowService.getWorkflow(workFlowId).getFlowTeamId();
@@ -391,7 +383,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
 
     if (teamId != null) {
 
-      FlowTeamEntity team = flowTeamService.findById(teamId);
+      FlowTeamEntity team = teamService.getTeamById(teamId);
       if (team != null) {
         String teamName = team.getName();
 
@@ -401,12 +393,10 @@ public class FlowActivityServiceImpl implements FlowActivityService {
           for (String teamID : teamIds.get()) {
             if (teamId.equals(teamID)) {
               activitiesFiltered.add(activity);
-              System.out.println("******ACTIVITYID***** "+activity.getId() +"added teamID present");
             }
           }
         } else {
           activitiesFiltered.add(activity);
-          System.out.println("******ACTIVITYID***** "+activity.getId() +"added team scope");
         }
       }
     }
