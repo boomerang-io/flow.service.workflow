@@ -30,6 +30,8 @@ import org.springframework.web.client.RequestCallback;
 import org.springframework.web.client.ResponseExtractor;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import net.boomerangplatform.model.Approval;
 import net.boomerangplatform.model.Execution;
 import net.boomerangplatform.model.FlowActivity;
@@ -223,6 +225,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
         Optional.of(workflowIdsList), statuses, triggers);
 
     final List<FlowActivity> activities = convert(records.getContent());
+    System.out.println("****ACTBEFORE****" + activities.size());
     List<FlowActivity> activitiesFiltered = new ArrayList<>();
 
     for (FlowActivity activity : activities) {
@@ -230,18 +233,29 @@ public class FlowActivityServiceImpl implements FlowActivityService {
       addTeamInformation(teamIds, activitiesFiltered, activity, workFlowId);
     }
 
+    System.out.println("***ACT AFTER****" + activitiesFiltered.size());
     Pageable pageable = PageRequest.of(0, 2147483647, page.getSort());
     Page<ActivityEntity> allrecords =
         flowActivityService.getAllActivites(from, to, pageable, workflowIds, statuses, triggers);
 
     final List<FlowActivity> allactivities = convert(allrecords.getContent());
     List<FlowActivity> allactivitiesFiltered = new ArrayList<>();
-
+    System.out.println("***ALL START****************");
     for (FlowActivity activity : allactivities) {
       String workFlowId = activity.getWorkflowId();
       addTeamInformation(teamIds, allactivitiesFiltered, activity, workFlowId);
     }
+    System.out.println("***ALL END****************");
 
+    ObjectMapper objectMapper = new ObjectMapper();
+    try {
+      System.out.println("*****ACT****");
+      System.out.println(objectMapper.writeValueAsString(activities));
+      System.out.println("*****ACTFITERRED****");
+      System.out.println(objectMapper.writeValueAsString(activitiesFiltered));
+    } catch (JsonProcessingException e) {
+      e.printStackTrace();
+    }
     if (!teamIds.isPresent()) {
       net.boomerangplatform.model.Pageable pageablefinal = createPageable(records, property,
           direction, activitiesFiltered, allactivitiesFiltered.size());
@@ -365,11 +379,14 @@ public class FlowActivityServiceImpl implements FlowActivityService {
   private void addTeamInformation(Optional<List<String>> teamIds,
       List<FlowActivity> activitiesFiltered, FlowActivity activity, String workFlowId) {
     String teamId = null;
-    if ((workflowService.getWorkflow(workFlowId) != null
-        && workflowService.getWorkflow(workFlowId).getScope().equals(WorkflowScope.team))) {
-      teamId = workflowService.getWorkflow(workFlowId).getFlowTeamId();
-    } else {
+    System.out.println("***ACTID****************"+ activity.getId());
+
+    WorkflowEntity workflow = workflowService.getWorkflow(workFlowId);
+    if (workflow.getScope().equals((WorkflowScope.system))) {
+      System.out.println("******ACTIVITYID***** "+activity.getId() +"added system scope");
       activitiesFiltered.add(activity);
+    } else if ((workflow.getScope().equals(WorkflowScope.team))) {
+      teamId = workflowService.getWorkflow(workFlowId).getFlowTeamId();
     }
 
     if (teamId != null) {
@@ -384,10 +401,12 @@ public class FlowActivityServiceImpl implements FlowActivityService {
           for (String teamID : teamIds.get()) {
             if (teamId.equals(teamID)) {
               activitiesFiltered.add(activity);
+              System.out.println("******ACTIVITYID***** "+activity.getId() +"added teamID present");
             }
           }
         } else {
           activitiesFiltered.add(activity);
+          System.out.println("******ACTIVITYID***** "+activity.getId() +"added team scope");
         }
       }
     }
