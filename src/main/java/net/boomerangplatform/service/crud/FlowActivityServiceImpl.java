@@ -120,7 +120,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
 
   @Override
   public ActivityEntity createFlowActivity(String workflowVersionId, Optional<String> trigger,
-      FlowExecutionRequest request,    Optional<List<TaskWorkspace>> taskWorkspaces) {
+      FlowExecutionRequest request, Optional<List<TaskWorkspace>> taskWorkspaces) {
     /* Create new one based of work flow version id. */
     final RevisionEntity entity = versionService.getWorkflowlWithId(workflowVersionId);
 
@@ -133,7 +133,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
     if (taskWorkspaces.isPresent()) {
       activity.setTaskWorkspaces(taskWorkspaces.get());
     }
-    
+
     if (trigger.isPresent()) {
       activity.setTrigger(trigger.get());
     }
@@ -185,6 +185,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
         LOGGER.info("Getting all teams as admin.");
 
         List<TeamWorkflowSummary> teams = teamService.getAllTeams();
+
         teamIdList = teams.stream().map(TeamWorkflowSummary::getId).collect(Collectors.toList());
       } else {
         List<TeamWorkflowSummary> teams = teamService.getUserTeams(user);
@@ -207,15 +208,19 @@ public class FlowActivityServiceImpl implements FlowActivityService {
           workflowIds.isEmpty() ? this.workflowService.getWorkflowsForTeams(teamIdList)
               : workflowsFromIds;
 
-
+//TODO
+      workflows.addAll(workflowService.getSystemWorkflows());
       LOGGER.info("Found workflows: " + workflows.size());
 
       workflowIdsList = workflows.stream().map(WorkflowEntity::getId).collect(Collectors.toList());
+
     }
 
     ListActivityResponse response = new ListActivityResponse();
+
     Page<ActivityEntity> records = flowActivityService.getAllActivites(from, to, page,
         Optional.of(workflowIdsList), statuses, triggers);
+
     final List<FlowActivity> activities = convert(records.getContent());
     List<FlowActivity> activitiesFiltered = new ArrayList<>();
 
