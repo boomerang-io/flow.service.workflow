@@ -292,7 +292,8 @@ public class TeamServiceImpl implements TeamService {
     Calendar c = Calendar.getInstance();
     c.set(Calendar.DAY_OF_MONTH, 1);
     return flowWorkflowActivityService
-        .findAllActivitiesForTeam(Optional.of(c.getTime()), Optional.of(new Date()),teamId, page).getContent();
+        .findAllActivitiesForTeam(Optional.of(c.getTime()), Optional.of(new Date()), teamId, page)
+        .getContent();
 
 
 

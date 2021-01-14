@@ -32,6 +32,7 @@ import net.boomerangplatform.mongo.model.WorkflowScope;
 import net.boomerangplatform.mongo.service.FlowTeamService;
 import net.boomerangplatform.mongo.service.FlowWorkflowService;
 import net.boomerangplatform.service.crud.FlowActivityService;
+import net.boomerangplatform.service.crud.TeamService;
 
 @RestController
 @RequestMapping("/workflow/")
@@ -42,9 +43,9 @@ public class ActivityController {
 
   @Autowired
   private FlowWorkflowService workflowService;
-
+  
   @Autowired
-  private FlowTeamService flowTeamService;
+  private TeamService teamService;
 
   private static final String CREATIONDATESORT = "creationDate";
 
@@ -106,7 +107,7 @@ public class ActivityController {
     }
 
     if (teamId != null) {
-      FlowTeamEntity team = flowTeamService.findById(teamId);
+      FlowTeamEntity team = teamService.getTeamById(teamId);
       if (team != null) {
         teamName = team.getName();
         response.setTeamName(teamName);
