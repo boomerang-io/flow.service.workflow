@@ -27,5 +27,6 @@
         }
     },
     "enablePersistentStorage" : false,
-    "status" : "active"
+    "status" : "active",
+     "scope":"team"
 }

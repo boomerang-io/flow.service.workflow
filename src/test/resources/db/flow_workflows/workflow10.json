@@ -30,5 +30,6 @@
 	},
 	"enablePersistentStorage": false,
 	"enableIAMIntegration": true,
-	"_class": "net.boomerangplatform.mongo.entity.FlowWorkflowEntity"
+	"_class": "net.boomerangplatform.mongo.entity.FlowWorkflowEntity",
+	 "scope":"team"
 }

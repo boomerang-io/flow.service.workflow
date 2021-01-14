@@ -30,6 +30,8 @@ import org.springframework.web.client.RequestCallback;
 import org.springframework.web.client.ResponseExtractor;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import net.boomerangplatform.model.Approval;
 import net.boomerangplatform.model.Execution;
 import net.boomerangplatform.model.FlowActivity;
@@ -50,6 +52,7 @@ import net.boomerangplatform.mongo.model.FlowTriggerEnum;
 import net.boomerangplatform.mongo.model.TaskStatus;
 import net.boomerangplatform.mongo.model.TaskType;
 import net.boomerangplatform.mongo.model.UserType;
+import net.boomerangplatform.mongo.model.WorkflowScope;
 import net.boomerangplatform.mongo.service.ActivityTaskService;
 import net.boomerangplatform.mongo.service.FlowTeamService;
 import net.boomerangplatform.mongo.service.FlowWorkflowActivityService;
@@ -207,8 +210,6 @@ public class FlowActivityServiceImpl implements FlowActivityService {
       List<WorkflowEntity> workflows =
           workflowIds.isEmpty() ? this.workflowService.getWorkflowsForTeams(teamIdList)
               : workflowsFromIds;
-
-//TODO
       workflows.addAll(workflowService.getSystemWorkflows());
       LOGGER.info("Found workflows: " + workflows.size());
 
@@ -235,7 +236,6 @@ public class FlowActivityServiceImpl implements FlowActivityService {
 
     final List<FlowActivity> allactivities = convert(allrecords.getContent());
     List<FlowActivity> allactivitiesFiltered = new ArrayList<>();
-
     for (FlowActivity activity : allactivities) {
       String workFlowId = activity.getWorkflowId();
       addTeamInformation(teamIds, allactivitiesFiltered, activity, workFlowId);
@@ -363,16 +363,18 @@ public class FlowActivityServiceImpl implements FlowActivityService {
 
   private void addTeamInformation(Optional<List<String>> teamIds,
       List<FlowActivity> activitiesFiltered, FlowActivity activity, String workFlowId) {
-    String teamId;
-    if ((workflowService.getWorkflow(workFlowId) != null)) {
+    String teamId = null;
+    
+    WorkflowEntity workflow = workflowService.getWorkflow(workFlowId);
+    if (workflow.getScope().equals((WorkflowScope.system))) {
+      activitiesFiltered.add(activity);
+    } else if ((workflow.getScope().equals(WorkflowScope.team))) {
       teamId = workflowService.getWorkflow(workFlowId).getFlowTeamId();
-    } else {
-      teamId = null;
     }
 
     if (teamId != null) {
 
-      FlowTeamEntity team = flowTeamService.findById(teamId);
+      FlowTeamEntity team = teamService.getTeamById(teamId);
       if (team != null) {
         String teamName = team.getName();
 
