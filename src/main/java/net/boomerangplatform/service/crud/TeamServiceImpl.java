@@ -292,7 +292,8 @@ public class TeamServiceImpl implements TeamService {
     Calendar c = Calendar.getInstance();
     c.set(Calendar.DAY_OF_MONTH, 1);
     return flowWorkflowActivityService
-        .findAllActivitiesForTeam(Optional.of(c.getTime()), Optional.of(new Date()),teamId, page).getContent();
+        .findAllActivitiesForTeam(Optional.of(c.getTime()), Optional.of(new Date()), teamId, page)
+        .getContent();
 
 
 
@@ -300,14 +301,30 @@ public class TeamServiceImpl implements TeamService {
 
   @Override
   public FlowTeam getTeamById(String teamId) {
-    FlowTeamEntity flowEntity = flowTeamService.findById(teamId);
-    FlowTeam flowTeam = new FlowTeam();
-    if (flowEntity != null) {
-      BeanUtils.copyProperties(flowEntity, flowTeam);
+    if (!flowExternalUrlTeam.isBlank()) {
+      List<FlowTeamEntity> allFlowteams =
+          this.externalTeamService.getExternalTeams(flowExternalUrlTeam);
+      if (allFlowteams != null) {
+        FlowTeamEntity flowEntity =
+            allFlowteams.stream().filter(t -> teamId.equals(t.getId())).findFirst().orElse(null);
+
+        FlowTeam flowTeam = new FlowTeam();
+        if (flowEntity != null) {
+          BeanUtils.copyProperties(flowEntity, flowTeam);
+        }
+        return flowTeam;
+      }
+
+    } else {
+      FlowTeamEntity flowEntity = flowTeamService.findById(teamId);
+      FlowTeam flowTeam = new FlowTeam();
+      if (flowEntity != null) {
+        BeanUtils.copyProperties(flowEntity, flowTeam);
+      }
+
+      return flowTeam;
     }
-
-
-    return flowTeam;
+    return null;
   }
 
   @Override
