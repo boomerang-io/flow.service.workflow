@@ -50,6 +50,7 @@ import net.boomerangplatform.mongo.model.FlowTriggerEnum;
 import net.boomerangplatform.mongo.model.TaskStatus;
 import net.boomerangplatform.mongo.model.TaskType;
 import net.boomerangplatform.mongo.model.UserType;
+import net.boomerangplatform.mongo.model.WorkflowScope;
 import net.boomerangplatform.mongo.service.ActivityTaskService;
 import net.boomerangplatform.mongo.service.FlowTeamService;
 import net.boomerangplatform.mongo.service.FlowWorkflowActivityService;
@@ -208,7 +209,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
           workflowIds.isEmpty() ? this.workflowService.getWorkflowsForTeams(teamIdList)
               : workflowsFromIds;
 
-//TODO
+      // TODO
       workflows.addAll(workflowService.getSystemWorkflows());
       LOGGER.info("Found workflows: " + workflows.size());
 
@@ -363,11 +364,12 @@ public class FlowActivityServiceImpl implements FlowActivityService {
 
   private void addTeamInformation(Optional<List<String>> teamIds,
       List<FlowActivity> activitiesFiltered, FlowActivity activity, String workFlowId) {
-    String teamId;
-    if ((workflowService.getWorkflow(workFlowId) != null)) {
+    String teamId = null;
+    if ((workflowService.getWorkflow(workFlowId) != null
+        && workflowService.getWorkflow(workFlowId).getScope().equals(WorkflowScope.team))) {
       teamId = workflowService.getWorkflow(workFlowId).getFlowTeamId();
     } else {
-      teamId = null;
+      activitiesFiltered.add(activity);
     }
 
     if (teamId != null) {
