@@ -1,10 +1,14 @@
 package net.boomerangplatform.service;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.commons.lang3.StringUtils;
@@ -67,10 +71,10 @@ public class PropertyManagerImpl implements PropertyManager {
   @Override
   public ControllerRequestProperties buildRequestPropertyLayering(Task task, String activityId, String workflowId) {
     ControllerRequestProperties applicationProperties = new ControllerRequestProperties();
-    Map<String, Object> systemProperties = applicationProperties.getSystemProperties();
-    Map<String, Object> globalProperties = applicationProperties.getGlobalProperties();
-    Map<String, Object> teamProperties = applicationProperties.getTeamProperties();
-    Map<String, Object> workflowProperties = applicationProperties.getWorkflowProperties();
+    Map<String, String> systemProperties = applicationProperties.getSystemProperties();
+    Map<String, String> globalProperties = applicationProperties.getGlobalProperties();
+    Map<String, String> teamProperties = applicationProperties.getTeamProperties();
+    Map<String, String> workflowProperties = applicationProperties.getWorkflowProperties();
 
     buildGlobalProperties(globalProperties);
     buildSystemProperties(task, activityId, workflowId, systemProperties);
@@ -172,7 +176,7 @@ public class PropertyManagerImpl implements PropertyManager {
 
 
   @Override
-  public void buildWorkflowProperties(Map<String, Object> workflowProperties, String activityId,
+  public void buildWorkflowProperties(Map<String, String> workflowProperties, String activityId,
       String workflowId) {
     WorkflowEntity workflow = new WorkflowEntity();
     List<CoreProperty> properties = null;
@@ -198,7 +202,7 @@ public class PropertyManagerImpl implements PropertyManager {
   }
 
   @Override
-  public void buildGlobalProperties(Map<String, Object> globalProperties) {
+  public void buildGlobalProperties(Map<String, String> globalProperties) {
     List<FlowGlobalConfigEntity> globalConfigs = this.flowGlobalConfigService.getGlobalConfigs();
     for (FlowGlobalConfigEntity entity : globalConfigs) {
       if (entity.getValue() != null) {
@@ -209,15 +213,21 @@ public class PropertyManagerImpl implements PropertyManager {
 
   @Override
   public void buildSystemProperties(Task task, String activityId, String workflowId,
-      Map<String, Object> systemProperties) {
+      Map<String, String> systemProperties) {
 
     WorkflowEntity workflow = workflowService.getWorkflow(workflowId);
     if (activityId != null) {
       ActivityEntity activity = activityService.findWorkflowActivity(activityId);
       systemProperties.put("workflow-version",
-          revisionService.getWorkflowlWithId(activity.getWorkflowRevisionid()).getVersion());
+          Long.toString(revisionService.getWorkflowlWithId(activity.getWorkflowRevisionid()).getVersion()));
       systemProperties.put("trigger-type", activity.getTrigger());
-      systemProperties.put("workflow-activity-initiator", activity.getInitiatedByUserId());
+      
+      systemProperties.put("workflow-activity-initiator", "");
+      if (activity.getInitiatedByUserId() != null) {
+        systemProperties.put("workflow-activity-initiator", activity.getInitiatedByUserId());
+      }
+      
+     
     }
 
     systemProperties.put("workflow-name", workflow.getName());
@@ -226,12 +236,12 @@ public class PropertyManagerImpl implements PropertyManager {
 
     if (task != null) {
       systemProperties.put("task-name", task.getTaskName());
-      systemProperties.put("task-type", task.getTaskType());
+      systemProperties.put("task-type", task.getTaskType().toString());
     }
   }
 
   @Override
-  public void buildTeamProperties(Map<String, Object> teamProperties, String workflowId) {
+  public void buildTeamProperties(Map<String, String> teamProperties, String workflowId) {
     FlowTeamEntity flowTeamEntity =
         this.flowTeamService.findById(workflowService.getWorkflow(workflowId).getFlowTeamId());
     List<FlowTeamConfiguration> teamConfig = null;
@@ -257,7 +267,7 @@ public class PropertyManagerImpl implements PropertyManager {
   private String replaceProperties(String value, String activityId,
       ControllerRequestProperties applicationProperties) {
 
-    Map<String, String> executionProperties = applicationProperties.getMap();
+    Map<String, String> executionProperties = applicationProperties.getMap(true);
 
     String regex = "(?<=\\$\\().+?(?=\\))";
     Pattern pattern = Pattern.compile(regex);
@@ -271,7 +281,17 @@ public class PropertyManagerImpl implements PropertyManager {
       int start = m.start() - 2;
       int end = m.end() + 1;
       String[] components = extractedValue.split("\\.");
-      if (components.length == 2) {
+      
+      if (components.length == 1) {
+        String allParams = components[0];
+        if ("allParams".equals(allParams)) {
+          Map<String, String> properties = applicationProperties.getMap(false);
+          replaceValue = this.getEncodedPropertiesForMap(properties);
+        }
+      } 
+      else if (components.length == 2) {
+        List<String> reservedList = Arrays.asList(reserved);
+        
         String params = components[0];
         if ("params".equals(params)) {
           String propertyName = components[1];
@@ -280,6 +300,13 @@ public class PropertyManagerImpl implements PropertyManager {
           }
           else {
             replaceValue = "";
+          }
+        }
+        else if (reservedList.contains(params)) {
+          String key = components[1];
+          if ("allParams".equals(key)) {
+            Map<String, String> properties = applicationProperties.getMapForKey(params);
+            replaceValue = this.getEncodedPropertiesForMap(properties);
           }
         }
       } else if (components.length == 4) {
@@ -332,7 +359,7 @@ public class PropertyManagerImpl implements PropertyManager {
   private String replaceLegacyProperties(String value, String activityId,
       ControllerRequestProperties applicationProperties) {
 
-    Map<String, String> executionProperties = applicationProperties.getMap();
+    Map<String, String> executionProperties = applicationProperties.getMap(true);
 
     String regex = "\\$\\{p\\:([^{}]*)\\}";
     Pattern pattern = Pattern.compile(regex);
@@ -391,4 +418,30 @@ public class PropertyManagerImpl implements PropertyManager {
     }
     return null;
   }
+  
+
+  private String getEncodedPropertiesForMap(Map<String, String> map) {
+    try {
+      Properties properties = new Properties();
+      properties.putAll(map);
+      ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+      properties.store(outputStream, null);
+      String text = outputStream.toString();
+      String[] lines = text.split("\\n");
+
+      StringBuilder sb = new StringBuilder();
+      for (String line : lines) {
+        if (!line.startsWith("#")) {
+          sb.append(line + '\n');
+        }
+
+      }
+      String propertiesFile = sb.toString();
+      String encodedString = Base64.getEncoder().encodeToString(propertiesFile.getBytes());
+      return encodedString;
+    } catch (IOException e) {
+      return "";
+    }
+  }
+
 }

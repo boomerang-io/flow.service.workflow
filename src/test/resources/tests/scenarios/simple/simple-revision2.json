@@ -98,7 +98,7 @@
                     }, 
                     {
                         "key" : "script",
-                        "value" : "echo \"Test\""
+                        "value" : "$(system.allParams)"
                     }
                 ],
                 "metadata" : {

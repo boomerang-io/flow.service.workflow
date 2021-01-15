@@ -137,7 +137,7 @@ public class ControllerClientImpl implements ControllerClient {
     ControllerRequestProperties applicationProperties =
         propertyManager.buildRequestPropertyLayering(task, activityId, task.getWorkflowId());
    
-    Map<String, String> map = applicationProperties.getMap();
+    Map<String, String> map = applicationProperties.getMap(true);
     String image = applicationProperties.getLayeredProperty("image");
     image = propertyManager.replaceValueWithProperty(image, activityId, applicationProperties); 
     request.setImage(image);

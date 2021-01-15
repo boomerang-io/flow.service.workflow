@@ -12,13 +12,13 @@ public interface PropertyManager {
       ControllerRequestProperties properties);
 
   public void buildSystemProperties(Task task, String activityId, String workflowId,
-      Map<String, Object> systemProperties);
+      Map<String, String> systemProperties);
 
-  public void buildWorkflowProperties(Map<String, Object> workflowProperties, String activityId,
+  public void buildWorkflowProperties(Map<String, String> workflowProperties, String activityId,
       String workflowId);
 
-  public void buildGlobalProperties(Map<String, Object> globalProperties);
+  public void buildGlobalProperties(Map<String, String> globalProperties);
 
-  public void buildTeamProperties(Map<String, Object> teamProperties, String workflowId);
+  public void buildTeamProperties(Map<String, String> teamProperties, String workflowId);
 
 }

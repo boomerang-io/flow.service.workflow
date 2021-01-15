@@ -739,10 +739,10 @@ public class WorkflowServiceImpl implements WorkflowService {
     WorkflowEntity workflow = workFlowRepository.getWorkflow(workFlowId);
 
     if (flowFeatureGlobalParameters) {
-      Map<String, Object> globalProperties = new HashMap<>();
+      Map<String, String> globalProperties = new HashMap<>();
       propertyManager.buildGlobalProperties(globalProperties);
 
-      for (Map.Entry<String, Object> globalProperty : globalProperties.entrySet()) {
+      for (Map.Entry<String, String> globalProperty : globalProperties.entrySet()) {
         parameters.add("global.params." + globalProperty.getKey());
         parameters.add("params." + globalProperty.getKey());
       }
@@ -750,25 +750,25 @@ public class WorkflowServiceImpl implements WorkflowService {
 
     if (flowFeatureTeamParameters && workflow.getScope() != null
         && WorkflowScope.team.equals(workflow.getScope())) {
-      Map<String, Object> teamProperties = new HashMap<>();
+      Map<String, String> teamProperties = new HashMap<>();
       propertyManager.buildTeamProperties(teamProperties, workflow.getId());
 
-      for (Map.Entry<String, Object> teamProperty : teamProperties.entrySet()) {
+      for (Map.Entry<String, String> teamProperty : teamProperties.entrySet()) {
         parameters.add("team.params." + teamProperty.getKey());
         parameters.add("params." + teamProperty.getKey());
       }
     }
 
-    Map<String, Object> workflowProperties = new HashMap<>();
+    Map<String, String> workflowProperties = new HashMap<>();
     propertyManager.buildWorkflowProperties(workflowProperties, null, workflow.getId());
-    for (Map.Entry<String, Object> workflowProperty : workflowProperties.entrySet()) {
+    for (Map.Entry<String, String> workflowProperty : workflowProperties.entrySet()) {
       parameters.add("workflow.params." + workflowProperty.getKey());
       parameters.add("params." + workflowProperty.getKey());
     }
 
-    Map<String, Object> systemProperties = new HashMap<>();
+    Map<String, String> systemProperties = new HashMap<>();
     propertyManager.buildSystemProperties(null, null, workflow.getId(), systemProperties);
-    for (Map.Entry<String, Object> systemProperty : systemProperties.entrySet()) {
+    for (Map.Entry<String, String> systemProperty : systemProperties.entrySet()) {
       parameters.add("system.params." + systemProperty.getKey());
       parameters.add("params." + systemProperty.getKey());
     }

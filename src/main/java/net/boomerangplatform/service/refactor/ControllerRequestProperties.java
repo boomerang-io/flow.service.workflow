@@ -17,16 +17,16 @@ public class ControllerRequestProperties {
   private boolean includeGlobalProperties = true;
 
   @JsonIgnore
-  private Map<String, Object> systemProperties = new HashMap<>();
+  private Map<String, String> systemProperties = new HashMap<>();
 
   @JsonIgnore
-  private Map<String, Object> globalProperties = new HashMap<>();
+  private Map<String, String> globalProperties = new HashMap<>();
 
   @JsonIgnore
-  private Map<String, Object> teamProperties = new HashMap<>();
+  private Map<String, String> teamProperties = new HashMap<>();
 
   @JsonIgnore
-  private Map<String, Object> workflowProperties = new HashMap<>();
+  private Map<String, String> workflowProperties = new HashMap<>();
 
   @JsonIgnore
   private Map<String, String> taskInputProperties = new HashMap<>();
@@ -39,91 +39,93 @@ public class ControllerRequestProperties {
     this.taskInputProperties = taskInputProperties;
   }
 
-  public Map<String, Object> getGlobalProperties() {
+  public Map<String, String> getGlobalProperties() {
     return globalProperties;
   }
 
-  public void setGlobalProperties(Map<String, Object> globalProperties) {
+  public void setGlobalProperties(Map<String, String> globalProperties) {
     this.globalProperties = globalProperties;
   }
 
-  public Map<String, Object> getSystemProperties() {
+  public Map<String, String> getSystemProperties() {
     return systemProperties;
   }
 
-  public void setSystemProperties(Map<String, Object> systemProperties) {
+  public void setSystemProperties(Map<String, String> systemProperties) {
     this.systemProperties = systemProperties;
   }
 
-  public Map<String, Object> getTeamProperties() {
+  public Map<String, String> getTeamProperties() {
     return teamProperties;
   }
 
-  public void setTeamProperties(Map<String, Object> teamProperties) {
+  public void setTeamProperties(Map<String, String> teamProperties) {
     this.teamProperties = teamProperties;
   }
-  
-  public Map<String, Object> getWorkflowProperties() {
+
+  public Map<String, String> getWorkflowProperties() {
     return workflowProperties;
   }
 
-  public void setWorkflowProperties(Map<String, Object> workflowProperties) {
+  public void setWorkflowProperties(Map<String, String> workflowProperties) {
     this.workflowProperties = workflowProperties;
   }
 
   @JsonAnyGetter
-  public Map<String, String> getMap() {
-
-
+  public Map<String, String> getMap(boolean includeScope) {
 
     Map<String, String> finalProperties = new TreeMap<>();
 
     if (this.includeGlobalProperties) {
-      copyProperties(globalProperties, finalProperties, "global");
+      copyProperties(globalProperties, finalProperties, "global", includeScope);
     }
 
-    copyProperties(teamProperties, finalProperties, "team");
-    copyProperties(workflowProperties, finalProperties, "workflow");
-    copyStringMap(taskInputProperties, finalProperties, "workflow");
-    copyProperties(systemProperties, finalProperties, "system");
+    copyProperties(teamProperties, finalProperties, "team", includeScope);
+    copyProperties(workflowProperties, finalProperties, "workflow", includeScope);
+    copyStringMap(taskInputProperties, finalProperties, "workflow", includeScope);
+    copyProperties(systemProperties, finalProperties, "system", includeScope);
 
     return finalProperties;
   }
 
   public String getLayeredProperty(String key) {
-    Object val = this.getMap().get(key);
+    Object val = this.getMap(false).get(key);
     if (val instanceof Boolean) {
       return String.valueOf(val);
     } else {
-      return this.getMap().get(key);
+      return this.getMap(false).get(key);
     }
   }
 
-  private void copyProperties(Map<String, Object> source, Map<String, String> target,
-      String prefix) {
-    for (Entry<String, Object> entry : source.entrySet()) {
-      String key = entry.getKey();
-      Object value = entry.getValue();
-      if (value != null) {
-        target.put(prefix + "/" + key, value.toString());
-        target.put(key, value.toString());
-      }
-    }
-  }
-
-  private void copyStringMap(Map<String, String> source, Map<String, String> target,
-      String prefix) {
+  private void copyProperties(Map<String, String> source, Map<String, String> target, String prefix,
+      boolean inludeScope) {
     for (Entry<String, String> entry : source.entrySet()) {
       String key = entry.getKey();
       Object value = entry.getValue();
       if (value != null) {
-        target.put(prefix + "/" + key, value.toString());
+        if (inludeScope) {
+          target.put(prefix + "/" + key, value.toString());
+        }
         target.put(key, value.toString());
       }
     }
   }
 
-  
+  private void copyStringMap(Map<String, String> source, Map<String, String> target, String prefix,
+      boolean includeScope) {
+    for (Entry<String, String> entry : source.entrySet()) {
+      String key = entry.getKey();
+      Object value = entry.getValue();
+      if (value != null) {
+        if (includeScope) {
+          target.put(prefix + "/" + key, value.toString());
+        }
+        target.put(key, value.toString());
+      }
+    }
+  }
+
+
   @Override
   public String toString() {
     ObjectMapper mapper = new ObjectMapper();
@@ -145,5 +147,19 @@ public class ControllerRequestProperties {
 
   public void setIncludeGlobalProperties(boolean includeGlobalProperties) {
     this.includeGlobalProperties = includeGlobalProperties;
+  }
+
+  public Map<String, String> getMapForKey(String key) {
+    if ("workflow".equals(key)) {
+      return this.getWorkflowProperties();
+    } else if ("system".equals(key)) {
+      return this.getSystemProperties();
+    } else if ("team".equals(key)) {
+      return this.getTeamProperties();
+    } else if ("global".equals(key)) {
+      return this.getGlobalProperties();
+    } else {
+      return new HashMap<String, String>();
+    }
   }
 }
