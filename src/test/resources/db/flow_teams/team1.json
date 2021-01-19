@@ -3,6 +3,7 @@
 	"_class": "net.boomerangplatform.mongo.entity.FlowTeamEntity",
 	"higherLevelGroupId": "5a5d2bb7d91eb90007f486ca",
 	"name": "Test Team",
+	"active" : true,
 	"settings": {
 		"properties": null
 	},
