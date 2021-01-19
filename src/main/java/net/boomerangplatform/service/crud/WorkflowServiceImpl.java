@@ -487,7 +487,8 @@ public class WorkflowServiceImpl implements WorkflowService {
 
        WorkflowEntity workflow= workFlowRepository.saveWorkflow(entity);
 
-        revision.setId(workflow.getId());
+        revision.setId(null);
+        revision.setWorkFlowId(workflow.getId());
         revision.setVersion(
             workflowVersionService.getLatestWorkflowVersion(export.getId()).getVersion() + 1);
 
