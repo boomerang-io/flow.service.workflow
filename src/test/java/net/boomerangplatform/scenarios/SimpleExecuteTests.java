@@ -7,6 +7,7 @@ import static org.springframework.test.web.client.ExpectedCount.times;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withStatus;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -26,6 +27,7 @@ import net.boomerangplatform.tests.IntegrationTests;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.context.ActiveProfiles;
@@ -41,6 +43,11 @@ public class SimpleExecuteTests extends IntegrationTests {
 
   @Test
   public void testExecution() throws Exception {
+    mockServer.expect(times(1), requestTo(containsString("http://localhost:8084/internal/users/user")))
+    .andExpect(method(HttpMethod.GET)).andRespond(
+        withSuccess(getMockFile("mock/users/users.json"), MediaType.APPLICATION_JSON));
+    
+    
     String workflowId = "5f4fc9e95683833cf0b1335b";
     RequestFlowExecution request = new  RequestFlowExecution();
     

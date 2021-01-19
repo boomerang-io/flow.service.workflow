@@ -4,6 +4,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,16 +22,21 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import net.boomerangplatform.model.FlowActivity;
 import net.boomerangplatform.model.InsightsSummary;
 import net.boomerangplatform.model.ListActivityResponse;
+import net.boomerangplatform.model.TeamWorkflowSummary;
 import net.boomerangplatform.mongo.entity.ActivityEntity;
 import net.boomerangplatform.mongo.entity.FlowTeamEntity;
+import net.boomerangplatform.mongo.entity.FlowUserEntity;
 import net.boomerangplatform.mongo.entity.TaskExecutionEntity;
 import net.boomerangplatform.mongo.entity.WorkflowEntity;
+import net.boomerangplatform.mongo.model.UserType;
 import net.boomerangplatform.mongo.model.WorkflowScope;
-import net.boomerangplatform.mongo.service.FlowTeamService;
 import net.boomerangplatform.mongo.service.FlowWorkflowService;
+import net.boomerangplatform.service.UserIdentityService;
 import net.boomerangplatform.service.crud.FlowActivityService;
 import net.boomerangplatform.service.crud.TeamService;
 
@@ -43,9 +49,12 @@ public class ActivityController {
 
   @Autowired
   private FlowWorkflowService workflowService;
-  
+
   @Autowired
   private TeamService teamService;
+
+  @Autowired
+  private UserIdentityService userIdentityService;
 
   private static final String CREATIONDATESORT = "creationDate";
 
@@ -84,9 +93,9 @@ public class ActivityController {
   }
 
   @GetMapping(value = "/activity/{activityId}")
-  public FlowActivity getFlowActivity(@PathVariable String activityId) {
+  public ResponseEntity<FlowActivity> getFlowActivity(@PathVariable String activityId) {
     final ActivityEntity activity = flowActivityService.findWorkflowActivity(activityId);
-
+    
     String workFlowId = activity.getWorkflowId();
     String teamId;
     String teamName;
@@ -97,9 +106,9 @@ public class ActivityController {
     if (scope == null) {
       scope = WorkflowScope.team;
     }
-    
+
     response.setScope(scope);
-    
+
     if ((workflowService.getWorkflow(workFlowId) != null)) {
       teamId = workflowService.getWorkflow(workFlowId).getFlowTeamId();
     } else {
@@ -107,6 +116,26 @@ public class ActivityController {
     }
 
     if (teamId != null) {
+
+      final FlowUserEntity user = userIdentityService.getCurrentUser();
+System.out.println("****admin*****"+ user.getType().equals(UserType.admin));
+      List<String> teamIdList = user.getType().equals(UserType.admin)
+          ? teamService.getAllTeams().stream().map(TeamWorkflowSummary::getId)
+              .collect(Collectors.toList())
+          : teamService.getUserTeams(user).stream().map(TeamWorkflowSummary::getId)
+              .collect(Collectors.toList());
+              ObjectMapper objectMapper = new ObjectMapper();
+              try {
+                System.out.println("***** "+objectMapper.writeValueAsString(teamIdList));
+              } catch (JsonProcessingException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+              } 
+
+      if (!teamIdList.contains(teamId)) {
+        return new ResponseEntity<>(new FlowActivity(), HttpStatus.FORBIDDEN);
+      }
+
       FlowTeamEntity team = teamService.getTeamById(teamId);
       if (team != null) {
         teamName = team.getName();
@@ -114,11 +143,11 @@ public class ActivityController {
       }
     }
 
-    final List<TaskExecutionEntity> steps = flowActivityService.getTaskExecutions(activityId);
+  final List<TaskExecutionEntity> steps = flowActivityService.getTaskExecutions(activityId);
 
-    response.setSteps(steps);
+  response.setSteps(steps);
 
-    return response;
+  return new ResponseEntity<>(response,HttpStatus.OK);
   }
 
   @GetMapping(value = "/activity/summary")

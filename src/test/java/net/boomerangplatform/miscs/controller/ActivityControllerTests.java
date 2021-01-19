@@ -47,7 +47,7 @@ public class ActivityControllerTests extends FlowTests {
   @Test
   public void testGetFlowActivity() {
 
-    FlowActivity activity = activityController.getFlowActivity("5d1a18c8f6ca2c00014c4325");
+    FlowActivity activity = activityController.getFlowActivity("5d1a18c8f6ca2c00014c4325").getBody();
     assertEquals("5d1a18c8f6ca2c00014c4325", activity.getId());
   }
 
