@@ -22,8 +22,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import net.boomerangplatform.model.FlowActivity;
 import net.boomerangplatform.model.InsightsSummary;
 import net.boomerangplatform.model.ListActivityResponse;
@@ -95,7 +93,7 @@ public class ActivityController {
   @GetMapping(value = "/activity/{activityId}")
   public ResponseEntity<FlowActivity> getFlowActivity(@PathVariable String activityId) {
     final ActivityEntity activity = flowActivityService.findWorkflowActivity(activityId);
-    
+
     String workFlowId = activity.getWorkflowId();
     String teamId;
     String teamName;
@@ -118,19 +116,13 @@ public class ActivityController {
     if (teamId != null) {
 
       final FlowUserEntity user = userIdentityService.getCurrentUser();
-System.out.println("****admin*****"+ user.getType().equals(UserType.admin));
+
       List<String> teamIdList = user.getType().equals(UserType.admin)
           ? teamService.getAllTeams().stream().map(TeamWorkflowSummary::getId)
               .collect(Collectors.toList())
           : teamService.getUserTeams(user).stream().map(TeamWorkflowSummary::getId)
               .collect(Collectors.toList());
-              ObjectMapper objectMapper = new ObjectMapper();
-              try {
-                System.out.println("***** "+objectMapper.writeValueAsString(teamIdList));
-              } catch (JsonProcessingException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-              } 
+
 
       if (!teamIdList.contains(teamId)) {
         return new ResponseEntity<>(new FlowActivity(), HttpStatus.FORBIDDEN);
@@ -143,11 +135,11 @@ System.out.println("****admin*****"+ user.getType().equals(UserType.admin));
       }
     }
 
-  final List<TaskExecutionEntity> steps = flowActivityService.getTaskExecutions(activityId);
+    final List<TaskExecutionEntity> steps = flowActivityService.getTaskExecutions(activityId);
 
-  response.setSteps(steps);
+    response.setSteps(steps);
 
-  return new ResponseEntity<>(response,HttpStatus.OK);
+    return new ResponseEntity<>(response, HttpStatus.OK);
   }
 
   @GetMapping(value = "/activity/summary")
