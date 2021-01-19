@@ -2,6 +2,7 @@
     "_id" : ObjectId("5eebc4b3aea46a0d8238fbe5"),
     "higherLevelGroupId" : "5eebc45aee818f597e7f7448",
     "name" : "Flow Refactor",
+    "isActive" : true,
     "quotas" : {
         "maxWorkflowCount" : 10,
         "maxWorkflowExecutionMonthly" : 100,

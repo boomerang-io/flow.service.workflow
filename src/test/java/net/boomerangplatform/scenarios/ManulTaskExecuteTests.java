@@ -61,16 +61,13 @@ public class ManulTaskExecuteTests extends IntegrationTests {
     super.setUp();
     mockServer = MockRestServiceServer.bindTo(this.restTemplate).ignoreExpectOrder(true).build();
 
-    mockServer.expect(times(1), requestTo(containsString("internal/users/user")))
+    mockServer.expect(times(7), requestTo(containsString("internal/users/user")))
         .andExpect(method(HttpMethod.GET)).andRespond(
             withSuccess(getMockFile("mock/users/users.json"), MediaType.APPLICATION_JSON));
     mockServer.expect(times(1), requestTo(containsString("controller/workflow/create")))
         .andExpect(method(HttpMethod.POST)).andRespond(withStatus(HttpStatus.OK));
     
-    mockServer.expect(times(4), requestTo(containsString("internal/users/user")))
-    .andExpect(method(HttpMethod.GET)).andRespond(
-        withSuccess(getMockFile("mock/users/users.json"), MediaType.APPLICATION_JSON));
-    
+   
         
     mockServer.expect(times(1), requestTo(containsString("controller/workflow/terminate")))
     .andExpect(method(HttpMethod.POST)).andRespond(withStatus(HttpStatus.OK));
