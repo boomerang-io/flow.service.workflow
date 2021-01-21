@@ -461,8 +461,11 @@ public class WorkflowServiceImpl implements WorkflowService {
       if (entity != null) {
         if (update != null && !update) {
           entity.setId(null);
+          revision.setVersion(1L);
+        }else {
+          revision.setVersion(
+              workflowVersionService.getLatestWorkflowVersion(export.getId()).getVersion() + 1);
         }
-
         entity.setName(export.getName());
         entity.setDescription(export.getDescription());
         entity.setIcon(export.getIcon());
@@ -489,8 +492,6 @@ public class WorkflowServiceImpl implements WorkflowService {
 
         revision.setId(null);
         revision.setWorkFlowId(workflow.getId());
-        revision.setVersion(
-            workflowVersionService.getLatestWorkflowVersion(export.getId()).getVersion() + 1);
 
         workflowVersionService.insertWorkflow(revision);
       } else {
