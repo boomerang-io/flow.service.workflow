@@ -48,7 +48,7 @@ public class LaunchpadNavigationServiceImpl implements LaunchpadNavigationServic
   @Qualifier("internalRestTemplate")
   private RestTemplate restTemplate;
   
-  @Value("${flow.externalUrl.platformNavigation}")
+  @Value("${flow.externalUrl.navigation}")
   private String platformNavigationUrl;
   
   private static final String AUTHORIZATION_HEADER = "Authorization";
