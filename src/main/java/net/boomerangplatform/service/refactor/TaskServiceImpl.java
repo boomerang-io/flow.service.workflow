@@ -81,6 +81,9 @@ public class TaskServiceImpl implements TaskService {
   
   @Autowired
   private PropertyManager propertyManager;
+  
+  @Autowired
+  private LockManager lockManager;
 
   private static final Logger LOGGER = LogManager.getLogger(TaskServiceImpl.class);
   
@@ -127,7 +130,14 @@ public class TaskServiceImpl implements TaskService {
         controllerClient.submitTemplateTask(task, activityId, workflowName);
       } else if (taskType == TaskType.customtask) {
         controllerClient.submitCustomTask(task, activityId, workflowName);
-      } else if (taskType == TaskType.setwfproperty) {
+      } 
+      else if (taskType == TaskType.acquirelock) {
+        createLock(taskExecution);
+      }
+      else if (taskType == TaskType.releaselock) {
+        releaseLock(taskExecution);
+      }
+      else if (taskType == TaskType.setwfproperty) {
         saveWorkflowProperty(task,activity);
         InternalTaskResponse response = new InternalTaskResponse();
         response.setActivityId(taskExecution.getId());
@@ -150,6 +160,31 @@ public class TaskServiceImpl implements TaskService {
 
       endTask(response);
     }
+  }
+
+  private void releaseLock(TaskExecutionEntity taskExecution) {
+    
+    LOGGER.debug("[{}] Releasing lock: ",taskExecution.getActivityId()); 
+    
+    lockManager.releaseLock(taskExecution);
+    InternalTaskResponse response = new InternalTaskResponse();
+    response.setActivityId(taskExecution.getId());
+    response.setStatus(TaskStatus.completed);
+    this.endTask(response);
+  }
+
+  private void createLock(TaskExecutionEntity taskExecution) {
+    
+    LOGGER.debug("[{}] Creating lock: ",taskExecution.getActivityId()); 
+    
+    lockManager.acquireLock(taskExecution);
+    
+    LOGGER.debug("[{}] Finishing lock: ",taskExecution.getActivityId()); 
+    
+    InternalTaskResponse response = new InternalTaskResponse();
+    response.setActivityId(taskExecution.getId());
+    response.setStatus(TaskStatus.completed);
+    this.endTask(response);
   }
 
   private void createWaitForEventTask(TaskExecutionEntity taskExecution) {
@@ -239,7 +274,7 @@ public class TaskServiceImpl implements TaskService {
 
     
     LOGGER.debug("[{}] Attempting to get lock", activityId);
-    String tokenId = getLock(storeId, keys);
+    String tokenId = getLock(storeId, keys, 105000);
     LOGGER.debug("[{}] Obtained lock",activityId);
 
     workflowActivity = this.activityService.findWorkflowActivtyById(activity.getActivityId());
@@ -258,9 +293,8 @@ public class TaskServiceImpl implements TaskService {
     this.activityService.saveWorkflowActivity(workflowActivity);
   }
 
-  private String getLock(String storeId, List<String> keys) {
+  private String getLock(String storeId, List<String> keys, long timeout) {
     RetryTemplate retryTemplate = getRetryTemplate();
-    long timeout = 105000;
     return retryTemplate.execute(ctx -> {
       final String token = lock.acquire(keys, "locks", timeout);
       if (StringUtils.isEmpty(token)) {
@@ -270,7 +304,7 @@ public class TaskServiceImpl implements TaskService {
       return token;
     });
   }
-
+  
   private RetryTemplate getRetryTemplate() {
     RetryTemplate retryTemplate = new RetryTemplate();
     FixedBackOffPolicy fixedBackOffPolicy = new FixedBackOffPolicy();
