@@ -571,6 +571,21 @@ public class TeamServiceImpl implements TeamService {
       }
     }
   }
+  
+
+  @Override
+  public void updateSummaryWithUpgradeFlags(List<WorkflowSummary> workflowSummary) {
+
+      for (WorkflowSummary summary : workflowSummary) {
+        String workflowId = summary.getId();
+        FlowWorkflowRevision latestRevision =
+            workflowVersionService.getLatestWorkflowVersion(workflowId);
+        if (latestRevision != null) {
+          summary.setTemplateUpgradesAvailable(latestRevision.isTemplateUpgradesAvailable());
+        }
+      }
+    
+  }
 
   @Override
   public void updateTeam(String teamId, FlowTeam flow) {

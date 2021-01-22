@@ -462,7 +462,7 @@ public class WorkflowServiceImpl implements WorkflowService {
         if (update != null && !update) {
           entity.setId(null);
           revision.setVersion(1L);
-        }else {
+        } else {
           revision.setVersion(
               workflowVersionService.getLatestWorkflowVersion(export.getId()).getVersion() + 1);
         }
@@ -488,7 +488,7 @@ public class WorkflowServiceImpl implements WorkflowService {
           entity.setFlowTeamId(null);
         }
 
-       WorkflowEntity workflow= workFlowRepository.saveWorkflow(entity);
+        WorkflowEntity workflow = workFlowRepository.saveWorkflow(entity);
 
         revision.setId(null);
         revision.setWorkFlowId(workflow.getId());
@@ -694,11 +694,14 @@ public class WorkflowServiceImpl implements WorkflowService {
       final WorkflowSummary summary = new WorkflowSummary(entity);
       updateSummaryInformation(summary);
 
+
       if (WorkflowStatus.active == entity.getStatus()) {
         newList.add(summary);
       }
 
     }
+    teamService.updateSummaryWithUpgradeFlags(newList);
+
     return newList;
   }
 
