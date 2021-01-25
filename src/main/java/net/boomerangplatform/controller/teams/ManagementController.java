@@ -44,7 +44,7 @@ public class ManagementController {
 
   @PatchMapping(value = "/users/{userId}")
   public void updateFlowUser(@PathVariable String userId, @RequestBody FlowUser flowUser) {
-    if (flowExternalUrlUser.isBlank()) {
+    if (isUserManagementAvaliable()) {
       userIdentityService.updateFlowUser(userId, flowUser);
     }
   }
@@ -56,7 +56,7 @@ public class ManagementController {
       @RequestParam(required = false) String sort, @RequestParam(defaultValue = "0") int page,
       @RequestParam(defaultValue = "100") int size) {
 
-    if (flowExternalUrlUser.isBlank()) {
+    if (isUserManagementAvaliable()) {
       Sort pagingSort = Sort.by(Direction.ASC, "firstLoginDate");
 
       SortSummary sortSummary = new SortSummary();
@@ -86,7 +86,7 @@ public class ManagementController {
 
   @PostMapping(value = "/teams")
   public FlowTeam addTeam(@RequestBody FlowTeam flowTeam) {
-    if (flowExternalUrlTeam.isBlank()) {
+    if (isTeamManagementAvaliable()) {
       String teamName = flowTeam.getName();
       return teamService.createStandaloneTeam(teamName);
     }
@@ -98,16 +98,24 @@ public class ManagementController {
   @PatchMapping(value = "/teams/{teamId}/members")
   public void updateTeamMembers(@PathVariable String teamId,
       @RequestBody List<String> teamMembers) {
-    if (flowExternalUrlTeam.isBlank()) {
+    if (isTeamManagementAvaliable()) {
       teamService.updateTeamMembers(teamId, teamMembers);
     }
   }
 
   @PutMapping(value = "/teams/{teamId}")
   public void updateTeamMembers(@PathVariable String teamId, @RequestBody FlowTeam flow) {
-    if (flowExternalUrlTeam.isBlank()) {
+    if (isTeamManagementAvaliable()) {
       teamService.updateTeam(teamId, flow);
     }
+  }
+
+  private boolean isUserManagementAvaliable() {
+    return flowExternalUrlUser.isBlank();
+  }
+
+  private boolean isTeamManagementAvaliable() {
+    return flowExternalUrlTeam.isBlank();
   }
 
 }
