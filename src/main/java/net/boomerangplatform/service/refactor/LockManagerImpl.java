@@ -6,6 +6,8 @@ import java.util.Map;
 import java.util.function.Supplier;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.retry.backoff.FixedBackOffPolicy;
@@ -13,6 +15,7 @@ import org.springframework.retry.policy.SimpleRetryPolicy;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Service;
 import com.github.alturkovic.lock.exception.LockNotAvailableException;
+import net.boomerangplatform.model.Task;
 import net.boomerangplatform.mongo.entity.TaskExecutionEntity;
 import net.boomerangplatform.mongo.service.MongoConfiguration;
 import net.boomerangplatform.service.PropertyManager;
@@ -29,18 +32,26 @@ public class LockManagerImpl implements LockManager {
 
   @Autowired
   private PropertyManager propertyManager;
-
+  
+  private static final Logger LOGGER = LogManager.getLogger(TaskServiceImpl.class);
 
   @Override
-  public void acquireLock(TaskExecutionEntity taskExecution) {
+  public void acquireLock(Task taskExecution) {
 
-    String activityId = taskExecution.getActivityId();
+    LOGGER.info("Entering Acquire Lock");
+    
+   
+    String activityId = taskExecution.getTaskActivityId();
     String workflowId = taskExecution.getWorkflowId();
 
     long timeout = 60000;
     String key = null;
-    if (taskExecution != null && taskExecution.getOutputs() != null) {
-      Map<String, String> properties = taskExecution.getOutputs();
+    
+    // TODO: if (taskExecution != null && taskExecution.getOutputs() != null) {
+    if (taskExecution != null) {
+      
+      Map<String, String> properties = null;
+      
       if (properties.get("timeout") != null) {
         String timeoutStr = properties.get("timeout");
         if (!timeoutStr.isBlank() && NumberUtils.isCreatable(timeoutStr)) {
@@ -55,6 +66,8 @@ public class LockManagerImpl implements LockManager {
     }
 
     if (key != null) {
+      LOGGER.info("Lock key: " + key);
+      
       String storeId = taskExecution.getWorkflowId();
       final List<String> keys = new LinkedList<>();
       keys.add(storeId);
@@ -85,6 +98,8 @@ public class LockManagerImpl implements LockManager {
         return lockExists;
       });
 
+    } else {
+      LOGGER.info("No Acquire Lock Key Found!");
     }
   }
 
@@ -100,14 +115,19 @@ public class LockManagerImpl implements LockManager {
   }
 
   @Override
-  public void releaseLock(TaskExecutionEntity taskExecution) {
-    String activityId = taskExecution.getActivityId();
+  public void releaseLock(Task taskExecution) {
+    
+    LOGGER.info("Entering Release Lock");
+    
+    String activityId = taskExecution.getTaskActivityId();
     String workflowId = taskExecution.getWorkflowId();
     String storeID = mongoConfiguration.fullCollectionName("tasks_locks");
     String key = null;
     
-    if (taskExecution != null && taskExecution.getOutputs() != null) {
-      Map<String, String> properties = taskExecution.getOutputs();
+    // TODO:  if (taskExecution != null && taskExecution.getOutputs() != null) {
+    
+    if (taskExecution != null) {
+      Map<String, String> properties = null;
       if (properties.get("key") != null) {
         key = properties.get("key");
         ControllerRequestProperties propertiesList =

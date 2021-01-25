@@ -12,6 +12,6 @@ public interface TaskService {
 
   List<String> updateTaskActivityForTopic(String activityId, String topic);
   
-  void submitActivity(String taskActivityId);
+  void submitActivity(String taskActivityId, String taskStatus);
   
 }

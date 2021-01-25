@@ -91,7 +91,17 @@ public class EventProcessorImpl implements EventProcessor {
 
     EventResponse response = new EventResponse();
 
+   
     String subject = event.getAttributes().getSubject().orElse("");
+    
+    String status = "sucess";
+    if (event.getExtensions().get("status") != null) {
+      String statusExtension = event.getExtensions().get("status").toString();
+      if ("sucess".equals(statusExtension) || "failure".equals(statusExtension)) {
+        status = statusExtension;
+      }
+    }
+        
     logger.info("processCloudEvent() - Subject: " + subject);
     if (!subject.startsWith("/")) {
       logger.error(
@@ -130,9 +140,10 @@ public class EventProcessorImpl implements EventProcessor {
     } else if ("wfe".equals(trigger)) {
       logger.info("processCloudEvent() - Wait For Event System Task");
       String workflowActivityId = getWorkflowActivityIdFromSubject(subject);
+          
       List<String> taskActivityId = taskService.updateTaskActivityForTopic(workflowActivityId, topic);
       for (String id : taskActivityId) {
-        taskService.submitActivity(id);
+        taskService.submitActivity(id, status);
       }
       
     } else {

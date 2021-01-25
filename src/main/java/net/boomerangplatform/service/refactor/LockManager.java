@@ -1,10 +1,10 @@
 package net.boomerangplatform.service.refactor;
 
-import net.boomerangplatform.mongo.entity.TaskExecutionEntity;
+import net.boomerangplatform.model.Task;
 
 public interface LockManager {
   
-  public void acquireLock(TaskExecutionEntity taskExecution);
-  public void releaseLock(TaskExecutionEntity taskExecution);
+  public void acquireLock(Task taskExecution);
+  public void releaseLock(Task taskExecution);
 
 }

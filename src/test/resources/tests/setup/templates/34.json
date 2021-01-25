@@ -1,9 +1,9 @@
 {
-    "_id" : ObjectId("5fa4144bcb28924ba43ab57f"),
+    "_id" : ObjectId("600b2f7220a674b1d2cb4731"),
     "currentVersion" : NumberLong(1),
-    "description" : "Wait for Lock",
+    "description" : "Release Lock",
     "lastModified" : ISODate("2020-04-30T22:53:23.337Z"),
-    "name" : "Wait for Lock",
+    "name" : "Release Lock",
     "category" : "workflow",
     "nodetype" : "releaselock",
     "revisions" : [ 
@@ -17,15 +17,15 @@
             "config" : [ 
                 {
                     "description" : "",
-                    "key" : "lock-key",
+                    "key" : "key",
                     "label" : "Lock Key",
                     "type" : "text",
                     "required" : true,
                     "placeholder" : "",
                     "helpertext" : "Key to wait for lock on.",
                     "readOnly" : false
-                },
-                     {
+                }, 
+                {
                     "description" : "",
                     "key" : "timeout",
                     "label" : "Timeout",

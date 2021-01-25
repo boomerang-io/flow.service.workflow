@@ -132,10 +132,10 @@ public class TaskServiceImpl implements TaskService {
         controllerClient.submitCustomTask(task, activityId, workflowName);
       } 
       else if (taskType == TaskType.acquirelock) {
-        createLock(taskExecution);
+        createLock(task, activity);
       }
       else if (taskType == TaskType.releaselock) {
-        releaseLock(taskExecution);
+        releaseLock(task,activity );
       }
       else if (taskType == TaskType.setwfproperty) {
         saveWorkflowProperty(task,activity);
@@ -162,27 +162,27 @@ public class TaskServiceImpl implements TaskService {
     }
   }
 
-  private void releaseLock(TaskExecutionEntity taskExecution) {
+  private void releaseLock(Task task, ActivityEntity activity) {
     
-    LOGGER.debug("[{}] Releasing lock: ",taskExecution.getActivityId()); 
+    LOGGER.debug("[{}] Releasing lock: ", task.getTaskActivityId()); 
     
-    lockManager.releaseLock(taskExecution);
+    lockManager.releaseLock(task);
     InternalTaskResponse response = new InternalTaskResponse();
-    response.setActivityId(taskExecution.getId());
+    response.setActivityId(task.getTaskActivityId());
     response.setStatus(TaskStatus.completed);
     this.endTask(response);
   }
 
-  private void createLock(TaskExecutionEntity taskExecution) {
+  private void createLock(Task task, ActivityEntity activity) {
     
-    LOGGER.debug("[{}] Creating lock: ",taskExecution.getActivityId()); 
+    LOGGER.debug("[{}] Creating lock: ",task.getTaskActivityId()); 
     
-    lockManager.acquireLock(taskExecution);
+    lockManager.acquireLock(task);
     
-    LOGGER.debug("[{}] Finishing lock: ",taskExecution.getActivityId()); 
+    LOGGER.debug("[{}] Finishing lock: ",task.getTaskActivityId()); 
     
     InternalTaskResponse response = new InternalTaskResponse();
-    response.setActivityId(taskExecution.getId());
+    response.setActivityId(task.getTaskActivityId());
     response.setStatus(TaskStatus.completed);
     this.endTask(response);
   }
@@ -540,12 +540,20 @@ public class TaskServiceImpl implements TaskService {
 
   @Override
   @Async
-  public void submitActivity(String taskActivityId) {
+  public void submitActivity(String taskActivityId, String taskStatus) {
+    
+    TaskStatus status = TaskStatus.completed;
+    if ("sucess".equals(taskStatus)) {
+      status = TaskStatus.completed;
+    } else if ("failure".equals(TaskStatus.failure)) {
+      status = TaskStatus.failure;
+    }
+    
     TaskExecutionEntity taskExecution = this.taskActivityService.findById(taskActivityId);
     if (taskExecution != null && !taskExecution.getFlowTaskStatus().equals(TaskStatus.notstarted)) {
       InternalTaskResponse request = new InternalTaskResponse();
       request.setActivityId(taskActivityId);
-      request.setStatus(TaskStatus.completed);
+      request.setStatus(status);
       endTask(request);
     }
   }
