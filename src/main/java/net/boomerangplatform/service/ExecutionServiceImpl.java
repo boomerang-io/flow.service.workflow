@@ -18,6 +18,7 @@ import net.boomerangplatform.mongo.entity.ActivityEntity;
 import net.boomerangplatform.mongo.entity.RevisionEntity;
 import net.boomerangplatform.mongo.entity.TaskExecutionEntity;
 import net.boomerangplatform.mongo.entity.WorkflowEntity;
+import net.boomerangplatform.mongo.model.WorkflowScope;
 import net.boomerangplatform.mongo.model.WorkflowStatus;
 import net.boomerangplatform.mongo.service.RevisionService;
 import net.boomerangplatform.service.crud.FlowActivityService;
@@ -40,17 +41,16 @@ public class ExecutionServiceImpl implements ExecutionService {
   private WorkflowService workflowService;
 
   @Override
-  public FlowActivity executeWorkflow(String workflowId,
-      Optional<String> trigger,
+  public FlowActivity executeWorkflow(String workflowId, Optional<String> trigger,
       Optional<FlowExecutionRequest> executionRequest,
       Optional<List<TaskWorkspace>> taskWorkspaces) {
-    
+
     final WorkflowEntity workflow = workflowService.getWorkflow(workflowId);
 
-    if (!workflowService.canExecuteWorkflow(workflowId,trigger)) {
+    if (!workflowService.canExecuteWorkflow(workflowId, trigger)) {
       throw new BoomerangException(BoomerangError.WORKLOAD_MANUAL_DISABLED);
-    }
-    else if (!workflowService.canExecuteWorkflowForQuotas(workflow.getFlowTeamId())) {
+    } else if (WorkflowScope.team.equals(workflow.getScope())
+        && !workflowService.canExecuteWorkflowForQuotas(workflow.getFlowTeamId())) {
       throw new BoomerangException(BoomerangError.TOO_MANY_REQUESTS);
     } else {
       if (workflow.getStatus() == WorkflowStatus.active) {
@@ -67,7 +67,7 @@ public class ExecutionServiceImpl implements ExecutionService {
           final ActivityEntity activity =
               activityService.createFlowActivity(entity.getId(), trigger, request, taskWorkspaces);
           flowExecutionService.executeWorkflowVersion(entity.getId(), activity.getId());
-          
+
           final List<TaskExecutionEntity> steps =
               activityService.getTaskExecutions(activity.getId());
           final FlowActivity response = new FlowActivity(activity);
