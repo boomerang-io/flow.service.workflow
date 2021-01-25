@@ -545,7 +545,7 @@ public class TaskServiceImpl implements TaskService {
     TaskStatus status = TaskStatus.completed;
     if ("sucess".equals(taskStatus)) {
       status = TaskStatus.completed;
-    } else if ("failure".equals(TaskStatus.failure)) {
+    } else if ("failure".equals(taskStatus)) {
       status = TaskStatus.failure;
     }
     
