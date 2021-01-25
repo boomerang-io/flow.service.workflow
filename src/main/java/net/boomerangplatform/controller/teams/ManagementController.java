@@ -3,7 +3,7 @@ package net.boomerangplatform.controller.teams;
 import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -26,9 +26,14 @@ import net.boomerangplatform.service.crud.TeamService;
 
 
 @RestController
-@ConditionalOnProperty(value = "flow.mode", havingValue = "standalone", matchIfMissing = false)
 @RequestMapping("/workflow/manage")
 public class ManagementController {
+
+  @Value("${flow.externalUrl.team}")
+  private String flowExternalUrlTeam;
+
+  @Value("${flow.externalUrl.user}")
+  private String flowExternalUrlUser;
 
   @Autowired
   private TeamService teamService;
@@ -36,49 +41,56 @@ public class ManagementController {
   @Autowired
   private UserIdentityService userIdentityService;
 
-  
+
   @PatchMapping(value = "/users/{userId}")
-  public void updateFlowUser(@PathVariable String userId,
-      @RequestBody FlowUser flowUser) {
-    userIdentityService.updateFlowUser(userId, flowUser);
+  public void updateFlowUser(@PathVariable String userId, @RequestBody FlowUser flowUser) {
+    if (flowExternalUrlUser.isBlank()) {
+      userIdentityService.updateFlowUser(userId, flowUser);
+    }
   }
-  
-  
+
+
   @GetMapping(value = "/users")
   public UserQueryResult getUsers(@RequestParam(required = false) String query,
       @RequestParam(defaultValue = "ASC") Direction order,
       @RequestParam(required = false) String sort, @RequestParam(defaultValue = "0") int page,
       @RequestParam(defaultValue = "100") int size) {
 
-    Sort pagingSort = Sort.by(Direction.ASC, "firstLoginDate");
+    if (flowExternalUrlUser.isBlank()) {
+      Sort pagingSort = Sort.by(Direction.ASC, "firstLoginDate");
 
-    SortSummary sortSummary = new SortSummary();
-    sortSummary.setProperty("firstLoginDate");
-    sortSummary.setDirection(Direction.ASC.toString());
+      SortSummary sortSummary = new SortSummary();
+      sortSummary.setProperty("firstLoginDate");
+      sortSummary.setDirection(Direction.ASC.toString());
 
-    if (StringUtils.isNotBlank(sort)) {
-      Direction direction = order == null ? Direction.ASC : order;
-      sortSummary.setDirection(direction.toString());
-      sortSummary.setProperty(sort);
-      pagingSort = Sort.by(direction, sort);
+      if (StringUtils.isNotBlank(sort)) {
+        Direction direction = order == null ? Direction.ASC : order;
+        sortSummary.setDirection(direction.toString());
+        sortSummary.setProperty(sort);
+        pagingSort = Sort.by(direction, sort);
+      }
+
+      final Pageable pageable = PageRequest.of(page, size, pagingSort);
+      if (StringUtils.isNotBlank(query)) {
+        UserQueryResult result = userIdentityService.getUserViaSearchTerm(query, pageable);
+        result.setupSortSummary(sortSummary);
+        return result;
+      } else {
+        UserQueryResult result = userIdentityService.getUsers(pageable);
+        result.setupSortSummary(sortSummary);
+        return result;
+      }
     }
-
-    final Pageable pageable = PageRequest.of(page, size, pagingSort);
-    if (StringUtils.isNotBlank(query)) {
-      UserQueryResult result = userIdentityService.getUserViaSearchTerm(query, pageable);
-      result.setupSortSummary(sortSummary);
-      return result;
-    } else {
-      UserQueryResult result = userIdentityService.getUsers(pageable);
-      result.setupSortSummary(sortSummary);
-      return result;
-    }
+    return new UserQueryResult();
   }
-    
+
   @PostMapping(value = "/teams")
   public FlowTeam addTeam(@RequestBody FlowTeam flowTeam) {
-    String teamName = flowTeam.getName();
-    return teamService.createStandaloneTeam(teamName);
+    if (flowExternalUrlTeam.isBlank()) {
+      String teamName = flowTeam.getName();
+      return teamService.createStandaloneTeam(teamName);
+    }
+    return new FlowTeam();
   }
 
 
@@ -86,12 +98,16 @@ public class ManagementController {
   @PatchMapping(value = "/teams/{teamId}/members")
   public void updateTeamMembers(@PathVariable String teamId,
       @RequestBody List<String> teamMembers) {
-    teamService.updateTeamMembers(teamId, teamMembers);
+    if (flowExternalUrlTeam.isBlank()) {
+      teamService.updateTeamMembers(teamId, teamMembers);
+    }
   }
-  
+
   @PutMapping(value = "/teams/{teamId}")
   public void updateTeamMembers(@PathVariable String teamId, @RequestBody FlowTeam flow) {
-    teamService.updateTeam(teamId, flow);
+    if (flowExternalUrlTeam.isBlank()) {
+      teamService.updateTeam(teamId, flow);
+    }
   }
-  
+
 }
