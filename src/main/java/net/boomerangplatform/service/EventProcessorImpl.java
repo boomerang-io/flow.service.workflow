@@ -5,6 +5,7 @@ import java.time.ZonedDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
@@ -50,6 +51,7 @@ public class EventProcessorImpl implements EventProcessor {
   @Override
   public CloudEventImpl<EventResponse> processHTTPEvent(Map<String, Object> headers,
       JsonNode payload) {
+    
     CloudEvent<AttributesImpl, JsonNode> event = Unmarshallers.structured(JsonNode.class)
         .withHeaders(() -> headers).withPayload(() -> payload.toString()).unmarshal();
 
@@ -94,6 +96,19 @@ public class EventProcessorImpl implements EventProcessor {
    
     String subject = event.getAttributes().getSubject().orElse("");
     
+
+    logger.info("Logging extension: {}" + event.getExtensions());
+    if (event.getExtensions() != null) {
+      logger.info("Extension size: {}", event.getExtensions().size());
+      
+      for (Entry<String, Object> entry : event.getExtensions().entrySet()) {
+        logger.info("Key: {} Value: {}", entry.getKey(), entry.getValue());
+      }
+    } else {
+      logger.info("Extension is empty");
+    }
+    
+   
     String status = "success";
     if (event.getExtensions() != null && event.getExtensions().containsKey("status")) {
       String statusExtension = event.getExtensions().get("status").toString();
