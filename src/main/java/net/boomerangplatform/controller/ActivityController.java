@@ -116,16 +116,16 @@ public class ActivityController {
     if (teamId != null) {
 
       final FlowUserEntity user = userIdentityService.getCurrentUser();
-
-      List<String> teamIdList = user.getType().equals(UserType.admin)
-          ? teamService.getAllTeams().stream().map(TeamWorkflowSummary::getId)
-              .collect(Collectors.toList())
-          : teamService.getUserTeams(user).stream().map(TeamWorkflowSummary::getId)
-              .collect(Collectors.toList());
-
-
-      if (!teamIdList.contains(teamId)) {
-        return new ResponseEntity<>(new FlowActivity(), HttpStatus.FORBIDDEN);
+      
+      if (user != null) {
+        List<String> teamIdList = user.getType().equals(UserType.admin)
+            ? teamService.getAllTeams().stream().map(TeamWorkflowSummary::getId)
+                .collect(Collectors.toList())
+            : teamService.getUserTeams(user).stream().map(TeamWorkflowSummary::getId)
+                .collect(Collectors.toList());
+        if (!teamIdList.contains(teamId)) {
+          return new ResponseEntity<>(new FlowActivity(), HttpStatus.FORBIDDEN);
+        }
       }
 
       FlowTeamEntity team = teamService.getTeamById(teamId);

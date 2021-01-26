@@ -51,6 +51,11 @@ public class UserIdentityServiceImpl implements UserIdentityService {
     } else {
       UserProfile userProfile = coreUserService.getInternalUserProfile();
       FlowUserEntity flowUser = new FlowUserEntity();
+      
+      if (userProfile == null) {
+        return null;
+      }
+      
       BeanUtils.copyProperties(userProfile, flowUser);
 
       return flowUser;
