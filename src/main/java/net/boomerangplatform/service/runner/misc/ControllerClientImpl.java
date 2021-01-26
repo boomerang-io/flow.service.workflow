@@ -1,6 +1,7 @@
 package net.boomerangplatform.service.runner.misc;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -62,16 +63,16 @@ public class ControllerClientImpl implements ControllerClient {
   @Autowired
   @Qualifier("internalRestTemplate")
   public RestTemplate restTemplate;
-  
+
   @Autowired
   public ActivityTaskService taskService;
-  
+
   @Autowired
   public FlowActivityService activityService;
 
   @Value("${controller.terminateworkflow.url}")
   private String terminateWorkflowURL;
-  
+
   @Override
   public boolean createFlow(String workflowId, String workflowName, String activityId,
       boolean enableStorage, Map<String, String> properties) {
@@ -81,13 +82,13 @@ public class ControllerClientImpl implements ControllerClient {
     request.setWorkflowName(workflowName);
     request.setWorkflowId(workflowId);
     request.setParameters(properties);
-    
+
     final WorkflowStorage storage = new WorkflowStorage();
     storage.setEnable(enableStorage);
     request.setWorkflowStorage(storage);
-    
+
     logPayload("Create Workflow Request", request);
-    
+
     try {
       restTemplate.postForObject(createWorkflowURL, request, String.class);
     } catch (RestClientException ex) {
@@ -95,7 +96,7 @@ public class ControllerClientImpl implements ControllerClient {
     }
     return true;
   }
-  
+
   @Override
   public boolean terminateFlow(String workflowId, String workflowName, String activityId) {
     final Workflow request = new Workflow();
@@ -106,7 +107,7 @@ public class ControllerClientImpl implements ControllerClient {
     storage.setEnable(true);
     request.setWorkflowStorage(storage);
     logPayload("Terminate Workflow Request", request);
-    
+
     try {
       restTemplate.postForObject(terminateWorkflowURL, request, String.class);
     } catch (RestClientException e) {
@@ -114,7 +115,7 @@ public class ControllerClientImpl implements ControllerClient {
     }
     return true;
   }
-  
+
   @Override
   @Async
   public void submitCustomTask(Task task, String activityId, String workflowName) {
@@ -124,7 +125,7 @@ public class ControllerClientImpl implements ControllerClient {
         taskService.findByTaskIdAndActiityId(task.getTaskId(), activityId);
 
     ActivityEntity activity = this.activityService.findWorkflowActivity(activityId);
-    
+
     taskResult.setNode(task.getTaskId());
     final TaskCustom request = new TaskCustom();
     request.setTaskId(task.getTaskId());
@@ -136,17 +137,17 @@ public class ControllerClientImpl implements ControllerClient {
 
     ControllerRequestProperties applicationProperties =
         propertyManager.buildRequestPropertyLayering(task, activityId, task.getWorkflowId());
-   
+
     Map<String, String> map = applicationProperties.getMap(true);
     String image = applicationProperties.getLayeredProperty("image");
-    image = propertyManager.replaceValueWithProperty(image, activityId, applicationProperties); 
+    image = propertyManager.replaceValueWithProperty(image, activityId, applicationProperties);
     request.setImage(image);
-    
+
     String command = applicationProperties.getLayeredProperty("command");
-    command = propertyManager.replaceValueWithProperty(command, activityId, applicationProperties);    
+    command = propertyManager.replaceValueWithProperty(command, activityId, applicationProperties);
     request.setCommand(command);
-    
-  
+
+
     List<String> args = new LinkedList<>();
     if (map.get("arguments") != null) {
       String arguments = applicationProperties.getLayeredProperty("arguments");
@@ -154,12 +155,13 @@ public class ControllerClientImpl implements ControllerClient {
         String[] lines = arguments.split("\\r?\\n");
         args = new LinkedList<>();
         for (String line : lines) {
-          String newValue = propertyManager.replaceValueWithProperty(line, activityId, applicationProperties);
+          String newValue =
+              propertyManager.replaceValueWithProperty(line, activityId, applicationProperties);
           args.add(newValue);
         }
       }
     }
-    
+
     request.setArguments(args);
 
     final Date startDate = new Date();
@@ -171,16 +173,21 @@ public class ControllerClientImpl implements ControllerClient {
     request.setConfiguration(taskConfiguration);
 
     request.setWorkspaces(activity.getTaskWorkspaces());
-    
+
     logPayload("Create Task Request", request);
-    
+
+    Map<String, String> outputProperties = new HashMap<>();
+
     try {
       TaskResponse response =
           restTemplate.postForObject(createTaskURL, request, TaskResponse.class);
-      if (response != null) {
-        taskExecution.setOutputs(response.getResults());
-      }
 
+      if (response != null) {
+        this.logPayload("Create Task Response", response);
+        if (response.getResults() != null && !response.getResults().isEmpty()) {
+          outputProperties = response.getResults();
+        }
+      }
       final Date finishDate = new Date();
       final long duration = finishDate.getTime() - startDate.getTime();
       taskExecution.setDuration(duration);
@@ -200,6 +207,8 @@ public class ControllerClientImpl implements ControllerClient {
     InternalTaskResponse response = new InternalTaskResponse();
     response.setActivityId(task.getTaskActivityId());
     response.setStatus(taskExecution.getFlowTaskStatus());
+    response.setOutputProperties(outputProperties);
+
     flowTaskClient.endTask(response);
   }
 
@@ -210,7 +219,7 @@ public class ControllerClientImpl implements ControllerClient {
 
 
     ActivityEntity activity = this.activityService.findWorkflowActivity(activityId);
-   
+
 
     TaskResult taskResult = new TaskResult();
     TaskExecutionEntity taskExecution =
@@ -228,14 +237,14 @@ public class ControllerClientImpl implements ControllerClient {
 
     ControllerRequestProperties applicationProperties =
         propertyManager.buildRequestPropertyLayering(task, activityId, task.getWorkflowId());
-   
+
     Map<String, String> map = applicationProperties.getTaskInputProperties();
-    
+
     request.setParameters(map);
-    
+
     TaskConfiguration taskConfiguration = buildTaskConfiguration();
-    request.setConfiguration(taskConfiguration); 
-    
+    request.setConfiguration(taskConfiguration);
+
     if (task.getRevision() != null) {
       Revision revision = task.getRevision();
       request.setArguments(revision.getArguments());
@@ -262,14 +271,18 @@ public class ControllerClientImpl implements ControllerClient {
     taskExecution = taskService.save(taskExecution);
 
     request.setWorkspaces(activity.getTaskWorkspaces());
-    
+    Map<String, String> outputProperties = new HashMap<>();
+
     logPayload("Create Task Request", request);
     try {
       TaskResponse response =
           restTemplate.postForObject(createTaskURL, request, TaskResponse.class);
+
       if (response != null) {
-        taskExecution.setOutputs(response.getResults());
-        logPayload("Create Task Response", response);
+        this.logPayload("Create Task Response", response);
+        if (response.getResults() != null && !response.getResults().isEmpty()) {
+          outputProperties = response.getResults();
+        }
       }
 
       final Date finishDate = new Date();
@@ -294,9 +307,11 @@ public class ControllerClientImpl implements ControllerClient {
     InternalTaskResponse response = new InternalTaskResponse();
     response.setActivityId(task.getTaskActivityId());
     response.setStatus(taskExecution.getFlowTaskStatus());
+    response.setOutputProperties(outputProperties);
+
     flowTaskClient.endTask(response);
   }
-  
+
   private TaskConfiguration buildTaskConfiguration() {
     TaskConfiguration taskConfiguration = new TaskConfiguration();
     TaskDeletion taskDeletion = TaskDeletion.Never;
@@ -311,7 +326,7 @@ public class ControllerClientImpl implements ControllerClient {
     if (settingsPolicy != null) {
       enableDebug = Boolean.valueOf(enableDebugFlag).booleanValue();
     }
-    
+
     taskConfiguration.setDeletion(taskDeletion);
     taskConfiguration.setDebug(Boolean.valueOf(enableDebug));
     return taskConfiguration;

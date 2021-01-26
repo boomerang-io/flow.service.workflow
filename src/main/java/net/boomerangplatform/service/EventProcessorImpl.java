@@ -55,6 +55,8 @@ public class EventProcessorImpl implements EventProcessor {
   public CloudEventImpl<EventResponse> processHTTPEvent(Map<String, Object> headers,
       JsonNode payload) {
 
+    logger.info("processHTTPEvent() - Message: " + payload.toPrettyString());
+    
     String requestStatus = getStatusFromPayload(payload);
     CloudEvent<AttributesImpl, JsonNode> event = Unmarshallers.structured(JsonNode.class)
         .withHeaders(() -> headers).withPayload(() -> payload.toString()).unmarshal();
