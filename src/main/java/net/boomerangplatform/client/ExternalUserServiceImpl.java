@@ -9,6 +9,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -37,16 +38,19 @@ public class ExternalUserServiceImpl implements ExernalUserService {
 
   @Override
   public UserProfile getInternalUserProfile() {
+    try {
+      String userEmail = userDetailsService.getUserDetails().getEmail();
+      UriComponents uriComponents = UriComponentsBuilder.fromHttpUrl(externalUserUrl).
+          queryParam("userEmail", userEmail).build();
+      HttpHeaders headers = buildHeaders();
     
-    String userEmail = userDetailsService.getUserDetails().getEmail();
-    UriComponents uriComponents = UriComponentsBuilder.fromHttpUrl(externalUserUrl).
-        queryParam("userEmail", userEmail).build();
-    HttpHeaders headers = buildHeaders();
-  
-    HttpEntity<String> requestUpdate = new HttpEntity<>("", headers);
-    ResponseEntity<UserProfile> response =
-        restTemplate.exchange(uriComponents.toUriString(), HttpMethod.GET, requestUpdate, UserProfile.class);
-    return response.getBody();
+      HttpEntity<String> requestUpdate = new HttpEntity<>("", headers);
+      ResponseEntity<UserProfile> response =
+          restTemplate.exchange(uriComponents.toUriString(), HttpMethod.GET, requestUpdate, UserProfile.class);
+      return response.getBody();
+    } catch (RestClientException e) {
+      return null;
+    }
   }
 
   @Override
