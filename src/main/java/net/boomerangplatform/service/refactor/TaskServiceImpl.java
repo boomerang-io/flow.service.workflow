@@ -543,7 +543,7 @@ public class TaskServiceImpl implements TaskService {
   public void submitActivity(String taskActivityId, String taskStatus) {
     
     TaskStatus status = TaskStatus.completed;
-    if ("sucess".equals(taskStatus)) {
+    if ("success".equals(taskStatus)) {
       status = TaskStatus.completed;
     } else if ("failure".equals(taskStatus)) {
       status = TaskStatus.failure;

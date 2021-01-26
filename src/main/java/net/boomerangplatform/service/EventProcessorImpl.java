@@ -94,10 +94,10 @@ public class EventProcessorImpl implements EventProcessor {
    
     String subject = event.getAttributes().getSubject().orElse("");
     
-    String status = "sucess";
+    String status = "success";
     if (event.getExtensions().get("status") != null) {
       String statusExtension = event.getExtensions().get("status").toString();
-      if ("sucess".equals(statusExtension) || "failure".equals(statusExtension)) {
+      if ("success".equals(statusExtension) || "failure".equals(statusExtension)) {
         status = statusExtension;
       }
     }
