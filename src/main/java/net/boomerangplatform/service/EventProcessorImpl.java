@@ -97,9 +97,13 @@ public class EventProcessorImpl implements EventProcessor {
     String status = "success";
     if (event.getExtensions() != null && event.getExtensions().containsKey("status")) {
       String statusExtension = event.getExtensions().get("status").toString();
+      logger.info("Status Extension: {}" + statusExtension);
       if ("failure".equals(statusExtension)) {
+        logger.info("Found failure status");
         status = statusExtension;
       }
+    } else {
+      logger.info("No status key found on extension");
     }
         
     logger.info("processCloudEvent() - Subject: " + subject);

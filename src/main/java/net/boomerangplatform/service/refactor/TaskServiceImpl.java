@@ -542,6 +542,8 @@ public class TaskServiceImpl implements TaskService {
   @Async
   public void submitActivity(String taskActivityId, String taskStatus) {
     
+    LOGGER.info("submitActivity: {}", taskStatus);
+    
     TaskStatus status = TaskStatus.completed;
     if ("success".equals(taskStatus)) {
       status = TaskStatus.completed;
@@ -549,6 +551,9 @@ public class TaskServiceImpl implements TaskService {
       status = TaskStatus.failure;
     }
     
+    LOGGER.info("Submit Activity (Task Status): {}", status.toString());
+  
+  
     TaskExecutionEntity taskExecution = this.taskActivityService.findById(taskActivityId);
     if (taskExecution != null && !taskExecution.getFlowTaskStatus().equals(TaskStatus.notstarted)) {
       InternalTaskResponse request = new InternalTaskResponse();
