@@ -12,7 +12,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.Option;
@@ -67,6 +70,18 @@ public class EventProcessorImpl implements EventProcessor {
     logger.info("processNATSMessage() - Message: " + message);
     Map<String, Object> headers = new HashMap<>();
     headers.put("Content-Type", "application/cloudevents+json");
+    
+    ObjectMapper mapper = new ObjectMapper();
+    try {
+      JsonNode messageJson = mapper.readTree(message);
+      logger.info("processCloudEvent() - Status: " + messageJson.get("status"));
+    } catch (JsonMappingException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    } catch (JsonProcessingException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
 
     CloudEvent<AttributesImpl, JsonNode> event = Unmarshallers.structured(JsonNode.class)
         .withHeaders(() -> headers).withPayload(() -> message).unmarshal();
@@ -87,7 +102,7 @@ public class EventProcessorImpl implements EventProcessor {
   }
 
   private EventResponse processEvent(CloudEvent<AttributesImpl, JsonNode> event) {
-    logger.info("processCloudEvent() - Event: " + event.toString());
+    logger.info("processCloudEvent() - Extensions: " + event.toString());
     logger.info("processCloudEvent() - Attributes: " + event.getAttributes().toString());
     JsonNode eventData = event.getData().get();
     logger.info("processCloudEvent() - Data: " + eventData.toPrettyString());
