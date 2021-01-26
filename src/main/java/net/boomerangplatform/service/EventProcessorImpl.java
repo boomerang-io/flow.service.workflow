@@ -87,6 +87,7 @@ public class EventProcessorImpl implements EventProcessor {
   }
 
   private EventResponse processEvent(CloudEvent<AttributesImpl, JsonNode> event) {
+    logger.info("processCloudEvent() - Event: " + event.toString());
     logger.info("processCloudEvent() - Attributes: " + event.getAttributes().toString());
     JsonNode eventData = event.getData().get();
     logger.info("processCloudEvent() - Data: " + eventData.toPrettyString());
