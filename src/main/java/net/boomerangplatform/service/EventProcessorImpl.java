@@ -176,9 +176,15 @@ public class EventProcessorImpl implements EventProcessor {
       logger.info("processCloudEvent() - Wait For Event System Task");
       String workflowActivityId = getWorkflowActivityIdFromSubject(subject);
           
+      Map<String, String> outputProperties = new HashMap<>();
+      if (eventData != null) {
+        String json = eventData.toPrettyString();
+        outputProperties.put("eventPayload", json);
+      }
+      
       List<String> taskActivityId = taskService.updateTaskActivityForTopic(workflowActivityId, topic);
       for (String id : taskActivityId) {
-        taskService.submitActivity(id, status);
+        taskService.submitActivity(id, status, outputProperties);
       }
       
     } else {

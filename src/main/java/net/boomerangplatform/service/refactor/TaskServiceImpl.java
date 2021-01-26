@@ -266,6 +266,12 @@ public class TaskServiceImpl implements TaskService {
     activity.setFlowTaskStatus(request.getStatus());
     long duration = new Date().getTime() - activity.getStartTime().getTime();
     activity.setDuration(duration);
+    
+    
+    if (request.getOutputProperties() != null) {
+      activity.setOutputs(request.getOutputProperties());
+    }
+   
     activity = taskActivityService.save(activity);
 
     boolean finishedAll = this.finishedAll(workflowActivity, tasks, currentTask);
@@ -540,7 +546,7 @@ public class TaskServiceImpl implements TaskService {
 
   @Override
   @Async
-  public void submitActivity(String taskActivityId, String taskStatus) {
+  public void submitActivity(String taskActivityId, String taskStatus, Map<String, String> outputProperties) {
     
     LOGGER.info("submitActivity: {}", taskStatus);
     
@@ -559,6 +565,11 @@ public class TaskServiceImpl implements TaskService {
       InternalTaskResponse request = new InternalTaskResponse();
       request.setActivityId(taskActivityId);
       request.setStatus(status);
+      
+      if (outputProperties != null) {
+        request.setOutputProperties(outputProperties);
+      }
+      
       endTask(request);
     }
   }
