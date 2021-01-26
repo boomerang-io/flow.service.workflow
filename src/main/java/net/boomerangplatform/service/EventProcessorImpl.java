@@ -49,18 +49,20 @@ public class EventProcessorImpl implements EventProcessor {
 
   @Autowired
   private TaskService taskService;
-  
+
   // TODO: better return management
   @Override
   public CloudEventImpl<EventResponse> processHTTPEvent(Map<String, Object> headers,
       JsonNode payload) {
-    
+
+    String requestStatus = getStatusFromPayload(payload);
     CloudEvent<AttributesImpl, JsonNode> event = Unmarshallers.structured(JsonNode.class)
         .withHeaders(() -> headers).withPayload(() -> payload.toString()).unmarshal();
 
     return createResponseEvent(event.getAttributes().getId(), event.getAttributes().getType(),
         event.getAttributes().getSource(), event.getAttributes().getSubject().orElse(""),
-        event.getAttributes().getTime().orElse(ZonedDateTime.now()), processEvent(event));
+        event.getAttributes().getTime().orElse(ZonedDateTime.now()),
+        processEvent(event, requestStatus));
   }
 
   // TODO: better return management
@@ -70,11 +72,29 @@ public class EventProcessorImpl implements EventProcessor {
     logger.info("processNATSMessage() - Message: " + message);
     Map<String, Object> headers = new HashMap<>();
     headers.put("Content-Type", "application/cloudevents+json");
-    
+
+
+    String requestStatus = getStatusFromPayload(message);
+
+    CloudEvent<AttributesImpl, JsonNode> event = Unmarshallers.structured(JsonNode.class)
+        .withHeaders(() -> headers).withPayload(() -> message).unmarshal();
+
+    // TODO return message to another queue for picking up?
+    createResponseEvent(event.getAttributes().getId(), event.getAttributes().getType(),
+        event.getAttributes().getSource(), event.getAttributes().getSubject().orElse(""),
+        event.getAttributes().getTime().orElse(ZonedDateTime.now()),
+        processEvent(event, requestStatus));
+  }
+
+  private String getStatusFromPayload(String message) {
     ObjectMapper mapper = new ObjectMapper();
+    String requestStatus = "success";
     try {
       JsonNode messageJson = mapper.readTree(message);
-      logger.info("processCloudEvent() - Status: " + messageJson.get("status"));
+      if (messageJson.get("status") != null) {
+        requestStatus = messageJson.get("status").asText();
+        logger.debug("Found status in payload: {}", requestStatus);
+      }
     } catch (JsonMappingException e) {
       // TODO Auto-generated catch block
       e.printStackTrace();
@@ -82,14 +102,17 @@ public class EventProcessorImpl implements EventProcessor {
       // TODO Auto-generated catch block
       e.printStackTrace();
     }
+    return requestStatus;
+  }
 
-    CloudEvent<AttributesImpl, JsonNode> event = Unmarshallers.structured(JsonNode.class)
-        .withHeaders(() -> headers).withPayload(() -> message).unmarshal();
-
-    // TODO return message to another queue for picking up?
-     createResponseEvent(event.getAttributes().getId(), event.getAttributes().getType(),
-     event.getAttributes().getSource(), event.getAttributes().getSubject().orElse(""),
-     event.getAttributes().getTime().orElse(ZonedDateTime.now()), processEvent(event));
+  private String getStatusFromPayload(JsonNode payload) {
+    logger.debug("Extracting status from payload");
+    String requestStatus = "success";
+    if (payload.get("status") != null) {
+      requestStatus = payload.get("status").asText();
+      logger.debug("Found status in payload: {}", requestStatus);
+    }
+    return requestStatus;
   }
 
   private CloudEventImpl<EventResponse> createResponseEvent(String id, String type, URI source,
@@ -101,7 +124,7 @@ public class EventProcessorImpl implements EventProcessor {
     return response;
   }
 
-  private EventResponse processEvent(CloudEvent<AttributesImpl, JsonNode> event) {
+  private EventResponse processEvent(CloudEvent<AttributesImpl, JsonNode> event, String status) {
     logger.info("processCloudEvent() - Extensions: " + event.toString());
     logger.info("processCloudEvent() - Attributes: " + event.getAttributes().toString());
     JsonNode eventData = event.getData().get();
@@ -109,34 +132,21 @@ public class EventProcessorImpl implements EventProcessor {
 
     EventResponse response = new EventResponse();
 
-   
+
     String subject = event.getAttributes().getSubject().orElse("");
-    
+
 
     logger.info("Logging extension: {}" + event.getExtensions());
     if (event.getExtensions() != null) {
       logger.info("Extension size: {}", event.getExtensions().size());
-      
+
       for (Entry<String, Object> entry : event.getExtensions().entrySet()) {
         logger.info("Key: {} Value: {}", entry.getKey(), entry.getValue());
       }
     } else {
       logger.info("Extension is empty");
     }
-    
-   
-    String status = "success";
-    if (event.getExtensions() != null && event.getExtensions().containsKey("status")) {
-      String statusExtension = event.getExtensions().get("status").toString();
-      logger.info("Status Extension: {}" + statusExtension);
-      if ("failure".equals(statusExtension)) {
-        logger.info("Found failure status");
-        status = statusExtension;
-      }
-    } else {
-      logger.info("No status key found on extension");
-    }
-        
+
     logger.info("processCloudEvent() - Subject: " + subject);
     if (!subject.startsWith("/")) {
       logger.error(
@@ -167,26 +177,27 @@ public class EventProcessorImpl implements EventProcessor {
       FlowExecutionRequest executionRequest = new FlowExecutionRequest();
       executionRequest.setProperties(processProperties(eventData, workflowId));
 
-      FlowActivity activity = executionService.executeWorkflow(workflowId,
-          Optional.of(trigger), Optional.of(executionRequest), Optional.empty());
+      FlowActivity activity = executionService.executeWorkflow(workflowId, Optional.of(trigger),
+          Optional.of(executionRequest), Optional.empty());
       response.setActivityId(activity.getId());
       response.setStatusCode(HttpStatus.SC_OK);
       return response;
     } else if ("wfe".equals(trigger)) {
       logger.info("processCloudEvent() - Wait For Event System Task");
       String workflowActivityId = getWorkflowActivityIdFromSubject(subject);
-          
+
       Map<String, String> outputProperties = new HashMap<>();
       if (eventData != null) {
         String json = eventData.toPrettyString();
         outputProperties.put("eventPayload", json);
       }
-      
-      List<String> taskActivityId = taskService.updateTaskActivityForTopic(workflowActivityId, topic);
+
+      List<String> taskActivityId =
+          taskService.updateTaskActivityForTopic(workflowActivityId, topic);
       for (String id : taskActivityId) {
         taskService.submitActivity(id, status, outputProperties);
       }
-      
+
     } else {
       // TODO make error
       logger.error("processCloudEvent() - No matching trigger enabled.");
@@ -194,7 +205,7 @@ public class EventProcessorImpl implements EventProcessor {
       response.setStatusMessage("Event did not match enabled workflow trigger.");
       return response;
     }
-    
+
     // TODO returning null to fix compilation errors
     return null;
   }
@@ -213,10 +224,11 @@ public class EventProcessorImpl implements EventProcessor {
           if (inputProperty.getJsonPath() != null && !inputProperty.getJsonPath().isBlank()) {
             JsonNode propertyValue =
                 JsonPath.using(jacksonConfig).parse(eventData).read(inputProperty.getJsonPath());
-  
+
             if (!propertyValue.isNull()) {
-              logger.info("processProperties() - Property: " + inputProperty.getKey() + ", Json Path: " + inputProperty.getJsonPath()
-                  + ", Value: " + propertyValue.toString());
+              logger.info(
+                  "processProperties() - Property: " + inputProperty.getKey() + ", Json Path: "
+                      + inputProperty.getJsonPath() + ", Value: " + propertyValue.toString());
               properties.put(inputProperty.getKey(), propertyValue.toString());
             } else {
               logger.info("processProperties() - Skipping property: " + inputProperty.getKey());
@@ -269,7 +281,7 @@ public class EventProcessorImpl implements EventProcessor {
       return "";
     }
   }
-  
+
   private String getWorkflowActivityIdFromSubject(String subject) {
     // Reference 0 will be an empty string as it is the left hand side of the split
     String[] splitArr = subject.split("/");
@@ -286,7 +298,7 @@ public class EventProcessorImpl implements EventProcessor {
     if (splitArr.length >= 4) {
       return splitArr[3].toString();
     } else if (splitArr.length >= 3) {
-        return splitArr[2].toString();
+      return splitArr[2].toString();
     } else {
       return "";
     }
