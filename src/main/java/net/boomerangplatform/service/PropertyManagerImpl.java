@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import net.boomerangplatform.model.Task;
+import net.boomerangplatform.model.WorkflowSummary;
 import net.boomerangplatform.mongo.entity.ActivityEntity;
 import net.boomerangplatform.mongo.entity.FlowGlobalConfigEntity;
 import net.boomerangplatform.mongo.entity.FlowTaskTemplateEntity;
@@ -29,6 +30,7 @@ import net.boomerangplatform.mongo.model.Dag;
 import net.boomerangplatform.mongo.model.FlowProperty;
 import net.boomerangplatform.mongo.model.Revision;
 import net.boomerangplatform.mongo.model.TaskTemplateConfig;
+import net.boomerangplatform.mongo.model.WorkflowScope;
 import net.boomerangplatform.mongo.model.next.DAGTask;
 import net.boomerangplatform.mongo.service.ActivityTaskService;
 import net.boomerangplatform.mongo.service.FlowGlobalConfigService;
@@ -59,7 +61,7 @@ public class PropertyManagerImpl implements PropertyManager {
 
   @Autowired
   private FlowGlobalConfigService flowGlobalConfigService;
-  
+
   @Autowired
   private FlowTaskTemplateService flowTaskTemplateService;
 
@@ -69,7 +71,8 @@ public class PropertyManagerImpl implements PropertyManager {
   final String[] reserved = {"system", "workflow", "global", "team", "workflow"};
 
   @Override
-  public ControllerRequestProperties buildRequestPropertyLayering(Task task, String activityId, String workflowId) {
+  public ControllerRequestProperties buildRequestPropertyLayering(Task task, String activityId,
+      String workflowId) {
     ControllerRequestProperties applicationProperties = new ControllerRequestProperties();
     Map<String, String> systemProperties = applicationProperties.getSystemProperties();
     Map<String, String> globalProperties = applicationProperties.getGlobalProperties();
@@ -83,11 +86,11 @@ public class PropertyManagerImpl implements PropertyManager {
       buildTeamProperties(teamProperties, workflowId);
     }
     buildWorkflowProperties(workflowProperties, activityId, null);
-    
+
     if (task != null) {
       buildTaskInputProperties(applicationProperties, task, activityId);
     }
-  
+
     return applicationProperties;
   }
 
@@ -96,30 +99,28 @@ public class PropertyManagerImpl implements PropertyManager {
     ActivityEntity activity = activityService.findWorkflowActivity(activityId);
 
     List<TaskTemplateConfig> configs = getInputsForTask(task, activity.getWorkflowRevisionid());
-    
+
     Map<String, String> workflowInputProperties = applicationProperties.getTaskInputProperties();
     for (TaskTemplateConfig config : configs) {
       String key = config.getKey();
       String value = this.getInputForTaskKey(task, activity.getWorkflowRevisionid(), key);
-      
+
       if (value == null || value.isBlank()) {
         value = config.getDefaultValue();
       }
-      
+
       if (value != null) {
         String newValue = this.replaceValueWithProperty(value, activityId, applicationProperties);
         newValue = this.replaceValueWithProperty(newValue, activityId, applicationProperties);
         workflowInputProperties.put(key, newValue);
-      }
-      else {
+      } else {
         workflowInputProperties.put(key, "");
       }
     }
   }
 
   private String getInputForTaskKey(Task task, String revisionId, String key) {
-    Optional<RevisionEntity> revisionOptional =
-        revisionService.getRevision(revisionId);
+    Optional<RevisionEntity> revisionOptional = revisionService.getRevision(revisionId);
     if (revisionOptional.isPresent()) {
       RevisionEntity revision = revisionOptional.get();
       Dag dag = revision.getDag();
@@ -130,8 +131,8 @@ public class PropertyManagerImpl implements PropertyManager {
         if (dagTask != null) {
           List<CoreProperty> properties = dagTask.getProperties();
           if (properties != null) {
-            CoreProperty property = properties.stream().filter(e -> key.equals(e.getKey()))
-            .findFirst().orElse(null);
+            CoreProperty property =
+                properties.stream().filter(e -> key.equals(e.getKey())).findFirst().orElse(null);
             if (property != null) {
               return property.getValue();
             }
@@ -144,8 +145,7 @@ public class PropertyManagerImpl implements PropertyManager {
 
 
   private List<TaskTemplateConfig> getInputsForTask(Task task, String revisionId) {
-    Optional<RevisionEntity> revisionOptional =
-        revisionService.getRevision(revisionId);
+    Optional<RevisionEntity> revisionOptional = revisionService.getRevision(revisionId);
     if (revisionOptional.isPresent()) {
       RevisionEntity revision = revisionOptional.get();
       Dag dag = revision.getDag();
@@ -156,13 +156,14 @@ public class PropertyManagerImpl implements PropertyManager {
         if (dagTask != null) {
           String templateId = dagTask.getTemplateId();
           Integer templateVersion = dagTask.getTemplateVersion();
-          FlowTaskTemplateEntity taskTemplate = flowTaskTemplateService.getTaskTemplateWithId(templateId);
-        
+          FlowTaskTemplateEntity taskTemplate =
+              flowTaskTemplateService.getTaskTemplateWithId(templateId);
+
           if (taskTemplate != null) {
             List<Revision> revisions = taskTemplate.getRevisions();
             if (revisions != null) {
-              Revision rev = revisions.stream()
-                  .filter(e -> e.getVersion().equals(templateVersion)).findFirst().orElse(null);
+              Revision rev = revisions.stream().filter(e -> e.getVersion().equals(templateVersion))
+                  .findFirst().orElse(null);
               if (rev != null) {
                 return rev.getConfig();
               }
@@ -218,16 +219,16 @@ public class PropertyManagerImpl implements PropertyManager {
     WorkflowEntity workflow = workflowService.getWorkflow(workflowId);
     if (activityId != null) {
       ActivityEntity activity = activityService.findWorkflowActivity(activityId);
-      systemProperties.put("workflow-version",
-          Long.toString(revisionService.getWorkflowlWithId(activity.getWorkflowRevisionid()).getVersion()));
+      systemProperties.put("workflow-version", Long.toString(
+          revisionService.getWorkflowlWithId(activity.getWorkflowRevisionid()).getVersion()));
       systemProperties.put("trigger-type", activity.getTrigger());
-      
+
       systemProperties.put("workflow-activity-initiator", "");
       if (activity.getInitiatedByUserId() != null) {
         systemProperties.put("workflow-activity-initiator", activity.getInitiatedByUserId());
       }
-      
-     
+
+
     }
 
     systemProperties.put("workflow-name", workflow.getName());
@@ -242,15 +243,18 @@ public class PropertyManagerImpl implements PropertyManager {
 
   @Override
   public void buildTeamProperties(Map<String, String> teamProperties, String workflowId) {
-    FlowTeamEntity flowTeamEntity =
-        this.flowTeamService.findById(workflowService.getWorkflow(workflowId).getFlowTeamId());
-    List<FlowTeamConfiguration> teamConfig = null;
-    if (flowTeamEntity.getSettings() != null) {
-      teamConfig = flowTeamEntity.getSettings().getProperties();
-    }
-    if (teamConfig != null) {
-      for (FlowTeamConfiguration config : teamConfig) {
-        teamProperties.put(config.getKey(), config.getValue());
+    WorkflowSummary workflow = workflowService.getWorkflow(workflowId);
+
+    if (WorkflowScope.team.equals(workflow.getScope())) {
+      FlowTeamEntity flowTeamEntity = this.flowTeamService.findById(workflow.getFlowTeamId());
+      List<FlowTeamConfiguration> teamConfig = null;
+      if (flowTeamEntity.getSettings() != null) {
+        teamConfig = flowTeamEntity.getSettings().getProperties();
+      }
+      if (teamConfig != null) {
+        for (FlowTeamConfiguration config : teamConfig) {
+          teamProperties.put(config.getKey(), config.getValue());
+        }
       }
     }
   }
@@ -281,28 +285,25 @@ public class PropertyManagerImpl implements PropertyManager {
       int start = m.start() - 2;
       int end = m.end() + 1;
       String[] components = extractedValue.split("\\.");
-      
+
       if (components.length == 1) {
         String allParams = components[0];
         if ("allParams".equals(allParams)) {
           Map<String, String> properties = applicationProperties.getMap(false);
           replaceValue = this.getEncodedPropertiesForMap(properties);
         }
-      } 
-      else if (components.length == 2) {
+      } else if (components.length == 2) {
         List<String> reservedList = Arrays.asList(reserved);
-        
+
         String params = components[0];
         if ("params".equals(params)) {
           String propertyName = components[1];
           if (executionProperties.get(propertyName) != null) {
             replaceValue = executionProperties.get(propertyName);
-          }
-          else {
+          } else {
             replaceValue = "";
           }
-        }
-        else if (reservedList.contains(params)) {
+        } else if (reservedList.contains(params)) {
           String key = components[1];
           if ("allParams".equals(key)) {
             Map<String, String> properties = applicationProperties.getMapForKey(params);
@@ -319,8 +320,7 @@ public class PropertyManagerImpl implements PropertyManager {
           if (taskExecution != null && taskExecution.getOutputs() != null
               && taskExecution.getOutputs().get(outputProperty) != null) {
             replaceValue = taskExecution.getOutputs().get(outputProperty);
-          }
-          else {
+          } else {
             replaceValue = "";
           }
         }
@@ -335,8 +335,7 @@ public class PropertyManagerImpl implements PropertyManager {
 
             if (executionProperties.get(key) != null) {
               replaceValue = executionProperties.get(key);
-            }
-            else {
+            } else {
               replaceValue = "";
             }
           }
@@ -418,7 +417,7 @@ public class PropertyManagerImpl implements PropertyManager {
     }
     return null;
   }
-  
+
 
   private String getEncodedPropertiesForMap(Map<String, String> map) {
     try {

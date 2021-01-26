@@ -30,8 +30,6 @@ import org.springframework.web.client.RequestCallback;
 import org.springframework.web.client.ResponseExtractor;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import net.boomerangplatform.model.Approval;
 import net.boomerangplatform.model.Execution;
 import net.boomerangplatform.model.FlowActivity;
@@ -364,7 +362,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
   private void addTeamInformation(Optional<List<String>> teamIds,
       List<FlowActivity> activitiesFiltered, FlowActivity activity, String workFlowId) {
     String teamId = null;
-    
+
     WorkflowEntity workflow = workflowService.getWorkflow(workFlowId);
     if (workflow.getScope().equals((WorkflowScope.system))) {
       activitiesFiltered.add(activity);
@@ -491,28 +489,25 @@ public class FlowActivityServiceImpl implements FlowActivityService {
 
   private void addActivityDetail(Optional<String> teamId, List<Execution> executions,
       FlowActivity activity) {
-    String teamName;
-    String workflowName;
-    String workflowId;
-    String activityTeamId;
-    if (workflowService.getWorkflow(activity.getWorkflowId()) != null) {
-      activityTeamId = workflowService.getWorkflow(activity.getWorkflowId()).getFlowTeamId();
-      FlowTeamEntity team = flowTeamService.findById(activityTeamId);
+    String teamName = null;
+    String workflowName = null;
+    String workflowId = activity.getWorkflowId();
+    String activityTeamId = null;
+    WorkflowEntity workflow = workflowService.getWorkflow(workflowId);
+    if (workflow != null) {
+      workflowName = workflow.getName();
 
-      if (team != null) {
-        teamName = team.getName();
+      if (WorkflowScope.team.equals(workflow.getScope())) {
+        activityTeamId = workflowService.getWorkflow(workflowId).getFlowTeamId();
+        FlowTeamEntity team = flowTeamService.findById(activityTeamId);
 
-      } else {
-        teamName = null;
+        if (team != null) {
+          teamName = team.getName();
+
+        } else {
+          teamName = null;
+        }
       }
-
-      workflowName = workflowService.getWorkflow(activity.getWorkflowId()).getName();
-      workflowId = activity.getWorkflowId();
-    } else {
-      activityTeamId = null;
-      teamName = null;
-      workflowName = null;
-      workflowId = null;
     }
 
     if (teamId.isPresent()) {
