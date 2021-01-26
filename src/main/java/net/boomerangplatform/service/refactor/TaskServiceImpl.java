@@ -268,7 +268,7 @@ public class TaskServiceImpl implements TaskService {
     activity.setDuration(duration);
     
     
-    if (request.getOutputProperties() != null) {
+    if (request.getOutputProperties() != null && !request.getOutputProperties().isEmpty()) {
       activity.setOutputs(request.getOutputProperties());
     }
    
