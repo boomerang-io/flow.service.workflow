@@ -1,6 +1,8 @@
 package net.boomerangplatform.tests;
 
 import java.io.IOException;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.Test;
@@ -12,6 +14,8 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.v1.AttributesImpl;
 import io.cloudevents.v1.http.Unmarshallers;
@@ -22,10 +26,27 @@ public class TestCloudEvent {
   @Test
   public void testCloudEvent() {
     Map<String, Object> headers = new HashMap<>();
-    String natsMessage = "{\"data\":{\"name\":\"tyson\"},\"id\":\"f182708f-025d-4fce-ba32-7686bab23a69\",\"source\":\"http://wdc2.cloud.boomerangplatform.net/listener/webhook/wfe\",\"specversion\":\"1.0\",\"type\":\"io.boomerang.eventing.wfe\",\"subject\":\"/5f7f8cf69a7d401d9e584c90/600f7e9ea8a2c75dc5d8deab/bar\",\"time\":\"2021-01-26T02:30:00.968526889Z\",\"status\":\"failure\"}";
-    JsonNode payload;
+    String natsMessage = "{\n"
+        + "  \"data\" : {\n"
+        + "    \"name\" : \"tyson\"\n"
+        + "  },\n"
+        + "  \"id\" : \"145d1c2c-5ea0-4ba8-a354-aa3bad8209c9\",\n"
+        + "  \"source\" : \"http://wdc2.cloud.boomerangplatform.net/listener/webhook/wfe\",\n"
+        + "  \"specversion\" : \"1.0\",\n"
+        + "  \"type\" : \"io.boomerang.eventing.wfe\",\n"
+        + "  \"subject\" : \"/5f7f8cf69a7d401d9e584c90/6010b41bbadf2e7743e03324/bar\",\n"
+        + "  \"time\" : 1.6117074537076776E9,\n"
+        + "  \"status\" : \"success\"\n"
+        + "}"; 
     try {
-      payload = getJsonNode(natsMessage);
+      
+      ZonedDateTime now = ZonedDateTime.now();
+      String formattedDate = DateTimeFormatter.
+          ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSSSSS").
+          format(now) + 'Z';
+      JsonNode timeNode = new TextNode(formattedDate);
+      JsonNode payload = getJsonNode(natsMessage);
+      ((ObjectNode) payload).set("time", timeNode);
       CloudEvent<AttributesImpl, JsonNode> event = Unmarshallers.structured(JsonNode.class)
           .withHeaders(() -> headers).withPayload(() -> payload.toString()).unmarshal();
       System.out.println(event.getAttributes().getTime().get());

@@ -2,6 +2,7 @@ package net.boomerangplatform.service;
 
 import java.net.URI;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,6 +17,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.Option;
@@ -55,8 +58,22 @@ public class EventProcessorImpl implements EventProcessor {
   public CloudEventImpl<EventResponse> processHTTPEvent(Map<String, Object> headers,
       JsonNode payload) {
 
+    ZonedDateTime now = ZonedDateTime.now();
+    String formattedDate = DateTimeFormatter.
+        ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSSSSS").
+        format(now) + 'Z';
+    JsonNode timeNode = new TextNode(formattedDate);
+    ((ObjectNode) payload).set("time", timeNode);
+
     logger.info("processHTTPEvent() - Message: " + payload.toPrettyString());
-    
+    logger.info("processHTTPEvent()  - Headers");
+
+    if (headers != null) {
+      for (Entry<String, Object> entry : headers.entrySet()) {
+        logger.info("Key: {} Value: {}", entry.getKey(), entry.getValue());
+      }
+    }
+
     String requestStatus = getStatusFromPayload(payload);
     CloudEvent<AttributesImpl, JsonNode> event = Unmarshallers.structured(JsonNode.class)
         .withHeaders(() -> headers).withPayload(() -> payload.toString()).unmarshal();
