@@ -1,6 +1,7 @@
 package net.boomerangplatform.mongo.service;
 
 import java.util.List;
+import java.util.Optional;
 import net.boomerangplatform.mongo.entity.WorkflowEntity;
 
 public interface FlowWorkflowService {
@@ -24,6 +25,8 @@ public interface FlowWorkflowService {
   WorkflowEntity saveWorkflow(WorkflowEntity entity);
 
   WorkflowEntity findByTokenString(String tokenString);
+
+  List<WorkflowEntity> getSystemWorkflows(Optional<List<String>> statuses, Optional<List<String>> triggers);
 
   List<WorkflowEntity> getSystemWorkflows();
 
