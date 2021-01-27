@@ -260,7 +260,7 @@ public class EventProcessorImpl implements EventProcessor {
       }
     }
 
-    properties.put("io.boomerang.eventing.data", eventData.toString());
+    properties.put("eventPayload", eventData.toString());
 
     properties.forEach((k, v) -> {
       logger.info("processProperties() - " + k + "=" + v);
