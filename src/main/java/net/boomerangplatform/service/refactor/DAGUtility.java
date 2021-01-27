@@ -426,11 +426,11 @@ public class DAGUtility {
     final List<String> nodes =
         GraphProcessor.createOrderedTaskList(graph, start.getTaskId(), end.getTaskId());
 
-    if (nodes.isEmpty()) {
-      activityEntity.setStatus(TaskStatus.invalid);
-      activityService.saveWorkflowActivity(activityEntity);
-      throw new InvalidWorkflowRuntimeException();
-    }
+    //if (nodes.isEmpty()) {
+     // activityEntity.setStatus(TaskStatus.invalid);
+      //activityService.saveWorkflowActivity(activityEntity);
+     // throw new InvalidWorkflowRuntimeException();
+   // }
 
     final DijkstraShortestPath<String, DefaultEdge> dijkstraAlg = new DijkstraShortestPath<>(graph);
     final SingleSourcePaths<String, DefaultEdge> pathFromStart =

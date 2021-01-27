@@ -215,6 +215,15 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
       final Graph<String, DefaultEdge> graph, final List<Task> tasksToRun)
       throws ExecutionException {
 
+    if (tasksToRun.size() == 2) {
+      final ActivityEntity activityEntity =        this.flowActivityService.findWorkflowActivity(activityId);
+      activityEntity.setStatus(TaskStatus.completed);
+      activityEntity.setCreationDate(new Date());
+      activityService.saveWorkflowActivity(activityEntity);
+      
+      System.out.println("Returning early");
+      return;
+    }
     
     final ActivityEntity activityEntity =        this.flowActivityService.findWorkflowActivity(activityId);
     activityEntity.setStatus(TaskStatus.inProgress);
