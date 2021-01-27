@@ -8,6 +8,8 @@ import net.boomerangplatform.mongo.entity.FlowTeamEntity;
 public interface FlowTeamService {
 
   Page<FlowTeamEntity> findAllTeams(Pageable pageable);
+  
+  Page<FlowTeamEntity> findAllActiveTeams(Pageable pageable);
 
   List<FlowTeamEntity> findTeamsWithHighLevelGroups(List<String> highLevelGroups);
 

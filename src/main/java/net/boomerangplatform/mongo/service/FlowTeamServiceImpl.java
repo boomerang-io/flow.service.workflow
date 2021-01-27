@@ -15,8 +15,13 @@ public class FlowTeamServiceImpl implements FlowTeamService {
   private FlowTeamRepository flowTeamRepository;
 
   @Override
-  public Page<FlowTeamEntity> findAllTeams(Pageable pageable) {
+  public Page<FlowTeamEntity> findAllActiveTeams(Pageable pageable) {
     return flowTeamRepository.findByIsActive(pageable,true);
+  }
+  
+  @Override
+  public Page<FlowTeamEntity> findAllTeams(Pageable pageable) {
+    return flowTeamRepository.findAll(pageable);
   }
 
   @Override

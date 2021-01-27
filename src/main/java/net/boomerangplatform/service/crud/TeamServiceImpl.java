@@ -260,7 +260,7 @@ public class TeamServiceImpl implements TeamService {
       flowTeams = this.externalTeamService.getExternalTeams(flowExternalUrlTeam);
     } else {
       final Page<FlowTeamEntity> paginatedTeamList =
-          flowTeamService.findAllTeams(Pageable.unpaged());
+          flowTeamService.findAllActiveTeams(Pageable.unpaged());
       flowTeams = paginatedTeamList.getContent();
     }
     return flowTeams;
