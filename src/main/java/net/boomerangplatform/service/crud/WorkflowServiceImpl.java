@@ -606,7 +606,7 @@ public class WorkflowServiceImpl implements WorkflowService {
         boolean webhookEnabled = false;
         String flowTeamId = workflow.getFlowTeamId();
         String token = null;
-        
+
         if (workflow.getTriggers() != null) {
           Triggers triggers = workflow.getTriggers();
           TriggerEvent webhook = triggers.getWebhook();
@@ -620,20 +620,24 @@ public class WorkflowServiceImpl implements WorkflowService {
         summary.setWebhookEnabled(webhookEnabled);
         summary.setWorkflowName(workflowName);
         summary.setWorkflowId(workflow.getId());
-        
+
         if (workflow.getScope() != null) {
           summary.setScope(workflow.getScope());
         } else {
           summary.setScope(WorkflowScope.team);
         }
-        
+
         summary.setTeamId(flowTeamId);
 
-        if (flowTeamId != null) {
-          FlowTeam flowTeam = teamService.getTeamById(flowTeamId);
-          if (flowTeam != null) {
-            summary.setTeamName(flowTeam.getName());
-            summaryList.add(summary);
+        if (WorkflowScope.system == summary.getScope()) {
+          summaryList.add(summary);
+        } else if (WorkflowScope.team == summary.getScope()) {
+          if (flowTeamId != null) {
+            FlowTeam flowTeam = teamService.getTeamById(flowTeamId);
+            if (flowTeam != null) {
+              summary.setTeamName(flowTeam.getName());
+              summaryList.add(summary);
+            }
           }
         }
       }

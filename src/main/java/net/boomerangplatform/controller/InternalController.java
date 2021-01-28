@@ -1,4 +1,4 @@
-package net.boomerangplatform.controller;
+\package net.boomerangplatform.controller;
 
 import java.util.List;
 import java.util.Map;
