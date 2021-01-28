@@ -24,6 +24,8 @@ public class FlowActivity extends ActivityEntity {
   
   private WorkflowScope scope;
   
+  private long workflowRevisionVersion;
+  
   public FlowActivity() {
     
   }
@@ -95,4 +97,13 @@ public class FlowActivity extends ActivityEntity {
   public void setScope(WorkflowScope scope) {
     this.scope = scope;
   }
+
+  public long getWorkflowRevisionVersion() {
+    return workflowRevisionVersion;
+  }
+
+  public void setWorkflowRevisionVersion(long workflowRevisionVersion) {
+    this.workflowRevisionVersion = workflowRevisionVersion;
+  }
+
 }

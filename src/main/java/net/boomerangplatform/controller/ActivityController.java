@@ -29,11 +29,14 @@ import net.boomerangplatform.model.TeamWorkflowSummary;
 import net.boomerangplatform.mongo.entity.ActivityEntity;
 import net.boomerangplatform.mongo.entity.FlowTeamEntity;
 import net.boomerangplatform.mongo.entity.FlowUserEntity;
+import net.boomerangplatform.mongo.entity.RevisionEntity;
 import net.boomerangplatform.mongo.entity.TaskExecutionEntity;
 import net.boomerangplatform.mongo.entity.WorkflowEntity;
+import net.boomerangplatform.mongo.model.Revision;
 import net.boomerangplatform.mongo.model.UserType;
 import net.boomerangplatform.mongo.model.WorkflowScope;
 import net.boomerangplatform.mongo.service.FlowWorkflowService;
+import net.boomerangplatform.mongo.service.RevisionService;
 import net.boomerangplatform.service.UserIdentityService;
 import net.boomerangplatform.service.crud.FlowActivityService;
 import net.boomerangplatform.service.crud.TeamService;
@@ -54,6 +57,9 @@ public class ActivityController {
   @Autowired
   private UserIdentityService userIdentityService;
 
+  @Autowired
+  private RevisionService revisionService;
+  
   private static final String CREATIONDATESORT = "creationDate";
 
   @GetMapping(value = "/activity")
@@ -107,6 +113,14 @@ public class ActivityController {
 
     response.setScope(scope);
 
+    if (activity.getWorkflowRevisionid() != null) {
+      Optional<RevisionEntity> revisionOpt = this.revisionService.getRevision(activity.getWorkflowRevisionid());
+      if (revisionOpt.isPresent()) {
+        RevisionEntity revision = revisionOpt.get();
+        response.setWorkflowRevisionVersion(revision.getVersion());
+      }
+    }
+    
     if ((workflowService.getWorkflow(workFlowId) != null)) {
       teamId = workflowService.getWorkflow(workFlowId).getFlowTeamId();
     } else {
