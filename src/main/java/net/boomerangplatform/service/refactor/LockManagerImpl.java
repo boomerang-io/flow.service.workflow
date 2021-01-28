@@ -16,7 +16,6 @@ import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Service;
 import com.github.alturkovic.lock.exception.LockNotAvailableException;
 import net.boomerangplatform.model.Task;
-import net.boomerangplatform.mongo.entity.TaskExecutionEntity;
 import net.boomerangplatform.mongo.service.MongoConfiguration;
 import net.boomerangplatform.service.PropertyManager;
 import net.boomerangplatform.util.FlowMongoLock;
@@ -32,74 +31,73 @@ public class LockManagerImpl implements LockManager {
 
   @Autowired
   private PropertyManager propertyManager;
-  
+
   private static final Logger LOGGER = LogManager.getLogger(TaskServiceImpl.class);
 
   @Override
-  public void acquireLock(Task taskExecution) {
+  public void acquireLock(Task taskExecution, String activityId) {
 
     LOGGER.info("Entering Acquire Lock");
-    
-   
-    String activityId = taskExecution.getTaskActivityId();
+
     String workflowId = taskExecution.getWorkflowId();
 
     long timeout = 60000;
     String key = null;
-    
+
     // TODO: if (taskExecution != null && taskExecution.getOutputs() != null) {
     if (taskExecution != null) {
-      
-      Map<String, String> properties = null;
-      
+
+      Map<String, String> properties = taskExecution.getInputs();
       if (properties.get("timeout") != null) {
         String timeoutStr = properties.get("timeout");
         if (!timeoutStr.isBlank() && NumberUtils.isCreatable(timeoutStr)) {
           timeout = Long.valueOf(timeoutStr);
         }
-      } else if (properties.get("key") != null) {
+      }
+      
+      if (properties.get("key") != null) {
         key = properties.get("key");
         ControllerRequestProperties propertiesList =
             propertyManager.buildRequestPropertyLayering(null, activityId, workflowId);
         key = propertyManager.replaceValueWithProperty(key, activityId, propertiesList);
       }
-    }
-
-    if (key != null) {
-      LOGGER.info("Lock key: " + key);
       
-      String storeId = taskExecution.getWorkflowId();
-      final List<String> keys = new LinkedList<>();
-      keys.add(storeId);
-      String text = null;
-      ControllerRequestProperties properties =
-          propertyManager.buildRequestPropertyLayering(null, activityId, workflowId);
-      final String textValue =
-          propertyManager.replaceValueWithProperty(text, activityId, properties);
-      Supplier<String> supplier = () -> textValue;
+      if (key != null) {
+        LOGGER.info("Lock key: " + key);
 
-      String storeID = mongoConfiguration.fullCollectionName("tasks_locks");
-      FlowMongoLock mongoLock = new FlowMongoLock(supplier, this.mongoTemplate);
-      final String token = mongoLock.acquire(keys, storeID, timeout);
 
-      if (StringUtils.isEmpty(token)) {
-        /** TODO: What to do here. */
-        throw new LockNotAvailableException(
-            String.format("Lock not available for keys: %s in store %s", keys, storeId));
-      }
+        final String test = key;
+        
+        Supplier<String> supplier = () -> test;
 
-      RetryTemplate retryTemplate = getRetryTemplate();
-      retryTemplate.execute(ctx -> {
-        final boolean lockExists = mongoLock.exists(storeID, token);
-        if (lockExists) {
+        String storeID = mongoConfiguration.fullCollectionName("tasks_locks");
+        FlowMongoLock mongoLock = new FlowMongoLock(supplier, this.mongoTemplate);
+
+        String storeId = key;
+        final List<String> keys = new LinkedList<>();
+        keys.add(storeId);
+
+        final String token = mongoLock.acquire(keys, storeID, timeout);
+
+        if (StringUtils.isEmpty(token)) {
+          /** TODO: What to do here. */
           throw new LockNotAvailableException(
-              String.format("Lock hasn't been released yet for: %s in store %s", keys, storeId));
+              String.format("Lock not available for keys: %s in store %s", keys, storeId));
         }
-        return lockExists;
-      });
 
-    } else {
-      LOGGER.info("No Acquire Lock Key Found!");
+        RetryTemplate retryTemplate = getRetryTemplate();
+        retryTemplate.execute(ctx -> {
+          final boolean lockExists = mongoLock.exists(storeID, token);
+          if (lockExists) {
+            throw new LockNotAvailableException(
+                String.format("Lock hasn't been released yet for: %s in store %s", keys, storeId));
+          }
+          return lockExists;
+        });
+
+      } else {
+        LOGGER.info("No Acquire Lock Key Found!");
+      }
     }
   }
 
@@ -115,39 +113,37 @@ public class LockManagerImpl implements LockManager {
   }
 
   @Override
-  public void releaseLock(Task taskExecution) {
-    
+  public void releaseLock(Task taskExecution, String activityId) {
+
     LOGGER.info("Entering Release Lock");
-    
-    String activityId = taskExecution.getTaskActivityId();
+
     String workflowId = taskExecution.getWorkflowId();
     String storeID = mongoConfiguration.fullCollectionName("tasks_locks");
     String key = null;
-    
-    // TODO:  if (taskExecution != null && taskExecution.getOutputs() != null) {
-    
+
+    // TODO: if (taskExecution != null && taskExecution.getOutputs() != null) {
+
     if (taskExecution != null) {
-      Map<String, String> properties = null;
+      Map<String, String> properties = taskExecution.getInputs();
       if (properties.get("key") != null) {
         key = properties.get("key");
         ControllerRequestProperties propertiesList =
-            propertyManager.buildRequestPropertyLayering(null, activityId, workflowId);
+            propertyManager.buildRequestPropertyLayering(taskExecution, activityId, workflowId);
         key = propertyManager.replaceValueWithProperty(key, activityId, propertiesList);
       }
     }
 
     if (key != null) {
-      String storeId = taskExecution.getWorkflowId();
-      final List<String> keys = new LinkedList<>();
-      keys.add(storeId);
-      String text = null;
       ControllerRequestProperties properties =
           propertyManager.buildRequestPropertyLayering(null, activityId, workflowId);
-      final String textValue = propertyManager.replaceValueWithProperty(text, activityId, properties);
+      final String textValue =
+          propertyManager.replaceValueWithProperty(key, activityId, properties);
       Supplier<String> supplier = () -> textValue;
-      String token = null;
       FlowMongoLock mongoLock = new FlowMongoLock(supplier, this.mongoTemplate);
-      mongoLock.release(null, storeID, token);
+
+      final List<String> keys = new LinkedList<>();
+      keys.add(textValue);
+      mongoLock.release(keys, storeID, textValue);
     }
   }
 }

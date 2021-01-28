@@ -36,7 +36,6 @@ import org.springframework.test.web.client.MockRestServiceServer;
 @ActiveProfiles("local")
 @WithMockUser(roles = {"admin"})
 @WithUserDetails("mdroy@us.ibm.com")
-@Ignore
 public class LockExecutionTests extends IntegrationTests {
 
   @Test
@@ -45,7 +44,7 @@ public class LockExecutionTests extends IntegrationTests {
     String workflowId = "600efc3e9e161e473d6b7b4e";
     FlowActivity activity = submitWorkflow(workflowId);
     String id = activity.getId();
-    Thread.sleep(10000);
+    Thread.sleep(15000);
     FlowActivity finalActivity = this.checkWorkflowActivity(id);
     assertEquals(TaskStatus.completed, finalActivity.getStatus());
     assertNotNull(finalActivity.getDuration());

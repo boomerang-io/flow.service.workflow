@@ -85,7 +85,7 @@ public class PropertyManagerImpl implements PropertyManager {
     if (enabledTeamProperites) {
       buildTeamProperties(teamProperties, workflowId);
     }
-    buildWorkflowProperties(workflowProperties, activityId, null);
+    buildWorkflowProperties(workflowProperties, activityId, workflowId);
 
     if (task != null) {
       buildTaskInputProperties(applicationProperties, task, activityId);

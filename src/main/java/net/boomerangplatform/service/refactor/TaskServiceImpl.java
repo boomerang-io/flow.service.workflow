@@ -166,7 +166,7 @@ public class TaskServiceImpl implements TaskService {
     
     LOGGER.debug("[{}] Releasing lock: ", task.getTaskActivityId()); 
     
-    lockManager.releaseLock(task);
+    lockManager.releaseLock(task, activity.getId());
     InternalTaskResponse response = new InternalTaskResponse();
     response.setActivityId(task.getTaskActivityId());
     response.setStatus(TaskStatus.completed);
@@ -177,7 +177,7 @@ public class TaskServiceImpl implements TaskService {
     
     LOGGER.debug("[{}] Creating lock: ",task.getTaskActivityId()); 
     
-    lockManager.acquireLock(task);
+    lockManager.acquireLock(task, activity.getId());
     
     LOGGER.debug("[{}] Finishing lock: ",task.getTaskActivityId()); 
     
@@ -483,7 +483,14 @@ public class TaskServiceImpl implements TaskService {
       } else if (dagTask.getType() == TaskType.decision) {
         newTask.setDecisionValue(dagTask.getDecisionValue());
       }
-      else if (dagTask.getType() == TaskType.setwfproperty) {
+      else if (dagTask.getType() == TaskType.setwfproperty || dagTask.getType() == TaskType.acquirelock || dagTask.getType() == TaskType.releaselock) {
+        
+        TaskExecutionEntity task =
+            taskActivityService.findByTaskIdAndActiityId(dagTask.getTaskId(), activity.getId());
+        if (task != null) {
+          newTask.setTaskActivityId(task.getId());
+        }
+        
         Map<String, String> properties = new HashMap<>();
         if (dagTask.getProperties() != null) {
           for (CoreProperty property : dagTask.getProperties()) {
@@ -514,6 +521,8 @@ public class TaskServiceImpl implements TaskService {
         activityService.findWorkflowActivtyById(activityId);
     RevisionEntity revision =
         workflowVersionService.getWorkflowlWithId(activity.getWorkflowRevisionid());
+    
+    
     List<DAGTask> tasks = revision.getDag().getTasks();
     for (DAGTask task : tasks) {
       if (TaskType.eventwait.equals(task.getType())) {
