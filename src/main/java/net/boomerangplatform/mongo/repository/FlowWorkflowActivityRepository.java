@@ -115,6 +115,7 @@ public interface FlowWorkflowActivityRepository
   @Query("{'workflowId' : ?0, 'properties.key' : ?1, 'properties.value' : ?2}")
   ActivityEntity findByWorkflowAndProperty(String workflowId, String key, String value);
 
-  @Query(value = "{'creationDate':{ $lt: ?1, $gte: ?0}}")
+  @Query(value = "{'creationDate':{ $lt: ?1, $gte: ?0}, 'teamId' : ?2}")
   Page<ActivityEntity> findByTeamId(Date fromDate, Date toDate, String teamId, Pageable page);
+
 }
