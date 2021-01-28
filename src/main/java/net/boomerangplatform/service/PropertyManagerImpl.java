@@ -237,6 +237,7 @@ public class PropertyManagerImpl implements PropertyManager {
 
     if (task != null) {
       systemProperties.put("task-name", task.getTaskName());
+      systemProperties.put("task-id", task.getTaskId());
       systemProperties.put("task-type", task.getTaskType().toString());
     }
   }

@@ -1,5 +1,7 @@
 package net.boomerangplatform.model;
 
+import net.boomerangplatform.mongo.model.WorkflowScope;
+
 public class WorkflowShortSummary {
   
   public String getWorkflowId() {
@@ -44,5 +46,12 @@ public class WorkflowShortSummary {
   private String teamName;
   private String token;
   private boolean webhookEnabled;
+  private WorkflowScope scope;
+  public WorkflowScope getScope() {
+    return scope;
+  }
+  public void setScope(WorkflowScope scope) {
+    this.scope = scope;
+  }
   
 }
