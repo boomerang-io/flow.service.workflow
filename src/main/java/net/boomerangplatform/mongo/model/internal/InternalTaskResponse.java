@@ -10,7 +10,7 @@ public class InternalTaskResponse {
 
   private String activityId;
   
-  private Map<String, String> outputProperties = new HashMap<String, String>();
+  private Map<String, String> outputProperties = new HashMap<>();
 
   public String getActivityId() {
     return activityId;

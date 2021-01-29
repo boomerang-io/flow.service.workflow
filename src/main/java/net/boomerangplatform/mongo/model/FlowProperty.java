@@ -2,7 +2,7 @@ package net.boomerangplatform.mongo.model;
 
 public class FlowProperty extends AbstractConfigurationProperty {
   
-  public String jsonPath;
+  private String jsonPath;
 
   public String getJsonPath() {
     return jsonPath;

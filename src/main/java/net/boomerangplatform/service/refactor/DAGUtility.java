@@ -19,17 +19,14 @@ import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.traverse.TopologicalOrderIterator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import net.boomerangplatform.exceptions.InvalidWorkflowRuntimeException;
 import net.boomerangplatform.model.Task;
 import net.boomerangplatform.model.TaskResult;
 import net.boomerangplatform.mongo.entity.ActivityEntity;
 import net.boomerangplatform.mongo.entity.FlowTaskTemplateEntity;
 import net.boomerangplatform.mongo.entity.RevisionEntity;
 import net.boomerangplatform.mongo.entity.TaskExecutionEntity;
-import net.boomerangplatform.mongo.entity.WorkflowEntity;
 import net.boomerangplatform.mongo.model.CoreProperty;
 import net.boomerangplatform.mongo.model.Dag;
-import net.boomerangplatform.mongo.model.FlowProperty;
 import net.boomerangplatform.mongo.model.Revision;
 import net.boomerangplatform.mongo.model.TaskStatus;
 import net.boomerangplatform.mongo.model.TaskType;
@@ -38,17 +35,11 @@ import net.boomerangplatform.mongo.model.next.DAGTask;
 import net.boomerangplatform.mongo.model.next.Dependency;
 import net.boomerangplatform.mongo.service.ActivityTaskService;
 import net.boomerangplatform.mongo.service.FlowTaskTemplateService;
-import net.boomerangplatform.mongo.service.FlowWorkflowActivityService;
-import net.boomerangplatform.mongo.service.FlowWorkflowService;
 import net.boomerangplatform.mongo.service.RevisionService;
-import net.boomerangplatform.service.runner.misc.DecisionLifecycleService;
 import net.boomerangplatform.util.GraphProcessor;
 
 @Service
 public class DAGUtility {
-
-  @Autowired
-  private RevisionService workflowVersionService;
 
   @Autowired
   private ActivityTaskService taskActivityService;
@@ -57,35 +48,31 @@ public class DAGUtility {
   private FlowTaskTemplateService templateService;
 
   @Autowired
-  private FlowWorkflowService flowWorkflowService;
+  private RevisionService workflowVersionService;
 
-  @Autowired
-  private DecisionLifecycleService decisionService;
+  private List<String> calculateNodesToRemove(Graph<String, DefaultEdge> graph,
+      List<Task> tasksToRun, String activityId, String value, final String currentVert,
+      Task currentTask) {
+    Set<DefaultEdge> outgoingEdges = graph.outgoingEdgesOf(currentVert);
 
-  @Autowired
-  private FlowWorkflowActivityService activityService;
+    List<String> matchedNodes = new LinkedList<>();
+    List<String> defaultNodes = new LinkedList<>();
 
-  
-  public boolean validateWorkflow(ActivityEntity workflowActivity) {
-    
-    RevisionEntity revision =
-        workflowVersionService.getWorkflowlWithId(workflowActivity.getWorkflowRevisionid());
-    List<Task> tasks = this.createTaskList(revision, workflowActivity);
-   
-    final Task start = tasks.stream().filter(tsk -> TaskType.start.equals(tsk.getTaskType()))
-        .findAny().orElse(null);
-    
-    final Task end = tasks.stream().filter(tsk -> TaskType.end.equals(tsk.getTaskType()))
-        .findAny().orElse(null);
-
-    Graph<String, DefaultEdge> graph = this.createGraph(tasks, workflowActivity);
-    DijkstraShortestPath<String, DefaultEdge> dijkstraAlg = new DijkstraShortestPath<>(graph);
-    final SingleSourcePaths<String, DefaultEdge> pathFromStart =
-        dijkstraAlg.getPaths(start.getTaskId());
-    final boolean startToVertex = (pathFromStart.getPath(end.getTaskId()) != null);
-    return startToVertex;
+    for (DefaultEdge edge : outgoingEdges) {
+      String destination = graph.getEdgeTarget(edge);
+      Task destTask = tasksToRun.stream().filter(t -> t.getTaskId().equals(destination)).findFirst()
+          .orElse(null);
+      if (destTask != null) {
+        determineNodeMatching(currentVert, matchedNodes, defaultNodes, value, destTask);
+      }
+    }
+    List<String> removeList = matchedNodes;
+    if (matchedNodes.isEmpty()) {
+      removeList = defaultNodes;
+    }
+    return removeList;
   }
-  
+
   public boolean canCompleteTask(ActivityEntity workflowActivity, String taskId) {
     RevisionEntity revision =
         workflowVersionService.getWorkflowlWithId(workflowActivity.getWorkflowRevisionid());
@@ -98,130 +85,7 @@ public class DAGUtility {
     DijkstraShortestPath<String, DefaultEdge> dijkstraAlg = new DijkstraShortestPath<>(graph);
     final SingleSourcePaths<String, DefaultEdge> pathFromStart =
         dijkstraAlg.getPaths(start.getTaskId());
-    final boolean startToVertex = (pathFromStart.getPath(current.getTaskId()) != null);
-    return startToVertex;
-  }
-
-  private Graph<String, DefaultEdge> createGraph(List<Task> tasks, ActivityEntity activity) {
-    WorkflowEntity workflow = this.flowWorkflowService.getWorkflow(activity.getWorkflowId());
-    final Map<String, String> executionProperties = buildExecutionProperties(activity, workflow);
-
-    Graph<String, DefaultEdge> graph = createGraph(tasks);
-    TopologicalOrderIterator<String, DefaultEdge> orderIterator =
-        new TopologicalOrderIterator<>(graph);
-    while (orderIterator.hasNext()) {
-
-      final String taskId = orderIterator.next();
-      Task currentTask = this.getTaskByid(tasks, taskId);
-      if (TaskType.start != currentTask.getTaskType() && TaskType.end != currentTask.getTaskType()) {
-        if (currentTask.getTaskActivityId() == null) {
-          continue;
-        }
-        
-        TaskExecutionEntity taskExecution =
-            taskActivityService.findById(currentTask.getTaskActivityId());
-        if (taskExecution == null) {
-          System.out.println("What to do");
-        }
-        TaskStatus flowTaskStatus = taskExecution.getFlowTaskStatus();
-        if (flowTaskStatus == TaskStatus.completed || flowTaskStatus == TaskStatus.failure) {
-          if (currentTask.getTaskType() == TaskType.decision) {
-            decisionService.processDecision(graph, tasks, activity.getId(), executionProperties,
-                currentTask.getTaskId(), currentTask);
-          } else {
-            TaskResult result = new TaskResult();
-            result.setStatus(flowTaskStatus);
-            this.updateTaskInGraph(result, graph, tasks, taskId);
-          }
-        }
-      }
-    }
-
-    return graph;
-  }
-
-  public Map<String, String> buildExecutionProperties(final ActivityEntity activityEntity,
-      WorkflowEntity entity) {
-    List<FlowProperty> defaultProperties = entity.getProperties();
-    Map<String, String> tempExecutionProperties = new HashMap<>();
-    Map<String, String> activityProperties = new HashMap<>();
-    List<CoreProperty> propertyList = activityEntity.getProperties();
-    if (propertyList != null) {
-      for (CoreProperty p : propertyList) {
-        activityProperties.put(p.getKey(), p.getValue());
-      }
-    }
-    if (defaultProperties != null) {
-      tempExecutionProperties = buildExecutionProperties(defaultProperties, activityProperties);
-    }
-    return tempExecutionProperties;
-  }
-
-  private Map<String, String> buildExecutionProperties(List<FlowProperty> defaultProperties,
-      Map<String, String> properties) {
-    Map<String, String> executionProperties = new HashMap<>();
-
-    for (FlowProperty flowProperty : defaultProperties) {
-      executionProperties.put(flowProperty.getKey(), flowProperty.getDefaultValue());
-    }
-
-    if (properties == null) {
-      return executionProperties;
-    }
-
-    for (String keyProperty : properties.keySet()) {
-
-      String key = keyProperty;
-      String value = properties.get(key);
-      executionProperties.put(key, value);
-
-    }
-
-    return executionProperties;
-  }
-
-  private void updateTaskInGraph(TaskResult result, Graph<String, DefaultEdge> graph,
-      List<Task> tasksToRun, String currentVert) {
-    List<String> matchedNodes = new LinkedList<>();
-    Set<DefaultEdge> outgoingEdges = graph.outgoingEdgesOf(currentVert);
-    TaskStatus value = result.getStatus();
-
-    for (DefaultEdge edge : outgoingEdges) {
-      String destination = graph.getEdgeTarget(edge);
-      Task destTask = tasksToRun.stream().filter(t -> t.getTaskId().equals(destination)).findFirst()
-          .orElse(null);
-      if (destTask != null) {
-        determineNodeMatching(currentVert, matchedNodes, value, destTask);
-      }
-    }
-
-    Iterator<DefaultEdge> itrerator = graph.edgesOf(currentVert).iterator();
-    while (itrerator.hasNext()) {
-      DefaultEdge e = itrerator.next();
-      String destination = graph.getEdgeTarget(e);
-      String source = graph.getEdgeSource(e);
-      if (source.equals(currentVert)
-          && matchedNodes.stream().noneMatch(str -> str.trim().equals(destination))) {
-        graph.removeEdge(e);
-      }
-    }
-  }
-
-  private void determineNodeMatching(final String currentVert, List<String> matchedNodes,
-      TaskStatus status, Task destTask) {
-    Optional<Dependency> optionalDependency = destTask.getDetailedDepednacies().stream()
-        .filter(d -> d.getTaskId().equals(currentVert)).findAny();
-    if (optionalDependency.isPresent()) {
-      Dependency dependency = optionalDependency.get();
-      WorkflowExecutionCondition condition = dependency.getExecutionCondition();
-      String node = destTask.getTaskId();
-      if (condition != null
-          && (status == TaskStatus.failure && condition == WorkflowExecutionCondition.failure)
-          || (status == TaskStatus.completed && condition == WorkflowExecutionCondition.success)
-          || (condition == WorkflowExecutionCondition.always)) {
-        matchedNodes.add(node);
-      }
-    }
+    return (pathFromStart.getPath(current.getTaskId()) != null);
   }
 
   private Graph<String, DefaultEdge> createGraph(List<Task> tasks) {
@@ -237,8 +101,40 @@ public class DAGUtility {
     return GraphProcessor.createGraph(vertices, edgeList);
   }
 
-  private Task getTaskByid(List<Task> tasks, String id) {
-    return tasks.stream().filter(tsk -> id.equals(tsk.getTaskId())).findAny().orElse(null);
+  private Graph<String, DefaultEdge> createGraph(List<Task> tasks, ActivityEntity activity) {
+    Graph<String, DefaultEdge> graph = createGraph(tasks);
+    TopologicalOrderIterator<String, DefaultEdge> orderIterator =
+        new TopologicalOrderIterator<>(graph);
+    while (orderIterator.hasNext()) {
+
+      final String taskId = orderIterator.next();
+      Task currentTask = this.getTaskByid(tasks, taskId);
+      if (TaskType.start != currentTask.getTaskType()
+          && TaskType.end != currentTask.getTaskType()) {
+        if (currentTask.getTaskActivityId() == null) {
+          continue;
+        }
+
+        TaskExecutionEntity taskExecution =
+            taskActivityService.findById(currentTask.getTaskActivityId());
+       
+        TaskStatus flowTaskStatus = taskExecution.getFlowTaskStatus();
+        if (flowTaskStatus == TaskStatus.completed || flowTaskStatus == TaskStatus.failure) {
+          if (currentTask.getTaskType() == TaskType.decision) {
+            String switchValue = taskExecution.getSwitchValue();
+            processDecision(graph, tasks, activity.getId(), switchValue, currentTask.getTaskId(),
+                currentTask);
+
+          } else {
+            TaskResult result = new TaskResult();
+            result.setStatus(flowTaskStatus);
+            this.updateTaskInGraph(result, graph, tasks, taskId);
+          }
+        }
+      }
+    }
+
+    return graph;
   }
 
   private List<Task> createTaskList(RevisionEntity revisionEntity, ActivityEntity activity) {
@@ -252,14 +148,12 @@ public class DAGUtility {
       newTask.setTaskId(dagTask.getTaskId());
       newTask.setTaskType(dagTask.getType());
       newTask.setTaskName(dagTask.getLabel());
-      
+
       TaskExecutionEntity task =
           taskActivityService.findByTaskIdAndActiityId(dagTask.getTaskId(), activity.getId());
       if (task != null) {
         newTask.setTaskActivityId(task.getId());
       }
-      
-      
 
       final String workFlowId = revisionEntity.getWorkFlowId();
       newTask.setWorkflowId(workFlowId);
@@ -341,64 +235,31 @@ public class DAGUtility {
     }
   }
 
-  public List<String> calculateNodesToRemove(Graph<String, DefaultEdge> graph,
-      List<Task> tasksToRun, String activityId, final Map<String, String> executionProperties,
-      final String currentVert, Task currentTask) {
-    Set<DefaultEdge> outgoingEdges = graph.outgoingEdgesOf(currentVert);
-
-    List<String> matchedNodes = new LinkedList<>();
-    List<String> defaultNodes = new LinkedList<>();
-
-    String value = currentTask.getDecisionValue();
-    value = replaceValueWithProperty(value, executionProperties, activityId);
-
-    for (DefaultEdge edge : outgoingEdges) {
-      String destination = graph.getEdgeTarget(edge);
-      Task destTask = tasksToRun.stream().filter(t -> t.getTaskId().equals(destination)).findFirst()
-          .orElse(null);
-      if (destTask != null) {
-        determineNodeMatching(currentVert, matchedNodes, defaultNodes, value, destTask);
+  private void determineNodeMatching(final String currentVert, List<String> matchedNodes,
+      TaskStatus status, Task destTask) {
+    Optional<Dependency> optionalDependency = destTask.getDetailedDepednacies().stream()
+        .filter(d -> d.getTaskId().equals(currentVert)).findAny();
+    if (optionalDependency.isPresent()) {
+      Dependency dependency = optionalDependency.get();
+      WorkflowExecutionCondition condition = dependency.getExecutionCondition();
+      String node = destTask.getTaskId();
+      if (condition != null
+          && (status == TaskStatus.failure && condition == WorkflowExecutionCondition.failure)
+          || (status == TaskStatus.completed && condition == WorkflowExecutionCondition.success)
+          || (condition == WorkflowExecutionCondition.always)) {
+        matchedNodes.add(node);
       }
     }
-    List<String> removeList = matchedNodes;
-    if (matchedNodes.isEmpty()) {
-      removeList = defaultNodes;
-    }
-    return removeList;
   }
 
-  private String replaceValueWithProperty(String value, Map<String, String> executionProperties,
-      String activityId) {
-    String regex = "\\$\\{p:(.*?)\\}";
-    Pattern pattern = Pattern.compile(regex);
-    Matcher matcher = pattern.matcher(value);
-    if (matcher.find()) {
-      String group = matcher.group(1);
-      String[] components = group.split("/");
-      if (components.length == 1) {
-        if (executionProperties.get(components[0]) != null) {
-
-          return executionProperties.get(components[0]);
-        }
-      } else if (components.length == 2) {
-        String taskName = components[0];
-        String outputProperty = components[1];
-        TaskExecutionEntity taskExecution =
-            taskActivityService.findByTaskNameAndActiityId(taskName, activityId);
-        if (taskExecution != null && taskExecution.getOutputs() != null
-            && taskExecution.getOutputs().get(outputProperty) != null) {
-          return taskExecution.getOutputs().get(outputProperty);
-        }
-      }
-    }
-    return value;
+  private Task getTaskByid(List<Task> tasks, String id) {
+    return tasks.stream().filter(tsk -> id.equals(tsk.getTaskId())).findAny().orElse(null);
   }
 
-  public void processDecision(Graph<String, DefaultEdge> graph, List<Task> tasksToRun,
-      String activityId, final Map<String, String> executionProperties, final String currentVertex,
-      Task currentTask) {
-    List<String> removeList = calculateNodesToRemove(graph, tasksToRun, activityId,
-        executionProperties, currentVertex, currentTask);
+  private void processDecision(Graph<String, DefaultEdge> graph, List<Task> tasksToRun,
+      String activityId, String value, final String currentVertex, Task currentTask) {
+    List<String> removeList =
+        calculateNodesToRemove(graph, tasksToRun, activityId, value, currentVertex, currentTask);
     Iterator<DefaultEdge> itrerator = graph.edgesOf(currentVertex).iterator();
     while (itrerator.hasNext()) {
       DefaultEdge e = itrerator.next();
@@ -412,70 +273,46 @@ public class DAGUtility {
     }
   }
 
-  public void validateWorkflow(String activityId, final Task start, final Task end,
-      final Graph<String, DefaultEdge> graph) {
+  private void updateTaskInGraph(TaskResult result, Graph<String, DefaultEdge> graph,
+      List<Task> tasksToRun, String currentVert) {
+    List<String> matchedNodes = new LinkedList<>();
+    Set<DefaultEdge> outgoingEdges = graph.outgoingEdgesOf(currentVert);
+    TaskStatus value = result.getStatus();
 
-    final ActivityEntity activityEntity = activityService.findWorkflowActivtyById(activityId);
-
-    if (start == null || end == null) {
-      activityEntity.setStatus(TaskStatus.invalid);
-      activityService.saveWorkflowActivity(activityEntity);
-      throw new InvalidWorkflowRuntimeException();
+    for (DefaultEdge edge : outgoingEdges) {
+      String destination = graph.getEdgeTarget(edge);
+      Task destTask = tasksToRun.stream().filter(t -> t.getTaskId().equals(destination)).findFirst()
+          .orElse(null);
+      if (destTask != null) {
+        determineNodeMatching(currentVert, matchedNodes, value, destTask);
+      }
     }
 
-    final List<String> nodes =
-        GraphProcessor.createOrderedTaskList(graph, start.getTaskId(), end.getTaskId());
-
-    //if (nodes.isEmpty()) {
-     // activityEntity.setStatus(TaskStatus.invalid);
-      //activityService.saveWorkflowActivity(activityEntity);
-     // throw new InvalidWorkflowRuntimeException();
-   // }
-
-    final DijkstraShortestPath<String, DefaultEdge> dijkstraAlg = new DijkstraShortestPath<>(graph);
-    final SingleSourcePaths<String, DefaultEdge> pathFromStart =
-        dijkstraAlg.getPaths(start.getTaskId());
-    final boolean singlePathExists = (pathFromStart.getPath(end.getTaskId()) != null);
-    if (!singlePathExists) {
-
-      activityEntity.setStatus(TaskStatus.invalid);
-      activityEntity.setStatusMessage("Failed to run workflow: Incomplete workflow");
-      activityService.saveWorkflowActivity(activityEntity);
-      throw new InvalidWorkflowRuntimeException();
+    Iterator<DefaultEdge> itrerator = graph.edgesOf(currentVert).iterator();
+    while (itrerator.hasNext()) {
+      DefaultEdge e = itrerator.next();
+      String destination = graph.getEdgeTarget(e);
+      String source = graph.getEdgeSource(e);
+      if (source.equals(currentVert)
+          && matchedNodes.stream().noneMatch(str -> str.trim().equals(destination))) {
+        graph.removeEdge(e);
+      }
     }
   }
 
-
-  
-  public String getOutputProperty(String expression, ActivityEntity activity) {
+  public boolean validateWorkflow(ActivityEntity workflowActivity) {
     
-    WorkflowEntity workflow = this.flowWorkflowService.getWorkflow(activity.getWorkflowId());
-    final Map<String, String> executionProperties = buildExecutionProperties(activity, workflow);
-    String regex = "\\$\\{p:(.*?)\\}";
-    Pattern pattern = Pattern.compile(regex);
-    Matcher matcher = pattern.matcher(expression);
-    if (matcher.find()) {
-      String group = matcher.group(1);
-      String[] components = group.split("/");
-      if (components.length == 1) {
-        if (executionProperties.get(components[0]) != null) {
-          return executionProperties.get(components[0]);
-        }
-      } else if (components.length == 2) {
-        String taskName = components[0];
-        String outputProperty = components[1];
-        TaskExecutionEntity taskExecution =
-            taskActivityService.findByTaskNameAndActiityId(taskName, activity.getId());
-        if (taskExecution != null && taskExecution.getOutputs() != null
-            && taskExecution.getOutputs().get(outputProperty) != null) {
-          return taskExecution.getOutputs().get(outputProperty);
-        }
-      }
-    }
-    
-    if (expression != null && !expression.isBlank()) {
-      return expression;
-    }
-    return null;
+    RevisionEntity revision =
+        workflowVersionService.getWorkflowlWithId(workflowActivity.getWorkflowRevisionid());
+    List<Task> tasks = this.createTaskList(revision, workflowActivity);
+    final Task start = tasks.stream().filter(tsk -> TaskType.start.equals(tsk.getTaskType()))
+        .findAny().orElse(null);
+    final Task end =
+        tasks.stream().filter(tsk -> TaskType.end.equals(tsk.getTaskType())).findAny().orElse(null);
+    Graph<String, DefaultEdge> graph = this.createGraph(tasks, workflowActivity);
+    DijkstraShortestPath<String, DefaultEdge> dijkstraAlg = new DijkstraShortestPath<>(graph);
+    final SingleSourcePaths<String, DefaultEdge> pathFromStart =
+        dijkstraAlg.getPaths(start.getTaskId());
+    return (pathFromStart.getPath(end.getTaskId()) != null);
   }
 }

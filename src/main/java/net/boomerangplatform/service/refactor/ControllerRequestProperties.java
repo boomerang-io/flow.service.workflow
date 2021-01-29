@@ -159,7 +159,7 @@ public class ControllerRequestProperties {
     } else if ("global".equals(key)) {
       return this.getGlobalProperties();
     } else {
-      return new HashMap<String, String>();
+      return new HashMap<>();
     }
   }
 }
