@@ -72,10 +72,6 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
   
   @Autowired
   private WorkflowService workflowService;
-  
-  @Autowired
-  private PropertyManager propertyManager;
-  
  
   @Autowired
   private ControllerClient controllerClient;

@@ -85,8 +85,7 @@ public class DAGUtility {
     DijkstraShortestPath<String, DefaultEdge> dijkstraAlg = new DijkstraShortestPath<>(graph);
     final SingleSourcePaths<String, DefaultEdge> pathFromStart =
         dijkstraAlg.getPaths(start.getTaskId());
-    final boolean startToVertex = (pathFromStart.getPath(current.getTaskId()) != null);
-    return startToVertex;
+    return (pathFromStart.getPath(current.getTaskId()) != null);
   }
 
   private Graph<String, DefaultEdge> createGraph(List<Task> tasks) {
@@ -118,9 +117,7 @@ public class DAGUtility {
 
         TaskExecutionEntity taskExecution =
             taskActivityService.findById(currentTask.getTaskActivityId());
-        if (taskExecution == null) {
-          System.out.println("What to do");
-        }
+       
         TaskStatus flowTaskStatus = taskExecution.getFlowTaskStatus();
         if (flowTaskStatus == TaskStatus.completed || flowTaskStatus == TaskStatus.failure) {
           if (currentTask.getTaskType() == TaskType.decision) {
@@ -316,7 +313,6 @@ public class DAGUtility {
     DijkstraShortestPath<String, DefaultEdge> dijkstraAlg = new DijkstraShortestPath<>(graph);
     final SingleSourcePaths<String, DefaultEdge> pathFromStart =
         dijkstraAlg.getPaths(start.getTaskId());
-    final boolean startToVertex = (pathFromStart.getPath(end.getTaskId()) != null);
-    return startToVertex;
+    return (pathFromStart.getPath(end.getTaskId()) != null);
   }
 }

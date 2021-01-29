@@ -32,7 +32,6 @@ import net.boomerangplatform.mongo.entity.FlowUserEntity;
 import net.boomerangplatform.mongo.entity.RevisionEntity;
 import net.boomerangplatform.mongo.entity.TaskExecutionEntity;
 import net.boomerangplatform.mongo.entity.WorkflowEntity;
-import net.boomerangplatform.mongo.model.Revision;
 import net.boomerangplatform.mongo.model.UserType;
 import net.boomerangplatform.mongo.model.WorkflowScope;
 import net.boomerangplatform.mongo.service.FlowWorkflowService;

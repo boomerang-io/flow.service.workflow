@@ -32,20 +32,18 @@ public class LockManagerImpl implements LockManager {
   @Autowired
   private PropertyManager propertyManager;
 
-  private static final Logger LOGGER = LogManager.getLogger(TaskServiceImpl.class);
+  private static final Logger LOGGER = LogManager.getLogger(LockManagerImpl.class);
 
   @Override
   public void acquireLock(Task taskExecution, String activityId) {
 
-    LOGGER.info("Entering Acquire Lock");
-
-    String workflowId = taskExecution.getWorkflowId();
 
     long timeout = 60000;
     String key = null;
 
-    // TODO: if (taskExecution != null && taskExecution.getOutputs() != null) {
     if (taskExecution != null) {
+      
+      String workflowId = taskExecution.getWorkflowId();
 
       Map<String, String> properties = taskExecution.getInputs();
       if (properties.get("timeout") != null) {
@@ -63,16 +61,10 @@ public class LockManagerImpl implements LockManager {
       }
       
       if (key != null) {
-        LOGGER.info("Lock key: " + key);
-
-
         final String test = key;
-        
         Supplier<String> supplier = () -> test;
-
         String storeID = mongoConfiguration.fullCollectionName("tasks_locks");
         FlowMongoLock mongoLock = new FlowMongoLock(supplier, this.mongoTemplate);
-
         String storeId = key;
         final List<String> keys = new LinkedList<>();
         keys.add(storeId);
@@ -114,16 +106,10 @@ public class LockManagerImpl implements LockManager {
 
   @Override
   public void releaseLock(Task taskExecution, String activityId) {
-
-    LOGGER.info("Entering Release Lock");
-
-    String workflowId = taskExecution.getWorkflowId();
     String storeID = mongoConfiguration.fullCollectionName("tasks_locks");
     String key = null;
-
-    // TODO: if (taskExecution != null && taskExecution.getOutputs() != null) {
-
     if (taskExecution != null) {
+      String workflowId = taskExecution.getWorkflowId();
       Map<String, String> properties = taskExecution.getInputs();
       if (properties.get("key") != null) {
         key = properties.get("key");
@@ -134,6 +120,7 @@ public class LockManagerImpl implements LockManager {
     }
 
     if (key != null) {
+      String workflowId = taskExecution.getWorkflowId();
       ControllerRequestProperties properties =
           propertyManager.buildRequestPropertyLayering(null, activityId, workflowId);
       final String textValue =
