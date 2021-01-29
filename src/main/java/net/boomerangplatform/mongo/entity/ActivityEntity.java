@@ -54,6 +54,8 @@ public class ActivityEntity {
   
   private String teamId;
   
+  private String switchValue;
+  
   @JsonProperty("workspaces")
   private List<TaskWorkspace> taskWorkspaces;
   
@@ -167,6 +169,14 @@ public class ActivityEntity {
 
   public void setTeamId(String teamId) {
     this.teamId = teamId;
+  }
+
+  public String getSwitchValue() {
+    return switchValue;
+  }
+
+  public void setSwitchValue(String switchValue) {
+    this.switchValue = switchValue;
   }
   
 }

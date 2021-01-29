@@ -20,6 +20,7 @@ import org.jgrapht.Graph;
 import org.jgrapht.graph.DefaultEdge;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import net.boomerangplatform.exceptions.InvalidWorkflowRuntimeException;
 import net.boomerangplatform.exceptions.RunWorkflowException;
 import net.boomerangplatform.model.Task;
 import net.boomerangplatform.mongo.entity.ActivityEntity;
@@ -71,10 +72,6 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
   
   @Autowired
   private WorkflowService workflowService;
-  
-  @Autowired
-  private PropertyManager propertyManager;
-  
  
   @Autowired
   private ControllerClient controllerClient;
@@ -150,7 +147,18 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
     final Task start = getTaskByName(tasks, TaskType.start);
     final Task end = getTaskByName(tasks, TaskType.end);
     final Graph<String, DefaultEdge> graph = createGraph(tasks);
-    dagUtility.validateWorkflow(activityId, start, end, graph);
+    
+    final ActivityEntity activityEntity = activityService.findWorkflowActivtyById(activityId);
+
+    boolean validWorkflow = dagUtility.validateWorkflow(activityEntity);
+    
+    if (!validWorkflow) {
+      activityEntity.setStatus(TaskStatus.invalid);
+      activityEntity.setStatusMessage("Failed to run workflow: Incomplete workflow");
+      activityService.saveWorkflowActivity(activityEntity);
+      throw new InvalidWorkflowRuntimeException();
+    }
+    
     createTaskPlan(tasks, activityId, start, end, graph);
   }
 

@@ -125,6 +125,7 @@ public class TaskServiceImpl implements TaskService {
         InternalTaskResponse response = new InternalTaskResponse();
         response.setActivityId(taskExecution.getId());
         response.setStatus(TaskStatus.completed);
+        processDecision(task, activity.getId());
         this.endTask(response);
       } else if (taskType == TaskType.template) {
         controllerClient.submitTemplateTask(task, activityId, workflowName);
@@ -160,6 +161,16 @@ public class TaskServiceImpl implements TaskService {
 
       endTask(response);
     }
+  }
+
+  private void processDecision(Task task, String activityId) {
+    String decisionValue = task.getDecisionValue();
+    ControllerRequestProperties properties = propertyManager.buildRequestPropertyLayering(task, activityId, task.getWorkflowId());
+    String value = decisionValue;
+    value = propertyManager.replaceValueWithProperty(value, activityId, properties);
+    TaskExecutionEntity taskExecution = taskActivityService.findById(task.getTaskActivityId());
+    taskExecution.setSwitchValue(value);
+    taskActivityService.save(taskExecution);
   }
 
   private void releaseLock(Task task, ActivityEntity activity) {
@@ -481,6 +492,13 @@ public class TaskServiceImpl implements TaskService {
         }
         newTask.setInputs(properties);
       } else if (dagTask.getType() == TaskType.decision) {
+        TaskExecutionEntity task =
+            taskActivityService.findByTaskIdAndActiityId(dagTask.getTaskId(), activity.getId());
+        if (task != null) {
+          newTask.setTaskActivityId(task.getId());
+        }
+        
+        
         newTask.setDecisionValue(dagTask.getDecisionValue());
       }
       else if (dagTask.getType() == TaskType.setwfproperty || dagTask.getType() == TaskType.acquirelock || dagTask.getType() == TaskType.releaselock) {

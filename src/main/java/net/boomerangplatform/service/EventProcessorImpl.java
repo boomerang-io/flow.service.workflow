@@ -53,7 +53,6 @@ public class EventProcessorImpl implements EventProcessor {
   @Autowired
   private TaskService taskService;
 
-  // TODO: better return management
   @Override
   public CloudEventImpl<EventResponse> processHTTPEvent(Map<String, Object> headers,
       JsonNode payload) {
@@ -144,10 +143,10 @@ public class EventProcessorImpl implements EventProcessor {
   }
 
   private EventResponse processEvent(CloudEvent<AttributesImpl, JsonNode> event, String status) {
-    logger.info("processCloudEvent() - Extensions: " + event.toString());
-    logger.info("processCloudEvent() - Attributes: " + event.getAttributes().toString());
+    logger.info("processCloudEvent() - Extensions: {}", event.toString());
+    logger.info("processCloudEvent() - Attributes: {}" , event.getAttributes().toString());
     JsonNode eventData = event.getData().get();
-    logger.info("processCloudEvent() - Data: " + eventData.toPrettyString());
+    logger.info("processCloudEvent() - Data: {}" , eventData.toPrettyString());
 
     EventResponse response = new EventResponse();
 
@@ -155,7 +154,7 @@ public class EventProcessorImpl implements EventProcessor {
     String subject = event.getAttributes().getSubject().orElse("");
 
 
-    logger.info("Logging extension: {}" + event.getExtensions());
+    logger.info("Logging extension: {}", event.getExtensions());
     if (event.getExtensions() != null) {
       logger.info("Extension size: {}", event.getExtensions().size());
 
@@ -166,7 +165,7 @@ public class EventProcessorImpl implements EventProcessor {
       logger.info("Extension is empty");
     }
 
-    logger.info("processCloudEvent() - Subject: " + subject);
+    logger.info("processCloudEvent() - Subject: {}", subject);
     if (!subject.startsWith("/")) {
       logger.error(
           "processCloudEvent() - Error: subject does not conform to required standard of /{workflowId} followed by /{topic} if custom event");
@@ -184,7 +183,7 @@ public class EventProcessorImpl implements EventProcessor {
       return response;
 
     }
-    logger.info("processCloudEvent() - WorkflowId: " + workflowId);
+    logger.info("processCloudEvent() - WorkflowId: {}", workflowId);
 
     String topic = getTopicFromSubject(subject);
     String trigger = event.getAttributes().getType().replace(TYPE_PREFIX, "");
@@ -218,14 +217,12 @@ public class EventProcessorImpl implements EventProcessor {
       }
 
     } else {
-      // TODO make error
       logger.error("processCloudEvent() - No matching trigger enabled.");
       response.setStatusCode(HttpStatus.SC_FORBIDDEN);
       response.setStatusMessage("Event did not match enabled workflow trigger.");
       return response;
     }
 
-    // TODO returning null to fix compilation errors
     return null;
   }
 

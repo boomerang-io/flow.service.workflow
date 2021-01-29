@@ -276,7 +276,7 @@ public class ModelConverterV5 {
     }
 
     link.setExtras(new Extras());
-    link.setLabels(new LinkedList<Object>());
+    link.setLabels(new LinkedList<>());
 
     if (dep != null) {
       link.setSource(dep.getTaskId());
@@ -412,7 +412,7 @@ public class ModelConverterV5 {
   private static void createTaskNode(List<TaskNode> taskNodes, List<ConfigNodes> configNodeList,
       List<ImmutablePair<String, Dependency>> pairs, DAGTask dagTask) {
     TaskNode taskNode = new TaskNode();
-    taskNode.setPorts(new LinkedList<Port>());
+    taskNode.setPorts(new LinkedList<>());
     taskNode.setNodeId(dagTask.getTaskId());
     taskNode.setSelected(false);
     taskNode.setTaskId(dagTask.getTemplateId());
@@ -426,7 +426,7 @@ public class ModelConverterV5 {
     taskNode.setType(type);
     taskNode.setExtras(new ExtrasNode());
 
-    taskNode.setPorts(new LinkedList<Port>());
+    taskNode.setPorts(new LinkedList<>());
 
     if (dagTask.getType() == TaskType.start) {
       taskNode.setPassedName("Start");

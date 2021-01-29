@@ -26,7 +26,7 @@ public class NavigationController {
   private UserIdentityService userService;
 
   @GetMapping(value = "")
-  ResponseEntity<List<Navigation>> getNavigation(@RequestParam(required = false) String teamId) {
+  public ResponseEntity<List<Navigation>> getNavigation(@RequestParam(required = false) String teamId) {
     boolean isUserAdmin = false;
     final FlowUserEntity userEntity = userService.getCurrentUser();
     if (userEntity != null
@@ -38,8 +38,5 @@ public class NavigationController {
     CacheControl cacheControl = CacheControl.maxAge(1, TimeUnit.HOURS);
 
     return ResponseEntity.ok().cacheControl(cacheControl).body(response);
-
-
   }
-
 }
