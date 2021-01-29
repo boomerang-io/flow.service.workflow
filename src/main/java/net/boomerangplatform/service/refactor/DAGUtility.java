@@ -103,9 +103,6 @@ public class DAGUtility {
   }
 
   private Graph<String, DefaultEdge> createGraph(List<Task> tasks, ActivityEntity activity) {
-    WorkflowEntity workflow = this.flowWorkflowService.getWorkflow(activity.getWorkflowId());
-    final Map<String, String> executionProperties = buildExecutionProperties(activity, workflow);
-
     Graph<String, DefaultEdge> graph = createGraph(tasks);
     TopologicalOrderIterator<String, DefaultEdge> orderIterator =
         new TopologicalOrderIterator<>(graph);
@@ -126,8 +123,10 @@ public class DAGUtility {
         TaskStatus flowTaskStatus = taskExecution.getFlowTaskStatus();
         if (flowTaskStatus == TaskStatus.completed || flowTaskStatus == TaskStatus.failure) {
           if (currentTask.getTaskType() == TaskType.decision) {
-            decisionService.processDecision(graph, tasks, activity.getId(), executionProperties,
+            String switchValue = taskExecution.getSwitchValue();
+            decisionService.processDecision(graph, tasks, activity.getId(), switchValue,
                 currentTask.getTaskId(), currentTask);
+            
           } else {
             TaskResult result = new TaskResult();
             result.setStatus(flowTaskStatus);
@@ -422,15 +421,6 @@ public class DAGUtility {
       activityService.saveWorkflowActivity(activityEntity);
       throw new InvalidWorkflowRuntimeException();
     }
-
-    final List<String> nodes =
-        GraphProcessor.createOrderedTaskList(graph, start.getTaskId(), end.getTaskId());
-
-    //if (nodes.isEmpty()) {
-     // activityEntity.setStatus(TaskStatus.invalid);
-      //activityService.saveWorkflowActivity(activityEntity);
-     // throw new InvalidWorkflowRuntimeException();
-   // }
 
     final DijkstraShortestPath<String, DefaultEdge> dijkstraAlg = new DijkstraShortestPath<>(graph);
     final SingleSourcePaths<String, DefaultEdge> pathFromStart =

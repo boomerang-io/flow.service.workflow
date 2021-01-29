@@ -37,6 +37,8 @@ public class TaskExecutionEntity {
   
   private boolean preApproved;
   
+  private String switchValue;
+  
   private ApprovalEntity approval;
 
   public TaskType getTaskType() {
@@ -151,5 +153,13 @@ public class TaskExecutionEntity {
 
   public void setPreApproved(boolean preApproved) {
     this.preApproved = preApproved;
+  }
+
+  public String getSwitchValue() {
+    return switchValue;
+  }
+
+  public void setSwitchValue(String switchValue) {
+    this.switchValue = switchValue;
   }
 }

@@ -1,59 +1,26 @@
 package net.boomerangplatform.service.runner.misc;
 
-import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.jgrapht.Graph;
 import org.jgrapht.graph.DefaultEdge;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import net.boomerangplatform.model.Task;
-import net.boomerangplatform.model.TaskResult;
-import net.boomerangplatform.mongo.entity.TaskExecutionEntity;
-import net.boomerangplatform.mongo.model.TaskStatus;
 import net.boomerangplatform.mongo.model.next.Dependency;
-import net.boomerangplatform.mongo.service.ActivityTaskService;
-import net.boomerangplatform.service.PropertyManager;
-import net.boomerangplatform.service.refactor.ControllerRequestProperties;
 
 @Service
 public class DecisionLifecycleService {
 
-  @Autowired
-  private ActivityTaskService taskService;
-
-  @Autowired
-  private PropertyManager propertyManager;
-  
-  public TaskResult submitDecision(Task task, String activityId) {
-    TaskResult taskResult = new TaskResult();
-    TaskExecutionEntity taskExecution =
-        taskService.findByTaskIdAndActiityId(task.getTaskId(), activityId);
-    final Date startDate = new Date();
-    taskExecution.setStartTime(startDate);
-    taskExecution.setFlowTaskStatus(TaskStatus.completed);
-
-    final Date finishDate = new Date();
-    final long duration = finishDate.getTime() - startDate.getTime();
-    taskExecution.setDuration(duration);
-    taskExecution.setFlowTaskStatus(TaskStatus.completed);
-    taskResult.setNode(task.getTaskId());
-    taskResult.setStatus(taskExecution.getFlowTaskStatus());
-    taskService.save(taskExecution);
-    return taskResult;
-  }
-
   public void processDecision(Graph<String, DefaultEdge> graph, List<Task> tasksToRun,
-      String activityId, final Map<String, String> executionProperties, final String currentVertex,
+      String activityId, String value, final String currentVertex,
       Task currentTask) {
     List<String> removeList = calculateNodesToRemove(graph, tasksToRun, activityId,
-        executionProperties, currentVertex, currentTask);
+        value, currentVertex, currentTask);
     Iterator<DefaultEdge> itrerator = graph.edgesOf(currentVertex).iterator();
     while (itrerator.hasNext()) {
       DefaultEdge e = itrerator.next();
@@ -68,17 +35,13 @@ public class DecisionLifecycleService {
   }
 
   public List<String> calculateNodesToRemove(Graph<String, DefaultEdge> graph,
-      List<Task> tasksToRun, String activityId, final Map<String, String> executionProperties,
-      final String currentVert, Task currentTask) {
+      List<Task> tasksToRun, String activityId, String value, final String currentVert,
+      Task currentTask) {
     Set<DefaultEdge> outgoingEdges = graph.outgoingEdgesOf(currentVert);
 
     List<String> matchedNodes = new LinkedList<>();
     List<String> defaultNodes = new LinkedList<>();
 
-    ControllerRequestProperties properties = propertyManager.buildRequestPropertyLayering(currentTask, activityId, currentTask.getWorkflowId());
-    String value = currentTask.getDecisionValue(); 
-    value = propertyManager.replaceValueWithProperty(value, activityId, properties);
-   
     for (DefaultEdge edge : outgoingEdges) {
       String destination = graph.getEdgeTarget(edge);
       Task destTask = tasksToRun.stream().filter(t -> t.getTaskId().equals(destination)).findFirst()
