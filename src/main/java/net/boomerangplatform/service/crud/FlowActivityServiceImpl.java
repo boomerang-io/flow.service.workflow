@@ -208,7 +208,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
       List<WorkflowEntity> workflows =
           workflowIds.isEmpty() ? this.workflowService.getWorkflowsForTeams(teamIdList)
               : workflowsFromIds;
-      if (teamIds.isEmpty()) {
+      if (!(teamIds.isEmpty() || workflowIds.isEmpty())) {
         workflows.addAll(workflowService.getSystemWorkflows());
       }
       LOGGER.info("Found workflows: " + workflows.size());
