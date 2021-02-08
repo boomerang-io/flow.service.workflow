@@ -54,7 +54,7 @@ public class WorkflowVersionServiceImpl implements WorkflowVersionService {
     FlowWorkflowRevision flowRevision = new FlowWorkflowRevision(revision);
     updateUpgradeFlags(flowRevision);
 
-    
+
     return flowRevision;
   }
 
@@ -66,8 +66,7 @@ public class WorkflowVersionServiceImpl implements WorkflowVersionService {
 
   @Override
   public FlowWorkflowRevision getWorkflowVersion(String workflowId, long verison) {
-    RevisionEntity revision =
-        flowWorkflowService.getLatestWorkflowVersion(workflowId, verison);
+    RevisionEntity revision = flowWorkflowService.getLatestWorkflowVersion(workflowId, verison);
 
     updateTemplateVersions(revision);
 
@@ -127,8 +126,8 @@ public class WorkflowVersionServiceImpl implements WorkflowVersionService {
                 newTemplatesAvailable = true;
                 if (revision.getDag().getNodes() != null) {
                   for (TaskNode taskNode : revision.getDag().getNodes()) {
-                    if (taskNode.getTaskId() != null
-                        && taskNode.getTaskId().equals(config.getTaskId())) {
+                    if (taskNode.getNodeId() != null && config.getNodeId() != null
+                        && taskNode.getNodeId().equals(config.getNodeId())) {
                       taskNode.setTemplateUpgradeAvailable(true);
                     }
                   }
