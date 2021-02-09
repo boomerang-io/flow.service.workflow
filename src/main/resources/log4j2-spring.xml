@@ -2,7 +2,7 @@
 <Configuration status="INFO">
    <Appenders>
       <Console name="Console" target="SYSTEM_OUT">
-         <PatternLayout pattern="[%clr{%d{yyyy-MM-dd HH:mm:ss.SSS}}{faint}] [%clr{%level}] [%tid] %clr{%-40.40c{3.2}}{cyan} %clr{:}{faint} %m%n%xwEx" />
+         <PatternLayout pattern="[%clr{%d{yyyy-MM-dd HH:mm:ss.SSS}}{faint}] [%clr{%level}] [%t] %clr{%-40.40c{3.2}}{cyan} %clr{:}{faint} %m%n%xwEx" />
       </Console>
    </Appenders>
    <Loggers>
