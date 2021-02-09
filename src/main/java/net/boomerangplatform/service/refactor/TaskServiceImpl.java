@@ -7,15 +7,18 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.retry.backoff.FixedBackOffPolicy;
 import org.springframework.retry.policy.SimpleRetryPolicy;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 import com.github.alturkovic.lock.Lock;
 import com.github.alturkovic.lock.exception.LockNotAvailableException;
@@ -84,13 +87,28 @@ public class TaskServiceImpl implements TaskService {
   
   @Autowired
   private LockManager lockManager;
-
+  
+  @Autowired
+  @Qualifier("flowAsyncExecutor")
+  private Executor executor;
+ 
   private static final Logger LOGGER = LogManager.getLogger(TaskServiceImpl.class);
+  
+  public void debugExecutor() {
+    LOGGER.debug("Debugging executor");
+    LOGGER.debug("---");
+    
+    ThreadPoolTaskExecutor threadExecutor = (ThreadPoolTaskExecutor) executor;
+    LOGGER.debug("Thread Executor (Active Count):" + threadExecutor.getActiveCount());
+        
+  }
   
   @Override
   @Async
   public void createTask(InternalTaskRequest request) {
 
+    debugExecutor();
+    
     String taskId = request.getActivityId();
     LOGGER.debug("[{}] Recieved creating task request", taskId);
     
