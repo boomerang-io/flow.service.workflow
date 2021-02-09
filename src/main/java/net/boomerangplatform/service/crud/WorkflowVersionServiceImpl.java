@@ -162,7 +162,7 @@ public class WorkflowVersionServiceImpl implements WorkflowVersionService {
 
 
     if (workFlowRepository.getWorkflow(flowWorkflowEntity.getWorkFlowId())
-        .getScope() == WorkflowScope.system && user.getType() != UserType.admin) {
+        .getScope() == WorkflowScope.system && (user.getType() != UserType.admin || user.getType() != UserType.operator)) {
       return new ResponseEntity<>(new FlowWorkflowRevision(), HttpStatus.FORBIDDEN);
     }
 
