@@ -117,7 +117,7 @@ public class ControllerClientImpl implements ControllerClient {
   }
 
   @Override
-  @Async
+  @Async("flowAsyncExecutor")
   public void submitCustomTask(Task task, String activityId, String workflowName) {
 
     TaskResult taskResult = new TaskResult();
@@ -214,7 +214,7 @@ public class ControllerClientImpl implements ControllerClient {
 
 
   @Override
-  @Async
+  @Async("flowAsyncExecutor")
   public void submitTemplateTask(Task task, String activityId, String workflowName) {
 
 

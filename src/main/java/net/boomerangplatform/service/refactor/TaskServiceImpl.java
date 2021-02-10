@@ -104,7 +104,7 @@ public class TaskServiceImpl implements TaskService {
   }
   
   @Override
-  @Async
+  @Async("flowAsyncExecutor")
   public void createTask(InternalTaskRequest request) {
 
     debugExecutor();
@@ -269,7 +269,7 @@ public class TaskServiceImpl implements TaskService {
   }
 
   @Override
-  @Async
+  @Async("flowAsyncExecutor")
   public void endTask(InternalTaskResponse request) {
 
     String activityId = request.getActivityId();
@@ -590,7 +590,7 @@ public class TaskServiceImpl implements TaskService {
   }
 
   @Override
-  @Async
+  @Async("flowAsyncExecutor")
   public void submitActivity(String taskActivityId, String taskStatus, Map<String, String> outputProperties) {
     
     LOGGER.info("submitActivity: {}", taskStatus);

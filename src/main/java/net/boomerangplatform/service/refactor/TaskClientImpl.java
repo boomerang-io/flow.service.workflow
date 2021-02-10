@@ -24,7 +24,7 @@ public class TaskClientImpl implements TaskClient {
   public RestTemplate restTemplate;
 
   @Override
-  @Async
+  @Async("flowAsyncExecutor")
   public void startTask(InternalTaskRequest taskRequest) {
     try {
       restTemplate.postForLocation(startTaskUrl, taskRequest);
@@ -34,7 +34,7 @@ public class TaskClientImpl implements TaskClient {
   }
 
   @Override
-  @Async
+  @Async("flowAsyncExecutor")
   public void endTask(InternalTaskResponse taskResponse) {
     try {
       restTemplate.postForLocation(endTaskUrl, taskResponse);
