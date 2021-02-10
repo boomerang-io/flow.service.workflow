@@ -4,6 +4,7 @@ import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.client.ExpectedCount.times;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.jsonPath;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withStatus;
@@ -43,14 +44,15 @@ public class SimpleExecuteTests extends IntegrationTests {
 
   @Test
   public void testExecution() throws Exception {
-    mockServer.expect(times(1), requestTo(containsString("http://localhost:8084/internal/users/user")))
-    .andExpect(method(HttpMethod.GET)).andRespond(
-        withSuccess(getMockFile("mock/users/users.json"), MediaType.APPLICATION_JSON));
-    
-    
+    mockServer
+        .expect(times(1), requestTo(containsString("http://localhost:8084/internal/users/user")))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withSuccess(getMockFile("mock/users/users.json"), MediaType.APPLICATION_JSON));
+
+
     String workflowId = "5f4fc9e95683833cf0b1335b";
-    RequestFlowExecution request = new  RequestFlowExecution();
-    
+    RequestFlowExecution request = new RequestFlowExecution();
+
     request.setWorkflowId(workflowId);
 
     TaskWorkspace taskWorkspace = new TaskWorkspace();
@@ -58,17 +60,17 @@ public class SimpleExecuteTests extends IntegrationTests {
     taskWorkspace.setReadOnly(false);
     taskWorkspace.setWorkspaceId("12345");
     taskWorkspace.setWorkspaceName("Test");
-    
+
     List<TaskWorkspace> taskWorkspaceList = new LinkedList<>();
     taskWorkspaceList.add(taskWorkspace);
 
     request.setTaskWorkspaces(taskWorkspaceList);
-    
+
     Map<String, String> map = new HashMap<>();
     map.put("foobar", "Hello World");
     request.setProperties(map);
     FlowWebhookResponse activity = this.submitInternalWorkflow(workflowId, request);
-    
+
     String id = activity.getActivityId();
     Thread.sleep(5000);
     FlowActivity finalActivity = this.checkWorkflowActivity(id);
@@ -84,8 +86,10 @@ public class SimpleExecuteTests extends IntegrationTests {
     mockServer = MockRestServiceServer.bindTo(this.restTemplate).ignoreExpectOrder(true).build();
 
     mockServer.expect(times(1), requestTo(containsString("controller/workflow/create")))
-        .andExpect(method(HttpMethod.POST)).andRespond(withStatus(HttpStatus.OK));
-
+        .andExpect(method(HttpMethod.POST)).andExpect(jsonPath("$.storage.size").value("1Gi"))
+        .andExpect(jsonPath("$.storage.accessMode").value("ReadWriteMany"))
+        .andExpect(jsonPath("$.storage.className").value("default"))
+        .andRespond(withStatus(HttpStatus.OK));
     mockServer.expect(times(1), requestTo(containsString("controller/task/execute")))
         .andExpect(method(HttpMethod.POST)).andRespond(withStatus(HttpStatus.OK));
 

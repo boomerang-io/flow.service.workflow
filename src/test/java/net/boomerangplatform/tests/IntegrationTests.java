@@ -100,7 +100,9 @@ public abstract class IntegrationTests extends AbstractFlowTests {
             "tests/setup/templates/33.json",
             "tests/setup/templates/34.json"));
     data.put("flow_teams", Arrays.asList("tests/setup/teams/team1.json"));
-    data.put("flow_settings", Arrays.asList("db/flow_settings/setting1.json"));
+    data.put("flow_settings", Arrays.asList("db/flow_settings/setting1.json",
+        "db/flow_settings/setting2.json",
+        "db/flow_settings/setting3.json"));
 
     getTestCaseData(data);
 

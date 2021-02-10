@@ -92,6 +92,25 @@ public class ControllerClientImpl implements ControllerClient {
 
     final WorkflowStorage storage = new WorkflowStorage();
     storage.setEnable(enableStorage);
+    
+    String storageClassName =
+        this.flowSettinigs.getConfiguration("workflow", "storage.class").getValue();
+    if (storageClassName != null && !storageClassName.isBlank()) {
+      storage.setClassName(storageClassName);
+    }
+    
+    String storageAccessMode =
+        this.flowSettinigs.getConfiguration("workflow", "storage.accessMode").getValue();
+    if (storageAccessMode != null && !storageAccessMode.isBlank()) {
+      storage.setAccessMode(storageAccessMode);
+    }
+    
+    String storageDefaultSize =
+        this.flowSettinigs.getConfiguration("workflow", "storage.size").getValue();
+    if (storageDefaultSize != null && !storageDefaultSize.isBlank()) {
+      storage.setSize(storageDefaultSize);
+    }
+  
     request.setWorkflowStorage(storage);
 
     logPayload(CREATEWORKFLOWREQUEST, request);
