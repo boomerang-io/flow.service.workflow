@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration status="INFO">
    <Appenders>
-      <Console name="Console" target="SYSTEM_OUT">
-         <PatternLayout pattern="[%clr{%d{yyyy-MM-dd HH:mm:ss.SSS}}{faint}] [%clr{%level}] [%tid] %clr{%-40.40c{3.2}}{cyan} %clr{:}{faint} %m%n%xwEx" />
-      </Console>
+   
+    <Console name="Console" target="SYSTEM_OUT" follow="true">
+        <PatternLayout pattern="[%d{${LOG_DATEFORMAT_PATTERN:-yyyy-MM-dd HH:mm:ss.SSS}}] [%highlight{${LOG_LEVEL_PATTERN:-%5p}}{FATAL=red blink, ERROR=red, WARN=yellow bold, INFO=green, DEBUG=green bold, TRACE=blue}] [%25.25t] [%style{%-25.25C{1.}}{cyan}] : %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"/>
+    </Console>
+
    </Appenders>
    <Loggers>
       <Root level="info">

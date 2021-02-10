@@ -85,8 +85,9 @@ public class TaskServiceImpl implements TaskService {
   @Autowired
   private LockManager lockManager;
 
-  private static final Logger LOGGER = LogManager.getLogger(TaskServiceImpl.class);
-  
+  private static final Logger LOGGER = LogManager.getLogger();
+
+
   @Override
   @Async
   public void createTask(InternalTaskRequest request) {
@@ -359,7 +360,7 @@ public class TaskServiceImpl implements TaskService {
     LOGGER.debug("[{}] Looking at next tasks",workflowActivity.getId());
     LOGGER.debug("Testing at next tasks");
     List<Task> nextNodes = this.getTasksDependants(tasks, currentTask);
-    LOGGER.debug("Testing at next tasks: {}" + nextNodes.size());
+    LOGGER.debug("Testing at next tasks: {}", nextNodes.size());
     
     for (Task next : nextNodes) {
       
