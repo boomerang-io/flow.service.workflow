@@ -43,6 +43,7 @@ import net.boomerangplatform.service.refactor.TaskClient;
 @Primary
 public class ControllerClientImpl implements ControllerClient {
 
+
   private static final Logger LOGGER = LogManager.getLogger();
 
   @Value("${controller.createtask.url}")
@@ -72,7 +73,13 @@ public class ControllerClientImpl implements ControllerClient {
 
   @Value("${controller.terminateworkflow.url}")
   private String terminateWorkflowURL;
-
+  
+  private static final String CREATEWORKFLOWREQUEST = "Create Workflow Request";
+  private static final String TERMINATEWORKFLOWREQUEST = "Terminate Workflow Request";
+  private static final String CREATETEMPLATETASKREQUEST = "Create Template Task Request";
+  private static final String CREATECUSTOMTASKREQUEST = "Create Custom Task Request";
+  private static final String ERRORLOGPRFIX = "Error for: {}";
+  
   @Override
   public boolean createFlow(String workflowId, String workflowName, String activityId,
       boolean enableStorage, Map<String, String> properties) {
@@ -87,13 +94,19 @@ public class ControllerClientImpl implements ControllerClient {
     storage.setEnable(enableStorage);
     request.setWorkflowStorage(storage);
 
-    logPayload("Create Workflow Request", request);
+    logPayload(CREATEWORKFLOWREQUEST, request);
+    Date startTime = new Date();
 
     try {
-      restTemplate.postForObject(createWorkflowURL, request, String.class);
+      restTemplate.postForObject(createWorkflowURL, request, String.class);    
     } catch (RestClientException ex) {
+      LOGGER.error(ERRORLOGPRFIX, CREATEWORKFLOWREQUEST);
+      LOGGER.error(ExceptionUtils.getStackTrace(ex));
       return false;
     }
+    
+    Date endTime = new Date();
+    logRequestTime(CREATEWORKFLOWREQUEST, startTime,endTime);
     return true;
   }
 
@@ -106,18 +119,23 @@ public class ControllerClientImpl implements ControllerClient {
     final WorkflowStorage storage = new WorkflowStorage();
     storage.setEnable(true);
     request.setWorkflowStorage(storage);
-    logPayload("Terminate Workflow Request", request);
+    logPayload(TERMINATEWORKFLOWREQUEST,request);
 
+    Date startTime = new Date();
     try {
       restTemplate.postForObject(terminateWorkflowURL, request, String.class);
-    } catch (RestClientException e) {
+    } catch (RestClientException ex) {
+      LOGGER.error(ERRORLOGPRFIX, TERMINATEWORKFLOWREQUEST);
+      LOGGER.error(ExceptionUtils.getStackTrace(ex));
       return false;
     }
+    Date endTime = new Date();
+    logRequestTime(TERMINATEWORKFLOWREQUEST, startTime,endTime);
     return true;
   }
 
   @Override
-  @Async
+  @Async("flowAsyncExecutor")
   public void submitCustomTask(Task task, String activityId, String workflowName) {
 
     TaskResult taskResult = new TaskResult();
@@ -148,22 +166,8 @@ public class ControllerClientImpl implements ControllerClient {
     request.setCommand(command);
 
 
-    List<String> args = new LinkedList<>();
-    if (map.get("arguments") != null) {
-      String arguments = applicationProperties.getLayeredProperty("arguments");
-      if (!arguments.isBlank()) {
-        String[] lines = arguments.split("\\r?\\n");
-        args = new LinkedList<>();
-        for (String line : lines) {
-          String newValue =
-              propertyManager.replaceValueWithProperty(line, activityId, applicationProperties);
-          args.add(newValue);
-        }
-      }
-    }
-
+    List<String> args = prepareCustomTaskArguments(activityId, applicationProperties, map);
     request.setArguments(args);
-
     final Date startDate = new Date();
     taskExecution.setStartTime(startDate);
     taskExecution.setFlowTaskStatus(TaskStatus.inProgress);
@@ -179,11 +183,16 @@ public class ControllerClientImpl implements ControllerClient {
     Map<String, String> outputProperties = new HashMap<>();
 
     try {
+      
+      Date startTime = new Date();
       TaskResponse response =
           restTemplate.postForObject(createTaskURL, request, TaskResponse.class);
 
+      Date endTime = new Date();
+      
+      logRequestTime(CREATECUSTOMTASKREQUEST, startTime,endTime);
       if (response != null) {
-        this.logPayload("Create Task Response", response);
+        this.logPayload(CREATECUSTOMTASKREQUEST, response);
         if (response.getResults() != null && !response.getResults().isEmpty()) {
           outputProperties = response.getResults();
         }
@@ -201,6 +210,8 @@ public class ControllerClientImpl implements ControllerClient {
     } catch (RestClientException ex) {
       taskExecution.setFlowTaskStatus(TaskStatus.failure);
       taskResult.setStatus(TaskStatus.failure);
+      LOGGER.error(ERRORLOGPRFIX, CREATECUSTOMTASKREQUEST);
+      LOGGER.error(ExceptionUtils.getStackTrace(ex));
     }
 
     taskService.save(taskExecution);
@@ -212,14 +223,30 @@ public class ControllerClientImpl implements ControllerClient {
     flowTaskClient.endTask(response);
   }
 
+  private List<String> prepareCustomTaskArguments(String activityId,
+      ControllerRequestProperties applicationProperties, Map<String, String> map) {
+    List<String> args = new LinkedList<>();
+    if (map.get("arguments") != null) {
+      String arguments = applicationProperties.getLayeredProperty("arguments");
+      if (!arguments.isBlank()) {
+        String[] lines = arguments.split("\\r?\\n");
+        args = new LinkedList<>();
+        for (String line : lines) {
+          String newValue =
+              propertyManager.replaceValueWithProperty(line, activityId, applicationProperties);
+          args.add(newValue);
+        }
+      }
+    }
+    return args;
+  }
+
 
   @Override
-  @Async
+  @Async("flowAsyncExecutor")
   public void submitTemplateTask(Task task, String activityId, String workflowName) {
 
-
     ActivityEntity activity = this.activityService.findWorkflowActivity(activityId);
-
 
     TaskResult taskResult = new TaskResult();
     TaskExecutionEntity taskExecution =
@@ -245,24 +272,7 @@ public class ControllerClientImpl implements ControllerClient {
     TaskConfiguration taskConfiguration = buildTaskConfiguration();
     request.setConfiguration(taskConfiguration);
 
-    if (task.getRevision() != null) {
-      Revision revision = task.getRevision();
-      request.setArguments(revision.getArguments());
-
-      if (revision.getImage() != null && !revision.getImage().isBlank()) {
-        request.setImage(revision.getImage());
-      } else {
-        String workerImage =
-            this.flowSettinigs.getConfiguration("controller", "worker.image").getValue();
-        request.setImage(workerImage);
-      }
-
-      if (revision.getCommand() != null && !revision.getCommand().isBlank()) {
-        request.setCommand(revision.getCommand());
-      }
-    } else {
-      taskResult.setStatus(TaskStatus.invalid);
-    }
+    prepareTemplateImageRequest(task, taskResult, request);
 
     final Date startDate = new Date();
 
@@ -273,13 +283,20 @@ public class ControllerClientImpl implements ControllerClient {
     request.setWorkspaces(activity.getTaskWorkspaces());
     Map<String, String> outputProperties = new HashMap<>();
 
-    logPayload("Create Task Request", request);
+    logPayload(CREATETEMPLATETASKREQUEST, request);
     try {
+      
+      Date startTime = new Date();
+      
       TaskResponse response =
           restTemplate.postForObject(createTaskURL, request, TaskResponse.class);
 
+      Date endTime = new Date();
+      
+      logRequestTime(CREATETEMPLATETASKREQUEST, startTime,endTime);
+     
       if (response != null) {
-        this.logPayload("Create Task Response", response);
+        this.logPayload(CREATETEMPLATETASKREQUEST, response);
         if (response.getResults() != null && !response.getResults().isEmpty()) {
           outputProperties = response.getResults();
         }
@@ -300,7 +317,10 @@ public class ControllerClientImpl implements ControllerClient {
     } catch (RestClientException ex) {
       taskExecution.setFlowTaskStatus(TaskStatus.failure);
       taskResult.setStatus(TaskStatus.failure);
+      
+      LOGGER.error(ERRORLOGPRFIX, CREATETEMPLATETASKREQUEST);
       LOGGER.error(ExceptionUtils.getStackTrace(ex));
+      
     }
     taskService.save(taskExecution);
 
@@ -310,6 +330,28 @@ public class ControllerClientImpl implements ControllerClient {
     response.setOutputProperties(outputProperties);
 
     flowTaskClient.endTask(response);
+  }
+
+  private void prepareTemplateImageRequest(Task task, TaskResult taskResult,
+      final TaskTemplate request) {
+    if (task.getRevision() != null) {
+      Revision revision = task.getRevision();
+      request.setArguments(revision.getArguments());
+
+      if (revision.getImage() != null && !revision.getImage().isBlank()) {
+        request.setImage(revision.getImage());
+      } else {
+        String workerImage =
+            this.flowSettinigs.getConfiguration("controller", "worker.image").getValue();
+        request.setImage(workerImage);
+      }
+
+      if (revision.getCommand() != null && !revision.getCommand().isBlank()) {
+        request.setCommand(revision.getCommand());
+      }
+    } else {
+      taskResult.setStatus(TaskStatus.invalid);
+    }
   }
 
   private TaskConfiguration buildTaskConfiguration() {
@@ -324,7 +366,7 @@ public class ControllerClientImpl implements ControllerClient {
     String enableDebugFlag =
         this.flowSettinigs.getConfiguration("controller", "enable.debug").getValue();
     if (settingsPolicy != null) {
-      enableDebug = Boolean.valueOf(enableDebugFlag).booleanValue();
+      enableDebug = Boolean.parseBoolean(enableDebugFlag);
     }
 
     taskConfiguration.setDeletion(taskDeletion);
@@ -336,10 +378,15 @@ public class ControllerClientImpl implements ControllerClient {
     try {
       ObjectMapper objectMapper = new ObjectMapper();
       String payload = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(request);
-      LOGGER.info("Received Request: {}", payloadName);
-      LOGGER.info(payload);
+      LOGGER.debug("Creating For Palyoad Type: {}", payloadName);
+      LOGGER.debug(payload);
     } catch (JsonProcessingException e) {
       LOGGER.error(ExceptionUtils.getStackTrace(e));
     }
+  }
+  
+  private void logRequestTime(String payloadName, Date start, Date end) {
+    long diff = end.getTime() - start.getTime();
+    LOGGER.debug("Benchmark [Request Type]: {} - {} ms", payloadName, diff);
   }
 }
