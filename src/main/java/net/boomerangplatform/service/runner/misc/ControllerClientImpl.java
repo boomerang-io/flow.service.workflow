@@ -43,7 +43,6 @@ import net.boomerangplatform.service.refactor.TaskClient;
 @Primary
 public class ControllerClientImpl implements ControllerClient {
 
-
   private static final Logger LOGGER = LogManager.getLogger();
 
   @Value("${controller.createtask.url}")
@@ -84,6 +83,7 @@ public class ControllerClientImpl implements ControllerClient {
   public boolean createFlow(String workflowId, String workflowName, String activityId,
       boolean enableStorage, Map<String, String> properties) {
 
+   
     final Workflow request = new Workflow();
     request.setWorkflowActivityId(activityId);
     request.setWorkflowName(workflowName);

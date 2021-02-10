@@ -8,14 +8,23 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import javax.net.ssl.SSLContext;
+import org.apache.http.HeaderElement;
+import org.apache.http.HeaderElementIterator;
+import org.apache.http.HeaderIterator;
 import org.apache.http.HttpHost;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.conn.ConnectionKeepAliveStrategy;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.conn.ssl.TrustStrategy;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.apache.http.message.BasicHeaderElementIterator;
+import org.apache.http.protocol.HTTP;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
@@ -31,6 +40,13 @@ public class RestConfig {
 
   @Value("${proxy.port:#{null}}")
   private Optional<String> boomerangProxyPort;
+
+  private static final int MAX_ROUTE_CONNECTIONS = 200;
+  private static final int MAX_TOTAL_CONNECTIONS = 200;
+  private static final int DEFAULT_KEEP_ALIVE_TIME = Integer.MAX_VALUE;
+  private static final int CONNECTION_TIMEOUT = Integer.MAX_VALUE;
+  private static final int REQUEST_TIMEOUT = Integer.MAX_VALUE;
+  private static final int SOCKET_TIMEOUT = Integer.MAX_VALUE;
 
   @Bean
   @Qualifier("externalRestTemplate")
@@ -68,13 +84,9 @@ public class RestConfig {
   @Bean
   @Qualifier("internalRestTemplate")
   public RestTemplate internalRestTemplate() {
-    final HttpComponentsClientHttpRequestFactory requestFactory =
-        new HttpComponentsClientHttpRequestFactory();
-    final RestTemplate template = new RestTemplate(requestFactory);
-    setRestTemplateInterceptors(template);
-    return template;
+    return new RestTemplateBuilder().requestFactory(this::clientHttpRequestFactory).build();
   }
-  
+
   @Bean
   @Qualifier("selfRestTemplate")
   public RestTemplate selfRestTemplate() {
@@ -91,5 +103,35 @@ public class RestConfig {
       interceptors = new ArrayList<>();
     }
     restTemplate.setInterceptors(interceptors);
+  }
+
+
+  public HttpComponentsClientHttpRequestFactory clientHttpRequestFactory() {
+    HttpComponentsClientHttpRequestFactory clientHttpRequestFactory =
+        new HttpComponentsClientHttpRequestFactory();
+    clientHttpRequestFactory.setHttpClient(httpClient());
+    return clientHttpRequestFactory;
+  }
+
+  public CloseableHttpClient httpClient() {
+    RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(CONNECTION_TIMEOUT)
+        .setConnectionRequestTimeout(REQUEST_TIMEOUT).setSocketTimeout(SOCKET_TIMEOUT).build();
+    return HttpClients.custom().setDefaultRequestConfig(requestConfig)
+        .setConnectionManager(poolingConnectionManager())
+        .setKeepAliveStrategy(connectionKeepAliveStrategy()).build();
+  }
+
+  public PoolingHttpClientConnectionManager poolingConnectionManager() {
+    PoolingHttpClientConnectionManager poolingConnectionManager =
+        new PoolingHttpClientConnectionManager();
+    poolingConnectionManager.setMaxTotal(MAX_TOTAL_CONNECTIONS);
+    poolingConnectionManager.setDefaultMaxPerRoute(MAX_ROUTE_CONNECTIONS);
+    return poolingConnectionManager;
+  }
+
+  public ConnectionKeepAliveStrategy connectionKeepAliveStrategy() {
+    return (httpResponse, httpContext) -> {
+      return DEFAULT_KEEP_ALIVE_TIME;
+    };
   }
 }
