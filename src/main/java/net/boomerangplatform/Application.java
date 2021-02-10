@@ -4,6 +4,7 @@ import java.time.Clock;
 import java.util.concurrent.Executor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
@@ -20,6 +21,9 @@ import net.boomerangplatform.service.refactor.TaskServiceImpl;
 public class Application {
 
   private static final Logger LOGGER = LogManager.getLogger(Application.class);
+  
+  @Value("${server.tomcat.max-threads}")
+  private Integer tomcatMaxThreads;
   
   public static void main(String[] args) {
     SpringApplication.run(Application.class, args);
@@ -38,7 +42,9 @@ public class Application {
 
     LOGGER.info("Creating task executor service: (max concurrent threads: %d) (max queue: %d)",
         maxThreads, maxQueue);
-
+    
+    LOGGER.info("Tomcat max threads: " +  tomcatMaxThreads);
+   
     ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
     executor.setCorePoolSize(maxThreads);
     executor.setMaxPoolSize(maxThreads);

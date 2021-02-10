@@ -100,7 +100,9 @@ public class TaskServiceImpl implements TaskService {
     
     ThreadPoolTaskExecutor threadExecutor = (ThreadPoolTaskExecutor) executor;
     LOGGER.debug("Thread Executor (Active Count):" + threadExecutor.getActiveCount());
-        
+    LOGGER.debug("Thread Executor (Core Pool Size):" + threadExecutor.getCorePoolSize());
+    LOGGER.debug("Thread Executor (Current Pool Size):" + threadExecutor.getPoolSize());
+    
   }
   
   @Override
