@@ -117,11 +117,18 @@ public class ControllerClientImpl implements ControllerClient {
     request.setWorkflowStorage(storage);
     logPayload("Terminate Workflow Request", request);
 
+    
+    Date startTime = new Date();
+    
     try {
       restTemplate.postForObject(terminateWorkflowURL, request, String.class);
     } catch (RestClientException e) {
       return false;
     }
+    Date endTime = new Date();
+    
+    logPayloadTime("Terminate Workflow Request", startTime,endTime);
+    
     return true;
   }
 
@@ -188,9 +195,15 @@ public class ControllerClientImpl implements ControllerClient {
     Map<String, String> outputProperties = new HashMap<>();
 
     try {
+      
+      Date startTime = new Date();
       TaskResponse response =
           restTemplate.postForObject(createTaskURL, request, TaskResponse.class);
 
+      Date endTime = new Date();
+      
+      logPayloadTime("Create Task Request", startTime,endTime);
+      
       if (response != null) {
         this.logPayload("Create Task Response", response);
         if (response.getResults() != null && !response.getResults().isEmpty()) {
@@ -284,9 +297,17 @@ public class ControllerClientImpl implements ControllerClient {
 
     logPayload("Create Task Request", request);
     try {
+      
+      Date startTime = new Date();
+      
       TaskResponse response =
           restTemplate.postForObject(createTaskURL, request, TaskResponse.class);
 
+      Date endTime = new Date();
+      
+      logPayloadTime("Create Task Request", startTime,endTime);
+      
+      
       if (response != null) {
         this.logPayload("Create Task Response", response);
         if (response.getResults() != null && !response.getResults().isEmpty()) {
