@@ -124,11 +124,13 @@ public class FlowActivityServiceImpl implements FlowActivityService {
       FlowExecutionRequest request, Optional<List<TaskWorkspace>> taskWorkspaces) {
     /* Create new one based of work flow version id. */
     final RevisionEntity entity = versionService.getWorkflowlWithId(workflowVersionId);
+    WorkflowEntity workflow = workflowService.getWorkflow(entity.getWorkFlowId());
 
-    final ActivityEntity activity = new ActivityEntity();
+    final FlowActivity activity = new FlowActivity();
     activity.setWorkflowRevisionid(workflowVersionId);
     activity.setWorkflowId(entity.getWorkFlowId());
-    activity.setTeamId(workflowService.getWorkflow(entity.getWorkFlowId()).getFlowTeamId());
+    activity.setTeamId(workflow.getFlowTeamId());
+    activity.setScope(workflow.getScope());
     activity.setCreationDate(new Date());
 
     if (taskWorkspaces.isPresent()) {
