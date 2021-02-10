@@ -87,13 +87,22 @@ public class ControllerClientImpl implements ControllerClient {
     storage.setEnable(enableStorage);
     request.setWorkflowStorage(storage);
 
+    
     logPayload("Create Workflow Request", request);
+    Date startTime = new Date();
 
+    
     try {
       restTemplate.postForObject(createWorkflowURL, request, String.class);
+    
     } catch (RestClientException ex) {
       return false;
     }
+    
+    Date endTime = new Date();
+    
+    logPayloadTime("Create Workflow Request", startTime,endTime);
+    
     return true;
   }
 
@@ -342,4 +351,11 @@ public class ControllerClientImpl implements ControllerClient {
       LOGGER.error(ExceptionUtils.getStackTrace(e));
     }
   }
+  
+  private void logPayloadTime(String payloadName, Date start, Date end) {
+    long diff = end.getTime() - start.getTime();
+    LOGGER.info("Request Type: {} duration: {} ms", payloadName, diff);
+    
+  }
+  
 }
