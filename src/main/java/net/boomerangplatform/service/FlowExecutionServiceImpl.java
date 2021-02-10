@@ -262,15 +262,21 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
     }
    
 
+    LOGGER.debug("Creating flow: {}", activityId );
+    
     controllerClient.createFlow(workflowId, workflowName, activityId, enablePVC, executionProperties);
     
+    LOGGER.debug("Completed Creating flow: {}", activityId );
+    
     final Task startTask =  tasksToRun.stream().filter(tsk -> TaskType.start.equals(tsk.getTaskType())).findAny().orElse(null);
+    
     executeNextStep(activityEntity, tasksToRun,startTask, start, end, graph);
   }
   
   private void executeNextStep(ActivityEntity workflowActivity, List<Task> tasks,
       Task currentTask, final Task start, final Task end,
       final Graph<String, DefaultEdge> graph) {
+    LOGGER.debug("executeNextStep: {} ", workflowActivity.getId());
     
     try {
       List<Task> nextNodes = this.getTasksDependants(tasks, currentTask);
@@ -282,6 +288,10 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
         if (nodes.contains(next.getTaskId())) {
           InternalTaskRequest taskRequest = new InternalTaskRequest();
           taskRequest.setActivityId(next.getTaskActivityId());
+          
+          LOGGER.debug("Preparing start task request for: {}", taskRequest.getActivityId());
+          
+          
           taskClient.startTask(taskRequest);
         }       
       }
