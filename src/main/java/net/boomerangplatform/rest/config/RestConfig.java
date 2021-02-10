@@ -9,11 +9,13 @@ import java.util.List;
 import java.util.Optional;
 import javax.net.ssl.SSLContext;
 import org.apache.http.HttpHost;
+import org.apache.http.conn.HttpClientConnectionManager;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.conn.ssl.TrustStrategy;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -70,16 +72,23 @@ public class RestConfig {
   public RestTemplate internalRestTemplate() {
     final HttpComponentsClientHttpRequestFactory requestFactory =
         new HttpComponentsClientHttpRequestFactory();
+
     final RestTemplate template = new RestTemplate(requestFactory);
     setRestTemplateInterceptors(template);
     return template;
   }
-  
+
   @Bean
   @Qualifier("selfRestTemplate")
   public RestTemplate selfRestTemplate() {
+	 PoolingHttpClientConnectionManager poolingConnManager = new PoolingHttpClientConnectionManager();
+	 poolingConnManager.setDefaultMaxPerRoute(50);
+	 poolingConnManager.setMaxTotal(50);
+
+    CloseableHttpClient client =
+        HttpClients.custom().setConnectionManager(poolingConnManager).build();
     final HttpComponentsClientHttpRequestFactory requestFactory =
-        new HttpComponentsClientHttpRequestFactory();
+        new HttpComponentsClientHttpRequestFactory(client);
     final RestTemplate template = new RestTemplate(requestFactory);
     setRestTemplateInterceptors(template);
     return template;
