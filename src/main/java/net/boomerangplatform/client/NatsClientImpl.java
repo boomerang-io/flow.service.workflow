@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
+import io.nats.client.ConnectionListener.Events;
 import io.nats.streaming.Message;
 import io.nats.streaming.MessageHandler;
 import io.nats.streaming.Options;
@@ -50,7 +51,10 @@ public class NatsClientImpl implements NatsClient {
 
 	      logger.info("Initializng subscriptions to NATS with URL: " + natsUrl + ", Cluster: " + natsCluster + ", Client ID: " + "flow-workflow-" + random);
 
-        Options cfOptions = new Options.Builder().natsUrl(natsUrl).clusterId(natsCluster).clientId("flow-workflow-" + random).build();
+        Options cfOptions = new Options.Builder().natsUrl(natsUrl).clusterId(natsCluster).connectionListener((conn, type) -> {
+          logger.info("Nats Connection Event: {}", type);
+ 
+        }).clientId("flow-workflow-" + random).build();
         StreamingConnectionFactory cf = new StreamingConnectionFactory(cfOptions);
         
         try {
