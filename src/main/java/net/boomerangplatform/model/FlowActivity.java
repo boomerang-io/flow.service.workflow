@@ -1,5 +1,6 @@
 package net.boomerangplatform.model;
 
+import java.util.LinkedList;
 import java.util.List;
 import org.springframework.beans.BeanUtils;
 import net.boomerangplatform.mongo.entity.ActivityEntity;
@@ -32,6 +33,7 @@ public class FlowActivity extends ActivityEntity {
 
   public FlowActivity(ActivityEntity entity) {
     BeanUtils.copyProperties(entity, this);
+    this.setProperties(new LinkedList<>());
   }
 
   public String getTeamName() {
