@@ -421,17 +421,19 @@ public class PropertyManagerImpl implements PropertyManager {
 
 
   private String getEncodedPropertiesForMap(Map<String, String> map) {
+    Properties properties = new Properties();
     
     for (Map.Entry<String,String> entry : map.entrySet()) {
       String originalKey = entry.getKey();
       String value = entry.getValue();
   
       String modifiedKey = originalKey.replaceAll("-", "\\.");
-      map.put(modifiedKey, value);
+//       map.put(modifiedKey, value);
+      properties.put(modifiedKey, value);
     }
       
     try {
-      Properties properties = new Properties();
+//       Properties properties = new Properties();
       properties.putAll(map);
       ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
       properties.store(outputStream, null);
