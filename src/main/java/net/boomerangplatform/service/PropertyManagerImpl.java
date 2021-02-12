@@ -422,14 +422,14 @@ public class PropertyManagerImpl implements PropertyManager {
 
   private String getEncodedPropertiesForMap(Map<String, String> map) {
     
-    if (map.containsKey("version-name")) {
-      map.put("version.name", map.get("version-name"));
+    for (Map.Entry<String,String> entry : map.entrySet()) {
+      String originalKey = entry.getKey();
+      String value = entry.getValue();
+  
+      String modifiedKey = originalKey.replaceAll("-", "\\.");
+      map.put(modifiedKey, value);
     }
-
-    if (map.containsKey("docker-image-name")) {
-      map.put("docker.image.name", map.get("docker-image-name"));
-    }
-    
+      
     try {
       Properties properties = new Properties();
       properties.putAll(map);
