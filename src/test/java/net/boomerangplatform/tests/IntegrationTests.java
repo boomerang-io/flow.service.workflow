@@ -8,6 +8,7 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -96,13 +97,11 @@ public abstract class IntegrationTests extends AbstractFlowTests {
             "tests/setup/templates/24.json", "tests/setup/templates/26.json",
             "tests/setup/templates/27.json", "tests/setup/templates/28.json",
             "tests/setup/templates/29.json", "tests/setup/templates/31.json",
-            "tests/setup/templates/32.json",
-            "tests/setup/templates/33.json",
+            "tests/setup/templates/32.json", "tests/setup/templates/33.json",
             "tests/setup/templates/34.json"));
     data.put("flow_teams", Arrays.asList("tests/setup/teams/team1.json"));
     data.put("flow_settings", Arrays.asList("db/flow_settings/setting1.json",
-        "db/flow_settings/setting2.json",
-        "db/flow_settings/setting3.json"));
+        "db/flow_settings/setting2.json", "db/flow_settings/setting3.json"));
 
     getTestCaseData(data);
 
@@ -116,7 +115,7 @@ public abstract class IntegrationTests extends AbstractFlowTests {
     HttpEntity<FlowExecutionRequest> requestUpdate = new HttpEntity<>(request, headers);
     return requestUpdate;
   }
-  
+
   protected HttpEntity<RequestFlowExecution> createInternalHeaders(RequestFlowExecution request) {
     HttpHeaders headers = new HttpHeaders();
     headers.add(AUTHORIZATION_HEADER, TOKEN_PREFIX + BEARER_TOKEN);
@@ -126,32 +125,38 @@ public abstract class IntegrationTests extends AbstractFlowTests {
   }
 
   protected FlowActivity submitWorkflow(String workflowId) throws RestClientException {
-    return this.submitWorkflow(workflowId, new FlowExecutionRequest());
+
+    FlowExecutionRequest request = new FlowExecutionRequest();
+
+    Map<String, String> inputs = new HashMap<String, String>();
+    inputs.put("magic", "$(params.workflow-name)");
+    request.setProperties(inputs);
+    return this.submitWorkflow(workflowId, request);
   }
 
   protected void approveWorkflow(boolean status, String activityId) {
     try {
-      
+
       ApprovalRequest request = new ApprovalRequest();
       request.setApproved(status);
       request.setComments("Test comment");
       request.setId(activityId);
-      
+
       HttpHeaders headers = new HttpHeaders();
       headers.add(AUTHORIZATION_HEADER, TOKEN_PREFIX + BEARER_TOKEN);
       headers.add("Content-type", "application/json");
       HttpEntity<ApprovalRequest> requestUpdate = new HttpEntity<>(request, headers);
-      
-      String url = "http://localhost:" + port + "/workflow/approvals/action?id="
-          + activityId + "&approved=" + status;
-      
+
+      String url = "http://localhost:" + port + "/workflow/approvals/action?id=" + activityId
+          + "&approved=" + status;
+
       ResponseEntity<String> response =
           testRestTemplate.exchange(url, HttpMethod.PUT, requestUpdate, String.class);
-      
+
     } catch (RestClientException e) {
     }
   }
-  
+
   protected List<Approval> getApprovals() {
 
     HttpHeaders headers = new HttpHeaders();
@@ -163,10 +168,11 @@ public abstract class IntegrationTests extends AbstractFlowTests {
         testRestTemplate.exchange("http://localhost:" + port + "/workflow/approvals/mine",
             HttpMethod.GET, requestUpdate, new ParameterizedTypeReference<List<Approval>>() {});
     List<Approval> approvalList = latestActivity.getBody();
-    
+
     try {
       ObjectMapper objectMapper = new ObjectMapper();
-      String payload = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(approvalList);
+      String payload =
+          objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(approvalList);
       LOGGER.info("Logging Approval Activity: ");
       LOGGER.info(payload);
     } catch (JsonProcessingException e) {
@@ -199,10 +205,10 @@ public abstract class IntegrationTests extends AbstractFlowTests {
     }
     return null;
   }
-  
 
-  protected FlowWebhookResponse submitInternalWorkflow(String workflowId, RequestFlowExecution request)
-      throws RestClientException {
+
+  protected FlowWebhookResponse submitInternalWorkflow(String workflowId,
+      RequestFlowExecution request) throws RestClientException {
     try {
       HttpEntity<RequestFlowExecution> headers = createInternalHeaders(request);
       ResponseEntity<String> response =
@@ -216,7 +222,7 @@ public abstract class IntegrationTests extends AbstractFlowTests {
         } catch (Exception e) {
           e.printStackTrace();
         }
-      
+
         return activity;
       }
     } catch (RestClientException e) {
@@ -235,12 +241,12 @@ public abstract class IntegrationTests extends AbstractFlowTests {
     ResponseEntity<String> latestActivity =
         testRestTemplate.exchange("http://localhost:" + port + "/workflow/activity/" + id,
             HttpMethod.GET, requestUpdate, String.class);
-    
+
     String str = latestActivity.getBody();
     System.out.println(str);
-    
+
     ObjectMapper mapper = new ObjectMapper();
-   
+
     FlowActivity finalActivity;
     try {
       finalActivity = mapper.readValue(str, FlowActivity.class);
@@ -271,9 +277,10 @@ public abstract class IntegrationTests extends AbstractFlowTests {
   public void setUp() throws IOException {
     super.setUp();
     mockServer = MockRestServiceServer.bindTo(this.restTemplate).ignoreExpectOrder(true).build();
-    mockServer.expect(times(1), requestTo(containsString("http://localhost:8084/internal/users/user")))
-        .andExpect(method(HttpMethod.GET)).andRespond(
-            withSuccess(getMockFile("mock/users/users.json"), MediaType.APPLICATION_JSON));
+    mockServer
+        .expect(times(1), requestTo(containsString("http://localhost:8084/internal/users/user")))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withSuccess(getMockFile("mock/users/users.json"), MediaType.APPLICATION_JSON));
 
     mockServer.expect(times(1), requestTo(containsString("controller/workflow/create")))
         .andExpect(method(HttpMethod.POST)).andRespond(withStatus(HttpStatus.OK));

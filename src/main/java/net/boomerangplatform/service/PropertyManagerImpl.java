@@ -112,6 +112,9 @@ public class PropertyManagerImpl implements PropertyManager {
       if (value != null) {
         String newValue = this.replaceValueWithProperty(value, activityId, applicationProperties);
         newValue = this.replaceValueWithProperty(newValue, activityId, applicationProperties);
+
+        newValue = this.replaceAllParams(newValue, activityId, applicationProperties);
+
         workflowInputProperties.put(key, newValue);
       } else {
         workflowInputProperties.put(key, "");
@@ -227,8 +230,6 @@ public class PropertyManagerImpl implements PropertyManager {
       if (activity.getInitiatedByUserId() != null) {
         systemProperties.put("workflow-activity-initiator", activity.getInitiatedByUserId());
       }
-
-
     }
 
     systemProperties.put("workflow-name", workflow.getName());
@@ -287,13 +288,7 @@ public class PropertyManagerImpl implements PropertyManager {
       int end = m.end() + 1;
       String[] components = extractedValue.split("\\.");
 
-      if (components.length == 1) {
-        String allParams = components[0];
-        if ("allParams".equals(allParams)) {
-          Map<String, String> properties = applicationProperties.getMap(false);
-          replaceValue = this.getEncodedPropertiesForMap(properties);
-        }
-      } else if (components.length == 2) {
+      if (components.length == 2) {
         List<String> reservedList = Arrays.asList(reserved);
 
         String params = components[0];
@@ -340,6 +335,50 @@ public class PropertyManagerImpl implements PropertyManager {
               replaceValue = "";
             }
           }
+        }
+      }
+
+      if (replaceValue != null) {
+        String regexStr = value.substring(start, end);
+        originalValues.add(regexStr);
+        newValues.add(replaceValue);
+      }
+    }
+
+    String[] originalValuesArray = originalValues.toArray(new String[originalValues.size()]);
+    String[] newValuesArray = newValues.toArray(new String[newValues.size()]);
+    String updatedString = StringUtils.replaceEach(value, originalValuesArray, newValuesArray);
+    return updatedString;
+  }
+
+  private String replaceAllParams(String value, String activityId,
+      ControllerRequestProperties applicationProperties) {
+
+    String regex = "(?<=\\$\\().+?(?=\\))";
+    Pattern pattern = Pattern.compile(regex);
+    Matcher m = pattern.matcher(value);
+    List<String> originalValues = new LinkedList<>();
+    List<String> newValues = new LinkedList<>();
+    while (m.find()) {
+      String extractedValue = m.group(0);
+      String replaceValue = null;
+
+      int start = m.start() - 2;
+      int end = m.end() + 1;
+      String[] components = extractedValue.split("\\.");
+
+      if (components.length == 1) {
+        String allParams = components[0];
+        if ("allParams".equals(allParams)) {
+          Map<String, String> properties = applicationProperties.getMap(false);
+          for (Map.Entry<String, String> entry : properties.entrySet()) {
+            String originalValue = entry.getValue();
+            String newValue =
+                this.replaceValueWithProperty(originalValue, activityId, applicationProperties);
+            newValue = this.replaceValueWithProperty(newValue, activityId, applicationProperties);
+            entry.setValue(newValue);
+          }
+          replaceValue = this.getEncodedPropertiesForMap(properties);
         }
       }
 
@@ -422,18 +461,15 @@ public class PropertyManagerImpl implements PropertyManager {
 
   private String getEncodedPropertiesForMap(Map<String, String> map) {
     Properties properties = new Properties();
-    
-    for (Map.Entry<String,String> entry : map.entrySet()) {
+
+    for (Map.Entry<String, String> entry : map.entrySet()) {
       String originalKey = entry.getKey();
       String value = entry.getValue();
-  
       String modifiedKey = originalKey.replaceAll("-", "\\.");
-//       map.put(modifiedKey, value);
       properties.put(modifiedKey, value);
     }
-      
+
     try {
-//       Properties properties = new Properties();
       properties.putAll(map);
       ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
       properties.store(outputStream, null);
