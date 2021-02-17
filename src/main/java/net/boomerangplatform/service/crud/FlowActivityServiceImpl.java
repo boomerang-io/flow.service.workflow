@@ -567,10 +567,13 @@ public class FlowActivityServiceImpl implements FlowActivityService {
   @Override
   public StreamingResponseBody getTaskLog(String activityId, String taskId) {
 
+    LOGGER.info("Getting task log for activity: {} task id: {}",activityId,taskId);
+    
     TaskExecutionEntity taskExecution = taskService.findByTaskIdAndActiityId(taskId, activityId);
 
     List<String> removeList = buildRemovalList(taskId, taskExecution);
-
+    LOGGER.info("Removal List Count: {} ", removeList.size());
+    
     return outputStream -> {
       Map<String, String> requestParams = new HashMap<>();
       requestParams.put("workflowId",
@@ -616,6 +619,9 @@ public class FlowActivityServiceImpl implements FlowActivityService {
   }
 
   private List<String> buildRemovalList(String taskId, TaskExecutionEntity taskExecution) {
+    
+   
+    
     String activityId = taskExecution.getActivityId();
     ActivityEntity activity =
         workflowActivityService.findWorkflowActivtyById(taskExecution.getActivityId());
@@ -628,7 +634,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
     Map<String, String> map = applicationProperties.getMap(false);
 
     String workflowRevisionId = activity.getWorkflowRevisionid();
-    System.out.println(workflowRevisionId);
+  
     
     RevisionEntity revision =
         this.versionService.getRevision(workflowRevisionId).get();
@@ -647,9 +653,12 @@ public class FlowActivityServiceImpl implements FlowActivityService {
             Revision rev = latestRevision.get();
             for (TaskTemplateConfig taskConfig : rev.getConfig()) {
               if ("password".equals(taskConfig.getType())) {
+                LOGGER.info("Found a secured property being used: {}", taskConfig.getKey());
+                
                 String key = taskConfig.getKey();
                 String value = propertyManager.replaceValueWithProperty(map.get(key), activityId, applicationProperties);
                 value = propertyManager.replaceValueWithProperty(value, activityId, applicationProperties);
+                LOGGER.info("New Value: {}", value);
                 
                 removalList.add(value);
               }
@@ -659,6 +668,10 @@ public class FlowActivityServiceImpl implements FlowActivityService {
       }
     }
     
+    LOGGER.info("Displaying removal list");
+    for (String item : removalList) {
+      LOGGER.info("Item: {}", item);
+    }
     return removalList;
   }
 
