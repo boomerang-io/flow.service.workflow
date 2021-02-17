@@ -603,12 +603,11 @@ public class FlowActivityServiceImpl implements FlowActivityService {
 
         while ((input = bufferedReader.readLine()) != null) {
           printWriter.println(satanzieInput(input, removeList));
+          printWriter.flush();
         }
 
         printWriter.close();
-        printWriter.flush();
         return null;
-
       };
       restTemplate.execute(encodedURL, HttpMethod.GET, requestCallback, responseExtractor);
 
@@ -643,7 +642,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
     DAGTask dagTask =
         dagTasks.stream().filter((t) -> taskId.equals(t.getTaskId())).findFirst().orElse(null);
     if (dagTask != null) {
-      if (dagTask.getTemplateVersion() == null && dagTask.getTemplateId() != null) {
+      if (dagTask.getTemplateId() != null) {
         FlowTaskTemplateEntity flowTaskTemplateEntity =
             templateService.getTaskTemplateWithId(dagTask.getTemplateId());
         if (flowTaskTemplateEntity != null && flowTaskTemplateEntity.getRevisions() != null) {
