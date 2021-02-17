@@ -8,5 +8,6 @@
     "startTime" : ISODate("2019-07-01T14:29:29.606Z"),
     "taskId" : "58340aec-4661-4768-aeec-307c1553409e",
     "taskName" : "Execute Shell 1",
+    "taskType" : "template",
     "outputs" : {}
 }

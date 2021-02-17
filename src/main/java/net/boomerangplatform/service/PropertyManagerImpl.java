@@ -222,8 +222,13 @@ public class PropertyManagerImpl implements PropertyManager {
     WorkflowEntity workflow = workflowService.getWorkflow(workflowId);
     if (activityId != null) {
       ActivityEntity activity = activityService.findWorkflowActivity(activityId);
-      systemProperties.put("workflow-version", Long.toString(
-          revisionService.getWorkflowlWithId(activity.getWorkflowRevisionid()).getVersion()));
+      RevisionEntity revision = revisionService.getWorkflowlWithId(activity.getWorkflowRevisionid());
+        
+      if (revision != null) {
+        systemProperties.put("workflow-version", Long.toString(
+            revision.getVersion()));
+      }
+      
       systemProperties.put("trigger-type", activity.getTrigger());
 
       systemProperties.put("workflow-activity-initiator", "");
