@@ -368,10 +368,12 @@ public class FlowActivityServiceImpl implements FlowActivityService {
     String teamId = null;
 
     WorkflowEntity workflow = workflowService.getWorkflow(workFlowId);
-    if (workflow.getScope().equals((WorkflowScope.system))) {
-      activitiesFiltered.add(activity);
-    } else if ((workflow.getScope().equals(WorkflowScope.team))) {
-      teamId = workflowService.getWorkflow(workFlowId).getFlowTeamId();
+    if (workflow != null) {
+      if (workflow.getScope().equals((WorkflowScope.system))) {
+        activitiesFiltered.add(activity);
+      } else if ((workflow.getScope().equals(WorkflowScope.team))) {
+        teamId = workflowService.getWorkflow(workFlowId).getFlowTeamId();
+      }
     }
 
     if (teamId != null) {
