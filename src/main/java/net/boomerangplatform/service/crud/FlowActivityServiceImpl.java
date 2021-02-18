@@ -572,14 +572,17 @@ public class FlowActivityServiceImpl implements FlowActivityService {
     LOGGER.info("Getting task log for activity: {} task id: {}",activityId,taskId);
     
     TaskExecutionEntity taskExecution = taskService.findByTaskIdAndActiityId(taskId, activityId);
-
-    List<String> removeList = buildRemovalList(taskId, taskExecution);
+    
+    ActivityEntity activity =
+        workflowActivityService.findWorkflowActivtyById(taskExecution.getActivityId());
+    
+    List<String> removeList = buildRemovalList(taskId, taskExecution, activity);
     LOGGER.info("Removal List Count: {} ", removeList.size());
     
     return outputStream -> {
       Map<String, String> requestParams = new HashMap<>();
       requestParams.put("workflowId",
-          flowActivityService.findWorkflowActivtyById(activityId).getWorkflowId());
+          activity.getWorkflowId());
       requestParams.put("workflowActivityId", activityId);
       requestParams.put("taskActivityId", taskExecution.getId());
       requestParams.put("taskId", taskId);
@@ -595,37 +598,26 @@ public class FlowActivityServiceImpl implements FlowActivityService {
 
       ResponseExtractor<Void> responseExtractor = restTemplateResponse -> {
 
-
         InputStream is = restTemplateResponse.getBody();
-
         Reader reader = new InputStreamReader(is);
         BufferedReader bufferedReader = new BufferedReader(reader);
-
         String input = null;
-
         while ((input = bufferedReader.readLine()) != null) {
           printWriter.println(satanzieInput(input, removeList));
           printWriter.flush();
         }
-
         printWriter.close();
         return null;
       };
       restTemplate.execute(encodedURL, HttpMethod.GET, requestCallback, responseExtractor);
 
       outputStream.close();
-
     };
-
   }
 
-  private List<String> buildRemovalList(String taskId, TaskExecutionEntity taskExecution) {
+  private List<String> buildRemovalList(String taskId, TaskExecutionEntity taskExecution, ActivityEntity activity) {
     
-   
-    
-    String activityId = taskExecution.getActivityId();
-    ActivityEntity activity =
-        workflowActivityService.findWorkflowActivtyById(taskExecution.getActivityId());
+    String activityId = activity.getId();
     List<String> removalList = new LinkedList<>();
     Task task = new Task();
     task.setTaskId(taskId);
