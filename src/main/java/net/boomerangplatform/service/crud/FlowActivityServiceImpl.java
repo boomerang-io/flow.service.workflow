@@ -4,6 +4,7 @@ import static java.util.stream.Collectors.groupingBy;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.Reader;
 import java.time.Instant;
@@ -577,7 +578,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
         workflowActivityService.findWorkflowActivtyById(taskExecution.getActivityId());
     
     List<String> removeList = buildRemovalList(taskId, taskExecution, activity);
-    LOGGER.info("Removal List Count: {} ", removeList.size());
+    LOGGER.debug("Removal List Count: {} ", removeList.size());
     
     return outputStream -> {
       Map<String, String> requestParams = new HashMap<>();
@@ -596,23 +597,42 @@ public class FlowActivityServiceImpl implements FlowActivityService {
 
       PrintWriter printWriter = new PrintWriter(outputStream);
 
-      ResponseExtractor<Void> responseExtractor = restTemplateResponse -> {
+      ResponseExtractor<Void> responseExtractor =
+          getResponseExtractorForRemovalList(removeList, outputStream, printWriter);
+      LOGGER.info("Startingg log download: {}",encodedURL);
+      
+      restTemplate.execute(encodedURL, HttpMethod.GET, requestCallback, responseExtractor);
+      outputStream.close();
+      LOGGER.info("Completed log download: {}",encodedURL);
+    };
+  }
 
+  private ResponseExtractor<Void> getResponseExtractorForRemovalList(List<String> maskWordList,
+      OutputStream outputStream, PrintWriter printWriter) {
+    if (maskWordList.isEmpty()) {
+      return restTemplateResponse -> {
+        InputStream is = restTemplateResponse.getBody();
+        int nRead;
+        byte[] data = new byte[1024];
+        while ((nRead = is.read(data, 0, data.length)) != -1) {
+          outputStream.write(data, 0, nRead);
+        }
+        return null;
+      };
+    } else {
+      return restTemplateResponse -> {
         InputStream is = restTemplateResponse.getBody();
         Reader reader = new InputStreamReader(is);
         BufferedReader bufferedReader = new BufferedReader(reader);
         String input = null;
         while ((input = bufferedReader.readLine()) != null) {
-          printWriter.println(satanzieInput(input, removeList));
+          printWriter.println(satanzieInput(input, maskWordList));
           printWriter.flush();
         }
         printWriter.close();
         return null;
       };
-      restTemplate.execute(encodedURL, HttpMethod.GET, requestCallback, responseExtractor);
-
-      outputStream.close();
-    };
+    }
   }
 
   private List<String> buildRemovalList(String taskId, TaskExecutionEntity taskExecution, ActivityEntity activity) {
@@ -628,9 +648,13 @@ public class FlowActivityServiceImpl implements FlowActivityService {
 
     String workflowRevisionId = activity.getWorkflowRevisionid();
   
-    
-    RevisionEntity revision =
-        this.versionService.getRevision(workflowRevisionId).get();
+    Optional<RevisionEntity> revisionOptional =
+        this.versionService.getRevision(workflowRevisionId);
+    if (revisionOptional.isEmpty()) {
+      return new LinkedList<>();
+    }
+ 
+    RevisionEntity revision = revisionOptional.get();
     Dag dag = revision.getDag();
     List<DAGTask> dagTasks = dag.getTasks();
     DAGTask dagTask =
@@ -646,12 +670,12 @@ public class FlowActivityServiceImpl implements FlowActivityService {
             Revision rev = latestRevision.get();
             for (TaskTemplateConfig taskConfig : rev.getConfig()) {
               if ("password".equals(taskConfig.getType())) {
-                LOGGER.info("Found a secured property being used: {}", taskConfig.getKey());
+                LOGGER.debug("Found a secured property being used: {}", taskConfig.getKey());
                 
                 String key = taskConfig.getKey();
                 String value = propertyManager.replaceValueWithProperty(map.get(key), activityId, applicationProperties);
                 value = propertyManager.replaceValueWithProperty(value, activityId, applicationProperties);
-                LOGGER.info("New Value: {}", value);
+                LOGGER.debug("New Value: {}", value);
                 
                 removalList.add(value);
               }
@@ -661,9 +685,9 @@ public class FlowActivityServiceImpl implements FlowActivityService {
       }
     }
     
-    LOGGER.info("Displaying removal list");
+    LOGGER.debug("Displaying removal list");
     for (String item : removalList) {
-      LOGGER.info("Item: {}", item);
+      LOGGER.debug("Item: {}", item);
     }
     return removalList;
   }
