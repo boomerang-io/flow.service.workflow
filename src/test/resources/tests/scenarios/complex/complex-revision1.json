@@ -116,7 +116,7 @@
                 "properties" : [ 
                     {
                         "key" : "path",
-                        "value" : ""
+                        "value" : "$(allParams)"
                     }, 
                     {
                         "key" : "shell",
