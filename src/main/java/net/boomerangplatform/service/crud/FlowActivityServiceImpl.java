@@ -132,6 +132,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
     activity.setTeamId(workflow.getFlowTeamId());
     activity.setScope(workflow.getScope());
     activity.setCreationDate(new Date());
+    activity.setStatus(TaskStatus.inProgress);
 
     if (taskWorkspaces.isPresent()) {
       activity.setTaskWorkspaces(taskWorkspaces.get());
