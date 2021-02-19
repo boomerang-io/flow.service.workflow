@@ -1,18 +1,25 @@
 package net.boomerangplatform.service.crud;
 
 import static java.util.stream.Collectors.groupingBy;
+import java.io.BufferedReader;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.io.Reader;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -37,27 +44,36 @@ import net.boomerangplatform.model.FlowExecutionRequest;
 import net.boomerangplatform.model.InsightsSummary;
 import net.boomerangplatform.model.ListActivityResponse;
 import net.boomerangplatform.model.Sort;
+import net.boomerangplatform.model.Task;
 import net.boomerangplatform.model.TeamWorkflowSummary;
 import net.boomerangplatform.model.controller.TaskWorkspace;
 import net.boomerangplatform.mongo.entity.ActivityEntity;
+import net.boomerangplatform.mongo.entity.FlowTaskTemplateEntity;
 import net.boomerangplatform.mongo.entity.FlowTeamEntity;
 import net.boomerangplatform.mongo.entity.FlowUserEntity;
 import net.boomerangplatform.mongo.entity.RevisionEntity;
 import net.boomerangplatform.mongo.entity.TaskExecutionEntity;
 import net.boomerangplatform.mongo.entity.WorkflowEntity;
 import net.boomerangplatform.mongo.model.CoreProperty;
+import net.boomerangplatform.mongo.model.Dag;
 import net.boomerangplatform.mongo.model.FlowTriggerEnum;
+import net.boomerangplatform.mongo.model.Revision;
 import net.boomerangplatform.mongo.model.TaskStatus;
+import net.boomerangplatform.mongo.model.TaskTemplateConfig;
 import net.boomerangplatform.mongo.model.TaskType;
 import net.boomerangplatform.mongo.model.UserType;
 import net.boomerangplatform.mongo.model.WorkflowScope;
+import net.boomerangplatform.mongo.model.next.DAGTask;
 import net.boomerangplatform.mongo.service.ActivityTaskService;
+import net.boomerangplatform.mongo.service.FlowTaskTemplateService;
 import net.boomerangplatform.mongo.service.FlowTeamService;
 import net.boomerangplatform.mongo.service.FlowWorkflowActivityService;
 import net.boomerangplatform.mongo.service.FlowWorkflowService;
 import net.boomerangplatform.mongo.service.RevisionService;
 import net.boomerangplatform.service.FlowApprovalService;
+import net.boomerangplatform.service.PropertyManager;
 import net.boomerangplatform.service.UserIdentityService;
+import net.boomerangplatform.service.refactor.ControllerRequestProperties;
 import net.boomerangplatform.util.DateUtil;
 
 @Service
@@ -95,7 +111,16 @@ public class FlowActivityServiceImpl implements FlowActivityService {
   private FlowApprovalService approvalService;
 
   @Autowired
+  private FlowWorkflowActivityService workflowActivityService;
+
+  @Autowired
   private TeamService teamService;
+
+  @Autowired
+  private FlowTaskTemplateService templateService;
+  
+  @Autowired
+  private PropertyManager propertyManager;
 
   private static final Logger LOGGER = LogManager.getLogger();
 
@@ -546,17 +571,22 @@ public class FlowActivityServiceImpl implements FlowActivityService {
   @Override
   public StreamingResponseBody getTaskLog(String activityId, String taskId) {
 
-    TaskExecutionEntity executionEntity = taskService.findByTaskIdAndActiityId(taskId, activityId);
-    if (executionEntity == null) {
-      return null;
-    }
-
+    LOGGER.info("Getting task log for activity: {} task id: {}",activityId,taskId);
+    
+    TaskExecutionEntity taskExecution = taskService.findByTaskIdAndActiityId(taskId, activityId);
+    
+    ActivityEntity activity =
+        workflowActivityService.findWorkflowActivtyById(taskExecution.getActivityId());
+    
+    List<String> removeList = buildRemovalList(taskId, taskExecution, activity);
+    LOGGER.debug("Removal List Count: {} ", removeList.size());
+    
     return outputStream -> {
       Map<String, String> requestParams = new HashMap<>();
       requestParams.put("workflowId",
-          flowActivityService.findWorkflowActivtyById(activityId).getWorkflowId());
+          activity.getWorkflowId());
       requestParams.put("workflowActivityId", activityId);
-      requestParams.put("taskActivityId", executionEntity.getId());
+      requestParams.put("taskActivityId", taskExecution.getId());
       requestParams.put("taskId", taskId);
 
       String encodedURL =
@@ -566,22 +596,107 @@ public class FlowActivityServiceImpl implements FlowActivityService {
       RequestCallback requestCallback = request -> request.getHeaders()
           .setAccept(Arrays.asList(MediaType.APPLICATION_OCTET_STREAM, MediaType.ALL));
 
-      ResponseExtractor<Void> responseExtractor = restTemplateResponse -> {
-        InputStream is = restTemplateResponse.getBody();
+      PrintWriter printWriter = new PrintWriter(outputStream);
 
+      ResponseExtractor<Void> responseExtractor =
+          getResponseExtractorForRemovalList(removeList, outputStream, printWriter);
+      LOGGER.info("Startingg log download: {}",encodedURL);
+      
+      restTemplate.execute(encodedURL, HttpMethod.GET, requestCallback, responseExtractor);
+      outputStream.close();
+      LOGGER.info("Completed log download: {}",encodedURL);
+    };
+  }
+
+  private ResponseExtractor<Void> getResponseExtractorForRemovalList(List<String> maskWordList,
+      OutputStream outputStream, PrintWriter printWriter) {
+    if (maskWordList.isEmpty()) {
+      return restTemplateResponse -> {
+        InputStream is = restTemplateResponse.getBody();
         int nRead;
         byte[] data = new byte[1024];
         while ((nRead = is.read(data, 0, data.length)) != -1) {
           outputStream.write(data, 0, nRead);
         }
-
         return null;
       };
-      restTemplate.execute(encodedURL, HttpMethod.GET, requestCallback, responseExtractor);
+    } else {
+      return restTemplateResponse -> {
+        InputStream is = restTemplateResponse.getBody();
+        Reader reader = new InputStreamReader(is);
+        BufferedReader bufferedReader = new BufferedReader(reader);
+        String input = null;
+        while ((input = bufferedReader.readLine()) != null) {
+          printWriter.println(satanzieInput(input, maskWordList));
+          printWriter.flush();
+        }
+        printWriter.close();
+        return null;
+      };
+    }
+  }
 
-      outputStream.close();
+  private List<String> buildRemovalList(String taskId, TaskExecutionEntity taskExecution, ActivityEntity activity) {
+    
+    String activityId = activity.getId();
+    List<String> removalList = new LinkedList<>();
+    Task task = new Task();
+    task.setTaskId(taskId);
+    task.setTaskType(taskExecution.getTaskType());
+    
+    ControllerRequestProperties applicationProperties = propertyManager.buildRequestPropertyLayering(task, activityId, activity.getWorkflowId());
+    Map<String, String> map = applicationProperties.getMap(false);
 
-    };
+    String workflowRevisionId = activity.getWorkflowRevisionid();
+  
+    Optional<RevisionEntity> revisionOptional =
+        this.versionService.getRevision(workflowRevisionId);
+    if (revisionOptional.isEmpty()) {
+      return new LinkedList<>();
+    }
+ 
+    RevisionEntity revision = revisionOptional.get();
+    Dag dag = revision.getDag();
+    List<DAGTask> dagTasks = dag.getTasks();
+    DAGTask dagTask =
+        dagTasks.stream().filter((t) -> taskId.equals(t.getTaskId())).findFirst().orElse(null);
+    if (dagTask != null) {
+      if (dagTask.getTemplateId() != null) {
+        FlowTaskTemplateEntity flowTaskTemplateEntity =
+            templateService.getTaskTemplateWithId(dagTask.getTemplateId());
+        if (flowTaskTemplateEntity != null && flowTaskTemplateEntity.getRevisions() != null) {
+          Optional<Revision> latestRevision = flowTaskTemplateEntity.getRevisions().stream()
+              .sorted(Comparator.comparingInt(Revision::getVersion).reversed()).findFirst();
+          if (latestRevision.isPresent()) {
+            Revision rev = latestRevision.get();
+            for (TaskTemplateConfig taskConfig : rev.getConfig()) {
+              if ("password".equals(taskConfig.getType())) {
+                LOGGER.debug("Found a secured property being used: {}", taskConfig.getKey());
+                
+                String key = taskConfig.getKey();
+                String value = propertyManager.replaceValueWithProperty(map.get(key), activityId, applicationProperties);
+                value = propertyManager.replaceValueWithProperty(value, activityId, applicationProperties);
+                LOGGER.debug("New Value: {}", value);
+                
+                removalList.add(value);
+              }
+            }
+          }
+        }
+      }
+    }
+    
+    LOGGER.debug("Displaying removal list");
+    for (String item : removalList) {
+      LOGGER.debug("Item: {}", item);
+    }
+    return removalList;
+  }
 
+  private String satanzieInput(String input, List<String> removeList) {
+    for (String value : removeList) {
+      input = input.replaceAll(Pattern.quote(value), "******");
+    }
+    return input;
   }
 }
