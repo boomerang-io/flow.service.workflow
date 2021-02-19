@@ -131,7 +131,8 @@ public class FlowActivityServiceImpl implements FlowActivityService {
     activity.setWorkflowId(entity.getWorkFlowId());
     activity.setTeamId(workflow.getFlowTeamId());
     activity.setScope(workflow.getScope());
-    activity.setCreationDate(new Date()); 
+    activity.setCreationDate(new Date());
+    activity.setStatus(TaskStatus.inProgress);
 
     if (taskWorkspaces.isPresent()) {
       activity.setTaskWorkspaces(taskWorkspaces.get());
@@ -139,9 +140,6 @@ public class FlowActivityServiceImpl implements FlowActivityService {
 
     if (trigger.isPresent()) {
       activity.setTrigger(trigger.get());
-      if ("webhook".equals(trigger.get())) {
-        activity.setStatus(TaskStatus.inProgress);
-      }
     }
 
     if (!trigger.isPresent() || "manual".equals(trigger.get())) {
