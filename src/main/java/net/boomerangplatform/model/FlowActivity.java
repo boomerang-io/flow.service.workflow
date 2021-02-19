@@ -33,7 +33,6 @@ public class FlowActivity extends ActivityEntity {
 
   public FlowActivity(ActivityEntity entity) {
     BeanUtils.copyProperties(entity, this);
-    this.setProperties(new LinkedList<>());
   }
 
   public String getTeamName() {
