@@ -672,13 +672,17 @@ public class FlowActivityServiceImpl implements FlowActivityService {
             for (TaskTemplateConfig taskConfig : rev.getConfig()) {
               if ("password".equals(taskConfig.getType())) {
                 LOGGER.debug("Found a secured property being used: {}", taskConfig.getKey());
-                
                 String key = taskConfig.getKey();
-                String value = propertyManager.replaceValueWithProperty(map.get(key), activityId, applicationProperties);
+                String inputValue = map.get(key);
+                if (inputValue != null && !inputValue.isBlank()) {
+                  inputValue = taskConfig.getDefaultValue();
+                }
+                String value = propertyManager.replaceValueWithProperty(inputValue, activityId, applicationProperties);
                 value = propertyManager.replaceValueWithProperty(value, activityId, applicationProperties);
                 LOGGER.debug("New Value: {}", value);
-                
-                removalList.add(value);
+                if (!value.isBlank()) {
+                  removalList.add(value);
+                }
               }
             }
           }
