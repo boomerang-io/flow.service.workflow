@@ -521,6 +521,9 @@ public class ModelConverterV5 {
     } else if (dagType == TaskType.releaselock) {
       type = "releaselock";
     }
+    else if (dagType == TaskType.runworkflow) {
+      type = "runworkflow";
+    }
     return type;
   }
 
