@@ -30,6 +30,18 @@ public class ControllerRequestProperties {
 
   @JsonIgnore
   private Map<String, String> taskInputProperties = new HashMap<>();
+  
+  @JsonIgnore
+  private Map<String, String> reservedProperties = new HashMap<>();
+
+
+  public Map<String, String> getReservedProperties() {
+    return reservedProperties;
+  }
+
+  public void setReservedProperties(Map<String, String> reservedProperties) {
+    this.reservedProperties = reservedProperties;
+  }
 
   public Map<String, String> getTaskInputProperties() {
     return taskInputProperties;
@@ -84,6 +96,9 @@ public class ControllerRequestProperties {
     copyProperties(workflowProperties, finalProperties, "workflow", includeScope);
     copyStringMap(taskInputProperties, finalProperties, "workflow", includeScope);
     copyProperties(systemProperties, finalProperties, "system", includeScope);
+
+    copyProperties( this.getReservedProperties(), finalProperties, null, false);
+
 
     return finalProperties;
   }

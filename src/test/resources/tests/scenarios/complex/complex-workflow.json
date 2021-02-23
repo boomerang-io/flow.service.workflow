@@ -25,6 +25,12 @@
             "topic" : ""
         }
     },
+      "tokens" : [
+        {
+            "label" : "default",
+            "token" : "12345"
+        }
+    ],
     "enablePersistentStorage" : false,
     "enableACCIntegration" : false,
     "_class" : "net.boomerangplatform.model.WorkflowSummary"

@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import net.boomerangplatform.model.Task;
 import net.boomerangplatform.model.WorkflowSummary;
+import net.boomerangplatform.model.WorkflowToken;
 import net.boomerangplatform.mongo.entity.ActivityEntity;
 import net.boomerangplatform.mongo.entity.FlowGlobalConfigEntity;
 import net.boomerangplatform.mongo.entity.FlowTaskTemplateEntity;
@@ -68,6 +69,18 @@ public class PropertyManagerImpl implements PropertyManager {
   @Value("${flow.feature.team.parameters}")
   private boolean enabledTeamProperites;
 
+  @Value("${flow.services.listener.webhook.url}")
+  private String webhookUrl;
+
+
+  @Value("${flow.services.listener.wfe.url}")
+  private String waitForEventUrl;
+
+
+  @Value("${flow.services.listener.event.url}")
+  private String eventUrl;
+
+
   final String[] reserved = {"system", "workflow", "global", "team", "workflow"};
 
   @Override
@@ -78,9 +91,11 @@ public class PropertyManagerImpl implements PropertyManager {
     Map<String, String> globalProperties = applicationProperties.getGlobalProperties();
     Map<String, String> teamProperties = applicationProperties.getTeamProperties();
     Map<String, String> workflowProperties = applicationProperties.getWorkflowProperties();
+    Map<String, String> reservedProperties = applicationProperties.getReservedProperties();
 
     buildGlobalProperties(globalProperties);
     buildSystemProperties(task, activityId, workflowId, systemProperties);
+    buildReservedPropertyList(reservedProperties, workflowId);
 
     if (enabledTeamProperites) {
       buildTeamProperties(teamProperties, workflowId);
@@ -91,7 +106,19 @@ public class PropertyManagerImpl implements PropertyManager {
       buildTaskInputProperties(applicationProperties, task, activityId);
     }
 
+  
     return applicationProperties;
+  }
+
+  private void buildReservedPropertyList(Map<String, String> reservedProperties,
+      String workflowId) {
+
+    WorkflowEntity workflow = workflowService.getWorkflow(workflowId);
+    if (workflow.getTokens() != null) {
+      for (WorkflowToken token : workflow.getTokens()) {
+        reservedProperties.put("system.tokens." + token.getLabel(), token.getToken());
+      }
+    }
   }
 
   private void buildTaskInputProperties(ControllerRequestProperties applicationProperties,
@@ -222,15 +249,13 @@ public class PropertyManagerImpl implements PropertyManager {
     WorkflowEntity workflow = workflowService.getWorkflow(workflowId);
     if (activityId != null) {
       ActivityEntity activity = activityService.findWorkflowActivity(activityId);
-      RevisionEntity revision = revisionService.getWorkflowlWithId(activity.getWorkflowRevisionid());
-        
-      if (revision != null) {
-        systemProperties.put("workflow-version", Long.toString(
-            revision.getVersion()));
-      }
-      
-      systemProperties.put("trigger-type", activity.getTrigger());
+      RevisionEntity revision =
+          revisionService.getWorkflowlWithId(activity.getWorkflowRevisionid());
 
+      if (revision != null) {
+        systemProperties.put("workflow-version", Long.toString(revision.getVersion()));
+      }
+      systemProperties.put("trigger-type", activity.getTrigger());
       systemProperties.put("workflow-activity-initiator", "");
       if (activity.getInitiatedByUserId() != null) {
         systemProperties.put("workflow-activity-initiator", activity.getInitiatedByUserId());
@@ -240,6 +265,11 @@ public class PropertyManagerImpl implements PropertyManager {
     systemProperties.put("workflow-name", workflow.getName());
     systemProperties.put("workflow-activity-id", activityId);
     systemProperties.put("workflow-id", workflow.getId());
+
+    systemProperties.put("trigger-webhook-url", this.webhookUrl);
+    systemProperties.put("trigger-wfe-url", this.waitForEventUrl);
+    systemProperties.put("trigger-event-url", this.eventUrl);
+
 
     if (task != null) {
       systemProperties.put("task-name", task.getTaskName());
@@ -312,6 +342,7 @@ public class PropertyManagerImpl implements PropertyManager {
           }
         }
       } else if (components.length == 4) {
+
         String task = components[0];
         String taskName = components[1];
         String results = components[2];
@@ -330,7 +361,14 @@ public class PropertyManagerImpl implements PropertyManager {
         String params = components[1];
         String name = components[2];
         List<String> reservedList = Arrays.asList(reserved);
-        if ("params".equals(params) && reservedList.contains(scope)) {
+        if ("tokens".equals(params) && "system".equals(scope)) {
+          if (executionProperties.get(extractedValue) != null) {
+            replaceValue = executionProperties.get(extractedValue);
+          } else {
+            replaceValue = "";
+          }
+        }
+        else if ("params".equals(params) && reservedList.contains(scope)) {
           if (reservedList.contains(scope)) {
             String key = scope + "/" + name;
 

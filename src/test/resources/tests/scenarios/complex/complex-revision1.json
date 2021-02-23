@@ -120,11 +120,11 @@
                     }, 
                     {
                         "key" : "shell",
-                        "value" : ""
+                        "value" : "$(system.params.trigger-wfe-url)"
                     }, 
                     {
                         "key" : "script",
-                        "value" : "echo \"Hi\""
+                        "value" : "$(system.tokens.default)"
                     }
                 ],
                 "metadata" : {
