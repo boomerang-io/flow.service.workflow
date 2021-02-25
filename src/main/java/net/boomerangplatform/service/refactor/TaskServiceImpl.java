@@ -129,9 +129,11 @@ public class TaskServiceImpl implements TaskService {
         processDecision(task, activity.getId());
         this.endTask(response);
       } else if (taskType == TaskType.template) {
-        controllerClient.submitTemplateTask(task, activityId, workflowName);
+        List<CoreProperty> labels = workflow.getLabels();
+        controllerClient.submitTemplateTask(task, activityId, workflowName, labels);
       } else if (taskType == TaskType.customtask) {
-        controllerClient.submitCustomTask(task, activityId, workflowName);
+        List<CoreProperty> labels = workflow.getLabels();
+        controllerClient.submitCustomTask(task, activityId, workflowName, labels);
       } 
       else if (taskType == TaskType.acquirelock) {
         createLock(task, activity);

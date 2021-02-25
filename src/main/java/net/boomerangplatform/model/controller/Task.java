@@ -36,6 +36,10 @@ public abstract class Task {
 
   @JsonProperty("parameters")
   private Map<String, String> parameters = new HashMap<>();
+  
+  @JsonProperty("labels")
+  private Map<String, String> labels = new HashMap<>();
+  
 
   @JsonProperty("arguments")
   private List<String> arguments;
@@ -149,4 +153,13 @@ public abstract class Task {
   public void setWorkspaces(List<TaskWorkspace> workspaces) {
     this.workspaces = workspaces;
   }
+  
+  public Map<String, String> getLabels() {
+    return labels;
+  }
+
+  public void setLabels(Map<String, String> labels) {
+    this.labels = labels;
+  }
+  
 }

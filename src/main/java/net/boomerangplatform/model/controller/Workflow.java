@@ -4,6 +4,8 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.util.HashMap;
+
 @JsonIgnoreProperties
 public class Workflow {
 
@@ -15,6 +17,9 @@ public class Workflow {
 
   @JsonProperty("storage")
   private WorkflowStorage storage;
+
+  @JsonProperty("labels")
+  private Map<String, String> labels = new HashMap<>();
 
   private Map<String, String> parameters;
 
@@ -49,6 +54,15 @@ public class Workflow {
   public void setWorkflowStorage(WorkflowStorage storage) {
     this.storage = storage;
   }
+
+  public Map<String, String> getLabels() {
+    return labels;
+  }
+
+  public void setLabels(Map<String, String> labels) {
+    this.labels = labels;
+  }
+
 
   public Map<String, String> getParameters() {
     return parameters;

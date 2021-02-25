@@ -262,8 +262,9 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
       e.printStackTrace();
     }
    
+    List<CoreProperty> labels = workflow.getLabels();
 
-    controllerClient.createFlow(workflowId, workflowName, activityId, enablePVC, executionProperties);
+    controllerClient.createFlow(workflowId, workflowName, activityId, enablePVC, labels, executionProperties);
     
     final Task startTask =  tasksToRun.stream().filter(tsk -> TaskType.start.equals(tsk.getTaskType())).findAny().orElse(null);
     executeNextStep(activityEntity, tasksToRun,startTask, start, end, graph);

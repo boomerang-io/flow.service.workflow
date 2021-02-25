@@ -5,6 +5,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.client.ExpectedCount.times;
 import static org.springframework.test.web.client.ExpectedCount.manyTimes;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.jsonPath;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withStatus;
@@ -61,9 +62,11 @@ public class ComplexExecuteTests extends IntegrationTests {
         .andExpect(method(HttpMethod.GET)).andRespond(
             withSuccess(getMockFile("mock/users/users.json"), MediaType.APPLICATION_JSON));
     mockServer.expect(times(1), requestTo(containsString("controller/workflow/create")))
+        .andExpect(jsonPath("$.labels.foo").value("bar"))
         .andExpect(method(HttpMethod.POST)).andRespond(withStatus(HttpStatus.OK));
 
     mockServer.expect(times(5), requestTo(containsString("controller/task/execute")))
+        .andExpect(jsonPath("$.labels.foo").value("bar"))
         .andExpect(method(HttpMethod.POST)).andRespond(withStatus(HttpStatus.OK));
 
     mockServer.expect(times(1), requestTo(containsString("controller/workflow/terminate")))

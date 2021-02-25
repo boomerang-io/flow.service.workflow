@@ -31,6 +31,10 @@
             "token" : "12345"
         }
     ],
+    "labels" : [{
+    "key" : "foo",
+    "value" : "bar"}
+    ],
     "enablePersistentStorage" : false,
     "enableACCIntegration" : false,
     "_class" : "net.boomerangplatform.model.WorkflowSummary"
