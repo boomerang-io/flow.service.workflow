@@ -573,7 +573,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
 
     LOGGER.info("Getting task log for activity: {} task id: {}",activityId,taskId);
     
-    TaskExecutionEntity taskExecution = taskService.findByTaskIdAndActiityId(taskId, activityId);
+    TaskExecutionEntity taskExecution = taskService.findByTaskIdAndActivityId(taskId, activityId);
     
     ActivityEntity activity =
         workflowActivityService.findWorkflowActivtyById(taskExecution.getActivityId());

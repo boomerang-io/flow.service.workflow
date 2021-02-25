@@ -379,7 +379,7 @@ public class TaskServiceImpl implements TaskService {
       
       if (executeTask) {
         TaskExecutionEntity task = this.taskActivityService
-            .findByTaskIdAndActiityId(next.getTaskId(), workflowActivity.getId());
+            .findByTaskIdAndActivityId(next.getTaskId(), workflowActivity.getId());
         if (task == null) {
           LOGGER.debug("Reached node which should not be executed.");
         } else {
@@ -400,7 +400,11 @@ public class TaskServiceImpl implements TaskService {
         List<String> deps = next.getDependencies();
         for (String dep : deps) {
           TaskExecutionEntity task =
-              this.taskActivityService.findByTaskIdAndActiityId(dep, workflowActivity.getId());
+              this.taskActivityService.findByTaskIdAndActivityId(dep, workflowActivity.getId());
+          if (task == null) {
+            continue;
+          }
+          
           TaskStatus status = task.getFlowTaskStatus();
           if (status == TaskStatus.inProgress || status == TaskStatus.notstarted || status == TaskStatus.waiting) {
             finishedAll = false;
@@ -416,7 +420,7 @@ public class TaskServiceImpl implements TaskService {
     List<String> deps = next.getDependencies();
     for (String dep : deps) {
       TaskExecutionEntity task =
-          taskActivityService.findByTaskIdAndActiityId(dep, workflowActivity.getId());
+          taskActivityService.findByTaskIdAndActivityId(dep, workflowActivity.getId());
       TaskStatus status = task.getFlowTaskStatus();
       if (status == TaskStatus.inProgress || status == TaskStatus.notstarted || status == TaskStatus.waiting) {
         return false;
@@ -458,7 +462,7 @@ public class TaskServiceImpl implements TaskService {
       if (dagTask.getType() == TaskType.template || dagTask.getType() == TaskType.customtask) {
 
         TaskExecutionEntity task =
-            taskActivityService.findByTaskIdAndActiityId(dagTask.getTaskId(), activity.getId());
+            taskActivityService.findByTaskIdAndActivityId(dagTask.getTaskId(), activity.getId());
         if (task != null) {
           newTask.setTaskActivityId(task.getId());
         }
@@ -494,7 +498,7 @@ public class TaskServiceImpl implements TaskService {
         newTask.setInputs(properties);
       } else if (dagTask.getType() == TaskType.decision) {
         TaskExecutionEntity task =
-            taskActivityService.findByTaskIdAndActiityId(dagTask.getTaskId(), activity.getId());
+            taskActivityService.findByTaskIdAndActivityId(dagTask.getTaskId(), activity.getId());
         if (task != null) {
           newTask.setTaskActivityId(task.getId());
         }
@@ -505,7 +509,7 @@ public class TaskServiceImpl implements TaskService {
       else if (dagTask.getType() == TaskType.setwfproperty || dagTask.getType() == TaskType.acquirelock || dagTask.getType() == TaskType.releaselock) {
         
         TaskExecutionEntity task =
-            taskActivityService.findByTaskIdAndActiityId(dagTask.getTaskId(), activity.getId());
+            taskActivityService.findByTaskIdAndActivityId(dagTask.getTaskId(), activity.getId());
         if (task != null) {
           newTask.setTaskActivityId(task.getId());
         }
@@ -556,7 +560,7 @@ public class TaskServiceImpl implements TaskService {
             text = propertyManager.replaceValueWithProperty(text, activityId, properties);
             
             String taskId = task.getTaskId();
-            TaskExecutionEntity taskExecution = this.taskActivityService.findByTaskIdAndActiityId(taskId, activityId);
+            TaskExecutionEntity taskExecution = this.taskActivityService.findByTaskIdAndActivityId(taskId, activityId);
             if (taskExecution != null) {
               LOGGER.info("[{}] Found task id: {} ", activityId, taskExecution.getId());
               taskExecution.setPreApproved(true);

@@ -13,7 +13,7 @@ public class ActivityTaskServiceImpl implements ActivityTaskService {
   private FlowWorkflowActivityTaskRepository repoisotry;
 
   @Override
-  public TaskExecutionEntity findByTaskIdAndActiityId(String taskId, String activityId) {
+  public TaskExecutionEntity findByTaskIdAndActivityId(String taskId, String activityId) {
     return repoisotry.findByActivityIdAndTaskId(activityId, taskId);
 
   }
@@ -29,7 +29,7 @@ public class ActivityTaskServiceImpl implements ActivityTaskService {
   }
 
   @Override
-  public TaskExecutionEntity findByTaskNameAndActiityId(String taskName, String activityId) {
+  public TaskExecutionEntity findByTaskNameAndActivityId(String taskName, String activityId) {
     return repoisotry.findByActivityIdAndTaskName(activityId, taskName);
   }
 

@@ -98,6 +98,7 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
         final FlowTaskTemplateEntity flowTaskTemplate =
             templateService.getTaskTemplateWithId(templateId);
      
+        System.out.println(templateId);
         Integer templateVersion = dagTask.getTemplateVersion();
         List<Revision> revisions = flowTaskTemplate.getRevisions();
         if (revisions != null) {
