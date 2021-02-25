@@ -159,7 +159,7 @@ public class ControllerClientImpl implements ControllerClient {
 
     TaskResult taskResult = new TaskResult();
     TaskExecutionEntity taskExecution =
-        taskService.findByTaskIdAndActiityId(task.getTaskId(), activityId);
+        taskService.findByTaskIdAndActivityId(task.getTaskId(), activityId);
 
     ActivityEntity activity = this.activityService.findWorkflowActivity(activityId);
 
@@ -269,7 +269,7 @@ public class ControllerClientImpl implements ControllerClient {
 
     TaskResult taskResult = new TaskResult();
     TaskExecutionEntity taskExecution =
-        taskService.findByTaskIdAndActiityId(task.getTaskId(), activityId);
+        taskService.findByTaskIdAndActivityId(task.getTaskId(), activityId);
 
     taskResult.setNode(task.getTaskId());
 

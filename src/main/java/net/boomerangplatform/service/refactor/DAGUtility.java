@@ -150,7 +150,7 @@ public class DAGUtility {
       newTask.setTaskName(dagTask.getLabel());
 
       TaskExecutionEntity task =
-          taskActivityService.findByTaskIdAndActiityId(dagTask.getTaskId(), activity.getId());
+          taskActivityService.findByTaskIdAndActivityId(dagTask.getTaskId(), activity.getId());
       if (task != null) {
         newTask.setTaskActivityId(task.getId());
       }
