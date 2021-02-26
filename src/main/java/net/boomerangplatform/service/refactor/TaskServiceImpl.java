@@ -193,6 +193,14 @@ public class TaskServiceImpl implements TaskService {
     if (task.getInputs() != null) {
       RequestFlowExecution request = new RequestFlowExecution();
       request.setWorkflowId(task.getInputs().get("workflowId"));
+      Map<String, String> properties = new HashMap<>();
+      for (Map.Entry<String,String> entry : task.getInputs().entrySet()) {
+        if (!"workflowId".equals(entry.getKey())) {
+          properties.put(entry.getKey(), entry.getValue());
+        }
+      }
+      
+      request.setProperties(properties);
       flowClient.submitWebhookEvent(request);
     }
  
