@@ -29,6 +29,7 @@ import net.boomerangplatform.model.controller.Workflow;
 import net.boomerangplatform.model.controller.WorkflowStorage;
 import net.boomerangplatform.mongo.entity.ActivityEntity;
 import net.boomerangplatform.mongo.entity.TaskExecutionEntity;
+import net.boomerangplatform.mongo.model.CoreProperty;
 import net.boomerangplatform.mongo.model.Revision;
 import net.boomerangplatform.mongo.model.TaskStatus;
 import net.boomerangplatform.mongo.model.internal.InternalTaskResponse;
@@ -81,7 +82,7 @@ public class ControllerClientImpl implements ControllerClient {
   
   @Override
   public boolean createFlow(String workflowId, String workflowName, String activityId,
-      boolean enableStorage, Map<String, String> properties) {
+      boolean enableStorage, List<CoreProperty> labels, Map<String, String> properties) {
 
    
     final Workflow request = new Workflow();
@@ -89,6 +90,7 @@ public class ControllerClientImpl implements ControllerClient {
     request.setWorkflowName(workflowName);
     request.setWorkflowId(workflowId);
     request.setParameters(properties);
+    
 
     final WorkflowStorage storage = new WorkflowStorage();
     storage.setEnable(enableStorage);
@@ -112,6 +114,7 @@ public class ControllerClientImpl implements ControllerClient {
     }
   
     request.setWorkflowStorage(storage);
+    request.setLabels(this.convertToMap(labels));
 
     logPayload(CREATEWORKFLOWREQUEST, request);
     Date startTime = new Date();
@@ -155,7 +158,7 @@ public class ControllerClientImpl implements ControllerClient {
 
   @Override
   @Async("flowAsyncExecutor")
-  public void submitCustomTask(Task task, String activityId, String workflowName) {
+  public void submitCustomTask(Task task, String activityId, String workflowName, List<CoreProperty> labels) {
 
     TaskResult taskResult = new TaskResult();
     TaskExecutionEntity taskExecution =
@@ -171,7 +174,8 @@ public class ControllerClientImpl implements ControllerClient {
     request.setWorkflowActivityId(activityId);
     request.setTaskName(task.getTaskName());
     request.setTaskActivityId(task.getTaskActivityId());
-
+    request.setLabels(this.convertToMap(labels));
+    
     ControllerRequestProperties applicationProperties =
         propertyManager.buildRequestPropertyLayering(task, activityId, task.getWorkflowId());
 
@@ -263,7 +267,7 @@ public class ControllerClientImpl implements ControllerClient {
 
   @Override
   @Async("flowAsyncExecutor")
-  public void submitTemplateTask(Task task, String activityId, String workflowName) {
+  public void submitTemplateTask(Task task, String activityId, String workflowName, List<CoreProperty> labels) {
 
     ActivityEntity activity = this.activityService.findWorkflowActivity(activityId);
 
@@ -280,7 +284,8 @@ public class ControllerClientImpl implements ControllerClient {
     request.setWorkflowActivityId(activityId);
     request.setTaskName(task.getTaskName());
     request.setTaskActivityId(task.getTaskActivityId());
-
+    request.setLabels(this.convertToMap(labels));
+    
     ControllerRequestProperties applicationProperties =
         propertyManager.buildRequestPropertyLayering(task, activityId, task.getWorkflowId());
 
@@ -407,5 +412,17 @@ public class ControllerClientImpl implements ControllerClient {
   private void logRequestTime(String payloadName, Date start, Date end) {
     long diff = end.getTime() - start.getTime();
     LOGGER.debug("Benchmark [Request Type]: {} - {} ms", payloadName, diff);
+  }
+  
+  private Map<String, String> convertToMap(List<CoreProperty> labelList) {
+    if (labelList == null) {
+      return null;
+    }
+    
+    Map<String, String> labels = new HashMap<>();
+    for (CoreProperty property : labelList) {
+      labels.put(property.getKey(), property.getValue());
+    }
+    return labels;
   }
 }

@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import net.boomerangplatform.model.WorkflowToken;
+import net.boomerangplatform.mongo.model.CoreProperty;
 import net.boomerangplatform.mongo.model.FlowProperty;
 import net.boomerangplatform.mongo.model.Triggers;
 import net.boomerangplatform.mongo.model.WorkflowScope;
@@ -38,6 +39,9 @@ public class WorkflowEntity {
 
   private boolean enablePersistentStorage;
   
+  
+  private List<CoreProperty> labels;
+  
   private WorkflowScope scope;
 
   public List<WorkflowToken> getTokens() {
@@ -47,9 +51,7 @@ public class WorkflowEntity {
   public void setTokens(List<WorkflowToken> tokens) {
     this.tokens = tokens;
   }
-
-  private boolean enableACCIntegration;
-
+  
   public String getDescription() {
     return description;
   }
@@ -130,20 +132,20 @@ public class WorkflowEntity {
     this.properties = properties;
   }
 
-  public boolean isEnableACCIntegration() {
-    return enableACCIntegration;
-  }
-
-  public void setEnableACCIntegration(boolean enableACCIntegration) {
-    this.enableACCIntegration = enableACCIntegration;
-  }
-
   public WorkflowScope getScope() {
     return scope;
   }
 
   public void setScope(WorkflowScope scope) {
     this.scope = scope;
+  }
+
+  public List<CoreProperty> getLabels() {
+    return labels;
+  }
+
+  public void setLabels(List<CoreProperty> labels) {
+    this.labels = labels;
   }
 
 

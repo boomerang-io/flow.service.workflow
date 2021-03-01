@@ -226,8 +226,8 @@ public class WorkflowServiceImpl implements WorkflowService {
     entity.setShortDescription(summary.getShortDescription());
     entity.setStatus(summary.getStatus());
     entity.setEnablePersistentStorage(summary.isEnablePersistentStorage());
-    entity.setEnableACCIntegration(summary.isEnableACCIntegration());
-
+    entity.setLabels(summary.getLabels());
+    
     List<FlowProperty> updatedProperties = setupDefaultProperties(summary);
     entity.setProperties(updatedProperties);
     Triggers previousTriggers = entity.getTriggers();
@@ -537,43 +537,12 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   private List<FlowProperty> setupDefaultProperties(WorkflowEntity workflowSummary) {
 
-    String[] iamKeys = {"execution_id"};
-
-    boolean enabled = workflowSummary.isEnableACCIntegration();
-
+  
     List<FlowProperty> newProperties = workflowSummary.getProperties();
 
     if (newProperties == null) {
       newProperties = new LinkedList<>();
     }
-
-    if (enabled) {
-      /* Add new Inputs. */
-      for (String key : iamKeys) {
-        /* Check to see if key already exists. */
-        boolean idExists = newProperties.stream().anyMatch(t -> t.getKey().equals(key));
-        if (!idExists) {
-          FlowProperty newProperty = new FlowProperty();
-          newProperty.setReadOnly(true);
-          newProperty.setLabel(key);
-          newProperty.setKey(key);
-          newProperty.setType("text");
-          newProperty.setRequired(true);
-
-          newProperties.add(newProperty);
-        }
-      }
-    } else {
-      /* Removed existing ones. */
-      for (String key : iamKeys) {
-        /* Check to see if key already exists. */
-        boolean idExists = newProperties.stream().anyMatch(t -> t.getKey().equals(key));
-        if (idExists) {
-          newProperties.removeIf(t -> t.getKey().equals(key));
-        }
-      }
-    }
-
     return newProperties;
   }
 
