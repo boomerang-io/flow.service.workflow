@@ -393,7 +393,8 @@ public class ModelConverterV5 {
     if (CUSTOMTASKNAME.equals(type) || TEMPLATETASKNAME.equals(type) || "approval".equals(type)
         || "manual".equals(type) || "setwfproperty".equals(type) || "eventwait".equals(type)
         || "releaselock".equals(type)
-        || "acquirelock".equals(type)) {
+        || "acquirelock".equals(type)
+        || "runworkflow".equals(type)) {
       port.setType("task");
     } else {
       port.setType(type);
@@ -520,6 +521,9 @@ public class ModelConverterV5 {
       type = "acquirelock";
     } else if (dagType == TaskType.releaselock) {
       type = "releaselock";
+    }
+    else if (dagType == TaskType.runworkflow) {
+      type = "runworkflow";
     }
     return type;
   }

@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import com.github.alturkovic.lock.Lock;
 import com.github.alturkovic.lock.exception.LockNotAvailableException;
 import net.boomerangplatform.model.ApprovalStatus;
+import net.boomerangplatform.model.RequestFlowExecution;
 import net.boomerangplatform.model.Task;
 import net.boomerangplatform.mongo.entity.ActivityEntity;
 import net.boomerangplatform.mongo.entity.ApprovalEntity;
@@ -138,6 +139,8 @@ public class TaskServiceImpl implements TaskService {
       }
       else if (taskType == TaskType.releaselock) {
         releaseLock(task,activity );
+      } else if (taskType == TaskType.runworkflow) {
+        this.runWorkflow(task, activity);
       }
       else if (taskType == TaskType.setwfproperty) {
         saveWorkflowProperty(task,activity);
@@ -179,6 +182,28 @@ public class TaskServiceImpl implements TaskService {
     LOGGER.debug("[{}] Releasing lock: ", task.getTaskActivityId()); 
     
     lockManager.releaseLock(task, activity.getId());
+    InternalTaskResponse response = new InternalTaskResponse();
+    response.setActivityId(task.getTaskActivityId());
+    response.setStatus(TaskStatus.completed);
+    this.endTask(response);
+  }
+  
+  private void runWorkflow(Task task, ActivityEntity activity) {
+ 
+    if (task.getInputs() != null) {
+      RequestFlowExecution request = new RequestFlowExecution();
+      request.setWorkflowId(task.getInputs().get("workflowId"));
+      Map<String, String> properties = new HashMap<>();
+      for (Map.Entry<String,String> entry : task.getInputs().entrySet()) {
+        if (!"workflowId".equals(entry.getKey())) {
+          properties.put(entry.getKey(), entry.getValue());
+        }
+      }
+      
+      request.setProperties(properties);
+      flowClient.submitWebhookEvent(request);
+    }
+ 
     InternalTaskResponse response = new InternalTaskResponse();
     response.setActivityId(task.getTaskActivityId());
     response.setStatus(TaskStatus.completed);
@@ -506,7 +531,7 @@ public class TaskServiceImpl implements TaskService {
         
         newTask.setDecisionValue(dagTask.getDecisionValue());
       }
-      else if (dagTask.getType() == TaskType.setwfproperty || dagTask.getType() == TaskType.acquirelock || dagTask.getType() == TaskType.releaselock) {
+      else if (dagTask.getType() == TaskType.runworkflow || dagTask.getType() == TaskType.setwfproperty || dagTask.getType() == TaskType.acquirelock || dagTask.getType() == TaskType.releaselock) {
         
         TaskExecutionEntity task =
             taskActivityService.findByTaskIdAndActivityId(dagTask.getTaskId(), activity.getId());

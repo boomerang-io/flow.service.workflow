@@ -1,5 +1,8 @@
 package net.boomerangplatform.service.refactor;
 
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -7,6 +10,8 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
+import net.boomerangplatform.model.FlowWebhookResponse;
+import net.boomerangplatform.model.RequestFlowExecution;
 import net.boomerangplatform.mongo.model.internal.InternalTaskRequest;
 import net.boomerangplatform.mongo.model.internal.InternalTaskResponse;
 
@@ -18,10 +23,16 @@ public class TaskClientImpl implements TaskClient {
 
   @Value("${flow.endtask.url}")
   public String endTaskUrl;
+  
+  @Value("${flow.webhook.url}")
+  public String webhookUrl;
 
   @Autowired
   @Qualifier("selfRestTemplate")
   public RestTemplate restTemplate;
+  
+  private static final Logger LOGGER = LogManager.getLogger();
+
 
   @Override
   @Async
@@ -30,7 +41,7 @@ public class TaskClientImpl implements TaskClient {
       restTemplate.postForLocation(startTaskUrl, taskRequest);
     } catch (RestClientException ex) {
 
-    }
+    } 
   }
 
   @Override
@@ -41,5 +52,16 @@ public class TaskClientImpl implements TaskClient {
     } catch (RestClientException ex) {
 
     }
+  }
+
+  @Override
+  public FlowWebhookResponse submitWebhookEvent(RequestFlowExecution request) {
+    LOGGER.info("Creating a request to execute workflow");
+    try {
+      restTemplate.postForLocation(webhookUrl, request);
+    } catch (RestClientException ex) {
+      LOGGER.error(ExceptionUtils.getStackTrace(ex));
+    }
+    return null;
   }
 }
