@@ -226,7 +226,8 @@ public class WorkflowServiceImpl implements WorkflowService {
     entity.setShortDescription(summary.getShortDescription());
     entity.setStatus(summary.getStatus());
     entity.setEnablePersistentStorage(summary.isEnablePersistentStorage());
-
+    entity.setLabels(summary.getLabels());
+    
     List<FlowProperty> updatedProperties = setupDefaultProperties(summary);
     entity.setProperties(updatedProperties);
     Triggers previousTriggers = entity.getTriggers();
