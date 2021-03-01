@@ -1,5 +1,8 @@
 package net.boomerangplatform.service.refactor;
 
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,6 +30,9 @@ public class TaskClientImpl implements TaskClient {
   @Autowired
   @Qualifier("selfRestTemplate")
   public RestTemplate restTemplate;
+  
+  private static final Logger LOGGER = LogManager.getLogger();
+
 
   @Override
   @Async
@@ -50,12 +56,12 @@ public class TaskClientImpl implements TaskClient {
 
   @Override
   public FlowWebhookResponse submitWebhookEvent(RequestFlowExecution request) {
+    LOGGER.info("Creating a request to execute workflow");
     try {
       restTemplate.postForLocation(webhookUrl, request);
     } catch (RestClientException ex) {
-
+      LOGGER.error(ExceptionUtils.getStackTrace(ex));
     }
-    
     return null;
   }
 }
