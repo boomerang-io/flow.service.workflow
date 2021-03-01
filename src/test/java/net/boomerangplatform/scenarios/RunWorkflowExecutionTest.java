@@ -17,6 +17,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatchers;
@@ -44,6 +45,7 @@ import net.boomerangplatform.tests.IntegrationTests;
 @ActiveProfiles("local")
 @WithMockUser(roles = {"admin"})
 @WithUserDetails("mdroy@us.ibm.com")
+@Ignore
 public class RunWorkflowExecutionTest extends IntegrationTests {
 
   @SpyBean
