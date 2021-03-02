@@ -203,7 +203,12 @@ public class TaskServiceImpl implements TaskService {
       }
       
       request.setProperties(properties);
-      flowClient.submitWebhookEvent(request);
+      String workflowActivityId = flowClient.submitWebhookEvent(request);
+      if (workflowActivityId != null) {
+        TaskExecutionEntity taskExecution = taskActivityService.findById(task.getTaskActivityId());
+        taskExecution.setRunWorkflowActivityId(workflowActivityId);
+        taskActivityService.save(taskExecution);
+      }
     }
  
     InternalTaskResponse response = new InternalTaskResponse();

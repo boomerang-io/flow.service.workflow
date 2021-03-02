@@ -55,10 +55,14 @@ public class TaskClientImpl implements TaskClient {
   }
 
   @Override
-  public FlowWebhookResponse submitWebhookEvent(RequestFlowExecution request) {
+  public String submitWebhookEvent(RequestFlowExecution request) {
     LOGGER.info("Creating a request to execute workflow");
     try {
-      restTemplate.postForLocation(webhookUrl, request);
+      FlowWebhookResponse response =
+          restTemplate.postForObject(webhookUrl, request, FlowWebhookResponse.class);
+      if (response != null) {
+        return response.getActivityId();
+      }
     } catch (RestClientException ex) {
       LOGGER.error(ExceptionUtils.getStackTrace(ex));
     }

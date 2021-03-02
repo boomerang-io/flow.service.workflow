@@ -10,5 +10,5 @@ public interface TaskClient {
   
   public void startTask(InternalTaskRequest taskRequest);  
   public void endTask(InternalTaskResponse taskResponse);
-  public FlowWebhookResponse submitWebhookEvent(@RequestBody RequestFlowExecution request);
+  public String submitWebhookEvent(@RequestBody RequestFlowExecution request);
 }

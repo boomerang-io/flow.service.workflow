@@ -29,17 +29,16 @@ public class TaskExecutionEntity {
   private long order;
   private Date startTime;
   private String taskId;
-
   private String taskName;
-
   private String workflowId;
   private TaskType taskType;
   
   private boolean preApproved;
-  
   private String switchValue;
   
   private ApprovalEntity approval;
+  
+  private String runWorkflowActivityId;
 
   public TaskType getTaskType() {
     return taskType;
@@ -161,5 +160,13 @@ public class TaskExecutionEntity {
 
   public void setSwitchValue(String switchValue) {
     this.switchValue = switchValue;
+  }
+
+  public String getRunWorkflowActivityId() {
+    return runWorkflowActivityId;
+  }
+
+  public void setRunWorkflowActivityId(String runWorkflowActivityId) {
+    this.runWorkflowActivityId = runWorkflowActivityId;
   }
 }
