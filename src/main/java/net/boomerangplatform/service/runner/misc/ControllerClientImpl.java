@@ -160,11 +160,13 @@ public class ControllerClientImpl implements ControllerClient {
   @Async("flowAsyncExecutor")
   public void submitCustomTask(Task task, String activityId, String workflowName, List<CoreProperty> labels) {
 
+    
     TaskResult taskResult = new TaskResult();
     TaskExecutionEntity taskExecution =
         taskService.findByTaskIdAndActivityId(task.getTaskId(), activityId);
 
     ActivityEntity activity = this.activityService.findWorkflowActivity(activityId);
+
 
     taskResult.setNode(task.getTaskId());
     final TaskCustom request = new TaskCustom();
@@ -196,10 +198,11 @@ public class ControllerClientImpl implements ControllerClient {
     taskExecution.setFlowTaskStatus(TaskStatus.inProgress);
     taskExecution = taskService.save(taskExecution);
 
-    TaskConfiguration taskConfiguration = buildTaskConfiguration();
+    boolean enableLifecycle = task.getEnableLifecycle();
+    TaskConfiguration taskConfiguration = buildTaskConfiguration(enableLifecycle);
     request.setConfiguration(taskConfiguration);
-
     request.setWorkspaces(activity.getTaskWorkspaces());
+    
 
     logPayload("Create Task Request", request);
 
@@ -293,7 +296,8 @@ public class ControllerClientImpl implements ControllerClient {
 
     request.setParameters(map);
 
-    TaskConfiguration taskConfiguration = buildTaskConfiguration();
+    boolean enableLifecycle = task.getEnableLifecycle();
+    TaskConfiguration taskConfiguration = buildTaskConfiguration(enableLifecycle);
     request.setConfiguration(taskConfiguration);
 
     prepareTemplateImageRequest(task, taskResult, request);
@@ -378,7 +382,7 @@ public class ControllerClientImpl implements ControllerClient {
     }
   }
 
-  private TaskConfiguration buildTaskConfiguration() {
+  private TaskConfiguration buildTaskConfiguration(boolean enableLifecycle) {
     TaskConfiguration taskConfiguration = new TaskConfiguration();
     TaskDeletion taskDeletion = TaskDeletion.Never;
     String settingsPolicy =
@@ -395,6 +399,8 @@ public class ControllerClientImpl implements ControllerClient {
 
     taskConfiguration.setDeletion(taskDeletion);
     taskConfiguration.setDebug(Boolean.valueOf(enableDebug));
+    taskConfiguration.setLifecycle(enableLifecycle);
+    
     return taskConfiguration;
   }
 

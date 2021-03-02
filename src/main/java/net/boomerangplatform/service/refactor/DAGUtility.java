@@ -162,6 +162,9 @@ public class DAGUtility {
         String templateId = dagTask.getTemplateId();
         final FlowTaskTemplateEntity flowTaskTemplate =
             templateService.getTaskTemplateWithId(templateId);
+        newTask.setTemplateId(flowTaskTemplate.getId());
+        newTask.setEnableLifecycle(flowTaskTemplate.getEnableLifecycle());
+        
         Integer templateVersion = dagTask.getTemplateVersion();
         List<Revision> revisions = flowTaskTemplate.getRevisions();
         if (revisions != null) {

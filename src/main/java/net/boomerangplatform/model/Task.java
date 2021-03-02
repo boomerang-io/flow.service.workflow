@@ -17,10 +17,12 @@ public class Task {
 
   private String taskId;
   private String taskName;
+  private String templateId;
 
   private String workflowId;
   private String workflowName;
   private String taskActivityId;
+  private boolean enableLifecycle;
 
   private String decisionValue;
 
@@ -114,6 +116,22 @@ public class Task {
 
   public void setRevision(Revision revision) {
     this.revision = revision;
+  }
+
+  public String getTemplateId() {
+    return templateId;
+  }
+
+  public void setTemplateId(String templateId) {
+    this.templateId = templateId;
+  }
+
+  public boolean getEnableLifecycle() {
+    return enableLifecycle;
+  }
+
+  public void setEnableLifecycle(boolean enableLifecycle) {
+    this.enableLifecycle = enableLifecycle;
   }
 
 }

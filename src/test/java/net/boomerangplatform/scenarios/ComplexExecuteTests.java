@@ -67,6 +67,7 @@ public class ComplexExecuteTests extends IntegrationTests {
 
     mockServer.expect(times(5), requestTo(containsString("controller/task/execute")))
         .andExpect(jsonPath("$.labels.foo").value("bar"))
+        .andExpect(jsonPath("$.configuration.lifecycle").value(true))
         .andExpect(method(HttpMethod.POST)).andRespond(withStatus(HttpStatus.OK));
 
     mockServer.expect(times(1), requestTo(containsString("controller/workflow/terminate")))

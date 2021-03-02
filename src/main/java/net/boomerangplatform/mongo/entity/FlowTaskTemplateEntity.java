@@ -33,6 +33,7 @@ public class FlowTaskTemplateEntity {
   private Date createdDate;
   private String icon;
   private boolean verified;
+  private boolean enableLifecycle;
 
   public FlowTaskTemplateEntity() {
     // Do nothing
@@ -125,6 +126,14 @@ public class FlowTaskTemplateEntity {
 
   public void setVerified(boolean verified) {
     this.verified = verified;
+  }
+
+  public boolean getEnableLifecycle() {
+    return enableLifecycle;
+  }
+
+  public void setEnableLifecycle(boolean enableLifecycle) {
+    this.enableLifecycle = enableLifecycle;
   }
 
 }

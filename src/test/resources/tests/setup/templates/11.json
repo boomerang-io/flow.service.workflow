@@ -6,6 +6,7 @@
     "name" : "Execute Shell",
     "category" : "utilities",
     "nodetype" : "templateTask",
+    "enableLifecycle" : true,
     "revisions" : [ 
         {
             "version" : 1,
