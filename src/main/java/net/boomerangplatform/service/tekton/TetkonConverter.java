@@ -5,8 +5,10 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
 import net.boomerangplatform.model.tekton.Annotations;
+import net.boomerangplatform.model.tekton.Labels;
 import net.boomerangplatform.model.tekton.Metadata;
 import net.boomerangplatform.model.tekton.Param;
 import net.boomerangplatform.model.tekton.Spec;
@@ -31,6 +33,7 @@ public class TetkonConverter {
     
     Metadata metadata = new  Metadata();
     metadata.setName(task.getName());
+    metadata.setLabels(new Labels());
     newTask.setMetadata(metadata);
     
     Spec spec = new Spec();
@@ -42,9 +45,8 @@ public class TetkonConverter {
     if (revisions != null) {
       revision = revisions.stream()
       .sorted(Comparator.comparingInt(Revision::getVersion).reversed() ).findFirst().orElse(null);
-      
     }
-    
+
     if (revision != null) {
       Step step = new Step();
       
@@ -66,6 +68,14 @@ public class TetkonConverter {
       
       List<Param> params = new LinkedList<>();
       List<TaskTemplateConfig> configList = revision.getConfig();
+    
+      Annotations annotations = new Annotations();
+      Map<String, Object> annotationFields = annotations.otherFields();
+      annotationFields.put("boomerang.io/icon", task.getIcon());
+      annotationFields.put("boomerang.io/params", configList);
+      annotationFields.put("description", task.getDescription());
+      
+      metadata.setAnnotations(annotations);
       
       if (configList != null) {
         for (TaskTemplateConfig config : configList) {
@@ -78,11 +88,9 @@ public class TetkonConverter {
           params.add(param);
         }
       }
-      
       revision.getConfig();
       spec.setParams(params);
     }
-
     return newTask;
   }
 
