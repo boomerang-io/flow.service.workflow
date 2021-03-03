@@ -1,0 +1,22 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: example-task-name
+  labels:
+    key: value
+  annotations:
+    description: cool task
+    boomerang.io/icon: fix
+    boomerang.io/category: Worker
+    boomerang.io/revision: 1
+spec:
+  params:
+    - name: pathToDockerFile
+      type: string
+      description: The path to the dockerfile to build
+  steps:
+  # Flow will only support single step
+    - name: ubuntu-example
+      image: ubuntu
+      command: ['entrypoint']
+      args: ["ubuntu-build-example", "SECRETS-example.md"]

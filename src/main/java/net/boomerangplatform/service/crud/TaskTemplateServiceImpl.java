@@ -6,12 +6,14 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import net.boomerangplatform.model.FlowTaskTemplate;
+import net.boomerangplatform.model.tekton.TektonTask;
 import net.boomerangplatform.mongo.entity.FlowTaskTemplateEntity;
 import net.boomerangplatform.mongo.entity.FlowUserEntity;
 import net.boomerangplatform.mongo.model.ChangeLog;
 import net.boomerangplatform.mongo.model.Revision;
 import net.boomerangplatform.mongo.service.FlowTaskTemplateService;
 import net.boomerangplatform.service.UserIdentityService;
+import net.boomerangplatform.service.tekton.TetkonConverter;
 
 @Service
 public class TaskTemplateServiceImpl implements TaskTemplateService {
@@ -109,5 +111,11 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
         }
       }
     }
+  }
+
+  @Override
+  public TektonTask getTaskTemplateYamlWithId(String id) {
+    FlowTaskTemplateEntity template = flowTaskTemplateService.getTaskTemplateWithId(id);
+    return TetkonConverter.convertFlowTaskToTekton(template);
   }
 }
