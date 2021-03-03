@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import net.boomerangplatform.model.FlowTaskTemplate;
+import net.boomerangplatform.model.tekton.TektonTask;
 import net.boomerangplatform.mongo.model.FlowTaskTemplateStatus;
 import net.boomerangplatform.service.crud.TaskTemplateService;
 
@@ -26,6 +27,12 @@ public class TaskTemplateController {
     return taskTemplateService.getTaskTemplateWithId(id);
   }
 
+  @GetMapping(value = "{id}/yaml",  produces = "application/x-yaml")
+  public TektonTask getTaskTemplateYamlWithId(@PathVariable String id) {
+    return taskTemplateService.getTaskTemplateYamlWithId(id);
+  }
+
+  
   @GetMapping(value = "")
   public List<FlowTaskTemplate> getAllTaskTemplates() {
     return taskTemplateService.getAllTaskTemplates();
