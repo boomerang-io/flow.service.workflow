@@ -31,7 +31,11 @@ public class TaskTemplateController {
   public TektonTask getTaskTemplateYamlWithId(@PathVariable String id) {
     return taskTemplateService.getTaskTemplateYamlWithId(id);
   }
-
+  
+  @GetMapping(value = "{id}/yaml/{revision}",  produces = "application/x-yaml")
+  public TektonTask getTaskTemplateYamlWithIdandRevision(@PathVariable String id, Integer revision ) {
+    return taskTemplateService.getTaskTemplateYamlWithIdAndRevision(id, revision);
+  }
   
   @GetMapping(value = "")
   public List<FlowTaskTemplate> getAllTaskTemplates() {
@@ -41,8 +45,12 @@ public class TaskTemplateController {
   @PostMapping(value = "")
   public FlowTaskTemplate insertTaskTemplate(@RequestBody FlowTaskTemplate flowTaskTemplateEntity) {
     flowTaskTemplateEntity.setStatus(FlowTaskTemplateStatus.active);
-
     return taskTemplateService.insertTaskTemplate(flowTaskTemplateEntity);
+  }
+  
+  @PostMapping(value = "yaml", consumes = "application/x-yaml", produces = "application/json")
+  public FlowTaskTemplate insertTaskTemplateYaml(@RequestBody TektonTask tektonTask) {
+    return taskTemplateService.insertTaskTemplateYaml(tektonTask);
   }
 
   @PutMapping(value = "")
