@@ -1,4 +1,4 @@
-\package net.boomerangplatform.service;
+package net.boomerangplatform.service;
 
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.AbstractJackson2HttpMessageConverter;
