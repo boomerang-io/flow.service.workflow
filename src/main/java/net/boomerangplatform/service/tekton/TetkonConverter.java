@@ -6,6 +6,7 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import org.apache.commons.lang3.StringUtils;
 import net.boomerangplatform.model.tekton.Annotations;
 import net.boomerangplatform.model.tekton.Labels;
@@ -26,10 +27,12 @@ public class TetkonConverter {
     
   }
   
-  public static TektonTask convertFlowTaskToTekton(FlowTaskTemplateEntity task) {
+  public static TektonTask convertFlowTaskToTekton(FlowTaskTemplateEntity task, Optional<Integer> revisionNumber) {
     TektonTask newTask = new TektonTask();
     newTask.setApiVersion("tekton.dev/v1beta1");
     newTask.setKind("Task");
+    
+    
     
     Metadata metadata = new  Metadata();
     metadata.setName(task.getName());
@@ -43,8 +46,14 @@ public class TetkonConverter {
     List<Revision> revisions = task.getRevisions();
     
     if (revisions != null) {
-      revision = revisions.stream()
-      .sorted(Comparator.comparingInt(Revision::getVersion).reversed() ).findFirst().orElse(null);
+      if (revisionNumber.isEmpty()) {
+        revision = revisions.stream()
+            .sorted(Comparator.comparingInt(Revision::getVersion).reversed() ).findFirst().orElse(null);
+      }
+      else {
+        revision = revisions.stream().filter(c -> c.getVersion().equals(revisionNumber)).findFirst().orElse(null);
+      }
+    
     }
 
     if (revision != null) {
@@ -81,7 +90,7 @@ public class TetkonConverter {
         for (TaskTemplateConfig config : configList) {
           Param param = new Param();
           param.setName(config.getKey());
-          param.setDefaultString(config.getDefaultValue());
+          param.otherFields().put("default", config.getDefaultValue());
           param.setType("string");
           param.setDescription(config.getDescription());
           
@@ -109,6 +118,9 @@ public class TetkonConverter {
     taskTemplate.setRevisions(revisions);
     taskTemplate.setStatus(FlowTaskTemplateStatus.active);
     taskTemplate.setVerified(false);
+    taskTemplate.setCategory("community");
+    taskTemplate.setDescription(task.getSpec().getDescription());
+    
     
     Date createdDate = new Date();
     taskTemplate.setCreatedDate(createdDate);
@@ -120,9 +132,21 @@ public class TetkonConverter {
   private static void getAnnotations(FlowTaskTemplateEntity taskTemplate, Metadata metadata) {
     Annotations annotations = metadata.getAnnotations();
 
-    taskTemplate.setIcon(annotations.otherFields().get("boomerang.io/icon").toString());
-    taskTemplate.setDescription(annotations.otherFields().get("description").toString()); 
-    taskTemplate.setCategory(annotations.otherFields().get("boomerang.io/category").toString());
+    Object icon = annotations.otherFields().get("boomerang.io/icon");
+    Object category = annotations.otherFields().get("boomerang.io/category");
+    Object description = annotations.otherFields().get("description");
+    
+    if (icon != null) {
+      taskTemplate.setIcon(icon.toString());
+    }
+    
+    if (category != null) {
+      taskTemplate.setCategory(category.toString());
+    }
+    
+    if (description != null) {
+      taskTemplate.setDescription(description.toString());
+    }
   }
   
   private static Revision convertSpecToRevision(Spec spec) {
@@ -142,9 +166,15 @@ public class TetkonConverter {
       for (Param param : spec.getParams()) {
         TaskTemplateConfig newConfig = new TaskTemplateConfig();
         newConfig.setKey(param.getName());
+        newConfig.setLabel(param.getName());
+        
         newConfig.setDescription(param.getDescription());
         newConfig.setType("text");
-        newConfig.setDefaultValue(param.getDefaultString());
+        Object defaultStr = param.otherFields().get("default");
+        if (defaultStr != null) {
+          newConfig.setDefaultValue(defaultStr.toString());
+        }
+        
         newConfig.setReadOnly(false);
         newConfig.setPlaceholder("");
    
