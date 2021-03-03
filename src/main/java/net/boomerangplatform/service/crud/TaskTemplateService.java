@@ -18,4 +18,8 @@ public interface TaskTemplateService {
   void deleteTaskTemplateWithId(String id);
 
   void activateTaskTemplate(String id);
+
+  TektonTask getTaskTemplateYamlWithIdAndRevision(String id, Integer revisionNumber);
+
+  FlowTaskTemplate insertTaskTemplateYaml(TektonTask tektonTask);
 }
