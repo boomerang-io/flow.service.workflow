@@ -58,7 +58,7 @@ public class TektonImportExportTests {
   }
   
   private void logObjectASYaml(Object o) throws JsonProcessingException {
-    ObjectMapper mapper = new ObjectMapper(new YAMLFactory().enable(YAMLGenerator.Feature.MINIMIZE_QUOTES));
+    ObjectMapper mapper = new ObjectMapper(new YAMLFactory().enable(YAMLGenerator.Feature.MINIMIZE_QUOTES).disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER));
     System.out.println(mapper.writer().writeValueAsString(o));
   }
   
