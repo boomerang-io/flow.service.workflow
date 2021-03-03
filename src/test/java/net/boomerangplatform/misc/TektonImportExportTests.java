@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import org.junit.Test;
 import org.springframework.core.io.ClassPathResource;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -38,7 +39,7 @@ public class TektonImportExportTests {
   @Test 
   public void testYamlExport() throws IOException {
     FlowTaskTemplateEntity flowTaskTemplate = loadFlowTemplate();
-    TektonTask task = TetkonConverter.convertFlowTaskToTekton(flowTaskTemplate);
+    TektonTask task = TetkonConverter.convertFlowTaskToTekton(flowTaskTemplate, Optional.empty());
     logObjectASYaml(task);
     assertEquals("Task", task.getKind());
   }
