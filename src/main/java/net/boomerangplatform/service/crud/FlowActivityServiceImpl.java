@@ -476,7 +476,8 @@ public class FlowActivityServiceImpl implements FlowActivityService {
         Approval approval = approvalService.getApprovalByTaskActivityId(task.getId());
         task.setApproval(approval);
       }
-      else if (TaskType.runworkflow == task.getTaskType()) {
+      else if (TaskType.runworkflow == task.getTaskType() && task.getRunWorkflowActivityId() != null) {
+        
         String runWorkflowActivityId = task.getRunWorkflowActivityId();
         ActivityEntity activity = this.flowActivityService.findWorkflowActivtyById(runWorkflowActivityId);
         if (activity != null) {
