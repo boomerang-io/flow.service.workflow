@@ -39,9 +39,9 @@ public class TaskExecutionEntity {
   private ApprovalEntity approval;
   
   private String runWorkflowActivityId;
-  
   private String runWorkflowId;
-
+  private TaskStatus runWorkflowActivityStatus;
+  
   public TaskType getTaskType() {
     return taskType;
   }
@@ -178,5 +178,13 @@ public class TaskExecutionEntity {
 
   public void setRunWorkflowId(String runWorkflowId) {
     this.runWorkflowId = runWorkflowId;
+  }
+
+  public TaskStatus getRunWorkflowActivityStatus() {
+    return runWorkflowActivityStatus;
+  }
+
+  public void setRunWorkflowActivityStatus(TaskStatus runWorkflowActivityStatus) {
+    this.runWorkflowActivityStatus = runWorkflowActivityStatus;
   }
 }
