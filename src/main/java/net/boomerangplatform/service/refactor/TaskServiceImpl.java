@@ -207,6 +207,7 @@ public class TaskServiceImpl implements TaskService {
       if (workflowActivityId != null) {
         TaskExecutionEntity taskExecution = taskActivityService.findById(task.getTaskActivityId());
         taskExecution.setRunWorkflowActivityId(workflowActivityId);
+        taskExecution.setRunWorkflowId(request.getWorkflowId());
         taskActivityService.save(taskExecution);
       }
     }
