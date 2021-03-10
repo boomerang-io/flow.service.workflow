@@ -71,7 +71,7 @@ public class NavigationServiceImpl implements NavigationService {
       response.add(insights);
 
       Navigation management = new Navigation();
-      management.setName("Management");
+      management.setName("Manage");
       management.setIcon("SettingsAdjust16");
       management.setChildLinks(new ArrayList<>());
       management.setType(NavigationType.category);
@@ -85,7 +85,7 @@ public class NavigationServiceImpl implements NavigationService {
 
       if (isUserAdmin) {
         Navigation admin = new Navigation();
-        admin.setName("Admin");
+        admin.setName("Administer");
         admin.setType(NavigationType.category);
         admin.setIcon("Settings16");
         admin.setChildLinks(new ArrayList<>());
