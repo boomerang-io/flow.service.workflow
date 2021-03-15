@@ -117,6 +117,8 @@ public class TaskTemplateControllerTests extends FlowTests {
     
     TektonTask task = this.controller.getTaskTemplateYamlWithId(templateId);
     assertNotNull(task);
+    assertNotNull(task.getSpec());
+    assertNotNull(task.getSpec().getParams());
   }
   
   @Test
@@ -124,7 +126,7 @@ public class TaskTemplateControllerTests extends FlowTests {
     String templateId = "5bd9d0825a5df954ad5bb5c3";
     
     TektonTask task = this.controller.getTaskTemplateYamlWithIdandRevision(templateId, 1);
-    assertNotNull(task);
+    assertNotNull(task.getSpec().getParams());
   }
 
 }

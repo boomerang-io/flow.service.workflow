@@ -51,7 +51,7 @@ public class TetkonConverter {
             .sorted(Comparator.comparingInt(Revision::getVersion).reversed() ).findFirst().orElse(null);
       }
       else {
-        revision = revisions.stream().filter(c -> c.getVersion().equals(revisionNumber)).findFirst().orElse(null);
+        revision = revisions.stream().filter(c -> c.getVersion().equals(revisionNumber.get())).findFirst().orElse(null);
       }
     
     }
