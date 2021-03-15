@@ -33,7 +33,7 @@ public class TaskTemplateController {
   }
   
   @GetMapping(value = "{id}/yaml/{revision}",  produces = "application/x-yaml")
-  public TektonTask getTaskTemplateYamlWithIdandRevision(@PathVariable String id, Integer revision ) {
+  public TektonTask getTaskTemplateYamlWithIdandRevision(@PathVariable String id, @PathVariable Integer revision ) {
     return taskTemplateService.getTaskTemplateYamlWithIdAndRevision(id, revision);
   }
   

@@ -13,9 +13,11 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import com.google.common.base.Optional;
 import net.boomerangplatform.controller.TaskTemplateController;
 import net.boomerangplatform.misc.FlowTests;
 import net.boomerangplatform.model.FlowTaskTemplate;
+import net.boomerangplatform.model.tekton.TektonTask;
 import net.boomerangplatform.mongo.model.ChangeLog;
 import net.boomerangplatform.mongo.model.FlowTaskTemplateStatus;
 import net.boomerangplatform.mongo.model.Revision;
@@ -107,6 +109,22 @@ public class TaskTemplateControllerTests extends FlowTests {
     assertEquals(FlowTaskTemplateStatus.active,
         controller.getTaskTemplateWithId("5bd9d0825a5df954ad5bb5c3").getStatus());
 
+  }
+  
+  @Test
+  public void testLatestTaskYaml() {
+    String templateId = "5bd9d0825a5df954ad5bb5c3";
+    
+    TektonTask task = this.controller.getTaskTemplateYamlWithId(templateId);
+    assertNotNull(task);
+  }
+  
+  @Test
+  public void testLatestTaskYamlWithRevision() {
+    String templateId = "5bd9d0825a5df954ad5bb5c3";
+    
+    TektonTask task = this.controller.getTaskTemplateYamlWithIdandRevision(templateId, 1);
+    assertNotNull(task);
   }
 
 }
