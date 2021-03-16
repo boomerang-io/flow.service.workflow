@@ -24,4 +24,6 @@ public interface TaskTemplateService {
   FlowTaskTemplate insertTaskTemplateYaml(TektonTask tektonTask);
 
   FlowTaskTemplate updateTaskTemplateWuthYaml(String id, TektonTask tektonTask);
+
+  FlowTaskTemplate updateTaskTemplateWuthYaml(String id, TektonTask tektonTask, Integer revision);
 }
