@@ -134,4 +134,42 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
     flowTaskTemplateService.insertTaskTemplate(template);
     return new FlowTaskTemplate(template);
   }
+
+  @Override
+  public FlowTaskTemplate updateTaskTemplateWuthYaml(String id, TektonTask tektonTask) {
+    FlowTaskTemplateEntity tektonTemplate =  TetkonConverter.convertTektonTaskToNewFlowTask(tektonTask);
+    FlowTaskTemplateEntity dbTemplate = flowTaskTemplateService.getTaskTemplateWithId(id);
+    
+    if (tektonTemplate.getName() != null && !tektonTemplate.getName().isBlank()) {
+      dbTemplate.setName(tektonTemplate.getName());
+    }
+    if (tektonTemplate.getCategory() != null && !tektonTemplate.getCategory().isBlank()) {
+      dbTemplate.setCategory(tektonTemplate.getCategory());
+    }
+    
+    if (tektonTemplate.getDescription() != null && !tektonTemplate.getDescription().isBlank()) {
+      dbTemplate.setDescription(tektonTemplate.getDescription());
+    }
+
+    List<Revision> revisions = tektonTemplate.getRevisions();
+    if (revisions.size() == 1) {
+      Revision revision = revisions.get(0);
+      
+      final FlowUserEntity user = userIdentityService.getCurrentUser();
+      if (user != null) {
+        ChangeLog changelog = revision.getChangelog();
+        changelog.setUserId(user.getId());
+        changelog.setDate(new Date());
+      }
+
+      
+      List<Revision> existingRevisions = dbTemplate.getRevisions();
+      int count = existingRevisions.size();
+      revision.setVersion(count + 1);
+      existingRevisions.add(revision);      
+    }
+    dbTemplate.setLastModified(new Date());
+    flowTaskTemplateService.updateTaskTemplate(dbTemplate);
+    return this.getTaskTemplateWithId(id);
+  }
 }
