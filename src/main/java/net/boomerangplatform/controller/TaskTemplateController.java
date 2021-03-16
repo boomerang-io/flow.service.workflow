@@ -58,6 +58,12 @@ public class TaskTemplateController {
     flowTaskTemplateEntity.setStatus(FlowTaskTemplateStatus.active);
     return taskTemplateService.updateTaskTemplate(flowTaskTemplateEntity);
   }
+  
+  @PutMapping(value = "{id}/yaml", consumes = "application/x-yaml", produces = "application/json")
+  public FlowTaskTemplate updateTaskTemplateWithYaml(@PathVariable String id, @RequestBody TektonTask tektonTask) {
+    return taskTemplateService.updateTaskTemplateWuthYaml(id, tektonTask);
+  }
+
 
   @DeleteMapping(value = "{id}")
   public void deleteTaskTemplateWithId(@PathVariable String id) {
