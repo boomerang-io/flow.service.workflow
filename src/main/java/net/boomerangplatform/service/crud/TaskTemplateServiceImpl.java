@@ -195,6 +195,7 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
     List<Revision> revisions = tektonTemplate.getRevisions();
     if (revisions.size() == 1) {
       Revision revision = revisions.get(0);
+      revision.setVersion(revisionId);
       
       final FlowUserEntity user = userIdentityService.getCurrentUser();
       if (user != null) {
@@ -204,9 +205,8 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
       }
       
       List<Revision> existingRevisions = dbTemplate.getRevisions();
-      int count = existingRevisions.size();
-      revision.setVersion(count + 1);
-      Revision oldRevision = existingRevisions.stream().filter( a -> revision.equals(a.getVersion())).findFirst().orElse(null);
+
+      Revision oldRevision = existingRevisions.stream().filter( a -> a.getVersion().equals(revisionId)).findFirst().orElse(null);
       if (oldRevision !=  null) {
         revisions.remove(oldRevision);
         existingRevisions.add(revision);   
