@@ -208,7 +208,7 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
 
       Revision oldRevision = existingRevisions.stream().filter( a -> a.getVersion().equals(revisionId)).findFirst().orElse(null);
       if (oldRevision !=  null) {
-        revisions.remove(oldRevision);
+        existingRevisions.remove(oldRevision);
         existingRevisions.add(revision);   
       }
     }
