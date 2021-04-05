@@ -24,6 +24,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import net.boomerangplatform.error.BoomerangError;
+import net.boomerangplatform.error.BoomerangException;
 import net.boomerangplatform.model.FlowTeam;
 import net.boomerangplatform.model.GenerateTokenResponse;
 import net.boomerangplatform.model.WorkflowExport;
@@ -538,10 +540,10 @@ public class WorkflowServiceImpl implements WorkflowService {
 
       }
     } else {
-      logger.info("Workflow not imported - template(s) not found");
-      throw new IllegalArgumentException("Workflow not imported - template(s) not found");
+      String message = "Workflow not imported - template(s) not found";
+      logger.info(message);
+      throw new BoomerangException(BoomerangError.IMPORT_WORKFLOW_FAILED);
     }
-
   }
 
   private List<FlowProperty> setupDefaultProperties(WorkflowEntity workflowSummary) {
