@@ -42,7 +42,7 @@ public interface FlowTaskTemplateRepository
       + "}")
   List<FlowTaskTemplateEntity> findAllForSystemTasks();
 
-  @Query(value = "{\"scope\" : \"team\", \"flowTeamId\" : $0, \"status\" : \"active\"}")
+  @Query(value = "{\"scope\" : \"team\", \"flowTeamId\" : ?0, \"status\" : \"active\"}")
   List<FlowTaskTemplateEntity> findByFlowTeamId(String flowTeamId);
   
   

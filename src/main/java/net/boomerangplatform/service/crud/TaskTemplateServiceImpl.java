@@ -58,7 +58,7 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
   public List<FlowTaskTemplate> getAllTaskTemplates(TemplateScope scope, String teamId) {
     List<FlowTaskTemplate> templates = new LinkedList<>();
     
-    if (scope == TemplateScope.global || scope == null || teamId == null) {
+    if (scope == TemplateScope.global || scope == null) {
        templates = flowTaskTemplateService.getAllGlobalTasks().stream()
           .map(FlowTaskTemplate::new).collect(Collectors.toList());
     } else if (scope == TemplateScope.team) {
