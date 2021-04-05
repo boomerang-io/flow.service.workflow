@@ -249,7 +249,7 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
         templates = flowTaskTemplateService.getAllTaskTemplatesforTeamId(flowTeamId).stream()
            .map(FlowTaskTemplate::new).collect(Collectors.toList());
     } else if (workflow.getScope() == WorkflowScope.system) {
-        templates = flowTaskTemplateService.getAllTaskTemplatesForSystem(flowTeamId).stream()
+        templates = flowTaskTemplateService.getAllTaskTemplatesForSystem().stream()
           .map(FlowTaskTemplate::new).collect(Collectors.toList());
     }
     

@@ -69,7 +69,7 @@ public class FlowTaskTemplateServiceImpl implements FlowTaskTemplateService {
   }
 
   @Override
-  public List<FlowTaskTemplateEntity> getAllTaskTemplatesForSystem(String teamId) {
+  public List<FlowTaskTemplateEntity> getAllTaskTemplatesForSystem() {
     return flowTaskTemplateRepository.findAllForSystemTasks();
   }
 

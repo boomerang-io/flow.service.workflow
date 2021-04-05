@@ -436,13 +436,22 @@ public class WorkflowServiceImpl implements WorkflowService {
   @Override
   public void importWorkflow(WorkflowExport export, Boolean update, String flowTeamId,
       WorkflowScope scope) {
-
-    List<FlowTaskTemplateEntity> templates = templateService.getAllTaskTemplates();
+    
     List<String> templateIds = new ArrayList<>();
-    for (FlowTaskTemplateEntity template : templates) {
-      templateIds.add(template.getId());
-
+    
+   
+    if (scope == null || scope == WorkflowScope.team) {
+      List<FlowTaskTemplateEntity> templates = templateService.getAllTaskTemplatesforTeamId(flowTeamId);
+      for (FlowTaskTemplateEntity template : templates) {
+        templateIds.add(template.getId());
+      }
+    } else if (scope == WorkflowScope.system) {
+      List<FlowTaskTemplateEntity> templates = templateService.getAllTaskTemplatesForSystem();
+      for (FlowTaskTemplateEntity template : templates) {
+        templateIds.add(template.getId());
+      }
     }
+   
 
     RevisionEntity revision = export.getLatestRevision();
     List<DAGTask> nodes = revision.getDag().getTasks();
