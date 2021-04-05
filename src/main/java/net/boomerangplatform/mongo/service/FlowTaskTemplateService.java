@@ -19,7 +19,7 @@ public interface FlowTaskTemplateService {
   
   List<FlowTaskTemplateEntity> getAllTaskTemplatesforTeamId(String teamId);
   
-  List<FlowTaskTemplateEntity> getAllTaskTemplatesForSystem(String teamId);
+  List<FlowTaskTemplateEntity> getAllTaskTemplatesForSystem();
   
   List<FlowTaskTemplateEntity> getTaskTemplatesforTeamId(String teamId);
  
