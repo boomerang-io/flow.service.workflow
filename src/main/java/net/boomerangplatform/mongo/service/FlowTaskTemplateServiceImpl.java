@@ -52,4 +52,29 @@ public class FlowTaskTemplateServiceImpl implements FlowTaskTemplateService {
     flowTaskTemplateEntity.setStatus(FlowTaskTemplateStatus.active);
     flowTaskTemplateRepository.save(flowTaskTemplateEntity);
   }
+
+  @Override
+  public List<FlowTaskTemplateEntity> getAllTaskTemplatesforTeamId(String teamId) {
+    return flowTaskTemplateRepository.findAllByFlowTeamId(teamId);
+  }
+
+  @Override
+  public List<FlowTaskTemplateEntity> getTaskTemplatesforTeamId(String teamId) {
+    return flowTaskTemplateRepository.findByFlowTeamId(teamId);
+  }
+
+  @Override
+  public List<FlowTaskTemplateEntity> getAllSystemTasks() {
+    return flowTaskTemplateRepository.findAllSystemTasks();
+  }
+
+  @Override
+  public List<FlowTaskTemplateEntity> getAllTaskTemplatesForSystem(String teamId) {
+    return flowTaskTemplateRepository.findAllForSystemTasks();
+  }
+
+  @Override
+  public List<FlowTaskTemplateEntity> getAllGlobalTasks() {
+    return flowTaskTemplateRepository.findAllGlobalTasks();
+  }
 }

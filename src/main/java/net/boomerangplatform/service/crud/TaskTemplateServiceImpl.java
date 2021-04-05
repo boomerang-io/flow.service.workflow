@@ -1,18 +1,23 @@
 package net.boomerangplatform.service.crud;
 
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import net.boomerangplatform.model.FlowTaskTemplate;
+import net.boomerangplatform.model.TemplateScope;
+import net.boomerangplatform.model.WorkflowSummary;
+import net.boomerangplatform.model.controller.Workflow;
 import net.boomerangplatform.model.tekton.TektonTask;
 import net.boomerangplatform.mongo.entity.FlowTaskTemplateEntity;
 import net.boomerangplatform.mongo.entity.FlowUserEntity;
 import net.boomerangplatform.mongo.model.ChangeLog;
 import net.boomerangplatform.mongo.model.FlowTaskTemplateStatus;
 import net.boomerangplatform.mongo.model.Revision;
+import net.boomerangplatform.mongo.model.WorkflowScope;
 import net.boomerangplatform.mongo.service.FlowTaskTemplateService;
 import net.boomerangplatform.service.UserIdentityService;
 import net.boomerangplatform.service.tekton.TetkonConverter;
@@ -25,6 +30,9 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
 
   @Autowired
   private UserIdentityService userIdentityService;
+  
+  @Autowired
+  private WorkflowService workflowService;
 
   @Override
   public FlowTaskTemplate getTaskTemplateWithId(String id) {
@@ -47,10 +55,25 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
   }
 
   @Override
-  public List<FlowTaskTemplate> getAllTaskTemplates() {
-    List<FlowTaskTemplate> templates = flowTaskTemplateService.getAllTaskTemplates().stream()
-        .map(FlowTaskTemplate::new).collect(Collectors.toList());
+  public List<FlowTaskTemplate> getAllTaskTemplates(TemplateScope scope, String teamId) {
+    List<FlowTaskTemplate> templates = new LinkedList<>();
+    
+    if (scope == TemplateScope.global || scope == null || teamId == null) {
+       templates = flowTaskTemplateService.getAllGlobalTasks().stream()
+          .map(FlowTaskTemplate::new).collect(Collectors.toList());
+    } else if (scope == TemplateScope.team) {
+       templates = flowTaskTemplateService.getTaskTemplatesforTeamId(teamId).stream()
+          .map(FlowTaskTemplate::new).collect(Collectors.toList());
+    } else if (scope == TemplateScope.system) {
+       templates = flowTaskTemplateService.getAllSystemTasks().stream()
+          .map(FlowTaskTemplate::new).collect(Collectors.toList());
+    }
+    
+    updateTemplateListUserNames(templates);
+    return templates;
+  }
 
+  private void updateTemplateListUserNames(List<FlowTaskTemplate> templates) {
     for (FlowTaskTemplate template : templates) {
       for (Revision revision : template.getRevisions()) {
         if (revision.getChangelog() != null && revision.getChangelog().getUserId() != null) {
@@ -63,7 +86,6 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
         }
       }
     }
-    return templates;
   }
 
   @Override
@@ -215,5 +237,22 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
     dbTemplate.setLastModified(new Date());
     flowTaskTemplateService.updateTaskTemplate(dbTemplate);
     return this.getTaskTemplateWithId(id);
+  }
+
+  @Override
+  public List<FlowTaskTemplate> getAllTaskTemplatesForWorkfow(String workflowId) {
+    List<FlowTaskTemplate> templates = new LinkedList<>();
+    
+    WorkflowSummary workflow = this.workflowService.getWorkflow(workflowId);
+    String flowTeamId = workflow.getFlowTeamId();
+    if (workflow.getScope() == WorkflowScope.team || workflow.getScope() == null) {
+        templates = flowTaskTemplateService.getAllTaskTemplatesforTeamId(flowTeamId).stream()
+           .map(FlowTaskTemplate::new).collect(Collectors.toList());
+    } else if (workflow.getScope() == WorkflowScope.system) {
+        templates = flowTaskTemplateService.getAllTaskTemplatesForSystem(flowTeamId).stream()
+          .map(FlowTaskTemplate::new).collect(Collectors.toList());
+    }
+    
+    return templates;
   }
 }

@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import net.boomerangplatform.model.TemplateScope;
 import net.boomerangplatform.mongo.model.FlowTaskTemplateStatus;
 import net.boomerangplatform.mongo.model.Revision;
 
@@ -34,6 +35,9 @@ public class FlowTaskTemplateEntity {
   private String icon;
   private boolean verified;
   private boolean enableLifecycle;
+  
+  private TemplateScope scope;
+  private String flowTeamId;
 
   public FlowTaskTemplateEntity() {
     // Do nothing
@@ -134,6 +138,22 @@ public class FlowTaskTemplateEntity {
 
   public void setEnableLifecycle(boolean enableLifecycle) {
     this.enableLifecycle = enableLifecycle;
+  }
+
+  public TemplateScope getScope() {
+    return scope;
+  }
+
+  public void setScope(TemplateScope scope) {
+    this.scope = scope;
+  }
+
+  public String getFlowTeamId() {
+    return flowTeamId;
+  }
+
+  public void setFlowTeamId(String flowTeamId) {
+    this.flowTeamId = flowTeamId;
   }
 
 }
