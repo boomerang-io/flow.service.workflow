@@ -13,7 +13,6 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import com.google.common.base.Optional;
 import net.boomerangplatform.controller.TaskTemplateController;
 import net.boomerangplatform.misc.FlowTests;
 import net.boomerangplatform.model.FlowTaskTemplate;
@@ -43,7 +42,7 @@ public class TaskTemplateControllerTests extends FlowTests {
 
   @Test
   public void testGetAllTaskTemplates() {
-    List<FlowTaskTemplate> templates = controller.getAllTaskTemplates();
+    List<FlowTaskTemplate> templates = controller.getAllTaskTemplates(null, null);
     assertEquals(6, templates.size());
     assertEquals(1, templates.get(0).getCurrentVersion());
     assertEquals(true, templates.get(0).isVerified());

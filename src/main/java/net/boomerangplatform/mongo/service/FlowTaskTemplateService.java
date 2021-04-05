@@ -16,4 +16,15 @@ public interface FlowTaskTemplateService {
   void deleteTaskTemplate(FlowTaskTemplateEntity flowTaskTemplateEntity);
 
   void activateTaskTemplate(FlowTaskTemplateEntity flowTaskTemplateEntity);
+  
+  List<FlowTaskTemplateEntity> getAllTaskTemplatesforTeamId(String teamId);
+  
+  List<FlowTaskTemplateEntity> getAllTaskTemplatesForSystem(String teamId);
+  
+  List<FlowTaskTemplateEntity> getTaskTemplatesforTeamId(String teamId);
+ 
+  List<FlowTaskTemplateEntity> getAllSystemTasks();
+  
+  List<FlowTaskTemplateEntity> getAllGlobalTasks();
+  
 }

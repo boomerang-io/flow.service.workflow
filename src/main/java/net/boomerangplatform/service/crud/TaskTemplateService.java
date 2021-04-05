@@ -2,6 +2,7 @@ package net.boomerangplatform.service.crud;
 
 import java.util.List;
 import net.boomerangplatform.model.FlowTaskTemplate;
+import net.boomerangplatform.model.TemplateScope;
 import net.boomerangplatform.model.tekton.TektonTask;
 
 public interface TaskTemplateService {
@@ -9,7 +10,7 @@ public interface TaskTemplateService {
 
   TektonTask getTaskTemplateYamlWithId(String id);
   
-  List<FlowTaskTemplate> getAllTaskTemplates();
+  List<FlowTaskTemplate> getAllTaskTemplates(TemplateScope scope, String teamId);
 
   FlowTaskTemplate insertTaskTemplate(FlowTaskTemplate flowTaskTemplateEntity);
 
@@ -26,4 +27,6 @@ public interface TaskTemplateService {
   FlowTaskTemplate updateTaskTemplateWuthYaml(String id, TektonTask tektonTask);
 
   FlowTaskTemplate updateTaskTemplateWuthYaml(String id, TektonTask tektonTask, Integer revision);
+
+  List<FlowTaskTemplate> getAllTaskTemplatesForWorkfow(String workflowId);
 }

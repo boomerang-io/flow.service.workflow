@@ -9,8 +9,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import net.boomerangplatform.model.FlowTaskTemplate;
+import net.boomerangplatform.model.TemplateScope;
 import net.boomerangplatform.model.tekton.TektonTask;
 import net.boomerangplatform.mongo.model.FlowTaskTemplateStatus;
 import net.boomerangplatform.service.crud.TaskTemplateService;
@@ -37,11 +39,17 @@ public class TaskTemplateController {
     return taskTemplateService.getTaskTemplateYamlWithIdAndRevision(id, revision);
   }
   
+  
   @GetMapping(value = "")
-  public List<FlowTaskTemplate> getAllTaskTemplates() {
-    return taskTemplateService.getAllTaskTemplates();
+  public List<FlowTaskTemplate> getAllTaskTemplates(@RequestParam(required = false) TemplateScope scope, @RequestParam(required = false) String teamId) {
+    return taskTemplateService.getAllTaskTemplates(scope, teamId);
   }
 
+  @GetMapping(value = "/workflow/{id}")
+  public List<FlowTaskTemplate> getTaskTemplatesForWorkfow(@PathVariable String workflowId) {
+    return taskTemplateService.getAllTaskTemplatesForWorkfow(workflowId);
+  }
+  
   @PostMapping(value = "")
   public FlowTaskTemplate insertTaskTemplate(@RequestBody FlowTaskTemplate flowTaskTemplateEntity) {
     flowTaskTemplateEntity.setStatus(FlowTaskTemplateStatus.active);
@@ -69,7 +77,6 @@ public class TaskTemplateController {
     return taskTemplateService.updateTaskTemplateWuthYaml(id, tektonTask, revision);
   }
   
-
   @DeleteMapping(value = "{id}")
   public void deleteTaskTemplateWithId(@PathVariable String id) {
     taskTemplateService.deleteTaskTemplateWithId(id);
