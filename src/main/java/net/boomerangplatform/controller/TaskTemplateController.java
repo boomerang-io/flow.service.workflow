@@ -45,7 +45,7 @@ public class TaskTemplateController {
     return taskTemplateService.getAllTaskTemplates(scope, teamId);
   }
 
-  @GetMapping(value = "/workflow/{id}")
+  @GetMapping(value = "/workflow/{workflowId}")
   public List<FlowTaskTemplate> getTaskTemplatesForWorkfow(@PathVariable String workflowId) {
     return taskTemplateService.getAllTaskTemplatesForWorkfow(workflowId);
   }
