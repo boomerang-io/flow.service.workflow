@@ -78,9 +78,16 @@ public class NavigationServiceImpl implements NavigationService {
 
       Navigation teamProperties = new Navigation();
       teamProperties.setName("Team Parameters");
-      teamProperties.setLink(flowAppsUrl + "/team-parameters");
+      teamProperties.setLink(flowAppsUrl + "/manage/team-parameters");
       teamProperties.setType(NavigationType.link);
       management.getChildLinks().add(teamProperties);
+      
+      Navigation teamTasks = new Navigation();
+      teamTasks.setName("Team Tasks");
+      teamTasks.setLink(flowAppsUrl + "/manage/task-templates");
+      teamTasks.setType(NavigationType.link);
+      management.getChildLinks().add(teamTasks);
+      
       response.add(management);
 
       if (isUserAdmin) {
