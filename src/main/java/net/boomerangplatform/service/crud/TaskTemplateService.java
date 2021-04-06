@@ -22,11 +22,11 @@ public interface TaskTemplateService {
 
   TektonTask getTaskTemplateYamlWithIdAndRevision(String id, Integer revisionNumber);
 
-  FlowTaskTemplate insertTaskTemplateYaml(TektonTask tektonTask);
+  FlowTaskTemplate insertTaskTemplateYaml(TektonTask tektonTask,TemplateScope scope, String teamId);
 
-  FlowTaskTemplate updateTaskTemplateWuthYaml(String id, TektonTask tektonTask);
+  FlowTaskTemplate updateTaskTemplateWithYaml(String id, TektonTask tektonTask);
 
-  FlowTaskTemplate updateTaskTemplateWuthYaml(String id, TektonTask tektonTask, Integer revision);
+  FlowTaskTemplate updateTaskTemplateWithYaml(String id, TektonTask tektonTask, Integer revision);
 
   List<FlowTaskTemplate> getAllTaskTemplatesForWorkfow(String workflowId);
 }
