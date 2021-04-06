@@ -57,8 +57,8 @@ public class TaskTemplateController {
   }
   
   @PostMapping(value = "yaml", consumes = "application/x-yaml", produces = "application/json")
-  public FlowTaskTemplate insertTaskTemplateYaml(@RequestBody TektonTask tektonTask) {
-    return taskTemplateService.insertTaskTemplateYaml(tektonTask);
+  public FlowTaskTemplate insertTaskTemplateYaml(@RequestBody TektonTask tektonTask, @RequestParam(required = true) TemplateScope scope, @RequestParam(required = false) String teamId) {
+    return taskTemplateService.insertTaskTemplateYaml(tektonTask, scope, teamId);
   }
 
   @PutMapping(value = "")
@@ -69,12 +69,12 @@ public class TaskTemplateController {
   
   @PutMapping(value = "{id}/yaml", consumes = "application/x-yaml", produces = "application/json")
   public FlowTaskTemplate updateTaskTemplateWithYaml(@PathVariable String id, @RequestBody TektonTask tektonTask) {
-    return taskTemplateService.updateTaskTemplateWuthYaml(id, tektonTask);
+    return taskTemplateService.updateTaskTemplateWithYaml(id, tektonTask);
   }
   
   @PutMapping(value = "{id}/yaml/{revision}", consumes = "application/x-yaml", produces = "application/json")
   public FlowTaskTemplate updateTaskTemplateWithYamlForRevision(@PathVariable String id, @RequestBody TektonTask tektonTask, @PathVariable Integer revision) {
-    return taskTemplateService.updateTaskTemplateWuthYaml(id, tektonTask, revision);
+    return taskTemplateService.updateTaskTemplateWithYaml(id, tektonTask, revision);
   }
   
   @DeleteMapping(value = "{id}")

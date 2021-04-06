@@ -151,15 +151,18 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
   }
 
   @Override
-  public FlowTaskTemplate insertTaskTemplateYaml(TektonTask tektonTask) {
+  public FlowTaskTemplate insertTaskTemplateYaml(TektonTask tektonTask, TemplateScope scope, String teamId) {
     FlowTaskTemplateEntity template = TetkonConverter.convertTektonTaskToNewFlowTask(tektonTask);
     template.setStatus(FlowTaskTemplateStatus.active);
+    template.setScope(scope);
+    template.setFlowTeamId(teamId);
+    
     flowTaskTemplateService.insertTaskTemplate(template);
     return new FlowTaskTemplate(template);
   }
 
   @Override
-  public FlowTaskTemplate updateTaskTemplateWuthYaml(String id, TektonTask tektonTask) {
+  public FlowTaskTemplate updateTaskTemplateWithYaml(String id, TektonTask tektonTask) {
     FlowTaskTemplateEntity tektonTemplate =
         TetkonConverter.convertTektonTaskToNewFlowTask(tektonTask);
     FlowTaskTemplateEntity dbTemplate = flowTaskTemplateService.getTaskTemplateWithId(id);
@@ -198,7 +201,7 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
   }
 
   @Override
-  public FlowTaskTemplate updateTaskTemplateWuthYaml(String id, TektonTask tektonTask,
+  public FlowTaskTemplate updateTaskTemplateWithYaml(String id, TektonTask tektonTask,
       Integer revisionId) {
     FlowTaskTemplateEntity tektonTemplate =  TetkonConverter.convertTektonTaskToNewFlowTask(tektonTask);
     FlowTaskTemplateEntity dbTemplate = flowTaskTemplateService.getTaskTemplateWithId(id);
