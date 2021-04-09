@@ -82,8 +82,7 @@ public class TetkonConverter {
       Map<String, Object> annotationFields = annotations.otherFields();
       annotationFields.put("boomerang.io/icon", task.getIcon());
       annotationFields.put("boomerang.io/params", configList);
-      annotationFields.put("description", task.getDescription());
-      
+  
       metadata.setAnnotations(annotations);
       
       if (configList != null) {
@@ -98,6 +97,7 @@ public class TetkonConverter {
         }
       }
       revision.getConfig();
+      spec.setDescription(task.getDescription());
       spec.setParams(params);
     }
     return newTask;
