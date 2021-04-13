@@ -12,8 +12,12 @@ metadata:
 spec:
   params:
     - name: pathToDockerFile
-      type: string
+      type: array
       description: The path to the dockerfile to build
+      default:
+        - "some"
+        - "array"
+        - "elements"
   steps:
   # Flow will only support single step
     - name: ubuntu-example

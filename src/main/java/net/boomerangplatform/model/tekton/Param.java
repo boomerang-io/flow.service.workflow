@@ -5,11 +5,13 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import net.boomerangplatform.model.ParamType;
 
 public class Param {
   private String name;
-  private String type;
+  private ParamType type;
   private String description;
+ 
   
   private Map<String, Object> unknownFields = new HashMap<>();
 
@@ -32,11 +34,11 @@ public class Param {
     this.name = name;
   }
 
-  public String getType() {
+  public ParamType getType() {
     return type;
   }
 
-  public void setType(String type) {
+  public void setType(ParamType type) {
     this.type = type;
   }
 
