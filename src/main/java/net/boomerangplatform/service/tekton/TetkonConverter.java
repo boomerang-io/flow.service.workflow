@@ -1,5 +1,6 @@
 package net.boomerangplatform.service.tekton;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
@@ -8,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import org.apache.commons.lang3.StringUtils;
+import net.boomerangplatform.model.ParamType;
 import net.boomerangplatform.model.tekton.Annotations;
 import net.boomerangplatform.model.tekton.Labels;
 import net.boomerangplatform.model.tekton.Metadata;
@@ -90,7 +92,13 @@ public class TetkonConverter {
           Param param = new Param();
           param.setName(config.getKey());
           param.otherFields().put("default", config.getDefaultValue());
-          param.setType("string");
+          
+          if ("textarea".equals(config.getType())) {
+            param.setType(ParamType.array);
+          } else {
+            param.setType(ParamType.string);
+          }
+          
           param.setDescription(config.getDescription());
           
           params.add(param);
@@ -149,6 +157,7 @@ public class TetkonConverter {
     }
   }
   
+  @SuppressWarnings("unchecked")
   private static Revision convertSpecToRevision(Spec spec) {
     Step step = spec.getSteps().get(0);
     
@@ -169,10 +178,21 @@ public class TetkonConverter {
         newConfig.setLabel(param.getName());
         
         newConfig.setDescription(param.getDescription());
-        newConfig.setType("text");
+      
+        ParamType type = param.getType();
         Object defaultStr = param.otherFields().get("default");
-        if (defaultStr != null) {
+        if (type == ParamType.string) {
           newConfig.setDefaultValue(defaultStr.toString());
+          newConfig.setType("text");
+          
+        } else if (defaultStr instanceof ArrayList<?>){
+          ArrayList<String> values = (ArrayList<String>) defaultStr;
+          StringBuilder sb = new StringBuilder();
+          for (String line : values) {
+            sb.append(line);
+            sb.append('\n');
+            newConfig.setDefaultValue(sb.toString());
+          }
         }
         
         newConfig.setReadOnly(false);

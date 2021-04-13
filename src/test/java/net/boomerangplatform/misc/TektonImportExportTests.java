@@ -106,7 +106,7 @@ public class TektonImportExportTests {
     
     Param param = params.get(0);
     assertEquals("pathToDockerFile", param.getName());
-    assertEquals("string", param.getType());
+    assertEquals("array", param.getType().toString());
     assertEquals("The path to the dockerfile to build", param.getDescription());
     
     List<Step> steps = spec.getSteps();
