@@ -73,46 +73,46 @@ public class ControllerClientImpl implements ControllerClient {
 
   @Value("${controller.terminateworkflow.url}")
   private String terminateWorkflowURL;
-  
+
   private static final String CREATEWORKFLOWREQUEST = "Create Workflow Request";
   private static final String TERMINATEWORKFLOWREQUEST = "Terminate Workflow Request";
   private static final String CREATETEMPLATETASKREQUEST = "Create Template Task Request";
   private static final String CREATECUSTOMTASKREQUEST = "Create Custom Task Request";
   private static final String ERRORLOGPRFIX = "Error for: {}";
-  
+
   @Override
   public boolean createFlow(String workflowId, String workflowName, String activityId,
       boolean enableStorage, List<CoreProperty> labels, Map<String, String> properties) {
 
-   
+
     final Workflow request = new Workflow();
     request.setWorkflowActivityId(activityId);
     request.setWorkflowName(workflowName);
     request.setWorkflowId(workflowId);
     request.setParameters(properties);
-    
+
 
     final WorkflowStorage storage = new WorkflowStorage();
     storage.setEnable(enableStorage);
-    
+
     String storageClassName =
         this.flowSettinigs.getConfiguration("workflow", "storage.class").getValue();
     if (storageClassName != null && !storageClassName.isBlank()) {
       storage.setClassName(storageClassName);
     }
-    
+
     String storageAccessMode =
         this.flowSettinigs.getConfiguration("workflow", "storage.accessMode").getValue();
     if (storageAccessMode != null && !storageAccessMode.isBlank()) {
       storage.setAccessMode(storageAccessMode);
     }
-    
+
     String storageDefaultSize =
         this.flowSettinigs.getConfiguration("workflow", "storage.size").getValue();
     if (storageDefaultSize != null && !storageDefaultSize.isBlank()) {
       storage.setSize(storageDefaultSize);
     }
-  
+
     request.setWorkflowStorage(storage);
     request.setLabels(this.convertToMap(labels));
 
@@ -120,15 +120,15 @@ public class ControllerClientImpl implements ControllerClient {
     Date startTime = new Date();
 
     try {
-      restTemplate.postForObject(createWorkflowURL, request, String.class);    
+      restTemplate.postForObject(createWorkflowURL, request, String.class);
     } catch (RestClientException ex) {
       LOGGER.error(ERRORLOGPRFIX, CREATEWORKFLOWREQUEST);
       LOGGER.error(ExceptionUtils.getStackTrace(ex));
       return false;
     }
-    
+
     Date endTime = new Date();
-    logRequestTime(CREATEWORKFLOWREQUEST, startTime,endTime);
+    logRequestTime(CREATEWORKFLOWREQUEST, startTime, endTime);
     return true;
   }
 
@@ -141,7 +141,7 @@ public class ControllerClientImpl implements ControllerClient {
     final WorkflowStorage storage = new WorkflowStorage();
     storage.setEnable(true);
     request.setWorkflowStorage(storage);
-    logPayload(TERMINATEWORKFLOWREQUEST,request);
+    logPayload(TERMINATEWORKFLOWREQUEST, request);
 
     Date startTime = new Date();
     try {
@@ -152,15 +152,16 @@ public class ControllerClientImpl implements ControllerClient {
       return false;
     }
     Date endTime = new Date();
-    logRequestTime(TERMINATEWORKFLOWREQUEST, startTime,endTime);
+    logRequestTime(TERMINATEWORKFLOWREQUEST, startTime, endTime);
     return true;
   }
 
   @Override
   @Async("flowAsyncExecutor")
-  public void submitCustomTask(Task task, String activityId, String workflowName, List<CoreProperty> labels) {
+  public void submitCustomTask(Task task, String activityId, String workflowName,
+      List<CoreProperty> labels) {
 
-    
+
     TaskResult taskResult = new TaskResult();
     TaskExecutionEntity taskExecution =
         taskService.findByTaskIdAndActivityId(task.getTaskId(), activityId);
@@ -177,7 +178,7 @@ public class ControllerClientImpl implements ControllerClient {
     request.setTaskName(task.getTaskName());
     request.setTaskActivityId(task.getTaskActivityId());
     request.setLabels(this.convertToMap(labels));
-    
+
     ControllerRequestProperties applicationProperties =
         propertyManager.buildRequestPropertyLayering(task, activityId, task.getWorkflowId());
 
@@ -202,21 +203,21 @@ public class ControllerClientImpl implements ControllerClient {
     TaskConfiguration taskConfiguration = buildTaskConfiguration(enableLifecycle);
     request.setConfiguration(taskConfiguration);
     request.setWorkspaces(activity.getTaskWorkspaces());
-    
+
 
     logPayload("Create Task Request", request);
 
     Map<String, String> outputProperties = new HashMap<>();
 
     try {
-      
+
       Date startTime = new Date();
       TaskResponse response =
           restTemplate.postForObject(createTaskURL, request, TaskResponse.class);
 
       Date endTime = new Date();
-      
-      logRequestTime(CREATECUSTOMTASKREQUEST, startTime,endTime);
+
+      logRequestTime(CREATECUSTOMTASKREQUEST, startTime, endTime);
       if (response != null) {
         this.logPayload(CREATECUSTOMTASKREQUEST, response);
         if (response.getResults() != null && !response.getResults().isEmpty()) {
@@ -270,7 +271,8 @@ public class ControllerClientImpl implements ControllerClient {
 
   @Override
   @Async("flowAsyncExecutor")
-  public void submitTemplateTask(Task task, String activityId, String workflowName, List<CoreProperty> labels) {
+  public void submitTemplateTask(Task task, String activityId, String workflowName,
+      List<CoreProperty> labels) {
 
     ActivityEntity activity = this.activityService.findWorkflowActivity(activityId);
 
@@ -288,13 +290,16 @@ public class ControllerClientImpl implements ControllerClient {
     request.setTaskName(task.getTaskName());
     request.setTaskActivityId(task.getTaskActivityId());
     request.setLabels(this.convertToMap(labels));
-    
+
     ControllerRequestProperties applicationProperties =
         propertyManager.buildRequestPropertyLayering(task, activityId, task.getWorkflowId());
 
     Map<String, String> map = applicationProperties.getTaskInputProperties();
 
     request.setParameters(map);
+
+    List<String> args = prepareCustomTaskArguments(activityId, applicationProperties, map);
+    request.setArguments(args);
 
     boolean enableLifecycle = task.getEnableLifecycle();
     TaskConfiguration taskConfiguration = buildTaskConfiguration(enableLifecycle);
@@ -313,16 +318,16 @@ public class ControllerClientImpl implements ControllerClient {
 
     logPayload(CREATETEMPLATETASKREQUEST, request);
     try {
-      
+
       Date startTime = new Date();
-      
+
       TaskResponse response =
           restTemplate.postForObject(createTaskURL, request, TaskResponse.class);
 
       Date endTime = new Date();
-      
-      logRequestTime(CREATETEMPLATETASKREQUEST, startTime,endTime);
-     
+
+      logRequestTime(CREATETEMPLATETASKREQUEST, startTime, endTime);
+
       if (response != null) {
         this.logPayload(CREATETEMPLATETASKREQUEST, response);
         if (response.getResults() != null && !response.getResults().isEmpty()) {
@@ -345,10 +350,10 @@ public class ControllerClientImpl implements ControllerClient {
     } catch (RestClientException ex) {
       taskExecution.setFlowTaskStatus(TaskStatus.failure);
       taskResult.setStatus(TaskStatus.failure);
-      
+
       LOGGER.error(ERRORLOGPRFIX, CREATETEMPLATETASKREQUEST);
       LOGGER.error(ExceptionUtils.getStackTrace(ex));
-      
+
     }
     taskService.save(taskExecution);
 
@@ -400,7 +405,7 @@ public class ControllerClientImpl implements ControllerClient {
     taskConfiguration.setDeletion(taskDeletion);
     taskConfiguration.setDebug(Boolean.valueOf(enableDebug));
     taskConfiguration.setLifecycle(enableLifecycle);
-    
+
     return taskConfiguration;
   }
 
@@ -414,17 +419,17 @@ public class ControllerClientImpl implements ControllerClient {
       LOGGER.error(ExceptionUtils.getStackTrace(e));
     }
   }
-  
+
   private void logRequestTime(String payloadName, Date start, Date end) {
     long diff = end.getTime() - start.getTime();
     LOGGER.debug("Benchmark [Request Type]: {} - {} ms", payloadName, diff);
   }
-  
+
   private Map<String, String> convertToMap(List<CoreProperty> labelList) {
     if (labelList == null) {
       return null;
     }
-    
+
     Map<String, String> labels = new HashMap<>();
     for (CoreProperty property : labelList) {
       labels.put(property.getKey(), property.getValue());
