@@ -682,7 +682,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
                 LOGGER.debug("Found a secured property being used: {}", taskConfig.getKey());
                 String key = taskConfig.getKey();
                 String inputValue = map.get(key);
-                if (inputValue != null && !inputValue.isBlank()) {
+                if (inputValue == null || inputValue.isBlank()) {
                   inputValue = taskConfig.getDefaultValue();
                 }
                 String value = propertyManager.replaceValueWithProperty(inputValue, activityId, applicationProperties);
