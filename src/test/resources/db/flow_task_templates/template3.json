@@ -29,7 +29,8 @@
             ],
             "arguments": [
                 "shell",
-                "execute"
+                "execute",
+                 "$(params.workflow-name)"
             ]
         }
     ]

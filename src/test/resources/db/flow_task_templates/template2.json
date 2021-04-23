@@ -15,7 +15,8 @@
             "command": "bash",
             "arguments": [
                 "shell",
-                "execute"
+                "execute",
+                 "$(params.workflow-name)"
             ],
             "config": [
                 {

@@ -250,6 +250,21 @@ public class ControllerClientImpl implements ControllerClient {
     flowTaskClient.endTask(response);
   }
 
+
+  private List<String> prepareTemplateTaskArguments(List<String> lines, String activityId,
+      ControllerRequestProperties applicationProperties, Map<String, String> map) {
+    List<String> args = new LinkedList<>();
+
+    for (String line : lines) {
+      String newValue =
+          propertyManager.replaceValueWithProperty(line, activityId, applicationProperties);
+      args.add(newValue);
+    }
+
+    return args;
+  }
+
+
   private List<String> prepareCustomTaskArguments(String activityId,
       ControllerRequestProperties applicationProperties, Map<String, String> map) {
     List<String> args = new LinkedList<>();
@@ -267,6 +282,7 @@ public class ControllerClientImpl implements ControllerClient {
     }
     return args;
   }
+
 
 
   @Override
@@ -298,14 +314,11 @@ public class ControllerClientImpl implements ControllerClient {
 
     request.setParameters(map);
 
-    List<String> args = prepareCustomTaskArguments(activityId, applicationProperties, map);
-    request.setArguments(args);
-
     boolean enableLifecycle = task.getEnableLifecycle();
     TaskConfiguration taskConfiguration = buildTaskConfiguration(enableLifecycle);
     request.setConfiguration(taskConfiguration);
 
-    prepareTemplateImageRequest(task, taskResult, request);
+    prepareTemplateImageRequest(task, taskResult, request,activityId, applicationProperties, map);
 
     final Date startDate = new Date();
 
@@ -366,11 +379,15 @@ public class ControllerClientImpl implements ControllerClient {
   }
 
   private void prepareTemplateImageRequest(Task task, TaskResult taskResult,
-      final TaskTemplate request) {
+      final TaskTemplate request, String activityId, ControllerRequestProperties applicationProperties, Map<String, String> map) {
     if (task.getRevision() != null) {
       Revision revision = task.getRevision();
       request.setArguments(revision.getArguments());
-
+      List<String> arguments = revision.getArguments();
+      
+      arguments = prepareTemplateTaskArguments(arguments, activityId, applicationProperties, map);
+      
+      request.setArguments(arguments);
       if (revision.getImage() != null && !revision.getImage().isBlank()) {
         request.setImage(revision.getImage());
       } else {

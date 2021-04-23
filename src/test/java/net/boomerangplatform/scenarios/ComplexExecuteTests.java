@@ -45,7 +45,7 @@ public class ComplexExecuteTests extends IntegrationTests {
     FlowActivity activity = submitWorkflow(workflowId);
 
     String id = activity.getId();
-    Thread.sleep(10000);
+    Thread.sleep(1000000);
     FlowActivity finalActivity = this.checkWorkflowActivity(id);
     assertEquals(TaskStatus.completed, finalActivity.getStatus());
     assertNotNull(finalActivity.getDuration());
