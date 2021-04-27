@@ -104,6 +104,12 @@ public class TetkonConverter {
           params.add(param);
         }
       }
+      
+      for (TaskTemplateConfig config : configList) {
+        config.setDescription(null);
+        config.setDefaultValue(null);
+      }
+      
       revision.getConfig();
       spec.setDescription(task.getDescription());
       spec.setParams(params);
@@ -197,6 +203,8 @@ public class TetkonConverter {
         
         newConfig.setReadOnly(false);
         newConfig.setPlaceholder("");
+        
+        
    
         config.add(newConfig);
       }
