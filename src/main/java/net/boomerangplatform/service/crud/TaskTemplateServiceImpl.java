@@ -202,7 +202,7 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
 
   @Override
   public FlowTaskTemplate updateTaskTemplateWithYaml(String id, TektonTask tektonTask,
-      Integer revisionId) {
+      Integer revisionId, String comment) {
     FlowTaskTemplateEntity tektonTemplate =  TetkonConverter.convertTektonTaskToNewFlowTask(tektonTask);
     FlowTaskTemplateEntity dbTemplate = flowTaskTemplateService.getTaskTemplateWithId(id);
     
@@ -227,6 +227,7 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
         ChangeLog changelog = revision.getChangelog();
         changelog.setUserId(user.getId());
         changelog.setDate(new Date());
+        changelog.setReason(comment);
       }
       
       List<Revision> existingRevisions = dbTemplate.getRevisions();
