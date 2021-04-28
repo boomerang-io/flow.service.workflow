@@ -454,9 +454,11 @@ public class TaskServiceImpl implements TaskService {
     for (String dep : deps) {
       TaskExecutionEntity task =
           taskActivityService.findByTaskIdAndActivityId(dep, workflowActivity.getId());
-      TaskStatus status = task.getFlowTaskStatus();
-      if (status == TaskStatus.inProgress || status == TaskStatus.notstarted || status == TaskStatus.waiting) {
-        return false;
+      if (task != null) {
+        TaskStatus status = task.getFlowTaskStatus();
+        if (status == TaskStatus.inProgress || status == TaskStatus.notstarted || status == TaskStatus.waiting) {
+          return false;
+        }
       }
     }
     return true;
