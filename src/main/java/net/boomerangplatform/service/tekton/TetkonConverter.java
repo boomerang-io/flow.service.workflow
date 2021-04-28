@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -126,7 +127,7 @@ public class TetkonConverter {
     getAnnotations(taskTemplate, metadata);
     
     List<Revision> revisions  = new LinkedList<>();
-    Revision newRevision = TetkonConverter.convertSpecToRevision(task.getSpec());
+    Revision newRevision = TetkonConverter.convertSpecToRevision(task);
     revisions.add(newRevision);
     newRevision.setVersion(1);
     taskTemplate.setRevisions(revisions);
@@ -164,7 +165,11 @@ public class TetkonConverter {
   }
   
   @SuppressWarnings("unchecked")
-  private static Revision convertSpecToRevision(Spec spec) {
+  private static Revision convertSpecToRevision(TektonTask task) {
+    List<Map<String, Object>> params  = extractBoomerangParams(task);
+
+ 
+    Spec spec = task.getSpec();
     Step step = spec.getSteps().get(0);
     
     Revision revision = new Revision();
@@ -179,9 +184,14 @@ public class TetkonConverter {
     
     if (spec.getParams() != null) {
       for (Param param : spec.getParams()) {
+        
+        String key = param.getName();
+        
+        Map<String, Object> extraPrams = params.stream().filter(element -> key.equals(element.get("key")) ).findFirst().orElse(new HashMap<>());
+        
         TaskTemplateConfig newConfig = new TaskTemplateConfig();
-        newConfig.setKey(param.getName());
-        newConfig.setLabel(param.getName());
+        newConfig.setKey(key);
+        newConfig.setLabel(key);
         
         newConfig.setDescription(param.getDescription());
       
@@ -201,11 +211,23 @@ public class TetkonConverter {
           }
         }
         
+     
         newConfig.setReadOnly(false);
         newConfig.setPlaceholder("");
         
         
-   
+        if (extraPrams.containsKey("placeholder")) {
+          newConfig.setPlaceholder((String) extraPrams.get("placeholder"));
+        }
+        if (extraPrams.containsKey("readOnly")) {
+          newConfig.setReadOnly((Boolean) extraPrams.get("readOnly"));
+        }
+        if (extraPrams.containsKey("label")) {
+          newConfig.setLabel((String) extraPrams.get("label"));
+        }
+        if (extraPrams.containsKey("type")) {
+          newConfig.setLabel((String) extraPrams.get("type"));
+        }
         config.add(newConfig);
       }
       revision.setConfig(config);
@@ -217,6 +239,19 @@ public class TetkonConverter {
     }
    
     return revision;
+  }
+
+  @SuppressWarnings("unchecked")
+  private static  List<Map<String, Object>> extractBoomerangParams(TektonTask task) {
+    List<Map<String, Object>> paramList = new LinkedList<>();
+    if (task.getMetadata() != null) {
+      Metadata metdata = task.getMetadata();
+      if (metdata.getAnnotations() != null) {
+        Annotations annotations = metdata.getAnnotations();
+        paramList = (List<Map<String, Object>>) annotations.otherFields().get("boomerang.io/params");
+      }
+    }
+    return paramList;
   }
   
 }

@@ -9,15 +9,18 @@ metadata:
     boomerang.io/icon: fix
     boomerang.io/category: Worker
     boomerang.io/revision: 1
+    boomerang.io/params:
+    - placeholder: "test"
+      readOnly: false
+      key: pathToDockerFile
+      label: Path To Docker File
+      type: text
 spec:
   params:
     - name: pathToDockerFile
-      type: array
+      type: string
       description: The path to the dockerfile to build
-      default:
-        - "some"
-        - "array"
-        - "elements"
+      default: hello
   steps:
   # Flow will only support single step
     - name: ubuntu-example

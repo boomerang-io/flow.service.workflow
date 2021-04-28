@@ -89,7 +89,7 @@ public class TektonImportExportTests {
     assertEquals("value", labels.otherFields().get("key"));
     
     Annotations annotations = metadata.getAnnotations();
-    assertEquals(4, annotations.otherFields().size());
+    assertEquals(5, annotations.otherFields().size());
     
     Map<String, Object> mappings = annotations.otherFields();
 
@@ -106,7 +106,7 @@ public class TektonImportExportTests {
     
     Param param = params.get(0);
     assertEquals("pathToDockerFile", param.getName());
-    assertEquals("array", param.getType().toString());
+    assertEquals("string", param.getType().toString());
     assertEquals("The path to the dockerfile to build", param.getDescription());
     
     List<Step> steps = spec.getSteps();
