@@ -24,9 +24,9 @@ import net.boomerangplatform.mongo.model.FlowTaskTemplateStatus;
 import net.boomerangplatform.mongo.model.Revision;
 import net.boomerangplatform.mongo.model.TaskTemplateConfig;
 
-public class TetkonConverter {
+public class TektonConverter {
   
-  private TetkonConverter() {
+  private TektonConverter() {
     
   }
   
@@ -127,7 +127,7 @@ public class TetkonConverter {
     getAnnotations(taskTemplate, metadata);
     
     List<Revision> revisions  = new LinkedList<>();
-    Revision newRevision = TetkonConverter.convertSpecToRevision(task);
+    Revision newRevision = TektonConverter.convertSpecToRevision(task);
     revisions.add(newRevision);
     newRevision.setVersion(1);
     taskTemplate.setRevisions(revisions);
@@ -198,7 +198,10 @@ public class TetkonConverter {
         ParamType type = param.getType();
         Object defaultStr = param.otherFields().get("default");
         if (type == ParamType.string) {
-          newConfig.setDefaultValue(defaultStr.toString());
+          if (defaultStr != null) {
+            newConfig.setDefaultValue(defaultStr.toString());
+          }
+          
           newConfig.setType("text");
           
         } else if (defaultStr instanceof ArrayList<?>){

@@ -21,14 +21,22 @@ import net.boomerangplatform.model.tekton.Spec;
 import net.boomerangplatform.model.tekton.Step;
 import net.boomerangplatform.model.tekton.TektonTask;
 import net.boomerangplatform.mongo.entity.FlowTaskTemplateEntity;
-import net.boomerangplatform.service.tekton.TetkonConverter;
+import net.boomerangplatform.service.tekton.TektonConverter;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 
 public class TektonImportExportTests {
   
   @Test
+  public void testYamlImportCostel() throws IOException {
+    TektonTask task = loadTektonTask("yaml/import2.yaml");
+    assertEquals("tekton.dev/v1beta1", task.getApiVersion());
+    assertEquals("Task", task.getKind());
+
+  }
+  
+  @Test
   public void testYamlImport() throws IOException {
-    TektonTask task = loadTektonTask();
+    TektonTask task = loadTektonTask("yaml/import.yaml");
     assertEquals("tekton.dev/v1beta1", task.getApiVersion());
     assertEquals("Task", task.getKind());
     Metadata metadata = task.getMetadata();
@@ -39,15 +47,15 @@ public class TektonImportExportTests {
   @Test 
   public void testYamlExport() throws IOException {
     FlowTaskTemplateEntity flowTaskTemplate = loadFlowTemplate();
-    TektonTask task = TetkonConverter.convertFlowTaskToTekton(flowTaskTemplate, Optional.empty());
+    TektonTask task = TektonConverter.convertFlowTaskToTekton(flowTaskTemplate, Optional.empty());
     logObjectASYaml(task);
     assertEquals("Task", task.getKind());
   }
   
   @Test
   public void testYamlConversion() throws IOException {
-    TektonTask task = loadTektonTask();
-    FlowTaskTemplateEntity entity = TetkonConverter.convertTektonTaskToNewFlowTask(task);
+    TektonTask task = loadTektonTask("yaml/import.yaml");
+    FlowTaskTemplateEntity entity = TektonConverter.convertTektonTaskToNewFlowTask(task);
     assertEquals("example-task-name", entity.getName());
     logObjectASJson(entity);
   }
@@ -72,9 +80,9 @@ public class TektonImportExportTests {
     return task;
   }
   
-  private TektonTask loadTektonTask()
+  private TektonTask loadTektonTask(String file)
       throws IOException, JsonProcessingException, JsonMappingException {
-    File resource = new ClassPathResource("yaml/import.yaml").getFile();
+    File resource = new ClassPathResource(file).getFile();
     String yamlString = new String(Files.readAllBytes(resource.toPath()));
     ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
     

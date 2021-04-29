@@ -1,0 +1,50 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: Tekton curl Task
+  labels: {}
+  annotations:
+    boomerang.io/icon: API/HTTP call
+    boomerang.io/params:
+    - required: true
+      placeholder: ""
+      readOnly: false
+      key: url
+      label: URL
+      type: text
+      helperText: ""
+    - required: true
+      placeholder: ""
+      readOnly: false
+      key: curl-image
+      label: Image
+      type: text
+      helperText: ""
+    - required: false
+      placeholder: ""
+      readOnly: false
+      key: options
+      label: Options
+      type: text
+      helperText: ""
+spec:
+  description: Run the curl Tekton task
+  params:
+  - name: url
+    type: string
+    description: ""
+    default: null
+  - name: curl-image
+    type: string
+    description: ""
+    default: "docker.io/curlimages/curl:7.72.0@sha256:3c3ff0c379abb1150bb586c7d55848ed4dcde4a6486b6f37d6815aed569332fe"
+  - name: options
+    type: string
+    description: ""
+    default: null
+  steps:
+  - name: Tekton curl Task
+    image: image
+    command: null
+    args:
+    - a

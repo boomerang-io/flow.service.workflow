@@ -20,7 +20,7 @@ import net.boomerangplatform.mongo.model.Revision;
 import net.boomerangplatform.mongo.model.WorkflowScope;
 import net.boomerangplatform.mongo.service.FlowTaskTemplateService;
 import net.boomerangplatform.service.UserIdentityService;
-import net.boomerangplatform.service.tekton.TetkonConverter;
+import net.boomerangplatform.service.tekton.TektonConverter;
 
 @Service
 public class TaskTemplateServiceImpl implements TaskTemplateService {
@@ -141,18 +141,18 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
   @Override
   public TektonTask getTaskTemplateYamlWithId(String id) {
     FlowTaskTemplateEntity template = flowTaskTemplateService.getTaskTemplateWithId(id);
-    return TetkonConverter.convertFlowTaskToTekton(template, Optional.empty());
+    return TektonConverter.convertFlowTaskToTekton(template, Optional.empty());
   }
 
   @Override
   public TektonTask getTaskTemplateYamlWithIdAndRevision(String id, Integer revisionNumber) {
     FlowTaskTemplateEntity template = flowTaskTemplateService.getTaskTemplateWithId(id);
-    return TetkonConverter.convertFlowTaskToTekton(template, Optional.of(revisionNumber));
+    return TektonConverter.convertFlowTaskToTekton(template, Optional.of(revisionNumber));
   }
 
   @Override
   public FlowTaskTemplate insertTaskTemplateYaml(TektonTask tektonTask, TemplateScope scope, String teamId) {
-    FlowTaskTemplateEntity template = TetkonConverter.convertTektonTaskToNewFlowTask(tektonTask);
+    FlowTaskTemplateEntity template = TektonConverter.convertTektonTaskToNewFlowTask(tektonTask);
     template.setStatus(FlowTaskTemplateStatus.active);
     template.setScope(scope);
     template.setFlowTeamId(teamId);
@@ -164,7 +164,7 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
   @Override
   public FlowTaskTemplate updateTaskTemplateWithYaml(String id, TektonTask tektonTask) {
     FlowTaskTemplateEntity tektonTemplate =
-        TetkonConverter.convertTektonTaskToNewFlowTask(tektonTask);
+        TektonConverter.convertTektonTaskToNewFlowTask(tektonTask);
     FlowTaskTemplateEntity dbTemplate = flowTaskTemplateService.getTaskTemplateWithId(id);
 
     if (tektonTemplate.getName() != null && !tektonTemplate.getName().isBlank()) {
@@ -203,7 +203,7 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
   @Override
   public FlowTaskTemplate updateTaskTemplateWithYaml(String id, TektonTask tektonTask,
       Integer revisionId, String comment) {
-    FlowTaskTemplateEntity tektonTemplate =  TetkonConverter.convertTektonTaskToNewFlowTask(tektonTask);
+    FlowTaskTemplateEntity tektonTemplate =  TektonConverter.convertTektonTaskToNewFlowTask(tektonTask);
     FlowTaskTemplateEntity dbTemplate = flowTaskTemplateService.getTaskTemplateWithId(id);
     
     if (tektonTemplate.getName() != null && !tektonTemplate.getName().isBlank()) {
