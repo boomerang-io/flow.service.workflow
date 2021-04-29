@@ -235,8 +235,9 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
       Revision oldRevision = existingRevisions.stream().filter( a -> a.getVersion().equals(revisionId)).findFirst().orElse(null);
       if (oldRevision !=  null) {
         existingRevisions.remove(oldRevision);
-        existingRevisions.add(revision);   
+        
       }
+      existingRevisions.add(revision);   
     }
     dbTemplate.setLastModified(new Date());
     flowTaskTemplateService.updateTaskTemplate(dbTemplate);
