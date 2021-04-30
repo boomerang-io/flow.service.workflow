@@ -29,4 +29,6 @@ public interface TaskTemplateService {
   FlowTaskTemplate updateTaskTemplateWithYaml(String id, TektonTask tektonTask, Integer revision, String comment);
 
   List<FlowTaskTemplate> getAllTaskTemplatesForWorkfow(String workflowId);
+
+  FlowTaskTemplate validateTaskTemplate(TektonTask tektonTask);
 }

@@ -260,4 +260,12 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
     
     return templates;
   }
+
+  @Override
+  public FlowTaskTemplate validateTaskTemplate(TektonTask tektonTask) {
+    FlowTaskTemplateEntity template = TektonConverter.convertTektonTaskToNewFlowTask(tektonTask);
+    template.setStatus(FlowTaskTemplateStatus.active);     
+    flowTaskTemplateService.insertTaskTemplate(template);
+    return new FlowTaskTemplate(template);
+  }
 }

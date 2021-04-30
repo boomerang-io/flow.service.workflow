@@ -24,6 +24,11 @@ public class TaskTemplateController {
   @Autowired
   private TaskTemplateService taskTemplateService;
 
+  @PostMapping(value = "yaml/validate", consumes = "application/x-yaml", produces = "application/json")
+  public FlowTaskTemplate validateYaml(@RequestBody TektonTask tektonTask) {
+    return taskTemplateService.validateTaskTemplate(tektonTask);
+  }
+  
   @GetMapping(value = "{id}")
   public FlowTaskTemplate getTaskTemplateWithId(@PathVariable String id) {
     return taskTemplateService.getTaskTemplateWithId(id);
