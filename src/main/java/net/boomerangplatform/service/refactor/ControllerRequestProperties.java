@@ -95,7 +95,6 @@ public class ControllerRequestProperties {
     copyProperties(teamProperties, finalProperties, "team", includeScope);
     copyProperties(workflowProperties, finalProperties, "workflow", includeScope);
     copyStringMap(taskInputProperties, finalProperties, "workflow", includeScope);
-    copyStringMap(taskInputProperties, finalProperties, "inputs", includeScope);
     copyProperties(systemProperties, finalProperties, "system", includeScope);
 
     copyProperties( this.getReservedProperties(), finalProperties, null, false);

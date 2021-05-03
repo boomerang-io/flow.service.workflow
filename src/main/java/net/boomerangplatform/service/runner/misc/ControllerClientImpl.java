@@ -311,14 +311,6 @@ public class ControllerClientImpl implements ControllerClient {
         propertyManager.buildRequestPropertyLayering(task, activityId, task.getWorkflowId());
 
     Map<String, String> map = applicationProperties.getTaskInputProperties();
-    
-    Map<String, String> map2 = applicationProperties.getMap(true);
-    
-    for (String keys : map2.keySet())  
-    {
-       System.out.println(keys + ":"+ map.get(keys));
-    }
-    
 
     request.setParameters(map);
 

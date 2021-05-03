@@ -81,7 +81,7 @@ public class PropertyManagerImpl implements PropertyManager {
   private String eventUrl;
 
 
-  final String[] reserved = {"system", "workflow", "global", "team", "inputs"};
+  final String[] reserved = {"system", "workflow", "global", "team", "workflow"};
 
   @Override
   public ControllerRequestProperties buildRequestPropertyLayering(Task task, String activityId,
