@@ -229,7 +229,7 @@ public class TektonConverter {
           newConfig.setLabel((String) extraPrams.get("label"));
         }
         if (extraPrams.containsKey("type")) {
-          newConfig.setLabel((String) extraPrams.get("type"));
+          newConfig.setType((String) extraPrams.get("type"));
         }
         config.add(newConfig);
       }
