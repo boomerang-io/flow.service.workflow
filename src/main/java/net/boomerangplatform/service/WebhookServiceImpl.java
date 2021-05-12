@@ -47,7 +47,8 @@ public class WebhookServiceImpl implements WebhookService {
 
     FlowExecutionRequest executionRequest = new FlowExecutionRequest();
     executionRequest.setProperties(request.getProperties());
-
+    executionRequest.setApplyQuotas(request.isApplyQuotas());
+    
     Optional<List<TaskWorkspace>> workspaces = Optional.empty();
 
     if (request.getTaskWorkspaces() != null) {

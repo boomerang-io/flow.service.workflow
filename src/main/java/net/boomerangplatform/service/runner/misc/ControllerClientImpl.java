@@ -18,6 +18,7 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.fabric8.tekton.pipeline.v1beta1.TaskRunResult;
 import net.boomerangplatform.model.Task;
 import net.boomerangplatform.model.TaskResult;
 import net.boomerangplatform.model.controller.TaskConfiguration;
@@ -113,6 +114,7 @@ public class ControllerClientImpl implements ControllerClient {
       storage.setSize(storageDefaultSize);
     }
 
+    
     request.setWorkflowStorage(storage);
     request.setLabels(this.convertToMap(labels));
 
@@ -191,7 +193,10 @@ public class ControllerClientImpl implements ControllerClient {
     command = propertyManager.replaceValueWithProperty(command, activityId, applicationProperties);
     request.setCommand(command);
 
-
+    String script = applicationProperties.getLayeredProperty("script");
+    script = propertyManager.replaceValueWithProperty(script, activityId, applicationProperties);
+    request.setScript(script);
+    
     List<String> args = prepareCustomTaskArguments(activityId, applicationProperties, map);
     request.setArguments(args);
     final Date startDate = new Date();
@@ -199,8 +204,8 @@ public class ControllerClientImpl implements ControllerClient {
     taskExecution.setFlowTaskStatus(TaskStatus.inProgress);
     taskExecution = taskService.save(taskExecution);
 
-    boolean enableLifecycle = task.getEnableLifecycle();
-    TaskConfiguration taskConfiguration = buildTaskConfiguration(enableLifecycle);
+
+    TaskConfiguration taskConfiguration = buildTaskConfiguration();
     request.setConfiguration(taskConfiguration);
     request.setWorkspaces(activity.getTaskWorkspaces());
 
@@ -221,7 +226,11 @@ public class ControllerClientImpl implements ControllerClient {
       if (response != null) {
         this.logPayload(CREATECUSTOMTASKREQUEST, response);
         if (response.getResults() != null && !response.getResults().isEmpty()) {
-          outputProperties = response.getResults();
+          for (TaskRunResult result : response.getResults()) {
+            String key = result.getName();
+            String value = result.getValue();
+            outputProperties.put(key, value);
+          }
         }
       }
       final Date finishDate = new Date();
@@ -307,6 +316,7 @@ public class ControllerClientImpl implements ControllerClient {
     request.setTaskActivityId(task.getTaskActivityId());
     request.setLabels(this.convertToMap(labels));
 
+
     ControllerRequestProperties applicationProperties =
         propertyManager.buildRequestPropertyLayering(task, activityId, task.getWorkflowId());
 
@@ -314,8 +324,8 @@ public class ControllerClientImpl implements ControllerClient {
 
     request.setParameters(map);
 
-    boolean enableLifecycle = task.getEnableLifecycle();
-    TaskConfiguration taskConfiguration = buildTaskConfiguration(enableLifecycle);
+
+    TaskConfiguration taskConfiguration = buildTaskConfiguration();
     request.setConfiguration(taskConfiguration);
 
     prepareTemplateImageRequest(task, taskResult, request,activityId, applicationProperties, map);
@@ -344,7 +354,14 @@ public class ControllerClientImpl implements ControllerClient {
       if (response != null) {
         this.logPayload(CREATETEMPLATETASKREQUEST, response);
         if (response.getResults() != null && !response.getResults().isEmpty()) {
-          outputProperties = response.getResults();
+          response.getResults().get(0);
+          if (response.getResults() != null) {
+            for (TaskRunResult result : response.getResults()) {
+              String key = result.getName();
+              String value = result.getValue();
+              outputProperties.put(key, value);
+            }
+          }
         }
       }
 
@@ -399,12 +416,15 @@ public class ControllerClientImpl implements ControllerClient {
       if (revision.getCommand() != null && !revision.getCommand().isBlank()) {
         request.setCommand(revision.getCommand());
       }
+      if (revision.getScript() != null && !revision.getScript().isBlank()) {
+        request.setScript(revision.getScript());
+      }
     } else {
       taskResult.setStatus(TaskStatus.invalid);
     }
   }
 
-  private TaskConfiguration buildTaskConfiguration(boolean enableLifecycle) {
+  private TaskConfiguration buildTaskConfiguration() {
     TaskConfiguration taskConfiguration = new TaskConfiguration();
     TaskDeletion taskDeletion = TaskDeletion.Never;
     String settingsPolicy =
@@ -421,7 +441,7 @@ public class ControllerClientImpl implements ControllerClient {
 
     taskConfiguration.setDeletion(taskDeletion);
     taskConfiguration.setDebug(Boolean.valueOf(enableDebug));
-    taskConfiguration.setLifecycle(enableLifecycle);
+
 
     return taskConfiguration;
   }

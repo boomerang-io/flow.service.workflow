@@ -7,6 +7,7 @@ public class Revision {
   private Integer version;
   private String image;
   private String command;
+  private String script;
 
   private List<String> arguments;
   private List<TaskTemplateConfig> config;
@@ -59,5 +60,13 @@ public class Revision {
 
   public void setChangelog(ChangeLog changelog) {
     this.changelog = changelog;
+  }
+
+  public String getScript() {
+    return script;
+  }
+
+  public void setScript(String script) {
+    this.script = script;
   }
 }
