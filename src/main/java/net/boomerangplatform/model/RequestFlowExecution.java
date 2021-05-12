@@ -7,6 +7,8 @@ import net.boomerangplatform.model.controller.TaskWorkspace;
 
 public class RequestFlowExecution {
 
+  private boolean applyQuotas;
+  
   private String token;
   
   private String workflowId;
@@ -46,6 +48,14 @@ public class RequestFlowExecution {
 
   public void setWorkflowId(String workflowId) {
     this.workflowId = workflowId;
+  }
+
+  public boolean isApplyQuotas() {
+    return applyQuotas;
+  }
+
+  public void setApplyQuotas(boolean applyQuotas) {
+    this.applyQuotas = applyQuotas;
   }
 
 }

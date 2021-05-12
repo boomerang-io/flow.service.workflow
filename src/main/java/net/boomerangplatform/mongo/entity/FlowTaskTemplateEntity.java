@@ -34,10 +34,11 @@ public class FlowTaskTemplateEntity {
   private Date createdDate;
   private String icon;
   private boolean verified;
-  private boolean enableLifecycle;
+
   
   private TemplateScope scope;
   private String flowTeamId;
+
 
   public FlowTaskTemplateEntity() {
     // Do nothing
@@ -132,13 +133,6 @@ public class FlowTaskTemplateEntity {
     this.verified = verified;
   }
 
-  public boolean getEnableLifecycle() {
-    return enableLifecycle;
-  }
-
-  public void setEnableLifecycle(boolean enableLifecycle) {
-    this.enableLifecycle = enableLifecycle;
-  }
 
   public TemplateScope getScope() {
     return scope;

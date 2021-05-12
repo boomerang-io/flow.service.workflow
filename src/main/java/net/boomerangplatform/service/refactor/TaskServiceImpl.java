@@ -511,7 +511,7 @@ public class TaskServiceImpl implements TaskService {
         final FlowTaskTemplateEntity flowTaskTemplate =
             templateService.getTaskTemplateWithId(templateId);
         newTask.setTemplateId(flowTaskTemplate.getId());
-        newTask.setEnableLifecycle(flowTaskTemplate.getEnableLifecycle());
+ 
         
         Integer templateVersion = dagTask.getTemplateVersion();
         List<Revision> revisions = flowTaskTemplate.getRevisions();
