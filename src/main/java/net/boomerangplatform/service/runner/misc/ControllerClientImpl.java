@@ -193,7 +193,7 @@ public class ControllerClientImpl implements ControllerClient {
     command = propertyManager.replaceValueWithProperty(command, activityId, applicationProperties);
     request.setCommand(command);
 
-    String script = applicationProperties.getLayeredProperty("script");
+    String script = applicationProperties.getLayeredProperty("shellScript");
     if (script != null) {
       script = propertyManager.replaceValueWithProperty(script, activityId, applicationProperties);
       request.setScript(script);
