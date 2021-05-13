@@ -1,6 +1,7 @@
 package net.boomerangplatform.mongo.model;
 
 import java.util.List;
+import net.boomerangplatform.model.controller.TaskEnvVar;
 
 public class Revision {
 
@@ -8,6 +9,9 @@ public class Revision {
   private String image;
   private String command;
   private String script;
+  
+  
+  private List<TaskEnvVar> envs;
 
   private List<String> arguments;
   private List<TaskTemplateConfig> config;
@@ -68,5 +72,13 @@ public class Revision {
 
   public void setScript(String script) {
     this.script = script;
+  }
+
+  public List<TaskEnvVar> getEnvs() {
+    return envs;
+  }
+
+  public void setEnvs(List<TaskEnvVar> envs) {
+    this.envs = envs;
   }
 }

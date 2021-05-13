@@ -9,16 +9,15 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import io.fabric8.tekton.pipeline.v1beta1.TaskResult;
 
 @JsonTypeInfo(
-          use = JsonTypeInfo.Id.NAME, 
-          include = JsonTypeInfo.As.PROPERTY, 
-          property = "taskType")
-        @JsonSubTypes({ 
-          @Type(value = TaskCustom.class, name = "custom"), 
-          @Type(value = TaskTemplate.class, name = "template")
-        })
+		  use = JsonTypeInfo.Id.NAME, 
+		  include = JsonTypeInfo.As.PROPERTY, 
+		  property = "taskType")
+		@JsonSubTypes({ 
+		  @Type(value = TaskCustom.class, name = "custom"), 
+		  @Type(value = TaskTemplate.class, name = "template")
+		})
 @JsonIgnoreProperties
 public abstract class Task {
 
@@ -48,6 +47,9 @@ public abstract class Task {
 
   @JsonProperty("parameters")
   private Map<String, String> parameters = new HashMap<>();
+
+  @JsonProperty("envs")
+  private List<TaskEnvVar> envs;
 
   @JsonProperty("results")
   private List<TaskResult> results;
@@ -124,6 +126,14 @@ public abstract class Task {
   public void setParameter(String name, String value) {
     this.parameters.put(name, value);
   }
+  
+  public List<TaskEnvVar> getEnvs() {
+    return envs;
+  }
+
+  public void setEnvs(List<TaskEnvVar> envs) {
+    this.envs = envs;
+  }
 
   public List<TaskResult> getResults() {
     return results;
@@ -178,11 +188,11 @@ public abstract class Task {
   }
 
   public TaskConfiguration getConfiguration() {
-    return configuration;
+	return configuration;
   }
 
   public void setConfiguration(TaskConfiguration configuration) {
-    this.configuration = configuration;
+	this.configuration = configuration;
   }
 
   public List<TaskWorkspace> getWorkspaces() {
