@@ -201,8 +201,10 @@ public class ControllerClientImpl implements ControllerClient {
     request.setCommand(command);
 
     String script = applicationProperties.getLayeredProperty("script");
-    script = propertyManager.replaceValueWithProperty(script, activityId, applicationProperties);
-    request.setScript(script);
+    if (script != null) {
+      script = propertyManager.replaceValueWithProperty(script, activityId, applicationProperties);
+      request.setScript(script);
+    }
     
     List<String> args = prepareCustomTaskArguments(activityId, applicationProperties, map);
     request.setArguments(args);

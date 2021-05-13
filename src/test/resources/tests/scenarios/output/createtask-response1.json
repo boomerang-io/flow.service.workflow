@@ -1,6 +1,7 @@
 {
-	"results": {
-		"foo": "test"
-	},
+	"results": [{
+		"name" : "foo",
+		"value" : "test"
+	}],
 	"code" : "0"
 }
