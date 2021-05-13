@@ -106,6 +106,7 @@ public class FlowApprovalServiceImpl implements FlowApprovalService {
         approvalEntity.setStatus(ApprovalStatus.rejected);
         actionApprovalResponse.setStatus(TaskStatus.failure);
       }
+      actionApprovalResponse.setOutputProperties(outputProperties);
       approvalService.save(approvalEntity);
       taskClient.endTask(actionApprovalResponse);
     }
