@@ -18,16 +18,16 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.fabric8.tekton.pipeline.v1beta1.TaskRunResult;
 import net.boomerangplatform.model.Task;
 import net.boomerangplatform.model.TaskResult;
+import net.boomerangplatform.model.controller.Storage;
 import net.boomerangplatform.model.controller.TaskConfiguration;
 import net.boomerangplatform.model.controller.TaskCustom;
 import net.boomerangplatform.model.controller.TaskDeletion;
 import net.boomerangplatform.model.controller.TaskResponse;
+import net.boomerangplatform.model.controller.TaskResponseResult;
 import net.boomerangplatform.model.controller.TaskTemplate;
 import net.boomerangplatform.model.controller.Workflow;
-import net.boomerangplatform.model.controller.WorkflowStorage;
 import net.boomerangplatform.mongo.entity.ActivityEntity;
 import net.boomerangplatform.mongo.entity.TaskExecutionEntity;
 import net.boomerangplatform.mongo.model.CoreProperty;
@@ -93,7 +93,7 @@ public class ControllerClientImpl implements ControllerClient {
     request.setParameters(properties);
 
 
-    final WorkflowStorage storage = new WorkflowStorage();
+    final Storage storage = new Storage();
     storage.setEnable(enableStorage);
 
     String storageClassName =
@@ -140,7 +140,7 @@ public class ControllerClientImpl implements ControllerClient {
     request.setWorkflowActivityId(activityId);
     request.setWorkflowName(workflowName);
     request.setWorkflowId(workflowId);
-    final WorkflowStorage storage = new WorkflowStorage();
+    final Storage storage = new Storage();
     storage.setEnable(true);
     request.setWorkflowStorage(storage);
     logPayload(TERMINATEWORKFLOWREQUEST, request);
@@ -226,7 +226,7 @@ public class ControllerClientImpl implements ControllerClient {
       if (response != null) {
         this.logPayload(CREATECUSTOMTASKREQUEST, response);
         if (response.getResults() != null && !response.getResults().isEmpty()) {
-          for (TaskRunResult result : response.getResults()) {
+          for (TaskResponseResult result : response.getResults()) {
             String key = result.getName();
             String value = result.getValue();
             outputProperties.put(key, value);
@@ -356,7 +356,7 @@ public class ControllerClientImpl implements ControllerClient {
         if (response.getResults() != null && !response.getResults().isEmpty()) {
           response.getResults().get(0);
           if (response.getResults() != null) {
-            for (TaskRunResult result : response.getResults()) {
+            for (TaskResponseResult result : response.getResults()) {
               String key = result.getName();
               String value = result.getValue();
               outputProperties.put(key, value);
@@ -419,6 +419,10 @@ public class ControllerClientImpl implements ControllerClient {
       if (revision.getScript() != null && !revision.getScript().isBlank()) {
         request.setScript(revision.getScript());
       }
+      if (revision.getEnvs() != null) {
+        request.setEnvs(revision.getEnvs());
+      }
+      
     } else {
       taskResult.setStatus(TaskStatus.invalid);
     }
