@@ -1,8 +1,13 @@
 package net.boomerangplatform.service;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import net.boomerangplatform.model.Approval;
@@ -67,6 +72,7 @@ public class FlowApprovalServiceImpl implements FlowApprovalService {
     FlowUserEntity flowUser = userIdentityService.getCurrentUser();
     ApprovalEntity approvalEntity = approvalService.findById(request.getId());
 
+
     if (approvalEntity != null && flowUser != null) {
 
       Audit audit = new Audit();
@@ -75,13 +81,28 @@ public class FlowApprovalServiceImpl implements FlowApprovalService {
       audit.setComments(request.getComments());
 
       approvalEntity.setAudit(audit);
-
+      Map<String, String> outputProperties = new HashMap<>();
+      
+      outputProperties.put("approvalUserName", flowUser.getName());
+      outputProperties.put("approvalUserEmail", flowUser.getEmail());
+      
+     
       InternalTaskResponse actionApprovalResponse = new InternalTaskResponse();
       actionApprovalResponse.setActivityId(approvalEntity.getTaskActivityId());
+      
+      outputProperties.put("approvalComments", audit.getComments());
+      
+      SimpleDateFormat formatter =  new SimpleDateFormat("yyyy-MM-dd'T'HH:mmZZZZ");
+      String strDate = formatter.format(audit.getActionDate());
+    
+      outputProperties.put("approvalDate", strDate);
+      
       if (request.isApproved()) {
+        outputProperties.put("approvalStatus", ApprovalStatus.approved.toString());
         approvalEntity.setStatus(ApprovalStatus.approved);
         actionApprovalResponse.setStatus(TaskStatus.completed);
       } else {
+        outputProperties.put("approvalStatus", ApprovalStatus.rejected.toString());
         approvalEntity.setStatus(ApprovalStatus.rejected);
         actionApprovalResponse.setStatus(TaskStatus.failure);
       }
