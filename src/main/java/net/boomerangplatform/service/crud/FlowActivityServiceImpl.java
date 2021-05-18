@@ -75,6 +75,7 @@ import net.boomerangplatform.service.FlowApprovalService;
 import net.boomerangplatform.service.PropertyManager;
 import net.boomerangplatform.service.UserIdentityService;
 import net.boomerangplatform.service.refactor.ControllerRequestProperties;
+import net.boomerangplatform.service.runner.misc.ControllerClient;
 import net.boomerangplatform.util.DateUtil;
 
 @Service
@@ -119,9 +120,12 @@ public class FlowActivityServiceImpl implements FlowActivityService {
 
   @Autowired
   private FlowTaskTemplateService templateService;
-  
+
   @Autowired
   private PropertyManager propertyManager;
+
+  @Autowired
+  private ControllerClient controllerClient;
 
   private static final Logger LOGGER = LogManager.getLogger();
 
@@ -476,11 +480,12 @@ public class FlowActivityServiceImpl implements FlowActivityService {
           || TaskType.manual.equals(task.getTaskType())) {
         Approval approval = approvalService.getApprovalByTaskActivityId(task.getId());
         task.setApproval(approval);
-      }
-      else if (TaskType.runworkflow == task.getTaskType() && task.getRunWorkflowActivityId() != null) {
-        
+      } else if (TaskType.runworkflow == task.getTaskType()
+          && task.getRunWorkflowActivityId() != null) {
+
         String runWorkflowActivityId = task.getRunWorkflowActivityId();
-        ActivityEntity activity = this.flowActivityService.findWorkflowActivtyById(runWorkflowActivityId);
+        ActivityEntity activity =
+            this.flowActivityService.findWorkflowActivtyById(runWorkflowActivityId);
         if (activity != null) {
           task.setRunWorkflowActivityStatus(activity.getStatus());
         }
@@ -580,20 +585,19 @@ public class FlowActivityServiceImpl implements FlowActivityService {
   @Override
   public StreamingResponseBody getTaskLog(String activityId, String taskId) {
 
-    LOGGER.info("Getting task log for activity: {} task id: {}",activityId,taskId);
-    
+    LOGGER.info("Getting task log for activity: {} task id: {}", activityId, taskId);
+
     TaskExecutionEntity taskExecution = taskService.findByTaskIdAndActivityId(taskId, activityId);
-    
+
     ActivityEntity activity =
         workflowActivityService.findWorkflowActivtyById(taskExecution.getActivityId());
-    
+
     List<String> removeList = buildRemovalList(taskId, taskExecution, activity);
     LOGGER.debug("Removal List Count: {} ", removeList.size());
-    
+
     return outputStream -> {
       Map<String, String> requestParams = new HashMap<>();
-      requestParams.put("workflowId",
-          activity.getWorkflowId());
+      requestParams.put("workflowId", activity.getWorkflowId());
       requestParams.put("workflowActivityId", activityId);
       requestParams.put("taskActivityId", taskExecution.getId());
       requestParams.put("taskId", taskId);
@@ -660,25 +664,26 @@ public class FlowActivityServiceImpl implements FlowActivityService {
     }
   }
 
-  private List<String> buildRemovalList(String taskId, TaskExecutionEntity taskExecution, ActivityEntity activity) {
-    
+  private List<String> buildRemovalList(String taskId, TaskExecutionEntity taskExecution,
+      ActivityEntity activity) {
+
     String activityId = activity.getId();
     List<String> removalList = new LinkedList<>();
     Task task = new Task();
     task.setTaskId(taskId);
     task.setTaskType(taskExecution.getTaskType());
-    
-    ControllerRequestProperties applicationProperties = propertyManager.buildRequestPropertyLayering(task, activityId, activity.getWorkflowId());
+
+    ControllerRequestProperties applicationProperties =
+        propertyManager.buildRequestPropertyLayering(task, activityId, activity.getWorkflowId());
     Map<String, String> map = applicationProperties.getMap(false);
 
     String workflowRevisionId = activity.getWorkflowRevisionid();
-  
-    Optional<RevisionEntity> revisionOptional =
-        this.versionService.getRevision(workflowRevisionId);
+
+    Optional<RevisionEntity> revisionOptional = this.versionService.getRevision(workflowRevisionId);
     if (revisionOptional.isEmpty()) {
       return new LinkedList<>();
     }
- 
+
     RevisionEntity revision = revisionOptional.get();
     Dag dag = revision.getDag();
     List<DAGTask> dagTasks = dag.getTasks();
@@ -701,8 +706,10 @@ public class FlowActivityServiceImpl implements FlowActivityService {
                 if (inputValue == null || inputValue.isBlank()) {
                   inputValue = taskConfig.getDefaultValue();
                 }
-                String value = propertyManager.replaceValueWithProperty(inputValue, activityId, applicationProperties);
-                value = propertyManager.replaceValueWithProperty(value, activityId, applicationProperties);
+                String value = propertyManager.replaceValueWithProperty(inputValue, activityId,
+                    applicationProperties);
+                value = propertyManager.replaceValueWithProperty(value, activityId,
+                    applicationProperties);
                 LOGGER.debug("New Value: {}", value);
                 if (!value.isBlank()) {
                   removalList.add(value);
@@ -713,7 +720,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
         }
       }
     }
-    
+
     LOGGER.debug("Displaying removal list");
     for (String item : removalList) {
       LOGGER.debug("Item: {}", item);
@@ -726,5 +733,38 @@ public class FlowActivityServiceImpl implements FlowActivityService {
       input = input.replaceAll(Pattern.quote(value), "******");
     }
     return input;
+  }
+
+  @Override
+  public void cancelWorkflowActivity(String activityId) {
+    ActivityEntity activity = flowActivityService.findWorkflowActivtyById(activityId);
+    activity.setStatus(TaskStatus.cancelled);
+
+    flowActivityService.saveWorkflowActivity(activity);
+
+    String workflowId = activity.getWorkflowId();
+    final WorkflowEntity workflow = workflowService.getWorkflow(workflowId);
+
+    List<TaskExecutionEntity> activites = taskService.findTaskActiivtyForActivity(activityId);
+    for (TaskExecutionEntity taskExecution : activites) {
+      if ((taskExecution.getTaskType() == TaskType.customtask
+          || taskExecution.getTaskType() == TaskType.template)
+          && taskExecution.getFlowTaskStatus() == TaskStatus.inProgress) {
+        Task task = new Task();
+        task.setTaskId(taskExecution.getTaskId());
+        task.setTaskName(taskExecution.getTaskName());
+        task.setWorkflowId(taskExecution.getWorkflowId());
+        task.setWorkflowName(workflow.getName());  
+        task.setTaskActivityId(taskExecution.getId());
+        controllerClient.terminateTask(task);
+      }
+
+      if (taskExecution.getFlowTaskStatus() == TaskStatus.notstarted
+          || taskExecution.getFlowTaskStatus() == TaskStatus.inProgress
+          || taskExecution.getFlowTaskStatus() == TaskStatus.waiting) {
+        taskExecution.setFlowTaskStatus(TaskStatus.cancelled);
+      }
+      taskService.save(taskExecution);
+    }
   }
 }

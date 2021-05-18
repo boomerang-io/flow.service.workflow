@@ -41,5 +41,7 @@ public interface FlowActivityService {
   Map<String, Long> getActivitySummary(Pageable pageable, List<String> teamIds,
       List<String> triggers, Long fromDate, Long toDate);
 
+  void cancelWorkflowActivity(String activityId);
+
 
 }

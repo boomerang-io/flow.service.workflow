@@ -81,11 +81,15 @@ public class ControllerClientImpl implements ControllerClient {
 
   @Value("${controller.terminateworkflow.url}")
   private String terminateWorkflowURL;
+  
+  @Value("${controller.terminatetask.url}")
+  private String terminateTaskURL;
 
   private static final String CREATEWORKFLOWREQUEST = "Create Workflow Request";
   private static final String TERMINATEWORKFLOWREQUEST = "Terminate Workflow Request";
   private static final String CREATETEMPLATETASKREQUEST = "Create Template Task Request";
   private static final String CREATECUSTOMTASKREQUEST = "Create Custom Task Request";
+  private static final String TERMINATETASKREQUEST = "Terminate Task Request";
   private static final String ERRORLOGPRFIX = "Error for: {}";
 
   @Override
@@ -485,5 +489,31 @@ public class ControllerClientImpl implements ControllerClient {
       labels.put(property.getKey(), property.getValue());
     }
     return labels;
+  }
+
+  @Override
+  public void terminateTask(Task task) {
+    TaskExecutionEntity taskExecution =
+        taskService.findById(task.getTaskActivityId());
+    ActivityEntity activity = this.activityService.findWorkflowActivity(taskExecution.getActivityId());
+    try {
+
+      Date startTime = new Date();
+      final TaskTemplate request = new TaskTemplate();
+      request.setTaskId(task.getTaskId());
+      request.setWorkflowId(task.getWorkflowId());
+      request.setWorkflowName(task.getWorkflowName());
+      request.setWorkflowActivityId(activity.getId());
+      request.setTaskName(task.getTaskName());
+      request.setTaskActivityId(task.getTaskActivityId());
+      restTemplate.postForObject(terminateTaskURL, request, TaskResponse.class);
+
+      Date endTime = new Date();
+      logRequestTime(TERMINATETASKREQUEST, startTime, endTime);
+    } catch (RestClientException ex) {
+      LOGGER.error(ERRORLOGPRFIX, TERMINATETASKREQUEST);
+      LOGGER.error(ExceptionUtils.getStackTrace(ex));
+    }
+    
   }
 }

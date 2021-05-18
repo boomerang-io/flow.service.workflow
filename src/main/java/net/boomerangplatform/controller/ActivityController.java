@@ -15,6 +15,7 @@ import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.domain.Sort.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -95,6 +96,24 @@ public class ActivityController {
         triggers, sort.get(), order.get());
   }
 
+  @DeleteMapping(value = "/activity/{activityId}/cancel")
+  public ResponseEntity<FlowActivity> cancelFlowActivity(@PathVariable String activityId) {
+    ActivityEntity activity = flowActivityService.findWorkflowActivity(activityId);
+    if (activity == null) {
+      return null;
+    }
+    
+    flowActivityService.cancelWorkflowActivity(activity.getId());
+    
+    activity = flowActivityService.findWorkflowActivity(activityId);
+    final List<TaskExecutionEntity> steps = flowActivityService.getTaskExecutions(activityId);
+    final FlowActivity response = new FlowActivity(activity);
+    response.setSteps(steps);
+    
+    return new ResponseEntity<>(response, HttpStatus.OK);
+  }
+
+    
   @GetMapping(value = "/activity/{activityId}")
   public ResponseEntity<FlowActivity> getFlowActivity(@PathVariable String activityId) {
     final ActivityEntity activity = flowActivityService.findWorkflowActivity(activityId);
