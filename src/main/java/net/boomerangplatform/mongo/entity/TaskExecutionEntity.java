@@ -7,6 +7,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import net.boomerangplatform.mongo.model.ErrorResponse;
 import net.boomerangplatform.mongo.model.TaskStatus;
 import net.boomerangplatform.mongo.model.TaskType;
 
@@ -41,6 +42,8 @@ public class TaskExecutionEntity {
   private String runWorkflowActivityId;
   private String runWorkflowId;
   private TaskStatus runWorkflowActivityStatus;
+  
+  private ErrorResponse error;
   
   public TaskType getTaskType() {
     return taskType;
@@ -186,5 +189,13 @@ public class TaskExecutionEntity {
 
   public void setRunWorkflowActivityStatus(TaskStatus runWorkflowActivityStatus) {
     this.runWorkflowActivityStatus = runWorkflowActivityStatus;
+  }
+
+  public ErrorResponse getError() {
+    return error;
+  }
+
+  public void setError(ErrorResponse error) {
+    this.error = error;
   }
 }
