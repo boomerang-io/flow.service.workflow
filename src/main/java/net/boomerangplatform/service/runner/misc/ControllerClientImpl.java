@@ -460,6 +460,12 @@ public class ControllerClientImpl implements ControllerClient {
         request.setEnvs(new LinkedList<>());
       }
       
+      if (revision.getResults() != null) {
+        request.setResults(revision.getResults());
+      } else {
+        request.setResults(new LinkedList<>());
+      }
+
     } else {
       taskResult.setStatus(TaskStatus.invalid);
     }
