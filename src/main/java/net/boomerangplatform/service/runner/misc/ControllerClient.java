@@ -7,6 +7,8 @@ import net.boomerangplatform.mongo.model.CoreProperty;
 
 public interface ControllerClient {
   
+  public void terminateTask(Task task);
+  
   public void submitTemplateTask(Task task, String activityId, String workflowName, List<CoreProperty> labels);
   
   public void submitCustomTask(Task task, String activityId, String workflowName, List<CoreProperty> labels);

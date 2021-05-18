@@ -99,6 +99,12 @@ public class TaskServiceImpl implements TaskService {
     TaskExecutionEntity taskExecution = taskActivityService.findById(taskId);
     ActivityEntity activity =
         activityService.findWorkflowActivtyById(taskExecution.getActivityId());
+    
+    if (activity.getStatus() == TaskStatus.cancelled ) {
+      LOGGER.error("[{}] Workflow has been marked as cancelled, not starting task.",activity.getId());
+      return;
+    }
+    
     WorkflowEntity workflow = workflowService.getWorkflow(activity.getWorkflowId());
     String workflowName = workflow.getName();
 
@@ -295,6 +301,14 @@ public class TaskServiceImpl implements TaskService {
     ActivityEntity workflowActivity =
         this.activityService.findWorkflowActivtyById(activity.getActivityId());
 
+    if (workflowActivity.getStatus() == TaskStatus.cancelled ) {
+      LOGGER.error("[{}] Workflow has been marked as cancelled, not ending task",activityId);
+      activity.setFlowTaskStatus(TaskStatus.cancelled);
+      long duration = new Date().getTime() - activity.getStartTime().getTime();
+      activity.setDuration(duration);
+      taskActivityService.save(activity);
+      return;
+    }
    
     RevisionEntity revision =
         workflowVersionService.getWorkflowlWithId(workflowActivity.getWorkflowRevisionid());
@@ -308,6 +322,7 @@ public class TaskServiceImpl implements TaskService {
 
     workflowActivity = this.activityService.findWorkflowActivtyById(activity.getActivityId());
 
+   
     activity.setFlowTaskStatus(request.getStatus());
     long duration = new Date().getTime() - activity.getStartTime().getTime();
     activity.setDuration(duration);
