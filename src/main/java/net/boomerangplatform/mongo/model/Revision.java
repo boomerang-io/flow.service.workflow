@@ -2,6 +2,7 @@ package net.boomerangplatform.mongo.model;
 
 import java.util.List;
 import net.boomerangplatform.model.controller.TaskEnvVar;
+import net.boomerangplatform.model.controller.TaskResult;
 
 public class Revision {
 
@@ -10,7 +11,16 @@ public class Revision {
   private String command;
   private String script;
   
+  private List<TaskResult> results;
   
+  public List<TaskResult> getResults() {
+    return results;
+  }
+
+  public void setResults(List<TaskResult> results) {
+    this.results = results;
+  }
+
   private List<TaskEnvVar> envs;
 
   private List<String> arguments;
