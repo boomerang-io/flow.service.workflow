@@ -456,6 +456,8 @@ public class ControllerClientImpl implements ControllerClient {
       }
       if (revision.getEnvs() != null) {
         request.setEnvs(revision.getEnvs());
+      } else {
+        request.setEnvs(new LinkedList<>());
       }
       
     } else {
