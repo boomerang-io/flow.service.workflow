@@ -20,6 +20,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import net.boomerangplatform.model.Task;
 import net.boomerangplatform.model.TaskResult;
+import net.boomerangplatform.model.controller.Response;
 import net.boomerangplatform.model.controller.Storage;
 import net.boomerangplatform.model.controller.TaskConfiguration;
 import net.boomerangplatform.model.controller.TaskCustom;
@@ -31,11 +32,13 @@ import net.boomerangplatform.model.controller.Workflow;
 import net.boomerangplatform.mongo.entity.ActivityEntity;
 import net.boomerangplatform.mongo.entity.TaskExecutionEntity;
 import net.boomerangplatform.mongo.model.CoreProperty;
+import net.boomerangplatform.mongo.model.ErrorResponse;
 import net.boomerangplatform.mongo.model.Revision;
 import net.boomerangplatform.mongo.model.TaskStatus;
 import net.boomerangplatform.mongo.model.internal.InternalTaskResponse;
 import net.boomerangplatform.mongo.service.ActivityTaskService;
 import net.boomerangplatform.mongo.service.FlowSettingsService;
+import net.boomerangplatform.mongo.service.FlowWorkflowActivityService;
 import net.boomerangplatform.service.PropertyManager;
 import net.boomerangplatform.service.crud.FlowActivityService;
 import net.boomerangplatform.service.refactor.ControllerRequestProperties;
@@ -71,6 +74,9 @@ public class ControllerClientImpl implements ControllerClient {
 
   @Autowired
   public FlowActivityService activityService;
+  
+  @Autowired
+  private FlowWorkflowActivityService workflowActivityService;
 
   @Value("${controller.terminateworkflow.url}")
   private String terminateWorkflowURL;
@@ -126,7 +132,19 @@ public class ControllerClientImpl implements ControllerClient {
     Date startTime = new Date();
 
     try {
-      restTemplate.postForObject(createWorkflowURL, request, String.class);
+      Response response = restTemplate.postForObject(createWorkflowURL, request, Response.class);
+      
+      if (response != null && !"0".equals(response.getCode())) {
+    
+        ErrorResponse error = new ErrorResponse();
+        error.setCode(response.getCode());
+        error.setMessage(response.getMessage());
+       
+        ActivityEntity activity = this.activityService.findWorkflowActivity(activityId);
+        activity.setError(error);
+        this.workflowActivityService.saveWorkflowActivity(activity);
+      }
+      
     } catch (RestClientException ex) {
       LOGGER.error(ERRORLOGPRFIX, CREATEWORKFLOWREQUEST);
       LOGGER.error(ExceptionUtils.getStackTrace(ex));
@@ -246,6 +264,11 @@ public class ControllerClientImpl implements ControllerClient {
 
       if (response != null && !"0".equals(response.getCode())) {
         taskExecution.setFlowTaskStatus(TaskStatus.failure);
+        ErrorResponse error = new ErrorResponse();
+        error.setCode(response.getCode());
+        error.setMessage(response.getMessage());
+        taskExecution.setError(error);
+        
       } else {
         taskResult.setStatus(taskExecution.getFlowTaskStatus());
       }
@@ -353,6 +376,7 @@ public class ControllerClientImpl implements ControllerClient {
       TaskResponse response =
           restTemplate.postForObject(createTaskURL, request, TaskResponse.class);
 
+      
       Date endTime = new Date();
 
       logRequestTime(CREATETEMPLATETASKREQUEST, startTime, endTime);
@@ -379,6 +403,11 @@ public class ControllerClientImpl implements ControllerClient {
       if (response != null && !"0".equals(response.getCode())) {
         taskExecution.setFlowTaskStatus(TaskStatus.failure);
         taskResult.setStatus(TaskStatus.failure);
+        
+        ErrorResponse error = new ErrorResponse();
+        error.setCode(response.getCode());
+        error.setMessage(response.getMessage());
+        taskExecution.setError(error);
       } else {
         taskResult.setStatus(taskExecution.getFlowTaskStatus());
       }

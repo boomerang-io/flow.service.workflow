@@ -53,6 +53,9 @@ public class FailureExecuteTests extends IntegrationTests {
     assertEquals(TaskStatus.failure, finalActivity.getSteps().get(0).getFlowTaskStatus());
     assertEquals(TaskStatus.skipped, finalActivity.getSteps().get(1).getFlowTaskStatus());
     mockServer.verify();
+    assertNotNull(finalActivity.getSteps().get(0).getError());
+    assertNotNull(finalActivity.getSteps().get(0).getError());
+    assertEquals("This is a special error",finalActivity.getSteps().get(0).getError().getMessage());
   }
 
   @Override
@@ -71,7 +74,8 @@ public class FailureExecuteTests extends IntegrationTests {
         .andExpect(method(HttpMethod.POST))
         .andExpect(jsonPath("$.workflowName").value("Unit Test Demo"))
         .andExpect(jsonPath("$.taskName").value("Echo Test"))
-        .andRespond(withStatus(HttpStatus.INTERNAL_SERVER_ERROR));
+        .andRespond(
+            withSuccess(getMockFile("tests/scenarios/failure/failure-response.json"), MediaType.APPLICATION_JSON));
 
     mockServer.expect(times(1), requestTo(containsString("controller/workflow/terminate")))
         .andExpect(method(HttpMethod.POST)).andRespond(withStatus(HttpStatus.OK));
