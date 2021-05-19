@@ -21,7 +21,7 @@ import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import net.boomerangplatform.model.FlowActivity;
 import net.boomerangplatform.model.FlowExecutionRequest;
-import net.boomerangplatform.mongo.entity.TaskExecutionEntity;
+import net.boomerangplatform.model.TaskExecutionResponse;
 import net.boomerangplatform.mongo.model.TaskStatus;
 import net.boomerangplatform.tests.IntegrationTests;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
@@ -61,10 +61,10 @@ public class SucessRedBranchFlowExecutionTest extends IntegrationTests {
     mockServer.verify();
     
     
-    List<TaskExecutionEntity> steps = finalActivity.getSteps();
-    TaskExecutionEntity executeShell1 = steps.stream().filter(e -> e.getTaskName().equals("Execute Shell 1")).findFirst().orElse(null);
-    TaskExecutionEntity executeShell2 = steps.stream().filter(e -> e.getTaskName().equals("Execute Shell 2")).findFirst().orElse(null);
-    TaskExecutionEntity executeShell3 = steps.stream().filter(e -> e.getTaskName().equals("Execute Shell 3")).findFirst().orElse(null);
+    List<TaskExecutionResponse> steps = finalActivity.getSteps();
+    TaskExecutionResponse executeShell1 = steps.stream().filter(e -> e.getTaskName().equals("Execute Shell 1")).findFirst().orElse(null);
+    TaskExecutionResponse executeShell2 = steps.stream().filter(e -> e.getTaskName().equals("Execute Shell 2")).findFirst().orElse(null);
+    TaskExecutionResponse executeShell3 = steps.stream().filter(e -> e.getTaskName().equals("Execute Shell 3")).findFirst().orElse(null);
     
     assertEquals(TaskStatus.skipped, executeShell1.getFlowTaskStatus());
     assertEquals(TaskStatus.completed, executeShell2.getFlowTaskStatus());

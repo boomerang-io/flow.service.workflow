@@ -1,10 +1,8 @@
 package net.boomerangplatform.model;
 
-import java.util.LinkedList;
 import java.util.List;
 import org.springframework.beans.BeanUtils;
 import net.boomerangplatform.mongo.entity.ActivityEntity;
-import net.boomerangplatform.mongo.entity.TaskExecutionEntity;
 import net.boomerangplatform.mongo.model.WorkflowScope;
 
 public class FlowActivity extends ActivityEntity {
@@ -15,7 +13,7 @@ public class FlowActivity extends ActivityEntity {
 
   private String shortDescription;
 
-  private List<TaskExecutionEntity> steps;
+  private List<TaskExecutionResponse> steps;
 
   private String userName;
 
@@ -43,7 +41,7 @@ public class FlowActivity extends ActivityEntity {
     this.teamName = teamName;
   }
 
-  public List<TaskExecutionEntity> getSteps() {
+  public List<TaskExecutionResponse> getSteps() {
     return steps;
   }
 
@@ -55,7 +53,7 @@ public class FlowActivity extends ActivityEntity {
     return workflowName;
   }
 
-  public void setSteps(List<TaskExecutionEntity> steps) {
+  public void setSteps(List<TaskExecutionResponse> steps) {
     this.steps = steps;
   }
 

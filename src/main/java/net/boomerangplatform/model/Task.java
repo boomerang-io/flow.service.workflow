@@ -19,6 +19,8 @@ public class Task {
   private String taskName;
   private String templateId;
 
+
+  
   private String workflowId;
   private String workflowName;
   private String taskActivityId;
