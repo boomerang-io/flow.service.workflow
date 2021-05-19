@@ -1,21 +1,16 @@
-package net.boomerangplatform.mongo.entity;
+package net.boomerangplatform.model;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import net.boomerangplatform.mongo.entity.ApprovalEntity;
 import net.boomerangplatform.mongo.model.ErrorResponse;
 import net.boomerangplatform.mongo.model.TaskStatus;
 import net.boomerangplatform.mongo.model.TaskType;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-@JsonInclude(Include.NON_NULL)
-@Document(collection = "#{@mongoConfiguration.fullCollectionName('workflows_activity_task')}")
-public class TaskExecutionEntity {
-
+public class TaskExecutionResponse {
+  private List<TaskOutputResult> results;
   private String activityId;
 
   private long duration;
@@ -32,9 +27,6 @@ public class TaskExecutionEntity {
   private String taskId;
   private String taskName;
   private String workflowId;
-  private String templateId;
-  private Integer templateRevision;
-  
   private TaskType taskType;
   
   private boolean preApproved;
@@ -202,19 +194,11 @@ public class TaskExecutionEntity {
     this.error = error;
   }
 
-  public String getTemplateId() {
-    return templateId;
+  public List<TaskOutputResult> getResults() {
+    return results;
   }
 
-  public void setTemplateId(String templateId) {
-    this.templateId = templateId;
-  }
-
-  public Integer getTemplateRevision() {
-    return templateRevision;
-  }
-
-  public void setTemplateRevision(Integer templateRevision) {
-    this.templateRevision = templateRevision;
+  public void setResults(List<TaskOutputResult> results) {
+    this.results = results;
   }
 }

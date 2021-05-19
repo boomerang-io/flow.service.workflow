@@ -92,13 +92,13 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
 
       final String workFlowId = revisionEntity.getWorkFlowId();
       newTask.setWorkflowId(workFlowId);
-
+      
       if (dagTask.getType() == TaskType.template || dagTask.getType() == TaskType.customtask) {
         String templateId = dagTask.getTemplateId();
         final FlowTaskTemplateEntity flowTaskTemplate =
             templateService.getTaskTemplateWithId(templateId);
-     
-        System.out.println(templateId);
+        newTask.setTemplateId(flowTaskTemplate.getId());
+        
         Integer templateVersion = dagTask.getTemplateVersion();
         List<Revision> revisions = flowTaskTemplate.getRevisions();
         if (revisions != null) {
@@ -179,8 +179,7 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
     long order = 1;
     for (final Task task : tasksToRun) {
 
-      final FlowTaskTemplateEntity taskTemplateEntity =
-          taskTemplateService.getTaskTemplateWithId(task.getTaskId());
+
       TaskExecutionEntity taskExecution = new TaskExecutionEntity();
       taskExecution.setActivityId(activityId);
       taskExecution.setTaskId(task.getTaskId());
@@ -188,13 +187,15 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
       taskExecution.setOrder(order);
       taskExecution.setTaskName(task.getTaskName());
       taskExecution.setTaskType(task.getTaskType());
-      
-      if (taskTemplateEntity != null) {
-        taskExecution.setTaskName(taskTemplateEntity.getName());
+     
+      if (task.getTemplateId() != null) {
+        final FlowTaskTemplateEntity taskTemplateEntity =
+            taskTemplateService.getTaskTemplateWithId(task.getTemplateId());
+        taskExecution.setTemplateId(taskTemplateEntity.getId());
+        taskExecution.setTemplateRevision(task.getRevision().getVersion());
       }
       
-      
-
+ 
       taskExecution = this.flowActivityService.saveTaskExecution(taskExecution);
 
       task.setTaskActivityId(taskExecution.getId());

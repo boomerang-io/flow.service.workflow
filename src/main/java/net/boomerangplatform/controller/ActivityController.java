@@ -26,12 +26,12 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 import net.boomerangplatform.model.FlowActivity;
 import net.boomerangplatform.model.InsightsSummary;
 import net.boomerangplatform.model.ListActivityResponse;
+import net.boomerangplatform.model.TaskExecutionResponse;
 import net.boomerangplatform.model.TeamWorkflowSummary;
 import net.boomerangplatform.mongo.entity.ActivityEntity;
 import net.boomerangplatform.mongo.entity.FlowTeamEntity;
 import net.boomerangplatform.mongo.entity.FlowUserEntity;
 import net.boomerangplatform.mongo.entity.RevisionEntity;
-import net.boomerangplatform.mongo.entity.TaskExecutionEntity;
 import net.boomerangplatform.mongo.entity.WorkflowEntity;
 import net.boomerangplatform.mongo.model.UserType;
 import net.boomerangplatform.mongo.model.WorkflowScope;
@@ -106,7 +106,7 @@ public class ActivityController {
     flowActivityService.cancelWorkflowActivity(activity.getId());
     
     activity = flowActivityService.findWorkflowActivity(activityId);
-    final List<TaskExecutionEntity> steps = flowActivityService.getTaskExecutions(activityId);
+    final List<TaskExecutionResponse> steps = flowActivityService.getTaskExecutions(activityId);
     final FlowActivity response = new FlowActivity(activity);
     response.setSteps(steps);
     
@@ -167,7 +167,7 @@ public class ActivityController {
       }
     }
 
-    final List<TaskExecutionEntity> steps = flowActivityService.getTaskExecutions(activityId);
+    final List<TaskExecutionResponse> steps = flowActivityService.getTaskExecutions(activityId);
 
     response.setSteps(steps);
 
