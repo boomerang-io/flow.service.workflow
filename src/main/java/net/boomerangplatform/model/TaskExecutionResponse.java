@@ -48,8 +48,6 @@ public class TaskExecutionResponse {
     this.taskType = taskType;
   }
 
-  private Map<String, String> outputs;
-
   public String getActivityId() {
     return activityId;
   }
@@ -128,14 +126,6 @@ public class TaskExecutionResponse {
 
   public void setWorkflowId(String workflowId) {
     this.workflowId = workflowId;
-  }
-
-  public Map<String, String> getOutputs() {
-    return outputs;
-  }
-
-  public void setOutputs(Map<String, String> outputs) {
-    this.outputs = outputs;
   }
 
   public ApprovalEntity getApproval() {

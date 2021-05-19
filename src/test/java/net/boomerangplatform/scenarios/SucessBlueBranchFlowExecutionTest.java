@@ -90,7 +90,9 @@ public class SucessBlueBranchFlowExecutionTest extends IntegrationTests {
         .andExpect(method(HttpMethod.POST)).andRespond(withStatus(HttpStatus.OK));
     mockServer.expect(times(1), requestTo(containsString("controller/task/execute")))
         .andExpect(jsonPath("$.taskName").value("Execute Shell 3"))
-        .andExpect(method(HttpMethod.POST)).andRespond(withStatus(HttpStatus.OK));
+        .andExpect(method(HttpMethod.POST)).andRespond(withSuccess(getMockFile("tests/scenarios/branch/branch-response1.json"),
+            MediaType.APPLICATION_JSON));
+    
     mockServer.expect(times(1), requestTo(containsString("controller/workflow/terminate")))
         .andExpect(method(HttpMethod.POST)).andRespond(withStatus(HttpStatus.OK));
   }
