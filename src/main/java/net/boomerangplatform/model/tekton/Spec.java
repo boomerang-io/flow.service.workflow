@@ -1,6 +1,7 @@
 package net.boomerangplatform.model.tekton;
 
 import java.util.List;
+import net.boomerangplatform.model.Result;
 
 public class Spec {
 
@@ -8,6 +9,8 @@ public class Spec {
   private List<Param> params;
   private List<Step> steps;
 
+  private List<Result> results;
+  
   public List<Step> getSteps() {
     return steps;
   }
@@ -30,5 +33,13 @@ public class Spec {
 
   public void setDescription(String description) {
     this.description = description;
+  }
+
+  public List<Result> getResults() {
+    return results;
+  }
+
+  public void setResults(List<Result> results) {
+    this.results = results;
   }
 }

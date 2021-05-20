@@ -6,6 +6,8 @@ public class Step {
 
   private String name;
   private String image;
+  private String script;
+  private List<Env> env;
   private List<String> command;
   private List<String> args;
 
@@ -39,5 +41,21 @@ public class Step {
 
   public void setCommand(List<String> command) {
     this.command = command;
+  }
+
+  public String getScript() {
+    return script;
+  }
+
+  public void setScript(String script) {
+    this.script = script;
+  }
+
+  public List<Env> getEnv() {
+    return env;
+  }
+
+  public void setEnv(List<Env> env) {
+    this.env = env;
   }
 }
