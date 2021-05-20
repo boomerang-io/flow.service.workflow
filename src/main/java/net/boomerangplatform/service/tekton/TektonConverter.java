@@ -11,7 +11,11 @@ import java.util.Map;
 import java.util.Optional;
 import org.apache.commons.lang3.StringUtils;
 import net.boomerangplatform.model.ParamType;
+import net.boomerangplatform.model.Result;
+import net.boomerangplatform.model.controller.TaskEnvVar;
+import net.boomerangplatform.model.controller.TaskResult;
 import net.boomerangplatform.model.tekton.Annotations;
+import net.boomerangplatform.model.tekton.Env;
 import net.boomerangplatform.model.tekton.Labels;
 import net.boomerangplatform.model.tekton.Metadata;
 import net.boomerangplatform.model.tekton.Param;
@@ -63,7 +67,20 @@ public class TektonConverter {
       Step step = new Step();
       
       step.setImage(revision.getImage());
+      step.setScript(revision.getScript());
       
+      List<Env> envList = new LinkedList<>();
+      if (revision.getEnvs() != null) {
+  
+        for (TaskEnvVar taskEnv :revision.getEnvs()) {
+          Env env = new Env();
+          env.setName(taskEnv.getName());
+          env.setValue(taskEnv.getValue());
+          
+          envList.add(env);
+        }
+      }
+      step.setEnv(envList);
       String commandStr = revision.getCommand();
       if (commandStr != null && !commandStr.isBlank()) {
         List<String> commandArray = Arrays.asList(commandStr.split(" ", -1));
@@ -110,6 +127,19 @@ public class TektonConverter {
         config.setDescription(null);
         config.setDefaultValue(null);
       }
+      
+      List<Result> results = new LinkedList<>();
+      List<TaskResult> resultsList = revision.getResults();
+      if (resultsList != null) {
+        for (TaskResult result : resultsList) {
+          Result r = new Result();
+          r.setName(result.getName());
+          r.setDescription(result.getDescription());
+          results.add(r);
+        }
+      }
+    
+      spec.setResults(results);
       
       revision.getConfig();
       spec.setDescription(task.getDescription());
@@ -168,7 +198,6 @@ public class TektonConverter {
   private static Revision convertSpecToRevision(TektonTask task) {
     List<Map<String, Object>> params  = extractBoomerangParams(task);
 
- 
     Spec spec = task.getSpec();
     Step step = spec.getSteps().get(0);
     
@@ -176,9 +205,38 @@ public class TektonConverter {
     
     revision.setImage(step.getImage());
     revision.setArguments(step.getArgs());
+    revision.setScript(step.getScript());
+    
+    List<TaskResult> taskResults = new LinkedList<>();
+    
+    if (spec.getResults() != null) {
+      for (Result taskResult :spec.getResults() ) {
+        TaskResult result = new TaskResult();
+        result.setName(taskResult.getName());
+        result.setDescription(taskResult.getDescription());
+        taskResults.add(result);
+      }
+      revision.setResults(taskResults);
+    }
+    
+    
+    
     
     if (step.getCommand() != null) {
       revision.setCommand(StringUtils.join(step.getCommand(), " "));
+    }
+    
+    if (step.getEnv() != null) {
+      List<Env> envs = step.getEnv();
+      List<TaskEnvVar> taskList = new LinkedList<>();
+      for (Env env : envs) {
+        TaskEnvVar taskEnvVar = new TaskEnvVar();
+        taskEnvVar.setName(env.getName());
+        taskEnvVar.setValue(env.getValue());
+        taskList.add(taskEnvVar);
+      }
+      revision.setEnvs(taskList);
+      
     }
     List<TaskTemplateConfig> config = new LinkedList<>();
     
@@ -231,6 +289,8 @@ public class TektonConverter {
         if (extraPrams.containsKey("type")) {
           newConfig.setType((String) extraPrams.get("type"));
         }
+        
+        
         config.add(newConfig);
       }
       revision.setConfig(config);
