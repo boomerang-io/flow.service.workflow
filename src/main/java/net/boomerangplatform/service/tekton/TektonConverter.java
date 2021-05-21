@@ -68,6 +68,7 @@ public class TektonConverter {
       
       step.setImage(revision.getImage());
       step.setScript(revision.getScript());
+      step.setWorkingDir(revision.getWorkingDir());
       
       List<Env> envList = new LinkedList<>();
       if (revision.getEnvs() != null) {
@@ -206,6 +207,7 @@ public class TektonConverter {
     revision.setImage(step.getImage());
     revision.setArguments(step.getArgs());
     revision.setScript(step.getScript());
+    revision.setWorkingDir(step.getWorkingDir());
     
     List<TaskResult> taskResults = new LinkedList<>();
     

@@ -7,6 +7,7 @@ public class Step {
   private String name;
   private String image;
   private String script;
+  private String workingDir;
   private List<Env> env;
   private List<String> command;
   private List<String> args;
@@ -57,5 +58,13 @@ public class Step {
 
   public void setEnv(List<Env> env) {
     this.env = env;
+  }
+
+  public String getWorkingDir() {
+    return workingDir;
+  }
+
+  public void setWorkingDir(String workingDir) {
+    this.workingDir = workingDir;
   }
 }
