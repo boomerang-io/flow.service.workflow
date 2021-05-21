@@ -15,6 +15,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Primary;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -81,13 +82,13 @@ public class ControllerClientImpl implements ControllerClient {
 
   @Autowired
   public FlowActivityService activityService;
-  
+
   @Autowired
   private FlowWorkflowActivityService workflowActivityService;
 
   @Value("${controller.terminateworkflow.url}")
   private String terminateWorkflowURL;
-  
+
   @Value("${controller.terminatetask.url}")
   private String terminateTaskURL;
 
@@ -131,7 +132,7 @@ public class ControllerClientImpl implements ControllerClient {
       storage.setSize(storageDefaultSize);
     }
 
-    
+
     request.setWorkflowStorage(storage);
     request.setLabels(this.convertToMap(labels));
 
@@ -140,18 +141,18 @@ public class ControllerClientImpl implements ControllerClient {
 
     try {
       Response response = restTemplate.postForObject(createWorkflowURL, request, Response.class);
-      
+
       if (response != null && !"0".equals(response.getCode())) {
-    
+
         ErrorResponse error = new ErrorResponse();
         error.setCode(response.getCode());
         error.setMessage(response.getMessage());
-       
+
         ActivityEntity activity = this.activityService.findWorkflowActivity(activityId);
         activity.setError(error);
         this.workflowActivityService.saveWorkflowActivity(activity);
       }
-      
+
     } catch (RestClientException ex) {
       LOGGER.error(ERRORLOGPRFIX, CREATEWORKFLOWREQUEST);
       LOGGER.error(ExceptionUtils.getStackTrace(ex));
@@ -227,7 +228,7 @@ public class ControllerClientImpl implements ControllerClient {
       script = propertyManager.replaceValueWithProperty(script, activityId, applicationProperties);
       request.setScript(script);
     }
-    
+
     List<String> args = prepareCustomTaskArguments(activityId, applicationProperties, map);
     request.setArguments(args);
     final Date startDate = new Date();
@@ -275,7 +276,7 @@ public class ControllerClientImpl implements ControllerClient {
         error.setCode(response.getCode());
         error.setMessage(response.getMessage());
         taskExecution.setError(error);
-        
+
       } else {
         taskResult.setStatus(taskExecution.getFlowTaskStatus());
       }
@@ -364,7 +365,7 @@ public class ControllerClientImpl implements ControllerClient {
     TaskConfiguration taskConfiguration = buildTaskConfiguration();
     request.setConfiguration(taskConfiguration);
 
-    prepareTemplateImageRequest(task, taskResult, request,activityId, applicationProperties, map);
+    prepareTemplateImageRequest(task, taskResult, request, activityId, applicationProperties, map);
 
     final Date startDate = new Date();
 
@@ -383,7 +384,7 @@ public class ControllerClientImpl implements ControllerClient {
       TaskResponse response =
           restTemplate.postForObject(createTaskURL, request, TaskResponse.class);
 
-      
+
       Date endTime = new Date();
 
       logRequestTime(CREATETEMPLATETASKREQUEST, startTime, endTime);
@@ -410,7 +411,7 @@ public class ControllerClientImpl implements ControllerClient {
       if (response != null && !"0".equals(response.getCode())) {
         taskExecution.setFlowTaskStatus(TaskStatus.failure);
         taskResult.setStatus(TaskStatus.failure);
-        
+
         ErrorResponse error = new ErrorResponse();
         error.setCode(response.getCode());
         error.setMessage(response.getMessage());
@@ -419,6 +420,29 @@ public class ControllerClientImpl implements ControllerClient {
         taskResult.setStatus(taskExecution.getFlowTaskStatus());
       }
       LOGGER.info("Task result: {}", taskResult.getStatus());
+    } catch (HttpStatusCodeException statusCodeException) {
+      LOGGER.error(ExceptionUtils.getStackTrace(statusCodeException));
+      
+      String body = statusCodeException.getResponseBodyAsString();
+      LOGGER.error("Error Response Body: " + body);
+      
+      ObjectMapper mapper = new ObjectMapper();
+      
+      TaskResponse response;
+      try {
+        response = mapper.readValue(body, TaskResponse.class);
+        if (response != null && !"0".equals(response.getCode())) {
+          taskExecution.setFlowTaskStatus(TaskStatus.failure);
+          taskResult.setStatus(TaskStatus.failure);
+
+          ErrorResponse error = new ErrorResponse();
+          error.setCode(response.getCode());
+          error.setMessage(response.getMessage());
+          taskExecution.setError(error);
+        }
+      } catch (JsonProcessingException e) {
+        e.printStackTrace();
+      }
     } catch (RestClientException ex) {
       taskExecution.setFlowTaskStatus(TaskStatus.failure);
       taskResult.setStatus(TaskStatus.failure);
@@ -427,6 +451,8 @@ public class ControllerClientImpl implements ControllerClient {
       LOGGER.error(ExceptionUtils.getStackTrace(ex));
 
     }
+
+
     taskService.save(taskExecution);
 
     InternalTaskResponse response = new InternalTaskResponse();
@@ -438,14 +464,15 @@ public class ControllerClientImpl implements ControllerClient {
   }
 
   private void prepareTemplateImageRequest(Task task, TaskResult taskResult,
-      final TaskTemplate request, String activityId, ControllerRequestProperties applicationProperties, Map<String, String> map) {
+      final TaskTemplate request, String activityId,
+      ControllerRequestProperties applicationProperties, Map<String, String> map) {
     if (task.getRevision() != null) {
       Revision revision = task.getRevision();
       request.setArguments(revision.getArguments());
       List<String> arguments = revision.getArguments();
-      
+
       arguments = prepareTemplateTaskArguments(arguments, activityId, applicationProperties, map);
-      
+
       request.setArguments(arguments);
       if (revision.getImage() != null && !revision.getImage().isBlank()) {
         request.setImage(revision.getImage());
@@ -466,7 +493,7 @@ public class ControllerClientImpl implements ControllerClient {
       } else {
         request.setEnvs(new LinkedList<>());
       }
-      
+
       if (revision.getResults() != null) {
         request.setResults(revision.getResults());
       } else {
@@ -530,9 +557,9 @@ public class ControllerClientImpl implements ControllerClient {
 
   @Override
   public void terminateTask(Task task) {
-    TaskExecutionEntity taskExecution =
-        taskService.findById(task.getTaskActivityId());
-    ActivityEntity activity = this.activityService.findWorkflowActivity(taskExecution.getActivityId());
+    TaskExecutionEntity taskExecution = taskService.findById(task.getTaskActivityId());
+    ActivityEntity activity =
+        this.activityService.findWorkflowActivity(taskExecution.getActivityId());
     try {
 
       Date startTime = new Date();
@@ -544,7 +571,7 @@ public class ControllerClientImpl implements ControllerClient {
       request.setTaskName(task.getTaskName());
       request.setTaskActivityId(task.getTaskActivityId());
       logPayload(TERMINATETASKREQUEST, request);
-      
+
       restTemplate.postForObject(terminateTaskURL, request, TaskResponse.class);
 
       Date endTime = new Date();
@@ -553,6 +580,6 @@ public class ControllerClientImpl implements ControllerClient {
       LOGGER.error(ERRORLOGPRFIX, TERMINATETASKREQUEST);
       LOGGER.error(ExceptionUtils.getStackTrace(ex));
     }
-    
+
   }
 }
