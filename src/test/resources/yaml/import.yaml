@@ -28,6 +28,7 @@ spec:
   # Flow will only support single step
     - name: ubuntu-example
       image: ubuntu
+      workingDir: /tmp
       script: |
         #!/bin/bash
 

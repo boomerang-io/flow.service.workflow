@@ -10,6 +10,7 @@ public class Revision {
   private String image;
   private String command;
   private String script;
+  private String workingDir;
   
   private List<TaskResult> results;
   
@@ -90,5 +91,13 @@ public class Revision {
 
   public void setEnvs(List<TaskEnvVar> envs) {
     this.envs = envs;
+  }
+
+  public String getWorkingDir() {
+    return workingDir;
+  }
+
+  public void setWorkingDir(String workingDir) {
+    this.workingDir = workingDir;
   }
 }
