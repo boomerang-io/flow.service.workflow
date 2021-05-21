@@ -543,6 +543,8 @@ public class ControllerClientImpl implements ControllerClient {
       request.setWorkflowActivityId(activity.getId());
       request.setTaskName(task.getTaskName());
       request.setTaskActivityId(task.getTaskActivityId());
+      logPayload(TERMINATETASKREQUEST, request);
+      
       restTemplate.postForObject(terminateTaskURL, request, TaskResponse.class);
 
       Date endTime = new Date();
