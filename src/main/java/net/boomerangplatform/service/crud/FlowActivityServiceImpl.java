@@ -805,9 +805,10 @@ public class FlowActivityServiceImpl implements FlowActivityService {
         Task task = new Task();
         task.setTaskId(taskExecution.getTaskId());
         task.setTaskName(taskExecution.getTaskName());
-        task.setWorkflowId(taskExecution.getWorkflowId());
+        task.setWorkflowId(workflow.getId());
         task.setWorkflowName(workflow.getName());
         task.setTaskActivityId(taskExecution.getId());
+        
         controllerClient.terminateTask(task);
       }
 
