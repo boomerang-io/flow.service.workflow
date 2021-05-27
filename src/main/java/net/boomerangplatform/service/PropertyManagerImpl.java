@@ -347,7 +347,9 @@ public class PropertyManagerImpl implements PropertyManager {
         String taskName = components[1];
         String results = components[2];
         String outputProperty = components[3];
-        if ("task".equals(task) && "results".equals(results)) {
+        
+        if (("task".equals(task) || "tasks".equals(task)) && "results".equals(results)) {
+      
           TaskExecutionEntity taskExecution = getTaskExecutionEntity(activityId, taskName);
           if (taskExecution != null && taskExecution.getOutputs() != null
               && taskExecution.getOutputs().get(outputProperty) != null) {
