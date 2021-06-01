@@ -3,6 +3,7 @@ package net.boomerangplatform.service;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import net.boomerangplatform.controller.ActivityController;
 import net.boomerangplatform.model.FlowActivity;
@@ -80,5 +81,10 @@ public class WebhookServiceImpl implements WebhookService {
   @Override
   public FlowActivity getFlowActivity(String activityId) {
     return activityController.getFlowActivity(activityId).getBody();
+  }
+
+  @Override
+  public ResponseEntity<FlowActivity> terminateActivity(String activityId) {
+    return activityController.cancelFlowActivity(activityId);
   }
 }
