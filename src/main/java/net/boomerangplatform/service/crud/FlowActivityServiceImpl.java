@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -609,9 +610,13 @@ public class FlowActivityServiceImpl implements FlowActivityService {
       ResponseExtractor<Void> responseExtractor =
           getResponseExtractorForRemovalList(removeList, outputStream, printWriter);
       LOGGER.info("Startingg log download: {}",encodedURL);
-      
-      restTemplate.execute(encodedURL, HttpMethod.GET, requestCallback, responseExtractor);
-      outputStream.close();
+      try {
+        restTemplate.execute(encodedURL, HttpMethod.GET, requestCallback, responseExtractor);
+      } catch (Exception ex) {
+        LOGGER.error("Error downloading logs: {} task id: {}", activityId,taskId);
+        LOGGER.error(ExceptionUtils.getStackTrace(ex));
+      }
+     
       LOGGER.info("Completed log download: {}",encodedURL);
     };
   }

@@ -11,6 +11,7 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Primary;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -54,9 +55,15 @@ public class ControllerClientImpl implements ControllerClient {
 
   @Autowired
   private FlowSettingsService flowSettinigs;
-
-  @Autowired
+  
   private TaskClient flowTaskClient;
+  
+  @Autowired
+  public ControllerClientImpl(@Lazy TaskClient flowTaskClient) {
+      this.flowTaskClient = flowTaskClient;
+  }
+  
+  
 
   @Autowired
   private PropertyManager propertyManager;

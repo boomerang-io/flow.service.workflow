@@ -34,24 +34,19 @@ public class TaskClientImpl implements TaskClient {
   private static final Logger LOGGER = LogManager.getLogger();
 
 
+  @Autowired
+  private TaskService taskService;
+  
   @Override
   @Async
   public void startTask(InternalTaskRequest taskRequest) {
-    try {
-      restTemplate.postForLocation(startTaskUrl, taskRequest);
-    } catch (RestClientException ex) {
-
-    } 
+    taskService.createTask(taskRequest);
   }
 
   @Override
   @Async
   public void endTask(InternalTaskResponse taskResponse) {
-    try {
-      restTemplate.postForLocation(endTaskUrl, taskResponse);
-    } catch (RestClientException ex) {
-
-    }
+    taskService.endTask(taskResponse);
   }
 
   @Override

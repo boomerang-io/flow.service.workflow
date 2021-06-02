@@ -12,6 +12,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.retry.backoff.FixedBackOffPolicy;
 import org.springframework.retry.policy.SimpleRetryPolicy;
 import org.springframework.retry.support.RetryTemplate;
@@ -69,9 +70,6 @@ public class TaskServiceImpl implements TaskService {
   private ActivityTaskService taskActivityService;
 
   @Autowired
-  private TaskClient flowClient;
-
-  @Autowired
   private DAGUtility dagUtility;
 
   @Autowired
@@ -88,6 +86,13 @@ public class TaskServiceImpl implements TaskService {
 
   private static final Logger LOGGER = LogManager.getLogger();
 
+  private TaskClient flowClient;
+  
+  @Autowired
+  public TaskServiceImpl(@Lazy TaskClient flowClient) {
+      this.flowClient = flowClient;
+  }
+  
 
   @Override
   @Async("flowAsyncExecutor")
