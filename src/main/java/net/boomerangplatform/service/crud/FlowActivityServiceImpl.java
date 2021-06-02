@@ -641,9 +641,9 @@ public class FlowActivityServiceImpl implements FlowActivityService {
         String input = null;
         while ((input = bufferedReader.readLine()) != null) {
           printWriter.println(satanzieInput(input, maskWordList));
-          printWriter.flush();
+          // printWriter.flush();
         }
-        printWriter.close();
+        // printWriter.close();
         return null;
       };
     }
