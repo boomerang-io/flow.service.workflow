@@ -624,6 +624,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
   private ResponseExtractor<Void> getResponseExtractorForRemovalList(List<String> maskWordList,
       OutputStream outputStream, PrintWriter printWriter) {
     if (maskWordList.isEmpty()) {
+      LOGGER.info("Remove word list empty, moving on.");
       return restTemplateResponse -> {
         InputStream is = restTemplateResponse.getBody();
         int nRead;
@@ -634,16 +635,26 @@ public class FlowActivityServiceImpl implements FlowActivityService {
         return null;
       };
     } else {
+      LOGGER.info("Streaming response from controller and processing");
       return restTemplateResponse -> {
-        InputStream is = restTemplateResponse.getBody();
-        Reader reader = new InputStreamReader(is);
-        BufferedReader bufferedReader = new BufferedReader(reader);
-        String input = null;
-        while ((input = bufferedReader.readLine()) != null) {
-          printWriter.println(satanzieInput(input, maskWordList));
-          // printWriter.flush();
+        try {
+          InputStream is = restTemplateResponse.getBody();
+          Reader reader = new InputStreamReader(is);
+          BufferedReader bufferedReader = new BufferedReader(reader);
+          String input = null;
+          while ((input = bufferedReader.readLine()) != null) {
+         
+            printWriter.println(satanzieInput(input, maskWordList));
+            if (!input.isBlank()) {
+              printWriter.flush();
+            }
+          }          
+        } catch (Exception e) {
+          LOGGER.error("Error streaming logs, displaying exception and moving on.");
+          LOGGER.error(ExceptionUtils.getStackTrace(e));
+        } finally {
+          printWriter.close();
         }
-        // printWriter.close();
         return null;
       };
     }
