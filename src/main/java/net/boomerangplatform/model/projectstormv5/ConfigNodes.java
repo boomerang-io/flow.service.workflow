@@ -2,6 +2,8 @@
 package net.boomerangplatform.model.projectstormv5;
 
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
@@ -9,6 +11,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import net.boomerangplatform.model.controller.TaskResult;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({"inputs", "nodeId", "taskId"})
@@ -34,7 +37,16 @@ public class ConfigNodes {
 
   private Integer taskVersion;
 
+  @JsonProperty("outputs")
+  private List<TaskResult> outputs = new LinkedList<>();
 
+  public List<TaskResult> getOutputs() {
+    return outputs;
+  }
+
+  public void setOutputs(List<TaskResult> outputs) {
+    this.outputs = outputs;
+  }
 
   @JsonIgnore
   private Map<String, Object> additionalProperties = new HashMap<>();

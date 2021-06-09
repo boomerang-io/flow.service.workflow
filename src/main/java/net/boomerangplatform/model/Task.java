@@ -2,6 +2,7 @@ package net.boomerangplatform.model;
 
 import java.util.List;
 import java.util.Map;
+import net.boomerangplatform.model.controller.TaskResult;
 import net.boomerangplatform.mongo.model.Revision;
 import net.boomerangplatform.mongo.model.TaskType;
 import net.boomerangplatform.mongo.model.next.Dependency;
@@ -14,6 +15,7 @@ public class Task {
   private List<Dependency> detailedDepednacies;
 
   private Map<String, String> inputs;
+
 
   private String taskId;
   private String taskName;
@@ -30,6 +32,15 @@ public class Task {
 
   private Revision revision;
 
+  private List<TaskResult> results;
+  
+  public List<TaskResult> getResults() {
+    return results;
+  }
+
+  public void setResults(List<TaskResult> results) {
+    this.results = results;
+  }
 
   public List<String> getDependencies() {
     return dependencies;

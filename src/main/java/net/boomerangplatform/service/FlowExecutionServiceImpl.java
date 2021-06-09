@@ -127,6 +127,8 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
         }
 
         newTask.setInputs(properties);
+        newTask.setResults(dagTask.getResults());
+        
 
       } else if (dagTask.getType() == TaskType.decision) {
         newTask.setDecisionValue(dagTask.getDecisionValue());

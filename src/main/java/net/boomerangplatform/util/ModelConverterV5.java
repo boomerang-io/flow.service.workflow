@@ -9,6 +9,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Predicate;
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import net.boomerangplatform.model.controller.TaskResult;
 import net.boomerangplatform.model.projectstormv5.ConfigNodes;
 import net.boomerangplatform.model.projectstormv5.Extras;
 import net.boomerangplatform.model.projectstormv5.ExtrasNode;
@@ -55,6 +56,8 @@ public class ModelConverterV5 {
 
       dagTask.setTemplateVersion(config.getTaskVersion());
 
+      /* Set up tas inputs */
+      
       Map<String, String> inputs = config.getInputs();
       List<CoreProperty> coreProperties = new LinkedList<>();
       for (Entry<String, String> entry : inputs.entrySet()) {
@@ -67,7 +70,10 @@ public class ModelConverterV5 {
       }
 
       dagTask.setProperties(coreProperties);
-
+      
+      /* Set up task results. */
+      List<TaskResult> results = config.getOutputs();
+      dagTask.setResults(results);
 
       if (getPropertyForKey(dagTask.getProperties(), TASKNAMEKEY) != null) {
         dagTask.setLabel(getPropertyForKey(dagTask.getProperties(), TASKNAMEKEY));
@@ -448,22 +454,21 @@ public class ModelConverterV5 {
     }
 
     List<CoreProperty> inputs = dagTask.getProperties();
+    ConfigNodes config = new ConfigNodes();
+    config.setNodeId(dagTask.getTaskId());
+    config.setTaskId(dagTask.getTemplateId());
+    config.setTaskVersion(dagTask.getTemplateVersion());
+    config.setType(taskNode.getType());
+    config.setTaskVersion(dagTask.getTemplateVersion());
 
+    config.setOutputs(dagTask.getResults());
     if (inputs != null && !inputs.isEmpty()) {
-      ConfigNodes config = new ConfigNodes();
-      config.setNodeId(dagTask.getTaskId());
-      config.setTaskId(dagTask.getTemplateId());
-      config.setTaskVersion(dagTask.getTemplateVersion());
-      config.setType(taskNode.getType());
-      config.setTaskVersion(dagTask.getTemplateVersion());
-
+    
       Map<String, String> map = new HashMap<>();
-
       for (CoreProperty coreProperty : inputs) {
         map.put(coreProperty.getKey(), coreProperty.getValue());
       }
       config.setInputs(map);
-
       config.getInputs().put(TASKNAMEKEY, dagTask.getLabel());
       configNodeList.add(config);
     }

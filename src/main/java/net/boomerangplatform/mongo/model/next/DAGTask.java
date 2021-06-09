@@ -10,6 +10,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import net.boomerangplatform.model.controller.TaskResult;
 import net.boomerangplatform.mongo.model.CoreProperty;
 import net.boomerangplatform.mongo.model.TaskType;
 
@@ -26,6 +27,17 @@ public class DAGTask {
   private String label;
   @JsonProperty("templateId")
   private String templateId;
+  
+  @JsonProperty
+  private List<TaskResult> results;
+
+  public List<TaskResult> getResults() {
+    return results;
+  }
+
+  public void setResults(List<TaskResult> results) {
+    this.results = results;
+  }
 
   @JsonProperty("templateVersion")
   private Integer templateVersion;

@@ -422,12 +422,12 @@ public class ControllerClientImpl implements ControllerClient {
       LOGGER.info("Task result: {}", taskResult.getStatus());
     } catch (HttpStatusCodeException statusCodeException) {
       LOGGER.error(ExceptionUtils.getStackTrace(statusCodeException));
-      
+
       String body = statusCodeException.getResponseBodyAsString();
       LOGGER.error("Error Response Body: " + body);
-      
+
       ObjectMapper mapper = new ObjectMapper();
-      
+
       TaskResponse response;
       try {
         response = mapper.readValue(body, TaskResponse.class);
@@ -493,11 +493,14 @@ public class ControllerClientImpl implements ControllerClient {
       } else {
         request.setEnvs(new LinkedList<>());
       }
+      request.setResults(new LinkedList<>());
 
-      if (revision.getResults() != null) {
-        request.setResults(revision.getResults());
+      if (task.getResults() != null) {
+        request.setResults(task.getResults());
       } else {
-        request.setResults(new LinkedList<>());
+        if (revision.getResults() != null) {
+          request.setResults(revision.getResults());
+        }
       }
 
     } else {

@@ -554,6 +554,7 @@ public class TaskServiceImpl implements TaskService {
           }
         }
         newTask.setInputs(properties);
+        newTask.setResults(dagTask.getResults());
       } else if (dagTask.getType() == TaskType.decision) {
         TaskExecutionEntity task =
             taskActivityService.findByTaskIdAndActivityId(dagTask.getTaskId(), activity.getId());
