@@ -140,10 +140,11 @@ public class TaskServiceImpl implements TaskService {
         response.setStatus(TaskStatus.completed);
         processDecision(task, activity.getId());
         this.endTask(response);
-      } else if (taskType == TaskType.template) {
+      } else if (taskType == TaskType.template || taskType == TaskType.script) {
         List<CoreProperty> labels = workflow.getLabels();
         controllerClient.submitTemplateTask(task, activityId, workflowName, labels);
-      } else if (taskType == TaskType.customtask) {
+      }
+      else if (taskType == TaskType.customtask) {
         List<CoreProperty> labels = workflow.getLabels();
         controllerClient.submitCustomTask(task, activityId, workflowName, labels);
       } 
@@ -300,7 +301,7 @@ public class TaskServiceImpl implements TaskService {
   public void endTask(InternalTaskResponse request) {
 
     String activityId = request.getActivityId();
-    LOGGER.debug("[{}] Recieved end task request",activityId);
+    LOGGER.info("[{}] Recieved end task request",activityId);
     TaskExecutionEntity activity = taskActivityService.findById(activityId);
 
     ActivityEntity workflowActivity =
@@ -514,7 +515,7 @@ public class TaskServiceImpl implements TaskService {
       final String workFlowId = revisionEntity.getWorkFlowId();
       newTask.setWorkflowId(workFlowId);
 
-      if (dagTask.getType() == TaskType.template || dagTask.getType() == TaskType.customtask) {
+      if (dagTask.getType() == TaskType.script || dagTask.getType() == TaskType.template || dagTask.getType() == TaskType.customtask) {
 
         TaskExecutionEntity task =
             taskActivityService.findByTaskIdAndActivityId(dagTask.getTaskId(), activity.getId());

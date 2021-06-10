@@ -5,7 +5,7 @@
     "lastModified" : ISODate("2020-08-25T15:04:10.173Z"),
     "name" : "Execute Shell",
     "category" : "utilities",
-    "nodetype" : "templateTask",
+    "nodetype" : "script",
     "enableLifecycle" : true,
     "revisions" : [ 
         {

@@ -158,7 +158,7 @@ public class DAGUtility {
       final String workFlowId = revisionEntity.getWorkFlowId();
       newTask.setWorkflowId(workFlowId);
 
-      if (dagTask.getType() == TaskType.template || dagTask.getType() == TaskType.customtask) {
+      if (dagTask.getType() == TaskType.script || dagTask.getType() == TaskType.template || dagTask.getType() == TaskType.customtask) {
         String templateId = dagTask.getTemplateId();
         final FlowTaskTemplateEntity flowTaskTemplate =
             templateService.getTaskTemplateWithId(templateId);

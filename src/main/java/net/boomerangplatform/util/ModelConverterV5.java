@@ -399,6 +399,7 @@ public class ModelConverterV5 {
     if (CUSTOMTASKNAME.equals(type) || TEMPLATETASKNAME.equals(type) || "approval".equals(type)
         || "manual".equals(type) || "setwfproperty".equals(type) || "eventwait".equals(type)
         || "releaselock".equals(type)
+        || "script".equals(type)
         || "acquirelock".equals(type)
         || "runworkflow".equals(type)) {
       port.setType("task");
@@ -529,6 +530,9 @@ public class ModelConverterV5 {
     }
     else if (dagType == TaskType.runworkflow) {
       type = "runworkflow";
+    }
+    else if (dagType == TaskType.script) {
+      type = "script";
     }
     return type;
   }

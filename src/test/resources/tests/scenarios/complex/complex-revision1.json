@@ -81,7 +81,7 @@
             }, 
             {
                 "taskId" : "39e8cea5-dc7e-4bf4-ad2e-52389472a8bd",
-                "type" : "template",
+                "type" : "script",
                 "label" : "Execute Shell 1",
                 "templateId" : "5c3907a1352b1b51412ed079",
                 "templateVersion" : 2,
@@ -137,7 +137,7 @@
             }, 
             {
                 "taskId" : "c50156ca-a5b2-401f-8a8c-1a46a5b9a9b7",
-                "type" : "template",
+                "type" : "script",
                 "label" : "Execute Shell 2",
                 "templateId" : "5c3907a1352b1b51412ed079",
                 "templateVersion" : 2,
@@ -193,7 +193,7 @@
             }, 
             {
                 "taskId" : "e35a5fef-8c67-433a-a920-21060242158a",
-                "type" : "template",
+                "type" : "script",
                 "label" : "Execute Shell 3",
                 "templateId" : "5c3907a1352b1b51412ed079",
                 "templateVersion" : 2,
@@ -275,7 +275,7 @@
             }, 
             {
                 "taskId" : "9fd49dd7-a80f-49d9-9e90-8ea940f793a0",
-                "type" : "template",
+                "type" : "script",
                 "label" : "Execute Shell 4",
                 "templateId" : "5c3907a1352b1b51412ed079",
                 "templateVersion" : 2,
@@ -331,7 +331,7 @@
             }, 
             {
                 "taskId" : "96acca48-f5c9-4ea2-a8f1-cf6201edc660",
-                "type" : "template",
+                "type" : "script",
                 "label" : "Execute Shell 5",
                 "templateId" : "5c3907a1352b1b51412ed079",
                 "templateVersion" : 2,

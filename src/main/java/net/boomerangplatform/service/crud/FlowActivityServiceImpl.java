@@ -498,7 +498,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
         if (activity != null) {
           response.setRunWorkflowActivityStatus(activity.getStatus());
         }
-      } else if (TaskType.template == task.getTaskType() || TaskType.customtask == task.getTaskType()) {
+      } else if (TaskType.template == task.getTaskType() || TaskType.customtask == task.getTaskType() || TaskType.script == task.getTaskType()) {
         List<TaskOutputResult> results = new LinkedList<>();
         setupTaskOutputResults(task, response, results);
        
@@ -816,6 +816,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
     List<TaskExecutionEntity> activites = taskService.findTaskActiivtyForActivity(activityId);
     for (TaskExecutionEntity taskExecution : activites) {
       if ((taskExecution.getTaskType() == TaskType.customtask
+          || taskExecution.getTaskType() == TaskType.script
           || taskExecution.getTaskType() == TaskType.template)
           && taskExecution.getFlowTaskStatus() == TaskStatus.inProgress) {
         Task task = new Task();
