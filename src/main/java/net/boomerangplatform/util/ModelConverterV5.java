@@ -245,7 +245,6 @@ public class ModelConverterV5 {
 
       if (dep.isConditionalExecution()) {
         type = DECISIONKEY;
-
       }
 
       Link link = createLink(key, dep, type);
@@ -504,6 +503,10 @@ public class ModelConverterV5 {
     String type = null;
     TaskType dagType = dagTask.getType();
 
+    if ("5c3907a1352b1b51412ed079".equals(dagTask.getTemplateId())) {
+      return "script";
+    }
+    
     if (dagType == TaskType.end || dagType == TaskType.start) {
       type = "startend";
     } else if (dagType == TaskType.template) {
