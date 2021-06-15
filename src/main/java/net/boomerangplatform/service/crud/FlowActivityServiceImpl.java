@@ -130,6 +130,10 @@ public class FlowActivityServiceImpl implements FlowActivityService {
 
   @Autowired
   private ControllerClient controllerClient;
+  
+  
+  @Autowired
+  private RevisionService revisionService;
 
   private static final Logger LOGGER = LogManager.getLogger();
 
@@ -516,37 +520,75 @@ public class FlowActivityServiceImpl implements FlowActivityService {
     if (task.getTemplateId() == null) {
       return;
     }
-    
+  
     Integer templateVersion = task.getTemplateRevision();
     FlowTaskTemplateEntity flowTaskTemplate =
         templateService.getTaskTemplateWithId(task.getTemplateId());
-    List<Revision> revisions = flowTaskTemplate.getRevisions();
-    if (revisions != null) {
-      Optional<Revision> result = revisions.stream().parallel()
-          .filter(revision -> revision.getVersion().equals(templateVersion)).findAny();
-      if (result.isPresent()) {
-        Revision revision = result.get();
-        List<TaskResult> taskResults = revision.getResults();
-        if (taskResults != null) {
-          for (TaskResult resultItem : taskResults) {
-            extractOutputProperty(task, results, resultItem);
-          }
-        }
-
-      } else {
-        Optional<Revision> latestRevision = revisions.stream()
-            .sorted(Comparator.comparingInt(Revision::getVersion).reversed()).findFirst();
-        if (latestRevision.isPresent()) {
-          List<TaskResult> taskResults = latestRevision.get().getResults();
+    
+    String templateType = flowTaskTemplate.getNodetype();
+    
+    if ("templateTask".equals(templateType)) {
+      List<Revision> revisions = flowTaskTemplate.getRevisions();
+      if (revisions != null) {
+        Optional<Revision> result = revisions.stream().parallel()
+            .filter(revision -> revision.getVersion().equals(templateVersion)).findAny();
+        if (result.isPresent()) {
+          Revision revision = result.get();
+          List<TaskResult> taskResults = revision.getResults();
           if (taskResults != null) {
             for (TaskResult resultItem : taskResults) {
               extractOutputProperty(task, results, resultItem);
             }
           }
 
+        } else {
+          Optional<Revision> latestRevision = revisions.stream()
+              .sorted(Comparator.comparingInt(Revision::getVersion).reversed()).findFirst();
+          if (latestRevision.isPresent()) {
+            List<TaskResult> taskResults = latestRevision.get().getResults();
+            if (taskResults != null) {
+              for (TaskResult resultItem : taskResults) {
+                extractOutputProperty(task, results, resultItem);
+              }
+            }
+          }
         }
       }
+    } else {
+      String activityId = task.getActivityId();
+      ActivityEntity activity = workflowActivityService.findWorkflowActivtyById(activityId);
+      String revisionId = activity.getWorkflowRevisionid();
+      Optional<RevisionEntity> revisionEntity = this.revisionService.getRevision(revisionId);
+      if (revisionEntity.isPresent() ) {
+        RevisionEntity revision = revisionEntity.get();
+        
+        List<DAGTask> tasks = revision.getDag().getTasks();
+        DAGTask dagTask = tasks.stream().filter(x -> x.getTaskId().equals(task.getTaskId())).findFirst().orElse(null);
+        
+        if (dagTask != null) {
+          dagTask.getResults();
+          List<TaskResult> dagResults = dagTask.getResults();
+          if (dagResults != null) {
+            for (TaskResult taskResult : dagResults) {
+              dagResults.add(taskResult);
+              TaskOutputResult outputResult = new TaskOutputResult();
+              String key = taskResult.getName();
+              
+              outputResult.setName(key);
+              outputResult.setDescription(taskResult.getDescription());
+          
+              if (task.getOutputs() != null && task.getOutputs().containsKey(key)) {
+                outputResult.setValue(task.getOutputs().get(key));
+              }
+              
+              task.getOutputs();
+            }
+          }
+        }
+      }
+      
     }
+
 
     response.setResults(results);
   }
