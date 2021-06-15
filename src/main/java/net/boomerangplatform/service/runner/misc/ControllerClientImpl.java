@@ -20,6 +20,8 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import net.boomerangplatform.errors.model.BoomerangError;
+import net.boomerangplatform.errors.model.ErrorDetail;
 import net.boomerangplatform.model.Task;
 import net.boomerangplatform.model.TaskResult;
 import net.boomerangplatform.model.controller.Response;
@@ -422,22 +424,19 @@ public class ControllerClientImpl implements ControllerClient {
       LOGGER.info("Task result: {}", taskResult.getStatus());
     } catch (HttpStatusCodeException statusCodeException) {
       LOGGER.error(ExceptionUtils.getStackTrace(statusCodeException));
-
+      taskExecution.setFlowTaskStatus(TaskStatus.failure);
+      taskResult.setStatus(TaskStatus.failure);
       String body = statusCodeException.getResponseBodyAsString();
-      LOGGER.error("Error Response Body: " + body);
+      LOGGER.error("Error Response Body: {}", body);
 
       ObjectMapper mapper = new ObjectMapper();
-
-      TaskResponse response;
       try {
-        response = mapper.readValue(body, TaskResponse.class);
-        if (response != null && !"0".equals(response.getCode())) {
-          taskExecution.setFlowTaskStatus(TaskStatus.failure);
-          taskResult.setStatus(TaskStatus.failure);
-
+        BoomerangError controllerError = mapper.readValue(body, BoomerangError.class);
+        if (controllerError != null && controllerError.getError() != null) {
+          ErrorDetail detail = controllerError.getError();
           ErrorResponse error = new ErrorResponse();
-          error.setCode(response.getCode());
-          error.setMessage(response.getMessage());
+          error.setCode(String.valueOf(detail.getCode()));
+          error.setMessage(detail.getDescription());
           taskExecution.setError(error);
         }
       } catch (JsonProcessingException e) {
