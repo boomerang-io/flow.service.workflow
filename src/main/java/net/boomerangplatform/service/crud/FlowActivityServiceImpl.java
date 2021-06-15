@@ -570,7 +570,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
           List<TaskResult> dagResults = dagTask.getResults();
           if (dagResults != null) {
             for (TaskResult taskResult : dagResults) {
-              dagResults.add(taskResult);
+             
               TaskOutputResult outputResult = new TaskOutputResult();
               String key = taskResult.getName();
               
@@ -581,7 +581,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
                 outputResult.setValue(task.getOutputs().get(key));
               }
               
-              task.getOutputs();
+              results.add(outputResult);
             }
           }
         }
