@@ -62,15 +62,15 @@ public class ControllerClientImpl implements ControllerClient {
 
   @Autowired
   private FlowSettingsService flowSettinigs;
-  
+
   private TaskClient flowTaskClient;
-  
+
   @Autowired
   public ControllerClientImpl(@Lazy TaskClient flowTaskClient) {
-      this.flowTaskClient = flowTaskClient;
+    this.flowTaskClient = flowTaskClient;
   }
-  
-  
+
+
 
   @Autowired
   private PropertyManager propertyManager;
@@ -140,7 +140,7 @@ public class ControllerClientImpl implements ControllerClient {
 
     logPayload(CREATEWORKFLOWREQUEST, request);
     Date startTime = new Date();
-
+    ActivityEntity activity = this.activityService.findWorkflowActivity(activityId);
     try {
       Response response = restTemplate.postForObject(createWorkflowURL, request, Response.class);
 
@@ -149,18 +149,37 @@ public class ControllerClientImpl implements ControllerClient {
         ErrorResponse error = new ErrorResponse();
         error.setCode(response.getCode());
         error.setMessage(response.getMessage());
-
-        ActivityEntity activity = this.activityService.findWorkflowActivity(activityId);
         activity.setError(error);
-        this.workflowActivityService.saveWorkflowActivity(activity);
+       
       }
 
+    }  catch (HttpStatusCodeException statusCodeException) {
+      LOGGER.error(ExceptionUtils.getStackTrace(statusCodeException));
+     
+      String body = statusCodeException.getResponseBodyAsString();
+      LOGGER.error("Error Creating Workflow Response Body: {}", body);
+
+      ObjectMapper mapper = new ObjectMapper();
+      try {
+        BoomerangError controllerError = mapper.readValue(body, BoomerangError.class);
+        if (controllerError != null && controllerError.getError() != null) {
+          ErrorDetail detail = controllerError.getError();
+          ErrorResponse error = new ErrorResponse();
+          error.setCode(String.valueOf(detail.getCode()));
+          error.setMessage(detail.getDescription());
+          activity.setError(error);
+        }
+      } catch (JsonProcessingException e) {
+        e.printStackTrace();
+      }
     } catch (RestClientException ex) {
       LOGGER.error(ERRORLOGPRFIX, CREATEWORKFLOWREQUEST);
       LOGGER.error(ExceptionUtils.getStackTrace(ex));
       return false;
     }
 
+    this.workflowActivityService.saveWorkflowActivity(activity);
+    
     Date endTime = new Date();
     logRequestTime(CREATEWORKFLOWREQUEST, startTime, endTime);
     return true;
@@ -204,7 +223,7 @@ public class ControllerClientImpl implements ControllerClient {
 
 
     taskResult.setNode(task.getTaskId());
-    final TaskCustom request = new TaskCustom();
+    final TaskTemplate request = new TaskTemplate();
     request.setTaskId(task.getTaskId());
     request.setWorkflowId(task.getWorkflowId());
     request.setWorkflowName(workflowName);
@@ -281,6 +300,26 @@ public class ControllerClientImpl implements ControllerClient {
 
       } else {
         taskResult.setStatus(taskExecution.getFlowTaskStatus());
+      }
+    } catch (HttpStatusCodeException statusCodeException) {
+      LOGGER.error(ExceptionUtils.getStackTrace(statusCodeException));
+      taskExecution.setFlowTaskStatus(TaskStatus.failure);
+      taskResult.setStatus(TaskStatus.failure);
+      String body = statusCodeException.getResponseBodyAsString();
+      LOGGER.error("Error Response Body: {}", body);
+
+      ObjectMapper mapper = new ObjectMapper();
+      try {
+        BoomerangError controllerError = mapper.readValue(body, BoomerangError.class);
+        if (controllerError != null && controllerError.getError() != null) {
+          ErrorDetail detail = controllerError.getError();
+          ErrorResponse error = new ErrorResponse();
+          error.setCode(String.valueOf(detail.getCode()));
+          error.setMessage(detail.getDescription());
+          taskExecution.setError(error);
+        }
+      } catch (JsonProcessingException e) {
+        e.printStackTrace();
       }
     } catch (RestClientException ex) {
       taskExecution.setFlowTaskStatus(TaskStatus.failure);
