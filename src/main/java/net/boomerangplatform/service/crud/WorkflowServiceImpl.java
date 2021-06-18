@@ -27,6 +27,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import net.boomerangplatform.error.BoomerangError;
 import net.boomerangplatform.error.BoomerangException;
 import net.boomerangplatform.model.FlowTeam;
+import net.boomerangplatform.model.FlowWorkflowRevision;
 import net.boomerangplatform.model.GenerateTokenResponse;
 import net.boomerangplatform.model.WorkflowExport;
 import net.boomerangplatform.model.WorkflowQuotas;
@@ -735,6 +736,13 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   @Override
   public List<String> getWorkflowParameters(String workFlowId) {
+    
+    RevisionEntity revision = this.workflowVersionService.getLatestWorkflowVersion(workFlowId);
+    
+    return buildAvailableParamList(workFlowId, revision);
+  }
+
+  private List<String> buildAvailableParamList(String workFlowId, RevisionEntity revision) {
     List<String> parameters = new ArrayList<>();
     WorkflowEntity workflow = workFlowRepository.getWorkflow(workFlowId);
 
@@ -773,7 +781,7 @@ public class WorkflowServiceImpl implements WorkflowService {
       parameters.add("params." + systemProperty.getKey());
     }
 
-    RevisionEntity revision = this.workflowVersionService.getLatestWorkflowVersion(workFlowId);
+
     if (revision != null) {
       Dag dag = revision.getDag();
       List<DAGTask> dagkTasks = dag.getTasks();
@@ -815,5 +823,12 @@ public class WorkflowServiceImpl implements WorkflowService {
     }
 
     return parameters;
+  }
+
+  @Override
+  public List<String> getWorkflowParameters(String workflowId, FlowWorkflowRevision workflowSummaryEntity) {
+
+    RevisionEntity revisionEntity = workflowSummaryEntity.convertToEntity();
+    return buildAvailableParamList(workflowId, revisionEntity);
   }
 }

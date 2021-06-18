@@ -136,4 +136,9 @@ public class WorkflowController {
     return workflowService.getWorkflowParameters(workFlowId);
   }
 
+  @PostMapping(value = "/{workFlowId}/available-parameters")
+  public List<String> getWorkflowParametersWithBody(@PathVariable String workFlowId,
+      @RequestBody FlowWorkflowRevision workflowSummaryEntity) {
+    return workflowService.getWorkflowParameters(workFlowId,workflowSummaryEntity);
+  }
 }

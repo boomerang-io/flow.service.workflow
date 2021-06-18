@@ -5,6 +5,7 @@ import java.util.Optional;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import net.boomerangplatform.model.FlowWorkflowRevision;
 import net.boomerangplatform.model.GenerateTokenResponse;
 import net.boomerangplatform.model.WorkflowExport;
 import net.boomerangplatform.model.WorkflowShortSummary;
@@ -48,4 +49,6 @@ public interface WorkflowService {
   List<WorkflowShortSummary> getSystemWorkflowShortSummaryList();
 
   List<String> getWorkflowParameters(String workFlowId);
+
+  List<String> getWorkflowParameters(String workflowId, FlowWorkflowRevision workflowSummaryEntity);
 }
