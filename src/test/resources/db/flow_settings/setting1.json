@@ -43,6 +43,14 @@
             ],
             "value" : "Always",
             "readOnly" : false
+        },
+        {
+            "description" : "Task Timeout Configuration specified in minutes",
+            "key" : "task.timeout.configuration",
+            "label" : "Task Timeout Configuration",
+            "type" : "number",
+            "value" : "90",
+            "readOnly" : false
         }
     ]
 }

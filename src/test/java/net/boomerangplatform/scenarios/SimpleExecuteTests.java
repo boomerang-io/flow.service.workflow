@@ -91,7 +91,8 @@ public class SimpleExecuteTests extends IntegrationTests {
         .andExpect(jsonPath("$.storage.className").value("default"))
         .andRespond(withStatus(HttpStatus.OK));
     mockServer.expect(times(1), requestTo(containsString("controller/task/execute")))
-        .andExpect(method(HttpMethod.POST)).andRespond(withStatus(HttpStatus.OK));
+        .andExpect(method(HttpMethod.POST)).andExpect(jsonPath("$.configuration.timeout").value(90))
+        .andRespond(withStatus(HttpStatus.OK));
 
     mockServer.expect(times(1), requestTo(containsString("controller/workflow/terminate")))
         .andExpect(method(HttpMethod.POST)).andRespond(withStatus(HttpStatus.OK));

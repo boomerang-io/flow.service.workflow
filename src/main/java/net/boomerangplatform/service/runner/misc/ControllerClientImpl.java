@@ -27,7 +27,6 @@ import net.boomerangplatform.model.TaskResult;
 import net.boomerangplatform.model.controller.Response;
 import net.boomerangplatform.model.controller.Storage;
 import net.boomerangplatform.model.controller.TaskConfiguration;
-import net.boomerangplatform.model.controller.TaskCustom;
 import net.boomerangplatform.model.controller.TaskDeletion;
 import net.boomerangplatform.model.controller.TaskResponse;
 import net.boomerangplatform.model.controller.TaskResponseResult;
@@ -69,7 +68,6 @@ public class ControllerClientImpl implements ControllerClient {
   public ControllerClientImpl(@Lazy TaskClient flowTaskClient) {
     this.flowTaskClient = flowTaskClient;
   }
-
 
 
   @Autowired
@@ -564,7 +562,14 @@ public class ControllerClientImpl implements ControllerClient {
     taskConfiguration.setDeletion(taskDeletion);
     taskConfiguration.setDebug(Boolean.valueOf(enableDebug));
 
-
+    String taskTimeout =
+        this.flowSettinigs.getConfiguration("controller", "task.timeout.configuration").getValue();
+    
+    if (taskTimeout != null) {
+      int timeout = Integer.parseInt(taskTimeout);
+      taskConfiguration.setTimeout(timeout);
+    }
+   
     return taskConfiguration;
   }
 
