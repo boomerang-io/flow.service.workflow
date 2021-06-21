@@ -358,6 +358,10 @@
 					"script": "echo \"its blue\"",
 					"taskName": "Execute Shell 1"
 				},
+				"outputs" : [{
+				   "name" : "testOutput",
+				   "description" : "Test"
+				}],
 				"type": "custom"
 				,
 					"templateVersion" : 1

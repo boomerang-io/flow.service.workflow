@@ -15,27 +15,33 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Primary;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import net.boomerangplatform.errors.model.BoomerangError;
+import net.boomerangplatform.errors.model.ErrorDetail;
 import net.boomerangplatform.model.Task;
 import net.boomerangplatform.model.TaskResult;
+import net.boomerangplatform.model.controller.Response;
+import net.boomerangplatform.model.controller.Storage;
 import net.boomerangplatform.model.controller.TaskConfiguration;
-import net.boomerangplatform.model.controller.TaskCustom;
 import net.boomerangplatform.model.controller.TaskDeletion;
 import net.boomerangplatform.model.controller.TaskResponse;
+import net.boomerangplatform.model.controller.TaskResponseResult;
 import net.boomerangplatform.model.controller.TaskTemplate;
 import net.boomerangplatform.model.controller.Workflow;
-import net.boomerangplatform.model.controller.WorkflowStorage;
 import net.boomerangplatform.mongo.entity.ActivityEntity;
 import net.boomerangplatform.mongo.entity.TaskExecutionEntity;
 import net.boomerangplatform.mongo.model.CoreProperty;
+import net.boomerangplatform.mongo.model.ErrorResponse;
 import net.boomerangplatform.mongo.model.Revision;
 import net.boomerangplatform.mongo.model.TaskStatus;
 import net.boomerangplatform.mongo.model.internal.InternalTaskResponse;
 import net.boomerangplatform.mongo.service.ActivityTaskService;
 import net.boomerangplatform.mongo.service.FlowSettingsService;
+import net.boomerangplatform.mongo.service.FlowWorkflowActivityService;
 import net.boomerangplatform.service.PropertyManager;
 import net.boomerangplatform.service.crud.FlowActivityService;
 import net.boomerangplatform.service.refactor.ControllerRequestProperties;
@@ -55,15 +61,14 @@ public class ControllerClientImpl implements ControllerClient {
 
   @Autowired
   private FlowSettingsService flowSettinigs;
-  
+
   private TaskClient flowTaskClient;
-  
+
   @Autowired
   public ControllerClientImpl(@Lazy TaskClient flowTaskClient) {
-      this.flowTaskClient = flowTaskClient;
+    this.flowTaskClient = flowTaskClient;
   }
-  
-  
+
 
   @Autowired
   private PropertyManager propertyManager;
@@ -78,13 +83,20 @@ public class ControllerClientImpl implements ControllerClient {
   @Autowired
   public FlowActivityService activityService;
 
+  @Autowired
+  private FlowWorkflowActivityService workflowActivityService;
+
   @Value("${controller.terminateworkflow.url}")
   private String terminateWorkflowURL;
+
+  @Value("${controller.terminatetask.url}")
+  private String terminateTaskURL;
 
   private static final String CREATEWORKFLOWREQUEST = "Create Workflow Request";
   private static final String TERMINATEWORKFLOWREQUEST = "Terminate Workflow Request";
   private static final String CREATETEMPLATETASKREQUEST = "Create Template Task Request";
   private static final String CREATECUSTOMTASKREQUEST = "Create Custom Task Request";
+  private static final String TERMINATETASKREQUEST = "Terminate Task Request";
   private static final String ERRORLOGPRFIX = "Error for: {}";
 
   @Override
@@ -99,7 +111,7 @@ public class ControllerClientImpl implements ControllerClient {
     request.setParameters(properties);
 
 
-    final WorkflowStorage storage = new WorkflowStorage();
+    final Storage storage = new Storage();
     storage.setEnable(enableStorage);
 
     String storageClassName =
@@ -120,20 +132,52 @@ public class ControllerClientImpl implements ControllerClient {
       storage.setSize(storageDefaultSize);
     }
 
+
     request.setWorkflowStorage(storage);
     request.setLabels(this.convertToMap(labels));
 
     logPayload(CREATEWORKFLOWREQUEST, request);
     Date startTime = new Date();
-
+    ActivityEntity activity = this.activityService.findWorkflowActivity(activityId);
     try {
-      restTemplate.postForObject(createWorkflowURL, request, String.class);
+      Response response = restTemplate.postForObject(createWorkflowURL, request, Response.class);
+
+      if (response != null && !"0".equals(response.getCode())) {
+
+        ErrorResponse error = new ErrorResponse();
+        error.setCode(response.getCode());
+        error.setMessage(response.getMessage());
+        activity.setError(error);
+       
+      }
+
+    }  catch (HttpStatusCodeException statusCodeException) {
+      LOGGER.error(ExceptionUtils.getStackTrace(statusCodeException));
+     
+      String body = statusCodeException.getResponseBodyAsString();
+      LOGGER.error("Error Creating Workflow Response Body: {}", body);
+
+      ObjectMapper mapper = new ObjectMapper();
+      try {
+        BoomerangError controllerError = mapper.readValue(body, BoomerangError.class);
+        if (controllerError != null && controllerError.getError() != null) {
+          ErrorDetail detail = controllerError.getError();
+          ErrorResponse error = new ErrorResponse();
+          error.setCode(String.valueOf(detail.getCode()));
+          error.setMessage(detail.getDescription());
+          activity.setError(error);
+        }
+      } catch (JsonProcessingException e) {
+        e.printStackTrace();
+      }
     } catch (RestClientException ex) {
       LOGGER.error(ERRORLOGPRFIX, CREATEWORKFLOWREQUEST);
       LOGGER.error(ExceptionUtils.getStackTrace(ex));
       return false;
     }
 
+    this.workflowActivityService.saveWorkflowActivity(activity);
+    
     Date endTime = new Date();
     logRequestTime(CREATEWORKFLOWREQUEST, startTime, endTime);
     return true;
@@ -145,7 +189,7 @@ public class ControllerClientImpl implements ControllerClient {
     request.setWorkflowActivityId(activityId);
     request.setWorkflowName(workflowName);
     request.setWorkflowId(workflowId);
-    final WorkflowStorage storage = new WorkflowStorage();
+    final Storage storage = new Storage();
     storage.setEnable(true);
     request.setWorkflowStorage(storage);
     logPayload(TERMINATEWORKFLOWREQUEST, request);
@@ -177,7 +221,7 @@ public class ControllerClientImpl implements ControllerClient {
 
 
     taskResult.setNode(task.getTaskId());
-    final TaskCustom request = new TaskCustom();
+    final TaskTemplate request = new TaskTemplate();
     request.setTaskId(task.getTaskId());
     request.setWorkflowId(task.getWorkflowId());
     request.setWorkflowName(workflowName);
@@ -198,6 +242,11 @@ public class ControllerClientImpl implements ControllerClient {
     command = propertyManager.replaceValueWithProperty(command, activityId, applicationProperties);
     request.setCommand(command);
 
+    String script = applicationProperties.getLayeredProperty("shellScript");
+    if (script != null) {
+      script = propertyManager.replaceValueWithProperty(script, activityId, applicationProperties);
+      request.setScript(script);
+    }
 
     List<String> args = prepareCustomTaskArguments(activityId, applicationProperties, map);
     request.setArguments(args);
@@ -206,8 +255,8 @@ public class ControllerClientImpl implements ControllerClient {
     taskExecution.setFlowTaskStatus(TaskStatus.inProgress);
     taskExecution = taskService.save(taskExecution);
 
-    boolean enableLifecycle = task.getEnableLifecycle();
-    TaskConfiguration taskConfiguration = buildTaskConfiguration(enableLifecycle);
+
+    TaskConfiguration taskConfiguration = buildTaskConfiguration();
     request.setConfiguration(taskConfiguration);
     request.setWorkspaces(activity.getTaskWorkspaces());
 
@@ -228,7 +277,11 @@ public class ControllerClientImpl implements ControllerClient {
       if (response != null) {
         this.logPayload(CREATECUSTOMTASKREQUEST, response);
         if (response.getResults() != null && !response.getResults().isEmpty()) {
-          outputProperties = response.getResults();
+          for (TaskResponseResult result : response.getResults()) {
+            String key = result.getName();
+            String value = result.getValue();
+            outputProperties.put(key, value);
+          }
         }
       }
       final Date finishDate = new Date();
@@ -238,8 +291,33 @@ public class ControllerClientImpl implements ControllerClient {
 
       if (response != null && !"0".equals(response.getCode())) {
         taskExecution.setFlowTaskStatus(TaskStatus.failure);
+        ErrorResponse error = new ErrorResponse();
+        error.setCode(response.getCode());
+        error.setMessage(response.getMessage());
+        taskExecution.setError(error);
+
       } else {
         taskResult.setStatus(taskExecution.getFlowTaskStatus());
+      }
+    } catch (HttpStatusCodeException statusCodeException) {
+      LOGGER.error(ExceptionUtils.getStackTrace(statusCodeException));
+      taskExecution.setFlowTaskStatus(TaskStatus.failure);
+      taskResult.setStatus(TaskStatus.failure);
+      String body = statusCodeException.getResponseBodyAsString();
+      LOGGER.error("Error Response Body: {}", body);
+
+      ObjectMapper mapper = new ObjectMapper();
+      try {
+        BoomerangError controllerError = mapper.readValue(body, BoomerangError.class);
+        if (controllerError != null && controllerError.getError() != null) {
+          ErrorDetail detail = controllerError.getError();
+          ErrorResponse error = new ErrorResponse();
+          error.setCode(String.valueOf(detail.getCode()));
+          error.setMessage(detail.getDescription());
+          taskExecution.setError(error);
+        }
+      } catch (JsonProcessingException e) {
+        e.printStackTrace();
       }
     } catch (RestClientException ex) {
       taskExecution.setFlowTaskStatus(TaskStatus.failure);
@@ -314,6 +392,7 @@ public class ControllerClientImpl implements ControllerClient {
     request.setTaskActivityId(task.getTaskActivityId());
     request.setLabels(this.convertToMap(labels));
 
+
     ControllerRequestProperties applicationProperties =
         propertyManager.buildRequestPropertyLayering(task, activityId, task.getWorkflowId());
 
@@ -321,11 +400,11 @@ public class ControllerClientImpl implements ControllerClient {
 
     request.setParameters(map);
 
-    boolean enableLifecycle = task.getEnableLifecycle();
-    TaskConfiguration taskConfiguration = buildTaskConfiguration(enableLifecycle);
+
+    TaskConfiguration taskConfiguration = buildTaskConfiguration();
     request.setConfiguration(taskConfiguration);
 
-    prepareTemplateImageRequest(task, taskResult, request,activityId, applicationProperties, map);
+    prepareTemplateImageRequest(task, taskResult, request, activityId, applicationProperties, map);
 
     final Date startDate = new Date();
 
@@ -344,6 +423,7 @@ public class ControllerClientImpl implements ControllerClient {
       TaskResponse response =
           restTemplate.postForObject(createTaskURL, request, TaskResponse.class);
 
+
       Date endTime = new Date();
 
       logRequestTime(CREATETEMPLATETASKREQUEST, startTime, endTime);
@@ -351,7 +431,14 @@ public class ControllerClientImpl implements ControllerClient {
       if (response != null) {
         this.logPayload(CREATETEMPLATETASKREQUEST, response);
         if (response.getResults() != null && !response.getResults().isEmpty()) {
-          outputProperties = response.getResults();
+          response.getResults().get(0);
+          if (response.getResults() != null) {
+            for (TaskResponseResult result : response.getResults()) {
+              String key = result.getName();
+              String value = result.getValue();
+              outputProperties.put(key, value);
+            }
+          }
         }
       }
 
@@ -363,10 +450,35 @@ public class ControllerClientImpl implements ControllerClient {
       if (response != null && !"0".equals(response.getCode())) {
         taskExecution.setFlowTaskStatus(TaskStatus.failure);
         taskResult.setStatus(TaskStatus.failure);
+
+        ErrorResponse error = new ErrorResponse();
+        error.setCode(response.getCode());
+        error.setMessage(response.getMessage());
+        taskExecution.setError(error);
       } else {
         taskResult.setStatus(taskExecution.getFlowTaskStatus());
       }
       LOGGER.info("Task result: {}", taskResult.getStatus());
+    } catch (HttpStatusCodeException statusCodeException) {
+      LOGGER.error(ExceptionUtils.getStackTrace(statusCodeException));
+      taskExecution.setFlowTaskStatus(TaskStatus.failure);
+      taskResult.setStatus(TaskStatus.failure);
+      String body = statusCodeException.getResponseBodyAsString();
+      LOGGER.error("Error Response Body: {}", body);
+
+      ObjectMapper mapper = new ObjectMapper();
+      try {
+        BoomerangError controllerError = mapper.readValue(body, BoomerangError.class);
+        if (controllerError != null && controllerError.getError() != null) {
+          ErrorDetail detail = controllerError.getError();
+          ErrorResponse error = new ErrorResponse();
+          error.setCode(String.valueOf(detail.getCode()));
+          error.setMessage(detail.getDescription());
+          taskExecution.setError(error);
+        }
+      } catch (JsonProcessingException e) {
+        e.printStackTrace();
+      }
     } catch (RestClientException ex) {
       taskExecution.setFlowTaskStatus(TaskStatus.failure);
       taskResult.setStatus(TaskStatus.failure);
@@ -375,6 +487,8 @@ public class ControllerClientImpl implements ControllerClient {
       LOGGER.error(ExceptionUtils.getStackTrace(ex));
 
     }
+
+
     taskService.save(taskExecution);
 
     InternalTaskResponse response = new InternalTaskResponse();
@@ -386,14 +500,15 @@ public class ControllerClientImpl implements ControllerClient {
   }
 
   private void prepareTemplateImageRequest(Task task, TaskResult taskResult,
-      final TaskTemplate request, String activityId, ControllerRequestProperties applicationProperties, Map<String, String> map) {
+      final TaskTemplate request, String activityId,
+      ControllerRequestProperties applicationProperties, Map<String, String> map) {
     if (task.getRevision() != null) {
       Revision revision = task.getRevision();
       request.setArguments(revision.getArguments());
       List<String> arguments = revision.getArguments();
-      
+
       arguments = prepareTemplateTaskArguments(arguments, activityId, applicationProperties, map);
-      
+
       request.setArguments(arguments);
       if (revision.getImage() != null && !revision.getImage().isBlank()) {
         request.setImage(revision.getImage());
@@ -406,12 +521,30 @@ public class ControllerClientImpl implements ControllerClient {
       if (revision.getCommand() != null && !revision.getCommand().isBlank()) {
         request.setCommand(revision.getCommand());
       }
+      if (revision.getScript() != null && !revision.getScript().isBlank()) {
+        request.setScript(revision.getScript());
+      }
+      if (revision.getEnvs() != null) {
+        request.setEnvs(revision.getEnvs());
+      } else {
+        request.setEnvs(new LinkedList<>());
+      }
+      request.setResults(new LinkedList<>());
+
+      if (task.getResults() != null) {
+        request.setResults(task.getResults());
+      } else {
+        if (revision.getResults() != null) {
+          request.setResults(revision.getResults());
+        }
+      }
+
     } else {
       taskResult.setStatus(TaskStatus.invalid);
     }
   }
 
-  private TaskConfiguration buildTaskConfiguration(boolean enableLifecycle) {
+  private TaskConfiguration buildTaskConfiguration() {
     TaskConfiguration taskConfiguration = new TaskConfiguration();
     TaskDeletion taskDeletion = TaskDeletion.Never;
     String settingsPolicy =
@@ -428,8 +561,15 @@ public class ControllerClientImpl implements ControllerClient {
 
     taskConfiguration.setDeletion(taskDeletion);
     taskConfiguration.setDebug(Boolean.valueOf(enableDebug));
-    taskConfiguration.setLifecycle(enableLifecycle);
 
+    String taskTimeout =
+        this.flowSettinigs.getConfiguration("controller", "task.timeout.configuration").getValue();
+    
+    if (taskTimeout != null) {
+      int timeout = Integer.parseInt(taskTimeout);
+      taskConfiguration.setTimeout(timeout);
+    }
+   
     return taskConfiguration;
   }
 
@@ -459,5 +599,33 @@ public class ControllerClientImpl implements ControllerClient {
       labels.put(property.getKey(), property.getValue());
     }
     return labels;
+  }
+
+  @Override
+  public void terminateTask(Task task) {
+    TaskExecutionEntity taskExecution = taskService.findById(task.getTaskActivityId());
+    ActivityEntity activity =
+        this.activityService.findWorkflowActivity(taskExecution.getActivityId());
+    try {
+
+      Date startTime = new Date();
+      final TaskTemplate request = new TaskTemplate();
+      request.setTaskId(task.getTaskId());
+      request.setWorkflowId(task.getWorkflowId());
+      request.setWorkflowName(task.getWorkflowName());
+      request.setWorkflowActivityId(activity.getId());
+      request.setTaskName(task.getTaskName());
+      request.setTaskActivityId(task.getTaskActivityId());
+      logPayload(TERMINATETASKREQUEST, request);
+
+      restTemplate.postForObject(terminateTaskURL, request, TaskResponse.class);
+
+      Date endTime = new Date();
+      logRequestTime(TERMINATETASKREQUEST, startTime, endTime);
+    } catch (RestClientException ex) {
+      LOGGER.error(ERRORLOGPRFIX, TERMINATETASKREQUEST);
+      LOGGER.error(ExceptionUtils.getStackTrace(ex));
+    }
+
   }
 }

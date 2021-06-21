@@ -27,16 +27,20 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import net.boomerangplatform.error.BoomerangError;
 import net.boomerangplatform.error.BoomerangException;
 import net.boomerangplatform.model.FlowTeam;
+import net.boomerangplatform.model.FlowWorkflowRevision;
 import net.boomerangplatform.model.GenerateTokenResponse;
 import net.boomerangplatform.model.WorkflowExport;
 import net.boomerangplatform.model.WorkflowQuotas;
 import net.boomerangplatform.model.WorkflowShortSummary;
 import net.boomerangplatform.model.WorkflowSummary;
 import net.boomerangplatform.model.WorkflowToken;
+import net.boomerangplatform.model.controller.TaskResult;
 import net.boomerangplatform.mongo.entity.FlowTaskTemplateEntity;
 import net.boomerangplatform.mongo.entity.RevisionEntity;
 import net.boomerangplatform.mongo.entity.WorkflowEntity;
+import net.boomerangplatform.mongo.model.Dag;
 import net.boomerangplatform.mongo.model.FlowProperty;
+import net.boomerangplatform.mongo.model.Revision;
 import net.boomerangplatform.mongo.model.TaskType;
 import net.boomerangplatform.mongo.model.Trigger;
 import net.boomerangplatform.mongo.model.TriggerEvent;
@@ -229,7 +233,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     entity.setStatus(summary.getStatus());
     entity.setEnablePersistentStorage(summary.isEnablePersistentStorage());
     entity.setLabels(summary.getLabels());
-    
+
     List<FlowProperty> updatedProperties = setupDefaultProperties(summary);
     entity.setProperties(updatedProperties);
     Triggers previousTriggers = entity.getTriggers();
@@ -438,12 +442,13 @@ public class WorkflowServiceImpl implements WorkflowService {
   @Override
   public void importWorkflow(WorkflowExport export, Boolean update, String flowTeamId,
       WorkflowScope scope) {
-    
+
     List<String> templateIds = new ArrayList<>();
-    
-   
+
+
     if (scope == null || scope == WorkflowScope.team) {
-      List<FlowTaskTemplateEntity> templates = templateService.getAllTaskTemplatesforTeamId(flowTeamId);
+      List<FlowTaskTemplateEntity> templates =
+          templateService.getAllTaskTemplatesforTeamId(flowTeamId);
       for (FlowTaskTemplateEntity template : templates) {
         templateIds.add(template.getId());
       }
@@ -453,7 +458,7 @@ public class WorkflowServiceImpl implements WorkflowService {
         templateIds.add(template.getId());
       }
     }
-   
+
 
     RevisionEntity revision = export.getLatestRevision();
     List<DAGTask> nodes = revision.getDag().getTasks();
@@ -548,7 +553,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   private List<FlowProperty> setupDefaultProperties(WorkflowEntity workflowSummary) {
 
-  
+
     List<FlowProperty> newProperties = workflowSummary.getProperties();
 
     if (newProperties == null) {
@@ -731,6 +736,13 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   @Override
   public List<String> getWorkflowParameters(String workFlowId) {
+    
+    RevisionEntity revision = this.workflowVersionService.getLatestWorkflowVersion(workFlowId);
+    
+    return buildAvailableParamList(workFlowId, revision);
+  }
+
+  private List<String> buildAvailableParamList(String workFlowId, RevisionEntity revision) {
     List<String> parameters = new ArrayList<>();
     WorkflowEntity workflow = workFlowRepository.getWorkflow(workFlowId);
 
@@ -769,6 +781,54 @@ public class WorkflowServiceImpl implements WorkflowService {
       parameters.add("params." + systemProperty.getKey());
     }
 
+
+    if (revision != null) {
+      Dag dag = revision.getDag();
+      List<DAGTask> dagkTasks = dag.getTasks();
+      if (dagkTasks != null) {
+        for (DAGTask task : dagkTasks) {
+          String taskName = task.getLabel();
+          if (task.getTemplateId() != null) {
+            String templateId = task.getTemplateId();
+            FlowTaskTemplateEntity taskTemplate = templateService.getTaskTemplateWithId(templateId);
+
+            if (taskTemplate != null) {
+              if ("templateTask".equals(taskTemplate.getNodetype())) {
+                int revisionCount = taskTemplate.getRevisions().size();
+                Revision latestRevision = taskTemplate.getRevisions().stream()
+                    .filter(x -> x.getVersion() == revisionCount).findFirst().orElse(null);
+                if (latestRevision != null) {
+                  List<TaskResult> results = latestRevision.getResults();
+                  if (results != null) {
+                    for (TaskResult result : results) {
+                      String key = "tasks." + taskName + ".results." + result.getName();
+                      parameters.add(key);
+                    }
+                  }
+                }
+              } else {
+                List<TaskResult> results = task.getResults();
+                if (results != null) {
+                  for (TaskResult result : results) {
+                    String key = "tasks." + taskName + ".results." + result.getName();
+                    parameters.add(key);
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+
+    }
+
     return parameters;
+  }
+
+  @Override
+  public List<String> getWorkflowParameters(String workflowId, FlowWorkflowRevision workflowSummaryEntity) {
+
+    RevisionEntity revisionEntity = workflowSummaryEntity.convertToEntity();
+    return buildAvailableParamList(workflowId, revisionEntity);
   }
 }

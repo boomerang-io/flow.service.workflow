@@ -104,6 +104,12 @@ public class TaskServiceImpl implements TaskService {
     TaskExecutionEntity taskExecution = taskActivityService.findById(taskId);
     ActivityEntity activity =
         activityService.findWorkflowActivtyById(taskExecution.getActivityId());
+    
+    if (activity.getStatus() == TaskStatus.cancelled ) {
+      LOGGER.error("[{}] Workflow has been marked as cancelled, not starting task.",activity.getId());
+      return;
+    }
+    
     WorkflowEntity workflow = workflowService.getWorkflow(activity.getWorkflowId());
     String workflowName = workflow.getName();
 
@@ -134,10 +140,11 @@ public class TaskServiceImpl implements TaskService {
         response.setStatus(TaskStatus.completed);
         processDecision(task, activity.getId());
         this.endTask(response);
-      } else if (taskType == TaskType.template) {
+      } else if (taskType == TaskType.template || taskType == TaskType.script) {
         List<CoreProperty> labels = workflow.getLabels();
         controllerClient.submitTemplateTask(task, activityId, workflowName, labels);
-      } else if (taskType == TaskType.customtask) {
+      }
+      else if (taskType == TaskType.customtask) {
         List<CoreProperty> labels = workflow.getLabels();
         controllerClient.submitCustomTask(task, activityId, workflowName, labels);
       } 
@@ -294,12 +301,20 @@ public class TaskServiceImpl implements TaskService {
   public void endTask(InternalTaskResponse request) {
 
     String activityId = request.getActivityId();
-    LOGGER.debug("[{}] Recieved end task request",activityId);
+    LOGGER.info("[{}] Recieved end task request",activityId);
     TaskExecutionEntity activity = taskActivityService.findById(activityId);
 
     ActivityEntity workflowActivity =
         this.activityService.findWorkflowActivtyById(activity.getActivityId());
 
+    if (workflowActivity.getStatus() == TaskStatus.cancelled ) {
+      LOGGER.error("[{}] Workflow has been marked as cancelled, not ending task",activityId);
+      activity.setFlowTaskStatus(TaskStatus.cancelled);
+      long duration = new Date().getTime() - activity.getStartTime().getTime();
+      activity.setDuration(duration);
+      taskActivityService.save(activity);
+      return;
+    }
    
     RevisionEntity revision =
         workflowVersionService.getWorkflowlWithId(workflowActivity.getWorkflowRevisionid());
@@ -313,6 +328,7 @@ public class TaskServiceImpl implements TaskService {
 
     workflowActivity = this.activityService.findWorkflowActivtyById(activity.getActivityId());
 
+   
     activity.setFlowTaskStatus(request.getStatus());
     long duration = new Date().getTime() - activity.getStartTime().getTime();
     activity.setDuration(duration);
@@ -499,7 +515,7 @@ public class TaskServiceImpl implements TaskService {
       final String workFlowId = revisionEntity.getWorkFlowId();
       newTask.setWorkflowId(workFlowId);
 
-      if (dagTask.getType() == TaskType.template || dagTask.getType() == TaskType.customtask) {
+      if (dagTask.getType() == TaskType.script || dagTask.getType() == TaskType.template || dagTask.getType() == TaskType.customtask) {
 
         TaskExecutionEntity task =
             taskActivityService.findByTaskIdAndActivityId(dagTask.getTaskId(), activity.getId());
@@ -511,7 +527,7 @@ public class TaskServiceImpl implements TaskService {
         final FlowTaskTemplateEntity flowTaskTemplate =
             templateService.getTaskTemplateWithId(templateId);
         newTask.setTemplateId(flowTaskTemplate.getId());
-        newTask.setEnableLifecycle(flowTaskTemplate.getEnableLifecycle());
+ 
         
         Integer templateVersion = dagTask.getTemplateVersion();
         List<Revision> revisions = flowTaskTemplate.getRevisions();
@@ -539,6 +555,7 @@ public class TaskServiceImpl implements TaskService {
           }
         }
         newTask.setInputs(properties);
+        newTask.setResults(dagTask.getResults());
       } else if (dagTask.getType() == TaskType.decision) {
         TaskExecutionEntity task =
             taskActivityService.findByTaskIdAndActivityId(dagTask.getTaskId(), activity.getId());

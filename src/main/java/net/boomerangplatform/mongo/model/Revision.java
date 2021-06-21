@@ -1,12 +1,28 @@
 package net.boomerangplatform.mongo.model;
 
 import java.util.List;
+import net.boomerangplatform.model.controller.TaskEnvVar;
+import net.boomerangplatform.model.controller.TaskResult;
 
 public class Revision {
 
   private Integer version;
   private String image;
   private String command;
+  private String script;
+  private String workingDir;
+  
+  private List<TaskResult> results;
+  
+  public List<TaskResult> getResults() {
+    return results;
+  }
+
+  public void setResults(List<TaskResult> results) {
+    this.results = results;
+  }
+
+  private List<TaskEnvVar> envs;
 
   private List<String> arguments;
   private List<TaskTemplateConfig> config;
@@ -59,5 +75,29 @@ public class Revision {
 
   public void setChangelog(ChangeLog changelog) {
     this.changelog = changelog;
+  }
+
+  public String getScript() {
+    return script;
+  }
+
+  public void setScript(String script) {
+    this.script = script;
+  }
+
+  public List<TaskEnvVar> getEnvs() {
+    return envs;
+  }
+
+  public void setEnvs(List<TaskEnvVar> envs) {
+    this.envs = envs;
+  }
+
+  public String getWorkingDir() {
+    return workingDir;
+  }
+
+  public void setWorkingDir(String workingDir) {
+    this.workingDir = workingDir;
   }
 }

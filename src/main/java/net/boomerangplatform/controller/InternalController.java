@@ -5,6 +5,7 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -42,10 +43,10 @@ public class InternalController {
 
   @Autowired
   private EventProcessor eventProcessor;
-  
+
   @Autowired
   private WebhookService webhookService;
-  
+
   @Autowired
   private ConfigurationService configurationService;
 
@@ -64,36 +65,42 @@ public class InternalController {
   public List<WorkflowShortSummary> getAllWorkflows() {
     return workflowService.getWorkflowShortSummaryList();
   }
-  
+
   @GetMapping(value = "/system-workflows")
   public List<WorkflowShortSummary> getAllSystemworkflows() {
     return workflowService.getSystemWorkflowShortSummaryList();
   }
-  
+
   @PutMapping(value = "/workflow/event", consumes = "application/cloudevents+json; charset=utf-8")
-  public ResponseEntity<CloudEventImpl<EventResponse>> acceptEvent(@RequestHeader Map<String, Object> headers, @RequestBody JsonNode payload) {
+  public ResponseEntity<CloudEventImpl<EventResponse>> acceptEvent(
+      @RequestHeader Map<String, Object> headers, @RequestBody JsonNode payload) {
     eventProcessor.processHTTPEvent(headers, payload);
 
     return ResponseEntity.ok(eventProcessor.processHTTPEvent(headers, payload));
   }
-  
+
   @PostMapping(value = "/workflow/{id}/validateToken", consumes = "application/json; charset=utf-8")
-  public ResponseEntity<HttpStatus> validateToken(@PathVariable String id, @RequestBody GenerateTokenResponse tokenPayload){ 
+  public ResponseEntity<HttpStatus> validateToken(@PathVariable String id,
+      @RequestBody GenerateTokenResponse tokenPayload) {
     return workflowService.validateWorkflowToken(id, tokenPayload);
   }
-  
+
   @PostMapping(value = "/webhook/payload", consumes = "application/json; charset=utf-8")
   public FlowWebhookResponse submitWebhookEvent(@RequestBody RequestFlowExecution request) {
     return webhookService.submitWebhookEvent(request);
   }
-  
+
 
   @GetMapping(value = "/webhook/status/{activityId}")
-  public FlowActivity getWebhookStatus(@PathVariable String activityId
-    ) {
+  public FlowActivity getWebhookStatus(@PathVariable String activityId) {
     return webhookService.getFlowActivity(activityId);
   }
-  
+
+  @DeleteMapping(value = "/webhook/status/{activityId}")
+  public ResponseEntity<FlowActivity> terminateActivity(@PathVariable String activityId) {
+    return webhookService.terminateActivity(activityId);
+  }
+
   @GetMapping(value = "/workflow/settings")
   public List<FlowSettings> getAppConfiguration() {
     return configurationService.getAllSettings();
@@ -103,5 +110,5 @@ public class InternalController {
   public List<FlowSettings> updateSettings(@RequestBody List<FlowSettings> settings) {
     return configurationService.updateSettings(settings);
   }
-  
+
 }

@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service;
 import net.boomerangplatform.model.FlowTaskTemplate;
 import net.boomerangplatform.model.TemplateScope;
 import net.boomerangplatform.model.WorkflowSummary;
-import net.boomerangplatform.model.controller.Workflow;
 import net.boomerangplatform.model.tekton.TektonTask;
 import net.boomerangplatform.mongo.entity.FlowTaskTemplateEntity;
 import net.boomerangplatform.mongo.entity.FlowUserEntity;

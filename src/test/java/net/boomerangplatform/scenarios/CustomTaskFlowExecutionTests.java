@@ -87,7 +87,7 @@ public class CustomTaskFlowExecutionTests extends IntegrationTests {
     mockServer.expect(times(1), requestTo(containsString("controller/task/execute")))
         .andExpect(method(HttpMethod.POST))
         .andExpect(jsonPath("$.workflowName").value("Unit Test Demo"))
-        .andExpect(jsonPath("$.taskType").value("custom"))
+        .andExpect(jsonPath("$.taskType").value("template"))
         .andExpect(jsonPath("$.command").value("world"))
         .andExpect(jsonPath("$.image").value("busybox"))
         .andExpect(jsonPath("$.arguments").value("hello"))

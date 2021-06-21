@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum TaskStatus {
   completed("completed"), failure("failure"), inProgress("inProgress"), notstarted( // NOSONAR
-      "notstarted"), invalid("invalid"), skipped("skipped"), waiting("waiting"); // NOSONAR
+      "notstarted"), invalid("invalid"), skipped("skipped"), waiting("waiting"), cancelled("cancelled"); // NOSONAR
 
   private String status;
 

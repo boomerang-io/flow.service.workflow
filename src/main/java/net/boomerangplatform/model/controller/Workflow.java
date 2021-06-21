@@ -1,10 +1,9 @@
 package net.boomerangplatform.model.controller;
-
+import java.util.HashMap;
 import java.util.Map;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
-import java.util.HashMap;
 
 @JsonIgnoreProperties
 public class Workflow {
@@ -16,7 +15,7 @@ public class Workflow {
   private String workflowActivityId;
 
   @JsonProperty("storage")
-  private WorkflowStorage storage;
+  private Storage storage;
 
   @JsonProperty("labels")
   private Map<String, String> labels = new HashMap<>();
@@ -47,11 +46,11 @@ public class Workflow {
     this.workflowActivityId = workflowActivityId;
   }
 
-  public WorkflowStorage getWorkflowStorage() {
+  public Storage getWorkflowStorage() {
     return storage;
   }
 
-  public void setWorkflowStorage(WorkflowStorage storage) {
+  public void setWorkflowStorage(Storage storage) {
     this.storage = storage;
   }
 
@@ -63,6 +62,9 @@ public class Workflow {
     this.labels = labels;
   }
 
+  public void setLabel(String name, String value) {
+    this.labels.put(name, value);
+  }
 
   public Map<String, String> getParameters() {
     return parameters;

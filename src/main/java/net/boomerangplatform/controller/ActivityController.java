@@ -15,6 +15,7 @@ import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.domain.Sort.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -25,12 +26,12 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 import net.boomerangplatform.model.FlowActivity;
 import net.boomerangplatform.model.InsightsSummary;
 import net.boomerangplatform.model.ListActivityResponse;
+import net.boomerangplatform.model.TaskExecutionResponse;
 import net.boomerangplatform.model.TeamWorkflowSummary;
 import net.boomerangplatform.mongo.entity.ActivityEntity;
 import net.boomerangplatform.mongo.entity.FlowTeamEntity;
 import net.boomerangplatform.mongo.entity.FlowUserEntity;
 import net.boomerangplatform.mongo.entity.RevisionEntity;
-import net.boomerangplatform.mongo.entity.TaskExecutionEntity;
 import net.boomerangplatform.mongo.entity.WorkflowEntity;
 import net.boomerangplatform.mongo.model.UserType;
 import net.boomerangplatform.mongo.model.WorkflowScope;
@@ -95,6 +96,24 @@ public class ActivityController {
         triggers, sort.get(), order.get());
   }
 
+  @DeleteMapping(value = "/activity/{activityId}/cancel")
+  public ResponseEntity<FlowActivity> cancelFlowActivity(@PathVariable String activityId) {
+    ActivityEntity activity = flowActivityService.findWorkflowActivity(activityId);
+    if (activity == null) {
+      return null;
+    }
+    
+    flowActivityService.cancelWorkflowActivity(activity.getId());
+    
+    activity = flowActivityService.findWorkflowActivity(activityId);
+    final List<TaskExecutionResponse> steps = flowActivityService.getTaskExecutions(activityId);
+    final FlowActivity response = new FlowActivity(activity);
+    response.setSteps(steps);
+    
+    return new ResponseEntity<>(response, HttpStatus.OK);
+  }
+
+    
   @GetMapping(value = "/activity/{activityId}")
   public ResponseEntity<FlowActivity> getFlowActivity(@PathVariable String activityId) {
     final ActivityEntity activity = flowActivityService.findWorkflowActivity(activityId);
@@ -148,7 +167,7 @@ public class ActivityController {
       }
     }
 
-    final List<TaskExecutionEntity> steps = flowActivityService.getTaskExecutions(activityId);
+    final List<TaskExecutionResponse> steps = flowActivityService.getTaskExecutions(activityId);
 
     response.setSteps(steps);
 

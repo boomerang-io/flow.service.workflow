@@ -13,10 +13,10 @@ import net.boomerangplatform.error.BoomerangError;
 import net.boomerangplatform.error.BoomerangException;
 import net.boomerangplatform.model.FlowActivity;
 import net.boomerangplatform.model.FlowExecutionRequest;
+import net.boomerangplatform.model.TaskExecutionResponse;
 import net.boomerangplatform.model.controller.TaskWorkspace;
 import net.boomerangplatform.mongo.entity.ActivityEntity;
 import net.boomerangplatform.mongo.entity.RevisionEntity;
-import net.boomerangplatform.mongo.entity.TaskExecutionEntity;
 import net.boomerangplatform.mongo.entity.WorkflowEntity;
 import net.boomerangplatform.mongo.model.WorkflowScope;
 import net.boomerangplatform.mongo.model.WorkflowStatus;
@@ -68,7 +68,7 @@ public class ExecutionServiceImpl implements ExecutionService {
               activityService.createFlowActivity(entity.getId(), trigger, request, taskWorkspaces);
           flowExecutionService.executeWorkflowVersion(entity.getId(), activity.getId());
 
-          final List<TaskExecutionEntity> steps =
+          final List<TaskExecutionResponse> steps =
               activityService.getTaskExecutions(activity.getId());
           final FlowActivity response = new FlowActivity(activity);
           response.setSteps(steps);

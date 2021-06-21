@@ -158,13 +158,12 @@ public class DAGUtility {
       final String workFlowId = revisionEntity.getWorkFlowId();
       newTask.setWorkflowId(workFlowId);
 
-      if (dagTask.getType() == TaskType.template || dagTask.getType() == TaskType.customtask) {
+      if (dagTask.getType() == TaskType.script || dagTask.getType() == TaskType.template || dagTask.getType() == TaskType.customtask) {
         String templateId = dagTask.getTemplateId();
         final FlowTaskTemplateEntity flowTaskTemplate =
             templateService.getTaskTemplateWithId(templateId);
         newTask.setTemplateId(flowTaskTemplate.getId());
-        newTask.setEnableLifecycle(flowTaskTemplate.getEnableLifecycle());
-        
+       
         Integer templateVersion = dagTask.getTemplateVersion();
         List<Revision> revisions = flowTaskTemplate.getRevisions();
         if (revisions != null) {
@@ -192,6 +191,7 @@ public class DAGUtility {
           }
         }
         newTask.setInputs(properties);
+        newTask.setResults(dagTask.getResults());
       } else if (dagTask.getType() == TaskType.decision) {
         newTask.setDecisionValue(dagTask.getDecisionValue());
       }

@@ -10,6 +10,7 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 import net.boomerangplatform.model.FlowExecutionRequest;
 import net.boomerangplatform.model.InsightsSummary;
 import net.boomerangplatform.model.ListActivityResponse;
+import net.boomerangplatform.model.TaskExecutionResponse;
 import net.boomerangplatform.model.controller.TaskWorkspace;
 import net.boomerangplatform.mongo.entity.ActivityEntity;
 import net.boomerangplatform.mongo.entity.FlowUserEntity;
@@ -29,8 +30,8 @@ public interface FlowActivityService {
   ListActivityResponse getAllActivitesForUser(FlowUserEntity user, Optional<Date> from,
       Optional<Date> to, Pageable page, String property, Direction direction);
   
-  List<TaskExecutionEntity> getTaskExecutions(String activityId);
-
+  public List<TaskExecutionResponse> getTaskExecutions(String activityId);
+  
   TaskExecutionEntity saveTaskExecution(TaskExecutionEntity task);
 
   InsightsSummary getInsightsSummary(Optional<Date> from, Optional<Date> to, Pageable pageable,
@@ -40,6 +41,8 @@ public interface FlowActivityService {
 
   Map<String, Long> getActivitySummary(Pageable pageable, List<String> teamIds,
       List<String> triggers, Long fromDate, Long toDate);
+
+  void cancelWorkflowActivity(String activityId);
 
 
 }

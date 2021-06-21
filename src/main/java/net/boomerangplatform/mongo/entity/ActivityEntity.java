@@ -10,12 +10,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import net.boomerangplatform.model.controller.TaskWorkspace;
 import net.boomerangplatform.mongo.model.CoreProperty;
+import net.boomerangplatform.mongo.model.ErrorResponse;
 import net.boomerangplatform.mongo.model.TaskStatus;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(Include.NON_NULL)
 @Document(collection = "#{@mongoConfiguration.fullCollectionName('workflows_activity')}")
-public class ActivityEntity {
+public class ActivityEntity   {
 
   private Date creationDate;
 
@@ -55,6 +56,8 @@ public class ActivityEntity {
   private String teamId;
   
   private String switchValue;
+  
+  private ErrorResponse error;
   
   @JsonProperty("workspaces")
   private List<TaskWorkspace> taskWorkspaces;
@@ -177,6 +180,14 @@ public class ActivityEntity {
 
   public void setSwitchValue(String switchValue) {
     this.switchValue = switchValue;
+  }
+
+  public ErrorResponse getError() {
+    return error;
+  }
+
+  public void setError(ErrorResponse error) {
+    this.error = error;
   }
   
 }

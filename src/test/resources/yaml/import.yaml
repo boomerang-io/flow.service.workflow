@@ -21,9 +21,28 @@ spec:
       type: string
       description: The path to the dockerfile to build
       default: hello
+  results:
+    - name: commit
+      description: The precise commit SHA after the git operation.
   steps:
   # Flow will only support single step
     - name: ubuntu-example
       image: ubuntu
+      workingDir: /tmp
+      script: |
+        #!/bin/bash
+
+        [[ -f  /etc/ssl/certs/$(params.CACERTFILE) ]] && \
+        keytool -import -keystore $JAVA_HOME/lib/security/cacerts -storepass "changeit" -file /etc/ssl/certs/$(params.CACERTFILE) -noprompt
+
+        mvn -B \
+          -Duser.home=$HOME \
+          -Djib.allowInsecureRegistries=$(params.INSECUREREGISTRY) \
+          -Djib.to.image=$(params.IMAGE) \
+          compile \
+          com.google.cloud.tools:jib-maven-plugin:build
       command: ['entrypoint']
+      env:
+        - name: HOME
+          value: /workspace
       args: ["ubuntu-build-example", "SECRETS-example.md"]

@@ -1,18 +1,15 @@
-package net.boomerangplatform.model.controller;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+package net.boomerangplatform.mongo.model;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class Response {
-
+public class ErrorResponse {
   private String code;
 
   private String message;
 
-  public Response() {
+  public ErrorResponse() {
     // Do nothing
   }
 
-  public Response(String code, String desc) {
+  public ErrorResponse(String code, String desc) {
     super();
     this.code = code;
     this.message = desc;
@@ -33,4 +30,5 @@ public class Response {
   public void setCode(String code) {
     this.code = code;
   }
+
 }

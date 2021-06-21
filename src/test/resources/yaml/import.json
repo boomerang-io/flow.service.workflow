@@ -9,9 +9,15 @@
                 "version": 1,
                 "image": "hi",
                 "command": "test",
+                "workingDir" : "/tmp2",
                 "arguments": [
                     "system",
                     "sleep"
+                ],
+                "envs" : [ {
+                    "name" : "Test", 
+                    "value" : "Value"
+                 }
                 ],
                 "config": [
                     {
@@ -23,6 +29,12 @@
                         "type": "number",
                         "defaultValue" : "1"
                     }
+                ],
+                "results" : [ {
+                  "name" : "test", 
+                  "description" : "testdesc"
+                }
+                
                 ],
                 "changelog": {
                     "userId": "5e8a6c6cd0827100011c2a35",

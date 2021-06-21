@@ -10,9 +10,14 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "taskType")
-@JsonSubTypes({@Type(value = TaskCustom.class, name = "custom"),
-    @Type(value = TaskTemplate.class, name = "template")})
+@JsonTypeInfo(
+		  use = JsonTypeInfo.Id.NAME, 
+		  include = JsonTypeInfo.As.PROPERTY, 
+		  property = "taskType")
+		@JsonSubTypes({ 
+		  @Type(value = TaskCustom.class, name = "custom"), 
+		  @Type(value = TaskTemplate.class, name = "template")
+		})
 @JsonIgnoreProperties
 public abstract class Task {
 
@@ -34,12 +39,20 @@ public abstract class Task {
   @JsonProperty("command")
   private String command;
 
-  @JsonProperty("parameters")
-  private Map<String, String> parameters = new HashMap<>();
-  
+  @JsonProperty("script")
+  private String script;
+
   @JsonProperty("labels")
   private Map<String, String> labels = new HashMap<>();
-  
+
+  @JsonProperty("parameters")
+  private Map<String, String> parameters = new HashMap<>();
+
+  @JsonProperty("envs")
+  private List<TaskEnvVar> envs;
+
+  @JsonProperty("results")
+  private List<TaskResult> results;
 
   @JsonProperty("arguments")
   private List<String> arguments;
@@ -90,6 +103,18 @@ public abstract class Task {
     this.taskName = taskName;
   }
 
+  public Map<String, String> getLabels() {
+    return labels;
+  }
+
+  public void setLabels(Map<String, String> labels) {
+    this.labels = labels;
+  }
+
+  public void setLabel(String name, String value) {
+    this.labels.put(name, value);
+  }
+
   public void setParameters(Map<String, String> parameters) {
     this.parameters = parameters;
   }
@@ -100,6 +125,22 @@ public abstract class Task {
 
   public void setParameter(String name, String value) {
     this.parameters.put(name, value);
+  }
+  
+  public List<TaskEnvVar> getEnvs() {
+    return envs;
+  }
+
+  public void setEnvs(List<TaskEnvVar> envs) {
+    this.envs = envs;
+  }
+
+  public List<TaskResult> getResults() {
+    return results;
+  }
+
+  public void setResults(List<TaskResult> results) {
+    this.results = results;
   }
 
   public List<String> getArguments() {
@@ -138,12 +179,20 @@ public abstract class Task {
     this.command = command;
   }
 
+  public String getScript() {
+    return script;
+  }
+
+  public void setScript(String script) {
+    this.script = script;
+  }
+
   public TaskConfiguration getConfiguration() {
-    return configuration;
+	return configuration;
   }
 
   public void setConfiguration(TaskConfiguration configuration) {
-    this.configuration = configuration;
+	this.configuration = configuration;
   }
 
   public List<TaskWorkspace> getWorkspaces() {
@@ -153,13 +202,4 @@ public abstract class Task {
   public void setWorkspaces(List<TaskWorkspace> workspaces) {
     this.workspaces = workspaces;
   }
-  
-  public Map<String, String> getLabels() {
-    return labels;
-  }
-
-  public void setLabels(Map<String, String> labels) {
-    this.labels = labels;
-  }
-  
 }
