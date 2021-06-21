@@ -3,7 +3,6 @@ package net.boomerangplatform.quartz;
 import java.util.List;
 import java.util.TimeZone;
 import java.util.function.Predicate;
-import javax.annotation.PostConstruct;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -20,7 +19,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.quartz.SchedulerFactoryBean;
 import org.springframework.stereotype.Component;
 import net.boomerangplatform.mongo.entity.WorkflowEntity;
-import net.boomerangplatform.mongo.model.WorkflowStatus;
 import net.boomerangplatform.mongo.service.FlowWorkflowService;
 
 @Component
@@ -38,10 +36,6 @@ public class ScheduledTasks {
   @Autowired
   private FlowWorkflowService flowWorkflowService;
 
-  @PostConstruct
-  private void initialize() {
-    setupJobs();
-  }
 
   public void cancelJob(String workflowId) throws SchedulerException {
     List<WorkflowEntity> scheduledWorkflows = flowWorkflowService.getScheduledWorkflows();
@@ -57,20 +51,7 @@ public class ScheduledTasks {
     }
   }
 
-  private void setupJobs() {
-    List<WorkflowEntity> scheduledWorkflows = flowWorkflowService.getScheduledWorkflows();
-    for (WorkflowEntity workflow : scheduledWorkflows) {
-      if (workflow.getStatus() == WorkflowStatus.active) {
-        logger.info("Picked up scheduled job: {}", workflow.getName());
-        try {
-          scheduleWorkflow(workflow);
-        } catch (RuntimeException e) {
-          logger.error("Failed up scheduled job: {}", workflow.getName());
-        }
-      }
-    }
-  }
-
+ 
   public void scheduleWorkflow(WorkflowEntity workflow) {
     
     if (workflow.getTriggers() != null && workflow.getTriggers().getScheduler() != null) {
