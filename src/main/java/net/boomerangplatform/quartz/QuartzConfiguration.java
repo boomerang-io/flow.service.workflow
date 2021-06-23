@@ -13,6 +13,10 @@ import org.springframework.scheduling.quartz.SchedulerFactoryBean;
 import net.boomerangplatform.mongo.service.MongoConfiguration;
 
 @Configuration
+@ConditionalOnProperty(
+    value="flow.scheduling.enabled", 
+    havingValue = "true", 
+    matchIfMissing = true)
 public class QuartzConfiguration {
 
   @Value("${spring.data.mongodb.uri}")

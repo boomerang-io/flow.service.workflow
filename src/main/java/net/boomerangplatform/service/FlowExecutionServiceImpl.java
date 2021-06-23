@@ -107,11 +107,13 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
           if (result.isPresent()) {
             Revision revision = result.get();
             newTask.setRevision(revision);
+            newTask.setResults(revision.getResults());
           } else {
             Optional<Revision> latestRevision = revisions.stream()
                 .sorted(Comparator.comparingInt(Revision::getVersion).reversed()).findFirst();
             if (latestRevision.isPresent()) {
               newTask.setRevision(latestRevision.get());
+              newTask.setResults(newTask.getRevision().getResults());
             }
           }
         } else {
@@ -127,9 +129,11 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
         }
 
         newTask.setInputs(properties);
-        newTask.setResults(dagTask.getResults());
         
-
+        if (newTask.getResults() == null) {
+          newTask.setResults(dagTask.getResults());
+        }
+      
       } else if (dagTask.getType() == TaskType.decision) {
         newTask.setDecisionValue(dagTask.getDecisionValue());
       }

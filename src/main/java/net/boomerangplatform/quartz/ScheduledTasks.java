@@ -22,10 +22,6 @@ import net.boomerangplatform.mongo.entity.WorkflowEntity;
 import net.boomerangplatform.mongo.service.FlowWorkflowService;
 
 @Component
-@ConditionalOnProperty(
-    value="flow.scheduling.enabled", 
-    havingValue = "true", 
-    matchIfMissing = true)
 public class ScheduledTasks {
 
   private final Logger logger = LogManager.getLogger(getClass());

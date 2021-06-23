@@ -65,6 +65,11 @@
                 "execute",
                 "$(params.workflow-name)"
             ],
+                 "results":[
+      {
+         "name":"shellCode",
+         "description":"Output code for result"
+      }],
             "config" : [ 
                 {
                     "description" : "",

@@ -57,8 +57,8 @@
                 "taskId" : "a74dfc84-e6f1-4efb-b50d-78307f7a67ab",
                 "type" : "template",
                 "label" : "Execute Shell 1",
-                "templateId" : "5c3907a1352b1b51412ed079",
-                "templateVersion" : 2,
+                "templateId" : "5c3d0401352b1b514150545b",
+                "templateVersion" : 4,
                 "dependencies" : [ 
                     {
                         "conditionalExecution" : false,
