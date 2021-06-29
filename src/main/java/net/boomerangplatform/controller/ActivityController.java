@@ -150,7 +150,7 @@ public class ActivityController {
       final FlowUserEntity user = userIdentityService.getCurrentUser();
       
       if (user != null) {
-        List<String> teamIdList = user.getType().equals(UserType.admin)
+        List<String> teamIdList = user.getType().equals(UserType.admin) || user.getType().equals(UserType.operator)
             ? teamService.getAllTeams().stream().map(TeamWorkflowSummary::getId)
                 .collect(Collectors.toList())
             : teamService.getUserTeams(user).stream().map(TeamWorkflowSummary::getId)
