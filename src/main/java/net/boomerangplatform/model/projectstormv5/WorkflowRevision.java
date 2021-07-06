@@ -27,6 +27,9 @@ public class WorkflowRevision {
   private String workFlowId;
   @JsonProperty("changelog")
   private ChangeLog changelog;
+
+  private String markdown;
+
   @JsonIgnore
   private Map<String, Object> additionalProperties = new HashMap<>();
 
@@ -110,4 +113,12 @@ public class WorkflowRevision {
     this.templateUpgradesAvailable = templateUpgradesAvailable;
   }
 
+  public String getMarkdown() {
+    return markdown;
+  }
+
+  public void setMarkdown(String markdown) {
+    this.markdown = markdown;
+  }
+  
 }
