@@ -12,7 +12,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import net.boomerangplatform.mongo.model.ChangeLog;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({"config", "dag", "id", "version", "workFlowId", "changelog"})
+@JsonPropertyOrder({"config", "dag", "id", "version", "workFlowId", "changelog", "markdown"})
 public class WorkflowRevision {
 
   @JsonProperty("config")
@@ -27,7 +27,7 @@ public class WorkflowRevision {
   private String workFlowId;
   @JsonProperty("changelog")
   private ChangeLog changelog;
-
+  @JsonProperty("markdown")
   private String markdown;
 
   @JsonIgnore
@@ -120,5 +120,5 @@ public class WorkflowRevision {
   public void setMarkdown(String markdown) {
     this.markdown = markdown;
   }
-  
+
 }
