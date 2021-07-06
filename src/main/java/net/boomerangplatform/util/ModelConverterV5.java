@@ -146,6 +146,7 @@ public class ModelConverterV5 {
   public static RevisionEntity convertToEntityModel(WorkflowRevision revision) {
     RevisionEntity entity = new RevisionEntity();
     entity.setVersion(revision.getVersion());
+    entity.setMarkdown(revision.getMarkdown());
 
     if (revision.getDag() == null) {
       return entity;
