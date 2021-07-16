@@ -7,7 +7,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import net.boomerangplatform.model.Team;
+import net.boomerangplatform.client.model.Team;
 import net.boomerangplatform.mongo.model.UserStatus;
 import net.boomerangplatform.mongo.model.UserType;
 
