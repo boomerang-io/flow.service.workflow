@@ -30,6 +30,7 @@ import net.boomerangplatform.error.BoomerangException;
 import net.boomerangplatform.model.FlowTeam;
 import net.boomerangplatform.model.FlowWorkflowRevision;
 import net.boomerangplatform.model.GenerateTokenResponse;
+import net.boomerangplatform.model.Team;
 import net.boomerangplatform.model.WorkflowExport;
 import net.boomerangplatform.model.WorkflowQuotas;
 import net.boomerangplatform.model.WorkflowShortSummary;
@@ -353,12 +354,21 @@ public class WorkflowServiceImpl implements WorkflowService {
         teamService.getTeamByIdDetailed(workFlowRepository.getWorkflow(workflowId).getFlowTeamId());
 
     List<String> userIds = new ArrayList<>();
-    for (FlowUserEntity teamUser : team.getUsers()) {
-      userIds.add(teamUser.getId());
+    if (team.getUsers() != null) {
+      for (FlowUserEntity teamUser : team.getUsers()) {
+        userIds.add(teamUser.getId());
+      }
+    }
+
+    List<String> userTeamIds = new ArrayList<>();
+    if (user.getTeams() != null) {
+      for (Team userTeam : user.getTeams()) {
+        userTeamIds.add(userTeam.getId());
+      }
     }
 
     if (user.getType() == UserType.admin || user.getType() == UserType.operator
-        || userIds.contains(user.getId())) {
+        || userIds.contains(user.getId()) || userTeamIds.contains(team.getHigherLevelGroupId())) {
       final WorkflowEntity entity = workFlowRepository.getWorkflow(workflowId);
       entity.setProperties(properties);
 
