@@ -24,6 +24,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import net.boomerangplatform.client.model.Team;
 import net.boomerangplatform.error.BoomerangError;
@@ -365,6 +366,22 @@ public class WorkflowServiceImpl implements WorkflowService {
       for (Team userTeam : user.getTeams()) {
         userTeamIds.add(userTeam.getId());
       }
+    }
+
+    try {
+      ObjectMapper objectMapper = new ObjectMapper();
+      System.out.println("*****USER*****");
+      System.out.println(objectMapper.writeValueAsString(user));
+
+      System.out.println("*****USERIDS*****");
+      System.out.println(objectMapper.writeValueAsString(userIds));
+
+      System.out.println("*****USERTEAMIDS*****");
+      System.out.println(objectMapper.writeValueAsString(userTeamIds));
+
+      System.out.println("*****HLGID***** " + team.getHigherLevelGroupId());
+    } catch (JsonProcessingException e) {
+
     }
 
     if (user.getType() == UserType.admin || user.getType() == UserType.operator
