@@ -7,6 +7,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import net.boomerangplatform.client.model.Team;
 import net.boomerangplatform.mongo.model.UserStatus;
 import net.boomerangplatform.mongo.model.UserType;
 
@@ -29,6 +30,8 @@ public class FlowUserEntity {
   private List<String> flowTeams;
 
   private UserStatus status;
+  
+  private List<Team> teams;
 
   public UserStatus getStatus() {
     return status;
@@ -109,4 +112,13 @@ public class FlowUserEntity {
   public void setFlowTeams(List<String> flowTeams) {
     this.flowTeams = flowTeams;
   }
+
+  public List<Team> getTeams() {
+    return teams;
+  }
+
+  public void setTeams(List<Team> teams) {
+    this.teams = teams;
+  }
+  
 }

@@ -23,7 +23,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import net.boomerangplatform.client.model.Team;
 import net.boomerangplatform.error.BoomerangError;
 import net.boomerangplatform.error.BoomerangException;
 import net.boomerangplatform.model.FlowTeam;
@@ -36,6 +38,7 @@ import net.boomerangplatform.model.WorkflowSummary;
 import net.boomerangplatform.model.WorkflowToken;
 import net.boomerangplatform.model.controller.TaskResult;
 import net.boomerangplatform.mongo.entity.FlowTaskTemplateEntity;
+import net.boomerangplatform.mongo.entity.FlowUserEntity;
 import net.boomerangplatform.mongo.entity.RevisionEntity;
 import net.boomerangplatform.mongo.entity.WorkflowEntity;
 import net.boomerangplatform.mongo.model.Dag;
@@ -46,6 +49,7 @@ import net.boomerangplatform.mongo.model.Trigger;
 import net.boomerangplatform.mongo.model.TriggerEvent;
 import net.boomerangplatform.mongo.model.TriggerScheduler;
 import net.boomerangplatform.mongo.model.Triggers;
+import net.boomerangplatform.mongo.model.UserType;
 import net.boomerangplatform.mongo.model.WorkflowScope;
 import net.boomerangplatform.mongo.model.WorkflowStatus;
 import net.boomerangplatform.mongo.model.next.DAGTask;
@@ -54,6 +58,7 @@ import net.boomerangplatform.mongo.service.FlowWorkflowService;
 import net.boomerangplatform.mongo.service.RevisionService;
 import net.boomerangplatform.quartz.ScheduledTasks;
 import net.boomerangplatform.service.PropertyManager;
+import net.boomerangplatform.service.UserIdentityService;
 
 @Service
 public class WorkflowServiceImpl implements WorkflowService {
@@ -69,6 +74,9 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   @Autowired
   private FlowTaskTemplateService templateService;
+
+  @Autowired
+  private UserIdentityService userIdentityService;
 
   @Autowired
   private PropertyManager propertyManager;
@@ -339,12 +347,38 @@ public class WorkflowServiceImpl implements WorkflowService {
   @Override
   public WorkflowSummary updateWorkflowProperties(String workflowId,
       List<FlowProperty> properties) {
-    final WorkflowEntity entity = workFlowRepository.getWorkflow(workflowId);
-    entity.setProperties(properties);
 
-    workFlowRepository.saveWorkflow(entity);
+    FlowUserEntity user = userIdentityService.getCurrentUser();
 
-    return new WorkflowSummary(entity);
+    FlowTeam team =
+        teamService.getTeamByIdDetailed(workFlowRepository.getWorkflow(workflowId).getFlowTeamId());
+
+    List<String> userIds = new ArrayList<>();
+    if (team.getUsers() != null) {
+      for (FlowUserEntity teamUser : team.getUsers()) {
+        userIds.add(teamUser.getId());
+      }
+    }
+
+    List<String> userTeamIds = new ArrayList<>();
+    if (user.getTeams() != null) {
+      for (Team userTeam : user.getTeams()) {
+        userTeamIds.add(userTeam.getId());
+      }
+    }
+
+    if (user.getType() == UserType.admin || user.getType() == UserType.operator
+        || userIds.contains(user.getId()) || userTeamIds.contains(team.getHigherLevelGroupId())) {
+      final WorkflowEntity entity = workFlowRepository.getWorkflow(workflowId);
+      entity.setProperties(properties);
+
+      workFlowRepository.saveWorkflow(entity);
+
+      return new WorkflowSummary(entity);
+    } else {
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+    }
+
   }
 
   @Override
@@ -736,9 +770,9 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   @Override
   public List<String> getWorkflowParameters(String workFlowId) {
-    
+
     RevisionEntity revision = this.workflowVersionService.getLatestWorkflowVersion(workFlowId);
-    
+
     return buildAvailableParamList(workFlowId, revision);
   }
 
@@ -826,7 +860,8 @@ public class WorkflowServiceImpl implements WorkflowService {
   }
 
   @Override
-  public List<String> getWorkflowParameters(String workflowId, FlowWorkflowRevision workflowSummaryEntity) {
+  public List<String> getWorkflowParameters(String workflowId,
+      FlowWorkflowRevision workflowSummaryEntity) {
 
     RevisionEntity revisionEntity = workflowSummaryEntity.convertToEntity();
     return buildAvailableParamList(workflowId, revisionEntity);
