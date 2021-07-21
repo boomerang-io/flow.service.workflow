@@ -398,7 +398,7 @@ public class ModelConverterV5 {
     port.setParentNode(taskId);
 
     if (CUSTOMTASKNAME.equals(type) || TEMPLATETASKNAME.equals(type) || "approval".equals(type)
-        || "manual".equals(type) || "setwfproperty".equals(type) || "eventwait".equals(type)
+        || "manual".equals(type) || "setwfstatus".equals(type) || "setwfproperty".equals(type) || "eventwait".equals(type)
         || "releaselock".equals(type) || "script".equals(type) || "acquirelock".equals(type)
         || "runworkflow".equals(type)) {
       port.setType("task");
@@ -517,6 +517,8 @@ public class ModelConverterV5 {
       type = DECISIONKEY;
     } else if (dagType == TaskType.setwfproperty) {
       type = "setwfproperty";
+    } else if (dagType == TaskType.setwfstatus) {
+      type = "setwfstatus";
     } else if (dagType == TaskType.manual) {
       type = "manual";
     } else if (dagType == TaskType.approval) {

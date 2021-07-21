@@ -30,6 +30,9 @@ public class ActivityEntity   {
   private String initiatedByUserName;
 
   private TaskStatus status;
+  
+  private TaskStatus statusOverride;
+
 
   public List<TaskWorkspace> getTaskWorkspaces() {
     return taskWorkspaces;
@@ -188,6 +191,14 @@ public class ActivityEntity   {
 
   public void setError(ErrorResponse error) {
     this.error = error;
+  }
+
+  public TaskStatus getStatusOverride() {
+    return statusOverride;
+  }
+
+  public void setStatusOverride(TaskStatus statusOverride) {
+    this.statusOverride = statusOverride;
   }
   
 }

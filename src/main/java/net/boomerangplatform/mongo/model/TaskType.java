@@ -1,5 +1,5 @@
 package net.boomerangplatform.mongo.model;
 
 public enum TaskType {
-  start, end, template, decision, customtask, approval, setwfproperty, manual, eventwait, acquirelock, releaselock, runworkflow, script
+  start, end, template, decision, customtask, approval, setwfproperty, manual, eventwait, acquirelock, releaselock, runworkflow, script, setwfstatus
 }
