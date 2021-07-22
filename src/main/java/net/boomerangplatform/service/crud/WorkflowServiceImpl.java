@@ -108,7 +108,7 @@ public class WorkflowServiceImpl implements WorkflowService {
   public void deleteWorkflow(String workFlowid) {
     final WorkflowEntity entity = workFlowRepository.getWorkflow(workFlowid);
     entity.setStatus(WorkflowStatus.deleted);
-    workFlowRepository.saveWorkflow(entity);
+    workFlowRepository.saveWorkflow(entity); 
 
     if (entity.getTriggers() != null) {
       Triggers trigger = entity.getTriggers();
