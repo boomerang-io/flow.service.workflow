@@ -28,7 +28,7 @@ import net.boomerangplatform.service.crud.TeamService;
 
 
 @RestController
-// @RequestMapping("/workflow/manage")
+@RequestMapping("/workflow/manage")
 public class ManagementController {
 
   @Value("${flow.externalUrl.team}")
