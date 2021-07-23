@@ -9,7 +9,7 @@
     "revisions" : [ 
         {
             "version" : 1,
-            "command" : "",
+            "command" : [],
             "arguments" : [ 
                 "twilio", 
                 "sendSMS"
@@ -25,7 +25,7 @@
         {
             "version" : 2,
             "image" : "",
-            "command" : "",
+            "command" : [],
             "arguments" : [ 
                 "twilio", 
                 "sendSMS"

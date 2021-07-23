@@ -10,7 +10,7 @@
         {
             "version" : 1,
             "image" : "tools.boomerangplatform.net:8500/ise/bmrg-worker-flow:2.0.0",
-            "command" : "",
+            "command" : [],
             "arguments" : [ 
                 "system", 
                 "jsonPathToProperty"
@@ -25,7 +25,7 @@
         {
             "version" : 2,
             "image" : "",
-            "command" : "",
+            "command" : [],
             "arguments" : [ 
                 "system", 
                 "jsonPathToProperty"

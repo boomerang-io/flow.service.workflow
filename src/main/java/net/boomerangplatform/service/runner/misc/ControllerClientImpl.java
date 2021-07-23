@@ -148,12 +148,12 @@ public class ControllerClientImpl implements ControllerClient {
         error.setCode(response.getCode());
         error.setMessage(response.getMessage());
         activity.setError(error);
-       
+
       }
 
-    }  catch (HttpStatusCodeException statusCodeException) {
+    } catch (HttpStatusCodeException statusCodeException) {
       LOGGER.error(ExceptionUtils.getStackTrace(statusCodeException));
-     
+
       String body = statusCodeException.getResponseBodyAsString();
       LOGGER.error("Error Creating Workflow Response Body: {}", body);
 
@@ -177,7 +177,7 @@ public class ControllerClientImpl implements ControllerClient {
     }
 
     this.workflowActivityService.saveWorkflowActivity(activity);
-    
+
     Date endTime = new Date();
     logRequestTime(CREATEWORKFLOWREQUEST, startTime, endTime);
     return true;
@@ -240,7 +240,17 @@ public class ControllerClientImpl implements ControllerClient {
 
     String command = applicationProperties.getLayeredProperty("command");
     command = propertyManager.replaceValueWithProperty(command, activityId, applicationProperties);
-    request.setCommand(command);
+
+    if (command != null && !command.isBlank()) {
+      String[] lines = command.split("\\r?\\n");
+      List<String> cmdArgs = new LinkedList<>();
+      for (String line : lines) {
+        String newValue =
+            propertyManager.replaceValueWithProperty(line, activityId, applicationProperties);
+        cmdArgs.add(newValue);
+      }
+      request.setCommand(cmdArgs);
+    }
 
     String script = applicationProperties.getLayeredProperty("shellScript");
     if (script != null) {
@@ -518,8 +528,16 @@ public class ControllerClientImpl implements ControllerClient {
         request.setImage(workerImage);
       }
 
-      if (revision.getCommand() != null && !revision.getCommand().isBlank()) {
+      if (revision.getCommand() != null && !revision.getCommand().isEmpty()) {
         request.setCommand(revision.getCommand());
+        List<String> cmdArgs = new LinkedList<>();
+        for (String line : revision.getCommand()) {
+          String newValue =
+              propertyManager.replaceValueWithProperty(line, activityId, applicationProperties);
+          cmdArgs.add(newValue);
+        }
+        
+        request.setCommand(cmdArgs);
       }
       if (revision.getScript() != null && !revision.getScript().isBlank()) {
         request.setScript(revision.getScript());
@@ -564,12 +582,12 @@ public class ControllerClientImpl implements ControllerClient {
 
     String taskTimeout =
         this.flowSettinigs.getConfiguration("controller", "task.timeout.configuration").getValue();
-    
+
     if (taskTimeout != null) {
       int timeout = Integer.parseInt(taskTimeout);
       taskConfiguration.setTimeout(timeout);
     }
-   
+
     return taskConfiguration;
   }
 

@@ -36,7 +36,7 @@
         {
             "version" : 2,
             "image" : "",
-            "command" : "",
+            "command" : [],
             "arguments" : [ 
                 "file", 
                 "createFile"

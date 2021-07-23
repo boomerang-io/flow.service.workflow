@@ -11,7 +11,7 @@
         {
             "version" : 1,
             "image" : "",
-            "command" : "",
+            "command" : [],
             "arguments" : [ 
                 "shell", 
                 "execute",
@@ -59,7 +59,7 @@
         {
             "version" : 2,
             "image" : "",
-            "command" : "",
+            "command" : [],
             "arguments" : [ 
                 "shell", 
                 "execute",

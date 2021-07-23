@@ -9,7 +9,7 @@
     "revisions" : [ 
         {
             "version" : 1,
-            "command" : "",
+            "command" : [],
             "arguments" : [ 
                 "github", 
                 "findInactiveIssuesInOrgAndLabel"
@@ -23,7 +23,7 @@
         }, 
         {
             "version" : 2,
-            "command" : "",
+            "command" : [],
             "arguments" : [ 
                 "github", 
                 "findInactiveIssuesInOrgAndLabel"
@@ -99,7 +99,7 @@
         }, 
         {
             "version" : 3,
-            "command" : "",
+            "command" : [],
             "arguments" : [ 
                 "github", 
                 "findInactiveIssuesInOrgAndLabel"

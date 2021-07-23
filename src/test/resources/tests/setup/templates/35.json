@@ -9,7 +9,7 @@
     "revisions" : [ 
         {
             "version" : 1,
-            "command" : "",
+            "command" : [],
             "arguments" : [ 
                 "mail", 
                 "sendgridMail"
@@ -143,7 +143,7 @@
         {
             "version" : 2,
             "image" : "boomerangio/worker-flow:2.5.26",
-            "command" : "",
+            "command" : [],
             "arguments" : [ 
                 "mail", 
                 "sendgridMail"
@@ -287,7 +287,7 @@
         {
             "version" : 3,
             "image" : "",
-            "command" : "",
+            "command" : [],
             "arguments" : [ 
                 "mail", 
                 "sendEmailWithSendgrid"

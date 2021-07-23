@@ -6,95 +6,95 @@ import net.boomerangplatform.model.controller.TaskResult;
 
 public class Revision {
 
-  private Integer version;
+  private List<String> arguments;
+  private ChangeLog changelog;
+  private List<String> command;
+  private List<TaskTemplateConfig> config;
+  private List<TaskEnvVar> envs;
+  
   private String image;
-  private String command;
-  private String script;
-  private String workingDir;
   
   private List<TaskResult> results;
-  
-  public List<TaskResult> getResults() {
-    return results;
-  }
 
-  public void setResults(List<TaskResult> results) {
-    this.results = results;
-  }
+  private String script;
 
-  private List<TaskEnvVar> envs;
+  private Integer version;
 
-  private List<String> arguments;
-  private List<TaskTemplateConfig> config;
-
-  private ChangeLog changelog;
-
-  public Integer getVersion() {
-    return version;
-  }
-
-  public void setVersion(Integer version) {
-    this.version = version;
-  }
-
-  public String getImage() {
-    return image;
-  }
-
-  public void setImage(String image) {
-    this.image = image;
-  }
-
-  public String getCommand() {
-    return command;
-  }
-
-  public void setCommand(String command) {
-    this.command = command;
-  }
-
+  private String workingDir;
   public List<String> getArguments() {
     return arguments;
-  }
-
-  public void setArguments(List<String> arguments) {
-    this.arguments = arguments;
-  }
-
-  public List<TaskTemplateConfig> getConfig() {
-    return config;
-  }
-
-  public void setConfig(List<TaskTemplateConfig> config) {
-    this.config = config;
   }
 
   public ChangeLog getChangelog() {
     return changelog;
   }
 
-  public void setChangelog(ChangeLog changelog) {
-    this.changelog = changelog;
+  public List<String> getCommand() {
+    return command;
   }
 
-  public String getScript() {
-    return script;
-  }
-
-  public void setScript(String script) {
-    this.script = script;
+  public List<TaskTemplateConfig> getConfig() {
+    return config;
   }
 
   public List<TaskEnvVar> getEnvs() {
     return envs;
   }
 
-  public void setEnvs(List<TaskEnvVar> envs) {
-    this.envs = envs;
+  public String getImage() {
+    return image;
+  }
+
+  public List<TaskResult> getResults() {
+    return results;
+  }
+
+  public String getScript() {
+    return script;
+  }
+
+  public Integer getVersion() {
+    return version;
   }
 
   public String getWorkingDir() {
     return workingDir;
+  }
+
+  public void setArguments(List<String> arguments) {
+    this.arguments = arguments;
+  }
+
+  public void setChangelog(ChangeLog changelog) {
+    this.changelog = changelog;
+  }
+
+  public void setCommand(List<String>  command) {
+    this.command = command;
+  }
+
+  public void setConfig(List<TaskTemplateConfig> config) {
+    this.config = config;
+  }
+
+  public void setEnvs(List<TaskEnvVar> envs) {
+    this.envs = envs;
+  }
+
+  public void setImage(String image) {
+    this.image = image;
+  }
+
+  public void setResults(List<TaskResult> results) {
+    this.results = results;
+  }
+
+  public void setScript(String script) {
+    this.script = script;
+  }
+
+  public void setVersion(Integer version) {
+    this.version = version;
   }
 
   public void setWorkingDir(String workingDir) {

@@ -10,7 +10,7 @@
         {
             "version" : 1,
             "image" : "tools.boomerangplatform.net:8500/ise/bmrg-worker-cicd-git:0.1.2",
-            "command" : "",
+            "command" : [],
             "arguments" : [ 
                 "git", 
                 "clone"

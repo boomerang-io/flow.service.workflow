@@ -37,7 +37,7 @@ public abstract class Task {
   private String image;
 
   @JsonProperty("command")
-  private String command;
+  private List<String> command;
 
   @JsonProperty("script")
   private String script;
@@ -171,11 +171,11 @@ public abstract class Task {
     this.image = image;
   }
 
-  public String getCommand() {
+  public List<String> getCommand() {
     return command;
   }
 
-  public void setCommand(String command) {
+  public void setCommand(List<String> command) {
     this.command = command;
   }
 
