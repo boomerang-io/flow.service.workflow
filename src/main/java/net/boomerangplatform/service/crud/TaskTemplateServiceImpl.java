@@ -134,7 +134,13 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
 
   @Override
   public void deleteTaskTemplateWithId(String id) {
-    flowTaskTemplateService.deleteTaskTemplate(flowTaskTemplateService.getTaskTemplateWithId(id));
+    FlowUserEntity user = userIdentityService.getCurrentUser();
+
+    if (user.getType() == UserType.admin || user.getType() == UserType.operator) {
+      flowTaskTemplateService.deleteTaskTemplate(flowTaskTemplateService.getTaskTemplateWithId(id));
+    } else {
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+    }
   }
 
   @Override
