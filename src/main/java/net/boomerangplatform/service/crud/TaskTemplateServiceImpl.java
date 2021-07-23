@@ -6,7 +6,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 import net.boomerangplatform.model.FlowTaskTemplate;
 import net.boomerangplatform.model.TemplateScope;
 import net.boomerangplatform.model.WorkflowSummary;
@@ -16,6 +18,7 @@ import net.boomerangplatform.mongo.entity.FlowUserEntity;
 import net.boomerangplatform.mongo.model.ChangeLog;
 import net.boomerangplatform.mongo.model.FlowTaskTemplateStatus;
 import net.boomerangplatform.mongo.model.Revision;
+import net.boomerangplatform.mongo.model.UserType;
 import net.boomerangplatform.mongo.model.WorkflowScope;
 import net.boomerangplatform.mongo.service.FlowTaskTemplateService;
 import net.boomerangplatform.service.UserIdentityService;
@@ -29,7 +32,7 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
 
   @Autowired
   private UserIdentityService userIdentityService;
-  
+
   @Autowired
   private WorkflowService workflowService;
 
@@ -56,18 +59,18 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
   @Override
   public List<FlowTaskTemplate> getAllTaskTemplates(TemplateScope scope, String teamId) {
     List<FlowTaskTemplate> templates = new LinkedList<>();
-    
+
     if (scope == TemplateScope.global || scope == null) {
-       templates = flowTaskTemplateService.getAllGlobalTasks().stream()
-          .map(FlowTaskTemplate::new).collect(Collectors.toList());
+      templates = flowTaskTemplateService.getAllGlobalTasks().stream().map(FlowTaskTemplate::new)
+          .collect(Collectors.toList());
     } else if (scope == TemplateScope.team) {
-       templates = flowTaskTemplateService.getTaskTemplatesforTeamId(teamId).stream()
+      templates = flowTaskTemplateService.getTaskTemplatesforTeamId(teamId).stream()
           .map(FlowTaskTemplate::new).collect(Collectors.toList());
     } else if (scope == TemplateScope.system) {
-       templates = flowTaskTemplateService.getAllSystemTasks().stream()
-          .map(FlowTaskTemplate::new).collect(Collectors.toList());
+      templates = flowTaskTemplateService.getAllSystemTasks().stream().map(FlowTaskTemplate::new)
+          .collect(Collectors.toList());
     }
-    
+
     updateTemplateListUserNames(templates);
     return templates;
   }
@@ -89,25 +92,44 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
 
   @Override
   public FlowTaskTemplate insertTaskTemplate(FlowTaskTemplate flowTaskTemplateEntity) {
-    Date creationDate = new Date();
+    FlowUserEntity user = userIdentityService.getCurrentUser();
 
-    flowTaskTemplateEntity.setCreatedDate(creationDate);
-    flowTaskTemplateEntity.setLastModified(creationDate);
-    flowTaskTemplateEntity.setVerified(false);
+    if (user.getType() == UserType.admin || user.getType() == UserType.operator) {
 
-    updateChangeLog(flowTaskTemplateEntity);
+      Date creationDate = new Date();
 
-    return new FlowTaskTemplate(flowTaskTemplateService.insertTaskTemplate(flowTaskTemplateEntity));
+      flowTaskTemplateEntity.setCreatedDate(creationDate);
+      flowTaskTemplateEntity.setLastModified(creationDate);
+      flowTaskTemplateEntity.setVerified(false);
+
+      updateChangeLog(flowTaskTemplateEntity);
+
+      return new FlowTaskTemplate(
+          flowTaskTemplateService.insertTaskTemplate(flowTaskTemplateEntity));
+
+    } else {
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+    }
+
   }
 
   @Override
   public FlowTaskTemplate updateTaskTemplate(FlowTaskTemplate flowTaskTemplateEntity) {
-    updateChangeLog(flowTaskTemplateEntity);
+    FlowUserEntity user = userIdentityService.getCurrentUser();
 
-    flowTaskTemplateEntity.setLastModified(new Date());
-    flowTaskTemplateEntity.setVerified(
-        flowTaskTemplateService.getTaskTemplateWithId(flowTaskTemplateEntity.getId()).isVerified());
-    return new FlowTaskTemplate(flowTaskTemplateService.updateTaskTemplate(flowTaskTemplateEntity));
+    if (user.getType() == UserType.admin || user.getType() == UserType.operator) {
+
+      updateChangeLog(flowTaskTemplateEntity);
+
+      flowTaskTemplateEntity.setLastModified(new Date());
+      flowTaskTemplateEntity.setVerified(flowTaskTemplateService
+          .getTaskTemplateWithId(flowTaskTemplateEntity.getId()).isVerified());
+      return new FlowTaskTemplate(
+          flowTaskTemplateService.updateTaskTemplate(flowTaskTemplateEntity));
+
+    } else {
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+    }
   }
 
   @Override
@@ -150,12 +172,13 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
   }
 
   @Override
-  public FlowTaskTemplate insertTaskTemplateYaml(TektonTask tektonTask, TemplateScope scope, String teamId) {
+  public FlowTaskTemplate insertTaskTemplateYaml(TektonTask tektonTask, TemplateScope scope,
+      String teamId) {
     FlowTaskTemplateEntity template = TektonConverter.convertTektonTaskToNewFlowTask(tektonTask);
     template.setStatus(FlowTaskTemplateStatus.active);
     template.setScope(scope);
     template.setFlowTeamId(teamId);
-    
+
     flowTaskTemplateService.insertTaskTemplate(template);
     return new FlowTaskTemplate(template);
   }
@@ -202,16 +225,17 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
   @Override
   public FlowTaskTemplate updateTaskTemplateWithYaml(String id, TektonTask tektonTask,
       Integer revisionId, String comment) {
-    FlowTaskTemplateEntity tektonTemplate =  TektonConverter.convertTektonTaskToNewFlowTask(tektonTask);
+    FlowTaskTemplateEntity tektonTemplate =
+        TektonConverter.convertTektonTaskToNewFlowTask(tektonTask);
     FlowTaskTemplateEntity dbTemplate = flowTaskTemplateService.getTaskTemplateWithId(id);
-    
+
     if (tektonTemplate.getName() != null && !tektonTemplate.getName().isBlank()) {
       dbTemplate.setName(tektonTemplate.getName());
     }
     if (tektonTemplate.getCategory() != null && !tektonTemplate.getCategory().isBlank()) {
       dbTemplate.setCategory(tektonTemplate.getCategory());
     }
-    
+
     if (tektonTemplate.getDescription() != null && !tektonTemplate.getDescription().isBlank()) {
       dbTemplate.setDescription(tektonTemplate.getDescription());
     }
@@ -220,7 +244,7 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
     if (revisions.size() == 1) {
       Revision revision = revisions.get(0);
       revision.setVersion(revisionId);
-      
+
       final FlowUserEntity user = userIdentityService.getCurrentUser();
       if (user != null) {
         ChangeLog changelog = revision.getChangelog();
@@ -228,15 +252,16 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
         changelog.setDate(new Date());
         changelog.setReason(comment);
       }
-      
+
       List<Revision> existingRevisions = dbTemplate.getRevisions();
 
-      Revision oldRevision = existingRevisions.stream().filter( a -> a.getVersion().equals(revisionId)).findFirst().orElse(null);
-      if (oldRevision !=  null) {
+      Revision oldRevision = existingRevisions.stream()
+          .filter(a -> a.getVersion().equals(revisionId)).findFirst().orElse(null);
+      if (oldRevision != null) {
         existingRevisions.remove(oldRevision);
-        
+
       }
-      existingRevisions.add(revision);   
+      existingRevisions.add(revision);
     }
     dbTemplate.setLastModified(new Date());
     flowTaskTemplateService.updateTaskTemplate(dbTemplate);
@@ -246,24 +271,24 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
   @Override
   public List<FlowTaskTemplate> getAllTaskTemplatesForWorkfow(String workflowId) {
     List<FlowTaskTemplate> templates = new LinkedList<>();
-    
+
     WorkflowSummary workflow = this.workflowService.getWorkflow(workflowId);
     String flowTeamId = workflow.getFlowTeamId();
     if (workflow.getScope() == WorkflowScope.team || workflow.getScope() == null) {
-        templates = flowTaskTemplateService.getAllTaskTemplatesforTeamId(flowTeamId).stream()
-           .map(FlowTaskTemplate::new).collect(Collectors.toList());
+      templates = flowTaskTemplateService.getAllTaskTemplatesforTeamId(flowTeamId).stream()
+          .map(FlowTaskTemplate::new).collect(Collectors.toList());
     } else if (workflow.getScope() == WorkflowScope.system) {
-        templates = flowTaskTemplateService.getAllTaskTemplatesForSystem().stream()
+      templates = flowTaskTemplateService.getAllTaskTemplatesForSystem().stream()
           .map(FlowTaskTemplate::new).collect(Collectors.toList());
     }
-    
+
     return templates;
   }
 
   @Override
   public FlowTaskTemplate validateTaskTemplate(TektonTask tektonTask) {
     FlowTaskTemplateEntity template = TektonConverter.convertTektonTaskToNewFlowTask(tektonTask);
-    template.setStatus(FlowTaskTemplateStatus.active);     
+    template.setStatus(FlowTaskTemplateStatus.active);
     return new FlowTaskTemplate(template);
   }
 }
