@@ -10,7 +10,7 @@
         {
             "version" : 1,
             "image" : "",
-            "command" : "",
+            "command" : [],
             "arguments" : [ 
                 "slack", 
                 "lookUpUser"

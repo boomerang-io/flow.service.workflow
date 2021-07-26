@@ -82,11 +82,8 @@ public class TektonConverter {
         }
       }
       step.setEnv(envList);
-      String commandStr = revision.getCommand();
-      if (commandStr != null && !commandStr.isBlank()) {
-        List<String> commandArray = Arrays.asList(commandStr.split(" ", -1));
-        step.setCommand(commandArray);
-      }
+      step.setCommand(revision.getCommand());
+      
       step.setArgs(revision.getArguments());
 
       step.setName(task.getName());
@@ -225,7 +222,7 @@ public class TektonConverter {
     
     
     if (step.getCommand() != null) {
-      revision.setCommand(StringUtils.join(step.getCommand(), " "));
+      revision.setCommand(step.getCommand());
     }
     
     if (step.getEnv() != null) {

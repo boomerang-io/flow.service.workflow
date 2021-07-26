@@ -10,7 +10,7 @@
         {
             "version" : 1,
             "image" : "",
-            "command" : "",
+            "command" : [],
             "arguments" : [ 
                 "http", 
                 "execute"
@@ -104,7 +104,7 @@
         {
             "version" : 2,
             "image" : "tools.boomerangplatform.net:8500/ise/bmrg-worker-flow:2.0.1",
-            "command" : "",
+            "command" : [],
             "arguments" : [ 
                 "http", 
                 "execute"
@@ -201,7 +201,7 @@
         {
             "version" : 3,
             "image" : "",
-            "command" : "",
+            "command" : [],
             "arguments" : [ 
                 "http", 
                 "execute"
@@ -299,7 +299,7 @@
         {
             "version" : 4,
             "image" : "",
-            "command" : "",
+            "command" : [],
             "script" : "",
             "workingDir" : "",
             "results" : [ 

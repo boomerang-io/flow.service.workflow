@@ -8,7 +8,7 @@
             {
                 "version": 1,
                 "image": "hi",
-                "command": "test",
+                "command": ["test"],
                 "workingDir" : "/tmp2",
                 "arguments": [
                     "system",
