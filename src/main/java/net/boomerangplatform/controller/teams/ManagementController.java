@@ -28,7 +28,7 @@ import net.boomerangplatform.service.crud.TeamService;
 
 
 @RestController
-// @RequestMapping("/workflow/manage")
+@RequestMapping("/workflow/manage")
 public class ManagementController {
 
   @Value("${flow.externalUrl.team}")
@@ -117,13 +117,13 @@ public class ManagementController {
     }
   }
 
-  @GetMapping(value = "/teams/{teamId}")
-  public FlowTeam getTeam(@PathVariable String teamId) {
-    if (isTeamManagementAvaliable()) {
-      return teamService.getTeamById(teamId);
-    }
-    return new FlowTeam();
-  }
+//  @GetMapping(value = "/teams/{teamId}")
+//  public FlowTeam getTeam(@PathVariable String teamId) {
+//    if (isTeamManagementAvaliable()) {
+//      return teamService.getTeamById(teamId);
+//    }
+//    return new FlowTeam();
+//  }
 
   @PatchMapping(value = "/teams/{teamId}/members")
   public void updateTeamMembers(@PathVariable String teamId,
