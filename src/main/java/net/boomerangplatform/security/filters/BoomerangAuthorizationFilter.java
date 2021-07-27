@@ -5,6 +5,7 @@ import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Enumeration;
 import java.util.List;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -12,6 +13,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.WordUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -29,6 +32,8 @@ import net.boomerangplatform.security.service.ApiTokenService;
 
 public class BoomerangAuthorizationFilter extends BasicAuthenticationFilter {
 
+  private static final Logger LOGGER = LogManager.getLogger();
+
   private final boolean checkJwt;
   private final String jwtSecret;
 
@@ -36,9 +41,9 @@ public class BoomerangAuthorizationFilter extends BasicAuthenticationFilter {
 
   @Value("${core.authorization.basic.password:}")
   private String basicPassword;
-  
+
   private static final String WEBHEADER = "X-WEBAUTH-EMAIL";
-  
+
 
   public BoomerangAuthorizationFilter(ApiTokenService tokenService,
       AuthenticationManager authManager, String jwtSecret, boolean checkJwt, String basicPassword) {
@@ -63,11 +68,17 @@ public class BoomerangAuthorizationFilter extends BasicAuthenticationFilter {
 
   private UsernamePasswordAuthenticationToken getAuthentication(HttpServletRequest request) // NOSONAR
   {
+    LOGGER.info("Entering getAuthentication()");
+    for (Enumeration<?> e = request.getHeaderNames(); e.hasMoreElements();) {
+      String nextHeaderName = (String) e.nextElement();
+      String headerValue = request.getHeader(nextHeaderName);
+      LOGGER.info("Header: " + nextHeaderName);
+      LOGGER.info("Value: " + headerValue);
+
+    }
 
     if (request.getHeader("Authorization") != null) {
-
       final String token = request.getHeader("Authorization");
-
       if (token.startsWith("Bearer ")) {
 
         final String jws = token.replace("Bearer ", "");
@@ -157,6 +168,7 @@ public class BoomerangAuthorizationFilter extends BasicAuthenticationFilter {
       }
 
     } else if (request.getHeader(WEBHEADER) != null) {
+
 
       String userId = null;
       if (request.getHeader(WEBHEADER) != null) {
