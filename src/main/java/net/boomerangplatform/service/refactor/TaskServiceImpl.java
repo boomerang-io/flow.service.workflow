@@ -184,7 +184,7 @@ public class TaskServiceImpl implements TaskService {
 
   private void saveWorkflowStatus(Task task, ActivityEntity activity) {
     String status = task.getInputs().get("status");
-    if (status.isEmpty() || status.isBlank()) {
+    if (!status.isBlank()) {
       TaskStatus taskStatus = TaskStatus.valueOf(status);
       activity.setStatusOverride(taskStatus);
       this.activityService.saveWorkflowActivity(activity);
