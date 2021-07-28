@@ -71,8 +71,8 @@ public class WorkflowController {
     return workflowService.getWorkflow(id);
   }
   @PostMapping(value = "/{workFlowId}/duplicate")
-  public WorkflowSummary duplicateWorkflow(@PathVariable String id) {
-    return workflowService.duplicateWorkflow(id);
+  public WorkflowSummary duplicateWorkflow(@PathVariable String workFlowId) {
+    return workflowService.duplicateWorkflow(workFlowId);
   }
   
   @PostMapping(value = "")
