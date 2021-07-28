@@ -866,4 +866,30 @@ public class WorkflowServiceImpl implements WorkflowService {
     RevisionEntity revisionEntity = workflowSummaryEntity.convertToEntity();
     return buildAvailableParamList(workflowId, revisionEntity);
   }
+
+  @Override
+  public WorkflowSummary duplicateWorkflow(String id) {
+    WorkflowEntity existingWorkflow = workFlowRepository.getWorkflow(id);
+    String newName = existingWorkflow.getName() + " (duplicate)";
+    existingWorkflow.setId(null);
+    existingWorkflow.setName(newName);
+    existingWorkflow.setTriggers(null);
+    existingWorkflow.setTokens(null);
+    
+    WorkflowEntity newWorkflow = this.saveWorkflow(existingWorkflow);
+ 
+    String newWorkflowId = newWorkflow.getId();
+    
+    RevisionEntity revisionEntity = this.workflowVersionService.getLatestWorkflowVersion(id);
+    revisionEntity.setId(null);
+    revisionEntity.setWorkFlowId(newWorkflowId);
+    revisionEntity.setVersion(1l);
+    
+    this.workflowVersionService.insertWorkflow(revisionEntity);
+    
+    WorkflowSummary updatedSummary = new WorkflowSummary(newWorkflow);
+    updateSummaryInformation(updatedSummary);
+
+    return updatedSummary;
+  }
 }

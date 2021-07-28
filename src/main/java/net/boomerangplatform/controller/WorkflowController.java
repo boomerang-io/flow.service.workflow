@@ -70,7 +70,11 @@ public class WorkflowController {
   public WorkflowSummary getWorkflowWithId(@PathVariable String id) {
     return workflowService.getWorkflow(id);
   }
-
+  @PostMapping(value = "/{workFlowId}/duplicate")
+  public WorkflowSummary duplicateWorkflow(@PathVariable String id) {
+    return workflowService.duplicateWorkflow(id);
+  }
+  
   @PostMapping(value = "")
   public WorkflowSummary insertWorkflow(@RequestBody WorkflowSummary workflowSummaryEntity) {
     workflowSummaryEntity.setStatus(WorkflowStatus.active);
