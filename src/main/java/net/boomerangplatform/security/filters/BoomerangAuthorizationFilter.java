@@ -224,6 +224,7 @@ public class BoomerangAuthorizationFilter extends BasicAuthenticationFilter {
         final UsernamePasswordAuthenticationToken authToken =
             new UsernamePasswordAuthenticationToken(userId, null, authorities);
         authToken.setDetails(userDetails);
+        LOGGER.info("Returning auth");
         return authToken;
       } 
       return null;
