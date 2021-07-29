@@ -5,6 +5,7 @@ import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Enumeration;
 import java.util.List;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -12,6 +13,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.WordUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -41,6 +44,7 @@ public class BoomerangAuthorizationFilter extends BasicAuthenticationFilter {
   private static final String XAuthHeaderUser = "X-Auth-Request-User";
   private static final String XAuthHeaderEmail = "X-Auth-Request-Email";
 
+  private static final Logger LOGGER = LogManager.getLogger();
  
   public BoomerangAuthorizationFilter(ApiTokenService tokenService,
       AuthenticationManager authManager, String jwtSecret, boolean checkJwt, String basicPassword) {
@@ -66,6 +70,15 @@ public class BoomerangAuthorizationFilter extends BasicAuthenticationFilter {
   private UsernamePasswordAuthenticationToken getAuthentication(HttpServletRequest request) // NOSONAR
   {
 
+    LOGGER.info("Entering getAuthentication()");
+    for (Enumeration<?> e = request.getHeaderNames(); e.hasMoreElements();) {
+      String nextHeaderName = (String) e.nextElement();
+      String headerValue = request.getHeader(nextHeaderName);
+      LOGGER.info("Header: " + nextHeaderName);
+      LOGGER.info("Value: " + headerValue);
+
+    }
+    
     if (request.getHeader("Authorization") != null) {
 
       final String token = request.getHeader("Authorization");
@@ -190,6 +203,8 @@ public class BoomerangAuthorizationFilter extends BasicAuthenticationFilter {
       return null;
     }  else if (request.getHeader(XAuthHeaderEmail) != null) {
 
+      LOGGER.info("In Github Auth");
+      
       String userId = null;
       if (request.getHeader(XAuthHeaderEmail) != null) {
         userId = request.getHeader(XAuthHeaderEmail);
