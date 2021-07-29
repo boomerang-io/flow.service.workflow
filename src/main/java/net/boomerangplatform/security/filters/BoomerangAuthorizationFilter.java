@@ -38,8 +38,10 @@ public class BoomerangAuthorizationFilter extends BasicAuthenticationFilter {
   private String basicPassword;
   
   private static final String WEBHEADER = "X-WEBAUTH-EMAIL";
-  
+  private static final String XAuthHeaderUser = "X-Auth-Request-User";
+  private static final String XAuthHeaderEmail = "X-Auth-Request-Email";
 
+ 
   public BoomerangAuthorizationFilter(ApiTokenService tokenService,
       AuthenticationManager authManager, String jwtSecret, boolean checkJwt, String basicPassword) {
     super(authManager);
@@ -184,7 +186,31 @@ public class BoomerangAuthorizationFilter extends BasicAuthenticationFilter {
             new UsernamePasswordAuthenticationToken(userId, null, authorities);
         authToken.setDetails(userDetails);
         return authToken;
+      } 
+      return null;
+    }  else if (request.getHeader(XAuthHeaderEmail) != null) {
+
+      String userId = null;
+      if (request.getHeader(XAuthHeaderEmail) != null) {
+        userId = request.getHeader(XAuthHeaderEmail);
       }
+
+      String firstName = null;
+      if (request.getHeader(XAuthHeaderUser) != null) {
+        firstName = request.getHeader(XAuthHeaderUser);
+      }
+
+      firstName = santaize(firstName);
+ 
+      final UserDetails userDetails = new UserDetails(userId, firstName, "");
+
+      if (userId != null) {
+        final List<GrantedAuthority> authorities = new ArrayList<>();
+        final UsernamePasswordAuthenticationToken authToken =
+            new UsernamePasswordAuthenticationToken(userId, null, authorities);
+        authToken.setDetails(userDetails);
+        return authToken;
+      } 
       return null;
     }
     return null;
