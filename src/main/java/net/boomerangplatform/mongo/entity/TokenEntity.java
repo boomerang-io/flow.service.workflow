@@ -38,11 +38,12 @@ public class TokenEntity {
   public void setDescription(String description) {
     this.description = description;
   }
-  public String getScopeId() {
-    return scopeId;
+
+  public String getTeamId() {
+    return teamId;
   }
-  public void setScopeId(String scopeId) {
-    this.scopeId = scopeId;
+  public void setTeamId(String teamId) {
+    this.teamId = teamId;
   }
   public String getToken() {
     return token;
@@ -62,14 +63,18 @@ public class TokenEntity {
   public void setScope(TokenScope scope) {
     this.scope = scope;
   }
+
+  
   private TokenScope scope;  
   private Date creationDate;
   private Date expiryDate;
   private String creatorId;
   private String description;
-  private String scopeId;
+  private String teamId;
   private String token;
   @Id
   private String id;
+  
+
 
 }
