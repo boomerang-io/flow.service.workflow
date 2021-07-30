@@ -88,6 +88,13 @@ public class NavigationServiceImpl implements NavigationService {
       teamTasks.setType(NavigationType.link);
       management.getChildLinks().add(teamTasks);
       
+      Navigation teamTokens = new Navigation();
+      teamTokens.setName("Team Tokens ");
+      teamTokens.setLink(flowAppsUrl + "/manage/team-tokens");
+      teamTokens.setType(NavigationType.link);
+      management.getChildLinks().add(teamTokens);
+      
+      
       response.add(management);
 
       if (isUserAdmin) {
@@ -118,6 +125,13 @@ public class NavigationServiceImpl implements NavigationService {
         properties.setLink(flowAppsUrl + "/admin/parameters");
         properties.setType(NavigationType.link);
         admin.getChildLinks().add(properties);
+        
+        Navigation tokens = new Navigation();
+        tokens.setName("Global Tokens");
+        tokens.setLink(flowAppsUrl + "/admin/tokens");
+        tokens.setType(NavigationType.link);
+        admin.getChildLinks().add(tokens);
+        
 
         Navigation quotas = new Navigation();
         quotas.setName("Quotas");
