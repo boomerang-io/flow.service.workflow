@@ -412,7 +412,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     if (workflowToken != null) {
       return ResponseEntity.ok(HttpStatus.OK);
     }
-    return ResponseEntity.ok(HttpStatus.FORBIDDEN);
+    return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
   }
 
   private static final char[] hexArray = "0123456789ABCDEF".toCharArray();
