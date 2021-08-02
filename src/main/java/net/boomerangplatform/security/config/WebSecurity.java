@@ -42,6 +42,7 @@ public class WebSecurity extends WebSecurityConfigurerAdapter {
 
   @Override
   protected void configure(HttpSecurity http) throws Exception {
+
     if (boomerangAuthorization) {
       setupJWT(http, false, null);
     } else {

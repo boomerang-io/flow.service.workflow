@@ -62,11 +62,13 @@ public class InternalController {
 
 
   @GetMapping(value = "/workflows")
+  @Deprecated
   public List<WorkflowShortSummary> getAllWorkflows() {
     return workflowService.getWorkflowShortSummaryList();
   }
 
   @GetMapping(value = "/system-workflows")
+  @Deprecated
   public List<WorkflowShortSummary> getAllSystemworkflows() {
     return workflowService.getSystemWorkflowShortSummaryList();
   }
@@ -92,11 +94,13 @@ public class InternalController {
 
 
   @GetMapping(value = "/webhook/status/{activityId}")
+  @Deprecated
   public FlowActivity getWebhookStatus(@PathVariable String activityId) {
     return webhookService.getFlowActivity(activityId);
   }
 
   @DeleteMapping(value = "/webhook/status/{activityId}")
+  @Deprecated
   public ResponseEntity<FlowActivity> terminateActivity(@PathVariable String activityId) {
     return webhookService.terminateActivity(activityId);
   }
