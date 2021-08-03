@@ -24,8 +24,8 @@ public class WebSecurity extends WebSecurityConfigurerAdapter {
 
   private static final String INFO = "/info";
 
-  private static final String API_DOCS = "/api-docs";
-
+  private static final String API_DOCS = "/apis/**";
+  
   private static final String HEALTH = "/health";
 
   private static final String INTERNAL = "/internal/**";
@@ -58,7 +58,7 @@ public class WebSecurity extends WebSecurityConfigurerAdapter {
     LOGGER.info("Enabling JWT identity checking.");
     final BoomerangAuthorizationFilter jwtFilter = new BoomerangAuthorizationFilter(tokenService,
         authenticationManager(), jwtSecret, checkSignature, basicPassword);
-    http.csrf().disable().authorizeRequests().antMatchers(HEALTH, API_DOCS, INFO, INTERNAL)
+    http.csrf().disable().authorizeRequests().antMatchers(HEALTH, API_DOCS, INFO, INTERNAL, API_DOCS2)
         .permitAll().and().authorizeRequests().anyRequest().authenticated().and()
         .addFilterBefore(jwtFilter, BasicAuthenticationFilter.class).sessionManagement()
         .sessionCreationPolicy(SessionCreationPolicy.STATELESS);

@@ -28,12 +28,6 @@ public class WorkflowShortSummary {
   public void setTeamName(String teamName) {
     this.teamName = teamName;
   }
-  public String getToken() {
-    return token;
-  }
-  public void setToken(String token) {
-    this.token = token;
-  }
   public boolean isWebhookEnabled() {
     return webhookEnabled;
   }
@@ -44,7 +38,6 @@ public class WorkflowShortSummary {
   private String workflowName;
   private String teamId;
   private String teamName;
-  private String token;
   private boolean webhookEnabled;
   private WorkflowScope scope;
   public WorkflowScope getScope() {

@@ -8,12 +8,14 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import io.swagger.v3.oas.annotations.Hidden;
 import net.boomerangplatform.model.Approval;
 import net.boomerangplatform.model.ApprovalRequest;
 import net.boomerangplatform.service.FlowApprovalService;
 
 @RestController
-@RequestMapping("/workflow/")
+@RequestMapping("/workflow")
+@Hidden
 public class ApprovalController {
 
   @Autowired
@@ -24,7 +26,7 @@ public class ApprovalController {
     return flowApprovalService.getApprovalsForUser();
   }
 
-  @GetMapping(value = "/approvals/{teamId")
+  @GetMapping(value = "/approvals/{teamId}")
   public List<Approval> getApprovalsForTeam(@PathVariable String teamId) {
     return flowApprovalService.getApprovalsForTeam(teamId);
   }

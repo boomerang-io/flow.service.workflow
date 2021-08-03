@@ -19,7 +19,7 @@ import net.boomerangplatform.security.model.UserDetails;
 public class UserAuthenticationFactory {
   
   public UsernamePasswordAuthenticationToken getTokenFromHeader(String token) {
-    
+    /*
     if (token != null) {
       if (token.startsWith("Bearer ")) {
 
@@ -166,7 +166,7 @@ public class UserAuthenticationFactory {
         return authToken;
       } 
       return null;
-    }
+    } */
     return null;
   }
   

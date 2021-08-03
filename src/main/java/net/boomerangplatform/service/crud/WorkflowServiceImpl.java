@@ -635,7 +635,6 @@ public class WorkflowServiceImpl implements WorkflowService {
           }
         }
         WorkflowShortSummary summary = new WorkflowShortSummary();
-        summary.setToken(token);
         summary.setWebhookEnabled(webhookEnabled);
         summary.setWorkflowName(workflowName);
         summary.setWorkflowId(workflow.getId());
@@ -747,7 +746,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
         String workflowName = workflow.getName();
         boolean webhookEnabled = false;
-        String token = null;
+   
         if (workflow.getTriggers() != null) {
           Triggers triggers = workflow.getTriggers();
           TriggerEvent webhook = triggers.getWebhook();
@@ -757,11 +756,9 @@ public class WorkflowServiceImpl implements WorkflowService {
           }
         }
         WorkflowShortSummary summary = new WorkflowShortSummary();
-        summary.setToken(token);
         summary.setWebhookEnabled(webhookEnabled);
         summary.setWorkflowName(workflowName);
         summary.setWorkflowId(workflow.getId());
-
         summaryList.add(summary);
       }
     }

@@ -12,6 +12,8 @@ public class AuthorizationInterceptor implements HandlerInterceptor {
   @Override
   public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
           throws Exception {
+    System.out.println("AM i here");
+    
     HandlerMethod handlerMethod = (HandlerMethod) handler;
     AuthenticationScope scope = handlerMethod.getMethod().getAnnotation(AuthenticationScope.class);
     /* Scopes annotation is necessary. */
