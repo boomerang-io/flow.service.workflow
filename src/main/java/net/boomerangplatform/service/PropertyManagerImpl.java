@@ -300,7 +300,6 @@ public class PropertyManagerImpl implements PropertyManager {
   public String replaceValueWithProperty(String value, String activityId,
       ControllerRequestProperties properties) {
     String replacementString = value;
-    replacementString = replaceLegacyProperties(value, activityId, properties);
     replacementString = replaceProperties(replacementString, activityId, properties);
     return replacementString;
   }
@@ -440,54 +439,7 @@ public class PropertyManagerImpl implements PropertyManager {
     return updatedString;
   }
 
-  private String replaceLegacyProperties(String value, String activityId,
-      ControllerRequestProperties applicationProperties) {
-
-    Map<String, String> executionProperties = applicationProperties.getMap(true);
-
-    String regex = "\\$\\{p\\:([^{}]*)\\}";
-    Pattern pattern = Pattern.compile(regex);
-    Matcher m = pattern.matcher(value);
-    List<String> originalValues = new LinkedList<>();
-    List<String> newValues = new LinkedList<>();
-    while (m.find()) {
-      String extractedValue = m.group(1);
-      String replaceValue = null;
-      int start = m.start();
-      int end = m.end();
-      String[] components = extractedValue.split("/");
-      if (components.length == 1) {
-        if (executionProperties.get(components[0]) != null) {
-          replaceValue = executionProperties.get(components[0]);
-        }
-      } else if (components.length == 2) {
-        String scope = components[0];
-        List<String> reservedList = Arrays.asList(reserved);
-        if (reservedList.contains(scope)) {
-          if (executionProperties.get(extractedValue) != null) {
-            replaceValue = executionProperties.get(extractedValue);
-          }
-        } else {
-          String taskName = components[0];
-          String outputProperty = components[1];
-          TaskExecutionEntity taskExecution = getTaskExecutionEntity(activityId, taskName);
-          if (taskExecution != null && taskExecution.getOutputs() != null
-              && taskExecution.getOutputs().get(outputProperty) != null) {
-            replaceValue = taskExecution.getOutputs().get(outputProperty);
-          }
-        }
-      }
-      if (replaceValue != null) {
-        String regexStr = value.substring(start, end);
-        originalValues.add(regexStr);
-        newValues.add(replaceValue);
-      }
-    }
-    String[] originalValuesArray = originalValues.toArray(new String[originalValues.size()]);
-    String[] newValuesArray = newValues.toArray(new String[newValues.size()]);
-    String updatedString = StringUtils.replaceEach(value, originalValuesArray, newValuesArray);
-    return updatedString;
-  }
+ 
 
   private TaskExecutionEntity getTaskExecutionEntity(String activityId, String taskName) {
 
