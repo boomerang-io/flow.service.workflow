@@ -65,12 +65,21 @@ public class TokenEntity {
   }
 
   
+  public String getUserId() {
+    return userId;
+  }
+  public void setUserId(String userId) {
+    this.userId = userId;
+  }
+
+
   private TokenScope scope;  
   private Date creationDate;
   private Date expiryDate;
   private String creatorId;
   private String description;
   private String teamId;
+  private String userId;
   private String token;
   @Id
   private String id;

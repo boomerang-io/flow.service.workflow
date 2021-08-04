@@ -1,6 +1,6 @@
 package net.boomerangplatform.security.model;
 
-public class ServiceTokenUserDetails extends UserDetails {
+public class ServiceTokenUserDetails extends UserToken {
 
   private final String accessToken;
 

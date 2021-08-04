@@ -14,7 +14,7 @@ import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.impl.DefaultJwtParser;
-import net.boomerangplatform.security.model.UserDetails;
+import net.boomerangplatform.security.model.UserToken;
 
 public class UserAuthenticationFactory {
   

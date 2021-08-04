@@ -21,7 +21,7 @@ import net.boomerangplatform.mongo.entity.FlowUserEntity;
 import net.boomerangplatform.mongo.model.UserStatus;
 import net.boomerangplatform.mongo.model.UserType;
 import net.boomerangplatform.mongo.service.FlowUserService;
-import net.boomerangplatform.security.model.UserDetails;
+import net.boomerangplatform.security.model.UserToken;
 import net.boomerangplatform.security.service.UserDetailsService;
 
 @Service
@@ -45,7 +45,7 @@ public class UserIdentityServiceImpl implements UserIdentityService {
   @Override
   public FlowUserEntity getCurrentUser() {
     if (flowExternalUrlUser.isBlank()) {
-      UserDetails user = usertDetailsService.getUserDetails();
+      UserToken user = usertDetailsService.getUserDetails();
       String email = user.getEmail();
       return flowUserService.getUserWithEmail(email);
 
@@ -65,7 +65,7 @@ public class UserIdentityServiceImpl implements UserIdentityService {
 
 
   private FlowUserEntity getOrRegisterUser(UserType userType) {
-    UserDetails userDetails = usertDetailsService.getUserDetails();
+    UserToken userDetails = usertDetailsService.getUserDetails();
     String email = userDetails.getEmail();
 
     String firstName = userDetails.getFirstName();

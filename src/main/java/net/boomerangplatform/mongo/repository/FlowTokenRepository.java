@@ -9,4 +9,5 @@ public interface FlowTokenRepository extends MongoRepository<TokenEntity, String
   
   public List<TokenEntity> findByScope(TokenScope scope);
   public List<TokenEntity> findByScopeAndTeamId(TokenScope scope, String teamId);
+  public TokenEntity findByToken(String token);
 }

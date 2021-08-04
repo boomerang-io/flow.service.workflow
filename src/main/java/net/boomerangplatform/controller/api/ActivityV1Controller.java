@@ -19,16 +19,15 @@ import net.boomerangplatform.service.WebhookService;
 @RestController
 @RequestMapping("/apis/v1")
 @Tag(name = "Activity Management",
-description = "Provides the ability to submit, search and check workflow activities.")
+    description = "Provides the ability to submit, search and check workflow activities.")
 public class ActivityV1Controller {
 
   @Autowired
   private WebhookService webhookService;
 
   @GetMapping(value = "/activity/{activityId}")
-  @AuthenticationScope(scopes = {Scope.global,Scope.team, Scope.user})
-  @Operation(
-      summary = "Retrieve workflow status")
+  @AuthenticationScope(scopes = {Scope.global, Scope.team, Scope.user})
+  @Operation(summary = "Retrieve workflow status")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
   public FlowActivity getWebhookStatus(@PathVariable String activityId) {
@@ -36,9 +35,8 @@ public class ActivityV1Controller {
   }
 
   @DeleteMapping(value = "/activity/{activityId}")
-  @AuthenticationScope(scopes = {Scope.global,Scope.team, Scope.user})
-  @Operation(
-      summary = "Terminate a workflow")
+  @AuthenticationScope(scopes = {Scope.global, Scope.team, Scope.user})
+  @Operation(summary = "Terminate a workflow")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
   public ResponseEntity<FlowActivity> terminateActivity(@PathVariable String activityId) {

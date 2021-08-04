@@ -14,5 +14,5 @@ public interface FlowTokenService {
   public TokenResponse createTeamToken(String teamId, Date expiryDate, String description);
   public TokenResponse createSystemToken(Date expiryDate, String description);
   public TokenEntity validateToken(String value);
-
+  public TokenEntity getAccessToken(String token);
 }

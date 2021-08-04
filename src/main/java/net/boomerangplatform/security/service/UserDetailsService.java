@@ -1,7 +1,9 @@
 package net.boomerangplatform.security.service;
 
-import net.boomerangplatform.security.model.UserDetails;
+import net.boomerangplatform.mongo.model.TokenScope;
+import net.boomerangplatform.security.model.UserToken;
 
 public interface UserDetailsService {
-  public UserDetails getUserDetails();
+  public UserToken getUserDetails();
+  public TokenScope getCurrentScope();
 }

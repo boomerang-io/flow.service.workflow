@@ -1,18 +1,19 @@
 package net.boomerangplatform.security.model;
 
-public class UserDetails {
+import net.boomerangplatform.mongo.model.TokenScope;
+
+public class UserToken extends Token {
 
   private String email;
-
   private String firstName;
   private String lastName;
-  private String platformRole;
 
-  public UserDetails(String email, String firstName, String lastName) {
+  public UserToken(String email, String firstName, String lastName) {
     super();
     this.email = email;
     this.firstName = firstName;
     this.lastName = lastName;
+    this.setScope(TokenScope.user);
   }
 
   public String getEmail() {
@@ -37,13 +38,5 @@ public class UserDetails {
 
   public void setLastName(String lastName) {
     this.lastName = lastName;
-  }
-
-  public String getPlatformRole() {
-    return platformRole;
-  }
-
-  public void setPlatformRole(String platformRole) {
-    this.platformRole = platformRole;
   }
 }

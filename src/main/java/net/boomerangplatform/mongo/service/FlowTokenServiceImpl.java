@@ -156,5 +156,11 @@ public class FlowTokenServiceImpl implements FlowTokenService {
       return null;
     }
   }
+
+  @Override
+  public TokenEntity getAccessToken(String token) {
+    final String hashToken = hashString(token);
+    return tokenRepository.findByToken(hashToken);
+  }
 }
 
