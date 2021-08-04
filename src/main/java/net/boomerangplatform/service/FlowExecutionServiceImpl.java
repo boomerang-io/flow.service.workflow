@@ -43,6 +43,7 @@ import net.boomerangplatform.service.crud.FlowActivityService;
 import net.boomerangplatform.service.crud.WorkflowService;
 import net.boomerangplatform.service.refactor.DAGUtility;
 import net.boomerangplatform.service.refactor.TaskClient;
+import net.boomerangplatform.service.refactor.TaskService;
 import net.boomerangplatform.service.runner.misc.ControllerClient;
 import net.boomerangplatform.util.GraphProcessor;
 
@@ -54,6 +55,10 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
 
   @Autowired
   private RevisionService flowRevisionService;
+  @Autowired
+  private TaskService taskService;
+
+  
 
   @Autowired
   private FlowTaskTemplateService taskTemplateService;
@@ -291,7 +296,7 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
         if (nodes.contains(next.getTaskId())) {
           InternalTaskRequest taskRequest = new InternalTaskRequest();
           taskRequest.setActivityId(next.getTaskActivityId());
-          taskClient.startTask(taskRequest);
+          taskClient.startTask(taskService, taskRequest);
         }       
       }
     } catch (Exception e) {

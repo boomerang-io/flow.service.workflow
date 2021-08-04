@@ -34,6 +34,7 @@ import net.boomerangplatform.service.crud.TeamService;
 import net.boomerangplatform.service.crud.WorkflowService;
 import net.boomerangplatform.service.refactor.ControllerRequestProperties;
 import net.boomerangplatform.service.refactor.TaskClient;
+import net.boomerangplatform.service.refactor.TaskService;
 import net.boomerangplatform.model.Task;
 
 @Service
@@ -44,6 +45,9 @@ public class FlowApprovalServiceImpl implements FlowApprovalService {
 
   @Autowired
   private TaskClient taskClient;
+  
+  @Autowired
+  private TaskService taskService;
 
   @Autowired
   private UserIdentityService userIdentityService;
@@ -108,7 +112,7 @@ public class FlowApprovalServiceImpl implements FlowApprovalService {
       }
       actionApprovalResponse.setOutputProperties(outputProperties);
       approvalService.save(approvalEntity);
-      taskClient.endTask(actionApprovalResponse);
+      taskClient.endTask(taskService, actionApprovalResponse);
     }
   }
 

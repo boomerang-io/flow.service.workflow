@@ -33,19 +33,15 @@ public class TaskClientImpl implements TaskClient {
   
   private static final Logger LOGGER = LogManager.getLogger();
 
-
-  @Autowired
-  private TaskService taskService;
-  
   @Override
   @Async
-  public void startTask(InternalTaskRequest taskRequest) {
+  public void startTask(TaskService taskService, InternalTaskRequest taskRequest) {
     taskService.createTask(taskRequest);
   }
 
   @Override
   @Async
-  public void endTask(InternalTaskResponse taskResponse) {
+  public void endTask(TaskService taskService, InternalTaskResponse taskResponse) {
     taskService.endTask(taskResponse);
   }
 

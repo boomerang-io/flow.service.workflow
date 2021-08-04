@@ -86,12 +86,8 @@ public class TaskServiceImpl implements TaskService {
 
   private static final Logger LOGGER = LogManager.getLogger();
 
-  private TaskClient flowClient;
-
   @Autowired
-  public TaskServiceImpl(@Lazy TaskClient flowClient) {
-    this.flowClient = flowClient;
-  }
+  private TaskClient flowClient;
 
 
   @Override
@@ -143,10 +139,10 @@ public class TaskServiceImpl implements TaskService {
         this.endTask(response);
       } else if (taskType == TaskType.template || taskType == TaskType.script) {
         List<CoreProperty> labels = workflow.getLabels();
-        controllerClient.submitTemplateTask(task, activityId, workflowName, labels);
+        controllerClient.submitTemplateTask(this, flowClient, task, activityId, workflowName, labels);
       } else if (taskType == TaskType.customtask) {
         List<CoreProperty> labels = workflow.getLabels();
-        controllerClient.submitCustomTask(task, activityId, workflowName, labels);
+        controllerClient.submitCustomTask(this, flowClient, task, activityId, workflowName, labels);
       } else if (taskType == TaskType.acquirelock) {
         createLock(task, activity);
       } else if (taskType == TaskType.releaselock) {
@@ -458,7 +454,7 @@ public class TaskServiceImpl implements TaskService {
         } else {
           InternalTaskRequest taskRequest = new InternalTaskRequest();
           taskRequest.setActivityId(task.getId());
-          flowClient.startTask(taskRequest);
+          flowClient.startTask(this, taskRequest);
         }
       }
     }

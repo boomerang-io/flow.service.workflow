@@ -11,7 +11,6 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Primary;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -46,6 +45,7 @@ import net.boomerangplatform.service.PropertyManager;
 import net.boomerangplatform.service.crud.FlowActivityService;
 import net.boomerangplatform.service.refactor.ControllerRequestProperties;
 import net.boomerangplatform.service.refactor.TaskClient;
+import net.boomerangplatform.service.refactor.TaskService;
 
 @Service
 @Primary
@@ -61,14 +61,6 @@ public class ControllerClientImpl implements ControllerClient {
 
   @Autowired
   private FlowSettingsService flowSettinigs;
-
-  private TaskClient flowTaskClient;
-
-  @Autowired
-  public ControllerClientImpl(@Lazy TaskClient flowTaskClient) {
-    this.flowTaskClient = flowTaskClient;
-  }
-
 
   @Autowired
   private PropertyManager propertyManager;
@@ -207,9 +199,12 @@ public class ControllerClientImpl implements ControllerClient {
     return true;
   }
 
+  
+
+  
   @Override
   @Async("flowAsyncExecutor")
-  public void submitCustomTask(Task task, String activityId, String workflowName,
+  public void submitCustomTask(TaskService t, TaskClient flowTaskClient, Task task, String activityId, String workflowName,
       List<CoreProperty> labels) {
 
 
@@ -342,7 +337,7 @@ public class ControllerClientImpl implements ControllerClient {
     response.setStatus(taskExecution.getFlowTaskStatus());
     response.setOutputProperties(outputProperties);
 
-    flowTaskClient.endTask(response);
+    flowTaskClient.endTask(t, response);
   }
 
 
@@ -382,7 +377,7 @@ public class ControllerClientImpl implements ControllerClient {
 
   @Override
   @Async("flowAsyncExecutor")
-  public void submitTemplateTask(Task task, String activityId, String workflowName,
+  public void submitTemplateTask(TaskService t, TaskClient flowTaskClient,Task task, String activityId, String workflowName,
       List<CoreProperty> labels) {
 
     ActivityEntity activity = this.activityService.findWorkflowActivity(activityId);
@@ -506,7 +501,7 @@ public class ControllerClientImpl implements ControllerClient {
     response.setStatus(taskExecution.getFlowTaskStatus());
     response.setOutputProperties(outputProperties);
 
-    flowTaskClient.endTask(response);
+    flowTaskClient.endTask(t, response);
   }
 
   private void prepareTemplateImageRequest(Task task, TaskResult taskResult,
