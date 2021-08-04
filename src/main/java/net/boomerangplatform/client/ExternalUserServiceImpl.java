@@ -42,13 +42,14 @@ public class ExternalUserServiceImpl implements ExernalUserService {
       String userEmail = userDetailsService.getUserDetails().getEmail();
       UriComponents uriComponents = UriComponentsBuilder.fromHttpUrl(externalUserUrl).
           queryParam("userEmail", userEmail).build();
-      HttpHeaders headers = buildHeaders();
+      HttpHeaders headers = buildHeaders(userEmail);
     
       HttpEntity<String> requestUpdate = new HttpEntity<>("", headers);
       ResponseEntity<UserProfile> response =
           restTemplate.exchange(uriComponents.toUriString(), HttpMethod.GET, requestUpdate, UserProfile.class);
       return response.getBody();
     } catch (RestClientException e) {
+      e.printStackTrace();
       return null;
     }
   }
@@ -57,7 +58,7 @@ public class ExternalUserServiceImpl implements ExernalUserService {
   public UserProfile getUserProfileById(String id) {
     UriComponents uriComponents = UriComponentsBuilder.fromHttpUrl(externalUserUrl).
         queryParam("userId", id).build();
-    HttpHeaders headers = buildHeaders();
+    HttpHeaders headers = buildHeaders(null);
   
     HttpEntity<String> requestUpdate = new HttpEntity<>("", headers);
     ResponseEntity<UserProfile> response =
@@ -65,12 +66,17 @@ public class ExternalUserServiceImpl implements ExernalUserService {
     return response.getBody();
   }
   
-  private HttpHeaders buildHeaders() {
+  private HttpHeaders buildHeaders(String email) {
 
     final HttpHeaders headers = new HttpHeaders();
     headers.add("Accept", "application/json");
-    headers.add(AUTHORIZATION_HEADER, TOKEN_PREFIX + apiTokenService.getUserToken());
-
+    
+    if (email != null) {
+      headers.add(AUTHORIZATION_HEADER, TOKEN_PREFIX + apiTokenService.createJWTToken(email));     headers.add(AUTHORIZATION_HEADER, TOKEN_PREFIX + apiTokenService.createJWTToken(email));
+    } else {
+      headers.add(AUTHORIZATION_HEADER, TOKEN_PREFIX + apiTokenService.createJWTToken());
+    }
+    
     headers.setContentType(MediaType.APPLICATION_JSON);
     return headers;
   }
