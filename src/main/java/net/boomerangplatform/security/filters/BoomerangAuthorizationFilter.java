@@ -69,7 +69,14 @@ public class BoomerangAuthorizationFilter extends BasicAuthenticationFilter {
 
   private UsernamePasswordAuthenticationToken getAuthentication(HttpServletRequest request) // NOSONAR
   {
+    LOGGER.info("Entering getAuthentication()");
+    for (Enumeration<?> e = request.getHeaderNames(); e.hasMoreElements();) {
+      String nextHeaderName = (String) e.nextElement();
+      String headerValue = request.getHeader(nextHeaderName);
+      LOGGER.info("Header: " + nextHeaderName);
+      LOGGER.info("Value: " + headerValue);
 
+    }
    
     if (request.getHeader("Authorization") != null) {
 
