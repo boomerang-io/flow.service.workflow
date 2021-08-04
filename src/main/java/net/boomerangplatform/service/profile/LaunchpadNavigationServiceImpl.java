@@ -18,7 +18,10 @@ import net.boomerangplatform.model.profile.Features;
 import net.boomerangplatform.model.profile.Navigation;
 import net.boomerangplatform.model.profile.NavigationResponse;
 import net.boomerangplatform.model.profile.Platform;
+import net.boomerangplatform.security.model.UserToken;
 import net.boomerangplatform.security.service.ApiTokenService;
+import net.boomerangplatform.security.service.UserDetailsService;
+import net.boomerangplatform.service.UserIdentityService;
 
 @Service
 public class LaunchpadNavigationServiceImpl implements LaunchpadNavigationService {
@@ -57,13 +60,23 @@ public class LaunchpadNavigationServiceImpl implements LaunchpadNavigationServic
   @Autowired
   private ApiTokenService apiTokenService;
   
+  @Autowired
+  private UserDetailsService identityService;
+  
   @Override
   public NavigationResponse getLaunchpadNavigation(boolean isUserAdmin) {
+    
+    UserToken userToken = identityService.getUserDetails();
+    if (userToken == null) {
+      return null;
+    }
+    String email = userToken.getEmail();
+    
     if (platformNavigationUrl.isBlank()) {
       return getFlowNavigationResponse();
     }
     else {
-      return getExternalNavigationResponse();
+      return getExternalNavigationResponse(email);
     }
   }
 
@@ -93,22 +106,19 @@ public class LaunchpadNavigationServiceImpl implements LaunchpadNavigationServic
     return navigationResponse;
   }
   
-  private NavigationResponse getExternalNavigationResponse() {
+  private NavigationResponse getExternalNavigationResponse(String email) {
     UriComponents uriComponents = UriComponentsBuilder.fromHttpUrl(platformNavigationUrl).build();
-    HttpHeaders headers = buildHeaders();
-  
+    HttpHeaders headers = buildHeaders(email);
     HttpEntity<String> requestUpdate = new HttpEntity<>("", headers);
     ResponseEntity<NavigationResponse> response =
         restTemplate.exchange(uriComponents.toUriString(), HttpMethod.GET, requestUpdate, NavigationResponse.class);
     return response.getBody();
   }
   
-  private HttpHeaders buildHeaders() {
-
+  private HttpHeaders buildHeaders(String email) {
     final HttpHeaders headers = new HttpHeaders();
     headers.add("Accept", "application/json");
-    headers.add(AUTHORIZATION_HEADER, TOKEN_PREFIX + apiTokenService.getUserToken());
-
+    headers.add(AUTHORIZATION_HEADER, TOKEN_PREFIX + apiTokenService.createJWTToken(email));
     headers.setContentType(MediaType.APPLICATION_JSON);
     return headers;
   }
