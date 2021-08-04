@@ -502,7 +502,17 @@ public class FlowActivityServiceImpl implements FlowActivityService {
         if (activity != null) {
           response.setRunWorkflowActivityStatus(activity.getStatus());
         }
-      } else if (TaskType.template == task.getTaskType() || TaskType.customtask == task.getTaskType() || TaskType.script == task.getTaskType()) {
+      } 
+      else if (TaskType.eventwait == task.getTaskType()) {
+        List<TaskOutputResult> results = new LinkedList<>();
+        TaskOutputResult result = new TaskOutputResult();
+        result.setName("eventPayload");
+        result.setDescription("Payload that was received with the Wait For Event");
+        String json = task.getOutputs().get("eventPayload");
+        result.setValue(json);
+        response.setResults(results);
+      }
+      else if (TaskType.template == task.getTaskType() || TaskType.customtask == task.getTaskType() || TaskType.script == task.getTaskType()) {
         List<TaskOutputResult> results = new LinkedList<>();
         setupTaskOutputResults(task, response, results);
        
