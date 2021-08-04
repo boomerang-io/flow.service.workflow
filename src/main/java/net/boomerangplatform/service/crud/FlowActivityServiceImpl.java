@@ -510,6 +510,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
         result.setDescription("Payload that was received with the Wait For Event");
         String json = task.getOutputs().get("eventPayload");
         result.setValue(json);
+        results.add(result);
         response.setResults(results);
       }
       else if (TaskType.template == task.getTaskType() || TaskType.customtask == task.getTaskType() || TaskType.script == task.getTaskType()) {
