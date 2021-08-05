@@ -5,6 +5,7 @@ import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.Optional;
 import javax.servlet.FilterChain;
@@ -63,12 +64,23 @@ public class FlowAuthorizationFilter extends BasicAuthenticationFilter {
   @Override
   protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res,
       FilterChain chain) throws IOException, ServletException {
+    
+    LOGGER.info("Entering getAuthentication()");
+    for (Enumeration<?> e = req.getHeaderNames(); e.hasMoreElements();) {
+      String nextHeaderName = (String) e.nextElement();
+      String headerValue = req.getHeader(nextHeaderName);
+      LOGGER.info("Header: " + nextHeaderName);
+      LOGGER.info("Value: " + headerValue);
+
+    }
+    
     try {
 
       Authentication authentication = null;
       if (req.getHeader(AUTHORIZATION_HEADER) != null) {
         authentication = getUserAuthentication(req);
       } else if (req.getHeader(X_FORWARDED_EMAIL) != null) { 
+        LOGGER.info("Detected Github Authorization");
         authentication = getGithubUserAuthentication(req);
       }
       else if (req.getHeader(X_ACCESS_TOKEN) != null) {
@@ -85,6 +97,8 @@ public class FlowAuthorizationFilter extends BasicAuthenticationFilter {
   private Authentication getGithubUserAuthentication(HttpServletRequest req) {
     String email = req.getHeader(X_FORWARDED_EMAIL);
     String userName = req.getHeader(X_FORWARDED_USER);
+    LOGGER.info("email: " + email);
+    LOGGER.info("userName: " + userName);
     final UserToken userDetails = new UserToken(email, userName, "");
     if (email != null && !email.isBlank()) {
       final List<GrantedAuthority> authorities = new ArrayList<>();
