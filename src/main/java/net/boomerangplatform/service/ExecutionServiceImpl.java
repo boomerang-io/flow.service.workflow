@@ -65,7 +65,7 @@ public class ExecutionServiceImpl implements ExecutionService {
         final RevisionEntity entity = this.flowRevisionService.getLatestWorkflowVersion(workflowId);
         if (entity != null) {
           final ActivityEntity activity =
-              activityService.createFlowActivity(entity.getId(), trigger, request, taskWorkspaces);
+              activityService.createFlowActivity(entity.getId(), trigger, request, taskWorkspaces, request.getLabels());
           flowExecutionService.executeWorkflowVersion(entity.getId(), activity.getId());
 
           final List<TaskExecutionResponse> steps =

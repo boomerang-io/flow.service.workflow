@@ -1,9 +1,12 @@
 package net.boomerangplatform.model;
 
+import java.util.List;
 import java.util.Map;
+import net.boomerangplatform.mongo.model.CoreProperty;
 
 public class FlowExecutionRequest {
 
+  private List<CoreProperty> labels;
   private boolean applyQuotas;
   
   private Map<String, String> properties;
@@ -22,6 +25,14 @@ public class FlowExecutionRequest {
 
   public void setApplyQuotas(boolean applyQuotas) {
     this.applyQuotas = applyQuotas;
+  }
+
+  public List<CoreProperty> getLabels() {
+    return labels;
+  }
+
+  public void setLabels(List<CoreProperty> labels) {
+    this.labels = labels;
   }
 
 }

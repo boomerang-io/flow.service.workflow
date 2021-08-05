@@ -4,6 +4,7 @@ import java.net.URI;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -32,6 +33,7 @@ import io.cloudevents.v1.http.Unmarshallers;
 import net.boomerangplatform.model.FlowActivity;
 import net.boomerangplatform.model.FlowExecutionRequest;
 import net.boomerangplatform.model.eventing.EventResponse;
+import net.boomerangplatform.mongo.model.CoreProperty;
 import net.boomerangplatform.mongo.model.FlowProperty;
 import net.boomerangplatform.mongo.model.Triggers;
 import net.boomerangplatform.service.crud.WorkflowService;
@@ -193,6 +195,15 @@ public class EventProcessorImpl implements EventProcessor {
       logger.info("processCloudEvent() - Trigger(" + trigger + ") is enabled");
 
       FlowExecutionRequest executionRequest = new FlowExecutionRequest();
+      
+      
+      List<CoreProperty> cloudEventLabels = new LinkedList<>();
+      CoreProperty property = new CoreProperty();
+      property.setKey("eventId");
+      property.setValue(event.getAttributes().getId());
+      cloudEventLabels.add(property);
+      executionRequest.setLabels(cloudEventLabels);
+      
       executionRequest.setProperties(processProperties(eventData, workflowId));
 
       FlowActivity activity = executionService.executeWorkflow(workflowId, Optional.of(trigger),

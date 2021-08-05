@@ -18,6 +18,7 @@ import net.boomerangplatform.mongo.model.TaskStatus;
 @Document(collection = "#{@mongoConfiguration.fullCollectionName('workflows_activity')}")
 public class ActivityEntity   {
 
+  private List<CoreProperty> labels;
   private Date creationDate;
 
   private Long duration;
@@ -199,6 +200,14 @@ public class ActivityEntity   {
 
   public void setStatusOverride(TaskStatus statusOverride) {
     this.statusOverride = statusOverride;
+  }
+
+  public List<CoreProperty> getLabels() {
+    return labels;
+  }
+
+  public void setLabels(List<CoreProperty> labels) {
+    this.labels = labels;
   }
   
 }

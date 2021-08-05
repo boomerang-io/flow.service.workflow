@@ -159,7 +159,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
 
   @Override
   public ActivityEntity createFlowActivity(String workflowVersionId, Optional<String> trigger,
-      FlowExecutionRequest request, Optional<List<TaskWorkspace>> taskWorkspaces) {
+      FlowExecutionRequest request, Optional<List<TaskWorkspace>> taskWorkspaces, List<CoreProperty> labels) {
     /* Create new one based of work flow version id. */
     final RevisionEntity entity = versionService.getWorkflowlWithId(workflowVersionId);
     WorkflowEntity workflow = workflowService.getWorkflow(entity.getWorkFlowId());
@@ -171,6 +171,8 @@ public class FlowActivityServiceImpl implements FlowActivityService {
     activity.setScope(workflow.getScope());
     activity.setCreationDate(new Date());
     activity.setStatus(TaskStatus.inProgress);
+    activity.setLabels(labels);
+
 
     if (taskWorkspaces.isPresent()) {
       activity.setTaskWorkspaces(taskWorkspaces.get());

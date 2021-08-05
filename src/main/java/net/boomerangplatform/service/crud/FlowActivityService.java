@@ -15,11 +15,12 @@ import net.boomerangplatform.model.controller.TaskWorkspace;
 import net.boomerangplatform.mongo.entity.ActivityEntity;
 import net.boomerangplatform.mongo.entity.FlowUserEntity;
 import net.boomerangplatform.mongo.entity.TaskExecutionEntity;
+import net.boomerangplatform.mongo.model.CoreProperty;
 
 public interface FlowActivityService {
 
   ActivityEntity createFlowActivity(String workflowVersionId,
-      Optional<String> trigger, FlowExecutionRequest request, Optional<List<TaskWorkspace>> taskWorkspaces);
+      Optional<String> trigger, FlowExecutionRequest request, Optional<List<TaskWorkspace>> taskWorkspaces, List<CoreProperty> list);
 
   ActivityEntity findWorkflowActivity(String id);
 
