@@ -39,6 +39,9 @@ import net.boomerangplatform.security.model.UserToken;
 
 public class FlowAuthorizationFilter extends BasicAuthenticationFilter {
 
+  private static final String X_FORWARDED_USER = "x-forwarded-user";
+  private static final String X_FORWARDED_EMAIL = "x-forwarded-email";
+  
   private static final String X_ACCESS_TOKEN = "x-access-token";
   private static final String AUTHORIZATION_HEADER = "Authorization";
 
@@ -65,7 +68,10 @@ public class FlowAuthorizationFilter extends BasicAuthenticationFilter {
       Authentication authentication = null;
       if (req.getHeader(AUTHORIZATION_HEADER) != null) {
         authentication = getUserAuthentication(req);
-      } else if (req.getHeader(X_ACCESS_TOKEN) != null) {
+      } else if (req.getHeader(X_FORWARDED_EMAIL) != null) { 
+        authentication = getGithubUserAuthentication(req);
+      }
+      else if (req.getHeader(X_ACCESS_TOKEN) != null) {
         authentication = getTokenBasedAuthentication(req);
       }
 
@@ -74,6 +80,20 @@ public class FlowAuthorizationFilter extends BasicAuthenticationFilter {
     } catch (final AuthorizationException e) {
       LOGGER.error(e);
     }
+  }
+
+  private Authentication getGithubUserAuthentication(HttpServletRequest req) {
+    String email = req.getHeader(X_FORWARDED_EMAIL);
+    String userName = req.getHeader(X_FORWARDED_USER);
+    final UserToken userDetails = new UserToken(email, userName, "");
+    if (email != null && !email.isBlank()) {
+      final List<GrantedAuthority> authorities = new ArrayList<>();
+      final UsernamePasswordAuthenticationToken authToken =
+          new UsernamePasswordAuthenticationToken(email, email, authorities);
+      authToken.setDetails(userDetails);
+      return authToken;
+    }
+    return null;
   }
 
   private Authentication getTokenBasedAuthentication(HttpServletRequest request) {
