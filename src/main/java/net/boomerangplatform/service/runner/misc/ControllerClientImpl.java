@@ -207,6 +207,7 @@ public class ControllerClientImpl implements ControllerClient {
   public void submitCustomTask(TaskService t, TaskClient flowTaskClient, Task task, String activityId, String workflowName,
       List<CoreProperty> labels) {
 
+    
 
     TaskResult taskResult = new TaskResult();
     TaskExecutionEntity taskExecution =
@@ -214,6 +215,9 @@ public class ControllerClientImpl implements ControllerClient {
 
     ActivityEntity activity = this.activityService.findWorkflowActivity(activityId);
 
+    if (activity.getLabels() != null) {
+      labels.addAll(activity.getLabels());
+    }
 
     taskResult.setNode(task.getTaskId());
     final TaskTemplate request = new TaskTemplate();
@@ -382,6 +386,10 @@ public class ControllerClientImpl implements ControllerClient {
 
     ActivityEntity activity = this.activityService.findWorkflowActivity(activityId);
 
+    if (activity.getLabels() != null) {
+      labels.addAll(activity.getLabels());
+    }
+    
     TaskResult taskResult = new TaskResult();
     TaskExecutionEntity taskExecution =
         taskService.findByTaskIdAndActivityId(task.getTaskId(), activityId);
