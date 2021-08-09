@@ -1,0 +1,56 @@
+package io.boomerang.service.crud;
+
+import java.util.List;
+import java.util.Optional;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import io.boomerang.model.FlowWorkflowRevision;
+import io.boomerang.model.GenerateTokenResponse;
+import io.boomerang.model.WorkflowExport;
+import io.boomerang.model.WorkflowShortSummary;
+import io.boomerang.model.WorkflowSummary;
+import io.boomerang.mongo.entity.WorkflowEntity;
+import io.boomerang.mongo.model.FlowProperty;
+import io.boomerang.mongo.model.WorkflowScope;
+
+public interface WorkflowService {
+
+  void deleteWorkflow(String workFlowid);
+
+  WorkflowSummary getWorkflow(String workflowId);
+
+  List<WorkflowSummary> getWorkflowsForTeam(String flowTeamId);
+
+  WorkflowSummary saveWorkflow(WorkflowEntity flowWorkflowEntity);
+
+  WorkflowSummary updateWorkflow(WorkflowSummary summary);
+
+  WorkflowSummary updateWorkflowProperties(String workflowId, List<FlowProperty> properties);
+
+  GenerateTokenResponse generateTriggerToken(String id, String label);
+
+  ResponseEntity<InputStreamResource> exportWorkflow(String workFlowId);
+
+  void importWorkflow(WorkflowExport export, Boolean update, String flowTeamId, WorkflowScope scope);
+  
+  boolean canExecuteWorkflowForQuotas(String teamId);
+
+  boolean canExecuteWorkflow(String workFlowId, Optional<String> trigger);
+  
+  public List<WorkflowShortSummary> getWorkflowShortSummaryList();
+
+  ResponseEntity<HttpStatus> validateWorkflowToken(String id, GenerateTokenResponse tokenPayload);
+
+  void deleteToken(String id, String label);
+
+  List<WorkflowSummary> getSystemWorkflows();
+
+  List<WorkflowShortSummary> getSystemWorkflowShortSummaryList();
+
+  List<String> getWorkflowParameters(String workFlowId);
+
+  List<String> getWorkflowParameters(String workflowId, FlowWorkflowRevision workflowSummaryEntity);
+
+  WorkflowSummary duplicateWorkflow(String id);
+}
