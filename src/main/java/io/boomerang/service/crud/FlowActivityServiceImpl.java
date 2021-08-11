@@ -181,9 +181,16 @@ public class FlowActivityServiceImpl implements FlowActivityService {
     activity.setScope(workflow.getScope());
     activity.setCreationDate(new Date());
     activity.setStatus(TaskStatus.inProgress);
+
+    List<CoreProperty> corePropertyList = new LinkedList<>();    
+    if (labels != null) {
+      corePropertyList.addAll(labels);
+    }
+    if (workflow.getLabels() != null) {
+      corePropertyList.addAll(workflow.getLabels());
+    }
     activity.setLabels(labels);
-
-
+    
     if (taskWorkspaces.isPresent()) {
       activity.setTaskWorkspaces(taskWorkspaces.get());
     }
