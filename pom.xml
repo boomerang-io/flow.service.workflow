@@ -165,12 +165,12 @@
 		<dependency>
 			<groupId>org.jgrapht</groupId>
 			<artifactId>jgrapht-io</artifactId>
-			<version>1.2.0</version>
+			<version>1.5.1</version>
 		</dependency>
 		<dependency>
 			<groupId>org.jgrapht</groupId>
 			<artifactId>jgrapht-ext</artifactId>
-			<version>1.2.0</version>
+			<version>1.5.1</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -207,13 +207,13 @@
 		<dependency>
 			<groupId>io.opentracing.contrib</groupId>
 			<artifactId>opentracing-spring-jaeger-web-starter</artifactId>
-			<version>0.2.2</version>
+			<version>3.3.1</version>
 		</dependency>
 
 		<dependency>
 			<groupId>io.jaegertracing</groupId>
 			<artifactId>jaeger-core</artifactId>
-			<version>0.31.0</version>
+			<version>1.6.0</version>
 		</dependency>
 
 		<dependency>
@@ -270,7 +270,7 @@
 		<dependency>
 			<groupId>org.apache.httpcomponents</groupId>
 			<artifactId>httpclient</artifactId>
-			<version>4.5.6</version>
+			<version>4.5.13</version>
 		</dependency>
 
 		<dependency>
