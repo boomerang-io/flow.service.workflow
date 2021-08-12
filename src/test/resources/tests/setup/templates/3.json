@@ -299,7 +299,9 @@
         {
             "version" : 4,
             "image" : "",
-            "command" : [],
+              "command" : [ 
+                ""
+            ],
             "script" : "",
             "workingDir" : "",
             "results" : [ 

@@ -531,7 +531,10 @@ public class ControllerClientImpl implements ControllerClient {
         request.setImage(workerImage);
       }
 
-      if (revision.getCommand() != null && !revision.getCommand().isEmpty()) {
+      List<String> command = revision.getCommand();
+      
+   
+      if (command != null && !command.isEmpty() && !checkForBlankValues(command)) {
         request.setCommand(revision.getCommand());
         List<String> cmdArgs = new LinkedList<>();
         for (String line : revision.getCommand()) {
@@ -563,6 +566,15 @@ public class ControllerClientImpl implements ControllerClient {
     } else {
       taskResult.setStatus(TaskStatus.invalid);
     }
+  }
+
+  private boolean checkForBlankValues(List<String> command) {
+    for (String str : command) {
+      if (str.isBlank()) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private TaskConfiguration buildTaskConfiguration() {
