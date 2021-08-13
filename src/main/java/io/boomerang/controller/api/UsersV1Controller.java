@@ -31,7 +31,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping("/apis/v1")
-@Tag(name = "Users Management", description = "Provides the ability to manage platform users")
+@Tag(name = "User Management", description = "Provides the ability to manage users")
 public class UsersV1Controller {
 
   @Value("${flow.externalUrl.user}")
