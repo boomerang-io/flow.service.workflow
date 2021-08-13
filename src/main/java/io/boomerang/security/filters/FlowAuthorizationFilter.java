@@ -5,7 +5,6 @@ import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
-import java.util.Enumeration;
 import java.util.List;
 import java.util.Optional;
 import javax.servlet.FilterChain;
@@ -64,18 +63,8 @@ public class FlowAuthorizationFilter extends BasicAuthenticationFilter {
   @Override
   protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res,
       FilterChain chain) throws IOException, ServletException {
-    
-    LOGGER.info("Entering getAuthentication()");
-    for (Enumeration<?> e = req.getHeaderNames(); e.hasMoreElements();) {
-      String nextHeaderName = (String) e.nextElement();
-      String headerValue = req.getHeader(nextHeaderName);
-      LOGGER.info("Header: " + nextHeaderName);
-      LOGGER.info("Value: " + headerValue);
 
-    }
-    
     try {
-
       Authentication authentication = null;
       if (req.getHeader(AUTHORIZATION_HEADER) != null) {
         authentication = getUserAuthentication(req);

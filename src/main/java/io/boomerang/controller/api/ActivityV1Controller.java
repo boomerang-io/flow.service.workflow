@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import io.boomerang.model.FlowActivity;
-import io.boomerang.model.ListActivityResponse;
 import io.boomerang.security.interceptors.AuthenticationScope;
 import io.boomerang.security.interceptors.Scope;
 import io.boomerang.service.WebhookService;
@@ -41,7 +40,7 @@ public class ActivityV1Controller {
   @Operation(summary = "Search for webhook workflow status")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
-  public List<FlowActivity> searchForActivity(@PathVariable String activityId, @Parameter(
+  public List<FlowActivity> searchForActivity(@Parameter(
       name = "labels",
       description = "Comma separated list of key value pairs which is url encoded. For example Organization=IBM,customKey=test would be encoded as Organization%3DIBM%2CcustomKey%3Dtest)",
       required = false) @RequestParam(required = false) Optional<String> labels,

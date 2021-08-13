@@ -759,6 +759,7 @@ public class WorkflowServiceImpl implements WorkflowService {
         summary.setWebhookEnabled(webhookEnabled);
         summary.setWorkflowName(workflowName);
         summary.setWorkflowId(workflow.getId());
+        summary.setScope(WorkflowScope.system);
         summaryList.add(summary);
       }
     }
