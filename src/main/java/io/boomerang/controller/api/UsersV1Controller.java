@@ -31,7 +31,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping("/apis/v1")
-@Tag(name = "User Management", description = "Provides the ability to manage users")
+@Tag(name = "User Management", description = "List, Create, update and delete users.")
 public class UsersV1Controller {
 
   @Value("${flow.externalUrl.user}")
@@ -42,7 +42,7 @@ public class UsersV1Controller {
 
   @PatchMapping(value = "/users/{userId}")
   @AuthenticationScope(scopes = {Scope.global})
-  @Operation(summary = "Update flow user details")
+  @Operation(summary = "Update a Boomerang Flow user details")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
   public ResponseEntity<Void> updateFlowUser(@PathVariable String userId,
@@ -57,7 +57,7 @@ public class UsersV1Controller {
 
   @DeleteMapping(value = "/users/{userId}")
   @AuthenticationScope(scopes = {Scope.global})
-  @Operation(summary = "Delete flow user")
+  @Operation(summary = "Delete a Boomerang Flow user")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
   public ResponseEntity<Void> deleteFlowUser(@PathVariable String userId) {
@@ -71,7 +71,7 @@ public class UsersV1Controller {
 
   @PostMapping(value = "/users")
   @AuthenticationScope(scopes = {Scope.global})
-  @Operation(summary = "Create flow user")
+  @Operation(summary = "Create a new Boomerang Flow user")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
   public ResponseEntity<FlowUserEntity> addUser(@RequestBody FlowUser flowUser) {
@@ -85,7 +85,7 @@ public class UsersV1Controller {
 
   @GetMapping(value = "/users")
   @AuthenticationScope(scopes = {Scope.global})
-  @Operation(summary = "Search for flow users")
+  @Operation(summary = "Search for users registed on Boomerang Flow")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
   public ResponseEntity<UserQueryResult> getUsers(@RequestParam(required = false) String query,

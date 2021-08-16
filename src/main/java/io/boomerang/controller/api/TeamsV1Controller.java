@@ -34,7 +34,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping("/apis/v1")
-@Tag(name = "Team Management", description = "Provides the ability to manage teams")
+@Tag(name = "Team Management", description = "List, Create, update and delete teams.")
 public class TeamsV1Controller {
 
   @Value("${flow.externalUrl.team}")
@@ -133,15 +133,6 @@ public class TeamsV1Controller {
       @ApiResponse(responseCode = "400", description = "Bad Request")})
   public WorkflowQuotas getTeamQuotas(@PathVariable String teamId) {
     return teamService.getTeamQuotas(teamId);
-  }
-  
-  @PutMapping(value = "/teams/{teamId}/quotas/default")
-  @AuthenticationScope(scopes = {Scope.global})
-  @Operation(summary = "Reset team quotas to default")
-  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
-      @ApiResponse(responseCode = "400", description = "Bad Request")})
-  public WorkflowQuotas resetTeamQuotas(@PathVariable String teamId) {
-    return teamService.resetTeamQuotas(teamId);
   }
   
   @PutMapping(value = "/teams/{teamId}/quotas")

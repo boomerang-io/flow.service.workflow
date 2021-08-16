@@ -19,7 +19,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @RestController
 @RequestMapping("/apis/v1")
 @Tag(name = "Workflow Management",
-    description = "Provides the ability to list all workflows and system workflows")
+    description = "List Boomerang Flow team workflows and system workflows.")
 public class WorkflowsV1Controller {
 
   @Autowired

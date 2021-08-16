@@ -26,7 +26,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @RestController
 @RequestMapping("/apis/v1")
 @Tag(name = "Activity Management",
-    description = "Provides the ability to submit, search and check workflow activities.")
+    description = "Submit requests to execute workflows and provide the ability to search and retrieve workflow activities.")
 public class ActivityV1Controller {
 
   @Autowired
@@ -37,7 +37,7 @@ public class ActivityV1Controller {
 
   @GetMapping(value = "/activites")
   @AuthenticationScope(scopes = {Scope.global, Scope.team, Scope.user})
-  @Operation(summary = "Search for webhook workflow status")
+  @Operation(summary = "Search for workflow execution activites")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
   public List<FlowActivity> searchForActivity(@Parameter(
@@ -54,7 +54,7 @@ public class ActivityV1Controller {
 
   @GetMapping(value = "/activity/{activityId}")
   @AuthenticationScope(scopes = {Scope.global, Scope.team, Scope.user})
-  @Operation(summary = "Retrieve workflow status")
+  @Operation(summary = "Retrieve a single workfloow execution")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
   public FlowActivity getWebhookStatus(@PathVariable String activityId) {
@@ -63,7 +63,7 @@ public class ActivityV1Controller {
 
   @DeleteMapping(value = "/activity/{activityId}")
   @AuthenticationScope(scopes = {Scope.global, Scope.team, Scope.user})
-  @Operation(summary = "Terminate a workflow")
+  @Operation(summary = "Cancel a workflow execution")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
   public ResponseEntity<FlowActivity> terminateActivity(@PathVariable String activityId) {
