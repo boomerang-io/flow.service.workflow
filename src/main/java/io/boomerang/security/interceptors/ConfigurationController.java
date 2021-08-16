@@ -1,4 +1,4 @@
-package io.boomerang.controller;
+package io.boomerang.security.interceptors;
 
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;

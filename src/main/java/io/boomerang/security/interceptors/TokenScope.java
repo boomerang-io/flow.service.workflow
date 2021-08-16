@@ -1,6 +1,6 @@
 package io.boomerang.security.interceptors;
 
-public enum Scope {
+public enum TokenScope {
   user,team,global
 
 }

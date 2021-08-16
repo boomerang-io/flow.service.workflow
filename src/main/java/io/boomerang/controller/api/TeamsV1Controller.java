@@ -24,8 +24,8 @@ import io.boomerang.model.TeamQueryResult;
 import io.boomerang.model.WorkflowQuotas;
 import io.boomerang.model.profile.SortSummary;
 import io.boomerang.mongo.model.Quotas;
+import io.boomerang.mongo.model.TokenScope;
 import io.boomerang.security.interceptors.AuthenticationScope;
-import io.boomerang.security.interceptors.Scope;
 import io.boomerang.service.crud.TeamService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -44,7 +44,7 @@ public class TeamsV1Controller {
   private TeamService teamService;
 
   @GetMapping(value = "/teams")
-  @AuthenticationScope(scopes = {Scope.global})
+  @AuthenticationScope(scopes = {TokenScope.global})
   @Operation(summary = "Search for flow team")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -73,7 +73,7 @@ public class TeamsV1Controller {
   }
   
   @PostMapping(value = "/teams")
-  @AuthenticationScope(scopes = {Scope.global})
+  @AuthenticationScope(scopes = {TokenScope.global})
   @Operation(summary = "Create flow team")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -90,7 +90,7 @@ public class TeamsV1Controller {
   }
 
   @DeleteMapping(value = "/teams/{teamId}")
-  @AuthenticationScope(scopes = {Scope.global})
+  @AuthenticationScope(scopes = {TokenScope.global})
   @Operation(summary = "Delete flow team")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -104,7 +104,7 @@ public class TeamsV1Controller {
   }
   
   @PatchMapping(value = "/teams/{teamId}/members")
-  @AuthenticationScope(scopes = {Scope.global})
+  @AuthenticationScope(scopes = {TokenScope.global})
   @Operation(summary = "Update flow team members")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -116,7 +116,7 @@ public class TeamsV1Controller {
   }
 
   @PutMapping(value = "/teams/{teamId}")
-  @AuthenticationScope(scopes = {Scope.global})
+  @AuthenticationScope(scopes = {TokenScope.global})
   @Operation(summary = "Update team details")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -127,7 +127,7 @@ public class TeamsV1Controller {
   }
   
   @GetMapping(value = "/teams/{teamId}/quotas")
-  @AuthenticationScope(scopes = {Scope.global})
+  @AuthenticationScope(scopes = {TokenScope.global})
   @Operation(summary = "Get currrent team quotas")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -136,7 +136,7 @@ public class TeamsV1Controller {
   }
   
   @PutMapping(value = "/teams/{teamId}/quotas")
-  @AuthenticationScope(scopes = {Scope.global})
+  @AuthenticationScope(scopes = {TokenScope.global})
   @Operation(summary = "Update Quotas for a team")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})

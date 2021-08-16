@@ -7,8 +7,8 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import io.boomerang.model.WorkflowShortSummary;
+import io.boomerang.mongo.model.TokenScope;
 import io.boomerang.security.interceptors.AuthenticationScope;
-import io.boomerang.security.interceptors.Scope;
 import io.boomerang.service.crud.WorkflowService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -26,7 +26,7 @@ public class WorkflowsV1Controller {
   private WorkflowService workflowService;
 
   @GetMapping(value = "/workflows")
-  @AuthenticationScope(scopes = {Scope.global})
+  @AuthenticationScope(scopes = {TokenScope.global})
   @Operation(summary = "List all workflows")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -37,7 +37,7 @@ public class WorkflowsV1Controller {
   }
 
   @GetMapping(value = "/system-workflows")
-  @AuthenticationScope(scopes = {Scope.global})
+  @AuthenticationScope(scopes = {TokenScope.global})
   @Operation(summary = "List all system workflows")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})

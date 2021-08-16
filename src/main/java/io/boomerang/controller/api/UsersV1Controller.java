@@ -21,8 +21,8 @@ import io.boomerang.model.FlowUser;
 import io.boomerang.model.UserQueryResult;
 import io.boomerang.model.profile.SortSummary;
 import io.boomerang.mongo.entity.FlowUserEntity;
+import io.boomerang.mongo.model.TokenScope;
 import io.boomerang.security.interceptors.AuthenticationScope;
-import io.boomerang.security.interceptors.Scope;
 import io.boomerang.service.UserIdentityService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -41,7 +41,7 @@ public class UsersV1Controller {
   private UserIdentityService userIdentityService;
 
   @PatchMapping(value = "/users/{userId}")
-  @AuthenticationScope(scopes = {Scope.global})
+  @AuthenticationScope(scopes = {TokenScope.global})
   @Operation(summary = "Update a Boomerang Flow user details")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -56,7 +56,7 @@ public class UsersV1Controller {
   }
 
   @DeleteMapping(value = "/users/{userId}")
-  @AuthenticationScope(scopes = {Scope.global})
+  @AuthenticationScope(scopes = {TokenScope.global})
   @Operation(summary = "Delete a Boomerang Flow user")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -70,7 +70,7 @@ public class UsersV1Controller {
   }
 
   @PostMapping(value = "/users")
-  @AuthenticationScope(scopes = {Scope.global})
+  @AuthenticationScope(scopes = {TokenScope.global})
   @Operation(summary = "Create a new Boomerang Flow user")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -84,7 +84,7 @@ public class UsersV1Controller {
   }
 
   @GetMapping(value = "/users")
-  @AuthenticationScope(scopes = {Scope.global})
+  @AuthenticationScope(scopes = {TokenScope.global})
   @Operation(summary = "Search for users registed on Boomerang Flow")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})

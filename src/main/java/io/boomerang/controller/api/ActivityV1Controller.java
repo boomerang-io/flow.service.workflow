@@ -13,8 +13,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import io.boomerang.model.FlowActivity;
+import io.boomerang.mongo.model.TokenScope;
 import io.boomerang.security.interceptors.AuthenticationScope;
-import io.boomerang.security.interceptors.Scope;
 import io.boomerang.service.WebhookService;
 import io.boomerang.service.crud.FlowActivityService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -36,7 +36,7 @@ public class ActivityV1Controller {
   private FlowActivityService activityService;
 
   @GetMapping(value = "/activites")
-  @AuthenticationScope(scopes = {Scope.global, Scope.team, Scope.user})
+  @AuthenticationScope(scopes = {TokenScope.global, TokenScope.team, TokenScope.user})
   @Operation(summary = "Search for workflow execution activites")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -53,7 +53,7 @@ public class ActivityV1Controller {
   }
 
   @GetMapping(value = "/activity/{activityId}")
-  @AuthenticationScope(scopes = {Scope.global, Scope.team, Scope.user})
+  @AuthenticationScope(scopes = {TokenScope.global, TokenScope.team, TokenScope.user})
   @Operation(summary = "Retrieve a single workfloow execution")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -62,7 +62,7 @@ public class ActivityV1Controller {
   }
 
   @DeleteMapping(value = "/activity/{activityId}")
-  @AuthenticationScope(scopes = {Scope.global, Scope.team, Scope.user})
+  @AuthenticationScope(scopes = {TokenScope.global, TokenScope.team, TokenScope.user})
   @Operation(summary = "Cancel a workflow execution")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
