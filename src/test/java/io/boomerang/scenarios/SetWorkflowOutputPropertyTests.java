@@ -26,7 +26,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.client.MockRestServiceServer;
 import io.boomerang.model.FlowActivity;
-import io.boomerang.mongo.model.CoreProperty;
+import io.boomerang.mongo.model.KeyValuePair;
 import io.boomerang.mongo.model.TaskStatus;
 import io.boomerang.tests.IntegrationTests;
 
@@ -49,10 +49,10 @@ public class SetWorkflowOutputPropertyTests extends IntegrationTests {
     Assertions.assertEquals(TaskStatus.completed, finalActivity.getStatus());
     Assertions.assertNotNull(finalActivity.getDuration());
     mockServer.verify();
-    List<CoreProperty> outputProperties = finalActivity.getOutputProperties();
+    List<KeyValuePair> outputProperties = finalActivity.getOutputProperties();
     
     Assertions.assertEquals(1, outputProperties.size());
-    CoreProperty outputProperty = outputProperties.get(0);
+    KeyValuePair outputProperty = outputProperties.get(0);
     Assertions.assertEquals("test-beep",outputProperty.getValue());
     Assertions.assertEquals("bar",outputProperty.getKey());
   }

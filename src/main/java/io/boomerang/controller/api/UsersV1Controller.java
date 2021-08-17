@@ -20,7 +20,6 @@ import org.springframework.web.bind.annotation.RestController;
 import io.boomerang.model.FlowUser;
 import io.boomerang.model.UserQueryResult;
 import io.boomerang.model.profile.SortSummary;
-import io.boomerang.mongo.entity.FlowUserEntity;
 import io.boomerang.mongo.model.TokenScope;
 import io.boomerang.security.interceptors.AuthenticationScope;
 import io.boomerang.service.UserIdentityService;
@@ -74,9 +73,9 @@ public class UsersV1Controller {
   @Operation(summary = "Create a new Boomerang Flow user")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
-  public ResponseEntity<FlowUserEntity> addUser(@RequestBody FlowUser flowUser) {
+  public ResponseEntity<FlowUser> addUser(@RequestBody FlowUser flowUser) {
     if (isUserManagementAvaliable()) {
-      FlowUserEntity flowUserEntity = userIdentityService.addFlowUser(flowUser);
+      FlowUser flowUserEntity = userIdentityService.addFlowUser(flowUser);
       return ResponseEntity.ok(flowUserEntity);
     } else {
       return ResponseEntity.badRequest().build();

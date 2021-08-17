@@ -1,16 +1,16 @@
 package io.boomerang.mongo.model;
 
-public class CoreProperty {
+public class KeyValuePair {
 
   private String key;
   private String value;
 
-  public CoreProperty() {
+  public KeyValuePair() {
 
   }
 
 
-  public CoreProperty(String key, String value) {
+  public KeyValuePair(String key, String value) {
     super();
     this.key = key;
     this.value = value;

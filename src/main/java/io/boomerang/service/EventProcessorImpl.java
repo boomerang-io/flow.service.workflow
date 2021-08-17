@@ -28,8 +28,8 @@ import com.jayway.jsonpath.spi.mapper.JacksonMappingProvider;
 import io.boomerang.model.FlowActivity;
 import io.boomerang.model.FlowExecutionRequest;
 import io.boomerang.model.eventing.EventResponse;
-import io.boomerang.mongo.model.CoreProperty;
-import io.boomerang.mongo.model.FlowProperty;
+import io.boomerang.mongo.model.KeyValuePair;
+import io.boomerang.mongo.model.WorkflowProperty;
 import io.boomerang.mongo.model.Triggers;
 import io.boomerang.service.crud.WorkflowService;
 import io.boomerang.service.refactor.TaskService;
@@ -197,8 +197,8 @@ public class EventProcessorImpl implements EventProcessor {
       FlowExecutionRequest executionRequest = new FlowExecutionRequest();
       
       
-      List<CoreProperty> cloudEventLabels = new LinkedList<>();
-      CoreProperty property = new CoreProperty();
+      List<KeyValuePair> cloudEventLabels = new LinkedList<>();
+      KeyValuePair property = new KeyValuePair();
       property.setKey("eventId");
       property.setValue(event.getAttributes().getId());
       cloudEventLabels.add(property);
@@ -242,7 +242,7 @@ public class EventProcessorImpl implements EventProcessor {
         Configuration.builder().mappingProvider(new JacksonMappingProvider())
             .jsonProvider(new JacksonJsonNodeJsonProvider())
             .options(Option.DEFAULT_PATH_LEAF_TO_NULL).build();
-    List<FlowProperty> inputProperties = workflowService.getWorkflow(workflowId).getProperties();
+    List<WorkflowProperty> inputProperties = workflowService.getWorkflow(workflowId).getProperties();
     Map<String, String> properties = new HashMap<>();
     if (inputProperties != null) {
       try {

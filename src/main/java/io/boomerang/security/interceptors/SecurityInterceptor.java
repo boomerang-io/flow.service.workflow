@@ -19,18 +19,22 @@ public class SecurityInterceptor implements HandlerInterceptor {
   @Override
   public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
       throws Exception {
-    HandlerMethod handlerMethod = (HandlerMethod) handler;
-    AuthenticationScope scope = handlerMethod.getMethod().getAnnotation(AuthenticationScope.class);
-    if (scope == null) {
-      return false;
+    if (handler instanceof HandlerMethod) {
+      HandlerMethod handlerMethod = (HandlerMethod) handler;
+      AuthenticationScope scope = handlerMethod.getMethod().getAnnotation(AuthenticationScope.class);
+      if (scope == null) {
+        return true;
+      }
+      TokenScope[] scopes = scope.scopes();
+      TokenScope currentScope = userDetailsService.getCurrentScope();
+      if (!ArrayUtils.contains(scopes, currentScope)) {
+        response.getWriter().write("");
+        response.setStatus(401);
+        return false;
+      }
+      return true;
+    } else {
+      return true;
     }
-    TokenScope[] scopes = scope.scopes();
-    TokenScope currentScope = userDetailsService.getCurrentScope();
-    if (!ArrayUtils.contains(scopes, currentScope)) {
-      response.getWriter().write("");
-      response.setStatus(401);
-      return false;
-    }
-    return true;
   }
 }

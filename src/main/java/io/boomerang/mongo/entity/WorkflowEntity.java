@@ -7,8 +7,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import io.boomerang.model.WorkflowToken;
-import io.boomerang.mongo.model.CoreProperty;
-import io.boomerang.mongo.model.FlowProperty;
+import io.boomerang.mongo.model.KeyValuePair;
+import io.boomerang.mongo.model.WorkflowProperty;
 import io.boomerang.mongo.model.Triggers;
 import io.boomerang.mongo.model.WorkflowScope;
 import io.boomerang.mongo.model.WorkflowStatus;
@@ -18,7 +18,7 @@ import io.boomerang.mongo.model.WorkflowStatus;
 @Document(collection = "#{@mongoConfiguration.fullCollectionName('workflows')}")
 public class WorkflowEntity {
 
-  private List<FlowProperty> properties;
+  private List<WorkflowProperty> properties;
 
   private String description;
 
@@ -40,7 +40,7 @@ public class WorkflowEntity {
   private boolean enablePersistentStorage;
   
   
-  private List<CoreProperty> labels;
+  private List<KeyValuePair> labels;
   
   private WorkflowScope scope;
 
@@ -124,11 +124,11 @@ public class WorkflowEntity {
     this.enablePersistentStorage = enablePersistentStorage;
   }
 
-  public List<FlowProperty> getProperties() {
+  public List<WorkflowProperty> getProperties() {
     return properties;
   }
 
-  public void setProperties(List<FlowProperty> properties) {
+  public void setProperties(List<WorkflowProperty> properties) {
     this.properties = properties;
   }
 
@@ -140,11 +140,11 @@ public class WorkflowEntity {
     this.scope = scope;
   }
 
-  public List<CoreProperty> getLabels() {
+  public List<KeyValuePair> getLabels() {
     return labels;
   }
 
-  public void setLabels(List<CoreProperty> labels) {
+  public void setLabels(List<KeyValuePair> labels) {
     this.labels = labels;
   }
 

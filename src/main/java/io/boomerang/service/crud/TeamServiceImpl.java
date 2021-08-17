@@ -23,6 +23,7 @@ import io.boomerang.client.ExternalTeamService;
 import io.boomerang.client.model.Team;
 import io.boomerang.client.model.UserProfile;
 import io.boomerang.model.FlowTeam;
+import io.boomerang.model.FlowUser;
 import io.boomerang.model.FlowWorkflowRevision;
 import io.boomerang.model.TeamQueryResult;
 import io.boomerang.model.TeamWorkflowSummary;
@@ -100,9 +101,9 @@ public class TeamServiceImpl implements TeamService {
 
     List<String> teamIds = new LinkedList<>();
     teamIds.add(flowTeam.getId());
-    List<FlowUserEntity> users = this.userIdentiyService.getUsersForTeams(teamIds);
-    flowTeam.setUsers(users);
 
+    List<FlowUserEntity> existingUsers = this.userIdentiyService.getUsersForTeams(teamIds);
+    convertToFlowUserList(flowTeam, existingUsers);
     if (team.getIsActive() == null) {
       flowTeam.setIsActive(true);
     }
@@ -342,9 +343,21 @@ public class TeamServiceImpl implements TeamService {
     teamIds.add(teamId);
 
     List<FlowUserEntity> existingUsers = this.userIdentiyService.getUsersForTeams(teamIds);
-    flowTeam.setUsers(existingUsers);
+    convertToFlowUserList(flowTeam, existingUsers);
 
     return flowTeam;
+  }
+
+  private void convertToFlowUserList(FlowTeam flowTeam, List<FlowUserEntity> existingUsers) {
+    List<FlowUser> users = new LinkedList<>();
+    
+    for (FlowUserEntity user : existingUsers) {
+      FlowUser flowUser = new FlowUser();
+      BeanUtils.copyProperties(user, flowUser);
+      
+      users.add(flowUser);
+    }
+    flowTeam.setUsers(users);
   }
 
   @Override

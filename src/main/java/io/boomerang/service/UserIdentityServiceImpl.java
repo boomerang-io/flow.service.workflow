@@ -182,9 +182,14 @@ public class UserIdentityServiceImpl implements UserIdentityService {
 
 
   @Override
-  public FlowUserEntity addFlowUser(FlowUser flowUser) {
+  public FlowUser addFlowUser(FlowUser flowUser) {
+    FlowUserEntity flowUserEntity = new FlowUserEntity();
+    BeanUtils.copyProperties(flowUser, flowUserEntity);
     flowUser.setStatus(UserStatus.active);
-    return flowUserService.save(flowUser);
+    flowUserEntity =  flowUserService.save(flowUser);
+    FlowUser newUser = new FlowUser();
+    BeanUtils.copyProperties(flowUserEntity, newUser);
+    return newUser;
   }
 
 }

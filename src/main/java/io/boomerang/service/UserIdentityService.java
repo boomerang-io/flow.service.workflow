@@ -29,6 +29,6 @@ public interface UserIdentityService {
 
   public void deleteFlowUser(String userId);
 
-  public FlowUserEntity addFlowUser(FlowUser flowUser);
+  public FlowUser addFlowUser(FlowUser flowUser);
 
 }

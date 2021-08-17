@@ -31,7 +31,7 @@ public class ApprovalController {
     return flowApprovalService.getApprovalsForTeam(teamId);
   }
 
-  // https://wdc2.cloud.boomerangplatform.net/dev/flow/services/workflow/approvals/action?id=5f74d06b3979cd04c7f8afa6&approve=true
+
   @PutMapping(value = "/approvals/action")
   public void actionApproval( @RequestBody ApprovalRequest request) {
     flowApprovalService.actionApproval(request);

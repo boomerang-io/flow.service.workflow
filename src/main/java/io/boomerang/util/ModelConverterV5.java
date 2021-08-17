@@ -21,7 +21,7 @@ import io.boomerang.model.projectstormv5.RestDag;
 import io.boomerang.model.projectstormv5.TaskNode;
 import io.boomerang.model.projectstormv5.WorkflowRevision;
 import io.boomerang.mongo.entity.RevisionEntity;
-import io.boomerang.mongo.model.CoreProperty;
+import io.boomerang.mongo.model.KeyValuePair;
 import io.boomerang.mongo.model.Dag;
 import io.boomerang.mongo.model.TaskType;
 import io.boomerang.mongo.model.WorkflowExecutionCondition;
@@ -40,9 +40,9 @@ public class ModelConverterV5 {
   private static final String CUSTOMTASKNAME = "customTask";
   private static final String TEMPLATETASKNAME = "templateTask";
 
-  private static String getPropertyForKey(List<CoreProperty> properties, String key) {
+  private static String getPropertyForKey(List<KeyValuePair> properties, String key) {
 
-    Optional<CoreProperty> property =
+    Optional<KeyValuePair> property =
         properties.stream().filter(x -> x.getKey().equals(key)).findFirst();
     if (property.isPresent()) {
       return property.get().getValue();
@@ -59,9 +59,9 @@ public class ModelConverterV5 {
       /* Set up tas inputs */
 
       Map<String, String> inputs = config.getInputs();
-      List<CoreProperty> coreProperties = new LinkedList<>();
+      List<KeyValuePair> coreProperties = new LinkedList<>();
       for (Entry<String, String> entry : inputs.entrySet()) {
-        CoreProperty property = new CoreProperty();
+        KeyValuePair property = new KeyValuePair();
         property.setKey(entry.getKey());
         property.setValue(entry.getValue());
 
@@ -77,7 +77,7 @@ public class ModelConverterV5 {
 
       if (getPropertyForKey(dagTask.getProperties(), TASKNAMEKEY) != null) {
         dagTask.setLabel(getPropertyForKey(dagTask.getProperties(), TASKNAMEKEY));
-        Predicate<CoreProperty> isQualified = (item -> item.getKey().equals(TASKNAMEKEY));
+        Predicate<KeyValuePair> isQualified = (item -> item.getKey().equals(TASKNAMEKEY));
         dagTask.getProperties().removeIf(isQualified);
       }
 
@@ -453,7 +453,7 @@ public class ModelConverterV5 {
       setupPosition(taskNode, position);
     }
 
-    List<CoreProperty> inputs = dagTask.getProperties();
+    List<KeyValuePair> inputs = dagTask.getProperties();
     ConfigNodes config = new ConfigNodes();
     config.setNodeId(dagTask.getTaskId());
     config.setTaskId(dagTask.getTemplateId());
@@ -465,7 +465,7 @@ public class ModelConverterV5 {
     if (inputs != null && !inputs.isEmpty()) {
 
       Map<String, String> map = new HashMap<>();
-      for (CoreProperty coreProperty : inputs) {
+      for (KeyValuePair coreProperty : inputs) {
         map.put(coreProperty.getKey(), coreProperty.getValue());
       }
       config.setInputs(map);

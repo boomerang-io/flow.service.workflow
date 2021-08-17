@@ -66,7 +66,7 @@ import io.boomerang.mongo.entity.FlowUserEntity;
 import io.boomerang.mongo.entity.RevisionEntity;
 import io.boomerang.mongo.entity.TaskExecutionEntity;
 import io.boomerang.mongo.entity.WorkflowEntity;
-import io.boomerang.mongo.model.CoreProperty;
+import io.boomerang.mongo.model.KeyValuePair;
 import io.boomerang.mongo.model.Dag;
 import io.boomerang.mongo.model.FlowTriggerEnum;
 import io.boomerang.mongo.model.Revision;
@@ -171,7 +171,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
   @Override
   public ActivityEntity createFlowActivity(String workflowVersionId, Optional<String> trigger,
       FlowExecutionRequest request, Optional<List<TaskWorkspace>> taskWorkspaces,
-      List<CoreProperty> labels) {
+      List<KeyValuePair> labels) {
     /* Create new one based of work flow version id. */
     final RevisionEntity entity = versionService.getWorkflowlWithId(workflowVersionId);
     WorkflowEntity workflow = workflowService.getWorkflow(entity.getWorkFlowId());
@@ -184,7 +184,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
     activity.setCreationDate(new Date());
     activity.setStatus(TaskStatus.inProgress);
 
-    List<CoreProperty> corePropertyList = new LinkedList<>();    
+    List<KeyValuePair> corePropertyList = new LinkedList<>();    
     if (labels != null) {
       corePropertyList.addAll(labels);
     }
@@ -210,11 +210,11 @@ public class FlowActivityServiceImpl implements FlowActivityService {
 
     if (request.getProperties() != null) {
       Map<String, String> properties = request.getProperties();
-      List<CoreProperty> propertyList = new LinkedList<>();
+      List<KeyValuePair> propertyList = new LinkedList<>();
       for (Map.Entry<String, String> entry : properties.entrySet()) {
         String key = entry.getKey();
         String value = properties.get(key);
-        CoreProperty prop = new CoreProperty();
+        KeyValuePair prop = new KeyValuePair();
         prop.setKey(key);
         prop.setValue(value);
         propertyList.add(prop);

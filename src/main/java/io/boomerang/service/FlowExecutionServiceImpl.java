@@ -28,7 +28,7 @@ import io.boomerang.mongo.entity.FlowTaskTemplateEntity;
 import io.boomerang.mongo.entity.RevisionEntity;
 import io.boomerang.mongo.entity.TaskExecutionEntity;
 import io.boomerang.mongo.entity.WorkflowEntity;
-import io.boomerang.mongo.model.CoreProperty;
+import io.boomerang.mongo.model.KeyValuePair;
 import io.boomerang.mongo.model.Dag;
 import io.boomerang.mongo.model.Revision;
 import io.boomerang.mongo.model.TaskStatus;
@@ -128,7 +128,7 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
 
         Map<String, String> properties = new HashMap<>();
         if (dagTask.getProperties() != null) {
-          for (CoreProperty property : dagTask.getProperties()) {
+          for (KeyValuePair property : dagTask.getProperties()) {
             properties.put(property.getKey(), property.getValue());
           }
         }
@@ -274,7 +274,7 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
       e.printStackTrace();
     }
    
-    List<CoreProperty> labels = workflow.getLabels();
+    List<KeyValuePair> labels = workflow.getLabels();
 
     controllerClient.createFlow(workflowId, workflowName, activityId, enablePVC, labels, executionProperties);
     

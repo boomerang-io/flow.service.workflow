@@ -106,11 +106,13 @@ public class InternalController {
   }
 
   @GetMapping(value = "/workflow/settings")
+  @Deprecated
   public List<FlowSettings> getAppConfiguration() {
     return configurationService.getAllSettings();
   }
 
   @PutMapping(value = "/workflow/settings")
+  @Deprecated
   public List<FlowSettings> updateSettings(@RequestBody List<FlowSettings> settings) {
     return configurationService.updateSettings(settings);
   }

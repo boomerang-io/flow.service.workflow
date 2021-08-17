@@ -9,7 +9,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import io.boomerang.model.controller.TaskWorkspace;
-import io.boomerang.mongo.model.CoreProperty;
+import io.boomerang.mongo.model.KeyValuePair;
 import io.boomerang.mongo.model.ErrorResponse;
 import io.boomerang.mongo.model.TaskStatus;
 
@@ -18,7 +18,7 @@ import io.boomerang.mongo.model.TaskStatus;
 @Document(collection = "#{@mongoConfiguration.fullCollectionName('workflows_activity')}")
 public class ActivityEntity   {
 
-  private List<CoreProperty> labels;
+  private List<KeyValuePair> labels;
   private Date creationDate;
 
   private Long duration;
@@ -51,9 +51,9 @@ public class ActivityEntity   {
 
   private String trigger;
 
-  private List<CoreProperty> properties;
+  private List<KeyValuePair> properties;
 
-  private List<CoreProperty> outputProperties;
+  private List<KeyValuePair> outputProperties;
   
   private boolean isAwaitingApproval;
   
@@ -130,11 +130,11 @@ public class ActivityEntity   {
     this.trigger = trigger;
   }
 
-  public List<CoreProperty> getProperties() {
+  public List<KeyValuePair> getProperties() {
     return properties;
   }
 
-  public void setProperties(List<CoreProperty> properties) {
+  public void setProperties(List<KeyValuePair> properties) {
     this.properties = properties;
   }
 
@@ -154,11 +154,11 @@ public class ActivityEntity   {
     this.duration = duration;
   }
 
-  public List<CoreProperty> getOutputProperties() {
+  public List<KeyValuePair> getOutputProperties() {
     return outputProperties;
   }
 
-  public void setOutputProperties(List<CoreProperty> outputProperties) {
+  public void setOutputProperties(List<KeyValuePair> outputProperties) {
     this.outputProperties = outputProperties;
   }
 
@@ -202,11 +202,11 @@ public class ActivityEntity   {
     this.statusOverride = statusOverride;
   }
 
-  public List<CoreProperty> getLabels() {
+  public List<KeyValuePair> getLabels() {
     return labels;
   }
 
-  public void setLabels(List<CoreProperty> labels) {
+  public void setLabels(List<KeyValuePair> labels) {
     this.labels = labels;
   }
   

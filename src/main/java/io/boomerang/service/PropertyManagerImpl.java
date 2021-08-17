@@ -26,9 +26,9 @@ import io.boomerang.mongo.entity.FlowTeamEntity;
 import io.boomerang.mongo.entity.RevisionEntity;
 import io.boomerang.mongo.entity.TaskExecutionEntity;
 import io.boomerang.mongo.entity.WorkflowEntity;
-import io.boomerang.mongo.model.CoreProperty;
+import io.boomerang.mongo.model.KeyValuePair;
 import io.boomerang.mongo.model.Dag;
-import io.boomerang.mongo.model.FlowProperty;
+import io.boomerang.mongo.model.WorkflowProperty;
 import io.boomerang.mongo.model.Revision;
 import io.boomerang.mongo.model.TaskTemplateConfig;
 import io.boomerang.mongo.model.WorkflowScope;
@@ -159,9 +159,9 @@ public class PropertyManagerImpl implements PropertyManager {
         DAGTask dagTask = tasks.stream().filter(e -> e.getTaskId().equals(task.getTaskId()))
             .findFirst().orElse(null);
         if (dagTask != null) {
-          List<CoreProperty> properties = dagTask.getProperties();
+          List<KeyValuePair> properties = dagTask.getProperties();
           if (properties != null) {
-            CoreProperty property =
+            KeyValuePair property =
                 properties.stream().filter(e -> key.equals(e.getKey())).findFirst().orElse(null);
             if (property != null) {
               return property.getValue();
@@ -210,7 +210,7 @@ public class PropertyManagerImpl implements PropertyManager {
   public void buildWorkflowProperties(Map<String, String> workflowProperties, String activityId,
       String workflowId) {
     WorkflowEntity workflow = new WorkflowEntity();
-    List<CoreProperty> properties = null;
+    List<KeyValuePair> properties = null;
     if (activityId != null) {
       ActivityEntity activity = activityService.findWorkflowActivity(activityId);
       workflow = workflowService.getWorkflow(activity.getWorkflowId());
@@ -220,13 +220,13 @@ public class PropertyManagerImpl implements PropertyManager {
     }
 
     if (workflow.getProperties() != null) {
-      for (FlowProperty property : workflow.getProperties()) {
+      for (WorkflowProperty property : workflow.getProperties()) {
         workflowProperties.put(property.getKey(), property.getDefaultValue());
       }
     }
 
     if (properties != null) {
-      for (CoreProperty property : properties) {
+      for (KeyValuePair property : properties) {
         workflowProperties.put(property.getKey(), property.getValue());
       }
     }

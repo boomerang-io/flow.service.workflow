@@ -1,7 +1,6 @@
 package io.boomerang.model;
 
 import java.util.Date;
-import io.boomerang.mongo.model.TokenScope;
 
 public class Token {
   

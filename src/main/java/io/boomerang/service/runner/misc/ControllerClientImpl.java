@@ -33,7 +33,7 @@ import io.boomerang.model.controller.TaskTemplate;
 import io.boomerang.model.controller.Workflow;
 import io.boomerang.mongo.entity.ActivityEntity;
 import io.boomerang.mongo.entity.TaskExecutionEntity;
-import io.boomerang.mongo.model.CoreProperty;
+import io.boomerang.mongo.model.KeyValuePair;
 import io.boomerang.mongo.model.ErrorResponse;
 import io.boomerang.mongo.model.Revision;
 import io.boomerang.mongo.model.TaskStatus;
@@ -93,7 +93,7 @@ public class ControllerClientImpl implements ControllerClient {
 
   @Override
   public boolean createFlow(String workflowId, String workflowName, String activityId,
-      boolean enableStorage, List<CoreProperty> labels, Map<String, String> properties) {
+      boolean enableStorage, List<KeyValuePair> labels, Map<String, String> properties) {
 
 
     final Workflow request = new Workflow();
@@ -205,7 +205,7 @@ public class ControllerClientImpl implements ControllerClient {
   @Override
   @Async("flowAsyncExecutor")
   public void submitCustomTask(TaskService t, TaskClient flowTaskClient, Task task, String activityId, String workflowName,
-      List<CoreProperty> labels) {
+      List<KeyValuePair> labels) {
 
     
 
@@ -382,7 +382,7 @@ public class ControllerClientImpl implements ControllerClient {
   @Override
   @Async("flowAsyncExecutor")
   public void submitTemplateTask(TaskService t, TaskClient flowTaskClient,Task task, String activityId, String workflowName,
-      List<CoreProperty> labels) {
+      List<KeyValuePair> labels) {
 
     ActivityEntity activity = this.activityService.findWorkflowActivity(activityId);
 
@@ -622,13 +622,13 @@ public class ControllerClientImpl implements ControllerClient {
     LOGGER.debug("Benchmark [Request Type]: {} - {} ms", payloadName, diff);
   }
 
-  private Map<String, String> convertToMap(List<CoreProperty> labelList) {
+  private Map<String, String> convertToMap(List<KeyValuePair> labelList) {
     if (labelList == null) {
       return null;
     }
 
     Map<String, String> labels = new HashMap<>();
-    for (CoreProperty property : labelList) {
+    for (KeyValuePair property : labelList) {
       labels.put(property.getKey(), property.getValue());
     }
     return labels;

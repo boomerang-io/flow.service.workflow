@@ -11,7 +11,7 @@ import io.boomerang.model.WorkflowExport;
 import io.boomerang.model.WorkflowShortSummary;
 import io.boomerang.model.WorkflowSummary;
 import io.boomerang.mongo.entity.WorkflowEntity;
-import io.boomerang.mongo.model.FlowProperty;
+import io.boomerang.mongo.model.WorkflowProperty;
 import io.boomerang.mongo.model.WorkflowScope;
 
 public interface WorkflowService {
@@ -26,7 +26,7 @@ public interface WorkflowService {
 
   WorkflowSummary updateWorkflow(WorkflowSummary summary);
 
-  WorkflowSummary updateWorkflowProperties(String workflowId, List<FlowProperty> properties);
+  WorkflowSummary updateWorkflowProperties(String workflowId, List<WorkflowProperty> properties);
 
   GenerateTokenResponse generateTriggerToken(String id, String label);
 

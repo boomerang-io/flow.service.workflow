@@ -27,7 +27,7 @@ public abstract class AbstractConfigurationProperty {
   private Integer maxValueLength;
 
   @JsonProperty("options")
-  private List<CoreProperty> options;
+  private List<KeyValuePair> options;
 
   private Boolean required;
   private String placeholder;
@@ -102,11 +102,11 @@ public abstract class AbstractConfigurationProperty {
     this.maxValueLength = maxValueLength;
   }
 
-  public List<CoreProperty> getOptions() {
+  public List<KeyValuePair> getOptions() {
     return options;
   }
 
-  public void setOptions(List<CoreProperty> options) {
+  public void setOptions(List<KeyValuePair> options) {
     this.options = options;
   }
 

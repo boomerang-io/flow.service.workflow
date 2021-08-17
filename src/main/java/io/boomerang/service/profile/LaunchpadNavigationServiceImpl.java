@@ -21,7 +21,6 @@ import io.boomerang.model.profile.Platform;
 import io.boomerang.security.model.UserToken;
 import io.boomerang.security.service.ApiTokenService;
 import io.boomerang.security.service.UserDetailsService;
-import io.boomerang.service.UserIdentityService;
 
 @Service
 public class LaunchpadNavigationServiceImpl implements LaunchpadNavigationService {

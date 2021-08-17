@@ -2,11 +2,11 @@ package io.boomerang.model;
 
 import java.util.List;
 import java.util.Map;
-import io.boomerang.mongo.model.CoreProperty;
+import io.boomerang.mongo.model.KeyValuePair;
 
 public class FlowExecutionRequest {
 
-  private List<CoreProperty> labels;
+  private List<KeyValuePair> labels;
   private boolean applyQuotas;
   
   private Map<String, String> properties;
@@ -27,11 +27,11 @@ public class FlowExecutionRequest {
     this.applyQuotas = applyQuotas;
   }
 
-  public List<CoreProperty> getLabels() {
+  public List<KeyValuePair> getLabels() {
     return labels;
   }
 
-  public void setLabels(List<CoreProperty> labels) {
+  public void setLabels(List<KeyValuePair> labels) {
     this.labels = labels;
   }
 

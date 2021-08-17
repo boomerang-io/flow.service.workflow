@@ -37,7 +37,7 @@ import io.boomerang.model.WorkflowSummary;
 import io.boomerang.model.projectstormv5.RestConfig;
 import io.boomerang.mongo.entity.RevisionEntity;
 import io.boomerang.mongo.entity.WorkflowEntity;
-import io.boomerang.mongo.model.FlowProperty;
+import io.boomerang.mongo.model.WorkflowProperty;
 import io.boomerang.mongo.model.TaskConfigurationNode;
 import io.boomerang.mongo.model.TriggerEvent;
 import io.boomerang.mongo.model.TriggerScheduler;
@@ -128,14 +128,14 @@ public class WorkflowControllerTests extends FlowTests {
   @Test
   public void testUpdateWorkflowProperties() {
 
-    FlowProperty property = new FlowProperty();
+    WorkflowProperty property = new WorkflowProperty();
     property.setKey("testKey");
     property.setDescription("testDescription");
     property.setLabel("testLabel");
     property.setRequired(true);
     property.setType("testing");
 
-    List<FlowProperty> properties = new ArrayList<>();
+    List<WorkflowProperty> properties = new ArrayList<>();
     properties.add(property);
 
     WorkflowEntity entity =

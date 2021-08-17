@@ -16,7 +16,7 @@ import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.Option;
 import com.jayway.jsonpath.spi.json.JacksonJsonNodeJsonProvider;
 import com.jayway.jsonpath.spi.mapper.JacksonMappingProvider;
-import io.boomerang.mongo.model.FlowProperty;
+import io.boomerang.mongo.model.WorkflowProperty;
 import io.boomerang.tests.TestUtil;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.json.Json;
@@ -90,17 +90,17 @@ public class EventProcessorTest {
         .jsonProvider(new JacksonJsonNodeJsonProvider())
         .options(Option.DEFAULT_PATH_LEAF_TO_NULL)
         .build();
-    List<FlowProperty> inputProperties = new LinkedList<>();
+    List<WorkflowProperty> inputProperties = new LinkedList<>();
 //  Test String property that exists
-    FlowProperty flowProperty1 = new FlowProperty();
+    WorkflowProperty flowProperty1 = new WorkflowProperty();
     flowProperty1.setKey("callback_url");
     inputProperties.add(flowProperty1);
 //    Test Array property that exists
-    FlowProperty flowProperty2 = new FlowProperty();
+    WorkflowProperty flowProperty2 = new WorkflowProperty();
     flowProperty2.setKey("push_data.images");
     inputProperties.add(flowProperty2);
 //  Test String property that does not exist
-  FlowProperty flowProperty3 = new FlowProperty();
+  WorkflowProperty flowProperty3 = new WorkflowProperty();
   flowProperty3.setKey("notPresent");
   inputProperties.add(flowProperty3);
     Map<String, String> properties = new HashMap<>();

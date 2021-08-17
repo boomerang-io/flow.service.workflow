@@ -1,7 +1,6 @@
 package io.boomerang.service.tekton;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
@@ -9,7 +8,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import org.apache.commons.lang3.StringUtils;
 import io.boomerang.model.ParamType;
 import io.boomerang.model.Result;
 import io.boomerang.model.controller.TaskEnvVar;

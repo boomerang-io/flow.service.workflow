@@ -12,7 +12,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.retry.backoff.FixedBackOffPolicy;
 import org.springframework.retry.policy.SimpleRetryPolicy;
 import org.springframework.retry.support.RetryTemplate;
@@ -29,7 +28,7 @@ import io.boomerang.mongo.entity.FlowTaskTemplateEntity;
 import io.boomerang.mongo.entity.RevisionEntity;
 import io.boomerang.mongo.entity.TaskExecutionEntity;
 import io.boomerang.mongo.entity.WorkflowEntity;
-import io.boomerang.mongo.model.CoreProperty;
+import io.boomerang.mongo.model.KeyValuePair;
 import io.boomerang.mongo.model.Dag;
 import io.boomerang.mongo.model.ManualType;
 import io.boomerang.mongo.model.Revision;
@@ -138,10 +137,10 @@ public class TaskServiceImpl implements TaskService {
         processDecision(task, activity.getId());
         this.endTask(response);
       } else if (taskType == TaskType.template || taskType == TaskType.script) {
-        List<CoreProperty> labels = workflow.getLabels();
+        List<KeyValuePair> labels = workflow.getLabels();
         controllerClient.submitTemplateTask(this, flowClient, task, activityId, workflowName, labels);
       } else if (taskType == TaskType.customtask) {
-        List<CoreProperty> labels = workflow.getLabels();
+        List<KeyValuePair> labels = workflow.getLabels();
         controllerClient.submitCustomTask(this, flowClient, task, activityId, workflowName, labels);
       } else if (taskType == TaskType.acquirelock) {
         createLock(task, activity);
@@ -288,10 +287,10 @@ public class TaskServiceImpl implements TaskService {
       activity.setOutputProperties(new LinkedList<>());
     }
 
-    List<CoreProperty> outputProperties = activity.getOutputProperties();
+    List<KeyValuePair> outputProperties = activity.getOutputProperties();
     String input = task.getInputs().get("value");
     String output = task.getInputs().get("output");
-    CoreProperty outputProperty = new CoreProperty();
+    KeyValuePair outputProperty = new KeyValuePair();
     outputProperty.setKey(output);
 
     ControllerRequestProperties requestProperties = propertyManager
@@ -567,7 +566,7 @@ public class TaskServiceImpl implements TaskService {
 
         Map<String, String> properties = new HashMap<>();
         if (dagTask.getProperties() != null) {
-          for (CoreProperty property : dagTask.getProperties()) {
+          for (KeyValuePair property : dagTask.getProperties()) {
             properties.put(property.getKey(), property.getValue());
           }
         }
@@ -598,7 +597,7 @@ public class TaskServiceImpl implements TaskService {
 
         Map<String, String> properties = new HashMap<>();
         if (dagTask.getProperties() != null) {
-          for (CoreProperty property : dagTask.getProperties()) {
+          for (KeyValuePair property : dagTask.getProperties()) {
             properties.put(property.getKey(), property.getValue());
           }
         }
@@ -630,9 +629,9 @@ public class TaskServiceImpl implements TaskService {
     List<DAGTask> tasks = revision.getDag().getTasks();
     for (DAGTask task : tasks) {
       if (TaskType.eventwait.equals(task.getType())) {
-        List<CoreProperty> coreProperties = task.getProperties();
+        List<KeyValuePair> coreProperties = task.getProperties();
         if (coreProperties != null) {
-          CoreProperty coreProperty = coreProperties.stream()
+          KeyValuePair coreProperty = coreProperties.stream()
               .filter(c -> "topic".contains(c.getKey())).findAny().orElse(null);
 
           if (coreProperty != null && topic.equals(coreProperty.getValue())) {

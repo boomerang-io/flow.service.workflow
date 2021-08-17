@@ -1,8 +1,6 @@
 package io.boomerang.service;
 
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -23,7 +21,7 @@ import io.boomerang.mongo.entity.FlowUserEntity;
 import io.boomerang.mongo.entity.RevisionEntity;
 import io.boomerang.mongo.entity.TaskExecutionEntity;
 import io.boomerang.mongo.model.Audit;
-import io.boomerang.mongo.model.CoreProperty;
+import io.boomerang.mongo.model.KeyValuePair;
 import io.boomerang.mongo.model.TaskStatus;
 import io.boomerang.mongo.model.internal.InternalTaskResponse;
 import io.boomerang.mongo.model.next.DAGTask;
@@ -177,7 +175,7 @@ public class FlowApprovalServiceImpl implements FlowApprovalService {
     DAGTask dagTask = tasks.stream().filter(t -> t.getTaskId().equals(taskExecution.getTaskId()))
         .findFirst().orElse(null);
     if (dagTask != null && dagTask.getProperties() != null) {
-      CoreProperty instructionsProperty = dagTask.getProperties().stream()
+      KeyValuePair instructionsProperty = dagTask.getProperties().stream()
           .filter(p -> "instructions".equals(p.getKey())).findFirst().orElse(null);
       if (instructionsProperty != null) {
         String instructionText = instructionsProperty.getValue();

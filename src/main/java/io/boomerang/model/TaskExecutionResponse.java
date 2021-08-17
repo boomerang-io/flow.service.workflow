@@ -2,9 +2,7 @@ package io.boomerang.model;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import org.springframework.data.annotation.Id;
-import io.boomerang.mongo.entity.ApprovalEntity;
 import io.boomerang.mongo.model.ErrorResponse;
 import io.boomerang.mongo.model.TaskStatus;
 import io.boomerang.mongo.model.TaskType;
@@ -32,7 +30,7 @@ public class TaskExecutionResponse {
   private boolean preApproved;
   private String switchValue;
   
-  private ApprovalEntity approval;
+  private Approval approval;
   
   private String runWorkflowActivityId;
   private String runWorkflowId;
@@ -128,11 +126,11 @@ public class TaskExecutionResponse {
     this.workflowId = workflowId;
   }
 
-  public ApprovalEntity getApproval() {
+  public Approval getApproval() {
     return approval;
   }
 
-  public void setApproval(ApprovalEntity approval) {
+  public void setApproval(Approval approval) {
     this.approval = approval;
   }
 

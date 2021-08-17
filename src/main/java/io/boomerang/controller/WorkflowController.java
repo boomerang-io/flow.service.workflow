@@ -24,7 +24,7 @@ import io.boomerang.model.GenerateTokenResponse;
 import io.boomerang.model.RevisionResponse;
 import io.boomerang.model.WorkflowExport;
 import io.boomerang.model.WorkflowSummary;
-import io.boomerang.mongo.model.FlowProperty;
+import io.boomerang.mongo.model.WorkflowProperty;
 import io.boomerang.mongo.model.WorkflowScope;
 import io.boomerang.mongo.model.WorkflowStatus;
 import io.boomerang.service.crud.WorkflowService;
@@ -96,7 +96,7 @@ public class WorkflowController {
 
   @PatchMapping(value = "/{workFlowId}/properties")
   public WorkflowSummary updateWorkflowProperties(@PathVariable String workFlowId,
-      @RequestBody List<FlowProperty> properties) {
+      @RequestBody List<WorkflowProperty> properties) {
     return workflowService.updateWorkflowProperties(workFlowId, properties);
   }
 

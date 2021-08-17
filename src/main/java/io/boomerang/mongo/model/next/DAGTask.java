@@ -11,7 +11,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import io.boomerang.model.controller.TaskResult;
-import io.boomerang.mongo.model.CoreProperty;
+import io.boomerang.mongo.model.KeyValuePair;
 import io.boomerang.mongo.model.TaskType;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -56,13 +56,13 @@ public class DAGTask {
   private List<Dependency> dependencies = null;
   @JsonProperty("properties")
 
-  private List<CoreProperty> properties;
+  private List<KeyValuePair> properties;
 
-  public List<CoreProperty> getProperties() {
+  public List<KeyValuePair> getProperties() {
     return properties;
   }
 
-  public void setProperties(List<CoreProperty> properties) {
+  public void setProperties(List<KeyValuePair> properties) {
     this.properties = properties;
   }
 

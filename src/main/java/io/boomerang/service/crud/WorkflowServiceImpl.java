@@ -42,7 +42,7 @@ import io.boomerang.mongo.entity.FlowUserEntity;
 import io.boomerang.mongo.entity.RevisionEntity;
 import io.boomerang.mongo.entity.WorkflowEntity;
 import io.boomerang.mongo.model.Dag;
-import io.boomerang.mongo.model.FlowProperty;
+import io.boomerang.mongo.model.WorkflowProperty;
 import io.boomerang.mongo.model.Revision;
 import io.boomerang.mongo.model.TaskType;
 import io.boomerang.mongo.model.Trigger;
@@ -242,7 +242,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     entity.setEnablePersistentStorage(summary.isEnablePersistentStorage());
     entity.setLabels(summary.getLabels());
 
-    List<FlowProperty> updatedProperties = setupDefaultProperties(summary);
+    List<WorkflowProperty> updatedProperties = setupDefaultProperties(summary);
     entity.setProperties(updatedProperties);
     Triggers previousTriggers = entity.getTriggers();
     Triggers trigger = summary.getTriggers();
@@ -346,7 +346,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   @Override
   public WorkflowSummary updateWorkflowProperties(String workflowId,
-      List<FlowProperty> properties) {
+      List<WorkflowProperty> properties) {
 
     FlowUserEntity user = userIdentityService.getCurrentUser();
 
@@ -585,10 +585,10 @@ public class WorkflowServiceImpl implements WorkflowService {
     }
   }
 
-  private List<FlowProperty> setupDefaultProperties(WorkflowEntity workflowSummary) {
+  private List<WorkflowProperty> setupDefaultProperties(WorkflowEntity workflowSummary) {
 
 
-    List<FlowProperty> newProperties = workflowSummary.getProperties();
+    List<WorkflowProperty> newProperties = workflowSummary.getProperties();
 
     if (newProperties == null) {
       newProperties = new LinkedList<>();
