@@ -182,6 +182,12 @@ public class WorkflowServiceImpl implements WorkflowService {
 
     boolean isNewWorkflow = flowWorkflowEntity.getId() == null;
     setupTriggerDefaults(flowWorkflowEntity);
+    
+    if (flowWorkflowEntity.getScope() == WorkflowScope.user) {
+      FlowUserEntity user = userIdentityService.getCurrentUser();
+      flowWorkflowEntity.setOwnerUserId(user.getId());
+    }
+    
     WorkflowEntity entity = workFlowRepository.saveWorkflow(flowWorkflowEntity);
     if (isNewWorkflow) {
       this.generateTriggerToken(entity.getId(), "default");
