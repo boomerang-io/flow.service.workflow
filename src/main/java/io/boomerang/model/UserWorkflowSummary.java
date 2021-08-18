@@ -4,20 +4,20 @@ import java.util.List;
 
 public class UserWorkflowSummary {
 
-  private WorkflowQuotas workflowQuotas;
+  private WorkflowQuotas userQuotas;
   private List<WorkflowSummary> workflows;
   
-  public WorkflowQuotas getWorkflowQuotas() {
-    return workflowQuotas;
-  }
-  public void setWorkflowQuotas(WorkflowQuotas workflowQuotas) {
-    this.workflowQuotas = workflowQuotas;
-  }
   public List<WorkflowSummary> getWorkflows() {
     return workflows;
   }
   public void setWorkflows(List<WorkflowSummary> workflows) {
     this.workflows = workflows;
+  }
+  public WorkflowQuotas getUserQuotas() {
+    return userQuotas;
+  }
+  public void setUserQuotas(WorkflowQuotas userQuotas) {
+    this.userQuotas = userQuotas;
   }
   
 }
