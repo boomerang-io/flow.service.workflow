@@ -17,6 +17,7 @@ public interface FlowUserService {
 
   public FlowUserEntity getOrRegisterUser(String userNane, String firstName, String lastName, UserType userType);
 
+  
   Page<FlowUserEntity> findBySearchTerm(String term, Pageable pageable);
 
   Page<FlowUserEntity> findAll(Pageable pageable);
@@ -24,6 +25,7 @@ public interface FlowUserService {
   List<FlowUserEntity> getUsersforTeams(List<String> teamIds);
 
   FlowUserEntity getUserWithEmail(String userEmail);
+  FlowUserEntity registerUser(FlowUserEntity user);
 
 
 }

@@ -44,6 +44,7 @@ public class UserIdentityServiceImpl implements UserIdentityService {
 
   @Override
   public FlowUserEntity getCurrentUser() {
+    
     if (flowExternalUrlUser.isBlank()) {
       UserToken user = usertDetailsService.getUserDetails();
       String email = user.getEmail();
@@ -58,6 +59,12 @@ public class UserIdentityServiceImpl implements UserIdentityService {
       }
 
       BeanUtils.copyProperties(userProfile, flowUser);
+      String email = userProfile.getEmail();
+      FlowUserEntity dbUser = flowUserService.getUserWithEmail(email);
+      if (dbUser == null) {
+        flowUser.setId(null);
+        flowUserService.registerUser(flowUser);
+      }
 
       return flowUser;
     }
@@ -152,24 +159,21 @@ public class UserIdentityServiceImpl implements UserIdentityService {
 
   @Override
   public UserProfile getOrRegisterCurrentUser() {
-
     if (flowExternalUrlUser.isBlank()) {
-
       if (flowUserService.getUserCount() == 0) {
         throw new HttpClientErrorException(HttpStatus.LOCKED);
       }
-
       FlowUserEntity userEntity = getOrRegisterUser(UserType.user);
-
       UserProfile profile = new UserProfile();
       BeanUtils.copyProperties(userEntity, profile);
       return profile;
     } else {
-      UserProfile userProfile = coreUserService.getInternalUserProfile();
-      return userProfile;
+      FlowUserEntity userEntity =  getCurrentUser();
+      UserProfile profile = new UserProfile();
+      BeanUtils.copyProperties(userEntity, profile);
+      return profile;
     }
   }
-
 
   @Override
   public void deleteFlowUser(String userId) {

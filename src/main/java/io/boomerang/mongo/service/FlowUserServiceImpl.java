@@ -80,4 +80,17 @@ public class FlowUserServiceImpl implements FlowUserService {
     return null;
 
   }
+
+  @Override
+  public FlowUserEntity registerUser(FlowUserEntity user) {
+    String email = user.getEmail();
+    
+    Long count = this.flowUserRepository.countByEmailIgnoreCase(email);
+    if (count == 1) {
+      return this.flowUserRepository.findByEmailIgnoreCase(email);
+    }
+
+
+    return flowUserRepository.save(user);
+  }
 }
