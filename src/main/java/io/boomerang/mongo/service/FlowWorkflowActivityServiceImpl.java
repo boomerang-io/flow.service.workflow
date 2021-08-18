@@ -290,4 +290,14 @@ public class FlowWorkflowActivityServiceImpl implements FlowWorkflowActivityServ
       TaskStatus status) {
     return repository.findByWorkflowIdInAndStatus(workflowIds, status);
   }
+
+  @Override
+  public Page<ActivityEntity> findAllActivitiesForUser(Optional<Date> fromDate,
+      Optional<Date> toDate, String userId, Pageable page) {
+    if (fromDate.isPresent() && toDate.isPresent()) {
+      return repository.findByUserId(fromDate.get(), toDate.get(), userId, page);
+    } else {
+      return repository.findAll(page);
+    }
+  }
 }

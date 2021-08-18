@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import io.boomerang.model.FlowWorkflowRevision;
 import io.boomerang.model.GenerateTokenResponse;
+import io.boomerang.model.UserWorkflowSummary;
 import io.boomerang.model.WorkflowExport;
 import io.boomerang.model.WorkflowShortSummary;
 import io.boomerang.model.WorkflowSummary;
@@ -45,6 +46,8 @@ public interface WorkflowService {
   void deleteToken(String id, String label);
 
   List<WorkflowSummary> getSystemWorkflows();
+  
+  UserWorkflowSummary getUserWorkflows();
 
   List<WorkflowShortSummary> getSystemWorkflowShortSummaryList();
 

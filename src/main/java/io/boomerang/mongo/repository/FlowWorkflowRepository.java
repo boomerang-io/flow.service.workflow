@@ -32,4 +32,6 @@ public interface FlowWorkflowRepository extends MongoRepository<WorkflowEntity, 
 
   List<WorkflowEntity> findByScopeAndStatusInAndTriggersIn(WorkflowScope system, List<String> list,
       List<String> list2);
+
+  List<WorkflowEntity> findByScopeAndOwnerUserId(WorkflowScope user, String id);
 }

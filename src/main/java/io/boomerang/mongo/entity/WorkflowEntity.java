@@ -23,6 +23,8 @@ public class WorkflowEntity {
   private String description;
 
   private String flowTeamId;
+  private String ownerUserId;
+  
   private String icon;
   @Id
   private String id;
@@ -146,6 +148,14 @@ public class WorkflowEntity {
 
   public void setLabels(List<KeyValuePair> labels) {
     this.labels = labels;
+  }
+
+  public String getOwnerUserId() {
+    return ownerUserId;
+  }
+
+  public void setOwnerUserId(String ownerUserId) {
+    this.ownerUserId = ownerUserId;
   }
 
 

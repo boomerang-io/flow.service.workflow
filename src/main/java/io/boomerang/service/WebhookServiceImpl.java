@@ -66,13 +66,17 @@ public class WebhookServiceImpl implements WebhookService {
     if (activity != null) {
       response.setActivityId(activity.getId());
       WorkflowEntity workflow = flowWorkflowService.getWorkflow(workflowId);
-      if (workflow.getFlowTeamId() != null) {
+      
+      if (workflow.getScope() == WorkflowScope.team) {
         activity.setTeamId(workflow.getFlowTeamId());
         activity.setScope(WorkflowScope.team);
-      }
-      else {
+      } else if (workflow.getScope() == WorkflowScope.user) {
+        activity.setUserId(workflow.getOwnerUserId());
+        activity.setScope(WorkflowScope.user);
+      } else {
         activity.setScope(WorkflowScope.system);
       }
+      
       activityService.saveWorkflowActivity(activity);
     }
     return response;

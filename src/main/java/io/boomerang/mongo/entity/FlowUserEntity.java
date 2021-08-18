@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import io.boomerang.client.model.Team;
+import io.boomerang.mongo.model.Quotas;
 import io.boomerang.mongo.model.UserStatus;
 import io.boomerang.mongo.model.UserType;
 
@@ -26,6 +27,8 @@ public class FlowUserEntity {
   private Boolean isShowHelp;
   private Date firstLoginDate;
   private Date lastLoginDate;
+  
+  private Quotas quotas;
 
   private List<String> flowTeams;
 
@@ -119,6 +122,14 @@ public class FlowUserEntity {
 
   public void setTeams(List<Team> teams) {
     this.teams = teams;
+  }
+
+  public Quotas getQuotas() {
+    return quotas;
+  }
+
+  public void setQuotas(Quotas quotas) {
+    this.quotas = quotas;
   }
   
 }

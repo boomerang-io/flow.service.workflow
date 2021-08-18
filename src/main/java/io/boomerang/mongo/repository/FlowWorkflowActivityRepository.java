@@ -118,4 +118,6 @@ public interface FlowWorkflowActivityRepository
   @Query(value = "{'creationDate':{ $lt: ?1, $gte: ?0}, 'teamId' : ?2}")
   Page<ActivityEntity> findByTeamId(Date fromDate, Date toDate, String teamId, Pageable page);
 
+  Page<ActivityEntity> findByUserId(Date date, Date date2, String userId, Pageable page);
+
 }

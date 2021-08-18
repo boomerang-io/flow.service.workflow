@@ -59,6 +59,8 @@ public class ActivityEntity   {
   
   private String teamId;
   
+  private String userId;
+  
   private String switchValue;
   
   private ErrorResponse error;
@@ -208,6 +210,14 @@ public class ActivityEntity   {
 
   public void setLabels(List<KeyValuePair> labels) {
     this.labels = labels;
+  }
+
+  public String getUserId() {
+    return userId;
+  }
+
+  public void setUserId(String userId) {
+    this.userId = userId;
   }
   
 }

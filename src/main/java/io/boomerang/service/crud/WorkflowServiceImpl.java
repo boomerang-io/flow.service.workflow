@@ -6,11 +6,14 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.TimeZone;
 import java.util.UUID;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -18,6 +21,7 @@ import org.quartz.SchedulerException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.InputStreamResource;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -31,19 +35,23 @@ import io.boomerang.error.BoomerangException;
 import io.boomerang.model.FlowTeam;
 import io.boomerang.model.FlowWorkflowRevision;
 import io.boomerang.model.GenerateTokenResponse;
+import io.boomerang.model.UserWorkflowSummary;
 import io.boomerang.model.WorkflowExport;
 import io.boomerang.model.WorkflowQuotas;
 import io.boomerang.model.WorkflowShortSummary;
 import io.boomerang.model.WorkflowSummary;
 import io.boomerang.model.WorkflowToken;
 import io.boomerang.model.controller.TaskResult;
+import io.boomerang.mongo.entity.ActivityEntity;
 import io.boomerang.mongo.entity.FlowTaskTemplateEntity;
 import io.boomerang.mongo.entity.FlowUserEntity;
 import io.boomerang.mongo.entity.RevisionEntity;
 import io.boomerang.mongo.entity.WorkflowEntity;
 import io.boomerang.mongo.model.Dag;
+import io.boomerang.mongo.model.Quotas;
 import io.boomerang.mongo.model.WorkflowProperty;
 import io.boomerang.mongo.model.Revision;
+import io.boomerang.mongo.model.TaskStatus;
 import io.boomerang.mongo.model.TaskType;
 import io.boomerang.mongo.model.Trigger;
 import io.boomerang.mongo.model.TriggerEvent;
@@ -54,6 +62,7 @@ import io.boomerang.mongo.model.WorkflowScope;
 import io.boomerang.mongo.model.WorkflowStatus;
 import io.boomerang.mongo.model.next.DAGTask;
 import io.boomerang.mongo.service.FlowTaskTemplateService;
+import io.boomerang.mongo.service.FlowWorkflowActivityService;
 import io.boomerang.mongo.service.FlowWorkflowService;
 import io.boomerang.mongo.service.RevisionService;
 import io.boomerang.quartz.ScheduledTasks;
@@ -62,6 +71,10 @@ import io.boomerang.service.UserIdentityService;
 
 @Service
 public class WorkflowServiceImpl implements WorkflowService {
+
+
+  @Autowired
+  private FlowWorkflowActivityService flowWorkflowActivityService;
 
   @Autowired
   private ScheduledTasks taskScheduler;
@@ -101,6 +114,12 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   @Value("${flow.feature.global.parameters}")
   private boolean flowFeatureGlobalParameters;
+  
+  @Value("${max.workflow.storage}")
+  private Integer maxWorkflowStorage;
+
+  @Value("${max.workflow.execution.time}")
+  private Integer maxWorkflowExecutionTime;
 
   private final Logger logger = LogManager.getLogger(getClass());
 
@@ -624,8 +643,7 @@ public class WorkflowServiceImpl implements WorkflowService {
         String workflowName = workflow.getName();
         boolean webhookEnabled = false;
         String flowTeamId = workflow.getFlowTeamId();
-        String token = null;
-
+  
         if (workflow.getTriggers() != null) {
           Triggers triggers = workflow.getTriggers();
           TriggerEvent webhook = triggers.getWebhook();
@@ -746,7 +764,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
         String workflowName = workflow.getName();
         boolean webhookEnabled = false;
-   
+
         if (workflow.getTriggers() != null) {
           Triggers triggers = workflow.getTriggers();
           TriggerEvent webhook = triggers.getWebhook();
@@ -873,21 +891,137 @@ public class WorkflowServiceImpl implements WorkflowService {
     existingWorkflow.setName(newName);
     existingWorkflow.setTriggers(null);
     existingWorkflow.setTokens(null);
-    
+
     WorkflowEntity newWorkflow = this.saveWorkflow(existingWorkflow);
- 
+
     String newWorkflowId = newWorkflow.getId();
-    
+
     RevisionEntity revisionEntity = this.workflowVersionService.getLatestWorkflowVersion(id);
     revisionEntity.setId(null);
     revisionEntity.setWorkFlowId(newWorkflowId);
     revisionEntity.setVersion(1l);
-    
+
     this.workflowVersionService.insertWorkflow(revisionEntity);
-    
+
     WorkflowSummary updatedSummary = new WorkflowSummary(newWorkflow);
     updateSummaryInformation(updatedSummary);
 
     return updatedSummary;
   }
+
+  @Override
+  public UserWorkflowSummary getUserWorkflows() {
+    FlowUserEntity user = userIdentityService.getCurrentUser();
+
+    if (user == null) {
+      return null;
+    }
+
+
+    final List<WorkflowEntity> workflows = workFlowRepository.getUserWorkflows(user.getId());
+    final List<WorkflowSummary> newList = new LinkedList<>();
+    for (final WorkflowEntity entity : workflows) {
+      setupTriggerDefaults(entity);
+      final WorkflowSummary summary = new WorkflowSummary(entity);
+      updateSummaryInformation(summary);
+      if (WorkflowStatus.active == entity.getStatus()) {
+        newList.add(summary);
+      }
+
+    }
+    teamService.updateSummaryWithUpgradeFlags(newList);
+    UserWorkflowSummary summary = new UserWorkflowSummary();
+    summary.setWorkflows(newList);
+    
+    getQuotasForUser(user, workflows);
+    return summary;
+  }
+
+  private WorkflowQuotas getQuotasForUser(FlowUserEntity user, List<WorkflowEntity> workflows) {
+
+    Quotas quotas = setTeamQuotas(user);
+   
+    Pageable page = Pageable.unpaged();
+    List<ActivityEntity> concurrentActivities = getConcurrentWorkflowActivities(workflows);
+    List<ActivityEntity> activitiesMonthly = getMonthlyWorkflowActivities(page, user.getId());
+    
+    WorkflowQuotas workflowQuotas = new WorkflowQuotas();
+    workflowQuotas.setMaxWorkflowCount(quotas.getMaxWorkflowCount());
+    workflowQuotas.setMaxWorkflowExecutionMonthly(quotas.getMaxWorkflowExecutionMonthly());
+    workflowQuotas.setMaxWorkflowStorage(quotas.getMaxWorkflowStorage());
+    workflowQuotas.setMaxWorkflowExecutionTime(quotas.getMaxWorkflowExecutionTime());
+    workflowQuotas.setMaxConcurrentWorkflows(quotas.getMaxConcurrentWorkflows());
+
+
+    workflowQuotas.setCurrentWorkflowCount(workflows.size());
+    workflowQuotas.setCurrentConcurrentWorkflows(concurrentActivities.size());
+    workflowQuotas.setCurrentWorkflowExecutionMonthly(activitiesMonthly.size());
+    
+    setWorkflowResetDate(workflowQuotas);
+    return workflowQuotas;
+  }
+
+  private void setWorkflowResetDate(WorkflowQuotas workflowQuotas) {
+    Calendar nextMonth = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+    nextMonth.add(Calendar.MONTH, 1);
+    nextMonth.set(Calendar.DAY_OF_MONTH, 1);
+    nextMonth.set(Calendar.HOUR_OF_DAY, 0);
+    nextMonth.set(Calendar.MINUTE, 0);
+    nextMonth.set(Calendar.SECOND, 0);
+    nextMonth.set(Calendar.MILLISECOND, 0);
+    workflowQuotas.setMonthlyResetDate(nextMonth.getTime());
+  }
+  
+  private Quotas setTeamQuotas(FlowUserEntity team) {
+    if (team.getQuotas() == null) {
+      team.setQuotas(new Quotas());
+    }
+
+    Quotas quotas = new Quotas();
+
+    if (team.getQuotas().getMaxWorkflowCount() != null) {
+      quotas.setMaxWorkflowCount(team.getQuotas().getMaxWorkflowCount());
+    } else {
+      quotas.setMaxWorkflowCount(maxWorkflowCount);
+    }
+    if (team.getQuotas().getMaxWorkflowExecutionMonthly() != null) {
+      quotas.setMaxWorkflowExecutionMonthly(team.getQuotas().getMaxWorkflowExecutionMonthly());
+    } else {
+      quotas.setMaxWorkflowExecutionMonthly(maxWorkflowExecutionMonthly);
+    }
+    if (team.getQuotas().getMaxWorkflowStorage() != null) {
+      quotas.setMaxWorkflowStorage(team.getQuotas().getMaxWorkflowStorage());
+    } else {
+      quotas.setMaxWorkflowStorage(maxWorkflowStorage);
+    }
+    if (team.getQuotas().getMaxWorkflowExecutionTime() != null) {
+      quotas.setMaxWorkflowExecutionTime(team.getQuotas().getMaxWorkflowExecutionTime());
+    } else {
+      quotas.setMaxWorkflowExecutionTime(maxWorkflowExecutionTime);
+    }
+    if (team.getQuotas().getMaxConcurrentWorkflows() != null) {
+      quotas.setMaxConcurrentWorkflows(team.getQuotas().getMaxConcurrentWorkflows());
+    } else {
+      quotas.setMaxConcurrentWorkflows(maxConcurrentWorkflows);
+    }
+    return quotas;
+  }
+  
+  private List<ActivityEntity> getConcurrentWorkflowActivities(List<WorkflowEntity> workflows) {
+    List<String> workflowIds = new ArrayList<>();
+    for (WorkflowEntity workflow : workflows) {
+      workflowIds.add(workflow.getId());
+    }
+    return flowWorkflowActivityService.findbyWorkflowIdsAndStatus(workflowIds,
+        TaskStatus.inProgress);
+  }
+  
+  private List<ActivityEntity> getMonthlyWorkflowActivities(Pageable page, String userId) {
+    Calendar c = Calendar.getInstance();
+    c.set(Calendar.DAY_OF_MONTH, 1);
+    return flowWorkflowActivityService
+        .findAllActivitiesForUser(Optional.of(c.getTime()), Optional.of(new Date()), userId, page)
+        .getContent();
+  }
+
 }

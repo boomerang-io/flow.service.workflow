@@ -34,5 +34,8 @@ public interface FlowWorkflowActivityService {
 
   Page<ActivityEntity> findAllActivitiesForTeam(Optional<Date> fromDate, Optional<Date> toDate,
       String teamId, Pageable page);
+  
+  Page<ActivityEntity> findAllActivitiesForUser(Optional<Date> fromDate, Optional<Date> toDate,
+      String teamId, Pageable page);
 
 }

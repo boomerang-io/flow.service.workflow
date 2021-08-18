@@ -27,5 +27,7 @@ public interface FlowWorkflowService {
 
   List<WorkflowEntity> getSystemWorkflows();
 
+  List<WorkflowEntity> getUserWorkflows(String id);
+
 
 }
