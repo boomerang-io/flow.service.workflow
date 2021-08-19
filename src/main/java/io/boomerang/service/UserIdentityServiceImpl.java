@@ -44,28 +44,26 @@ public class UserIdentityServiceImpl implements UserIdentityService {
 
   @Override
   public FlowUserEntity getCurrentUser() {
-    
     if (flowExternalUrlUser.isBlank()) {
       UserToken user = usertDetailsService.getUserDetails();
       String email = user.getEmail();
       return flowUserService.getUserWithEmail(email);
-
     } else {
       UserProfile userProfile = coreUserService.getInternalUserProfile();
       FlowUserEntity flowUser = new FlowUserEntity();
-
       if (userProfile == null) {
         return null;
       }
-
       BeanUtils.copyProperties(userProfile, flowUser);
+      flowUser.setTeams(null);
       String email = userProfile.getEmail();
       FlowUserEntity dbUser = flowUserService.getUserWithEmail(email);
       if (dbUser == null) {
         flowUser.setId(null);
         flowUserService.registerUser(flowUser);
+      } else {
+        flowUser.setQuotas(dbUser.getQuotas());
       }
-
       return flowUser;
     }
   }
@@ -74,10 +72,8 @@ public class UserIdentityServiceImpl implements UserIdentityService {
   private FlowUserEntity getOrRegisterUser(UserType userType) {
     UserToken userDetails = usertDetailsService.getUserDetails();
     String email = userDetails.getEmail();
-
     String firstName = userDetails.getFirstName();
     String lastName = userDetails.getLastName();
-
     return flowUserService.getOrRegisterUser(email, firstName, lastName, userType);
   }
 

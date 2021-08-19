@@ -923,7 +923,6 @@ public class WorkflowServiceImpl implements WorkflowService {
       return null;
     }
 
-
     final List<WorkflowEntity> workflows = workFlowRepository.getUserWorkflows(user.getId());
     final List<WorkflowSummary> newList = new LinkedList<>();
     for (final WorkflowEntity entity : workflows) {
@@ -939,7 +938,9 @@ public class WorkflowServiceImpl implements WorkflowService {
     UserWorkflowSummary summary = new UserWorkflowSummary();
     summary.setWorkflows(newList);
     
-    getQuotasForUser(user, workflows);
+    WorkflowQuotas quotas = getQuotasForUser(user, workflows);
+    summary.setUserQuotas(quotas);
+    
     return summary;
   }
 
