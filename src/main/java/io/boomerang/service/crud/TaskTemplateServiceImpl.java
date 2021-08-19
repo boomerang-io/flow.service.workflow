@@ -283,7 +283,7 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
     if (workflow.getScope() == WorkflowScope.team || workflow.getScope() == null) {
       templates = flowTaskTemplateService.getAllTaskTemplatesforTeamId(flowTeamId).stream()
           .map(FlowTaskTemplate::new).collect(Collectors.toList());
-    } else if (workflow.getScope() == WorkflowScope.system) {
+    } else if (workflow.getScope() == WorkflowScope.system || workflow.getScope() == WorkflowScope.user) {
       templates = flowTaskTemplateService.getAllTaskTemplatesForSystem().stream()
           .map(FlowTaskTemplate::new).collect(Collectors.toList());
     }
