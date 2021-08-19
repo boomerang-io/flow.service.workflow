@@ -924,6 +924,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     }
 
     final List<WorkflowEntity> workflows = workFlowRepository.getUserWorkflows(user.getId());
+    
     final List<WorkflowSummary> newList = new LinkedList<>();
     for (final WorkflowEntity entity : workflows) {
       setupTriggerDefaults(entity);

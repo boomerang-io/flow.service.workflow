@@ -5,6 +5,7 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 import io.boomerang.mongo.entity.WorkflowEntity;
 import io.boomerang.mongo.model.WorkflowScope;
+import io.boomerang.mongo.model.WorkflowStatus;
 
 public interface FlowWorkflowRepository extends MongoRepository<WorkflowEntity, String> {
 
@@ -33,5 +34,6 @@ public interface FlowWorkflowRepository extends MongoRepository<WorkflowEntity, 
   List<WorkflowEntity> findByScopeAndStatusInAndTriggersIn(WorkflowScope system, List<String> list,
       List<String> list2);
 
-  List<WorkflowEntity> findByScopeAndOwnerUserId(WorkflowScope user, String id);
+  List<WorkflowEntity> findByScopeAndOwnerUserIdAndStatus(WorkflowScope user, String id,
+      WorkflowStatus active);
 }

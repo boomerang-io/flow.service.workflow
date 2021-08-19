@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import io.boomerang.mongo.entity.WorkflowEntity;
 import io.boomerang.mongo.model.WorkflowScope;
+import io.boomerang.mongo.model.WorkflowStatus;
 import io.boomerang.mongo.repository.FlowWorkflowRepository;
 
 @Service
@@ -70,6 +71,6 @@ public class FlowWorkflowServiceImpl implements FlowWorkflowService {
 
   @Override
   public List<WorkflowEntity> getUserWorkflows(String id) {
-    return workFlowRepository.findByScopeAndOwnerUserId(WorkflowScope.user, id);
+    return workFlowRepository.findByScopeAndOwnerUserIdAndStatus(WorkflowScope.user, id, WorkflowStatus.active);
   }
 }
