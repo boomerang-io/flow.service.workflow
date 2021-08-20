@@ -240,12 +240,15 @@ public class FlowActivityServiceImpl implements FlowActivityService {
       Optional<List<String>> statuses, Optional<List<String>> triggers,
       Optional<List<String>> scopes, String property, Direction direction) {
 
+    System.out.println("Activites");
+    
     final FlowUserEntity user = userIdentityService.getCurrentUser();
     List<String> workflowIdsList = new LinkedList<>();
 
     if (scopes.isPresent() && !scopes.get().isEmpty()) {
+      
       List<String> scopeList = scopes.get();
-      if (scopeList.contains("user")) {
+      if (scopeList.contains("user")) {        
         addUserWorkflows(user, workflowIdsList);
       }
       if (scopeList.contains("system") && user.getType() == UserType.admin) {
@@ -255,6 +258,9 @@ public class FlowActivityServiceImpl implements FlowActivityService {
         addTeamWorkflows(user, workflowIdsList, teamIds);
       }
     } else {
+      
+      System.out.println("No filters");
+      
       addUserWorkflows(user, workflowIdsList);
       addTeamWorkflows(user, workflowIdsList, teamIds);
       if (user.getType() == UserType.admin) {
@@ -265,48 +271,18 @@ public class FlowActivityServiceImpl implements FlowActivityService {
     ListActivityResponse response = new ListActivityResponse();
     Page<ActivityEntity> records = flowActivityService.getAllActivites(from, to, page,
         Optional.of(workflowIdsList), statuses, triggers);
-
     final List<FlowActivity> activities = convert(records.getContent());
     List<FlowActivity> activitiesFiltered = new ArrayList<>();
-
     for (FlowActivity activity : activities) {
       String workFlowId = activity.getWorkflowId();
       addTeamInformation(teamIds, activitiesFiltered, activity, workFlowId);
     }
 
-    Pageable pageable = PageRequest.of(0, 2147483647, page.getSort());
-    Page<ActivityEntity> allrecords =
-        flowActivityService.getAllActivites(from, to, pageable, workflowIds, statuses, triggers);
-
-    final List<FlowActivity> allactivities = convert(allrecords.getContent());
-    List<FlowActivity> allactivitiesFiltered = new ArrayList<>();
-    for (FlowActivity activity : allactivities) {
-      String workFlowId = activity.getWorkflowId();
-      addTeamInformation(teamIds, allactivitiesFiltered, activity, workFlowId);
-    }
-
-    if (!teamIds.isPresent()) {
-      io.boomerang.model.Pageable pageablefinal = createPageable(records, property, direction,
-          activitiesFiltered, allactivitiesFiltered.size());
-      response.setPageable(pageablefinal);
-      response.setRecords(activitiesFiltered);
-    } else {
-
-      io.boomerang.model.Pageable pageablefinal =
-          createPageable(records, property, direction, activitiesFiltered, allactivitiesFiltered);
-
-      int fromIndex = pageablefinal.getSize() * pageablefinal.getNumber();
-      int toIndex = pageablefinal.getSize() * (pageablefinal.getNumber() + 1);
-
-      response.setRecords(toIndex > allactivitiesFiltered.size()
-          ? allactivitiesFiltered.subList(fromIndex, allactivitiesFiltered.size())
-          : allactivitiesFiltered.subList(fromIndex, toIndex));
-
-      pageablefinal.setNumberOfElements(response.getRecords().size());
-      response.setPageable(pageablefinal);
-
-    }
-
+    io.boomerang.model.Pageable pageablefinal = createPageable(records, property, direction,
+        activitiesFiltered, activitiesFiltered.size());
+    response.setPageable(pageablefinal);
+    response.setRecords(activities);
+       
     return response;
   }
 
@@ -348,6 +324,8 @@ public class FlowActivityServiceImpl implements FlowActivityService {
     List<WorkflowEntity> userWorkflows = this.workflowService.getUserWorkflows(userId);
     List<String> userWorkflowIds =
         userWorkflows.stream().map(WorkflowEntity::getId).collect(Collectors.toList());
+    System.out.println(userWorkflowIds.size());
+    
     workflowIdsList.addAll(userWorkflowIds);
   }
 
