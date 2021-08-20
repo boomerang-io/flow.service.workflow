@@ -406,7 +406,8 @@ public class TeamServiceImpl implements TeamService {
     return workflowQuotas;
   }
 
-  private List<FlowTeamEntity> getUsersTeamListing(FlowUserEntity userEntity) {
+  @Override
+  public List<FlowTeamEntity> getUsersTeamListing(FlowUserEntity userEntity) {
     List<String> highLevelGroupIds = new LinkedList<>();
     if (flowExternalUrlUser.isBlank()) {
       highLevelGroupIds = userEntity.getFlowTeams();

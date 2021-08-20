@@ -73,4 +73,9 @@ public class FlowWorkflowServiceImpl implements FlowWorkflowService {
   public List<WorkflowEntity> getUserWorkflows(String id) {
     return workFlowRepository.findByScopeAndOwnerUserIdAndStatus(WorkflowScope.user, id, WorkflowStatus.active);
   }
+
+  @Override
+  public List<WorkflowEntity> getTeamWorkflows() {
+    return workFlowRepository.findByScope(WorkflowScope.team);
+  }
 }

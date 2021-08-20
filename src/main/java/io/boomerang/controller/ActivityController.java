@@ -65,6 +65,7 @@ public class ActivityController {
   @GetMapping(value = "/activity")
   public ListActivityResponse getFlowActivities(
       @RequestParam(defaultValue = "ASC") Optional<Direction> order,
+      @RequestParam Optional<List<String>> scopes,
       @RequestParam Optional<String> sort, @RequestParam Optional<List<String>> workflowIds,
       @RequestParam Optional<List<String>> teamIds, @RequestParam(defaultValue = "0") int page,
       @RequestParam(defaultValue = "2147483647") int size, @RequestParam Optional<Long> fromDate,
@@ -93,7 +94,7 @@ public class ActivityController {
     }
     final Pageable pageable = PageRequest.of(page, size, pagingSort);
     return flowActivityService.getAllActivites(from, to, pageable, workflowIds, teamIds, statuses,
-        triggers, sort.get(), order.get());
+        triggers, scopes, sort.get(), order.get());
   }
 
   @DeleteMapping(value = "/activity/{activityId}/cancel")

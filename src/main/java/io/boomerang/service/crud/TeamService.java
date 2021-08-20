@@ -59,6 +59,8 @@ public interface TeamService {
   FlowTeamEntity deactivateTeam(String teamId);
 
   void updateSummaryWithUpgradeFlags(List<WorkflowSummary> workflowSummary);
+
+  List<FlowTeamEntity> getUsersTeamListing(FlowUserEntity userEntity);
   
 
 }

@@ -26,6 +26,7 @@ public interface FlowWorkflowService {
   WorkflowEntity findByTokenString(String tokenString);
 
   List<WorkflowEntity> getSystemWorkflows();
+  List<WorkflowEntity> getTeamWorkflows();
 
   List<WorkflowEntity> getUserWorkflows(String id);
 
