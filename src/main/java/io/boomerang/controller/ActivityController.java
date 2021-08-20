@@ -181,11 +181,13 @@ public class ActivityController {
       @RequestParam(defaultValue = "0") int page,
       @RequestParam(defaultValue = "2147483647") int size,
       @RequestParam(required = false) String sort,
-      @RequestParam(required = false) List<String> teamIds,
+      @RequestParam Optional<List<String>> teamIds,
       @RequestParam(required = false) List<String> triggers,
+      @RequestParam Optional<List<String>> scopes,
+      @RequestParam Optional<List<String>> workflowIds,
       @RequestParam(required = false) Long fromDate, @RequestParam(required = false) Long toDate) {
 
-    return flowActivityService.getActivitySummary(getPageable(page, size, sort), teamIds, triggers,
+    return flowActivityService.getActivitySummary(getPageable(page, size, sort), teamIds, triggers, workflowIds, scopes,
         fromDate, toDate);
   }
 

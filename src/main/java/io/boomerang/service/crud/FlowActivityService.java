@@ -43,8 +43,8 @@ public interface FlowActivityService {
 
   StreamingResponseBody getTaskLog(String activityId, String taskId);
 
-  Map<String, Long> getActivitySummary(Pageable pageable, List<String> teamIds,
-      List<String> triggers, Long fromDate, Long toDate);
+  Map<String, Long> getActivitySummary(Pageable pageable, Optional<List<String>> teamIds,
+      List<String> triggers, Optional<List<String>> workflowIds,Optional<List<String>> scopes, Long fromDate, Long toDate);
 
   void cancelWorkflowActivity(String activityId);
 
