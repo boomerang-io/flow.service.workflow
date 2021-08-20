@@ -1032,4 +1032,22 @@ public class WorkflowServiceImpl implements WorkflowService {
         .getContent();
   }
 
+  @Override
+  public boolean canExecuteWorkflowForQuotasForUser() {
+    if (!enabledQuotaCheck) {
+      return true;
+    }
+
+    UserWorkflowSummary summary =  getUserWorkflows();
+   
+    WorkflowQuotas workflowQuotas = summary.getUserQuotas();
+    if (workflowQuotas.getCurrentConcurrentWorkflows() >= workflowQuotas.getMaxConcurrentWorkflows()
+        || workflowQuotas.getCurrentWorkflowExecutionMonthly() >= workflowQuotas
+            .getMaxWorkflowExecutionMonthly()) {
+      return false;
+    } else {
+      return true;
+    }
+  }
+
 }

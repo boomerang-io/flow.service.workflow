@@ -56,4 +56,6 @@ public interface WorkflowService {
   List<String> getWorkflowParameters(String workflowId, FlowWorkflowRevision workflowSummaryEntity);
 
   WorkflowSummary duplicateWorkflow(String id);
+
+  boolean canExecuteWorkflowForQuotasForUser();
 }
