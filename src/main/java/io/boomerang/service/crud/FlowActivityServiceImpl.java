@@ -238,35 +238,36 @@ public class FlowActivityServiceImpl implements FlowActivityService {
   public ListActivityResponse getAllActivites(Optional<Date> from, Optional<Date> to, Pageable page,
       Optional<List<String>> workflowIds, Optional<List<String>> teamIds,
       Optional<List<String>> statuses, Optional<List<String>> triggers,
-      Optional<List<String>> scopes, String property, Direction direction) {
-
-    System.out.println("Activites");
-    
+      Optional<List<String>> scopes, String property, Direction direction) {    
     final FlowUserEntity user = userIdentityService.getCurrentUser();
     List<String> workflowIdsList = new LinkedList<>();
 
-    if (scopes.isPresent() && !scopes.get().isEmpty()) {
-      
-      List<String> scopeList = scopes.get();
-      if (scopeList.contains("user")) {        
+    if (!workflowIds.isPresent()) {
+      if (scopes.isPresent() && !scopes.get().isEmpty()) {
+        
+        List<String> scopeList = scopes.get();
+        if (scopeList.contains("user")) {        
+          addUserWorkflows(user, workflowIdsList);
+        }
+        if (scopeList.contains("system") && user.getType() == UserType.admin) {
+          addSystemWorkflows(workflowIdsList);
+        }
+        if (scopeList.contains("team")) {
+          addTeamWorkflows(user, workflowIdsList, teamIds);
+        }
+      } else {
+        
         addUserWorkflows(user, workflowIdsList);
-      }
-      if (scopeList.contains("system") && user.getType() == UserType.admin) {
-        addSystemWorkflows(workflowIdsList);
-      }
-      if (scopeList.contains("team")) {
         addTeamWorkflows(user, workflowIdsList, teamIds);
+        if (user.getType() == UserType.admin) {
+          addSystemWorkflows(workflowIdsList);
+        }
       }
     } else {
-      
-      System.out.println("No filters");
-      
-      addUserWorkflows(user, workflowIdsList);
-      addTeamWorkflows(user, workflowIdsList, teamIds);
-      if (user.getType() == UserType.admin) {
-        addSystemWorkflows(workflowIdsList);
-      }
+      List<String> requestWorkflowList = workflowIds.get();
+      workflowIdsList.addAll(requestWorkflowList);
     }
+   
 
     ListActivityResponse response = new ListActivityResponse();
     Page<ActivityEntity> records = flowActivityService.getAllActivites(from, to, page,
