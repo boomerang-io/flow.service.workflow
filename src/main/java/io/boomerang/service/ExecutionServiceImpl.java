@@ -52,7 +52,7 @@ public class ExecutionServiceImpl implements ExecutionService {
     } else if (WorkflowScope.team.equals(workflow.getScope())
         && !workflowService.canExecuteWorkflowForQuotas(workflow.getFlowTeamId())) {
       throw new BoomerangException(BoomerangError.TOO_MANY_REQUESTS);
-    } else if (WorkflowScope.team.equals(workflow.getScope())
+    } else if (WorkflowScope.user.equals(workflow.getScope())
         && !workflowService.canExecuteWorkflowForQuotasForUser()) { 
       throw new BoomerangException(BoomerangError.TOO_MANY_REQUESTS);
     }
