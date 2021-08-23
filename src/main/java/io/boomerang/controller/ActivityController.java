@@ -104,7 +104,7 @@ public class ActivityController {
       return null;
     }
     
-    flowActivityService.cancelWorkflowActivity(activity.getId());
+    flowActivityService.cancelWorkflowActivity(activity.getId(), null);
     
     activity = flowActivityService.findWorkflowActivity(activityId);
     final List<TaskExecutionResponse> steps = flowActivityService.getTaskExecutions(activityId);

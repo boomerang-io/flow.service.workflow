@@ -16,6 +16,7 @@ import io.boomerang.model.controller.TaskWorkspace;
 import io.boomerang.mongo.entity.ActivityEntity;
 import io.boomerang.mongo.entity.FlowUserEntity;
 import io.boomerang.mongo.entity.TaskExecutionEntity;
+import io.boomerang.mongo.model.ErrorResponse;
 import io.boomerang.mongo.model.KeyValuePair;
 
 public interface FlowActivityService {
@@ -46,7 +47,7 @@ public interface FlowActivityService {
   Map<String, Long> getActivitySummary(Pageable pageable, Optional<List<String>> teamIds,
       List<String> triggers, Optional<List<String>> workflowIds,Optional<List<String>> scopes, Long fromDate, Long toDate);
 
-  void cancelWorkflowActivity(String activityId);
+  void cancelWorkflowActivity(String activityId, ErrorResponse error);
 
 
   public boolean hasExceededExecutionQuotas(String activityId);

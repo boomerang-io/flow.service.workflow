@@ -67,6 +67,7 @@ import io.boomerang.mongo.entity.TaskExecutionEntity;
 import io.boomerang.mongo.entity.WorkflowEntity;
 import io.boomerang.mongo.model.KeyValuePair;
 import io.boomerang.mongo.model.Dag;
+import io.boomerang.mongo.model.ErrorResponse;
 import io.boomerang.mongo.model.FlowTriggerEnum;
 import io.boomerang.mongo.model.Revision;
 import io.boomerang.mongo.model.TaskStatus;
@@ -889,10 +890,14 @@ public class FlowActivityServiceImpl implements FlowActivityService {
   }
 
   @Override
-  public void cancelWorkflowActivity(String activityId) {
+  public void cancelWorkflowActivity(String activityId, ErrorResponse error) {
     ActivityEntity activity = flowActivityService.findWorkflowActivtyById(activityId);
     activity.setStatus(TaskStatus.cancelled);
 
+    if (error != null) {
+      activity.setError(error);
+    }
+    
     flowActivityService.saveWorkflowActivity(activity);
 
     String workflowId = activity.getWorkflowId();

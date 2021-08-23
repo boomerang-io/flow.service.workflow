@@ -30,6 +30,7 @@ import io.boomerang.mongo.entity.TaskExecutionEntity;
 import io.boomerang.mongo.entity.WorkflowEntity;
 import io.boomerang.mongo.model.KeyValuePair;
 import io.boomerang.mongo.model.Dag;
+import io.boomerang.mongo.model.ErrorResponse;
 import io.boomerang.mongo.model.ManualType;
 import io.boomerang.mongo.model.Revision;
 import io.boomerang.mongo.model.TaskStatus;
@@ -369,8 +370,11 @@ public class TaskServiceImpl implements TaskService {
     
     if (this.flowActivityService.hasExceededExecutionQuotas(workflowActivityId)) {
       LOGGER.error("Workflow has been cancelled due to its max workflow duration has exceeded.");
-      
-      this.flowActivityService.cancelWorkflowActivity(workflowActivityId);
+      ErrorResponse response = new ErrorResponse();
+      response.setMessage("Workflow execution terminated due to exceeding maxinum workflow duration.");
+      response.setCode("001");
+    
+      this.flowActivityService.cancelWorkflowActivity(workflowActivityId, response);
     } else {
       executeNextStep(workflowActivity, tasks, currentTask, finishedAll);
     }
