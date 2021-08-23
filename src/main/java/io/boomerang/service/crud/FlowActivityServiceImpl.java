@@ -998,7 +998,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
       }
     }
 
-    if (maxDuration > totalDuration) {
+    if (maxDuration < totalDuration) {
       return true;
     }
     return false;
