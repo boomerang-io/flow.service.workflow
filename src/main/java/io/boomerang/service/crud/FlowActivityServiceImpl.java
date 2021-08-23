@@ -121,7 +121,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
   private RestTemplate restTemplate;
 
 
-  @Value("${max.workflow.max.duration}")
+  @Value("${max.workflow.duration}")
   private long maxWorkflowDuration;
 
   @Autowired

@@ -957,7 +957,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   private WorkflowQuotas getQuotasForUser(FlowUserEntity user, List<WorkflowEntity> workflows) {
   
-    final String configurationKey = "quotas";
+    final String configurationKey = "users";
     
     int maxUserWorkflowCount = Integer.parseInt(flowSettingsService.getConfiguration(configurationKey, "max.user.workflow.count").getValue());
     int maxExecutionsMonthly = Integer.parseInt(flowSettingsService.getConfiguration(configurationKey, "max.user.workflow.execution.monthly").getValue());
