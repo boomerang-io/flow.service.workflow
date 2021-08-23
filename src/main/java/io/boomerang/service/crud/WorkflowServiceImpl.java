@@ -61,6 +61,7 @@ import io.boomerang.mongo.model.UserType;
 import io.boomerang.mongo.model.WorkflowScope;
 import io.boomerang.mongo.model.WorkflowStatus;
 import io.boomerang.mongo.model.next.DAGTask;
+import io.boomerang.mongo.service.FlowSettingsService;
 import io.boomerang.mongo.service.FlowTaskTemplateService;
 import io.boomerang.mongo.service.FlowWorkflowActivityService;
 import io.boomerang.mongo.service.FlowWorkflowService;
@@ -96,6 +97,9 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   @Autowired
   private TeamService teamService;
+  
+  @Autowired
+  private FlowSettingsService flowSettingsService;
 
   @Value("${max.workflow.count}")
   private Integer maxWorkflowCount;
@@ -952,7 +956,13 @@ public class WorkflowServiceImpl implements WorkflowService {
   }
 
   private WorkflowQuotas getQuotasForUser(FlowUserEntity user, List<WorkflowEntity> workflows) {
-
+  
+    final String configurationKey = "quotas";
+    
+    int maxUserWorkflowCount = Integer.parseInt(flowSettingsService.getConfiguration(configurationKey, "max.user.workflow.count").getValue());
+    int maxExecutionsMonthly = Integer.parseInt(flowSettingsService.getConfiguration(configurationKey, "max.user.workflow.execution.monthly").getValue());
+    int maxConcurrentExecutions = Integer.parseInt(flowSettingsService.getConfiguration(configurationKey, "max.user.workflow.execution.monthly").getValue());
+    
     Quotas quotas = setTeamQuotas(user);
    
     Pageable page = Pageable.unpaged();
@@ -960,11 +970,11 @@ public class WorkflowServiceImpl implements WorkflowService {
     List<ActivityEntity> activitiesMonthly = getMonthlyWorkflowActivities(page, user.getId());
     
     WorkflowQuotas workflowQuotas = new WorkflowQuotas();
-    workflowQuotas.setMaxWorkflowCount(quotas.getMaxWorkflowCount());
-    workflowQuotas.setMaxWorkflowExecutionMonthly(quotas.getMaxWorkflowExecutionMonthly());
+    workflowQuotas.setMaxWorkflowCount(maxUserWorkflowCount);
+    workflowQuotas.setMaxWorkflowExecutionMonthly(maxExecutionsMonthly);
     workflowQuotas.setMaxWorkflowStorage(quotas.getMaxWorkflowStorage());
     workflowQuotas.setMaxWorkflowExecutionTime(quotas.getMaxWorkflowExecutionTime());
-    workflowQuotas.setMaxConcurrentWorkflows(quotas.getMaxConcurrentWorkflows());
+    workflowQuotas.setMaxConcurrentWorkflows(maxConcurrentExecutions);
 
 
     workflowQuotas.setCurrentWorkflowCount(workflows.size());
@@ -1041,7 +1051,6 @@ public class WorkflowServiceImpl implements WorkflowService {
   @Override
   public boolean canExecuteWorkflowForQuotasForUser() {
     
-    System.out.println("can execute workflows");
     if (!enabledQuotaCheck) {
       return true;
     }
@@ -1052,8 +1061,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     if (workflowQuotas.getCurrentConcurrentWorkflows() >= workflowQuotas.getMaxConcurrentWorkflows()
         || workflowQuotas.getCurrentWorkflowExecutionMonthly() >= workflowQuotas
             .getMaxWorkflowExecutionMonthly()) {
-      System.out.println("failed check here");
-      
+    
       return false;
     } else {
       return true;

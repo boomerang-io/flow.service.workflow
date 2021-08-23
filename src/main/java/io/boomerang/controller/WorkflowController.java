@@ -39,7 +39,7 @@ public class WorkflowController {
 
   @Autowired
   private WorkflowVersionService workflowVersionService;
-
+‰
   @DeleteMapping(value = "{id}")
   public void deleteWorkflowWithId(@PathVariable String id) {
     workflowService.deleteWorkflow(id);
