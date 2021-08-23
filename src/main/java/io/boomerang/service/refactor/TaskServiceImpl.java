@@ -365,10 +365,12 @@ public class TaskServiceImpl implements TaskService {
 
     activity.setFlowTaskStatus(request.getStatus());
     
-    if (this.flowActivityService.hasExceededExecutionQuotas(activityId)) {
+    String workflowActivityId = workflowActivity.getId();
+    
+    if (this.flowActivityService.hasExceededExecutionQuotas(workflowActivityId)) {
       LOGGER.error("Workflow has been cancelled due to its max workflow duration has exceeded.");
       
-      this.flowActivityService.cancelWorkflowActivity(activityId);
+      this.flowActivityService.cancelWorkflowActivity(workflowActivityId);
     } else {
       executeNextStep(workflowActivity, tasks, currentTask, finishedAll);
     }
