@@ -984,6 +984,8 @@ public class FlowActivityServiceImpl implements FlowActivityService {
 
   @Override
   public boolean hasExceededExecutionQuotas(String activityId) {
+    
+    
     List<TaskExecutionEntity> activites = taskService.findTaskActiivtyForActivity(activityId);
 
     long totalDuration = 0;
