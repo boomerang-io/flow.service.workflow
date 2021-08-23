@@ -45,6 +45,7 @@ import io.boomerang.mongo.service.FlowWorkflowActivityService;
 import io.boomerang.mongo.service.FlowWorkflowService;
 import io.boomerang.mongo.service.RevisionService;
 import io.boomerang.service.PropertyManager;
+import io.boomerang.service.crud.FlowActivityService;
 import io.boomerang.service.runner.misc.ControllerClient;
 
 @Service
@@ -87,6 +88,9 @@ public class TaskServiceImpl implements TaskService {
 
   @Autowired
   private TaskClient flowClient;
+  
+  @Autowired
+  private FlowActivityService flowActivityService;
 
 
   @Override
@@ -360,7 +364,14 @@ public class TaskServiceImpl implements TaskService {
     updatePendingAprovalStatus(workflowActivity);
 
     activity.setFlowTaskStatus(request.getStatus());
-    executeNextStep(workflowActivity, tasks, currentTask, finishedAll);
+    
+    if (this.flowActivityService.hasExceededExecutionQuotas(activityId)) {
+      LOGGER.error("Workflow has been cancelled due to its max workflow duration has exceeded.");
+      
+      this.flowActivityService.cancelWorkflowActivity(activityId);
+    } else {
+      executeNextStep(workflowActivity, tasks, currentTask, finishedAll);
+    }
     lock.release(keys, "locks", tokenId);
     LOGGER.debug("[{}] Released lock", activityId);
   }

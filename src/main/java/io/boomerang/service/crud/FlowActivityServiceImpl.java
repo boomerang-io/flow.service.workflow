@@ -21,6 +21,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -117,6 +118,10 @@ public class FlowActivityServiceImpl implements FlowActivityService {
   @Autowired
   @Qualifier("internalRestTemplate")
   private RestTemplate restTemplate;
+
+
+  @Value("${max.workflow.max.duration}")
+  private long maxWorkflowDuration;
 
   @Autowired
   private FlowApprovalService approvalService;
@@ -236,9 +241,9 @@ public class FlowActivityServiceImpl implements FlowActivityService {
   public ListActivityResponse getAllActivites(Optional<Date> from, Optional<Date> to, Pageable page,
       Optional<List<String>> workflowIds, Optional<List<String>> teamIds,
       Optional<List<String>> statuses, Optional<List<String>> triggers,
-      Optional<List<String>> scopes, String property, Direction direction) {    
+      Optional<List<String>> scopes, String property, Direction direction) {
     List<String> workflowIdsList = getWorkflowIdsForParams(workflowIds, teamIds, scopes);
-   
+
 
     ListActivityResponse response = new ListActivityResponse();
     Page<ActivityEntity> records = flowActivityService.getAllActivites(from, to, page,
@@ -250,26 +255,26 @@ public class FlowActivityServiceImpl implements FlowActivityService {
       addTeamInformation(teamIds, activitiesFiltered, activity, workFlowId);
     }
 
-    io.boomerang.model.Pageable pageablefinal = createPageable(records, property, direction,
-        activitiesFiltered, activitiesFiltered.size());
+    io.boomerang.model.Pageable pageablefinal =
+        createPageable(records, property, direction, activitiesFiltered, activitiesFiltered.size());
     response.setPageable(pageablefinal);
     response.setRecords(activities);
-       
+
     return response;
   }
 
   private List<String> getWorkflowIdsForParams(Optional<List<String>> workflowIds,
       Optional<List<String>> teamIds, Optional<List<String>> scopes) {
-    
-    
+
+
     final FlowUserEntity user = userIdentityService.getCurrentUser();
     List<String> workflowIdsList = new LinkedList<>();
 
     if (!workflowIds.isPresent()) {
       if (scopes.isPresent() && !scopes.get().isEmpty()) {
-        
+
         List<String> scopeList = scopes.get();
-        if (scopeList.contains("user")) {        
+        if (scopeList.contains("user")) {
           addUserWorkflows(user, workflowIdsList);
         }
         if (scopeList.contains("system") && user.getType() == UserType.admin) {
@@ -279,7 +284,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
           addTeamWorkflows(user, workflowIdsList, teamIds);
         }
       } else {
-        
+
         addUserWorkflows(user, workflowIdsList);
         addTeamWorkflows(user, workflowIdsList, teamIds);
         if (user.getType() == UserType.admin) {
@@ -297,7 +302,8 @@ public class FlowActivityServiceImpl implements FlowActivityService {
       Optional<List<String>> teamIds) {
 
     if (teamIds.isPresent() && !teamIds.get().isEmpty()) {
-      List<WorkflowEntity> allTeamWorkflows = this.workflowService.getWorkflowsForTeams(teamIds.get());
+      List<WorkflowEntity> allTeamWorkflows =
+          this.workflowService.getWorkflowsForTeams(teamIds.get());
       List<String> allTeamWorkflowsIds =
           allTeamWorkflows.stream().map(WorkflowEntity::getId).collect(Collectors.toList());
       workflowIdsList.addAll(allTeamWorkflowsIds);
@@ -383,19 +389,20 @@ public class FlowActivityServiceImpl implements FlowActivityService {
 
   @Override
   public Map<String, Long> getActivitySummary(Pageable pageable, Optional<List<String>> teamIds,
-      List<String> triggers, Optional<List<String>> workflowIds, Optional<List<String>> scopes, Long fromDate, Long toDate) {
-     
+      List<String> triggers, Optional<List<String>> workflowIds, Optional<List<String>> scopes,
+      Long fromDate, Long toDate) {
+
     List<String> workflowIdsList = getWorkflowIdsForParams(workflowIds, teamIds, scopes);
     Optional<Date> to =
         toDate == null ? Optional.empty() : Optional.of(DateUtil.asDate(getDateTime(toDate)));
     Optional<Date> from =
         fromDate == null ? Optional.empty() : Optional.of(DateUtil.asDate(getDateTime(fromDate)));
-        
-        
+
+
     List<ActivityEntity> flowWorkflowActivityEntities =
         flowActivityService.getAllActivites(from, to, pageable, getOptional(workflowIdsList),
             Optional.empty(), getOptional(triggers)).getContent();
-    
+
     Map<String, Long> result = flowWorkflowActivityEntities.stream()
         .collect(groupingBy(v -> getStatusValue(v), Collectors.counting())); // NOSONAR
     result.put("all", Long.valueOf(flowWorkflowActivityEntities.size()));
@@ -968,6 +975,33 @@ public class FlowActivityServiceImpl implements FlowActivityService {
     List<FlowActivity> activityRecords = this.convert(activityPages.getContent());
 
     return activityRecords;
+  }
+
+  @Override
+  public boolean hasExceededExecutionQuotas(String activityId) {
+    List<TaskExecutionEntity> activites = taskService.findTaskActiivtyForActivity(activityId);
+
+    long totalDuration = 0;
+    long maxDuration = TimeUnit.MINUTES.toMillis(this.maxWorkflowDuration);
+
+    for (TaskExecutionEntity task : activites) {
+      if (task.getTaskType() == TaskType.template || task.getTaskType() == TaskType.customtask) {
+
+        if (task.getFlowTaskStatus() == TaskStatus.completed
+            || task.getFlowTaskStatus() == TaskStatus.failure) {
+          totalDuration += task.getDuration();
+        } else if (task.getFlowTaskStatus() == TaskStatus.inProgress) {
+          Date currentTime = new Date();
+          long inProgressTime = currentTime.getTime() - task.getStartTime().getTime();
+          totalDuration += inProgressTime;
+        }
+      }
+    }
+
+    if (maxDuration > totalDuration) {
+      return true;
+    }
+    return false;
   }
 
 }

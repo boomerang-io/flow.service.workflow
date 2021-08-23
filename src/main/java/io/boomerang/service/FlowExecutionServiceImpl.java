@@ -241,8 +241,7 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
       activityEntity.setStatus(TaskStatus.completed);
       activityEntity.setCreationDate(new Date());
       activityService.saveWorkflowActivity(activityEntity);
-      
-      System.out.println("Returning early");
+
       return;
     }
     
@@ -259,7 +258,6 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
     
     Map<String, String> executionProperties = new HashMap<>();
     Map<String, Object> inputs = new HashMap<>();
-    // propertyManager.buildSystemProperties(null, activityId, workflowId, inputs);
     try {
       for (Entry<String, Object> entry : inputs.entrySet()) {
         if (entry.getValue() != null) {

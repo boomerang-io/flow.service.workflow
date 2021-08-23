@@ -49,4 +49,5 @@ public interface FlowActivityService {
   void cancelWorkflowActivity(String activityId);
 
 
+  public boolean hasExceededExecutionQuotas(String activityId);
 }
