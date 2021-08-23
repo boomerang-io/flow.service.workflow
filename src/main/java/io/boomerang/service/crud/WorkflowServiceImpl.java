@@ -374,7 +374,7 @@ public class WorkflowServiceImpl implements WorkflowService {
       List<WorkflowProperty> properties) {
     final WorkflowEntity entity = workFlowRepository.getWorkflow(workflowId);
     
-    if (entity.getScope() == WorkflowScope.user) {
+    if (entity.getScope() == WorkflowScope.team) {
       FlowUserEntity user = userIdentityService.getCurrentUser();
 
       FlowTeam team =
