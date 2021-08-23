@@ -372,38 +372,44 @@ public class WorkflowServiceImpl implements WorkflowService {
   @Override
   public WorkflowSummary updateWorkflowProperties(String workflowId,
       List<WorkflowProperty> properties) {
+    final WorkflowEntity entity = workFlowRepository.getWorkflow(workflowId);
+    
+    if (entity.getScope() == WorkflowScope.user) {
+      FlowUserEntity user = userIdentityService.getCurrentUser();
 
-    FlowUserEntity user = userIdentityService.getCurrentUser();
+      FlowTeam team =
+          teamService.getTeamByIdDetailed(workFlowRepository.getWorkflow(workflowId).getFlowTeamId());
 
-    FlowTeam team =
-        teamService.getTeamByIdDetailed(workFlowRepository.getWorkflow(workflowId).getFlowTeamId());
-
-    List<String> userIds = new ArrayList<>();
-    if (team.getUsers() != null) {
-      for (FlowUserEntity teamUser : team.getUsers()) {
-        userIds.add(teamUser.getId());
+      List<String> userIds = new ArrayList<>();
+      if (team.getUsers() != null) {
+        for (FlowUserEntity teamUser : team.getUsers()) {
+          userIds.add(teamUser.getId());
+        }
       }
-    }
 
-    List<String> userTeamIds = new ArrayList<>();
-    if (user.getTeams() != null) {
-      for (Team userTeam : user.getTeams()) {
-        userTeamIds.add(userTeam.getId());
+      List<String> userTeamIds = new ArrayList<>();
+      if (user.getTeams() != null) {
+        for (Team userTeam : user.getTeams()) {
+          userTeamIds.add(userTeam.getId());
+        }
       }
-    }
 
-    if (user.getType() == UserType.admin || user.getType() == UserType.operator
-        || userIds.contains(user.getId()) || userTeamIds.contains(team.getHigherLevelGroupId())) {
-      final WorkflowEntity entity = workFlowRepository.getWorkflow(workflowId);
-      entity.setProperties(properties);
+      if (user.getType() == UserType.admin || user.getType() == UserType.operator
+          || userIds.contains(user.getId()) || userTeamIds.contains(team.getHigherLevelGroupId())) {
+      
+        entity.setProperties(properties);
 
-      workFlowRepository.saveWorkflow(entity);
+        workFlowRepository.saveWorkflow(entity);
 
-      return new WorkflowSummary(entity);
+        return new WorkflowSummary(entity);
+      } else {
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+      }
     } else {
-      throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+      entity.setProperties(properties);
+      workFlowRepository.saveWorkflow(entity);
+      return new WorkflowSummary(entity);
     }
-
   }
 
   @Override
@@ -1034,6 +1040,8 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   @Override
   public boolean canExecuteWorkflowForQuotasForUser() {
+    
+    System.out.println("can execute workflows");
     if (!enabledQuotaCheck) {
       return true;
     }
@@ -1044,6 +1052,8 @@ public class WorkflowServiceImpl implements WorkflowService {
     if (workflowQuotas.getCurrentConcurrentWorkflows() >= workflowQuotas.getMaxConcurrentWorkflows()
         || workflowQuotas.getCurrentWorkflowExecutionMonthly() >= workflowQuotas
             .getMaxWorkflowExecutionMonthly()) {
+      System.out.println("failed check here");
+      
       return false;
     } else {
       return true;
