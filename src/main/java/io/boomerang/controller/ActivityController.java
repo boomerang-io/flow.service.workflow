@@ -59,18 +59,22 @@ public class ActivityController {
 
   @Autowired
   private RevisionService revisionService;
-  
+
   private static final String CREATIONDATESORT = "creationDate";
+
 
   @GetMapping(value = "/activity")
   public ListActivityResponse getFlowActivities(
       @RequestParam(defaultValue = "ASC") Optional<Direction> order,
-      @RequestParam Optional<List<String>> scopes,
-      @RequestParam Optional<String> sort, @RequestParam Optional<List<String>> workflowIds,
-      @RequestParam Optional<List<String>> teamIds, @RequestParam(defaultValue = "0") int page,
-      @RequestParam(defaultValue = "2147483647") int size, @RequestParam Optional<Long> fromDate,
-      @RequestParam Optional<Long> toDate, @RequestParam Optional<List<String>> statuses,
-
+      @RequestParam Optional<List<String>> scopes, 
+      @RequestParam Optional<String> sort,
+      @RequestParam Optional<List<String>> workflowIds,
+      @RequestParam Optional<List<String>> teamIds, 
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "2147483647") int size, 
+      @RequestParam Optional<Long> fromDate,
+      @RequestParam Optional<Long> toDate, 
+      @RequestParam Optional<List<String>> statuses,
       @RequestParam Optional<List<String>> triggers) {
 
     Optional<Date> from = Optional.empty();
@@ -103,18 +107,18 @@ public class ActivityController {
     if (activity == null) {
       return null;
     }
-    
+
     flowActivityService.cancelWorkflowActivity(activity.getId(), null);
-    
+
     activity = flowActivityService.findWorkflowActivity(activityId);
     final List<TaskExecutionResponse> steps = flowActivityService.getTaskExecutions(activityId);
     final FlowActivity response = new FlowActivity(activity);
     response.setSteps(steps);
-    
+
     return new ResponseEntity<>(response, HttpStatus.OK);
   }
 
-    
+
   @GetMapping(value = "/activity/{activityId}")
   public ResponseEntity<FlowActivity> getFlowActivity(@PathVariable String activityId) {
     final ActivityEntity activity = flowActivityService.findWorkflowActivity(activityId);
@@ -133,13 +137,14 @@ public class ActivityController {
     response.setScope(scope);
 
     if (activity.getWorkflowRevisionid() != null) {
-      Optional<RevisionEntity> revisionOpt = this.revisionService.getRevision(activity.getWorkflowRevisionid());
+      Optional<RevisionEntity> revisionOpt =
+          this.revisionService.getRevision(activity.getWorkflowRevisionid());
       if (revisionOpt.isPresent()) {
         RevisionEntity revision = revisionOpt.get();
         response.setWorkflowRevisionVersion(revision.getVersion());
       }
     }
-    
+
     if ((workflowService.getWorkflow(workFlowId) != null)) {
       teamId = workflowService.getWorkflow(workFlowId).getFlowTeamId();
     } else {
@@ -149,13 +154,14 @@ public class ActivityController {
     if (teamId != null) {
 
       final FlowUserEntity user = userIdentityService.getCurrentUser();
-      
+
       if (user != null) {
-        List<String> teamIdList = user.getType().equals(UserType.admin) || user.getType().equals(UserType.operator)
-            ? teamService.getAllTeams().stream().map(TeamWorkflowSummary::getId)
-                .collect(Collectors.toList())
-            : teamService.getUserTeams(user).stream().map(TeamWorkflowSummary::getId)
-                .collect(Collectors.toList());
+        List<String> teamIdList =
+            user.getType().equals(UserType.admin) || user.getType().equals(UserType.operator)
+                ? teamService.getAllTeams().stream().map(TeamWorkflowSummary::getId)
+                    .collect(Collectors.toList())
+                : teamService.getUserTeams(user).stream().map(TeamWorkflowSummary::getId)
+                    .collect(Collectors.toList());
         if (!teamIdList.contains(teamId)) {
           return new ResponseEntity<>(new FlowActivity(), HttpStatus.FORBIDDEN);
         }
@@ -180,15 +186,13 @@ public class ActivityController {
       @RequestParam(defaultValue = "ASC") Direction order,
       @RequestParam(defaultValue = "0") int page,
       @RequestParam(defaultValue = "2147483647") int size,
-      @RequestParam(required = false) String sort,
-      @RequestParam Optional<List<String>> teamIds,
+      @RequestParam(required = false) String sort, @RequestParam Optional<List<String>> teamIds,
       @RequestParam(required = false) List<String> triggers,
-      @RequestParam Optional<List<String>> scopes,
-      @RequestParam Optional<List<String>> workflowIds,
+      @RequestParam Optional<List<String>> scopes, @RequestParam Optional<List<String>> workflowIds,
       @RequestParam(required = false) Long fromDate, @RequestParam(required = false) Long toDate) {
 
-    return flowActivityService.getActivitySummary(getPageable(page, size, sort), teamIds, triggers, workflowIds, scopes,
-        fromDate, toDate);
+    return flowActivityService.getActivitySummary(getPageable(page, size, sort), teamIds, triggers,
+        workflowIds, scopes, fromDate, toDate);
   }
 
   @GetMapping(value = "/insights")
@@ -240,5 +244,7 @@ public class ActivityController {
     }
     return PageRequest.of(page, size, pagingSort);
   }
+
+
 
 }
