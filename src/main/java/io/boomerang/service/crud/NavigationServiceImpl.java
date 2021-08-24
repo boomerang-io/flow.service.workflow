@@ -134,7 +134,7 @@ public class NavigationServiceImpl implements NavigationService {
         
 
         Navigation quotas = new Navigation();
-        quotas.setName("Quotas");
+        quotas.setName("Team Quotas");
         quotas.setLink(flowAppsUrl + "/admin/quotas");
         quotas.setType(NavigationType.link);
         admin.getChildLinks().add(quotas);
