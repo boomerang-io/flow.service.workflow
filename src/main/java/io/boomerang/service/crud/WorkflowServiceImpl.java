@@ -961,7 +961,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     
     int maxUserWorkflowCount = Integer.parseInt(flowSettingsService.getConfiguration(configurationKey, "max.user.workflow.count").getValue());
     int maxExecutionsMonthly = Integer.parseInt(flowSettingsService.getConfiguration(configurationKey, "max.user.workflow.execution.monthly").getValue());
-    int maxConcurrentExecutions = Integer.parseInt(flowSettingsService.getConfiguration(configurationKey, "max.user.workflow.execution.monthly").getValue());
+    int maxConcurrentExecutions = Integer.parseInt(flowSettingsService.getConfiguration(configurationKey, "max.user.concurrent.workflows").getValue());
     
     Quotas quotas = setTeamQuotas(user);
    
