@@ -64,9 +64,11 @@ public class FlowAuthorizationFilter extends BasicAuthenticationFilter {
   protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res,
       FilterChain chain) throws IOException, ServletException {
 
+    LOGGER.info("Entering flow authorization filter");
     try {
       Authentication authentication = null;
       if (req.getHeader(AUTHORIZATION_HEADER) != null) {
+        LOGGER.info("Detected Authorization header");
         authentication = getUserAuthentication(req);
       } else if (req.getHeader(X_FORWARDED_EMAIL) != null) { 
         LOGGER.info("Detected Github Authorization");
@@ -139,6 +141,10 @@ public class FlowAuthorizationFilter extends BasicAuthenticationFilter {
   private UsernamePasswordAuthenticationToken getUserAuthentication(HttpServletRequest request) // NOSONAR
   {
     final String token = request.getHeader(AUTHORIZATION_HEADER);
+    
+    LOGGER.info("Token Value");
+    LOGGER.info(token);
+    
     if (token.startsWith("Bearer ")) {
       final String jws = token.replace("Bearer ", "");
       Claims claims;
@@ -185,8 +191,15 @@ public class FlowAuthorizationFilter extends BasicAuthenticationFilter {
       }
       return null;
     } else if (token.startsWith("Basic ")) {
+
+      
+      
       String base64Credentials =
           request.getHeader(AUTHORIZATION_HEADER).substring("Basic".length()).trim();
+      
+      LOGGER.info("Base64 Details");
+      LOGGER.info(base64Credentials);
+      
       byte[] credDecoded = Base64.getDecoder().decode(base64Credentials);
       String credentials = new String(credDecoded, StandardCharsets.UTF_8);
 
