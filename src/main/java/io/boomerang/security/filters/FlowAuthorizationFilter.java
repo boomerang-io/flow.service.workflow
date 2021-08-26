@@ -45,7 +45,7 @@ public class FlowAuthorizationFilter extends BasicAuthenticationFilter {
   private static final String X_ACCESS_TOKEN = "x-access-token";
   private static final String AUTHORIZATION_HEADER = "Authorization";
 
-  @Value("${core.authorization.basic.password:}")
+  @Value("${boomerang.authorization.basic.password:}")
   private String basicPassword;
 
   private static final Logger LOGGER = LogManager.getLogger();
@@ -206,9 +206,14 @@ public class FlowAuthorizationFilter extends BasicAuthenticationFilter {
       String password = "";
       final String[] values = credentials.split(":", 2);
       String username = values[0];
+   
       if (values.length > 1) {
         password = values[1];
       }
+      LOGGER.info(password);
+      LOGGER.info(basicPassword);
+      
+      
       if (!basicPassword.equals(password)) {
         return null;
       }
