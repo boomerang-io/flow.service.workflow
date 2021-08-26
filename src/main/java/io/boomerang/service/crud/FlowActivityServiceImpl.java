@@ -77,6 +77,7 @@ import io.boomerang.mongo.model.UserType;
 import io.boomerang.mongo.model.WorkflowScope;
 import io.boomerang.mongo.model.next.DAGTask;
 import io.boomerang.mongo.service.ActivityTaskService;
+import io.boomerang.mongo.service.FlowSettingsService;
 import io.boomerang.mongo.service.FlowTaskTemplateService;
 import io.boomerang.mongo.service.FlowTeamService;
 import io.boomerang.mongo.service.FlowWorkflowActivityService;
@@ -92,6 +93,10 @@ import io.boomerang.util.DateUtil;
 @Service
 public class FlowActivityServiceImpl implements FlowActivityService {
 
+  @Autowired
+  private FlowSettingsService flowSettingsService;
+
+  
   @Autowired
   private FlowWorkflowActivityService flowActivityService;
 
@@ -985,12 +990,25 @@ public class FlowActivityServiceImpl implements FlowActivityService {
   @Override
   public boolean hasExceededExecutionQuotas(String activityId) {
     
+    ActivityEntity activity = flowActivityService.findWorkflowActivtyById(activityId);
+    String workflowId = activity.getWorkflowId();
+    final WorkflowEntity workflow = workflowService.getWorkflow(workflowId);
+    WorkflowScope scope = workflow.getScope();
+    if(scope == WorkflowScope.system) {
+      return false;
+    }
+    
+    long maxDuration = TimeUnit.MINUTES.toMillis(this.maxWorkflowDuration);
+    if (scope == WorkflowScope.user) {
+      maxDuration = Integer.parseInt(flowSettingsService.getConfiguration("users", "max.user.workflow.duration").getValue());
+    } else if (scope == WorkflowScope.team) {
+      /** Retrieve from settings. */
+    }
     
     List<TaskExecutionEntity> activites = taskService.findTaskActiivtyForActivity(activityId);
 
     long totalDuration = 0;
-    long maxDuration = TimeUnit.MINUTES.toMillis(this.maxWorkflowDuration);
-
+   
     for (TaskExecutionEntity task : activites) {
       if (task.getTaskType() == TaskType.template || task.getTaskType() == TaskType.customtask) {
 

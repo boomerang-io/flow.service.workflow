@@ -962,7 +962,9 @@ public class WorkflowServiceImpl implements WorkflowService {
     int maxUserWorkflowCount = Integer.parseInt(flowSettingsService.getConfiguration(configurationKey, "max.user.workflow.count").getValue());
     int maxExecutionsMonthly = Integer.parseInt(flowSettingsService.getConfiguration(configurationKey, "max.user.workflow.execution.monthly").getValue());
     int maxConcurrentExecutions = Integer.parseInt(flowSettingsService.getConfiguration(configurationKey, "max.user.concurrent.workflows").getValue());
-    
+    int maxWorkflowDuration = Integer.parseInt(flowSettingsService.getConfiguration(configurationKey, "max.user.workflow.duration").getValue());
+        
+   
     Quotas quotas = setTeamQuotas(user);
    
     Pageable page = Pageable.unpaged();
@@ -973,7 +975,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     workflowQuotas.setMaxWorkflowCount(maxUserWorkflowCount);
     workflowQuotas.setMaxWorkflowExecutionMonthly(maxExecutionsMonthly);
     workflowQuotas.setMaxWorkflowStorage(quotas.getMaxWorkflowStorage());
-    workflowQuotas.setMaxWorkflowExecutionTime(quotas.getMaxWorkflowExecutionTime());
+    workflowQuotas.setMaxWorkflowExecutionTime(maxWorkflowDuration);
     workflowQuotas.setMaxConcurrentWorkflows(maxConcurrentExecutions);
 
 
