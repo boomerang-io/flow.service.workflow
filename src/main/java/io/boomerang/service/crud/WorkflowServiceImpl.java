@@ -99,7 +99,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   @Autowired
   private TeamService teamService;
-  
+
   @Autowired
   private FlowSettingsService flowSettingsService;
 
@@ -112,15 +112,6 @@ public class WorkflowServiceImpl implements WorkflowService {
   @Value("${max.concurrent.workflows}")
   private Integer maxConcurrentWorkflows;
 
-  @Value("${flow.feature.workflow.quotas}")
-  private boolean enabledQuotaCheck;
-
-  @Value("${flow.feature.team.parameters}")
-  private boolean flowFeatureTeamParameters;
-
-  @Value("${flow.feature.global.parameters}")
-  private boolean flowFeatureGlobalParameters;
-  
   @Value("${max.workflow.storage}")
   private Integer maxWorkflowStorage;
 
@@ -188,12 +179,12 @@ public class WorkflowServiceImpl implements WorkflowService {
 
     boolean isNewWorkflow = flowWorkflowEntity.getId() == null;
     setupTriggerDefaults(flowWorkflowEntity);
-    
+
     if (flowWorkflowEntity.getScope() == WorkflowScope.user) {
       FlowUserEntity user = userIdentityService.getCurrentUser();
       flowWorkflowEntity.setOwnerUserId(user.getId());
     }
-    
+
     WorkflowEntity entity = workFlowRepository.saveWorkflow(flowWorkflowEntity);
     if (isNewWorkflow) {
       this.generateTriggerToken(entity.getId(), "default");
@@ -379,12 +370,12 @@ public class WorkflowServiceImpl implements WorkflowService {
   public WorkflowSummary updateWorkflowProperties(String workflowId,
       List<WorkflowProperty> properties) {
     final WorkflowEntity entity = workFlowRepository.getWorkflow(workflowId);
-    
+
     if (entity.getScope() == WorkflowScope.team) {
       FlowUserEntity user = userIdentityService.getCurrentUser();
 
-      FlowTeam team =
-          teamService.getTeamByIdDetailed(workFlowRepository.getWorkflow(workflowId).getFlowTeamId());
+      FlowTeam team = teamService
+          .getTeamByIdDetailed(workFlowRepository.getWorkflow(workflowId).getFlowTeamId());
 
       List<String> userIds = new ArrayList<>();
       if (team.getUsers() != null) {
@@ -402,7 +393,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
       if (user.getType() == UserType.admin || user.getType() == UserType.operator
           || userIds.contains(user.getId()) || userTeamIds.contains(team.getHigherLevelGroupId())) {
-      
+
         entity.setProperties(properties);
 
         workFlowRepository.saveWorkflow(entity);
@@ -635,7 +626,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   @Override
   public boolean canExecuteWorkflowForQuotas(String teamId) {
-    if (!enabledQuotaCheck) {
+    if (!flowSettingsService.getConfiguration("features", "workflowQuotas").getBooleanValue()) {
       return true;
     }
 
@@ -661,7 +652,7 @@ public class WorkflowServiceImpl implements WorkflowService {
         String workflowName = workflow.getName();
         boolean webhookEnabled = false;
         String flowTeamId = workflow.getFlowTeamId();
-  
+
         if (workflow.getTriggers() != null) {
           Triggers triggers = workflow.getTriggers();
           TriggerEvent webhook = triggers.getWebhook();
@@ -814,7 +805,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     List<String> parameters = new ArrayList<>();
     WorkflowEntity workflow = workFlowRepository.getWorkflow(workFlowId);
 
-    if (flowFeatureGlobalParameters) {
+    if (flowSettingsService.getConfiguration("features", "globalParameters").getBooleanValue()) {
       Map<String, String> globalProperties = new HashMap<>();
       propertyManager.buildGlobalProperties(globalProperties);
 
@@ -824,7 +815,7 @@ public class WorkflowServiceImpl implements WorkflowService {
       }
     }
 
-    if (flowFeatureTeamParameters && workflow.getScope() != null
+    if (flowSettingsService.getConfiguration("features", "teamParameters").getBooleanValue() && workflow.getScope() != null
         && WorkflowScope.team.equals(workflow.getScope())) {
       Map<String, String> teamProperties = new HashMap<>();
       propertyManager.buildTeamProperties(teamProperties, workflow.getId());
@@ -936,7 +927,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     }
 
     final List<WorkflowEntity> workflows = workFlowRepository.getUserWorkflows(user.getId());
-    
+
     final List<WorkflowSummary> newList = new LinkedList<>();
     for (final WorkflowEntity entity : workflows) {
       setupTriggerDefaults(entity);
@@ -950,29 +941,33 @@ public class WorkflowServiceImpl implements WorkflowService {
     teamService.updateSummaryWithUpgradeFlags(newList);
     UserWorkflowSummary summary = new UserWorkflowSummary();
     summary.setWorkflows(newList);
-    
+
     WorkflowQuotas quotas = getQuotasForUser(user, workflows);
     summary.setUserQuotas(quotas);
-    
+
     return summary;
   }
 
   private WorkflowQuotas getQuotasForUser(FlowUserEntity user, List<WorkflowEntity> workflows) {
-  
+
     final String configurationKey = "users";
-    
-    int maxUserWorkflowCount = Integer.parseInt(flowSettingsService.getConfiguration(configurationKey, "max.user.workflow.count").getValue());
-    int maxExecutionsMonthly = Integer.parseInt(flowSettingsService.getConfiguration(configurationKey, "max.user.workflow.execution.monthly").getValue());
-    int maxConcurrentExecutions = Integer.parseInt(flowSettingsService.getConfiguration(configurationKey, "max.user.concurrent.workflows").getValue());
-    int maxWorkflowDuration = Integer.parseInt(flowSettingsService.getConfiguration(configurationKey, "max.user.workflow.duration").getValue());
-        
-   
+
+    int maxUserWorkflowCount = Integer.parseInt(flowSettingsService
+        .getConfiguration(configurationKey, "max.user.workflow.count").getValue());
+    int maxExecutionsMonthly = Integer.parseInt(flowSettingsService
+        .getConfiguration(configurationKey, "max.user.workflow.execution.monthly").getValue());
+    int maxConcurrentExecutions = Integer.parseInt(flowSettingsService
+        .getConfiguration(configurationKey, "max.user.concurrent.workflows").getValue());
+    int maxWorkflowDuration = Integer.parseInt(flowSettingsService
+        .getConfiguration(configurationKey, "max.user.workflow.duration").getValue());
+
+
     Quotas quotas = setTeamQuotas(user);
-   
+
     Pageable page = Pageable.unpaged();
     List<ActivityEntity> concurrentActivities = getConcurrentWorkflowActivities(workflows);
     List<ActivityEntity> activitiesMonthly = getMonthlyWorkflowActivities(page, user.getId());
-    
+
     WorkflowQuotas workflowQuotas = new WorkflowQuotas();
     workflowQuotas.setMaxWorkflowCount(maxUserWorkflowCount);
     workflowQuotas.setMaxWorkflowExecutionMonthly(maxExecutionsMonthly);
@@ -984,7 +979,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     workflowQuotas.setCurrentWorkflowCount(workflows.size());
     workflowQuotas.setCurrentConcurrentWorkflows(concurrentActivities.size());
     workflowQuotas.setCurrentWorkflowExecutionMonthly(activitiesMonthly.size());
-    
+
     setWorkflowResetDate(workflowQuotas);
     return workflowQuotas;
   }
@@ -999,7 +994,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     nextMonth.set(Calendar.MILLISECOND, 0);
     workflowQuotas.setMonthlyResetDate(nextMonth.getTime());
   }
-  
+
   private Quotas setTeamQuotas(FlowUserEntity team) {
     if (team.getQuotas() == null) {
       team.setQuotas(new Quotas());
@@ -1034,7 +1029,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     }
     return quotas;
   }
-  
+
   private List<ActivityEntity> getConcurrentWorkflowActivities(List<WorkflowEntity> workflows) {
     List<String> workflowIds = new ArrayList<>();
     for (WorkflowEntity workflow : workflows) {
@@ -1043,7 +1038,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     return flowWorkflowActivityService.findbyWorkflowIdsAndStatus(workflowIds,
         TaskStatus.inProgress);
   }
-  
+
   private List<ActivityEntity> getMonthlyWorkflowActivities(Pageable page, String userId) {
     Calendar c = Calendar.getInstance();
     c.set(Calendar.DAY_OF_MONTH, 1);
@@ -1054,18 +1049,18 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   @Override
   public boolean canExecuteWorkflowForQuotasForUser() {
-    
-    if (!enabledQuotaCheck) {
+
+    if (!flowSettingsService.getConfiguration("features", "workflowQuotas").getBooleanValue()) {
       return true;
     }
 
-    UserWorkflowSummary summary =  getUserWorkflows();
-   
+    UserWorkflowSummary summary = getUserWorkflows();
+
     WorkflowQuotas workflowQuotas = summary.getUserQuotas();
     if (workflowQuotas.getCurrentConcurrentWorkflows() >= workflowQuotas.getMaxConcurrentWorkflows()
         || workflowQuotas.getCurrentWorkflowExecutionMonthly() >= workflowQuotas
             .getMaxWorkflowExecutionMonthly()) {
-    
+
       return false;
     } else {
       return true;

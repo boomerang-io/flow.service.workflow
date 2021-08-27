@@ -41,9 +41,13 @@ import io.boomerang.mongo.service.RevisionService;
 import io.boomerang.service.crud.FlowActivityService;
 import io.boomerang.service.crud.WorkflowService;
 import io.boomerang.service.refactor.ControllerRequestProperties;
+import io.boomerang.mongo.service.FlowSettingsService;
 
 @Service
 public class PropertyManagerImpl implements PropertyManager {
+
+  @Autowired
+  private FlowSettingsService flowSettingsService;
 
   @Autowired
   private RevisionService revisionService;
@@ -65,9 +69,6 @@ public class PropertyManagerImpl implements PropertyManager {
 
   @Autowired
   private FlowTaskTemplateService flowTaskTemplateService;
-
-  @Value("${flow.feature.team.parameters}")
-  private boolean enabledTeamProperites;
 
   @Value("${flow.services.listener.webhook.url}")
   private String webhookUrl;
@@ -97,7 +98,7 @@ public class PropertyManagerImpl implements PropertyManager {
     buildSystemProperties(task, activityId, workflowId, systemProperties);
     buildReservedPropertyList(reservedProperties, workflowId);
 
-    if (enabledTeamProperites) {
+    if (flowSettingsService.getConfiguration("features", "teamParameters").getBooleanValue()) {
       buildTeamProperties(teamProperties, workflowId);
     }
     buildWorkflowProperties(workflowProperties, activityId, workflowId);
@@ -106,7 +107,7 @@ public class PropertyManagerImpl implements PropertyManager {
       buildTaskInputProperties(applicationProperties, task, activityId);
     }
 
-  
+
     return applicationProperties;
   }
 
@@ -299,10 +300,10 @@ public class PropertyManagerImpl implements PropertyManager {
   @Override
   public String replaceValueWithProperty(String value, String activityId,
       ControllerRequestProperties properties) {
-  
+
     String replacementString = value;
     replacementString = replaceProperties(replacementString, activityId, properties);
-    
+
     return replacementString;
   }
 
@@ -329,10 +330,10 @@ public class PropertyManagerImpl implements PropertyManager {
 
         String params = components[0];
         if ("params".equals(params)) {
-        
+
           String propertyName = components[1];
-          
-       
+
+
           if (executionProperties.get(propertyName) != null) {
             replaceValue = executionProperties.get(propertyName);
           } else {
@@ -351,9 +352,9 @@ public class PropertyManagerImpl implements PropertyManager {
         String taskName = components[1];
         String results = components[2];
         String outputProperty = components[3];
-        
+
         if (("task".equals(task) || "tasks".equals(task)) && "results".equals(results)) {
-      
+
           TaskExecutionEntity taskExecution = getTaskExecutionEntity(activityId, taskName);
           if (taskExecution != null && taskExecution.getOutputs() != null
               && taskExecution.getOutputs().get(outputProperty) != null) {
@@ -373,8 +374,7 @@ public class PropertyManagerImpl implements PropertyManager {
           } else {
             replaceValue = "";
           }
-        }
-        else if ("params".equals(params) && reservedList.contains(scope)) {
+        } else if ("params".equals(params) && reservedList.contains(scope)) {
           if (reservedList.contains(scope)) {
             String key = scope + "/" + name;
 
@@ -444,7 +444,7 @@ public class PropertyManagerImpl implements PropertyManager {
     return updatedString;
   }
 
- 
+
 
   private TaskExecutionEntity getTaskExecutionEntity(String activityId, String taskName) {
 
