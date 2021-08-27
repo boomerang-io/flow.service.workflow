@@ -35,6 +35,7 @@ import io.boomerang.error.BoomerangException;
 import io.boomerang.model.FlowTeam;
 import io.boomerang.model.FlowWorkflowRevision;
 import io.boomerang.model.GenerateTokenResponse;
+import io.boomerang.model.TemplateWorkflowSummary;
 import io.boomerang.model.UserWorkflowSummary;
 import io.boomerang.model.WorkflowExport;
 import io.boomerang.model.WorkflowQuotas;
@@ -42,6 +43,7 @@ import io.boomerang.model.WorkflowShortSummary;
 import io.boomerang.model.WorkflowSummary;
 import io.boomerang.model.WorkflowToken;
 import io.boomerang.model.controller.TaskResult;
+import io.boomerang.model.projectstormv5.WorkflowRevision;
 import io.boomerang.mongo.entity.ActivityEntity;
 import io.boomerang.mongo.entity.FlowTaskTemplateEntity;
 import io.boomerang.mongo.entity.FlowUserEntity;
@@ -69,10 +71,10 @@ import io.boomerang.mongo.service.RevisionService;
 import io.boomerang.quartz.ScheduledTasks;
 import io.boomerang.service.PropertyManager;
 import io.boomerang.service.UserIdentityService;
+import io.boomerang.util.ModelConverterV5;
 
 @Service
 public class WorkflowServiceImpl implements WorkflowService {
-
 
   @Autowired
   private FlowWorkflowActivityService flowWorkflowActivityService;
@@ -1068,6 +1070,26 @@ public class WorkflowServiceImpl implements WorkflowService {
     } else {
       return true;
     }
+  }
+
+  @Override
+  public List<TemplateWorkflowSummary> getTemplateWorkflows() {
+    List<WorkflowEntity> workflows = this.workFlowRepository.getTemplateWorkflows();
+    List<TemplateWorkflowSummary> summaryList = new LinkedList<>();
+    
+    for (WorkflowEntity workflow : workflows) {
+      TemplateWorkflowSummary summary = new TemplateWorkflowSummary();
+      summary.setId(workflow.getId());
+      summary.setDescription(workflow.getDescription());
+      summary.setIcon(workflow.getIcon());
+      summary.setParameters(workflow.getProperties());
+      
+      RevisionEntity revision = this.workflowVersionService.getLatestWorkflowVersion(workflow.getId());
+      WorkflowRevision workflowRevision = ModelConverterV5.convertToRestModel(revision);
+      summary.setDag(workflowRevision.getDag()); 
+      summaryList.add(summary);
+    }
+    return summaryList;
   }
 
 }

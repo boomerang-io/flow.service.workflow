@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import io.boomerang.model.FlowWorkflowRevision;
 import io.boomerang.model.GenerateTokenResponse;
+import io.boomerang.model.TemplateWorkflowSummary;
 import io.boomerang.model.UserWorkflowSummary;
 import io.boomerang.model.WorkflowExport;
 import io.boomerang.model.WorkflowShortSummary;
@@ -58,4 +59,6 @@ public interface WorkflowService {
   WorkflowSummary duplicateWorkflow(String id);
 
   boolean canExecuteWorkflowForQuotasForUser();
+
+  List<TemplateWorkflowSummary> getTemplateWorkflows();
 }

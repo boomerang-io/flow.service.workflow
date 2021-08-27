@@ -78,4 +78,9 @@ public class FlowWorkflowServiceImpl implements FlowWorkflowService {
   public List<WorkflowEntity> getTeamWorkflows() {
     return workFlowRepository.findByScope(WorkflowScope.team);
   }
+
+  @Override
+  public List<WorkflowEntity> getTemplateWorkflows() {
+    return workFlowRepository.findByScope(WorkflowScope.template);
+  }
 }
