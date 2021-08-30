@@ -1081,7 +1081,7 @@ public class WorkflowServiceImpl implements WorkflowService {
       
       RevisionEntity revision = this.workflowVersionService.getLatestWorkflowVersion(workflow.getId());
       WorkflowRevision workflowRevision = ModelConverterV5.convertToRestModel(revision);
-      summary.setDag(workflowRevision.getDag()); 
+      summary.setRevision(workflowRevision);
       summaryList.add(summary);
     }
     return summaryList;
