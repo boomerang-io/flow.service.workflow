@@ -1078,6 +1078,8 @@ public class WorkflowServiceImpl implements WorkflowService {
       summary.setDescription(workflow.getDescription());
       summary.setIcon(workflow.getIcon());
       summary.setParameters(workflow.getProperties());
+      summary.setName(workflow.getName());
+      summary.setSummary(workflow.getShortDescription());
       
       RevisionEntity revision = this.workflowVersionService.getLatestWorkflowVersion(workflow.getId());
       WorkflowRevision workflowRevision = ModelConverterV5.convertToRestModel(revision);
