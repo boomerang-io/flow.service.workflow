@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -21,13 +20,11 @@ import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.Option;
 import com.jayway.jsonpath.spi.json.JacksonJsonNodeJsonProvider;
 import com.jayway.jsonpath.spi.mapper.JacksonMappingProvider;
-
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import io.boomerang.model.FlowActivity;
 import io.boomerang.model.FlowExecutionRequest;
 import io.boomerang.model.eventing.EventResponse;
@@ -90,18 +87,18 @@ public class EventProcessorImpl implements EventProcessor {
 
   @Override
   public void processNATSMessage(String message) {
-
     logger.info("processNATSMessage() - Message: " + message);
 
     Map<String, Object> headers = Map.of("Content-Type", "application/cloudevents+json");
     String requestStatus = getStatusFromPayload(message);
 
-    CloudEvent<AttributesImpl, JsonNode> event = Unmarshallers.structured(JsonNode.class).withHeaders(() -> headers)
-        .withPayload(() -> message).unmarshal();
+    CloudEvent<AttributesImpl, JsonNode> event = Unmarshallers.structured(JsonNode.class)
+        .withHeaders(() -> headers).withPayload(() -> message).unmarshal();
 
     createResponseEvent(event.getAttributes().getId(), event.getAttributes().getType(),
         event.getAttributes().getSource(), event.getAttributes().getSubject().orElse(""),
-        event.getAttributes().getTime().orElse(ZonedDateTime.now()), processEvent(event, requestStatus));
+        event.getAttributes().getTime().orElse(ZonedDateTime.now()),
+        processEvent(event, requestStatus));
   }
 
   private String getStatusFromPayload(String message) {
@@ -144,9 +141,9 @@ public class EventProcessorImpl implements EventProcessor {
 
   private EventResponse processEvent(CloudEvent<AttributesImpl, JsonNode> event, String status) {
     logger.info("processCloudEvent() - Extensions: {}", event.toString());
-    logger.info("processCloudEvent() - Attributes: {}" , event.getAttributes().toString());
+    logger.info("processCloudEvent() - Attributes: {}", event.getAttributes().toString());
     JsonNode eventData = event.getData().get();
-    logger.info("processCloudEvent() - Data: {}" , eventData.toPrettyString());
+    logger.info("processCloudEvent() - Data: {}", eventData.toPrettyString());
 
     EventResponse response = new EventResponse();
 
@@ -193,15 +190,13 @@ public class EventProcessorImpl implements EventProcessor {
       logger.info("processCloudEvent() - Trigger(" + trigger + ") is enabled");
 
       FlowExecutionRequest executionRequest = new FlowExecutionRequest();
-      
-      
+
       List<KeyValuePair> cloudEventLabels = new LinkedList<>();
       KeyValuePair property = new KeyValuePair();
       property.setKey("eventId");
       property.setValue(event.getAttributes().getId());
       cloudEventLabels.add(property);
       executionRequest.setLabels(cloudEventLabels);
-      
       executionRequest.setProperties(processProperties(eventData, workflowId));
 
       FlowActivity activity = executionService.executeWorkflow(workflowId, Optional.of(trigger),
