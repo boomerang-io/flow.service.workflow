@@ -1,7 +1,7 @@
 package io.boomerang.model;
 
 import java.util.List;
-import io.boomerang.model.projectstormv5.RestDag;
+import io.boomerang.model.projectstormv5.WorkflowRevision;
 import io.boomerang.mongo.model.WorkflowProperty;
 
 public class TemplateWorkflowSummary {
@@ -9,6 +9,7 @@ public class TemplateWorkflowSummary {
   private String icon;
   private String description;
   private List<WorkflowProperty> parameters;
+  private WorkflowRevision revision;
 
   public String getId() {
     return id;
@@ -42,14 +43,11 @@ public class TemplateWorkflowSummary {
     this.parameters = parameters;
   }
 
-  public RestDag getDag() {
-    return dag;
+  public WorkflowRevision getRevision() {
+    return revision;
   }
 
-  public void setDag(RestDag dag) {
-    this.dag = dag;
+  public void setRevision(WorkflowRevision revision) {
+    this.revision = revision;
   }
-
-  private RestDag dag;
-
 }
