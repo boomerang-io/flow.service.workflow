@@ -117,7 +117,7 @@
 			<version>1.3.1</version>
 		</dependency>
 		<dependency>
-			<groupId>net.boomerangplatform</groupId>
+			<groupId>io.boomerang</groupId>
 			<artifactId>lib-jetstream</artifactId>
 			<version>0.0.1</version>
 		</dependency>

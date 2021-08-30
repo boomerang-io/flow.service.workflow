@@ -27,9 +27,14 @@ public class JetstreamListener {
 
   @EventListener(ApplicationReadyEvent.class)
   void onApplicationReadyEvent() throws InterruptedException {
-    logger.info("Initializing subscriptions to NATS Jetstream!");
 
-    jetstreamClient.subscribe(jetstreamStreamSubject, ConsumerType.PullBased,
-        (subject, message) -> eventProcessor.processNATSMessage(message));
+    if (jetstreamClient.subscribe(jetstreamStreamSubject, ConsumerType.PullBased,
+        (subject, message) -> eventProcessor.processNATSMessage(message))) {
+
+      logger.info("Successfully subscribed to consume messages from NATS Jetstream.");
+    } else {
+
+      logger.error("Failed to subscribe to consume messages from NATS Jetstream.!");
+    }
   }
 }
