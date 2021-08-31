@@ -32,6 +32,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.boomerang.client.model.Team;
 import io.boomerang.error.BoomerangError;
 import io.boomerang.error.BoomerangException;
+import io.boomerang.model.DuplicateRequest;
 import io.boomerang.model.FlowTeam;
 import io.boomerang.model.FlowWorkflowRevision;
 import io.boomerang.model.GenerateTokenResponse;
@@ -893,13 +894,32 @@ public class WorkflowServiceImpl implements WorkflowService {
   }
 
   @Override
-  public WorkflowSummary duplicateWorkflow(String id) {
+  public WorkflowSummary duplicateWorkflow(String id, DuplicateRequest duplicateRequest) {
     WorkflowEntity existingWorkflow = workFlowRepository.getWorkflow(id);
     String newName = existingWorkflow.getName() + " (duplicate)";
     existingWorkflow.setId(null);
     existingWorkflow.setName(newName);
     existingWorkflow.setTriggers(null);
     existingWorkflow.setTokens(null);
+    
+    if (duplicateRequest != null) {
+      if (duplicateRequest.getDescription() != null) {
+        existingWorkflow.setDescription(duplicateRequest.getDescription());
+      }
+      if (duplicateRequest.getName() != null) {
+        existingWorkflow.setDescription(duplicateRequest.getName());
+      }
+      if (duplicateRequest.getSummary() != null) {
+        existingWorkflow.setShortDescription(duplicateRequest.getSummary());
+      }
+      if (duplicateRequest.getIcon() != null) {
+        existingWorkflow.setIcon(duplicateRequest.getIcon());
+      }
+      if (duplicateRequest.getScope() == WorkflowScope.team && 
+          duplicateRequest.getTeamId() != null) {
+        existingWorkflow.setFlowTeamId(duplicateRequest.getTeamId());
+      }
+    }
 
     WorkflowEntity newWorkflow = this.saveWorkflow(existingWorkflow);
 

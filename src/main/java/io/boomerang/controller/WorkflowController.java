@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import io.boomerang.model.DuplicateRequest;
 import io.boomerang.model.FlowWorkflowRevision;
 import io.boomerang.model.GenerateTokenResponse;
 import io.boomerang.model.RevisionResponse;
@@ -71,8 +72,8 @@ public class WorkflowController {
     return workflowService.getWorkflow(id);
   }
   @PostMapping(value = "/{workFlowId}/duplicate")
-  public WorkflowSummary duplicateWorkflow(@PathVariable String workFlowId) {
-    return workflowService.duplicateWorkflow(workFlowId);
+  public WorkflowSummary duplicateWorkflow(@PathVariable String workFlowId, @RequestBody DuplicateRequest duplicateRequest) {
+    return workflowService.duplicateWorkflow(workFlowId, duplicateRequest);
   }
   
   @PostMapping(value = "")

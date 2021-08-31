@@ -5,6 +5,7 @@ import java.util.Optional;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import io.boomerang.model.DuplicateRequest;
 import io.boomerang.model.FlowWorkflowRevision;
 import io.boomerang.model.GenerateTokenResponse;
 import io.boomerang.model.TemplateWorkflowSummary;
@@ -56,7 +57,7 @@ public interface WorkflowService {
 
   List<String> getWorkflowParameters(String workflowId, FlowWorkflowRevision workflowSummaryEntity);
 
-  WorkflowSummary duplicateWorkflow(String id);
+  WorkflowSummary duplicateWorkflow(String id, DuplicateRequest duplicateRequest);
 
   boolean canExecuteWorkflowForQuotasForUser();
 
