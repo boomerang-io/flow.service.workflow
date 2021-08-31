@@ -918,6 +918,12 @@ public class WorkflowServiceImpl implements WorkflowService {
       if (duplicateRequest.getScope() == WorkflowScope.team && 
           duplicateRequest.getTeamId() != null) {
         existingWorkflow.setFlowTeamId(duplicateRequest.getTeamId());
+        existingWorkflow.setScope(WorkflowScope.team);
+      } 
+      if (duplicateRequest.getScope() == WorkflowScope.user) {
+          FlowUserEntity user = userIdentityService.getCurrentUser();
+          existingWorkflow.setOwnerUserId(user.getId());
+          existingWorkflow.setScope(WorkflowScope.user);
       }
     }
 
