@@ -907,7 +907,7 @@ public class WorkflowServiceImpl implements WorkflowService {
         existingWorkflow.setDescription(duplicateRequest.getDescription());
       }
       if (duplicateRequest.getName() != null) {
-        existingWorkflow.setDescription(duplicateRequest.getName());
+        existingWorkflow.setName(duplicateRequest.getName());
       }
       if (duplicateRequest.getSummary() != null) {
         existingWorkflow.setShortDescription(duplicateRequest.getSummary());
