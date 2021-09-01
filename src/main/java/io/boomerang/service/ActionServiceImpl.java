@@ -148,10 +148,12 @@ public class ActionServiceImpl implements ActionService {
     WorkflowSummary workflowSummary = workflowService.getWorkflow(approval.getWorkflowId());
     approval.setWorkflowName(workflowSummary.getName());
 
-    FlowTeam flowTeam = teamService.getTeamById(approval.getTeamId());
-    approval.setTeamName(flowTeam.getName());
-    approval.setTaskName("");
-
+    if (approval.getTeamId() != null) {
+      FlowTeam flowTeam = teamService.getTeamById(approval.getTeamId());
+      approval.setTeamName(flowTeam.getName());
+      approval.setTaskName("");
+    }
+    
     TaskExecutionEntity taskExecution = activityTaskService.findById(approval.getTaskActivityId());
     approval.setTaskName(taskExecution.getTaskName());
 

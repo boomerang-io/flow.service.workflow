@@ -15,7 +15,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.WordUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -61,15 +60,11 @@ public class FlowAuthorizationFilter extends BasicAuthenticationFilter {
   @Override
   protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res,
       FilterChain chain) throws IOException, ServletException {
-
-    LOGGER.info("Entering flow authorization filter");
     try {
       Authentication authentication = null;
       if (req.getHeader(AUTHORIZATION_HEADER) != null) {
-        LOGGER.info("Detected Authorization header");
         authentication = getUserAuthentication(req);
       } else if (req.getHeader(X_FORWARDED_EMAIL) != null) { 
-        LOGGER.info("Detected Github Authorization");
         authentication = getGithubUserAuthentication(req);
       }
       else if (req.getHeader(X_ACCESS_TOKEN) != null) {
@@ -86,8 +81,6 @@ public class FlowAuthorizationFilter extends BasicAuthenticationFilter {
   private Authentication getGithubUserAuthentication(HttpServletRequest req) {
     String email = req.getHeader(X_FORWARDED_EMAIL);
     String userName = req.getHeader(X_FORWARDED_USER);
-    LOGGER.info("email: " + email);
-    LOGGER.info("userName: " + userName);
     final UserToken userDetails = new UserToken(email, userName, "");
     if (email != null && !email.isBlank()) {
       final List<GrantedAuthority> authorities = new ArrayList<>();
@@ -101,8 +94,6 @@ public class FlowAuthorizationFilter extends BasicAuthenticationFilter {
 
   private Authentication getTokenBasedAuthentication(HttpServletRequest request) {
     String xAccessToken = request.getHeader(X_ACCESS_TOKEN);
-    LOGGER.error("getTokenBasedAuthentication()");
-    LOGGER.error(xAccessToken);
     TokenEntity token = tokenService.getAccessToken(xAccessToken);
     if (token != null) {
       final List<GrantedAuthority> authorities = new ArrayList<>();
@@ -139,9 +130,6 @@ public class FlowAuthorizationFilter extends BasicAuthenticationFilter {
   private UsernamePasswordAuthenticationToken getUserAuthentication(HttpServletRequest request) // NOSONAR
   {
     final String token = request.getHeader(AUTHORIZATION_HEADER);
-    
-    LOGGER.info("Token Value");
-    LOGGER.info(token);
     
     if (token.startsWith("Bearer ")) {
       final String jws = token.replace("Bearer ", "");
@@ -195,9 +183,6 @@ public class FlowAuthorizationFilter extends BasicAuthenticationFilter {
       String base64Credentials =
           request.getHeader(AUTHORIZATION_HEADER).substring("Basic".length()).trim();
       
-      LOGGER.info("Base64 Details");
-      LOGGER.info(base64Credentials);
-      
       byte[] credDecoded = Base64.getDecoder().decode(base64Credentials);
       String credentials = new String(credDecoded, StandardCharsets.UTF_8);
 
@@ -208,9 +193,6 @@ public class FlowAuthorizationFilter extends BasicAuthenticationFilter {
       if (values.length > 1) {
         password = values[1];
       }
-      LOGGER.info(password);
-      LOGGER.info(basicPassword);
-      
       
       if (!basicPassword.equals(password)) {
         return null;
