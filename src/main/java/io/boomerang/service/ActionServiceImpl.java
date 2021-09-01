@@ -137,7 +137,8 @@ public class ActionServiceImpl implements ActionService {
     approval.setWorkflowId(approvalEntity.getWorkflowId());
     approval.setTeamId(approvalEntity.getTeamId());
     approval.setStatus(approvalEntity.getStatus());
-
+    approval.setType(approvalEntity.getType());
+    
     if (approval.getAudit() != null) {
       Audit audit = approval.getAudit();
       FlowUserEntity flowUser = userIdentityService.getUserByID(audit.getApproverId());
