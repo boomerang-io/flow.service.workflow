@@ -9,6 +9,7 @@
     "name" : "Flow Refactor",
     "shortDescription" : "Flow Refactor",
     "status" : "active",
+    "scope" : "team",
     "triggers" : {
         "scheduler" : {
             "enable" : false,

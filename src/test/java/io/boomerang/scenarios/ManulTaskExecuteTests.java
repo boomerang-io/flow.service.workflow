@@ -24,7 +24,7 @@ import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.client.MockRestServiceServer;
-import io.boomerang.model.Approval;
+import io.boomerang.model.Action;
 import io.boomerang.model.FlowActivity;
 import io.boomerang.mongo.model.TaskStatus;
 import io.boomerang.tests.IntegrationTests;
@@ -34,17 +34,17 @@ import io.boomerang.tests.IntegrationTests;
 @ActiveProfiles("local")
 @WithMockUser(roles = {"admin"})
 @WithUserDetails("mdroy@us.ibm.com")
-public class ManulTaskExecuteTests extends IntegrationTests {
+class ManulTaskExecuteTests extends IntegrationTests {
 
   @Test
-  public void testExecution() throws Exception {
+  void testExecution() throws Exception {
     String workflowId = "5f4fc9e95683833cf0b1335b";
     FlowActivity activity = submitWorkflow(workflowId);
     String id = activity.getId();
     Thread.sleep(5000);
     FlowActivity waitingAprpoval = this.checkWorkflowActivity(id);
     Assertions.assertEquals(TaskStatus.inProgress, waitingAprpoval.getStatus());
-    List<Approval> approvals = this.getApprovals();
+    List<Action> approvals = this.getApprovals();
     Assertions.assertEquals("Mark down here manual",  approvals.get(0).getInstructions());
     
     this.approveWorkflow(true, approvals.get(0).getId());
@@ -61,7 +61,7 @@ public class ManulTaskExecuteTests extends IntegrationTests {
     super.setUp();
     mockServer = MockRestServiceServer.bindTo(this.restTemplate).ignoreExpectOrder(true).build();
 
-    mockServer.expect(times(7), requestTo(containsString("internal/users/user")))
+    mockServer.expect(times(6), requestTo(containsString("internal/users/user")))
         .andExpect(method(HttpMethod.GET)).andRespond(
             withSuccess(getMockFile("mock/users/users.json"), MediaType.APPLICATION_JSON));
     mockServer.expect(times(1), requestTo(containsString("controller/workflow/create")))
