@@ -6,6 +6,8 @@ import io.boomerang.mongo.model.WorkflowProperty;
 
 public class TemplateWorkflowSummary {
   private String id;
+  private String name;
+  private String summary;
   private String icon;
   private String description;
   private List<WorkflowProperty> parameters;
@@ -49,5 +51,21 @@ public class TemplateWorkflowSummary {
 
   public void setRevision(WorkflowRevision revision) {
     this.revision = revision;
+  }
+
+  public String getName() {
+    return name;
+  }
+
+  public void setName(String name) {
+    this.name = name;
+  }
+
+  public String getSummary() {
+    return summary;
+  }
+
+  public void setSummary(String summary) {
+    this.summary = summary;
   }
 }
