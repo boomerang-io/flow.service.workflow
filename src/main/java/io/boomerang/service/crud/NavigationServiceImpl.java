@@ -95,7 +95,6 @@ public class NavigationServiceImpl implements NavigationService {
       teamProperties.setType(NavigationType.link);
       management.getChildLinks().add(teamProperties);
       
-      
       Navigation teamTasks = new Navigation();
       teamTasks.setName("Team Tasks");
       teamTasks.setLink(flowAppsUrl + "/manage/task-templates");
@@ -107,7 +106,6 @@ public class NavigationServiceImpl implements NavigationService {
       teamTokens.setLink(flowAppsUrl + "/manage/team-tokens");
       teamTokens.setType(NavigationType.link);
       management.getChildLinks().add(teamTokens);
-      
       
       response.add(management);
 
