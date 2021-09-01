@@ -9,11 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
-import org.apache.http.HttpStatus;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -25,12 +20,17 @@ import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.Option;
 import com.jayway.jsonpath.spi.json.JacksonJsonNodeJsonProvider;
 import com.jayway.jsonpath.spi.mapper.JacksonMappingProvider;
+import org.apache.http.HttpStatus;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 import io.boomerang.model.FlowActivity;
 import io.boomerang.model.FlowExecutionRequest;
 import io.boomerang.model.eventing.EventResponse;
 import io.boomerang.mongo.model.KeyValuePair;
-import io.boomerang.mongo.model.WorkflowProperty;
 import io.boomerang.mongo.model.Triggers;
+import io.boomerang.mongo.model.WorkflowProperty;
 import io.boomerang.service.crud.WorkflowService;
 import io.boomerang.service.refactor.TaskService;
 import io.cloudevents.CloudEvent;
@@ -85,21 +85,16 @@ public class EventProcessorImpl implements EventProcessor {
         processEvent(event, requestStatus));
   }
 
-  // TODO: better return management
   @Override
   public void processNATSMessage(String message) {
-
     logger.info("processNATSMessage() - Message: " + message);
-    Map<String, Object> headers = new HashMap<>();
-    headers.put("Content-Type", "application/cloudevents+json");
 
-
+    Map<String, Object> headers = Map.of("Content-Type", "application/cloudevents+json");
     String requestStatus = getStatusFromPayload(message);
 
     CloudEvent<AttributesImpl, JsonNode> event = Unmarshallers.structured(JsonNode.class)
         .withHeaders(() -> headers).withPayload(() -> message).unmarshal();
 
-    // TODO return message to another queue for picking up?
     createResponseEvent(event.getAttributes().getId(), event.getAttributes().getType(),
         event.getAttributes().getSource(), event.getAttributes().getSubject().orElse(""),
         event.getAttributes().getTime().orElse(ZonedDateTime.now()),
@@ -146,9 +141,9 @@ public class EventProcessorImpl implements EventProcessor {
 
   private EventResponse processEvent(CloudEvent<AttributesImpl, JsonNode> event, String status) {
     logger.info("processCloudEvent() - Extensions: {}", event.toString());
-    logger.info("processCloudEvent() - Attributes: {}" , event.getAttributes().toString());
+    logger.info("processCloudEvent() - Attributes: {}", event.getAttributes().toString());
     JsonNode eventData = event.getData().get();
-    logger.info("processCloudEvent() - Data: {}" , eventData.toPrettyString());
+    logger.info("processCloudEvent() - Data: {}", eventData.toPrettyString());
 
     EventResponse response = new EventResponse();
 
@@ -195,15 +190,13 @@ public class EventProcessorImpl implements EventProcessor {
       logger.info("processCloudEvent() - Trigger(" + trigger + ") is enabled");
 
       FlowExecutionRequest executionRequest = new FlowExecutionRequest();
-      
-      
+
       List<KeyValuePair> cloudEventLabels = new LinkedList<>();
       KeyValuePair property = new KeyValuePair();
       property.setKey("eventId");
       property.setValue(event.getAttributes().getId());
       cloudEventLabels.add(property);
       executionRequest.setLabels(cloudEventLabels);
-      
       executionRequest.setProperties(processProperties(eventData, workflowId));
 
       FlowActivity activity = executionService.executeWorkflow(workflowId, Optional.of(trigger),
