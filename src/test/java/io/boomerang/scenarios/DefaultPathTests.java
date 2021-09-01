@@ -25,7 +25,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.client.MockRestServiceServer;
 import io.boomerang.Application;
-import io.boomerang.model.Approval;
+import io.boomerang.model.Action;
 import io.boomerang.model.FlowActivity;
 import io.boomerang.mongo.model.TaskStatus;
 import io.boomerang.tests.IntegrationTests;
@@ -50,7 +50,7 @@ public class DefaultPathTests extends IntegrationTests {
 
     FlowActivity waitingAprpoval = this.checkWorkflowActivity(id);
     Assertions.assertEquals(TaskStatus.inProgress, waitingAprpoval.getStatus());
-    List<Approval> approvals = this.getApprovals();
+    List<Action> approvals = this.getApprovals();
     this.approveWorkflow(true, approvals.get(0).getId());
 
     Thread.sleep(5000);

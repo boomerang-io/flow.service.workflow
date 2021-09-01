@@ -2,7 +2,7 @@ package io.boomerang.model;
 
 import io.boomerang.mongo.entity.ApprovalEntity;
 
-public class Approval extends ApprovalEntity {
+public class Action extends ApprovalEntity {
   
   private String taskName;
   private String workflowName;

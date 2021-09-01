@@ -1,10 +1,12 @@
 package io.boomerang.mongo.entity;
 
+import java.util.Date;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.boomerang.model.ApprovalStatus;
 import io.boomerang.mongo.model.Audit;
+import io.boomerang.mongo.model.ManualType;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Document(collection = "#{@mongoConfiguration.fullCollectionName('workflows_activity_approval')}")
@@ -57,6 +59,18 @@ public class ApprovalEntity {
     this.status = status;
   }
  
+  public ManualType getType() {
+    return type;
+  }
+  public void setType(ManualType type) {
+    this.type = type;
+  }
+  public Date getCreationDate() {
+    return creationDate;
+  }
+  public void setCreationDate(Date creationDate) {
+    this.creationDate = creationDate;
+  }
   private String activityId;
   
   private String taskActivityId;
@@ -64,6 +78,7 @@ public class ApprovalEntity {
   private String teamId;
   private Audit audit;
   private ApprovalStatus status;
+  private ManualType type;
+  private Date creationDate;
 
- 
 }

@@ -46,7 +46,7 @@ import org.springframework.web.client.RequestCallback;
 import org.springframework.web.client.ResponseExtractor;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
-import io.boomerang.model.Approval;
+import io.boomerang.model.Action;
 import io.boomerang.model.Execution;
 import io.boomerang.model.FlowActivity;
 import io.boomerang.model.FlowExecutionRequest;
@@ -83,7 +83,7 @@ import io.boomerang.mongo.service.FlowTeamService;
 import io.boomerang.mongo.service.FlowWorkflowActivityService;
 import io.boomerang.mongo.service.FlowWorkflowService;
 import io.boomerang.mongo.service.RevisionService;
-import io.boomerang.service.FlowApprovalService;
+import io.boomerang.service.ActionService;
 import io.boomerang.service.PropertyManager;
 import io.boomerang.service.UserIdentityService;
 import io.boomerang.service.refactor.ControllerRequestProperties;
@@ -130,7 +130,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
   private long maxWorkflowDuration;
 
   @Autowired
-  private FlowApprovalService approvalService;
+  private ActionService approvalService;
 
   @Autowired
   private FlowWorkflowActivityService workflowActivityService;
@@ -529,7 +529,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
 
       if (TaskType.approval.equals(task.getTaskType())
           || TaskType.manual.equals(task.getTaskType())) {
-        Approval approval = approvalService.getApprovalByTaskActivityId(task.getId());
+        Action approval = approvalService.getApprovalByTaskActivityId(task.getId());
         response.setApproval(approval);
       } else if (TaskType.runworkflow == task.getTaskType()
           && task.getRunWorkflowActivityId() != null) {

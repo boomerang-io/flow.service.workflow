@@ -30,7 +30,7 @@ public class TaskExecutionResponse {
   private boolean preApproved;
   private String switchValue;
   
-  private Approval approval;
+  private Action approval;
   
   private String runWorkflowActivityId;
   private String runWorkflowId;
@@ -126,11 +126,11 @@ public class TaskExecutionResponse {
     this.workflowId = workflowId;
   }
 
-  public Approval getApproval() {
+  public Action getApproval() {
     return approval;
   }
 
-  public void setApproval(Approval approval) {
+  public void setApproval(Action approval) {
     this.approval = approval;
   }
 

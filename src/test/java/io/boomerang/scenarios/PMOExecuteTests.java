@@ -25,7 +25,7 @@ import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.client.MockRestServiceServer;
-import io.boomerang.model.Approval;
+import io.boomerang.model.Action;
 import io.boomerang.model.FlowActivity;
 import io.boomerang.mongo.model.TaskStatus;
 import io.boomerang.tests.IntegrationTests;
@@ -35,10 +35,10 @@ import io.boomerang.tests.IntegrationTests;
 @ActiveProfiles("local")
 @WithMockUser(roles = {"admin"})
 @WithUserDetails("mdroy@us.ibm.com")
-public class PMOExecuteTests extends IntegrationTests {
+class PMOExecuteTests extends IntegrationTests {
 
   @Test
-  public void testExecution() throws Exception {
+  void testExecution() throws Exception {
     String workflowId = "5fd0099a2dfe2d6d5e4295de";
 
     FlowActivity activity = submitWorkflow(workflowId);
@@ -46,7 +46,7 @@ public class PMOExecuteTests extends IntegrationTests {
     String id = activity.getId();
     Thread.sleep(10000);
     
-    List<Approval> approvals = this.getApprovals();
+    List<Action> approvals = this.getApprovals();
 
     this.approveWorkflow(true, approvals.get(0).getId());
     
@@ -55,7 +55,7 @@ public class PMOExecuteTests extends IntegrationTests {
     approvals = this.getApprovals();
 
     
-    this.approveWorkflow(true, approvals.get(1).getId());
+    this.approveWorkflow(true, approvals.get(0).getId());
     
     Thread.sleep(5000);
     FlowActivity finalActivity = this.checkWorkflowActivity(id);

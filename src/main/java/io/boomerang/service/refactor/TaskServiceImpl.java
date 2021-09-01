@@ -280,7 +280,8 @@ public class TaskServiceImpl implements TaskService {
     approval.setWorkflowId(workflow.getId());
     approval.setTeamId(workflow.getFlowTeamId());
     approval.setStatus(ApprovalStatus.submitted);
-
+    approval.setType(type);
+    approval.setCreationDate(new Date());
     approvalService.save(approval);
 
     activity.setAwaitingApproval(true);
