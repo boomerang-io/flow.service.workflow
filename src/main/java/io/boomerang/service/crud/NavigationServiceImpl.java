@@ -63,6 +63,13 @@ public class NavigationServiceImpl implements NavigationService {
       activity.setLink(flowAppsUrl + "/activity");
       response.add(activity);
 
+      Navigation actions = new Navigation();
+      actions.setName("Actions");
+      actions.setType(NavigationType.link);
+      actions.setIcon("Stamp16");
+      actions.setLink(flowAppsUrl + "/actions");
+      response.add(actions);
+
       Navigation insights = new Navigation();
       insights.setName("Insights");
       insights.setType(NavigationType.link);
@@ -76,11 +83,18 @@ public class NavigationServiceImpl implements NavigationService {
       management.setChildLinks(new ArrayList<>());
       management.setType(NavigationType.category);
 
+      Navigation teamApprovers = new Navigation();
+      teamApprovers.setName("Team Approvers");
+      teamApprovers.setLink(flowAppsUrl + "/manage/team-parameters");
+      teamApprovers.setType(NavigationType.link);
+      management.getChildLinks().add(teamApprovers);
+      
       Navigation teamProperties = new Navigation();
-      teamProperties.setName("Team Parameters");
-      teamProperties.setLink(flowAppsUrl + "/manage/team-parameters");
+      teamProperties.setName("Team Approvers");
+      teamProperties.setLink(flowAppsUrl + "/manage/approver-groups");
       teamProperties.setType(NavigationType.link);
       management.getChildLinks().add(teamProperties);
+      
       
       Navigation teamTasks = new Navigation();
       teamTasks.setName("Team Tasks");
