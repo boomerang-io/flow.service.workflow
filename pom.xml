@@ -63,6 +63,8 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-actuator</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>com.github.alturkovic.distributed-lock</groupId>
 			<artifactId>distributed-lock-mongo</artifactId>
 			<version>1.4.1</version>
