@@ -33,7 +33,7 @@
 		<jackson.databind.version>2.9.9.3</jackson.databind.version>
 	</properties>
 	<dependencies>
-			<dependency>
+		<dependency>
 			<groupId>org.springdoc</groupId>
 			<artifactId>springdoc-openapi-ui</artifactId>
 			<version>1.5.8</version>
@@ -60,9 +60,9 @@
 			<version>2.11.1</version>
 		</dependency>
 		<dependency>
-			<groupId>com.github.marcusdroy</groupId>
+			<groupId>com.github.alturkovic.distributed-lock</groupId>
 			<artifactId>distributed-lock-mongo</artifactId>
-			<version>1.3.1</version>
+			<version>1.4.1</version>
 		</dependency>
 
 		<dependency>
@@ -279,9 +279,9 @@
 		</dependency>
 
 		<dependency>
-			<groupId>com.novemberain</groupId>
-			<artifactId>quartz-mongodb</artifactId>
-			<version>2.2.0-rc2</version>
+			<groupId>io.boomerang</groupId>
+			<artifactId>lib-scheduling</artifactId>
+			<version>0.0.1</version>
 		</dependency>
 	</dependencies>
 	<build>
@@ -344,8 +344,12 @@
 
 	<repositories>
 		<repository>
-			<id>boomeranglib-maven</id>
-			<url>https://tools.boomerangplatform.net/artifactory/boomeranglib-maven</url>
+			<id>jitpack.io</id>
+			<url>https://jitpack.io</url>
+		</repository>
+		<repository>
+			<id>github</id>
+			<url>https://maven.pkg.github.com/boomerang-io/flow.lib.scheduling</url>
 		</repository>
 	</repositories>
 
