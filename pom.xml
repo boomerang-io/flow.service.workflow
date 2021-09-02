@@ -318,7 +318,8 @@
 				<directory>src/main/resources</directory>
 				<filtering>true</filtering>
 			</resource>
-		</resources>
+			</resources>
+		<finalName>${project.name}</finalName>
 	</build>
 
 	<repositories>

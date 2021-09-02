@@ -53,8 +53,8 @@ jobs:
       - uses: actions/upload-artifact@v2
         if: ${{ success() }}
         with:
-          name: service-listener.jar
-          path: target/service-listener.jar
+          name: service-flow.jar
+          path: target/service-flow.jar
       - name: Slack
         uses: 8398a7/action-slack@v3
         if: ${{ always() }}
@@ -72,8 +72,8 @@ jobs:
         uses: actions/checkout@v2
       - uses: actions/download-artifact@v2
         with:
-          name: service-listener.jar
-          path: ${{ github.workspace }}/target/service-listener.jar
+          name: service-flow.jar
+          path: ${{ github.workspace }}/target/service-flow.jar
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
       - name: Set up Docker Buildx
@@ -92,7 +92,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: boomerangio/flow-service-listener:latest,boomerangio/flow-service-listener:${{ steps.get_version.outputs.VERSION }}
+          tags: boomerangio/flow-service-workflow:latest,boomerangio/flow-service-workflow:${{ steps.get_version.outputs.VERSION }}
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
       - name: Slack
