@@ -816,8 +816,8 @@ public class WorkflowServiceImpl implements WorkflowService {
       }
     }
 
-    if (flowSettingsService.getConfiguration("features", "teamParameters").getBooleanValue() && workflow.getScope() != null
-        && WorkflowScope.team.equals(workflow.getScope())) {
+    if (flowSettingsService.getConfiguration("features", "teamParameters").getBooleanValue()
+        && workflow.getScope() != null && WorkflowScope.team.equals(workflow.getScope())) {
       Map<String, String> teamProperties = new HashMap<>();
       propertyManager.buildTeamProperties(teamProperties, workflow.getId());
 
@@ -901,7 +901,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     existingWorkflow.setName(newName);
     existingWorkflow.setTriggers(null);
     existingWorkflow.setTokens(null);
-    
+
     if (duplicateRequest != null) {
       if (duplicateRequest.getDescription() != null) {
         existingWorkflow.setDescription(duplicateRequest.getDescription());
@@ -915,15 +915,15 @@ public class WorkflowServiceImpl implements WorkflowService {
       if (duplicateRequest.getIcon() != null) {
         existingWorkflow.setIcon(duplicateRequest.getIcon());
       }
-      if (duplicateRequest.getScope() == WorkflowScope.team && 
-          duplicateRequest.getTeamId() != null) {
+      if (duplicateRequest.getScope() == WorkflowScope.team
+          && duplicateRequest.getTeamId() != null) {
         existingWorkflow.setFlowTeamId(duplicateRequest.getTeamId());
         existingWorkflow.setScope(WorkflowScope.team);
-      } 
+      }
       if (duplicateRequest.getScope() == WorkflowScope.user) {
-          FlowUserEntity user = userIdentityService.getCurrentUser();
-          existingWorkflow.setOwnerUserId(user.getId());
-          existingWorkflow.setScope(WorkflowScope.user);
+        FlowUserEntity user = userIdentityService.getCurrentUser();
+        existingWorkflow.setOwnerUserId(user.getId());
+        existingWorkflow.setScope(WorkflowScope.user);
       }
     }
 
@@ -1097,20 +1097,23 @@ public class WorkflowServiceImpl implements WorkflowService {
   public List<TemplateWorkflowSummary> getTemplateWorkflows() {
     List<WorkflowEntity> workflows = this.workFlowRepository.getTemplateWorkflows();
     List<TemplateWorkflowSummary> summaryList = new LinkedList<>();
-    
+
     for (WorkflowEntity workflow : workflows) {
-      TemplateWorkflowSummary summary = new TemplateWorkflowSummary();
-      summary.setId(workflow.getId());
-      summary.setDescription(workflow.getDescription());
-      summary.setIcon(workflow.getIcon());
-      summary.setParameters(workflow.getProperties());
-      summary.setName(workflow.getName());
-      summary.setSummary(workflow.getShortDescription());
-      
-      RevisionEntity revision = this.workflowVersionService.getLatestWorkflowVersion(workflow.getId());
-      WorkflowRevision workflowRevision = ModelConverterV5.convertToRestModel(revision);
-      summary.setRevision(workflowRevision);
-      summaryList.add(summary);
+      if (WorkflowStatus.active == workflow.getStatus()) {
+        TemplateWorkflowSummary summary = new TemplateWorkflowSummary();
+        summary.setId(workflow.getId());
+        summary.setDescription(workflow.getDescription());
+        summary.setIcon(workflow.getIcon());
+        summary.setParameters(workflow.getProperties());
+        summary.setName(workflow.getName());
+        summary.setSummary(workflow.getShortDescription());
+
+        RevisionEntity revision =
+            this.workflowVersionService.getLatestWorkflowVersion(workflow.getId());
+        WorkflowRevision workflowRevision = ModelConverterV5.convertToRestModel(revision);
+        summary.setRevision(workflowRevision);
+        summaryList.add(summary);
+      }
     }
     return summaryList;
   }
