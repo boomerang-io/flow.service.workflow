@@ -1,5 +1,6 @@
 package io.boomerang.util;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -397,10 +398,9 @@ public class ModelConverterV5 {
     port.setSelected(false);
     port.setParentNode(taskId);
 
-    if (CUSTOMTASKNAME.equals(type) || TEMPLATETASKNAME.equals(type) || "approval".equals(type)
-        || "manual".equals(type) || "setwfstatus".equals(type) || "setwfproperty".equals(type) || "eventwait".equals(type)
-        || "releaselock".equals(type) || "script".equals(type) || "acquirelock".equals(type)
-        || "runworkflow".equals(type)) {
+    String[] taskTypeList = {CUSTOMTASKNAME, TEMPLATETASKNAME, "approval", "manual", "setwfstatus",
+        "setwfproperty", "eventwait", "releaselock", "script", "acquirelock", "runworkflow"};
+    if (Arrays.stream(taskTypeList).anyMatch(x -> x.equals(type))) {
       port.setType("task");
     } else {
       port.setType(type);
