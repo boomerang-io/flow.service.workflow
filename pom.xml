@@ -53,11 +53,11 @@
          <artifactId>jackson-dataformat-yaml</artifactId>
          <version>2.11.1</version>
       </dependency>
-      <dependency>
-         <groupId>com.github.alturkovic.distributed-loc</groupId>
-         <artifactId>distributed-lock</artifactId>
-         <version>1.4.0</version>
-      </dependency>
+<dependency>
+  <groupId>com.github.alturkovic</groupId>
+  <artifactId>distributed-lock-mongo</artifactId>
+  <version>1.4.2</version>
+</dependency>
       <dependency>
          <groupId>io.cloudevents</groupId>
          <artifactId>cloudevents-api</artifactId>
@@ -326,11 +326,6 @@
 	  <finalName>${project.name}</finalName>
    </build>
    <repositories>
-
-	    <repository>
-    <id>jitpack.io</id>
-    <url>https://jitpack.io</url>
-  </repository>
       <repository>
          <id>github</id>
          <url>https://maven.pkg.github.com/boomerang-io/flow.lib.streaming</url>
