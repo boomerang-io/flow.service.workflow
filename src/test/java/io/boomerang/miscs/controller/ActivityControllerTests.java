@@ -39,20 +39,20 @@ import io.boomerang.mongo.model.TaskStatus;
 @ActiveProfiles("local")
 @WithMockUser(roles = {"admin"})
 @WithUserDetails("mdroy@us.ibm.com")
-public class ActivityControllerTests extends FlowTests {
+class ActivityControllerTests extends FlowTests {
 
   @Autowired
   private ActivityController activityController;
 
   @Test
-  public void testGetFlowActivity() {
+  void testGetFlowActivity() {
 
     FlowActivity activity = activityController.getFlowActivity("5d1a18c8f6ca2c00014c4325").getBody();
     Assertions.assertEquals("5d1a18c8f6ca2c00014c4325", activity.getId());
   }
 
   @Test
-  public void testGetTaskLog() throws IOException {
+  void testGetTaskLog() throws IOException {
 
     mockServer = MockRestServiceServer.bindTo(restTemplate).ignoreExpectOrder(true).build();
     mockServer.expect(times(1), requestTo(containsString("controller/log/stream")))
@@ -65,7 +65,7 @@ public class ActivityControllerTests extends FlowTests {
   }
 
   @Test
-  public void testGetFlowActivitiesTeamAndWorkflowFiltered() {
+  void testGetFlowActivitiesTeamAndWorkflowFiltered() {
     List<String> workflowIds = new ArrayList<>();
     workflowIds.add("5d1a188af6ca2c00014c4314");
 
@@ -89,7 +89,7 @@ public class ActivityControllerTests extends FlowTests {
   }
 
   @Test
-  public void testGetFlowActivitiesTeamFiltered() {
+  void testGetFlowActivitiesTeamFiltered() {
 
     List<String> teamIds = new ArrayList<>();
     teamIds.add("5d1a1841f6ca2c00014c4309");
@@ -106,118 +106,10 @@ public class ActivityControllerTests extends FlowTests {
     Assertions.assertEquals(Long.valueOf(6), response.getPageable().getTotalElements());
     Assertions.assertEquals(Integer.valueOf(1), response.getPageable().getTotalPages());
   }
-  /**
-  @Test
 
-  public void testGetFlowActivitiesTeamFilter() {
-
-    List<String> teamIds = new ArrayList<>();
-    teamIds.add("5d1a1841f6ca2c00014c4309");
-
-    ListActivityResponse response =
-        activityController.getFlowActivities(getOptionalOrder(Direction.ASC),
-            getOptionalString("sort"), Optional.empty(), getOptionalListString(teamIds), 0, 4,10,
-            Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
-
-    Assertions.assertEquals(4, response.getRecords().size());
-    Assertions.assertEquals(Integer.valueOf(0), response.getPageable().getNumber());
-    Assertions.assertEquals(Integer.valueOf(4), response.getPageable().getSize());
-    Assertions.assertEquals(Integer.valueOf(4), response.getPageable().getNumberOfElements());
-    Assertions.assertEquals(Long.valueOf(6), response.getPageable().getTotalElements());
-    Assertions.assertEquals(Integer.valueOf(2), response.getPageable().getTotalPages());
-
-    response = activityController.getFlowActivities(getOptionalOrder(Direction.ASC),
-        getOptionalString("sort"), Optional.empty(), getOptionalListString(teamIds), 1, 4,10,
-        Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
-
-    Assertions.assertEquals(2, response.getRecords().size());
-    Assertions.assertEquals(Integer.valueOf(1), response.getPageable().getNumber());
-    Assertions.assertEquals(Integer.valueOf(4), response.getPageable().getSize());
-    Assertions.assertEquals(Integer.valueOf(2), response.getPageable().getNumberOfElements());
-    Assertions.assertEquals(Long.valueOf(6), response.getPageable().getTotalElements());
-    Assertions.assertEquals(Integer.valueOf(2), response.getPageable().getTotalPages());
-  } **/
-
-
-  /**
-  @Test
-  public void testGetFlowActivitiesWorkflowFiltered() {
-    List<String> workflowIds = new ArrayList<>();
-    workflowIds.add("5d1a188af6ca2c00014c4314");
-
-    ListActivityResponse response =
-        activityController.getFlowActivities(getOptionalOrder(Direction.ASC),
-            getOptionalString("sort"), getOptionalListString(workflowIds), Optional.empty(), 0,
-            2147483647, Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
-
-    Assertions.assertEquals(5, response.getRecords().size());
-    Assertions.assertEquals(Integer.valueOf(0), response.getPageable().getNumber());
-    Assertions.assertEquals(Integer.valueOf(2147483647), response.getPageable().getSize());
-    Assertions.assertEquals(Integer.valueOf(5), response.getPageable().getNumberOfElements());
-    Assertions.assertEquals(Long.valueOf(5), response.getPageable().getTotalElements());
-    Assertions.assertEquals(Integer.valueOf(1), response.getPageable().getTotalPages());
-
-    workflowIds = new ArrayList<>();
-    workflowIds.add("5d1a188af6ca2c00014c4316");
-
-    response = activityController.getFlowActivities(getOptionalOrder(Direction.ASC),
-        getOptionalString("sort"), getOptionalListString(workflowIds), Optional.empty(), 0,
-        2147483647, Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
-
-    Assertions.assertEquals(1, response.getRecords().size());
-    Assertions.assertEquals(Integer.valueOf(0), response.getPageable().getNumber());
-    Assertions.assertEquals(Integer.valueOf(2147483647), response.getPageable().getSize());
-    Assertions.assertEquals(Integer.valueOf(1), response.getPageable().getNumberOfElements());
-    Assertions.assertEquals(Long.valueOf(1), response.getPageable().getTotalElements());
-    Assertions.assertEquals(Integer.valueOf(1), response.getPageable().getTotalPages());
-    
-    workflowIds = new ArrayList<>();
-    workflowIds.add("5d1a188af6ca2c00014c4316");
-    workflowIds.add("5d1a188af6ca2c00014c4314");
-
-    response = activityController.getFlowActivities(getOptionalOrder(Direction.ASC),
-        getOptionalString("sort"), getOptionalListString(workflowIds), Optional.empty(), 0,
-        2147483647, Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
-
-    Assertions.assertEquals(6, response.getRecords().size());
-    Assertions.assertEquals(Integer.valueOf(0), response.getPageable().getNumber());
-    Assertions.assertEquals(Integer.valueOf(2147483647), response.getPageable().getSize());
-    Assertions.assertEquals(Integer.valueOf(6), response.getPageable().getNumberOfElements());
-    Assertions.assertEquals(Long.valueOf(6), response.getPageable().getTotalElements());
-    Assertions.assertEquals(Integer.valueOf(1), response.getPageable().getTotalPages());
-    
-  } **/
-
-  /**
-  @Test
-  public void testGetFlowActivities() {
-
-    ListActivityResponse response =
-        activityController.getFlowActivities(getOptionalOrder(Direction.ASC),
-            getOptionalString("sort"), Optional.empty(), Optional.empty(), 0, 2147483647,
-            Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
-
-    Assertions.assertEquals(6, response.getRecords().size());
-    Assertions.assertEquals(Integer.valueOf(0), response.getPageable().getNumber());
-    Assertions.assertEquals(Integer.valueOf(2147483647), response.getPageable().getSize());
-    Assertions.assertEquals(Integer.valueOf(6), response.getPageable().getNumberOfElements());
-    Assertions.assertEquals(Long.valueOf(6), response.getPageable().getTotalElements());
-    Assertions.assertEquals(Integer.valueOf(1), response.getPageable().getTotalPages());
-
-    response = activityController.getFlowActivities(getOptionalOrder(Direction.ASC),
-        getOptionalString("sort"), Optional.empty(), Optional.empty(), 0, 1, Optional.empty(),
-        Optional.empty(), Optional.empty(), Optional.empty());
-
-    Assertions.assertEquals(1, response.getRecords().size());
-    Assertions.assertEquals(Integer.valueOf(0), response.getPageable().getNumber());
-    Assertions.assertEquals(Integer.valueOf(1), response.getPageable().getSize());
-    Assertions.assertEquals(Integer.valueOf(1), response.getPageable().getNumberOfElements());
-    Assertions.assertEquals(Long.valueOf(6), response.getPageable().getTotalElements());
-    Assertions.assertEquals(Integer.valueOf(6), response.getPageable().getTotalPages());
-  } **/
 
   @Test
-  public void testGetInsightsSummary() {
+  void testGetInsightsSummary() {
     InsightsSummary summary = activityController.getInsightsSummary(getOptionalOrder(Direction.ASC),
         getOptionalString("sort"), getOptionalString("5d1a1841f6ca2c00014c4309"), 0, 2147483647,
         Optional.empty(), Optional.empty());
@@ -235,7 +127,7 @@ public class ActivityControllerTests extends FlowTests {
   }
 
   @Test
-  public void testGetActivitySummary() {
+  void testGetActivitySummary() {
     Map<String, Long> activitySummary = activityController.getFlowActivitySummary(Direction.ASC, 0,
         2147483647, null, Optional.empty(), null, Optional.empty(), Optional.empty(), null, null);
 

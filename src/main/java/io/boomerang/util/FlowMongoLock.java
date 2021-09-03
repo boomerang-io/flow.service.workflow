@@ -20,4 +20,15 @@ public class FlowMongoLock extends SimpleMongoLock {
     final var query = Query.query(Criteria.where("token").is(token)); 
     return mongoTemplate.exists(query, LockDocument.class, storeId);
   }
+  
+  @Override
+  public boolean equals(Object o) {
+    return super.equals(o);
+  }
+  
+  @Override
+  public int hashCode()
+  {
+    return super.hashCode();
+  }
 }

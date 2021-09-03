@@ -31,10 +31,10 @@ import io.boomerang.tests.IntegrationTests;
 @ActiveProfiles("local")
 @WithMockUser(roles = {"admin"})
 @WithUserDetails("mdroy@us.ibm.com")
-public class EmptyExecuteTests extends IntegrationTests {
+class EmptyExecuteTests extends IntegrationTests {
 
   @Test
-  public void testExecution() throws Exception {
+  void testExecution() throws Exception {
     String workflowId = "601193f58d92c206683350a0";
 
     FlowActivity activity = submitWorkflow(workflowId);

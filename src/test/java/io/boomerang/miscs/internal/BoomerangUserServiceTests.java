@@ -29,13 +29,13 @@ import io.boomerang.misc.FlowTests;
 @ActiveProfiles("local")
 @WithMockUser(roles = {"admin"})
 @WithUserDetails("mdroy@us.ibm.com")
-public class BoomerangUserServiceTests extends FlowTests {
+class BoomerangUserServiceTests extends FlowTests {
 
   @Autowired
   private ExernalUserService userService;
 
   @Test
-  public void testGetUserProfile() {
+  void testGetUserProfile() {
     UserProfile userProfile = userService.getInternalUserProfile();
     Assertions.assertEquals( "trbula@us.ibm.com", userProfile.getEmail());
   }
