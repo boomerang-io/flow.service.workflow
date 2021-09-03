@@ -8,7 +8,7 @@ import io.boomerang.model.TeamWorkflowSummary;
 import io.boomerang.model.WorkflowQuotas;
 import io.boomerang.model.WorkflowSummary;
 import io.boomerang.mongo.entity.FlowTeamConfiguration;
-import io.boomerang.mongo.entity.FlowTeamEntity;
+import io.boomerang.mongo.entity.TeamEntity;
 import io.boomerang.mongo.entity.FlowUserEntity;
 import io.boomerang.mongo.model.Quotas;
 
@@ -56,11 +56,11 @@ public interface TeamService {
 
   Quotas getDefaultQuotas();
 
-  FlowTeamEntity deactivateTeam(String teamId);
+  TeamEntity deactivateTeam(String teamId);
 
   void updateSummaryWithUpgradeFlags(List<WorkflowSummary> workflowSummary);
 
-  List<FlowTeamEntity> getUsersTeamListing(FlowUserEntity userEntity);
+  List<TeamEntity> getUsersTeamListing(FlowUserEntity userEntity);
   
 
 }

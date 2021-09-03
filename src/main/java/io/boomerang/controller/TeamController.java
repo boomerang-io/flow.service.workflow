@@ -25,7 +25,7 @@ import io.boomerang.model.TeamWorkflowSummary;
 import io.boomerang.model.WorkflowQuotas;
 import io.boomerang.model.profile.SortSummary;
 import io.boomerang.mongo.entity.FlowTeamConfiguration;
-import io.boomerang.mongo.entity.FlowTeamEntity;
+import io.boomerang.mongo.entity.TeamEntity;
 import io.boomerang.mongo.entity.FlowUserEntity;
 import io.boomerang.mongo.model.Quotas;
 import io.boomerang.mongo.model.UserType;
@@ -140,7 +140,7 @@ public class TeamController {
   }
 
   @DeleteMapping(value = "/teams/{teamId}")
-  public FlowTeamEntity deactivateTeam(@PathVariable String teamId) {
+  public TeamEntity deactivateTeam(@PathVariable String teamId) {
     return flowTeamService.deactivateTeam(teamId);
   }
 

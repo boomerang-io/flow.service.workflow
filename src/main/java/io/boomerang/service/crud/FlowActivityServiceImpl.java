@@ -60,7 +60,7 @@ import io.boomerang.model.controller.TaskResult;
 import io.boomerang.model.controller.TaskWorkspace;
 import io.boomerang.mongo.entity.ActivityEntity;
 import io.boomerang.mongo.entity.FlowTaskTemplateEntity;
-import io.boomerang.mongo.entity.FlowTeamEntity;
+import io.boomerang.mongo.entity.TeamEntity;
 import io.boomerang.mongo.entity.FlowUserEntity;
 import io.boomerang.mongo.entity.RevisionEntity;
 import io.boomerang.mongo.entity.TaskExecutionEntity;
@@ -320,9 +320,9 @@ public class FlowActivityServiceImpl implements FlowActivityService {
             allTeamWorkflows.stream().map(WorkflowEntity::getId).collect(Collectors.toList());
         workflowIdsList.addAll(workflowIds);
       } else {
-        List<FlowTeamEntity> flowTeam = teamService.getUsersTeamListing(user);
+        List<TeamEntity> flowTeam = teamService.getUsersTeamListing(user);
         List<String> flowTeamIds =
-            flowTeam.stream().map(FlowTeamEntity::getId).collect(Collectors.toList());
+            flowTeam.stream().map(TeamEntity::getId).collect(Collectors.toList());
         List<WorkflowEntity> teamWorkflows = this.workflowService.getWorkflowsForTeams(flowTeamIds);
         List<String> allTeamWorkflowsIds =
             teamWorkflows.stream().map(WorkflowEntity::getId).collect(Collectors.toList());
@@ -455,7 +455,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
 
     if (teamId != null) {
 
-      FlowTeamEntity team = teamService.getTeamById(teamId);
+      TeamEntity team = teamService.getTeamById(teamId);
       if (team != null) {
         String teamName = team.getName();
 
@@ -706,7 +706,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
 
       if (WorkflowScope.team.equals(workflow.getScope())) {
         activityTeamId = workflowService.getWorkflow(workflowId).getFlowTeamId();
-        FlowTeamEntity team = flowTeamService.findById(activityTeamId);
+        TeamEntity team = flowTeamService.findById(activityTeamId);
 
         if (team != null) {
           teamName = team.getName();

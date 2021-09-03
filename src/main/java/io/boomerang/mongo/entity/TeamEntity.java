@@ -1,17 +1,19 @@
 package io.boomerang.mongo.entity;
 
+import java.util.List;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import io.boomerang.mongo.model.ApproverGroup;
 import io.boomerang.mongo.model.Quotas;
 import io.boomerang.mongo.model.Settings;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(Include.NON_NULL)
 @Document(collection = "#{@mongoConfiguration.fullCollectionName('teams')}")
-public class FlowTeamEntity {
+public class TeamEntity {
 
   private String higherLevelGroupId;
 
@@ -24,6 +26,7 @@ public class FlowTeamEntity {
   private Settings settings;
   
   private Quotas quotas;
+  private List<ApproverGroup> approverGroups;
 
   public String getHigherLevelGroupId() {
     return higherLevelGroupId;
@@ -71,5 +74,13 @@ public class FlowTeamEntity {
 
   public void setQuotas(Quotas quotas) {
     this.quotas = quotas;
+  }
+
+  public List<ApproverGroup> getApproverGroups() {
+    return approverGroups;
+  }
+
+  public void setApproverGroups(List<ApproverGroup> approverGroups) {
+    this.approverGroups = approverGroups;
   }
 }

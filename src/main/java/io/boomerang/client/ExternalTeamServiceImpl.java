@@ -18,7 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import io.boomerang.client.model.ExternalTeam;
-import io.boomerang.mongo.entity.FlowTeamEntity;
+import io.boomerang.mongo.entity.TeamEntity;
 import io.boomerang.mongo.model.Quotas;
 import io.boomerang.security.service.ApiTokenService;
 
@@ -53,9 +53,9 @@ public class ExternalTeamServiceImpl implements ExternalTeamService {
   private static final Logger LOGGER = LogManager.getLogger(ExternalTeamServiceImpl.class);
   
   @Override
-  public List<FlowTeamEntity> getExternalTeams(String url) {
+  public List<TeamEntity> getExternalTeams(String url) {
     
-    List<FlowTeamEntity> flowTeams = new LinkedList<>();
+    List<TeamEntity> flowTeams = new LinkedList<>();
     
     try {
       final HttpHeaders headers = buildHeaders();
@@ -67,7 +67,7 @@ public class ExternalTeamServiceImpl implements ExternalTeamService {
       
     
       for (ExternalTeam team : allTeams) {
-        FlowTeamEntity newTeam = new FlowTeamEntity();
+        TeamEntity newTeam = new TeamEntity();
         newTeam.setId(team.getId());
         newTeam.setName(team.getName());
         newTeam.setIsActive(true);

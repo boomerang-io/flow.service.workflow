@@ -2,15 +2,15 @@ package io.boomerang.model;
 
 import java.util.List;
 import org.springframework.beans.BeanUtils;
-import io.boomerang.mongo.entity.FlowTeamEntity;
+import io.boomerang.mongo.entity.TeamEntity;
 
-public class TeamWorkflowSummary extends FlowTeamEntity {
+public class TeamWorkflowSummary extends TeamEntity {
 
   private List<WorkflowSummary> workflows;
   
   private WorkflowQuotas workflowQuotas;
 
-  public TeamWorkflowSummary(FlowTeamEntity teamEntity, List<WorkflowSummary> workflows) {
+  public TeamWorkflowSummary(TeamEntity teamEntity, List<WorkflowSummary> workflows) {
     BeanUtils.copyProperties(teamEntity, this);
 
     this.workflows = workflows;

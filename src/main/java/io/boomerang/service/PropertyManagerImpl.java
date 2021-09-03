@@ -22,7 +22,7 @@ import io.boomerang.mongo.entity.ActivityEntity;
 import io.boomerang.mongo.entity.FlowGlobalConfigEntity;
 import io.boomerang.mongo.entity.FlowTaskTemplateEntity;
 import io.boomerang.mongo.entity.FlowTeamConfiguration;
-import io.boomerang.mongo.entity.FlowTeamEntity;
+import io.boomerang.mongo.entity.TeamEntity;
 import io.boomerang.mongo.entity.RevisionEntity;
 import io.boomerang.mongo.entity.TaskExecutionEntity;
 import io.boomerang.mongo.entity.WorkflowEntity;
@@ -284,7 +284,7 @@ public class PropertyManagerImpl implements PropertyManager {
     WorkflowSummary workflow = workflowService.getWorkflow(workflowId);
 
     if (WorkflowScope.team.equals(workflow.getScope())) {
-      FlowTeamEntity flowTeamEntity = this.flowTeamService.findById(workflow.getFlowTeamId());
+      TeamEntity flowTeamEntity = this.flowTeamService.findById(workflow.getFlowTeamId());
       List<FlowTeamConfiguration> teamConfig = null;
       if (flowTeamEntity.getSettings() != null) {
         teamConfig = flowTeamEntity.getSettings().getProperties();

@@ -24,7 +24,7 @@ import io.boomerang.model.Task;
 import io.boomerang.model.WorkflowSummary;
 import io.boomerang.mongo.entity.ActivityEntity;
 import io.boomerang.mongo.entity.ApprovalEntity;
-import io.boomerang.mongo.entity.FlowTeamEntity;
+import io.boomerang.mongo.entity.TeamEntity;
 import io.boomerang.mongo.entity.FlowUserEntity;
 import io.boomerang.mongo.entity.RevisionEntity;
 import io.boomerang.mongo.entity.TaskExecutionEntity;
@@ -300,9 +300,9 @@ public class ActionServiceImpl implements ActionService {
             allTeamWorkflows.stream().map(WorkflowEntity::getId).collect(Collectors.toList());
         workflowIdsList.addAll(workflowIds);
       } else {
-        List<FlowTeamEntity> flowTeam = teamService.getUsersTeamListing(user);
+        List<TeamEntity> flowTeam = teamService.getUsersTeamListing(user);
         List<String> flowTeamIds =
-            flowTeam.stream().map(FlowTeamEntity::getId).collect(Collectors.toList());
+            flowTeam.stream().map(TeamEntity::getId).collect(Collectors.toList());
         List<WorkflowEntity> teamWorkflows =
             this.flowWorkflowService.getWorkflowsForTeams(flowTeamIds);
         List<String> allTeamWorkflowsIds =

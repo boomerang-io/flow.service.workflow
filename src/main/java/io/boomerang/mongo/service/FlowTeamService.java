@@ -3,18 +3,18 @@ package io.boomerang.mongo.service;
 import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import io.boomerang.mongo.entity.FlowTeamEntity;
+import io.boomerang.mongo.entity.TeamEntity;
 
 public interface FlowTeamService {
 
-  Page<FlowTeamEntity> findAllTeams(Pageable pageable);
+  Page<TeamEntity> findAllTeams(Pageable pageable);
   
-  Page<FlowTeamEntity> findAllActiveTeams(Pageable pageable);
+  Page<TeamEntity> findAllActiveTeams(Pageable pageable);
 
-  List<FlowTeamEntity> findTeamsWithHighLevelGroups(List<String> highLevelGroups);
+  List<TeamEntity> findTeamsWithHighLevelGroups(List<String> highLevelGroups);
 
-  FlowTeamEntity save(FlowTeamEntity entity);
+  TeamEntity save(TeamEntity entity);
 
-  FlowTeamEntity findById(String id);
+  TeamEntity findById(String id);
 
 }

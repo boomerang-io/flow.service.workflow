@@ -29,7 +29,7 @@ import io.boomerang.model.ListActivityResponse;
 import io.boomerang.model.TaskExecutionResponse;
 import io.boomerang.model.TeamWorkflowSummary;
 import io.boomerang.mongo.entity.ActivityEntity;
-import io.boomerang.mongo.entity.FlowTeamEntity;
+import io.boomerang.mongo.entity.TeamEntity;
 import io.boomerang.mongo.entity.FlowUserEntity;
 import io.boomerang.mongo.entity.RevisionEntity;
 import io.boomerang.mongo.entity.WorkflowEntity;
@@ -167,7 +167,7 @@ public class ActivityController {
         }
       }
 
-      FlowTeamEntity team = teamService.getTeamById(teamId);
+      TeamEntity team = teamService.getTeamById(teamId);
       if (team != null) {
         teamName = team.getName();
         response.setTeamName(teamName);

@@ -5,7 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import io.boomerang.mongo.entity.FlowTeamEntity;
+import io.boomerang.mongo.entity.TeamEntity;
 import io.boomerang.mongo.repository.FlowTeamRepository;
 
 @Service
@@ -15,27 +15,27 @@ public class FlowTeamServiceImpl implements FlowTeamService {
   private FlowTeamRepository flowTeamRepository;
 
   @Override
-  public Page<FlowTeamEntity> findAllActiveTeams(Pageable pageable) {
+  public Page<TeamEntity> findAllActiveTeams(Pageable pageable) {
     return flowTeamRepository.findByIsActive(pageable,true);
   }
   
   @Override
-  public Page<FlowTeamEntity> findAllTeams(Pageable pageable) {
+  public Page<TeamEntity> findAllTeams(Pageable pageable) {
     return flowTeamRepository.findAll(pageable);
   }
 
   @Override
-  public List<FlowTeamEntity> findTeamsWithHighLevelGroups(List<String> highLevelGroups) {
+  public List<TeamEntity> findTeamsWithHighLevelGroups(List<String> highLevelGroups) {
     return flowTeamRepository.findByhigherLevelGroupIdIn(highLevelGroups);
   }
 
   @Override
-  public FlowTeamEntity save(FlowTeamEntity entity) {
+  public TeamEntity save(TeamEntity entity) {
     return flowTeamRepository.save(entity);
   }
 
   @Override
-  public FlowTeamEntity findById(String id) {
+  public TeamEntity findById(String id) {
     return flowTeamRepository.findById(id).orElse(null);
 
   }

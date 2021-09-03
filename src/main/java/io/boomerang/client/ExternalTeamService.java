@@ -1,9 +1,9 @@
 package io.boomerang.client;
 
 import java.util.List;
-import io.boomerang.mongo.entity.FlowTeamEntity;
+import io.boomerang.mongo.entity.TeamEntity;
 
 public interface ExternalTeamService {
 
-  List<FlowTeamEntity>  getExternalTeams(String url);
+  List<TeamEntity>  getExternalTeams(String url);
 }

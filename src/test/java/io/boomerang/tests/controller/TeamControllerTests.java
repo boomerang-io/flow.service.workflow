@@ -19,7 +19,7 @@ import io.boomerang.misc.FlowTests;
 import io.boomerang.model.CreateFlowTeam;
 import io.boomerang.model.WorkflowQuotas;
 import io.boomerang.mongo.entity.FlowTeamConfiguration;
-import io.boomerang.mongo.entity.FlowTeamEntity;
+import io.boomerang.mongo.entity.TeamEntity;
 import io.boomerang.mongo.model.Quotas;
 
 @ExtendWith(SpringExtension.class)
@@ -258,7 +258,7 @@ public class TeamControllerTests extends FlowTests {
 
   @Test
   public void deactivateTeam() {
-    FlowTeamEntity entity = controller.deactivateTeam("5d1a1841f6ca2c00014c4309");
+    TeamEntity entity = controller.deactivateTeam("5d1a1841f6ca2c00014c4309");
     Assertions.assertEquals(false, entity.getIsActive());
     Assertions.assertEquals(2, controller.getTeams().size());
   }
