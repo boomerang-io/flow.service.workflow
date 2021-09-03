@@ -399,7 +399,7 @@ public class ModelConverterV5 {
     port.setParentNode(taskId);
 
     String[] taskTypeList = {CUSTOMTASKNAME, TEMPLATETASKNAME, "approval", "manual", "setwfstatus",
-        "setwfproperty", "eventwait", "releaselock", "script", "acquirelock", "runworkflow"};
+        "setwfproperty", "eventwait", "releaselock", TaskType.script.toString(), "acquirelock", "runworkflow"};
     if (Arrays.stream(taskTypeList).anyMatch(x -> x.equals(type))) {
       port.setType("task");
     } else {
