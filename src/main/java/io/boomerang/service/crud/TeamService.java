@@ -3,7 +3,7 @@ package io.boomerang.service.crud;
 import java.util.List;
 import org.springframework.data.domain.Pageable;
 import io.boomerang.model.FlowTeam;
-import io.boomerang.model.FlowUser;
+import io.boomerang.model.TeamMember;
 import io.boomerang.model.TeamQueryResult;
 import io.boomerang.model.TeamWorkflowSummary;
 import io.boomerang.model.WorkflowQuotas;
@@ -63,7 +63,7 @@ public interface TeamService {
 
   List<TeamEntity> getUsersTeamListing(FlowUserEntity userEntity);
 
-  List<FlowUser> getTeamMembers(String teamId);
+  List<TeamMember> getTeamMembers(String teamId);
   
 
 }

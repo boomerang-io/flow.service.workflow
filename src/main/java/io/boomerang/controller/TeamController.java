@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 import io.boomerang.model.CreateFlowTeam;
 import io.boomerang.model.FlowTeam;
 import io.boomerang.model.FlowUser;
+import io.boomerang.model.TeamMember;
 import io.boomerang.model.TeamQueryResult;
 import io.boomerang.model.TeamWorkflowSummary;
 import io.boomerang.model.WorkflowQuotas;
@@ -66,7 +67,7 @@ public class TeamController {
   }
   
   @GetMapping(value = "/teams/{teamId}/members")
-  public List<FlowUser> getTeamMembers(@PathVariable String teamId) {
+  public List<TeamMember> getTeamMembers(@PathVariable String teamId) {
     return flowTeamService.getTeamMembers(teamId);
   }
 

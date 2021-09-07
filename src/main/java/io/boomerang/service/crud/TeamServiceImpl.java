@@ -25,6 +25,7 @@ import io.boomerang.client.model.UserProfile;
 import io.boomerang.model.FlowTeam;
 import io.boomerang.model.FlowUser;
 import io.boomerang.model.FlowWorkflowRevision;
+import io.boomerang.model.TeamMember;
 import io.boomerang.model.TeamQueryResult;
 import io.boomerang.model.TeamWorkflowSummary;
 import io.boomerang.model.WorkflowQuotas;
@@ -716,22 +717,29 @@ public class TeamServiceImpl implements TeamService {
   }
 
   @Override
-  public List<FlowUser> getTeamMembers(String teamId) {
+  public List<TeamMember> getTeamMembers(String teamId) {
+    List<TeamMember> members = new LinkedList<>();
     if (!flowExternalUrlTeam.isBlank()) {
       TeamEntity flowTeam = this.flowTeamService.findById(teamId);
       String externalTeamId = flowTeam.getHigherLevelGroupId();
-      return this.externalTeamService.getExternalTeamMemberListing(externalTeamId);
+      List<FlowUserEntity> flowUsers = this.externalTeamService.getExternalTeamMemberListing(externalTeamId);
+      mapToTeamMemberList(members, flowUsers);
     } else {
       List<String> teamIds = new LinkedList<>();
       teamIds.add(teamId);
       List<FlowUserEntity> existingUsers = this.userIdentiyService.getUsersForTeams(teamIds);
-      List<FlowUser> userList = new LinkedList<>();
-      for (FlowUserEntity u : existingUsers) {
-        FlowUser user = new FlowUser();
-        BeanUtils.copyProperties(u, user);
-        userList.add(user);
-      }
-      return userList;
+      mapToTeamMemberList(members, existingUsers);
+    }
+    return members;
+  }
+
+  private void mapToTeamMemberList(List<TeamMember> members, List<FlowUserEntity> existingUsers) {
+    for (FlowUserEntity u : existingUsers) {
+      TeamMember user = new TeamMember();
+      user.setEmail(u.getEmail());
+      user.setUserName(u.getName());
+      user.setUserId(u.getId());
+      members.add(user);
     }
   }
 }

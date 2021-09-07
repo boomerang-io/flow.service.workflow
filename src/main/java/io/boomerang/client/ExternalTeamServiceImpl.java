@@ -19,6 +19,7 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import io.boomerang.client.model.ExternalTeam;
 import io.boomerang.model.FlowUser;
+import io.boomerang.mongo.entity.FlowUserEntity;
 import io.boomerang.mongo.entity.TeamEntity;
 import io.boomerang.mongo.model.Quotas;
 import io.boomerang.security.service.ApiTokenService;
@@ -108,16 +109,16 @@ public class ExternalTeamServiceImpl implements ExternalTeamService {
   }
 
   @Override
-  public List<FlowUser> getExternalTeamMemberListing(String teamId) {
+  public List<FlowUserEntity> getExternalTeamMemberListing(String teamId) {
     try {
       final HttpHeaders headers = new HttpHeaders();
       final HttpEntity<String> request = new HttpEntity<>(headers);
 
       String url = teamMemberBaseURL + "/" + teamId + "/members";
       
-      ResponseEntity<List<FlowUser>> response = restTemplate.exchange(url, HttpMethod.GET,
-          request, new ParameterizedTypeReference<List<FlowUser>>() {});
-      List<FlowUser> allTeams = response.getBody();
+      ResponseEntity<List<FlowUserEntity>> response = restTemplate.exchange(url, HttpMethod.GET,
+          request, new ParameterizedTypeReference<List<FlowUserEntity>>() {});
+      List<FlowUserEntity> allTeams = response.getBody();
       return allTeams;
     } catch (RestClientException e) {
       LOGGER.error("Error retrievign teams");
