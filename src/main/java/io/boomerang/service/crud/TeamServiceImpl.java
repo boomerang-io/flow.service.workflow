@@ -85,7 +85,7 @@ public class TeamServiceImpl implements TeamService {
 
   @Value("${max.workflow.storage}")
   private Integer maxWorkflowStorage;
-
+  
   @Autowired
   private UserIdentityService userIdentiyService;
 
@@ -715,4 +715,23 @@ public class TeamServiceImpl implements TeamService {
     }
   }
 
+  @Override
+  public List<FlowUser> getTeamMembers(String teamId) {
+    if (!flowExternalUrlTeam.isBlank()) {
+      TeamEntity flowTeam = this.flowTeamService.findById(teamId);
+      String externalTeamId = flowTeam.getHigherLevelGroupId();
+      return this.externalTeamService.getExternalTeamMemberListing(externalTeamId);
+    } else {
+      List<String> teamIds = new LinkedList<>();
+      teamIds.add(teamId);
+      List<FlowUserEntity> existingUsers = this.userIdentiyService.getUsersForTeams(teamIds);
+      List<FlowUser> userList = new LinkedList<>();
+      for (FlowUserEntity u : existingUsers) {
+        FlowUser user = new FlowUser();
+        BeanUtils.copyProperties(u, user);
+        userList.add(user);
+      }
+      return userList;
+    }
+  }
 }

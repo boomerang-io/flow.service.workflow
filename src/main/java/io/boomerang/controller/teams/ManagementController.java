@@ -117,13 +117,6 @@ public class ManagementController {
     }
   }
 
-//  @GetMapping(value = "/teams/{teamId}")
-//  public FlowTeam getTeam(@PathVariable String teamId) {
-//    if (isTeamManagementAvaliable()) {
-//      return teamService.getTeamById(teamId);
-//    }
-//    return new FlowTeam();
-//  }
 
   @PatchMapping(value = "/teams/{teamId}/members")
   public void updateTeamMembers(@PathVariable String teamId,

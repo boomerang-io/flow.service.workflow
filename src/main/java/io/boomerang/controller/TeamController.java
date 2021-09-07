@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import io.boomerang.model.CreateFlowTeam;
 import io.boomerang.model.FlowTeam;
+import io.boomerang.model.FlowUser;
 import io.boomerang.model.TeamQueryResult;
 import io.boomerang.model.TeamWorkflowSummary;
 import io.boomerang.model.WorkflowQuotas;
@@ -62,6 +63,11 @@ public class TeamController {
   @GetMapping(value = "/teams/{teamId}/properties")
   public List<FlowTeamConfiguration> getAllTeamProperties(@PathVariable String teamId) {
     return flowTeamService.getAllTeamProperties(teamId);
+  }
+  
+  @GetMapping(value = "/teams/{teamId}/members")
+  public List<FlowUser> getTeamMembers(@PathVariable String teamId) {
+    return flowTeamService.getTeamMembers(teamId);
   }
 
   @DeleteMapping(value = "/teams/{teamId}/properties/{configurationId}")

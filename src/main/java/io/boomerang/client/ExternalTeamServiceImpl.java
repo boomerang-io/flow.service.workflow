@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import io.boomerang.client.model.ExternalTeam;
+import io.boomerang.model.FlowUser;
 import io.boomerang.mongo.entity.TeamEntity;
 import io.boomerang.mongo.model.Quotas;
 import io.boomerang.security.service.ApiTokenService;
@@ -49,6 +50,9 @@ public class ExternalTeamServiceImpl implements ExternalTeamService {
   
   @Value("${max.concurrent.workflows}")
   private Integer maxConcurrentWorkflows;
+  
+  @Value("${launchpad.team.url}")
+  private String teamMemberBaseURL;
 
   private static final Logger LOGGER = LogManager.getLogger(ExternalTeamServiceImpl.class);
   
@@ -101,5 +105,24 @@ public class ExternalTeamServiceImpl implements ExternalTeamService {
 
     headers.setContentType(MediaType.APPLICATION_JSON);
     return headers;
+  }
+
+  @Override
+  public List<FlowUser> getExternalTeamMemberListing(String teamId) {
+    try {
+      final HttpHeaders headers = new HttpHeaders();
+      final HttpEntity<String> request = new HttpEntity<>(headers);
+
+      String url = teamMemberBaseURL + "/" + teamId + "/members";
+      
+      ResponseEntity<List<FlowUser>> response = restTemplate.exchange(url, HttpMethod.GET,
+          request, new ParameterizedTypeReference<List<FlowUser>>() {});
+      List<FlowUser> allTeams = response.getBody();
+      return allTeams;
+    } catch (RestClientException e) {
+      LOGGER.error("Error retrievign teams");
+      LOGGER.error(ExceptionUtils.getStackTrace(e));
+    }
+    return new LinkedList<>();
   }
 }
