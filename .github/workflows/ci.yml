@@ -74,7 +74,7 @@ jobs:
       - uses: actions/download-artifact@v2
         with:
           name: service-flow.jar
-          path: ${{ github.workspace }}/target/service-flow.jar
+          path: ${{ github.workspace }}/target
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
       - name: Set up Docker Buildx
