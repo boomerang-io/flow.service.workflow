@@ -22,7 +22,7 @@
 			"key": "max.team.workflow.execution.monthly",
 			"label": "Maximum Workflow Executions per month",
 			"type": "number",
-			"value": "20",
+			"value": "100",
 			"readOnly": false
 		},
 		{
