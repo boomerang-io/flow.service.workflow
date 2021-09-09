@@ -28,8 +28,12 @@
 			"topic": ""
 		}
 	},
-	"enablePersistentStorage": false,
+	"storage": {
+		"workflow": {
+			"enabled": false
+		}
+	},
 	"enableIAMIntegration": true,
 	"_class": "net.boomerangplatform.mongo.entity.FlowWorkflowEntity",
-	 "scope":"team"
+	"scope": "team"
 }

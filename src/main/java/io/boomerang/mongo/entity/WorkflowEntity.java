@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import io.boomerang.model.WorkflowToken;
 import io.boomerang.mongo.model.KeyValuePair;
+import io.boomerang.mongo.model.Storage;
 import io.boomerang.mongo.model.WorkflowProperty;
 import io.boomerang.mongo.model.Triggers;
 import io.boomerang.mongo.model.WorkflowScope;
@@ -24,7 +25,7 @@ public class WorkflowEntity {
 
   private String flowTeamId;
   private String ownerUserId;
-  
+
   private String icon;
   @Id
   private String id;
@@ -36,14 +37,13 @@ public class WorkflowEntity {
   private WorkflowStatus status;
 
   private Triggers triggers;
-  
+
   private List<WorkflowToken> tokens;
 
-  private boolean enablePersistentStorage;
-  
-  
+  private Storage storage;
+
   private List<KeyValuePair> labels;
-  
+
   private WorkflowScope scope;
 
   public List<WorkflowToken> getTokens() {
@@ -53,7 +53,7 @@ public class WorkflowEntity {
   public void setTokens(List<WorkflowToken> tokens) {
     this.tokens = tokens;
   }
-  
+
   public String getDescription() {
     return description;
   }
@@ -118,14 +118,6 @@ public class WorkflowEntity {
     this.triggers = triggers;
   }
 
-  public boolean isEnablePersistentStorage() {
-    return enablePersistentStorage;
-  }
-
-  public void setEnablePersistentStorage(boolean enablePersistentStorage) {
-    this.enablePersistentStorage = enablePersistentStorage;
-  }
-
   public List<WorkflowProperty> getProperties() {
     return properties;
   }
@@ -158,5 +150,12 @@ public class WorkflowEntity {
     this.ownerUserId = ownerUserId;
   }
 
+  public Storage getStorage() {
+    return storage;
+  }
+
+  public void setStorage(Storage storage) {
+    this.storage = storage;
+  }
 
 }

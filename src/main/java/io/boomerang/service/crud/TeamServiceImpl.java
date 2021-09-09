@@ -37,8 +37,10 @@ import io.boomerang.mongo.entity.FlowUserEntity;
 import io.boomerang.mongo.entity.WorkflowEntity;
 import io.boomerang.mongo.model.Quotas;
 import io.boomerang.mongo.model.Settings;
+import io.boomerang.mongo.model.Storage;
 import io.boomerang.mongo.model.TaskStatus;
 import io.boomerang.mongo.model.UserType;
+import io.boomerang.mongo.model.WorkflowStorage;
 import io.boomerang.mongo.service.FlowSettingsService;
 import io.boomerang.mongo.service.FlowTeamService;
 import io.boomerang.mongo.service.FlowUserService;
@@ -555,7 +557,14 @@ public class TeamServiceImpl implements TeamService {
   private void setWorkflowStorage(List<WorkflowSummary> workflows, WorkflowQuotas workflowQuotas) {
     Integer currentWorkflowsPersistentStorage = 0;
     for (WorkflowSummary workflow : workflows) {
-      if (workflow.isEnablePersistentStorage()) {
+      if(workflow.getStorage() == null) {
+        workflow.setStorage(new Storage());
+      }
+      if(workflow.getStorage().getWorkflow() == null) {
+        workflow.getStorage().setWorkflow(new WorkflowStorage());
+      }
+      
+      if (workflow.getStorage().getWorkflow().getEnabled()) {
         currentWorkflowsPersistentStorage += 1;
       }
     }
