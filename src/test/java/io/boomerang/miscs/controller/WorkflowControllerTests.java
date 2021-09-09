@@ -38,6 +38,7 @@ import io.boomerang.model.projectstormv5.RestConfig;
 import io.boomerang.mongo.entity.RevisionEntity;
 import io.boomerang.mongo.entity.WorkflowEntity;
 import io.boomerang.mongo.model.WorkflowProperty;
+import io.boomerang.mongo.model.Storage;
 import io.boomerang.mongo.model.TaskConfigurationNode;
 import io.boomerang.mongo.model.TriggerEvent;
 import io.boomerang.mongo.model.TriggerScheduler;
@@ -45,6 +46,7 @@ import io.boomerang.mongo.model.Triggers;
 import io.boomerang.mongo.model.WorkflowConfiguration;
 import io.boomerang.mongo.model.WorkflowScope;
 import io.boomerang.mongo.model.WorkflowStatus;
+import io.boomerang.mongo.model.WorkflowStorage;
 
 
 @ExtendWith(SpringExtension.class)
@@ -120,6 +122,8 @@ public class WorkflowControllerTests extends FlowTests {
     WorkflowSummary entity = new WorkflowSummary();
     entity.setId("5d1a188af6ca2c00014c4314");
     entity.setName("TestUpdateWorkflow");
+    entity.setStorage(new Storage());
+    entity.getStorage().setWorkflow(new WorkflowStorage());
     WorkflowSummary updatedEntity = controller.updateWorkflow(entity);
     Assertions.assertEquals("5d1a188af6ca2c00014c4314", updatedEntity.getId());
     Assertions.assertEquals("TestUpdateWorkflow", updatedEntity.getName());
@@ -160,7 +164,8 @@ public class WorkflowControllerTests extends FlowTests {
     export.setDescription("testImportDescription");
     export.setName("testImportName");
     export.setId("5d7177af2c57250007e3d7a1");
-
+    export.setStorage(new Storage());
+    export.getStorage().setWorkflow(new WorkflowStorage());
     TriggerEvent manual = new TriggerEvent();
     manual.setEnable(true);
 
