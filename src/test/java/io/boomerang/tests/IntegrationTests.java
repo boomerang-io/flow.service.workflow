@@ -99,11 +99,13 @@ public abstract class IntegrationTests extends AbstractFlowTests {
             "tests/setup/templates/27.json", "tests/setup/templates/28.json",
             "tests/setup/templates/29.json", "tests/setup/templates/31.json",
             "tests/setup/templates/32.json", "tests/setup/templates/33.json",
-            "tests/setup/templates/34.json",  "tests/setup/templates/35.json",
+            "tests/setup/templates/34.json", "tests/setup/templates/35.json",
             "tests/setup/templates/36.json"));
     data.put("flow_teams", Arrays.asList("tests/setup/teams/team1.json"));
-    data.put("flow_settings", Arrays.asList("db/flow_settings/setting1.json",
-        "db/flow_settings/setting2.json", "db/flow_settings/setting3.json", "db/flow_settings/setting4.json"));
+    data.put("flow_settings",
+        Arrays.asList("db/flow_settings/setting1.json", "db/flow_settings/setting2.json",
+            "db/flow_settings/setting3.json", "db/flow_settings/setting4.json",
+            "db/flow_settings/setting5.json"));
 
     getTestCaseData(data);
 
@@ -171,7 +173,7 @@ public abstract class IntegrationTests extends AbstractFlowTests {
             HttpMethod.GET, requestUpdate, ListActionResponse.class);
     ListActionResponse approvalList = latestActivity.getBody();
 
-    try  {
+    try {
       ObjectMapper objectMapper = new ObjectMapper();
       String payload =
           objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(approvalList);

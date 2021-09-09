@@ -43,6 +43,7 @@ import io.boomerang.mongo.model.Quotas;
 import io.boomerang.mongo.model.Settings;
 import io.boomerang.mongo.model.TaskStatus;
 import io.boomerang.mongo.model.UserType;
+import io.boomerang.mongo.service.FlowSettingsService;
 import io.boomerang.mongo.service.FlowTeamService;
 import io.boomerang.mongo.service.FlowUserService;
 import io.boomerang.mongo.service.FlowWorkflowActivityService;
@@ -76,20 +77,17 @@ public class TeamServiceImpl implements TeamService {
   @Autowired
   private FlowWorkflowService flowWorkflowService;
 
-  @Value("${max.concurrent.workflows}")
-  private Integer maxConcurrentWorkflows;
+  @Autowired
+  private FlowSettingsService flowSettingsService;
 
-  @Value("${max.workflow.count}")
-  private Integer maxWorkflowCount;
+  public static final String TEAMS = "teams";
+  public static final String MAX_TEAM_WORKFLOW_COUNT = "max.team.workflow.count";
+  public static final String MAX_TEAM_CONCURRENT_WORKFLOW = "max.team.concurrent.workflows";
+  public static final String MAX_TEAM_WORKFLOW_EXECUTION_MONTHLY =
+      "max.team.workflow.execution.monthly";
+  public static final String MAX_TEAM_WORKFLOW_STORAGE = "max.team.workflow.storage";
+  public static final String MAX_TEAM_WORKFLOW_DURATION = "max.team.workflow.duration";
 
-  @Value("${max.workflow.execution.monthly}")
-  private Integer maxWorkflowExecutionMonthly;
-
-  @Value("${max.workflow.execution.time}")
-  private Integer maxWorkflowExecutionTime;
-
-  @Value("${max.workflow.storage}")
-  private Integer maxWorkflowStorage;
 
   @Autowired
   private UserIdentityService userIdentiyService;
@@ -130,11 +128,16 @@ public class TeamServiceImpl implements TeamService {
     flowTeamEntity.setIsActive(true);
     if (flowTeamEntity.getQuotas() == null) {
       Quotas quotas = new Quotas();
-      quotas.setMaxWorkflowCount(maxWorkflowCount);
-      quotas.setMaxWorkflowExecutionMonthly(maxWorkflowExecutionMonthly);
-      quotas.setMaxWorkflowStorage(maxWorkflowStorage);
-      quotas.setMaxWorkflowExecutionTime(maxWorkflowExecutionTime);
-      quotas.setMaxConcurrentWorkflows(maxConcurrentWorkflows);
+      quotas.setMaxWorkflowCount(Integer.valueOf(
+          flowSettingsService.getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_COUNT).getValue()));
+      quotas.setMaxWorkflowExecutionMonthly(Integer.valueOf(flowSettingsService
+          .getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_EXECUTION_MONTHLY).getValue()));
+      quotas.setMaxWorkflowStorage(Integer.valueOf(
+          flowSettingsService.getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_STORAGE).getValue()));
+      quotas.setMaxWorkflowExecutionTime(Integer.valueOf(
+          flowSettingsService.getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_DURATION).getValue()));
+      quotas.setMaxConcurrentWorkflows(Integer.valueOf(
+          flowSettingsService.getConfiguration(TEAMS, MAX_TEAM_CONCURRENT_WORKFLOW).getValue()));
       flowTeamEntity.setQuotas(quotas);
     }
     flowTeamService.save(flowTeamEntity);
@@ -172,11 +175,16 @@ public class TeamServiceImpl implements TeamService {
     flowTeamEntity.setIsActive(true);
     if (flowTeamEntity.getQuotas() == null) {
       Quotas quotas = new Quotas();
-      quotas.setMaxWorkflowCount(maxWorkflowCount);
-      quotas.setMaxWorkflowExecutionMonthly(maxWorkflowExecutionMonthly);
-      quotas.setMaxWorkflowStorage(maxWorkflowStorage);
-      quotas.setMaxWorkflowExecutionTime(maxWorkflowExecutionTime);
-      quotas.setMaxConcurrentWorkflows(maxConcurrentWorkflows);
+      quotas.setMaxWorkflowCount(Integer.valueOf(
+          flowSettingsService.getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_COUNT).getValue()));
+      quotas.setMaxWorkflowExecutionMonthly(Integer.valueOf(flowSettingsService
+          .getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_EXECUTION_MONTHLY).getValue()));
+      quotas.setMaxWorkflowStorage(Integer.valueOf(
+          flowSettingsService.getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_STORAGE).getValue()));
+      quotas.setMaxWorkflowExecutionTime(Integer.valueOf(
+          flowSettingsService.getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_DURATION).getValue()));
+      quotas.setMaxConcurrentWorkflows(Integer.valueOf(
+          flowSettingsService.getConfiguration(TEAMS, MAX_TEAM_CONCURRENT_WORKFLOW).getValue()));
       flowTeamEntity.setQuotas(quotas);
     }
     flowTeamEntity = flowTeamService.save(flowTeamEntity);
@@ -285,11 +293,16 @@ public class TeamServiceImpl implements TeamService {
   @Override
   public Quotas getDefaultQuotas() {
     Quotas quota = new Quotas();
-    quota.setMaxConcurrentWorkflows(maxConcurrentWorkflows);
-    quota.setMaxWorkflowCount(maxWorkflowCount);
-    quota.setMaxWorkflowExecutionMonthly(maxWorkflowExecutionMonthly);
-    quota.setMaxWorkflowExecutionTime(maxWorkflowExecutionTime);
-    quota.setMaxWorkflowStorage(maxWorkflowStorage);
+    quota.setMaxWorkflowCount(Integer
+        .valueOf(flowSettingsService.getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_COUNT).getValue()));
+    quota.setMaxWorkflowExecutionMonthly(Integer.valueOf(flowSettingsService
+        .getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_EXECUTION_MONTHLY).getValue()));
+    quota.setMaxWorkflowStorage(Integer.valueOf(
+        flowSettingsService.getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_STORAGE).getValue()));
+    quota.setMaxWorkflowExecutionTime(Integer.valueOf(
+        flowSettingsService.getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_DURATION).getValue()));
+    quota.setMaxConcurrentWorkflows(Integer.valueOf(
+        flowSettingsService.getConfiguration(TEAMS, MAX_TEAM_CONCURRENT_WORKFLOW).getValue()));
     return quota;
 
   }
@@ -465,11 +478,16 @@ public class TeamServiceImpl implements TeamService {
     List<ActivityEntity> activitiesMonthly = getMonthlyWorkflowActivities(page, teamId);
 
     Quotas teamQuotas = team.getQuotas();
-    teamQuotas.setMaxWorkflowCount(maxWorkflowCount);
-    teamQuotas.setMaxWorkflowExecutionMonthly(maxWorkflowExecutionMonthly);
-    teamQuotas.setMaxWorkflowStorage(maxWorkflowStorage);
-    teamQuotas.setMaxWorkflowExecutionTime(maxWorkflowExecutionTime);
-    teamQuotas.setMaxConcurrentWorkflows(maxConcurrentWorkflows);
+    teamQuotas.setMaxWorkflowCount(Integer
+        .valueOf(flowSettingsService.getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_COUNT).getValue()));
+    teamQuotas.setMaxWorkflowExecutionMonthly(Integer.valueOf(flowSettingsService
+        .getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_EXECUTION_MONTHLY).getValue()));
+    teamQuotas.setMaxWorkflowStorage(Integer.valueOf(
+        flowSettingsService.getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_STORAGE).getValue()));
+    teamQuotas.setMaxWorkflowExecutionTime(Integer.valueOf(
+        flowSettingsService.getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_DURATION).getValue()));
+    teamQuotas.setMaxConcurrentWorkflows(Integer.valueOf(
+        flowSettingsService.getConfiguration(TEAMS, MAX_TEAM_CONCURRENT_WORKFLOW).getValue()));
     TeamEntity updatedTeam = this.flowTeamService.save(team);
 
     WorkflowQuotas workflowQuotas = new WorkflowQuotas();
@@ -498,27 +516,32 @@ public class TeamServiceImpl implements TeamService {
     if (team.getQuotas().getMaxWorkflowCount() != null) {
       quotas.setMaxWorkflowCount(team.getQuotas().getMaxWorkflowCount());
     } else {
-      quotas.setMaxWorkflowCount(maxWorkflowCount);
+      quotas.setMaxWorkflowCount(Integer.valueOf(
+          flowSettingsService.getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_COUNT).getValue()));
     }
     if (team.getQuotas().getMaxWorkflowExecutionMonthly() != null) {
       quotas.setMaxWorkflowExecutionMonthly(team.getQuotas().getMaxWorkflowExecutionMonthly());
     } else {
-      quotas.setMaxWorkflowExecutionMonthly(maxWorkflowExecutionMonthly);
+      quotas.setMaxWorkflowExecutionMonthly(Integer.valueOf(flowSettingsService
+          .getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_EXECUTION_MONTHLY).getValue()));
     }
     if (team.getQuotas().getMaxWorkflowStorage() != null) {
       quotas.setMaxWorkflowStorage(team.getQuotas().getMaxWorkflowStorage());
     } else {
-      quotas.setMaxWorkflowStorage(maxWorkflowStorage);
+      quotas.setMaxWorkflowStorage(Integer.valueOf(
+          flowSettingsService.getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_STORAGE).getValue()));
     }
     if (team.getQuotas().getMaxWorkflowExecutionTime() != null) {
       quotas.setMaxWorkflowExecutionTime(team.getQuotas().getMaxWorkflowExecutionTime());
     } else {
-      quotas.setMaxWorkflowExecutionTime(maxWorkflowExecutionTime);
+      quotas.setMaxWorkflowExecutionTime(Integer.valueOf(
+          flowSettingsService.getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_DURATION).getValue()));
     }
     if (team.getQuotas().getMaxConcurrentWorkflows() != null) {
       quotas.setMaxConcurrentWorkflows(team.getQuotas().getMaxConcurrentWorkflows());
     } else {
-      quotas.setMaxConcurrentWorkflows(maxConcurrentWorkflows);
+      quotas.setMaxConcurrentWorkflows(Integer.valueOf(
+          flowSettingsService.getConfiguration(TEAMS, MAX_TEAM_CONCURRENT_WORKFLOW).getValue()));
     }
     return quotas;
   }
