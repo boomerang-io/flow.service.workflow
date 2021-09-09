@@ -719,7 +719,7 @@ public class TeamServiceImpl implements TeamService {
   @Override
   public List<TeamMember> getTeamMembers(String teamId) {
     List<TeamMember> members = new LinkedList<>();
-    if (!flowExternalUrlTeam.isBlank()) {
+    if (!flowExternalUrlUser.isBlank()) {
       TeamEntity flowTeam = this.flowTeamService.findById(teamId);
       String externalTeamId = flowTeam.getHigherLevelGroupId();
       List<FlowUserEntity> flowUsers = this.externalTeamService.getExternalTeamMemberListing(externalTeamId);
