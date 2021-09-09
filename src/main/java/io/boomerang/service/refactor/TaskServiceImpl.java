@@ -12,6 +12,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.retry.backoff.FixedBackOffPolicy;
 import org.springframework.retry.policy.SimpleRetryPolicy;
 import org.springframework.retry.support.RetryTemplate;
@@ -53,6 +54,7 @@ import io.boomerang.service.runner.misc.ControllerClient;
 public class TaskServiceImpl implements TaskService {
 
   @Autowired
+  @Lazy
   private ControllerClient controllerClient;
 
   @Autowired
