@@ -1,4 +1,4 @@
-package io.boomerang.model;
+package io.boomerang.model.teams;
 
 import io.boomerang.mongo.entity.ApprovalEntity;
 

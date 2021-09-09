@@ -26,9 +26,12 @@ import io.boomerang.model.TeamQueryResult;
 import io.boomerang.model.TeamWorkflowSummary;
 import io.boomerang.model.WorkflowQuotas;
 import io.boomerang.model.profile.SortSummary;
+import io.boomerang.model.teams.ApproverGroupResponse;
+import io.boomerang.model.teams.CreateApproverGroupRequest;
 import io.boomerang.mongo.entity.FlowTeamConfiguration;
 import io.boomerang.mongo.entity.TeamEntity;
 import io.boomerang.mongo.entity.FlowUserEntity;
+import io.boomerang.mongo.model.ApproverGroup;
 import io.boomerang.mongo.model.Quotas;
 import io.boomerang.mongo.model.UserType;
 import io.boomerang.service.UserIdentityService;
@@ -150,5 +153,30 @@ public class TeamController {
   public TeamEntity deactivateTeam(@PathVariable String teamId) {
     return flowTeamService.deactivateTeam(teamId);
   }
-
+ 
+  @GetMapping(value = "/teams/{teamId}/approvers")
+  public List<ApproverGroupResponse> getApproverGroups(@PathVariable String teamId) {
+    return flowTeamService.getTeamApproverGroups(teamId);
+  }
+  
+  @PostMapping(value = "/teams/{teamId}/approvers")
+  public ApproverGroupResponse createApproverGroup(@PathVariable String teamId, @RequestBody CreateApproverGroupRequest createApproverGroupRequest) {
+    return flowTeamService.createApproverGroup(teamId, createApproverGroupRequest);
+  }
+  
+  @PutMapping(value = "/teams/{teamId}/approvers/{groupId}")
+  public ApproverGroupResponse updateApproverGroup(@PathVariable String teamId, @PathVariable String groupId, @RequestBody CreateApproverGroupRequest updateApproverGroup) {
+    return flowTeamService.updateApproverGroup(teamId, groupId, updateApproverGroup);
+  }
+  
+  @GetMapping(value = "/teams/{teamId}/approvers/{groupId}")
+  public ApproverGroupResponse getSingleAproverGroup(@PathVariable String teamId, @PathVariable String groupId) {
+    return flowTeamService.getSingleAproverGroup(teamId, groupId);
+  }
+ 
+  
+  @DeleteMapping(value = "/teams/{teamId}/approvers/{groupId}")
+  public void deleteApproverGroup(@PathVariable String teamId,@PathVariable String groupId) {
+    flowTeamService.deleteApproverGroup(teamId, groupId);
+  }
 }

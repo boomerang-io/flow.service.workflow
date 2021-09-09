@@ -30,11 +30,15 @@ import io.boomerang.model.TeamQueryResult;
 import io.boomerang.model.TeamWorkflowSummary;
 import io.boomerang.model.WorkflowQuotas;
 import io.boomerang.model.WorkflowSummary;
+import io.boomerang.model.teams.ApproverGroupResponse;
+import io.boomerang.model.teams.ApproverUser;
+import io.boomerang.model.teams.CreateApproverGroupRequest;
 import io.boomerang.mongo.entity.ActivityEntity;
 import io.boomerang.mongo.entity.FlowTeamConfiguration;
 import io.boomerang.mongo.entity.TeamEntity;
 import io.boomerang.mongo.entity.FlowUserEntity;
 import io.boomerang.mongo.entity.WorkflowEntity;
+import io.boomerang.mongo.model.ApproverGroup;
 import io.boomerang.mongo.model.Quotas;
 import io.boomerang.mongo.model.Settings;
 import io.boomerang.mongo.model.TaskStatus;
@@ -86,7 +90,7 @@ public class TeamServiceImpl implements TeamService {
 
   @Value("${max.workflow.storage}")
   private Integer maxWorkflowStorage;
-  
+
   @Autowired
   private UserIdentityService userIdentiyService;
 
@@ -351,11 +355,11 @@ public class TeamServiceImpl implements TeamService {
 
   private void convertToFlowUserList(FlowTeam flowTeam, List<FlowUserEntity> existingUsers) {
     List<FlowUser> users = new LinkedList<>();
-    
+
     for (FlowUserEntity user : existingUsers) {
       FlowUser flowUser = new FlowUser();
       BeanUtils.copyProperties(user, flowUser);
-      
+
       users.add(flowUser);
     }
     flowTeam.setUsers(users);
@@ -439,8 +443,7 @@ public class TeamServiceImpl implements TeamService {
     return teamWorkFlowSummary;
   }
 
-  private List<TeamWorkflowSummary> populateWorkflowSummaryInformation(
-      List<TeamEntity> flowTeams) {
+  private List<TeamWorkflowSummary> populateWorkflowSummaryInformation(List<TeamEntity> flowTeams) {
     final List<TeamWorkflowSummary> teamWorkFlowSummary = new LinkedList<>();
     for (final TeamEntity entity : flowTeams) {
       final List<WorkflowSummary> workflowSummary =
@@ -586,20 +589,20 @@ public class TeamServiceImpl implements TeamService {
       }
     }
   }
-  
+
 
   @Override
   public void updateSummaryWithUpgradeFlags(List<WorkflowSummary> workflowSummary) {
 
-      for (WorkflowSummary summary : workflowSummary) {
-        String workflowId = summary.getId();
-        FlowWorkflowRevision latestRevision =
-            workflowVersionService.getLatestWorkflowVersion(workflowId);
-        if (latestRevision != null) {
-          summary.setTemplateUpgradesAvailable(latestRevision.isTemplateUpgradesAvailable());
-        }
+    for (WorkflowSummary summary : workflowSummary) {
+      String workflowId = summary.getId();
+      FlowWorkflowRevision latestRevision =
+          workflowVersionService.getLatestWorkflowVersion(workflowId);
+      if (latestRevision != null) {
+        summary.setTemplateUpgradesAvailable(latestRevision.isTemplateUpgradesAvailable());
       }
-    
+    }
+
   }
 
   @Override
@@ -722,7 +725,8 @@ public class TeamServiceImpl implements TeamService {
     if (!flowExternalUrlUser.isBlank()) {
       TeamEntity flowTeam = this.flowTeamService.findById(teamId);
       String externalTeamId = flowTeam.getHigherLevelGroupId();
-      List<FlowUserEntity> flowUsers = this.externalTeamService.getExternalTeamMemberListing(externalTeamId);
+      List<FlowUserEntity> flowUsers =
+          this.externalTeamService.getExternalTeamMemberListing(externalTeamId);
       mapToTeamMemberList(members, flowUsers);
     } else {
       List<String> teamIds = new LinkedList<>();
@@ -741,5 +745,140 @@ public class TeamServiceImpl implements TeamService {
       user.setUserId(u.getId());
       members.add(user);
     }
+  }
+
+  @Override
+  public void deleteApproverGroup(String teamId, String groupId) {
+    TeamEntity team = flowTeamService.findById(teamId);
+
+    if (team != null) {
+      if (team.getApproverGroups() == null) {
+        team.setApproverGroups(new LinkedList<ApproverGroup>());
+      }
+      ApproverGroup deletedGroup = team.getApproverGroups().stream()
+          .filter(x -> groupId.equals(x.getId())).findFirst().orElse(null);
+      if (deletedGroup != null) {
+        team.getApproverGroups().remove(deletedGroup);
+      }
+      flowTeamService.save(team);
+    }
+  }
+
+  @Override
+  public List<ApproverGroupResponse> getTeamApproverGroups(String teamId) {
+    TeamEntity team = flowTeamService.findById(teamId);
+    List<ApproverGroupResponse> response = new LinkedList<>();
+
+    if (team != null && team.getApproverGroups() != null) {
+
+      for (ApproverGroup group : team.getApproverGroups()) {
+        ApproverGroupResponse approverGroupResponse = this.createApproverGroupResponse(group, team);
+        response.add(approverGroupResponse);
+      }
+    }
+    return response;
+  }
+
+  @Override
+  public ApproverGroupResponse createApproverGroup(String teamId,
+      CreateApproverGroupRequest createApproverGroupRequest) {
+    String newGroupId = UUID.randomUUID().toString();
+    ApproverGroup group = new ApproverGroup();
+    group.setId(newGroupId);
+    group.setName(createApproverGroupRequest.getGroupName());
+
+    if (createApproverGroupRequest.getApprovers() != null) {
+      List<ApproverUser> users = new LinkedList<>();
+      for (ApproverUser user : createApproverGroupRequest.getApprovers()) {
+        ApproverUser newUser = new ApproverUser();
+        newUser.setUserId(user.getUserId());
+
+        users.add(newUser);
+      }
+      group.setApprovers(users);
+    }
+
+    TeamEntity team = flowTeamService.findById(teamId);
+
+    if (team != null) {
+      if (team.getApproverGroups() == null) {
+        team.setApproverGroups(new LinkedList<ApproverGroup>());
+      }
+      List<ApproverGroup> approverGroups = team.getApproverGroups();
+      approverGroups.add(group);
+      flowTeamService.save(team);
+      return this.createApproverGroupResponse(group, team);
+    }
+    return null;
+  }
+
+  private ApproverGroupResponse createApproverGroupResponse(ApproverGroup group, TeamEntity team) {
+
+    ApproverGroupResponse approverGroupResponse = new ApproverGroupResponse();
+    approverGroupResponse.setGroupId(group.getId());
+    approverGroupResponse.setGroupName(group.getName());
+    approverGroupResponse.setTeamId(team.getId());
+    approverGroupResponse.setTeamName(team.getName());
+
+    if (group.getApprovers() == null) {
+      group.setApprovers(new LinkedList<>());
+    }
+
+    approverGroupResponse.setApprovers(group.getApprovers());
+
+    for (ApproverUser approverUser : group.getApprovers()) {
+      FlowUserEntity flowUser = this.userIdentiyService.getUserByID(approverUser.getUserId());
+      approverUser.setUserEmail(flowUser.getEmail());
+      approverUser.setUserName(flowUser.getName());
+    }
+
+    return approverGroupResponse;
+  }
+
+  @Override
+  public ApproverGroupResponse updateApproverGroup(String teamId, String groupId,
+      CreateApproverGroupRequest updatedRequest) {
+    TeamEntity team = flowTeamService.findById(teamId);
+
+    if (team != null) {
+      if (team.getApproverGroups() == null) {
+        team.setApproverGroups(new LinkedList<ApproverGroup>());
+      }
+      ApproverGroup updatedGroup = team.getApproverGroups().stream()
+          .filter(x -> groupId.equals(x.getId())).findFirst().orElse(null);
+      if (updatedGroup != null) {
+        if (updatedRequest.getGroupName() != null) {
+          updatedGroup.setName(updatedRequest.getGroupName());
+        }
+        if (updatedRequest.getApprovers() != null) {
+          List<ApproverUser> users = new LinkedList<>();
+          for (ApproverUser user : updatedRequest.getApprovers()) {
+            ApproverUser newUser = new ApproverUser();
+            newUser.setUserId(user.getUserId());
+            users.add(newUser);
+          }
+          updatedGroup.setApprovers(users);
+        }
+        flowTeamService.save(team);
+        return this.createApproverGroupResponse(updatedGroup, team);
+      }
+    }
+    return null;
+  }
+
+  @Override
+  public ApproverGroupResponse getSingleAproverGroup(String teamId, String groupId) {
+    TeamEntity team = flowTeamService.findById(teamId);
+    if (team != null) {
+      if (team.getApproverGroups() == null) {
+        team.setApproverGroups(new LinkedList<ApproverGroup>());
+      }
+      ApproverGroup group = team.getApproverGroups().stream()
+          .filter(x -> groupId.equals(x.getId())).findFirst().orElse(null);
+      if (group != null) {
+        return this.createApproverGroupResponse(group, team);
+      }
+    }
+    return null;
   }
 }

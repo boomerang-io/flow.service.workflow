@@ -1,12 +1,14 @@
 package io.boomerang.mongo.model;
 
 import java.util.List;
+import io.boomerang.model.teams.ApproverUser;
 
 public class ApproverGroup {
 
   private String id;
   private String name;
-  private List<String> members;
+  private List<ApproverUser> approvers;
+  
   public String getId() {
     return id;
   }
@@ -19,11 +21,12 @@ public class ApproverGroup {
   public void setName(String name) {
     this.name = name;
   }
-  public List<String> getMembers() {
-    return members;
+  public List<ApproverUser> getApprovers() {
+    return approvers;
   }
-  public void setMembers(List<String> members) {
-    this.members = members;
+  public void setApprovers(List<ApproverUser> approvers) {
+    this.approvers = approvers;
   }
+
   
 }

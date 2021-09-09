@@ -8,9 +8,12 @@ import io.boomerang.model.TeamQueryResult;
 import io.boomerang.model.TeamWorkflowSummary;
 import io.boomerang.model.WorkflowQuotas;
 import io.boomerang.model.WorkflowSummary;
+import io.boomerang.model.teams.ApproverGroupResponse;
+import io.boomerang.model.teams.CreateApproverGroupRequest;
 import io.boomerang.mongo.entity.FlowTeamConfiguration;
 import io.boomerang.mongo.entity.TeamEntity;
 import io.boomerang.mongo.entity.FlowUserEntity;
+import io.boomerang.mongo.model.ApproverGroup;
 import io.boomerang.mongo.model.Quotas;
 
 public interface TeamService {
@@ -64,6 +67,16 @@ public interface TeamService {
   List<TeamEntity> getUsersTeamListing(FlowUserEntity userEntity);
 
   List<TeamMember> getTeamMembers(String teamId);
-  
+
+  void deleteApproverGroup(String teamId, String groupId);
+
+  List<ApproverGroupResponse> getTeamApproverGroups(String teamId);
+
+  ApproverGroupResponse createApproverGroup(String teamId, CreateApproverGroupRequest createApproverGroupRequest);
+
+  ApproverGroupResponse updateApproverGroup(String teamId, String groupId, CreateApproverGroupRequest updateApproverGroup);
+
+  ApproverGroupResponse getSingleAproverGroup(String teamId, String groupId);
+
 
 }

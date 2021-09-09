@@ -5,10 +5,10 @@ import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort.Direction;
-import io.boomerang.model.Action;
 import io.boomerang.model.ApprovalRequest;
 import io.boomerang.model.ApprovalStatus;
 import io.boomerang.model.ListActionResponse;
+import io.boomerang.model.teams.Action;
 import io.boomerang.mongo.model.ManualType;
 
 public interface ActionService {
