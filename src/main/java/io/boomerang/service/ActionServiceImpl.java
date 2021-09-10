@@ -91,7 +91,7 @@ public class ActionServiceImpl implements ActionService {
     FlowUserEntity flowUser = userIdentityService.getCurrentUser();
     ApprovalEntity approvalEntity = approvalService.findById(request.getId());
 
-    if (approvalEntity.getActioners() != null) {
+    if (approvalEntity.getActioners() == null) {
       approvalEntity.setActioners(new LinkedList<>());
     }
 
@@ -101,12 +101,10 @@ public class ActionServiceImpl implements ActionService {
 
       String approverGroupId = approvalEntity.getApproverGroupId();
       int numberApprovals = approvalEntity.getNumberOfApprovers();
-
       boolean canBeApproved = false;
       if (approverGroupId != null) {
         String workflowId = approvalEntity.getWorkflowId();
         WorkflowEntity workflow = this.workflowService.getWorkflow(workflowId);
-
         if (workflow.getScope() == WorkflowScope.team) {
           String teamId = workflow.getFlowTeamId();
           TeamEntity team = this.teamService.getTeamById(teamId);
@@ -124,9 +122,9 @@ public class ActionServiceImpl implements ActionService {
           } else {
             canBeApproved = true;
           }
-        } else {
-          canBeApproved = true;
-        }
+        } 
+      } else {
+        canBeApproved = true;
       }
       
       if (canBeApproved) {
