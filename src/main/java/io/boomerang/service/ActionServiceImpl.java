@@ -29,11 +29,13 @@ import io.boomerang.mongo.entity.FlowUserEntity;
 import io.boomerang.mongo.entity.RevisionEntity;
 import io.boomerang.mongo.entity.TaskExecutionEntity;
 import io.boomerang.mongo.entity.WorkflowEntity;
+import io.boomerang.mongo.model.ApproverGroup;
 import io.boomerang.mongo.model.Audit;
 import io.boomerang.mongo.model.KeyValuePair;
 import io.boomerang.mongo.model.ManualType;
 import io.boomerang.mongo.model.TaskStatus;
 import io.boomerang.mongo.model.UserType;
+import io.boomerang.mongo.model.WorkflowScope;
 import io.boomerang.mongo.model.internal.InternalTaskResponse;
 import io.boomerang.mongo.model.next.DAGTask;
 import io.boomerang.mongo.service.ActivityTaskService;
@@ -88,64 +90,106 @@ public class ActionServiceImpl implements ActionService {
 
     FlowUserEntity flowUser = userIdentityService.getCurrentUser();
     ApprovalEntity approvalEntity = approvalService.findById(request.getId());
-    if (approvalEntity != null && flowUser != null) {
 
+    if (approvalEntity.getActioners() != null) {
+      approvalEntity.setActioners(new LinkedList<>());
+    }
+
+    if (approvalEntity.getType() == ManualType.approval) {
+
+      String flowUserId = flowUser.getId();
+
+      String approverGroupId = approvalEntity.getApproverGroupId();
+      int numberApprovals = approvalEntity.getNumberOfApprovers();
+
+      boolean canBeApproved = false;
+      if (approverGroupId != null) {
+        String workflowId = approvalEntity.getWorkflowId();
+        WorkflowEntity workflow = this.workflowService.getWorkflow(workflowId);
+
+        if (workflow.getScope() == WorkflowScope.team) {
+          String teamId = workflow.getFlowTeamId();
+          TeamEntity team = this.teamService.getTeamById(teamId);
+          if (team.getApproverGroups() != null) {
+            List<ApproverGroup> approverGroups = team.getApproverGroups();
+            ApproverGroup group = approverGroups.stream()
+                .filter(x -> approverGroupId.equals(x.getId())).findFirst().orElse(null);
+            if (group != null) {
+              boolean partOfGroup = group.getApprovers().stream()
+                  .anyMatch(x -> x.getUserId().equals(flowUserId));
+              if (partOfGroup) {
+                canBeApproved = true;
+              }
+            }
+          } else {
+            canBeApproved = true;
+          }
+        } else {
+          canBeApproved = true;
+        }
+      }
+      
+      if (canBeApproved) {
+        Audit audit = new Audit();
+        audit.setActionDate(new Date());
+        audit.setApproverId(flowUser.getId());
+        audit.setComments(request.getComments());
+        approvalEntity.getActioners().add(audit);
+      }
+      
+      if (approvalEntity.getActioners().size() >= numberApprovals) {
+        InternalTaskResponse actionApprovalResponse = new InternalTaskResponse();
+        actionApprovalResponse.setActivityId(approvalEntity.getTaskActivityId());
+        Map<String, String> outputProperties = new HashMap<>();
+        actionApproval(request, approvalEntity, actionApprovalResponse, outputProperties);
+      }
+    } else if (approvalEntity.getType() == ManualType.task) {
       Audit audit = new Audit();
       audit.setActionDate(new Date());
       audit.setApproverId(flowUser.getId());
       audit.setComments(request.getComments());
-
-   //   approvalEntity.setAudit(audit);
-      Map<String, String> outputProperties = new HashMap<>();
-
-      outputProperties.put("approvalUserName", flowUser.getName());
-      outputProperties.put("approvalUserEmail", flowUser.getEmail());
-
-
+      approvalEntity.getActioners().add(audit);
       InternalTaskResponse actionApprovalResponse = new InternalTaskResponse();
       actionApprovalResponse.setActivityId(approvalEntity.getTaskActivityId());
+      Map<String, String> outputProperties = new HashMap<>();
 
-      outputProperties.put("approvalComments", audit.getComments());
-
-      SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mmZZZZ");
-      String strDate = formatter.format(audit.getActionDate());
-
-      outputProperties.put("approvalDate", strDate);
-
-      if (request.isApproved()) {
-        outputProperties.put("approvalStatus", ApprovalStatus.approved.toString());
-        approvalEntity.setStatus(ApprovalStatus.approved);
-        actionApprovalResponse.setStatus(TaskStatus.completed);
-      } else {
-        outputProperties.put("approvalStatus", ApprovalStatus.rejected.toString());
-        approvalEntity.setStatus(ApprovalStatus.rejected);
-        actionApprovalResponse.setStatus(TaskStatus.failure);
-      }
-      actionApprovalResponse.setOutputProperties(outputProperties);
-      approvalService.save(approvalEntity);
-      taskClient.endTask(taskService, actionApprovalResponse);
+      actionApproval(request, approvalEntity, actionApprovalResponse, outputProperties);
     }
+  }
+
+  private void actionApproval(ApprovalRequest request, ApprovalEntity approvalEntity,
+      InternalTaskResponse actionApprovalResponse, Map<String, String> outputProperties) {
+    if (request.isApproved()) {
+      outputProperties.put("approvalStatus", ApprovalStatus.approved.toString());
+      approvalEntity.setStatus(ApprovalStatus.approved);
+      actionApprovalResponse.setStatus(TaskStatus.completed);
+    } else {
+      outputProperties.put("approvalStatus", ApprovalStatus.rejected.toString());
+      approvalEntity.setStatus(ApprovalStatus.rejected);
+      actionApprovalResponse.setStatus(TaskStatus.failure);
+    }
+    actionApprovalResponse.setOutputProperties(outputProperties);
+    approvalService.save(approvalEntity);
+    taskClient.endTask(taskService, actionApprovalResponse);
   }
 
   private Action convertToApproval(ApprovalEntity approvalEntity) {
 
     Action approval = new Action();
     approval.setId(approvalEntity.getId());
-    //approval.setAudit(approvalEntity.getAudit());
+    // approval.setAudit(approvalEntity.getAudit());
     approval.setActivityId(approvalEntity.getActivityId());
     approval.setTaskActivityId(approvalEntity.getTaskActivityId());
     approval.setWorkflowId(approvalEntity.getWorkflowId());
     approval.setTeamId(approvalEntity.getTeamId());
     approval.setStatus(approvalEntity.getStatus());
     approval.setType(approvalEntity.getType());
-    
+
     /*
-    if (approval.getAudit() != null) {
-      Audit audit = approval.getAudit();
-      FlowUserEntity flowUser = userIdentityService.getUserByID(audit.getApproverId());
-      audit.setApproverEmail(flowUser.getEmail());
-      audit.setApproverName(flowUser.getName());
-    } */
+     * if (approval.getAudit() != null) { Audit audit = approval.getAudit(); FlowUserEntity flowUser
+     * = userIdentityService.getUserByID(audit.getApproverId());
+     * audit.setApproverEmail(flowUser.getEmail()); audit.setApproverName(flowUser.getName()); }
+     */
     WorkflowSummary workflowSummary = workflowService.getWorkflow(approval.getWorkflowId());
     approval.setWorkflowName(workflowSummary.getName());
 
@@ -154,7 +198,7 @@ public class ActionServiceImpl implements ActionService {
       approval.setTeamName(flowTeam.getName());
       approval.setTaskName("");
     }
-    
+
     TaskExecutionEntity taskExecution = activityTaskService.findById(approval.getTaskActivityId());
     approval.setTaskName(taskExecution.getTaskName());
 
@@ -210,30 +254,32 @@ public class ActionServiceImpl implements ActionService {
   @Override
   public ListActionResponse getAllActions(Optional<Date> from, Optional<Date> to, Pageable pageable,
       Optional<List<String>> workflowIds, Optional<List<String>> teamIds, Optional<ManualType> type,
-      Optional<List<String>> scopes, String property, Direction direction, Optional<ApprovalStatus> status) {
+      Optional<List<String>> scopes, String property, Direction direction,
+      Optional<ApprovalStatus> status) {
 
     List<String> workflowIdsList = getWorkflowIdsForParams(workflowIds, teamIds, scopes);
     ListActionResponse response = new ListActionResponse();
-   
-    Page<ApprovalEntity> records = this.approvalService.getAllApprovals(from, to, pageable, workflowIdsList, type, status);
+
+    Page<ApprovalEntity> records =
+        this.approvalService.getAllApprovals(from, to, pageable, workflowIdsList, type, status);
 
     List<Action> actions = new LinkedList<>();
-    
+
     for (ApprovalEntity approval : records.getContent()) {
       Action action = this.convertToApproval(approval);
       actions.add(action);
     }
-    
+
     io.boomerang.model.Pageable pageablefinal =
         createPageable(records, property, direction, actions, actions.size());
     response.setPageable(pageablefinal);
     response.setRecords(actions);
     return response;
   }
-  
+
   protected io.boomerang.model.Pageable createPageable(final Page<ApprovalEntity> records,
       String property, Direction direction, List<Action> actions, int totalElements) {
-    
+
     io.boomerang.model.Pageable pageable = new io.boomerang.model.Pageable();
     pageable.setNumberOfElements(records.getNumberOfElements());
     pageable.setNumber(records.getNumber());
