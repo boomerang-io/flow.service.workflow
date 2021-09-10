@@ -52,9 +52,7 @@ import io.boomerang.mongo.entity.RevisionEntity;
 import io.boomerang.mongo.entity.WorkflowEntity;
 import io.boomerang.mongo.model.Dag;
 import io.boomerang.mongo.model.Quotas;
-import io.boomerang.mongo.model.WorkflowProperty;
 import io.boomerang.mongo.model.Revision;
-import io.boomerang.mongo.model.Storage;
 import io.boomerang.mongo.model.TaskStatus;
 import io.boomerang.mongo.model.TaskType;
 import io.boomerang.mongo.model.Trigger;
@@ -62,9 +60,9 @@ import io.boomerang.mongo.model.TriggerEvent;
 import io.boomerang.mongo.model.TriggerScheduler;
 import io.boomerang.mongo.model.Triggers;
 import io.boomerang.mongo.model.UserType;
+import io.boomerang.mongo.model.WorkflowProperty;
 import io.boomerang.mongo.model.WorkflowScope;
 import io.boomerang.mongo.model.WorkflowStatus;
-import io.boomerang.mongo.model.WorkflowStorage;
 import io.boomerang.mongo.model.next.DAGTask;
 import io.boomerang.mongo.service.FlowSettingsService;
 import io.boomerang.mongo.service.FlowTaskTemplateService;
@@ -264,15 +262,8 @@ public class WorkflowServiceImpl implements WorkflowService {
     entity.setIcon(summary.getIcon());
     entity.setShortDescription(summary.getShortDescription());
     entity.setStatus(summary.getStatus());
-    
-    if(entity.getStorage() == null) {
-      entity.setStorage(new Storage());
-    }
-    if(entity.getStorage().getWorkflow() == null) {
-      entity.getStorage().setWorkflow(new WorkflowStorage());
-    }
-    
-    entity.getStorage().getWorkflow().setEnabled(summary.getStorage().getWorkflow().getEnabled());
+
+    entity.setStorage(summary.getStorage());
     entity.setLabels(summary.getLabels());
 
     List<WorkflowProperty> updatedProperties = setupDefaultProperties(summary);
@@ -560,16 +551,7 @@ public class WorkflowServiceImpl implements WorkflowService {
         entity.setIcon(export.getIcon());
         entity.setShortDescription(export.getShortDescription());
         entity.setStatus(export.getStatus());
-        
-        if(entity.getStorage() == null) {
-         entity.setStorage(new Storage());
-        }
-        if(entity.getStorage().getWorkflow() == null) {
-        entity.getStorage().setWorkflow(new WorkflowStorage());
-        }
-        
-        entity.getStorage().getWorkflow()
-            .setEnabled((export.getStorage().getWorkflow().getEnabled()));
+        entity.setStorage(export.getStorage());
         entity.setProperties(export.getProperties());
         entity.setTriggers(export.getTriggers());
         entity.setScope(scope);
@@ -614,15 +596,7 @@ public class WorkflowServiceImpl implements WorkflowService {
         newEntity.setShortDescription(export.getShortDescription());
         newEntity.setStatus(export.getStatus());
         newEntity.setTriggers(export.getTriggers());
-        if(newEntity.getStorage() == null) {
-          newEntity.setStorage(new Storage());
-        }
-        if(newEntity.getStorage().getWorkflow() == null) {
-          newEntity.getStorage().setWorkflow(new WorkflowStorage());
-        }
-        
-        newEntity.getStorage().getWorkflow()
-            .setEnabled((export.getStorage().getWorkflow().getEnabled()));
+        newEntity.setStorage(export.getStorage());
         newEntity.setIcon(export.getIcon());
 
         WorkflowEntity savedEntity = workFlowRepository.saveWorkflow(newEntity);
