@@ -95,7 +95,7 @@ public class ActionServiceImpl implements ActionService {
       audit.setApproverId(flowUser.getId());
       audit.setComments(request.getComments());
 
-      approvalEntity.setAudit(audit);
+   //   approvalEntity.setAudit(audit);
       Map<String, String> outputProperties = new HashMap<>();
 
       outputProperties.put("approvalUserName", flowUser.getName());
@@ -131,7 +131,7 @@ public class ActionServiceImpl implements ActionService {
 
     Action approval = new Action();
     approval.setId(approvalEntity.getId());
-    approval.setAudit(approvalEntity.getAudit());
+    //approval.setAudit(approvalEntity.getAudit());
     approval.setActivityId(approvalEntity.getActivityId());
     approval.setTaskActivityId(approvalEntity.getTaskActivityId());
     approval.setWorkflowId(approvalEntity.getWorkflowId());
@@ -139,12 +139,13 @@ public class ActionServiceImpl implements ActionService {
     approval.setStatus(approvalEntity.getStatus());
     approval.setType(approvalEntity.getType());
     
+    /*
     if (approval.getAudit() != null) {
       Audit audit = approval.getAudit();
       FlowUserEntity flowUser = userIdentityService.getUserByID(audit.getApproverId());
       audit.setApproverEmail(flowUser.getEmail());
       audit.setApproverName(flowUser.getName());
-    }
+    } */
     WorkflowSummary workflowSummary = workflowService.getWorkflow(approval.getWorkflowId());
     approval.setWorkflowName(workflowSummary.getName());
 

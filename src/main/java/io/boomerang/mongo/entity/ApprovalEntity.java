@@ -1,6 +1,7 @@
 package io.boomerang.mongo.entity;
 
 import java.util.Date;
+import java.util.List;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -31,12 +32,7 @@ public class ApprovalEntity {
   public void setTaskActivityId(String taskActivityId) {
     this.taskActivityId = taskActivityId;
   }
-  public Audit getAudit() {
-    return audit;
-  }
-  public void setAudit(Audit audit) {
-    this.audit = audit;
-  }
+
   @Id
   private String id;
   
@@ -71,14 +67,36 @@ public class ApprovalEntity {
   public void setCreationDate(Date creationDate) {
     this.creationDate = creationDate;
   }
+  public List<Audit> getActioners() {
+    return actioners;
+  }
+  public void setActioners(List<Audit> actioners) {
+    this.actioners = actioners;
+  }
+  public int getNumberOfApprovers() {
+    return numberOfApprovers;
+  }
+  public void setNumberOfApprovers(int numberOfApprovers) {
+    this.numberOfApprovers = numberOfApprovers;
+  }
+
+  public String getApproverGroupId() {
+    return approverGroupId;
+  }
+  public void setApproverGroupId(String approverGroupId) {
+    this.approverGroupId = approverGroupId;
+  }
+
   private String activityId;
   
   private String taskActivityId;
   private String workflowId;
   private String teamId;
-  private Audit audit;
+  private List<Audit> actioners;
   private ApprovalStatus status;
   private ManualType type;
   private Date creationDate;
+  private int numberOfApprovers;
+  private String approverGroupId;
 
 }

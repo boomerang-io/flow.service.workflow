@@ -168,9 +168,9 @@ public class TaskServiceImpl implements TaskService {
         response.setStatus(TaskStatus.completed);
         this.endTask(response);
       } else if (taskType == TaskType.approval) {
-        createApprovalNotification(taskExecution, activity, workflow, ManualType.approval);
+        createApprovalNotification(taskExecution, task, activity, workflow, ManualType.approval);
       } else if (taskType == TaskType.manual) {
-        createApprovalNotification(taskExecution, activity, workflow, ManualType.task);
+        createApprovalNotification(taskExecution, task, activity, workflow, ManualType.task);
       } else if (taskType == TaskType.eventwait) {
         createWaitForEventTask(taskExecution);
       }
@@ -272,7 +272,7 @@ public class TaskServiceImpl implements TaskService {
     }
   }
 
-  private void createApprovalNotification(TaskExecutionEntity taskExecution,
+  private void createApprovalNotification(TaskExecutionEntity taskExecution, Task task,
       ActivityEntity activity, WorkflowEntity workflow, ManualType type) {
     taskExecution.setFlowTaskStatus(TaskStatus.waiting);
     taskExecution = taskActivityService.save(taskExecution);
@@ -284,8 +284,22 @@ public class TaskServiceImpl implements TaskService {
     approval.setStatus(ApprovalStatus.submitted);
     approval.setType(type);
     approval.setCreationDate(new Date());
+    approval.setNumberOfApprovers(1);
+    
+    if (ManualType.approval == type) {
+      if (task.getInputs() != null) {
+        String approverGroupId = task.getInputs().get("approverGroupId");
+        String numberOfApprovers = task.getInputs().get("numberOfApprovers");
+        
+        if (approverGroupId != null && !approverGroupId.isBlank()) {
+          approval.setApproverGroupId(approverGroupId);
+        }
+        if (numberOfApprovers != null && !numberOfApprovers.isBlank()) {
+          approval.setNumberOfApprovers(Integer.valueOf(numberOfApprovers));
+        }
+      }
+    }
     approvalService.save(approval);
-
     activity.setAwaitingApproval(true);
     this.activityService.saveWorkflowActivity(activity);
   }
