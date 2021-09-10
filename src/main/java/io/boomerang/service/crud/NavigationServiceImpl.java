@@ -84,7 +84,7 @@ public class NavigationServiceImpl implements NavigationService {
       management.setType(NavigationType.category);
 
       Navigation teamApprovers = new Navigation();
-      teamApprovers.setName("Team Approvers");
+      teamApprovers.setName("Team Parameters");
       teamApprovers.setLink(flowAppsUrl + "/manage/team-parameters");
       teamApprovers.setType(NavigationType.link);
       management.getChildLinks().add(teamApprovers);
