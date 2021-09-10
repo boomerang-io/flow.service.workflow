@@ -31,8 +31,10 @@ import io.boomerang.mongo.entity.WorkflowEntity;
 import io.boomerang.mongo.model.KeyValuePair;
 import io.boomerang.mongo.model.Dag;
 import io.boomerang.mongo.model.Revision;
+import io.boomerang.mongo.model.Storage;
 import io.boomerang.mongo.model.TaskStatus;
 import io.boomerang.mongo.model.TaskType;
+import io.boomerang.mongo.model.WorkflowStorage;
 import io.boomerang.mongo.model.internal.InternalTaskRequest;
 import io.boomerang.mongo.model.next.DAGTask;
 import io.boomerang.mongo.model.next.Dependency;
@@ -251,8 +253,14 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
     activityService.saveWorkflowActivity(activityEntity);
     
     WorkflowEntity workflow = workflowService.getWorkflow(activityEntity.getWorkflowId());
+    if(workflow.getStorage() == null) {
+      workflow.setStorage(new Storage());
+    }
+    if(workflow.getStorage().getWorkflow() == null) {
+      workflow.getStorage().setWorkflow(new WorkflowStorage());
+    }
     
-    boolean enablePVC = workflow.isEnablePersistentStorage();
+    boolean enablePVC = workflow.getStorage().getWorkflow().getEnabled();
     String workflowName = workflow.getName();
     String workflowId = workflow.getId();
     

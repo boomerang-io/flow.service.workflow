@@ -26,7 +26,11 @@
 			"token": "A5DF2F840C0DFF496D516B4F75BD947C9BC44756A8AE8571FC45FCB064323641"
 		}
 	},
-	"enablePersistentStorage": false,
+	"storage": {
+		"workflow": {
+			"enabled": false
+		}
+	},
 	"status": "active",
 	"scope": "team"
 }
