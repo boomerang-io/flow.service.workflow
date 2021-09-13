@@ -556,8 +556,6 @@ public class WorkflowServiceImpl implements WorkflowService {
         entity.setTriggers(export.getTriggers());
         entity.setScope(scope);
 
-        entity.setScope(scope);
-
         if (WorkflowScope.team.equals(scope)) {
           if (flowTeamId != null && flowTeamId.length() != 0) {
             entity.setFlowTeamId(flowTeamId);
@@ -566,6 +564,15 @@ public class WorkflowServiceImpl implements WorkflowService {
           }
         } else {
           entity.setFlowTeamId(null);
+        }
+
+        if (WorkflowScope.user.equals(scope)) {
+          FlowUserEntity user = userIdentityService.getCurrentUser();
+          if (user != null) {
+            entity.setOwnerUserId(user.getId());
+          }
+        } else {
+          entity.setOwnerUserId(null);
         }
 
         WorkflowEntity workflow = workFlowRepository.saveWorkflow(entity);
