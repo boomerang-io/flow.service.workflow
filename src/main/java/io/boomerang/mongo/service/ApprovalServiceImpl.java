@@ -97,7 +97,7 @@ public class ApprovalServiceImpl implements ApprovalService {
     if (from.isPresent() && to.isPresent()) {
       return flowRepository.countByStatusAndTypeAndCreationDateBetween(ApprovalStatus.submitted, type, from.get(), to.get());
     }
-    return flowRepository.countByStatus(ApprovalStatus.submitted);
+    return flowRepository.countByStatusAndType(ApprovalStatus.submitted,type);
   }
 
   @Override
