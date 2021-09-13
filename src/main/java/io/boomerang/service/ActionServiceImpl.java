@@ -1,6 +1,5 @@
 package io.boomerang.service;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -14,6 +13,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.stereotype.Service;
+import io.boomerang.model.ActionSummary;
 import io.boomerang.model.ApprovalRequest;
 import io.boomerang.model.ApprovalStatus;
 import io.boomerang.model.FlowTeam;
@@ -373,5 +373,20 @@ public class ActionServiceImpl implements ActionService {
     List<String> userWorkflowIds =
         userWorkflows.stream().map(WorkflowEntity::getId).collect(Collectors.toList());
     workflowIdsList.addAll(userWorkflowIds);
+  }
+
+  @Override
+  public ActionSummary getActionSummary(Date fromDate, Date toDate) {
+    
+    ActionSummary summary = new ActionSummary();
+    long approvalCount = this.approvalService.getActionCount(ManualType.approval, fromDate, toDate);
+    long manualCount = this.approvalService.getActionCount(ManualType.task, fromDate, toDate);
+    long approvalRateCount = 0;
+    
+    summary.setApprovalsRate(approvalRateCount);
+    summary.setManual(manualCount);
+    summary.setApprovals(approvalCount);
+    
+    return summary;
   }
 }

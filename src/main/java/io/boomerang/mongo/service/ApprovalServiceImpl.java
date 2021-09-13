@@ -85,4 +85,14 @@ public class ApprovalServiceImpl implements ApprovalService {
     Page<ApprovalEntity> paginaedApprovalList = new PageImpl<>(list, pageable, mongoTemplate.count(new Query(criteria), ApprovalEntity.class));
     return paginaedApprovalList;
   }
+
+  @Override
+  public long getActionCountForType(ManualType type, Date from, Date to) {
+    return flowRepository.countByTypeAndCreationDateBetween(type, from, to);
+  }
+
+  @Override
+  public long getActionCount(ManualType type, Date from, Date to) {
+    return flowRepository.countByCreationDateBetween(from, to);
+  }
 }

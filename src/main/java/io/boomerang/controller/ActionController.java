@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import io.boomerang.model.ActionSummary;
 import io.boomerang.model.ApprovalRequest;
 import io.boomerang.model.ApprovalStatus;
 import io.boomerang.model.ListActionResponse;
@@ -37,6 +38,16 @@ public class ActionController {
     actionService.actionApproval(request);
   }
 
+  @GetMapping(value = "/actions/summary")
+  public ActionSummary getActions(@RequestParam Long fromDate,
+      @RequestParam Long toDate) {
+    
+    Date from = new Date(fromDate * 1000);
+    Date to = new Date(toDate * 1000);
+   
+    return actionService.getActionSummary(from, to);
+  }
+      
   @GetMapping(value = "/actions")
   public ListActionResponse getActions(
       @RequestParam(defaultValue = "ASC") Optional<Direction> order,
