@@ -39,11 +39,17 @@ public class ActionController {
   }
 
   @GetMapping(value = "/actions/summary")
-  public ActionSummary getActions(@RequestParam Long fromDate,
-      @RequestParam Long toDate) {
+  public ActionSummary getActions(@RequestParam Optional<Long> fromDate,
+      @RequestParam Optional<Long> toDate) {
     
-    Date from = new Date(fromDate * 1000);
-    Date to = new Date(toDate * 1000);
+    Optional<Date> from = Optional.empty();
+    Optional<Date> to = Optional.empty();
+    if (fromDate.isPresent()) {
+      from = Optional.of(new Date(fromDate.get() * 1000));
+    }
+    if (toDate.isPresent()) {
+      to = Optional.of(new Date(toDate.get() * 1000));
+    }
    
     return actionService.getActionSummary(from, to);
   }

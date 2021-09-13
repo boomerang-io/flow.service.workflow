@@ -376,12 +376,19 @@ public class ActionServiceImpl implements ActionService {
   }
 
   @Override
-  public ActionSummary getActionSummary(Date fromDate, Date toDate) {
+  public ActionSummary getActionSummary( Optional<Date> fromDate,  Optional<Date> toDate) {
     
     ActionSummary summary = new ActionSummary();
     long approvalCount = this.approvalService.getActionCountForType(ManualType.approval, fromDate, toDate);
     long manualCount = this.approvalService.getActionCountForType(ManualType.task, fromDate, toDate);
-    long approvalRateCount = 0;
+  
+    
+    long rejectedCount = approvalService.getActionCountForStatus(ApprovalStatus.rejected, fromDate, toDate);
+    long approvedCount = approvalService.getActionCountForStatus(ApprovalStatus.approved, fromDate, toDate);
+    long submittedCount = approvalService.getActionCountForStatus(ApprovalStatus.submitted, fromDate, toDate);
+    long total = rejectedCount + approvedCount + submittedCount;
+    
+    long approvalRateCount = ((submittedCount / total) * 100);
     
     summary.setApprovalsRate(approvalRateCount);
     summary.setManual(manualCount);

@@ -24,6 +24,7 @@ public interface ApprovalService {
   public Page<ApprovalEntity> getAllApprovals(Optional<Date> from, Optional<Date> to,
       Pageable pageable, List<String> workflowIds, Optional<ManualType> type, Optional<ApprovalStatus> status);
 
-  public long getActionCountForType(ManualType type, Date from, Date to);
-  public long getActionCount(ManualType type, Date from, Date to);
+  public long getActionCountForType(ManualType type,  Optional<Date> from,  Optional<Date> to);
+  public long getActionCount(Optional<Date> from,  Optional<Date> to);
+  public long getActionCountForStatus(ApprovalStatus status,  Optional<Date> from,  Optional<Date> to);
 }

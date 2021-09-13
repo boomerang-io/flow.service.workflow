@@ -55,6 +55,15 @@ public class ApprovalServiceImpl implements ApprovalService {
   public Page<ApprovalEntity> getAllApprovals(Optional<Date> from, Optional<Date> to,
       Pageable pageable, List<String> workflowIds, Optional<ManualType> type, Optional<ApprovalStatus> status) {
     
+    Criteria criteria = extracted(from, to, workflowIds, type, status);
+    Query approvalQuery = new Query(criteria).with(pageable);
+    List<ApprovalEntity> list = this.mongoTemplate.find(approvalQuery, ApprovalEntity.class);
+    Page<ApprovalEntity> paginaedApprovalList = new PageImpl<>(list, pageable, mongoTemplate.count(new Query(criteria), ApprovalEntity.class));
+    return paginaedApprovalList;
+  }
+
+  private Criteria extracted(Optional<Date> from, Optional<Date> to, List<String> workflowIds,
+      Optional<ManualType> type, Optional<ApprovalStatus> status) {
     List<Criteria> criterias = new ArrayList<>();
     
     if (from.isPresent()) {
@@ -80,19 +89,31 @@ public class ApprovalServiceImpl implements ApprovalService {
     Criteria workflowIdsCriteria = Criteria.where("workflowId").in(workflowIds);
     criterias.add(workflowIdsCriteria);
     Criteria criteria = new Criteria().andOperator(criterias.toArray(new Criteria[criterias.size()]));
-    Query approvalQuery = new Query(criteria).with(pageable);
-    List<ApprovalEntity> list = this.mongoTemplate.find(approvalQuery, ApprovalEntity.class);
-    Page<ApprovalEntity> paginaedApprovalList = new PageImpl<>(list, pageable, mongoTemplate.count(new Query(criteria), ApprovalEntity.class));
-    return paginaedApprovalList;
+    return criteria;
   }
 
   @Override
-  public long getActionCountForType(ManualType type, Date from, Date to) {
-    return flowRepository.countByTypeAndCreationDateBetween(type, from, to);
+  public long getActionCountForType(ManualType type,  Optional<Date> from, Optional<Date> to) {
+    if (from.isPresent() && to.isPresent()) {
+      return flowRepository.countByStatusAndTypeAndCreationDateBetween(ApprovalStatus.submitted, type, from.get(), to.get());
+    }
+    return flowRepository.countByStatus(ApprovalStatus.submitted);
   }
 
   @Override
-  public long getActionCount(ManualType type, Date from, Date to) {
-    return flowRepository.countByCreationDateBetween(from, to);
+  public long getActionCount(Optional<Date> from,  Optional<Date> to) {
+    if (from.isPresent() && to.isPresent()) { 
+      return flowRepository.countByStatusAndCreationDateBetween(ApprovalStatus.submitted, from.get(), to.get());
+    }
+    return flowRepository.countByStatus(ApprovalStatus.submitted);
+  }
+
+  @Override
+  public long getActionCountForStatus(ApprovalStatus status, Optional<Date> from,
+      Optional<Date> to) {
+    if (from.isPresent() && to.isPresent()) { 
+      return flowRepository.countByStatusAndCreationDateBetween(status, from.get(), to.get());
+    }
+    return flowRepository.countByStatus(status);
   }
 }

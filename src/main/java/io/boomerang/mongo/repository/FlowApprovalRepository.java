@@ -19,6 +19,15 @@ public interface FlowApprovalRepository extends MongoRepository<ApprovalEntity, 
   long countByCreationDateBetween(Date from, Date to);
   long countByTypeAndCreationDateBetween(ManualType type, Date from, Date to);
 
+  long countByType(ManualType type);
+
+  long countByStatus(ApprovalStatus submitted);
+
+  long countByStatusAndCreationDateBetween(ApprovalStatus submitted, Date date, Date date2);
+
+  long countByStatusAndTypeAndCreationDateBetween(ApprovalStatus submitted, ManualType type,
+      Date date, Date date2);
+
   
 }
 

@@ -23,6 +23,6 @@ public interface ActionService {
       Pageable pageable, Optional<List<String>> workflowIds, Optional<List<String>> teamIds,
       Optional<ManualType> type, Optional<List<String>> scopes, String string, Direction direction, Optional<ApprovalStatus> status);
 
-  public ActionSummary getActionSummary(Date fromDate, Date toDate);
+  public ActionSummary getActionSummary( Optional<Date> fromDate,  Optional<Date> toDate);
 
 }
