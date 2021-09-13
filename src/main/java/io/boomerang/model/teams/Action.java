@@ -10,6 +10,8 @@ public class Action extends ApprovalEntity {
   private String teamName;
   private String instructions;
   private WorkflowScope scope;
+  private long numberOfApprovals;
+  private long approvalsRequired;
   
   public String getTaskName() {
     return taskName;
@@ -40,6 +42,18 @@ public class Action extends ApprovalEntity {
   }
   public void setScope(WorkflowScope scope) {
     this.scope = scope;
+  }
+  public long getApprovalsRequired() {
+    return approvalsRequired;
+  }
+  public void setApprovalsRequired(long approvalsRequired) {
+    this.approvalsRequired = approvalsRequired;
+  }
+  public long getNumberOfApprovals() {
+    return numberOfApprovals;
+  }
+  public void setNumberOfApprovals(long numberOfApprovals) {
+    this.numberOfApprovals = numberOfApprovals;
   }
 
 }

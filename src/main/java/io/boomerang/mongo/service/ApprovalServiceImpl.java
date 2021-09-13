@@ -88,8 +88,7 @@ public class ApprovalServiceImpl implements ApprovalService {
     
     Criteria workflowIdsCriteria = Criteria.where("workflowId").in(workflowIds);
     criterias.add(workflowIdsCriteria);
-    Criteria criteria = new Criteria().andOperator(criterias.toArray(new Criteria[criterias.size()]));
-    return criteria;
+    return new Criteria().andOperator(criterias.toArray(new Criteria[criterias.size()]));
   }
 
   @Override
