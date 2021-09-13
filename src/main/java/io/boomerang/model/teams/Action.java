@@ -1,6 +1,7 @@
 package io.boomerang.model.teams;
 
 import io.boomerang.mongo.entity.ApprovalEntity;
+import io.boomerang.mongo.model.WorkflowScope;
 
 public class Action extends ApprovalEntity {
   
@@ -8,6 +9,7 @@ public class Action extends ApprovalEntity {
   private String workflowName;
   private String teamName;
   private String instructions;
+  private WorkflowScope scope;
   
   public String getTaskName() {
     return taskName;
@@ -32,6 +34,12 @@ public class Action extends ApprovalEntity {
   }
   public void setInstructions(String instructions) {
     this.instructions = instructions;
+  }
+  public WorkflowScope getScope() {
+    return scope;
+  }
+  public void setScope(WorkflowScope scope) {
+    this.scope = scope;
   }
 
 }

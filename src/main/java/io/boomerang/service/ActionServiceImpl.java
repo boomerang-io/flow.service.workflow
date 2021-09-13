@@ -175,13 +175,14 @@ public class ActionServiceImpl implements ActionService {
 
     Action approval = new Action();
     approval.setId(approvalEntity.getId());
-    // approval.setAudit(approvalEntity.getAudit());
+
     approval.setActivityId(approvalEntity.getActivityId());
     approval.setTaskActivityId(approvalEntity.getTaskActivityId());
     approval.setWorkflowId(approvalEntity.getWorkflowId());
     approval.setTeamId(approvalEntity.getTeamId());
     approval.setStatus(approvalEntity.getStatus());
     approval.setType(approvalEntity.getType());
+    approval.setCreationDate(approvalEntity.getCreationDate());
 
     /*
      * if (approval.getAudit() != null) { Audit audit = approval.getAudit(); FlowUserEntity flowUser
@@ -190,12 +191,14 @@ public class ActionServiceImpl implements ActionService {
      */
     WorkflowSummary workflowSummary = workflowService.getWorkflow(approval.getWorkflowId());
     approval.setWorkflowName(workflowSummary.getName());
-
+    approval.setScope(workflowSummary.getScope());
+    
     if (approval.getTeamId() != null) {
       FlowTeam flowTeam = teamService.getTeamById(approval.getTeamId());
       approval.setTeamName(flowTeam.getName());
       approval.setTaskName("");
     }
+    
 
     TaskExecutionEntity taskExecution = activityTaskService.findById(approval.getTaskActivityId());
     approval.setTaskName(taskExecution.getTaskName());
