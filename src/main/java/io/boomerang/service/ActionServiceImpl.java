@@ -388,7 +388,7 @@ public class ActionServiceImpl implements ActionService {
     long submittedCount = approvalService.getActionCountForStatus(ApprovalStatus.submitted, fromDate, toDate);
     long total = rejectedCount + approvedCount + submittedCount;
     
-    long approvalRateCount = ((submittedCount / total) * 100);
+    long approvalRateCount = (((approvedCount +rejectedCount)  / total) * 100);
     
     summary.setApprovalsRate(approvalRateCount);
     summary.setManual(manualCount);
