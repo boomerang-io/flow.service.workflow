@@ -95,9 +95,9 @@ public class ApprovalServiceImpl implements ApprovalService {
   @Override
   public long getActionCountForType(ManualType type,  Optional<Date> from, Optional<Date> to) {
     if (from.isPresent() && to.isPresent()) {
-      return flowRepository.countByStatusAndTypeAndCreationDateBetween(ApprovalStatus.submitted, type, from.get(), to.get());
+      return flowRepository.countByTypeAndCreationDateBetween(type, from.get(), to.get());
     }
-    return flowRepository.countByStatusAndType(ApprovalStatus.submitted,type);
+    return flowRepository.countByType(type);
   }
 
   @Override
