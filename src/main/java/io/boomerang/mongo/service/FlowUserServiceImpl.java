@@ -19,17 +19,20 @@ public class FlowUserServiceImpl implements FlowUserService {
   private FlowUserRepository flowUserRepository;
 
   @Override
-  public FlowUserEntity getOrRegisterUser(String userNane, String firstName, String lastName, UserType usertype) {
+  public FlowUserEntity getOrRegisterUser(String email, String firstName, String lastName, UserType usertype) {
 
-    Long count = this.flowUserRepository.countByEmailIgnoreCase(userNane);
+    Long count = this.flowUserRepository.countByEmailIgnoreCase(email);
     if (count == 1) {
-      return this.flowUserRepository.findByEmailIgnoreCase(userNane);
+      return this.flowUserRepository.findByEmailIgnoreCase(email);
     }
 
-    final String name = String.format("%s %s", firstName, lastName);
+    String name = String.format("%s %s", firstName, lastName);
+    if (firstName == null && lastName == null && email != null) {
+      name = email;
+    }
 
     FlowUserEntity userEntity = new FlowUserEntity();
-    userEntity.setEmail(userNane);
+    userEntity.setEmail(email);
     userEntity.setName(name);
     userEntity.setFirstLoginDate(new Date());
     userEntity.setIsFirstVisit(true);
