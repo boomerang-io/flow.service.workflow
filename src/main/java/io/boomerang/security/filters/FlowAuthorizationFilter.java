@@ -161,6 +161,11 @@ public class FlowAuthorizationFilter extends BasicAuthenticationFilter {
       } else if (claims.get("family_name") != null) {
         lastName = (String) claims.get("family_name");
       }
+      
+      if (firstName == null && lastName == null) {
+        String[] userIdSplit = userId.split("@", 2);
+        firstName = userIdSplit[0];
+      }
 
       firstName = santaize(firstName);
       lastName = santaize(lastName);
