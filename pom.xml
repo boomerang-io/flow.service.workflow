@@ -330,9 +330,5 @@
          <id>github</id>
          <url>https://maven.pkg.github.com/boomerang-io/flow.lib.streaming</url>
       </repository>
-	        <repository>
-         <id>boomeranglib-maven</id>
-         <url>https://tools.boomerangplatform.net/artifactory/boomeranglib-maven</url>
-      </repository>
    </repositories>
 </project>
