@@ -26,7 +26,7 @@ public class FlowUserServiceImpl implements FlowUserService {
       return this.flowUserRepository.findByEmailIgnoreCase(email);
     }
 
-    String name = String.format("%s %s", firstName, lastName);
+    String name = String.format("%s %s", firstName, lastName).trim();
     if (firstName == null && lastName == null && email != null) {
       name = email;
     }
