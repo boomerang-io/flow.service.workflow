@@ -183,11 +183,21 @@ public class ActionServiceImpl implements ActionService {
     approval.setStatus(approvalEntity.getStatus());
     approval.setType(approvalEntity.getType());
     approval.setCreationDate(approvalEntity.getCreationDate());
-
+    approval.setActioners(approvalEntity.getActioners());
+    
+ 
     approval.setApprovalsRequired(approvalEntity.getNumberOfApprovers());
     
     if (approvalEntity.getActioners() != null) {
       approval.setNumberOfApprovals(approvalEntity.getActioners().size());
+      for (Audit audit : approvalEntity.getActioners()) {
+        FlowUserEntity user = this.userIdentityService.getUserByID(audit.getApproverId());
+        if (user != null) {
+          audit.setApproverName(user.getName());
+          audit.setApproverEmail(user.getEmail());
+        }
+      }
+      approval.setActioners(approvalEntity.getActioners());
     }
     
     WorkflowSummary workflowSummary = workflowService.getWorkflow(approval.getWorkflowId());
