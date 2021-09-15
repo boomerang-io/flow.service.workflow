@@ -12,6 +12,7 @@ public class Audit {
   private String approverName;
   private String comments;
 
+  private boolean approved;
   public String getApproverEmail() {
     return approverEmail;
   }
@@ -52,5 +53,13 @@ public class Audit {
 
   public void setComments(String comments) {
     this.comments = comments;
+  }
+
+  public boolean isApproved() {
+    return approved;
+  }
+
+  public void setApproved(boolean approved) {
+    this.approved = approved;
   }
 }

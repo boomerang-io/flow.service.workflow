@@ -132,10 +132,13 @@ public class ActionServiceImpl implements ActionService {
         audit.setActionDate(new Date());
         audit.setApproverId(flowUser.getId());
         audit.setComments(request.getComments());
+        audit.setApproved(request.isApproved());
         approvalEntity.getActioners().add(audit);
       }
       
-      if (approvalEntity.getActioners().size() >= numberApprovals) {
+      long aprovalCount = approvalEntity.getActioners().stream().filter(x -> x.isApproved()).count();
+      
+      if (aprovalCount >= numberApprovals) {
         InternalTaskResponse actionApprovalResponse = new InternalTaskResponse();
         actionApprovalResponse.setActivityId(approvalEntity.getTaskActivityId());
         Map<String, String> outputProperties = new HashMap<>();
@@ -184,12 +187,14 @@ public class ActionServiceImpl implements ActionService {
     approval.setType(approvalEntity.getType());
     approval.setCreationDate(approvalEntity.getCreationDate());
     approval.setActioners(approvalEntity.getActioners());
-    
- 
+
     approval.setApprovalsRequired(approvalEntity.getNumberOfApprovers());
     
     if (approvalEntity.getActioners() != null) {
-      approval.setNumberOfApprovals(approvalEntity.getActioners().size());
+      
+      long aprovalCount = approvalEntity.getActioners().stream().filter(x -> x.isApproved()).count();
+     
+      approval.setNumberOfApprovals(aprovalCount);
       for (Audit audit : approvalEntity.getActioners()) {
         FlowUserEntity user = this.userIdentityService.getUserByID(audit.getApproverId());
         if (user != null) {
@@ -211,6 +216,7 @@ public class ActionServiceImpl implements ActionService {
     }
     
 
+   
     TaskExecutionEntity taskExecution = activityTaskService.findById(approval.getTaskActivityId());
     approval.setTaskName(taskExecution.getTaskName());
 
