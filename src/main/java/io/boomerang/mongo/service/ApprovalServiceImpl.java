@@ -55,14 +55,14 @@ public class ApprovalServiceImpl implements ApprovalService {
   public Page<ApprovalEntity> getAllApprovals(Optional<Date> from, Optional<Date> to,
       Pageable pageable, List<String> workflowIds, Optional<ManualType> type, Optional<ApprovalStatus> status) {
     
-    Criteria criteria = extracted(from, to, workflowIds, type, status);
+    Criteria criteria = buildCriteriaList(from, to, workflowIds, type, status);
     Query approvalQuery = new Query(criteria).with(pageable);
     List<ApprovalEntity> list = this.mongoTemplate.find(approvalQuery, ApprovalEntity.class);
     Page<ApprovalEntity> paginaedApprovalList = new PageImpl<>(list, pageable, mongoTemplate.count(new Query(criteria), ApprovalEntity.class));
     return paginaedApprovalList;
   }
 
-  private Criteria extracted(Optional<Date> from, Optional<Date> to, List<String> workflowIds,
+  private Criteria buildCriteriaList(Optional<Date> from, Optional<Date> to, List<String> workflowIds,
       Optional<ManualType> type, Optional<ApprovalStatus> status) {
     List<Criteria> criterias = new ArrayList<>();
     
@@ -92,11 +92,9 @@ public class ApprovalServiceImpl implements ApprovalService {
   }
 
   @Override
-  public long getActionCountForType(ManualType type,  Optional<Date> from, Optional<Date> to) {
-    if (from.isPresent() && to.isPresent()) {
-      return flowRepository.countByTypeAndCreationDateBetween(type, from.get(), to.get());
-    }
-    return flowRepository.countByType(type);
+  public long getActionCountForType(ManualType type,  Optional<Date> from, Optional<Date> to, List<String> workflowIds, Optional<ApprovalStatus> status) {
+    Criteria criteria = this.buildCriteriaList(from, to, workflowIds, Optional.of(type), status);
+    return mongoTemplate.count(new Query(criteria), ApprovalEntity.class);
   }
 
   @Override

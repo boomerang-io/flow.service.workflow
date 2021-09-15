@@ -1,7 +1,6 @@
 package io.boomerang.controller;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -20,9 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.type.CollectionType;
 import io.boomerang.model.ActionSummary;
 import io.boomerang.model.ApprovalRequest;
 import io.boomerang.model.ApprovalStatus;
@@ -63,8 +60,12 @@ public class ActionController {
   }
 
   @GetMapping(value = "/actions/summary")
-  public ActionSummary getActions(@RequestParam Optional<Long> fromDate,
-      @RequestParam Optional<Long> toDate) {
+  public ActionSummary getActions(@RequestParam Optional<ApprovalStatus> status,
+      @RequestParam Optional<List<String>> scopes, 
+      @RequestParam Optional<List<String>> workflowIds,
+      @RequestParam Optional<List<String>> teamIds, @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "2147483647") int size, @RequestParam Optional<Long> fromDate,
+      @RequestParam Optional<Long> toDate, @RequestParam Optional<ManualType> type) {
 
     Optional<Date> from = Optional.empty();
     Optional<Date> to = Optional.empty();
@@ -75,7 +76,7 @@ public class ActionController {
       to = Optional.of(new Date(toDate.get() * 1000));
     }
 
-    return actionService.getActionSummary(from, to);
+    return actionService.getActionSummary(from, to, workflowIds, teamIds, status,scopes);
   }
 
   @GetMapping(value = "/actions")

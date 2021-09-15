@@ -377,11 +377,13 @@ public class ActionServiceImpl implements ActionService {
   }
 
   @Override
-  public ActionSummary getActionSummary( Optional<Date> fromDate,  Optional<Date> toDate) {
+  public ActionSummary getActionSummary( Optional<Date> fromDate,  Optional<Date> toDate, Optional<List<String>> workflowIds, Optional<List<String>> teamIds, Optional<ApprovalStatus> status, Optional<List<String>> scopes)
+  {
+    List<String> workflowIdsList = getWorkflowIdsForParams(workflowIds, teamIds, scopes);
     
     ActionSummary summary = new ActionSummary();
-    long approvalCount = this.approvalService.getActionCountForType(ManualType.approval, fromDate, toDate);
-    long manualCount = this.approvalService.getActionCountForType(ManualType.task, fromDate, toDate);
+    long approvalCount = this.approvalService.getActionCountForType(ManualType.approval, fromDate, toDate, workflowIdsList, status);
+    long manualCount = this.approvalService.getActionCountForType(ManualType.task, fromDate, toDate,workflowIdsList, status);
   
     
     long rejectedCount = approvalService.getActionCountForStatus(ApprovalStatus.rejected, fromDate, toDate);
