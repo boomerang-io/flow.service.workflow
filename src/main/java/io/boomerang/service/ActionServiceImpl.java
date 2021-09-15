@@ -136,13 +136,20 @@ public class ActionServiceImpl implements ActionService {
         approvalEntity.getActioners().add(audit);
       }
       
-      long aprovalCount = approvalEntity.getActioners().stream().filter(x -> x.isApproved()).count();
+      long approvedCount = approvalEntity.getActioners().stream().filter(x -> x.isApproved()).count();
+      long numberOfActions = approvalEntity.getActioners().size();
       
-      if (aprovalCount >= numberApprovals) {
+      if (numberOfActions >= numberApprovals) {
+
         InternalTaskResponse actionApprovalResponse = new InternalTaskResponse();
         actionApprovalResponse.setActivityId(approvalEntity.getTaskActivityId());
+        
         Map<String, String> outputProperties = new HashMap<>();
-        actionApproval(request, approvalEntity, actionApprovalResponse, outputProperties);
+        boolean aproved = false;
+        if (approvedCount == numberApprovals) {
+          aproved = true;
+        }
+        actionApproval(aproved, approvalEntity, actionApprovalResponse, outputProperties);
       }
     } else if (approvalEntity.getType() == ManualType.task) {
       Audit audit = new Audit();
@@ -154,13 +161,13 @@ public class ActionServiceImpl implements ActionService {
       actionApprovalResponse.setActivityId(approvalEntity.getTaskActivityId());
       Map<String, String> outputProperties = new HashMap<>();
 
-      actionApproval(request, approvalEntity, actionApprovalResponse, outputProperties);
+      actionApproval(request.isApproved(), approvalEntity, actionApprovalResponse, outputProperties);
     }
   }
 
-  private void actionApproval(ApprovalRequest request, ApprovalEntity approvalEntity,
+  private void actionApproval(boolean approved, ApprovalEntity approvalEntity,
       InternalTaskResponse actionApprovalResponse, Map<String, String> outputProperties) {
-    if (request.isApproved()) {
+    if (approved) {
       outputProperties.put("approvalStatus", ApprovalStatus.approved.toString());
       approvalEntity.setStatus(ApprovalStatus.approved);
       actionApprovalResponse.setStatus(TaskStatus.completed);
