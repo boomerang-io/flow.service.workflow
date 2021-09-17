@@ -564,7 +564,7 @@ public class ControllerClientImpl implements ControllerClient {
         if (workflowStorage != null && workflowStorage.getEnabled()) {
           TaskWorkspace taskWorkflow = new TaskWorkspace();
           taskWorkflow.setName("workflow");
-          taskWorkflow.setId(activityId);
+          taskWorkflow.setId(workflow.getId());
           taskWorkflow.setReadOnly(false);
           taskWorkflow.setOptional(false);
           
@@ -575,8 +575,7 @@ public class ControllerClientImpl implements ControllerClient {
         }
       }
     }
-    System.out.println("workspace");
-    System.out.println(workspaces.size());
+
     return workspaces;
   }
 
