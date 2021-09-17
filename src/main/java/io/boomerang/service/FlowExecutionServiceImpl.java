@@ -20,8 +20,6 @@ import org.jgrapht.Graph;
 import org.jgrapht.graph.DefaultEdge;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.boomerang.exceptions.InvalidWorkflowRuntimeException;
 import io.boomerang.exceptions.RunWorkflowException;
 import io.boomerang.model.Task;
@@ -36,7 +34,7 @@ import io.boomerang.mongo.model.Revision;
 import io.boomerang.mongo.model.Storage;
 import io.boomerang.mongo.model.TaskStatus;
 import io.boomerang.mongo.model.TaskType;
-import io.boomerang.mongo.model.WorkflowStorage;
+import io.boomerang.mongo.model.ActivityStorage;
 import io.boomerang.mongo.model.internal.InternalTaskRequest;
 import io.boomerang.mongo.model.next.DAGTask;
 import io.boomerang.mongo.model.next.Dependency;
@@ -258,15 +256,11 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
     if(workflow.getStorage() == null) {
       workflow.setStorage(new Storage());
     }
-    if(workflow.getStorage().getWorkflow() == null) {
-      workflow.getStorage().setWorkflow(new WorkflowStorage());
+    if(workflow.getStorage().getActivity() == null) {
+      workflow.getStorage().setActivity(new ActivityStorage());
     }
-    
-
-    
-    boolean enablePVC = workflow.getStorage().getWorkflow().getEnabled();
-    
-    System.out.println(enablePVC);
+   
+    boolean enablePVC = workflow.getStorage().getActivity().getEnabled();
     
     String workflowName = workflow.getName();
     String workflowId = workflow.getId();

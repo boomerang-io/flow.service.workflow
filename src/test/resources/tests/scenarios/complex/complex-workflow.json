@@ -36,12 +36,12 @@
     "value" : "bar"}
     ],
     "storage" : {
-        "workflow" : {
+        "activity" : {
             "enabled" : true,
             "mountPath" : "/activity",
             "size" : 1
         },
-        "workspace" : {
+        "workflow" : {
             "enabled" : true,
              "mountPath" : "/workflow",
              "size" : 1

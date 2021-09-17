@@ -40,8 +40,8 @@ import io.boomerang.mongo.model.ErrorResponse;
 import io.boomerang.mongo.model.Revision;
 import io.boomerang.mongo.model.Storage;
 import io.boomerang.mongo.model.TaskStatus;
+import io.boomerang.mongo.model.ActivityStorage;
 import io.boomerang.mongo.model.WorkflowStorage;
-import io.boomerang.mongo.model.WorkspaceStorage;
 import io.boomerang.mongo.model.internal.InternalTaskResponse;
 import io.boomerang.mongo.service.ActivityTaskService;
 import io.boomerang.mongo.service.FlowSettingsService;
@@ -527,37 +527,35 @@ public class ControllerClientImpl implements ControllerClient {
 
   private List<TaskWorkspace> buildTaskWorkspaceList(WorkflowEntity workflow, String activityId) 
   {
-    System.out.println("buildTaskWorkspaceList");
-    
     List<TaskWorkspace> workspaces = new LinkedList<>();
     if (workflow.getStorage() != null) {
       Storage storage = workflow.getStorage();
       if (storage.getWorkflow() != null) {
-        WorkflowStorage workflowStorage = storage.getWorkflow();
-        if (workflowStorage.getEnabled()) {
+        ActivityStorage activityStorage = storage.getActivity();
+        if (activityStorage != null && activityStorage.getEnabled()) {
           TaskWorkspace taskActivity = new TaskWorkspace();
           taskActivity.setName("activity");
           taskActivity.setId(activityId);
           taskActivity.setReadOnly(false);
           taskActivity.setOptional(false);
-          if (workflowStorage.getMountPath() != null && !workflowStorage.getMountPath().isBlank()) {
-            taskActivity.setMountPath(workflowStorage.getMountPath());
+          if (activityStorage.getMountPath() != null && !activityStorage.getMountPath().isBlank()) {
+            taskActivity.setMountPath(activityStorage.getMountPath());
           }
        
           
           workspaces.add(taskActivity);
         }
         
-        WorkspaceStorage workspaceStorage = storage.getWorkspace();
-        if (workspaceStorage.getEnabled()) {
+        WorkflowStorage workflowStorage = storage.getWorkflow();
+        if (workflowStorage != null && workflowStorage.getEnabled()) {
           TaskWorkspace taskWorkflow = new TaskWorkspace();
           taskWorkflow.setName("workflow");
           taskWorkflow.setId(activityId);
           taskWorkflow.setReadOnly(false);
           taskWorkflow.setOptional(false);
           
-          if (workspaceStorage.getMountPath() != null && !workspaceStorage.getMountPath().isBlank()) {
-            taskWorkflow.setMountPath(workspaceStorage.getMountPath());
+          if (workflowStorage.getMountPath() != null && !workflowStorage.getMountPath().isBlank()) {
+            taskWorkflow.setMountPath(workflowStorage.getMountPath());
           }
           workspaces.add(taskWorkflow);
         }
