@@ -14,7 +14,7 @@
 			"key": "storage.class",
 			"label": "Storage Class Name",
 			"type": "text",
-			"value": "",
+			"value": "default",
 			"readOnly": false
 		},
 		{
