@@ -10,7 +10,6 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Assertions;
@@ -30,7 +29,6 @@ import org.springframework.test.web.client.MockRestServiceServer;
 import io.boomerang.model.FlowActivity;
 import io.boomerang.model.FlowWebhookResponse;
 import io.boomerang.model.RequestFlowExecution;
-import io.boomerang.model.controller.TaskWorkspace;
 import io.boomerang.mongo.model.TaskStatus;
 import io.boomerang.tests.IntegrationTests;
 
@@ -39,10 +37,10 @@ import io.boomerang.tests.IntegrationTests;
 @ActiveProfiles("local")
 @WithMockUser(roles = {"admin"})
 @WithUserDetails("mdroy@us.ibm.com")
-public class SimpleExecuteTests extends IntegrationTests {
+class SimpleExecuteTests extends IntegrationTests {
 
   @Test
-  public void testExecution() throws Exception {
+  void testExecution() throws Exception {
     mockServer
         .expect(times(1), requestTo(containsString("http://localhost:8084/internal/users/user")))
         .andExpect(method(HttpMethod.GET))
@@ -54,16 +52,6 @@ public class SimpleExecuteTests extends IntegrationTests {
 
     request.setWorkflowId(workflowId);
 
-    TaskWorkspace taskWorkspace = new TaskWorkspace();
-    taskWorkspace.setOptional(false);
-    taskWorkspace.setReadOnly(false);
-    taskWorkspace.setWorkspaceId("12345");
-    taskWorkspace.setWorkspaceName("Test");
-
-    List<TaskWorkspace> taskWorkspaceList = new LinkedList<>();
-    taskWorkspaceList.add(taskWorkspace);
-
-    request.setTaskWorkspaces(taskWorkspaceList);
 
     Map<String, String> map = new HashMap<>();
     map.put("foobar", "Hello World");
@@ -84,10 +72,7 @@ public class SimpleExecuteTests extends IntegrationTests {
     super.setUp();
     mockServer = MockRestServiceServer.bindTo(this.restTemplate).ignoreExpectOrder(true).build();
 
-    mockServer.expect(times(1), requestTo(containsString("controller/workflow/create")))
-        .andExpect(method(HttpMethod.POST)).andExpect(jsonPath("$.storage.size").value("1Gi"))
-        .andExpect(jsonPath("$.storage.accessMode").value("ReadWriteMany"))
-        .andExpect(jsonPath("$.storage.className").value("default"))
+    mockServer.expect(times(1), requestTo(containsString("controller/workflow/execute")))
         .andRespond(withStatus(HttpStatus.OK));
     mockServer.expect(times(1), requestTo(containsString("controller/task/execute")))
         .andExpect(method(HttpMethod.POST)).andExpect(jsonPath("$.configuration.timeout").value(90))

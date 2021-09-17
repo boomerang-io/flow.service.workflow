@@ -75,7 +75,7 @@ public class DefaultPathTests extends IntegrationTests {
         .andExpect(method(HttpMethod.GET)).andRespond(
             withSuccess(getMockFile("mock/users/users.json"), MediaType.APPLICATION_JSON));
 
-    mockServer.expect(times(1), requestTo(containsString("controller/workflow/create")))
+    mockServer.expect(times(1), requestTo(containsString("controller/workflow/execute")))
         .andExpect(method(HttpMethod.POST)).andRespond(withStatus(HttpStatus.OK));
 
     mockServer.expect(times(1), requestTo(containsString("users/user/5e736fb0a97b78000125ebe3")))

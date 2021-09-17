@@ -25,7 +25,17 @@
             "topic" : ""
         }
     },
-    "enablePersistentStorage" : false,
-    "enableACCIntegration" : false,
+    "storage" : {
+        "workflow" : {
+            "enabled" : true,
+            "mountPath" : "/activity",
+            "size" : 1
+        },
+        "workspace" : {
+            "enabled" : true,
+             "mountPath" : "/workflow",
+             "size" : 1
+        }
+    },
     "_class" : "net.boomerangplatform.model.WorkflowSummary"
 }

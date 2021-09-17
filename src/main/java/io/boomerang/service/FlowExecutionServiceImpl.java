@@ -20,6 +20,8 @@ import org.jgrapht.Graph;
 import org.jgrapht.graph.DefaultEdge;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.boomerang.exceptions.InvalidWorkflowRuntimeException;
 import io.boomerang.exceptions.RunWorkflowException;
 import io.boomerang.model.Task;
@@ -260,7 +262,12 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
       workflow.getStorage().setWorkflow(new WorkflowStorage());
     }
     
+
+    
     boolean enablePVC = workflow.getStorage().getWorkflow().getEnabled();
+    
+    System.out.println(enablePVC);
+    
     String workflowName = workflow.getName();
     String workflowId = workflow.getId();
     

@@ -2,6 +2,7 @@ package io.boomerang.scenarios;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.springframework.test.web.client.ExpectedCount.times;
+import static org.springframework.test.web.client.ExpectedCount.manyTimes;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withStatus;
@@ -61,10 +62,10 @@ class ManualTaskExecuteTests extends IntegrationTests {
     super.setUp();
     mockServer = MockRestServiceServer.bindTo(this.restTemplate).ignoreExpectOrder(true).build();
 
-    mockServer.expect(times(5), requestTo(containsString("internal/users/user")))
+    mockServer.expect(manyTimes(), requestTo(containsString("internal/users/user")))
         .andExpect(method(HttpMethod.GET)).andRespond(
             withSuccess(getMockFile("mock/users/users.json"), MediaType.APPLICATION_JSON));
-    mockServer.expect(times(1), requestTo(containsString("controller/workflow/create")))
+    mockServer.expect(times(1), requestTo(containsString("controller/workflow/execute")))
         .andExpect(method(HttpMethod.POST)).andRespond(withStatus(HttpStatus.OK));
     
    

@@ -11,13 +11,13 @@ import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 @JsonTypeInfo(
-		  use = JsonTypeInfo.Id.NAME, 
-		  include = JsonTypeInfo.As.PROPERTY, 
-		  property = "taskType")
-		@JsonSubTypes({ 
-		  @Type(value = TaskCustom.class, name = "custom"), 
-		  @Type(value = TaskTemplate.class, name = "template")
-		})
+          use = JsonTypeInfo.Id.NAME, 
+          include = JsonTypeInfo.As.PROPERTY, 
+          property = "taskType")
+        @JsonSubTypes({ 
+          @Type(value = TaskCustom.class, name = "custom"), 
+          @Type(value = TaskTemplate.class, name = "template")
+        })
 @JsonIgnoreProperties
 public abstract class Task {
 
@@ -38,6 +38,9 @@ public abstract class Task {
 
   @JsonProperty("command")
   private List<String> command;
+
+  @JsonProperty("workingDir")
+  private String workingDir;
 
   @JsonProperty("script")
   private String script;
@@ -179,6 +182,14 @@ public abstract class Task {
     this.command = command;
   }
 
+  public String getWorkingDir() {
+    return workingDir;
+  }
+
+  public void setWorkingDir(String workingDir) {
+    this.workingDir = workingDir;
+  }
+
   public String getScript() {
     return script;
   }
@@ -188,11 +199,11 @@ public abstract class Task {
   }
 
   public TaskConfiguration getConfiguration() {
-	return configuration;
+    return configuration;
   }
 
   public void setConfiguration(TaskConfiguration configuration) {
-	this.configuration = configuration;
+    this.configuration = configuration;
   }
 
   public List<TaskWorkspace> getWorkspaces() {

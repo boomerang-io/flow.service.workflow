@@ -24,23 +24,29 @@ import io.boomerang.errors.model.ErrorDetail;
 import io.boomerang.model.Task;
 import io.boomerang.model.TaskResult;
 import io.boomerang.model.controller.Response;
-import io.boomerang.model.controller.Storage;
 import io.boomerang.model.controller.TaskConfiguration;
 import io.boomerang.model.controller.TaskDeletion;
 import io.boomerang.model.controller.TaskResponse;
 import io.boomerang.model.controller.TaskResponseResult;
 import io.boomerang.model.controller.TaskTemplate;
+import io.boomerang.model.controller.TaskWorkspace;
 import io.boomerang.model.controller.Workflow;
+import io.boomerang.model.controller.Workspace;
 import io.boomerang.mongo.entity.ActivityEntity;
 import io.boomerang.mongo.entity.TaskExecutionEntity;
+import io.boomerang.mongo.entity.WorkflowEntity;
 import io.boomerang.mongo.model.KeyValuePair;
 import io.boomerang.mongo.model.ErrorResponse;
 import io.boomerang.mongo.model.Revision;
+import io.boomerang.mongo.model.Storage;
 import io.boomerang.mongo.model.TaskStatus;
+import io.boomerang.mongo.model.WorkflowStorage;
+import io.boomerang.mongo.model.WorkspaceStorage;
 import io.boomerang.mongo.model.internal.InternalTaskResponse;
 import io.boomerang.mongo.service.ActivityTaskService;
 import io.boomerang.mongo.service.FlowSettingsService;
 import io.boomerang.mongo.service.FlowWorkflowActivityService;
+import io.boomerang.mongo.service.FlowWorkflowService;
 import io.boomerang.service.PropertyManager;
 import io.boomerang.service.crud.FlowActivityService;
 import io.boomerang.service.refactor.ControllerRequestProperties;
@@ -83,6 +89,9 @@ public class ControllerClientImpl implements ControllerClient {
 
   @Value("${controller.terminatetask.url}")
   private String terminateTaskURL;
+  
+  @Autowired
+  private FlowWorkflowService workflowService;
 
   private static final String CREATEWORKFLOWREQUEST = "Create Workflow Request";
   private static final String TERMINATEWORKFLOWREQUEST = "Terminate Workflow Request";
@@ -101,31 +110,32 @@ public class ControllerClientImpl implements ControllerClient {
     request.setWorkflowName(workflowName);
     request.setWorkflowId(workflowId);
     request.setParameters(properties);
+ 
 
-
-    final Storage storage = new Storage();
-    storage.setEnable(enableStorage);
-
-    String storageClassName =
-        this.flowSettinigs.getConfiguration("workflow", "storage.class").getValue();
-    if (storageClassName != null && !storageClassName.isBlank()) {
-      storage.setClassName(storageClassName);
+    if (enableStorage) {
+      Workspace workspace = new Workspace();
+      workspace.setId(activityId);
+      workspace.setName("activity");
+      String storageClassName =
+          this.flowSettinigs.getConfiguration("workflow", "storage.class").getValue();
+      if (storageClassName != null && !storageClassName.isBlank()) {
+        workspace.setClassName(storageClassName);
+      }
+      String storageAccessMode =
+          this.flowSettinigs.getConfiguration("workflow", "storage.accessMode").getValue();
+      if (storageAccessMode != null && !storageAccessMode.isBlank()) {
+        workspace.setAccessMode(storageAccessMode);
+      }
+      String storageDefaultSize =
+          this.flowSettinigs.getConfiguration("workflow", "storage.size").getValue();
+      if (storageDefaultSize != null && !storageDefaultSize.isBlank()) {
+        workspace.setSize(storageDefaultSize);
+      }
+      List<Workspace> workspaces = new LinkedList<>(); 
+      workspaces.add(workspace);
+      request.setWorkspaces(workspaces);
     }
 
-    String storageAccessMode =
-        this.flowSettinigs.getConfiguration("workflow", "storage.accessMode").getValue();
-    if (storageAccessMode != null && !storageAccessMode.isBlank()) {
-      storage.setAccessMode(storageAccessMode);
-    }
-
-    String storageDefaultSize =
-        this.flowSettinigs.getConfiguration("workflow", "storage.size").getValue();
-    if (storageDefaultSize != null && !storageDefaultSize.isBlank()) {
-      storage.setSize(storageDefaultSize);
-    }
-
-
-    request.setWorkflowStorage(storage);
     request.setLabels(this.convertToMap(labels));
 
     logPayload(CREATEWORKFLOWREQUEST, request);
@@ -181,9 +191,7 @@ public class ControllerClientImpl implements ControllerClient {
     request.setWorkflowActivityId(activityId);
     request.setWorkflowName(workflowName);
     request.setWorkflowId(workflowId);
-    final Storage storage = new Storage();
-    storage.setEnable(true);
-    request.setWorkflowStorage(storage);
+
     logPayload(TERMINATEWORKFLOWREQUEST, request);
 
     Date startTime = new Date();
@@ -199,16 +207,14 @@ public class ControllerClientImpl implements ControllerClient {
     return true;
   }
 
-  
-
+ 
   
   @Override
   @Async("flowAsyncExecutor")
   public void submitCustomTask(TaskService t, TaskClient flowTaskClient, Task task, String activityId, String workflowName,
       List<KeyValuePair> labels) {
 
-    
-
+   
     TaskResult taskResult = new TaskResult();
     TaskExecutionEntity taskExecution =
         taskService.findByTaskIdAndActivityId(task.getTaskId(), activityId);
@@ -228,7 +234,11 @@ public class ControllerClientImpl implements ControllerClient {
     request.setTaskName(task.getTaskName());
     request.setTaskActivityId(task.getTaskActivityId());
     request.setLabels(this.convertToMap(labels));
-
+    
+    WorkflowEntity workflow = this.workflowService.getWorkflow(activity.getWorkflowId());
+    List<TaskWorkspace> taskWorkspaces = buildTaskWorkspaceList(workflow, activityId);
+    request.setWorkspaces(taskWorkspaces);
+    
     ControllerRequestProperties applicationProperties =
         propertyManager.buildRequestPropertyLayering(task, activityId, task.getWorkflowId());
 
@@ -405,7 +415,11 @@ public class ControllerClientImpl implements ControllerClient {
     request.setTaskActivityId(task.getTaskActivityId());
     request.setLabels(this.convertToMap(labels));
 
-
+    
+    WorkflowEntity workflow = this.workflowService.getWorkflow(activity.getWorkflowId());
+    List<TaskWorkspace> taskWorkspaces = buildTaskWorkspaceList(workflow, activityId);
+    request.setWorkspaces(taskWorkspaces);
+    
     ControllerRequestProperties applicationProperties =
         propertyManager.buildRequestPropertyLayering(task, activityId, task.getWorkflowId());
 
@@ -425,7 +439,6 @@ public class ControllerClientImpl implements ControllerClient {
     taskExecution.setFlowTaskStatus(TaskStatus.inProgress);
     taskExecution = taskService.save(taskExecution);
 
-    request.setWorkspaces(activity.getTaskWorkspaces());
     Map<String, String> outputProperties = new HashMap<>();
 
     logPayload(CREATETEMPLATETASKREQUEST, request);
@@ -510,6 +523,49 @@ public class ControllerClientImpl implements ControllerClient {
     response.setOutputProperties(outputProperties);
 
     flowTaskClient.endTask(t, response);
+  }
+
+  private List<TaskWorkspace> buildTaskWorkspaceList(WorkflowEntity workflow, String activityId) 
+  {
+    System.out.println("buildTaskWorkspaceList");
+    
+    List<TaskWorkspace> workspaces = new LinkedList<>();
+    if (workflow.getStorage() != null) {
+      Storage storage = workflow.getStorage();
+      if (storage.getWorkflow() != null) {
+        WorkflowStorage workflowStorage = storage.getWorkflow();
+        if (workflowStorage.getEnabled()) {
+          TaskWorkspace taskActivity = new TaskWorkspace();
+          taskActivity.setName("activity");
+          taskActivity.setId(activityId);
+          taskActivity.setReadOnly(false);
+          taskActivity.setOptional(false);
+          if (workflowStorage.getMountPath() != null && !workflowStorage.getMountPath().isBlank()) {
+            taskActivity.setMountPath(workflowStorage.getMountPath());
+          }
+       
+          
+          workspaces.add(taskActivity);
+        }
+        
+        WorkspaceStorage workspaceStorage = storage.getWorkspace();
+        if (workspaceStorage.getEnabled()) {
+          TaskWorkspace taskWorkflow = new TaskWorkspace();
+          taskWorkflow.setName("workflow");
+          taskWorkflow.setId(activityId);
+          taskWorkflow.setReadOnly(false);
+          taskWorkflow.setOptional(false);
+          
+          if (workspaceStorage.getMountPath() != null && !workspaceStorage.getMountPath().isBlank()) {
+            taskWorkflow.setMountPath(workspaceStorage.getMountPath());
+          }
+          workspaces.add(taskWorkflow);
+        }
+      }
+    }
+    System.out.println("workspace");
+    System.out.println(workspaces.size());
+    return workspaces;
   }
 
   private void prepareTemplateImageRequest(Task task, TaskResult taskResult,

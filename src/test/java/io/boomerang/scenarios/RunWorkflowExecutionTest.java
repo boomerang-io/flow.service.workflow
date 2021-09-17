@@ -61,17 +61,6 @@ public class RunWorkflowExecutionTest extends IntegrationTests {
 
     request.setWorkflowId(workflowId);
 
-    TaskWorkspace taskWorkspace = new TaskWorkspace();
-    taskWorkspace.setOptional(false);
-    taskWorkspace.setReadOnly(false);
-    taskWorkspace.setWorkspaceId("12345");
-    taskWorkspace.setWorkspaceName("Test");
-
-    List<TaskWorkspace> taskWorkspaceList = new LinkedList<>();
-    taskWorkspaceList.add(taskWorkspace);
-
-    request.setTaskWorkspaces(taskWorkspaceList);
-
     Map<String, String> map = new HashMap<>();
     map.put("foobar", "Hello World");
     request.setProperties(map);
@@ -91,7 +80,7 @@ public class RunWorkflowExecutionTest extends IntegrationTests {
   public void setUp() throws IOException {
     super.setUp();
     mockServer = MockRestServiceServer.bindTo(this.restTemplate).ignoreExpectOrder(true).build();
-    mockServer.expect(times(1), requestTo(containsString("controller/workflow/create")))
+    mockServer.expect(times(1), requestTo(containsString("controller/workflow/execute")))
         .andExpect(method(HttpMethod.POST))
         .andRespond(withStatus(HttpStatus.OK));
     mockServer.expect(times(1), requestTo(containsString("internal/users/user")))
