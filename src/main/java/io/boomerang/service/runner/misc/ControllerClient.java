@@ -19,4 +19,8 @@ public interface ControllerClient {
 
   boolean createFlow(String workflowId, String workflowName, String activityId,
       boolean enableStorage,  List<KeyValuePair> labels, Map<String, String> properties);
+  
+  public void createWorkspace(String id);
+  
+  public void deleteWorkspace(String id);
 }

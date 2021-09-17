@@ -92,7 +92,10 @@ public class ControllerClientImpl implements ControllerClient {
   
   @Autowired
   private FlowWorkflowService workflowService;
-
+  
+  private static final String CREATEWORKSPACEREQUEST = "Create Workflow Request";
+  private static final String DELETEWORKSPACEREQUEST = "Delete Workspace Request";
+  
   private static final String CREATEWORKFLOWREQUEST = "Create Workflow Request";
   private static final String TERMINATEWORKFLOWREQUEST = "Terminate Workflow Request";
   private static final String CREATETEMPLATETASKREQUEST = "Create Template Task Request";
@@ -100,6 +103,12 @@ public class ControllerClientImpl implements ControllerClient {
   private static final String TERMINATETASKREQUEST = "Terminate Task Request";
   private static final String ERRORLOGPRFIX = "Error for: {}";
 
+  @Value("${controller.createworkspace.url}")
+  private String createWorkspaceUrl;
+
+  @Value("${controller.deleteworkspace.url}")
+  private String deleteWorkspaceUrl;
+  
   @Override
   public boolean createFlow(String workflowId, String workflowName, String activityId,
       boolean enableStorage, List<KeyValuePair> labels, Map<String, String> properties) {
@@ -113,24 +122,7 @@ public class ControllerClientImpl implements ControllerClient {
  
 
     if (enableStorage) {
-      Workspace workspace = new Workspace();
-      workspace.setId(activityId);
-      workspace.setName("activity");
-      String storageClassName =
-          this.flowSettinigs.getConfiguration("workflow", "storage.class").getValue();
-      if (storageClassName != null && !storageClassName.isBlank()) {
-        workspace.setClassName(storageClassName);
-      }
-      String storageAccessMode =
-          this.flowSettinigs.getConfiguration("workflow", "storage.accessMode").getValue();
-      if (storageAccessMode != null && !storageAccessMode.isBlank()) {
-        workspace.setAccessMode(storageAccessMode);
-      }
-      String storageDefaultSize =
-          this.flowSettinigs.getConfiguration("workflow", "storage.size").getValue();
-      if (storageDefaultSize != null && !storageDefaultSize.isBlank()) {
-        workspace.setSize(storageDefaultSize);
-      }
+      Workspace workspace = createWorkspaceRequest(activityId, "activity");
       List<Workspace> workspaces = new LinkedList<>(); 
       workspaces.add(workspace);
       request.setWorkspaces(workspaces);
@@ -183,6 +175,28 @@ public class ControllerClientImpl implements ControllerClient {
     Date endTime = new Date();
     logRequestTime(CREATEWORKFLOWREQUEST, startTime, endTime);
     return true;
+  }
+
+  private Workspace createWorkspaceRequest(String activityId, String name) {
+    Workspace workspace = new Workspace();
+    workspace.setId(activityId);
+    workspace.setName(name);
+    String storageClassName =
+        this.flowSettinigs.getConfiguration("workflow", "storage.class").getValue();
+    if (storageClassName != null && !storageClassName.isBlank()) {
+      workspace.setClassName(storageClassName);
+    }
+    String storageAccessMode =
+        this.flowSettinigs.getConfiguration("workflow", "storage.accessMode").getValue();
+    if (storageAccessMode != null && !storageAccessMode.isBlank()) {
+      workspace.setAccessMode(storageAccessMode);
+    }
+    String storageDefaultSize =
+        this.flowSettinigs.getConfiguration("workflow", "storage.size").getValue();
+    if (storageDefaultSize != null && !storageDefaultSize.isBlank()) {
+      workspace.setSize(storageDefaultSize);
+    }
+    return workspace;
   }
 
   @Override
@@ -714,5 +728,76 @@ public class ControllerClientImpl implements ControllerClient {
       LOGGER.error(ExceptionUtils.getStackTrace(ex));
     }
 
+  }
+
+  @Override
+  @Async("flowAsyncExecutor")
+  public void createWorkspace(String id) {
+    
+    Workspace workspace = this.createWorkspaceRequest(id, "workflow");
+    
+    try {
+      logPayload(CREATEWORKSPACEREQUEST, workspace);
+
+      Response response = restTemplate.postForObject(createWorkspaceUrl, workspace, Response.class);
+      logPayload(DELETEWORKSPACEREQUEST, response);
+      
+    } catch (HttpStatusCodeException statusCodeException) {
+      LOGGER.error(ExceptionUtils.getStackTrace(statusCodeException));
+
+      String body = statusCodeException.getResponseBodyAsString();
+      LOGGER.error("Error Creating Workflow Response Body: {}", body);
+
+      ObjectMapper mapper = new ObjectMapper();
+      try {
+        BoomerangError controllerError = mapper.readValue(body, BoomerangError.class);
+        if (controllerError != null && controllerError.getError() != null) {
+          ErrorDetail detail = controllerError.getError();
+          ErrorResponse error = new ErrorResponse();
+          error.setCode(String.valueOf(detail.getCode()));
+          error.setMessage(detail.getDescription());
+        }
+      } catch (JsonProcessingException e) {
+        e.printStackTrace();
+      }
+    } catch (RestClientException ex) {
+      LOGGER.error(ERRORLOGPRFIX, CREATEWORKFLOWREQUEST);
+      LOGGER.error(ExceptionUtils.getStackTrace(ex));
+    }
+  }
+
+  @Override
+  @Async("flowAsyncExecutor")
+  public void deleteWorkspace(String id) {
+    Workspace workspace = this.createWorkspaceRequest(id, "workflow");
+    try {
+      logPayload(CREATEWORKSPACEREQUEST, workspace);
+
+      Response response = restTemplate.postForObject(deleteWorkspaceUrl, workspace, Response.class);
+      logPayload(DELETEWORKSPACEREQUEST, response);
+      
+    } catch (HttpStatusCodeException statusCodeException) {
+      LOGGER.error(ExceptionUtils.getStackTrace(statusCodeException));
+
+      String body = statusCodeException.getResponseBodyAsString();
+      LOGGER.error("Error Creating Workflow Response Body: {}", body);
+
+      ObjectMapper mapper = new ObjectMapper();
+      try {
+        BoomerangError controllerError = mapper.readValue(body, BoomerangError.class);
+        if (controllerError != null && controllerError.getError() != null) {
+          ErrorDetail detail = controllerError.getError();
+          ErrorResponse error = new ErrorResponse();
+          error.setCode(String.valueOf(detail.getCode()));
+          error.setMessage(detail.getDescription());
+        }
+      } catch (JsonProcessingException e) {
+        e.printStackTrace();
+      }
+    } catch (RestClientException ex) {
+      LOGGER.error(ERRORLOGPRFIX, CREATEWORKFLOWREQUEST);
+      LOGGER.error(ExceptionUtils.getStackTrace(ex));
+    }
+    
   }
 }

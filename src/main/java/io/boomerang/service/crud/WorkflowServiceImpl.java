@@ -20,6 +20,7 @@ import org.apache.logging.log4j.Logger;
 import org.quartz.SchedulerException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
@@ -72,6 +73,7 @@ import io.boomerang.mongo.service.RevisionService;
 import io.boomerang.quartz.ScheduledTasks;
 import io.boomerang.service.PropertyManager;
 import io.boomerang.service.UserIdentityService;
+import io.boomerang.service.runner.misc.ControllerClient;
 import io.boomerang.util.ModelConverterV5;
 
 @Service
@@ -100,6 +102,10 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   @Autowired
   private TeamService teamService;
+  
+  @Autowired
+  @Lazy
+  private ControllerClient controllerClient;
 
   @Autowired
   private FlowSettingsService flowSettingsService;
@@ -263,7 +269,11 @@ public class WorkflowServiceImpl implements WorkflowService {
     entity.setShortDescription(summary.getShortDescription());
     entity.setStatus(summary.getStatus());
 
+
+    createOrDeleteWorkspace(summary, entity);
     entity.setStorage(summary.getStorage());
+    
+    
     entity.setLabels(summary.getLabels());
 
     List<WorkflowProperty> updatedProperties = setupDefaultProperties(summary);
@@ -279,6 +289,24 @@ public class WorkflowServiceImpl implements WorkflowService {
 
     return updatedSummary;
 
+  }
+
+  private void createOrDeleteWorkspace(WorkflowSummary summary, final WorkflowEntity entity) {
+    boolean previousStorageState = false;
+    if (entity.getStorage() != null && entity.getStorage().getWorkflow() != null) {
+      previousStorageState = entity.getStorage().getWorkflow().getEnabled();
+    }
+    boolean newStorageState = summary.getStorage().getWorkflow().getEnabled();
+    
+    if (!previousStorageState && newStorageState) {
+      logger.info("Creating workspace for: {}", summary.getId());
+      this.controllerClient.createWorkspace(summary.getId());
+    }
+    
+    if (previousStorageState && !newStorageState) {
+      logger.info("Deleting workspace for: {}", summary.getId());
+      this.controllerClient.deleteWorkspace(summary.getId());
+    }
   }
 
   private void updateTriggers(final WorkflowEntity entity, Triggers currentTriggers,
