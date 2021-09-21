@@ -296,8 +296,12 @@ public class WorkflowServiceImpl implements WorkflowService {
     if (entity.getStorage() != null && entity.getStorage().getWorkflow() != null) {
       previousStorageState = entity.getStorage().getWorkflow().getEnabled();
     }
-    boolean newStorageState = summary.getStorage().getWorkflow().getEnabled();
     
+    boolean newStorageState = false;
+    if (summary.getStorage() != null && summary.getStorage().getWorkflow() != null) {
+      newStorageState = summary.getStorage().getWorkflow().getEnabled();
+    }
+   
     if (!previousStorageState && newStorageState) {
       logger.info("Creating workspace for: {}", summary.getId());
       this.controllerClient.createWorkspace(summary.getId());
