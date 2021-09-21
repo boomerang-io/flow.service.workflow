@@ -57,6 +57,7 @@ public class TektonImportExportTests {
     TektonTask task = loadTektonTask("yaml/import.yaml");
     FlowTaskTemplateEntity entity = TektonConverter.convertTektonTaskToNewFlowTask(task);
     Assertions.assertEquals("example-task-name", entity.getName());
+    Assertions.assertEquals("Worker", entity.getCategory());
     logObjectASJson(entity);
   }
 

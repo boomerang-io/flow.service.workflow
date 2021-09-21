@@ -98,6 +98,7 @@ public class TektonConverter {
       Map<String, Object> annotationFields = annotations.otherFields();
       annotationFields.put("boomerang.io/icon", task.getIcon());
       annotationFields.put("boomerang.io/params", configList);
+      annotationFields.put("boomerang.io/category", task.getCategory());
   
       metadata.setAnnotations(annotations);
       
@@ -159,7 +160,8 @@ public class TektonConverter {
     taskTemplate.setRevisions(revisions);
     taskTemplate.setStatus(FlowTaskTemplateStatus.active);
     taskTemplate.setVerified(false);
-    taskTemplate.setCategory("community");
+    
+
     taskTemplate.setDescription(task.getSpec().getDescription());
     
     
