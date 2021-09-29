@@ -186,6 +186,7 @@ public class UserIdentityServiceImpl implements UserIdentityService {
     FlowUserEntity flowUserEntity = new FlowUserEntity();
     BeanUtils.copyProperties(flowUser, flowUserEntity);
     flowUser.setStatus(UserStatus.active);
+    flowUser.setId(null);
     flowUserEntity =  flowUserService.save(flowUser);
     FlowUser newUser = new FlowUser();
     BeanUtils.copyProperties(flowUserEntity, newUser);
