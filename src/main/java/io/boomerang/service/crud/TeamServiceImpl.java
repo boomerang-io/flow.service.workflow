@@ -182,7 +182,7 @@ public class TeamServiceImpl implements TeamService {
       quotas.setMaxWorkflowExecutionMonthly(Integer.valueOf(flowSettingsService
           .getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_EXECUTION_MONTHLY).getValue()));
       quotas.setMaxWorkflowStorage(Integer.valueOf(
-          flowSettingsService.getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_STORAGE).getValue()));
+          flowSettingsService.getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_STORAGE).getValue().replace("Gi", "")));
       quotas.setMaxWorkflowExecutionTime(Integer.valueOf(
           flowSettingsService.getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_DURATION).getValue()));
       quotas.setMaxConcurrentWorkflows(Integer.valueOf(
