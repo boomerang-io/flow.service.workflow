@@ -59,11 +59,11 @@ public class ScheduledTasks {
       if (cronString != null && timezone != null) {
         boolean validCron = org.quartz.CronExpression.isValidExpression(cronString);
         if (!validCron) {
-          logger.info("Invalid CRON: {}. Attempting quartz to cron conversion", cronString);
+          logger.info("Invalid CRON: {}. Attempting cron to quartz conversion", cronString);
           CronParser parser =
-              new CronParser(CronDefinitionBuilder.instanceDefinitionFor(CronType.QUARTZ));
+              new CronParser(CronDefinitionBuilder.instanceDefinitionFor(CronType.CRON4J));
           Cron cron = parser.parse(cronString);
-          CronMapper cronMapper = CronMapper.fromQuartzToCron4j();
+          CronMapper cronMapper = CronMapper.fromCron4jToQuartz();
           Cron cron4jQuartz = cronMapper.map(cron);
           cronString = cron4jQuartz.asString();
           if (org.quartz.CronExpression.isValidExpression(cronString)) {
