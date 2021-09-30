@@ -195,7 +195,7 @@ public class PropertyManagerImpl implements PropertyManager {
             if (revisions != null) {
               Revision rev = revisions.stream().filter(e -> e.getVersion().equals(templateVersion))
                   .findFirst().orElse(null);
-              if (rev != null) {
+              if (rev != null && rev.getConfig() != null) {
                 return rev.getConfig();
               }
             }
