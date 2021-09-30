@@ -17,6 +17,11 @@ import org.quartz.TriggerBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.quartz.SchedulerFactoryBean;
 import org.springframework.stereotype.Component;
+import com.cronutils.mapper.CronMapper;
+import com.cronutils.model.Cron;
+import com.cronutils.model.CronType;
+import com.cronutils.model.definition.CronDefinitionBuilder;
+import com.cronutils.parser.CronParser;
 import io.boomerang.mongo.entity.WorkflowEntity;
 import io.boomerang.mongo.service.FlowWorkflowService;
 
@@ -46,30 +51,36 @@ public class ScheduledTasks {
     }
   }
 
- 
+
   public void scheduleWorkflow(WorkflowEntity workflow) {
-    
     if (workflow.getTriggers() != null && workflow.getTriggers().getScheduler() != null) {
-      
       String cronString = workflow.getTriggers().getScheduler().getSchedule();
       String timezone = workflow.getTriggers().getScheduler().getTimezone();
       if (cronString != null && timezone != null) {
         boolean validCron = org.quartz.CronExpression.isValidExpression(cronString);
         if (!validCron) {
-          logger.info("Invalid CRON: {}", cronString);
-          return;
+          logger.info("Invalid CRON: {}. Attempting cron to quartz conversion", cronString);
+          CronParser parser =
+              new CronParser(CronDefinitionBuilder.instanceDefinitionFor(CronType.CRON4J));
+          Cron cron = parser.parse(cronString);
+          CronMapper cronMapper = CronMapper.fromCron4jToQuartz();
+          Cron cron4jQuartz = cronMapper.map(cron);
+          cronString = cron4jQuartz.asString();
+          if (org.quartz.CronExpression.isValidExpression(cronString)) {
+            logger.info("Invalid CRON: {}", cronString);
+            return;
+          }
         }
+        logger.info("Valid CRON: {}", cronString);
         TimeZone timeZone = TimeZone.getTimeZone(timezone);
         String workflowId = workflow.getId();
         Scheduler scheduler = schedulerFactoryBean.getScheduler();
         JobDetail jobDetail =
             JobBuilder.newJob(FlowJob.class).withIdentity(workflowId, "flow").build();
-       
         try {
           if (!scheduler.checkExists(jobDetail.getKey())) {
             CronScheduleBuilder scheduleBuilder =
                 CronScheduleBuilder.cronSchedule(cronString).inTimeZone(timeZone);
-
             CronTrigger trigger = TriggerBuilder.newTrigger().withIdentity(workflowId, "flow")
                 .withSchedule(scheduleBuilder).build();
             try {
