@@ -1,6 +1,7 @@
 package io.boomerang.miscs.controller;
 
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -321,6 +322,14 @@ public class WorkflowControllerTests extends FlowTests {
     Assertions.assertEquals("system.params.workflow-id", parameters.get(2));
     Assertions.assertEquals("params.workflow-id", parameters.get(3));
 
+  }
+
+  @Test
+  public void testCronValidation() {
+    assertEquals(false, controller.validateCron("0 * * * * *"));
+    assertEquals(true, controller.validateCron("0 * * ? * *"));
+    assertEquals(true, controller.validateCron("0 0 * ? * *"));
+    assertEquals(true, controller.validateCron("0 0 * ? * MON,TUE,WED,THU,FRI,SAT,SUN"));
   }
 
   private void verifyTemplateVersions(FlowWorkflowRevision entity) {

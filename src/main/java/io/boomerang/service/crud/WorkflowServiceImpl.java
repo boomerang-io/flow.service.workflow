@@ -29,6 +29,9 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+import com.cronutils.model.CronType;
+import com.cronutils.model.definition.CronDefinitionBuilder;
+import com.cronutils.parser.CronParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.boomerang.client.model.Team;
 import io.boomerang.error.BoomerangError;
@@ -102,7 +105,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   @Autowired
   private TeamService teamService;
-  
+
   @Autowired
   @Lazy
   private ControllerClient controllerClient;
@@ -272,8 +275,8 @@ public class WorkflowServiceImpl implements WorkflowService {
 
     createOrDeleteWorkspace(summary, entity);
     entity.setStorage(summary.getStorage());
-    
-    
+
+
     entity.setLabels(summary.getLabels());
 
     List<WorkflowProperty> updatedProperties = setupDefaultProperties(summary);
@@ -296,17 +299,17 @@ public class WorkflowServiceImpl implements WorkflowService {
     if (entity.getStorage() != null && entity.getStorage().getWorkflow() != null) {
       previousStorageState = entity.getStorage().getWorkflow().getEnabled();
     }
-    
+
     boolean newStorageState = false;
     if (summary.getStorage() != null && summary.getStorage().getWorkflow() != null) {
       newStorageState = summary.getStorage().getWorkflow().getEnabled();
     }
-   
+
     if (!previousStorageState && newStorageState) {
       logger.info("Creating workspace for: {}", summary.getId());
       this.controllerClient.createWorkspace(summary.getId());
     }
-    
+
     if (previousStorageState && !newStorageState) {
       logger.info("Deleting workspace for: {}", summary.getId());
       this.controllerClient.deleteWorkspace(summary.getId());
@@ -1156,6 +1159,19 @@ public class WorkflowServiceImpl implements WorkflowService {
       }
     }
     return summaryList;
+  }
+
+  @Override
+  public boolean validateCron(String cronString) {
+    CronParser parser =
+        new CronParser(CronDefinitionBuilder.instanceDefinitionFor(CronType.QUARTZ));
+    try {
+      parser.parse(cronString);
+    } catch (IllegalArgumentException e) {
+      return false;
+    }
+    return true;
+
   }
 
 }

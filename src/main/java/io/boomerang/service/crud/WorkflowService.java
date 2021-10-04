@@ -62,4 +62,6 @@ public interface WorkflowService {
   boolean canExecuteWorkflowForQuotasForUser();
 
   List<TemplateWorkflowSummary> getTemplateWorkflows();
+
+  boolean validateCron(String cron);
 }
