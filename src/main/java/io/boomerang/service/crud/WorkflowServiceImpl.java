@@ -29,6 +29,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+import com.cronutils.mapper.CronMapper;
+import com.cronutils.model.Cron;
 import com.cronutils.model.CronType;
 import com.cronutils.model.definition.CronDefinitionBuilder;
 import com.cronutils.parser.CronParser;
@@ -36,6 +38,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.boomerang.client.model.Team;
 import io.boomerang.error.BoomerangError;
 import io.boomerang.error.BoomerangException;
+import io.boomerang.model.CronValidationResponse;
 import io.boomerang.model.DuplicateRequest;
 import io.boomerang.model.FlowTeam;
 import io.boomerang.model.FlowWorkflowRevision;
@@ -1162,15 +1165,35 @@ public class WorkflowServiceImpl implements WorkflowService {
   }
 
   @Override
-  public boolean validateCron(String cronString) {
+  public CronValidationResponse validateCron(String cronString) {
+
+    logger.info("CRON: {}", cronString);
+
+    CronValidationResponse response = new CronValidationResponse();
     CronParser parser =
         new CronParser(CronDefinitionBuilder.instanceDefinitionFor(CronType.QUARTZ));
     try {
-      parser.parse(cronString);
+      cronString = parser.parse(cronString).asString();
+      response.setCron(cronString);
+      response.setVaild(true);
     } catch (IllegalArgumentException e) {
-      return false;
+      logger.info("Invalid CRON: {} . Attempting cron to quartz conversion", cronString);
+      parser = new CronParser(CronDefinitionBuilder.instanceDefinitionFor(CronType.CRON4J));
+      try {
+        Cron cron = parser.parse(cronString);
+        CronMapper quartzMapper = CronMapper.fromCron4jToQuartz();
+        Cron quartzCron = quartzMapper.map(cron);
+        cronString = quartzCron.asString();
+        response.setCron(cronString);
+        response.setVaild(true);
+      } catch (IllegalArgumentException exc) {
+        logger.info("Invalid CRON: {} . Cannot convert", cronString);
+        response.setCron(null);
+        response.setVaild(false);
+      }
+
     }
-    return true;
+    return response;
 
   }
 

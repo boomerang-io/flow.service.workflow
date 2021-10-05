@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import io.boomerang.model.CronValidationResponse;
 import io.boomerang.model.DuplicateRequest;
 import io.boomerang.model.FlowWorkflowRevision;
 import io.boomerang.model.GenerateTokenResponse;
@@ -151,7 +152,7 @@ public class WorkflowController {
   }
 
   @GetMapping(value = "/validate/cron")
-  public boolean validateCron(@RequestParam String cron) {
+  public CronValidationResponse validateCron(@RequestParam String cron) {
     return workflowService.validateCron(cron);
   }
 }
