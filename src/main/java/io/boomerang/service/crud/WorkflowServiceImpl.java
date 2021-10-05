@@ -1176,6 +1176,7 @@ public class WorkflowServiceImpl implements WorkflowService {
       cronString = parser.parse(cronString).asString();
       response.setCron(cronString);
       response.setVaild(true);
+      logger.info("Final CRON: {} .", cronString);
     } catch (IllegalArgumentException e) {
       logger.info("Invalid CRON: {} . Attempting cron to quartz conversion", cronString);
       parser = new CronParser(CronDefinitionBuilder.instanceDefinitionFor(CronType.CRON4J));
