@@ -1192,6 +1192,7 @@ public class WorkflowServiceImpl implements WorkflowService {
         response.setVaild(false);
       }
 
+      logger.info("Final CRON: {} .", cronString);
     }
     return response;
 
