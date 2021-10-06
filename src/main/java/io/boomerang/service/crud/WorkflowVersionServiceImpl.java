@@ -8,7 +8,9 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import io.boomerang.model.FlowWorkflowRevision;
 import io.boomerang.model.RevisionResponse;
 import io.boomerang.model.projectstormv5.ConfigNodes;
@@ -17,11 +19,14 @@ import io.boomerang.model.projectstormv5.TaskNode;
 import io.boomerang.mongo.entity.FlowTaskTemplateEntity;
 import io.boomerang.mongo.entity.FlowUserEntity;
 import io.boomerang.mongo.entity.RevisionEntity;
+import io.boomerang.mongo.entity.WorkflowEntity;
 import io.boomerang.mongo.model.ChangeLog;
 import io.boomerang.mongo.model.Dag;
 import io.boomerang.mongo.model.Revision;
+import io.boomerang.mongo.model.WorkflowScope;
 import io.boomerang.mongo.model.next.DAGTask;
 import io.boomerang.mongo.service.FlowTaskTemplateService;
+import io.boomerang.mongo.service.FlowWorkflowService;
 import io.boomerang.mongo.service.RevisionService;
 import io.boomerang.service.UserIdentityService;
 
@@ -37,6 +42,9 @@ public class WorkflowVersionServiceImpl implements WorkflowVersionService {
   @Autowired
   private FlowTaskTemplateService templateService;
 
+  @Autowired
+  private FlowWorkflowService workFlowRepository;
+
   @Override
   public void deleteWorkflowVersionWithId(String id) {
     flowWorkflowService.deleteWorkflow(flowWorkflowService.getWorkflowlWithId(id));
@@ -44,6 +52,14 @@ public class WorkflowVersionServiceImpl implements WorkflowVersionService {
 
   @Override
   public FlowWorkflowRevision getLatestWorkflowVersion(String workflowId) {
+
+    final WorkflowEntity entity = workFlowRepository.getWorkflow(workflowId);
+
+    if (entity.getScope() == WorkflowScope.user
+        && !entity.getOwnerUserId().equals(userIdentityService.getCurrentUser().getId())) {
+      throw new HttpClientErrorException(HttpStatus.FORBIDDEN);
+    }
+
     RevisionEntity revision = flowWorkflowService.getLatestWorkflowVersion(workflowId);
     if (revision == null) {
       return null;
@@ -66,6 +82,13 @@ public class WorkflowVersionServiceImpl implements WorkflowVersionService {
 
   @Override
   public FlowWorkflowRevision getWorkflowVersion(String workflowId, long verison) {
+
+    final WorkflowEntity entity = workFlowRepository.getWorkflow(workflowId);
+
+    if (entity.getScope() == WorkflowScope.user
+        && !entity.getOwnerUserId().equals(userIdentityService.getCurrentUser().getId())) {
+      throw new HttpClientErrorException(HttpStatus.FORBIDDEN);
+    }
     RevisionEntity revision = flowWorkflowService.getLatestWorkflowVersion(workflowId, verison);
 
     updateTemplateVersions(revision);

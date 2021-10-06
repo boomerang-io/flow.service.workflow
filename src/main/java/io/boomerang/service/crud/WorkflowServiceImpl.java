@@ -28,6 +28,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.server.ResponseStatusException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.boomerang.client.model.Team;
@@ -102,7 +103,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   @Autowired
   private TeamService teamService;
-  
+
   @Autowired
   @Lazy
   private ControllerClient controllerClient;
@@ -153,6 +154,11 @@ public class WorkflowServiceImpl implements WorkflowService {
   public WorkflowSummary getWorkflow(String workflowId) {
 
     final WorkflowEntity entity = workFlowRepository.getWorkflow(workflowId);
+
+    if (entity.getScope() == WorkflowScope.user
+        && !entity.getOwnerUserId().equals(userIdentityService.getCurrentUser().getId())) {
+      throw new HttpClientErrorException(HttpStatus.FORBIDDEN);
+    }
 
     setupTriggerDefaults(entity);
 
@@ -272,8 +278,8 @@ public class WorkflowServiceImpl implements WorkflowService {
 
     createOrDeleteWorkspace(summary, entity);
     entity.setStorage(summary.getStorage());
-    
-    
+
+
     entity.setLabels(summary.getLabels());
 
     List<WorkflowProperty> updatedProperties = setupDefaultProperties(summary);
@@ -296,17 +302,17 @@ public class WorkflowServiceImpl implements WorkflowService {
     if (entity.getStorage() != null && entity.getStorage().getWorkflow() != null) {
       previousStorageState = entity.getStorage().getWorkflow().getEnabled();
     }
-    
+
     boolean newStorageState = false;
     if (summary.getStorage() != null && summary.getStorage().getWorkflow() != null) {
       newStorageState = summary.getStorage().getWorkflow().getEnabled();
     }
-   
+
     if (!previousStorageState && newStorageState) {
       logger.info("Creating workspace for: {}", summary.getId());
       this.controllerClient.createWorkspace(summary.getId());
     }
-    
+
     if (previousStorageState && !newStorageState) {
       logger.info("Deleting workspace for: {}", summary.getId());
       this.controllerClient.deleteWorkspace(summary.getId());
