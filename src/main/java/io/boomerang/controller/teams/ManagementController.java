@@ -105,7 +105,7 @@ public class ManagementController {
   public FlowTeam addTeam(@RequestBody FlowTeam flowTeam) {
     if (isTeamManagementAvaliable()) {
       String teamName = flowTeam.getName();
-      return teamService.createStandaloneTeam(teamName);
+      return teamService.createStandaloneTeam(teamName, flowTeam.getQuotas());
     }
     return new FlowTeam();
   }

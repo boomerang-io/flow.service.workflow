@@ -71,18 +71,18 @@ public class TeamsV1Controller {
     response.setupSortSummary(sortSummary);
     return ResponseEntity.ok(response);
   }
-  
+
   @PostMapping(value = "/teams")
   @AuthenticationScope(scopes = {TokenScope.global})
   @Operation(summary = "Create flow team")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
   public ResponseEntity<FlowTeam> addTeam(@RequestBody FlowTeam flowTeam) {
-    
-    
+
+
     if (isTeamManagementAvaliable()) {
       String teamName = flowTeam.getName();
-      FlowTeam team = teamService.createStandaloneTeam(teamName);
+      FlowTeam team = teamService.createStandaloneTeam(teamName, flowTeam.getQuotas());
       return ResponseEntity.ok(team);
     } else {
       return ResponseEntity.badRequest().build();
@@ -102,7 +102,7 @@ public class TeamsV1Controller {
       return ResponseEntity.badRequest().build();
     }
   }
-  
+
   @PatchMapping(value = "/teams/{teamId}/members")
   @AuthenticationScope(scopes = {TokenScope.global})
   @Operation(summary = "Update flow team members")
@@ -125,7 +125,7 @@ public class TeamsV1Controller {
       teamService.updateTeam(teamId, flow);
     }
   }
-  
+
   @GetMapping(value = "/teams/{teamId}/quotas")
   @AuthenticationScope(scopes = {TokenScope.global})
   @Operation(summary = "Get currrent team quotas")
@@ -134,7 +134,7 @@ public class TeamsV1Controller {
   public WorkflowQuotas getTeamQuotas(@PathVariable String teamId) {
     return teamService.getTeamQuotas(teamId);
   }
-  
+
   @PutMapping(value = "/teams/{teamId}/quotas")
   @AuthenticationScope(scopes = {TokenScope.global})
   @Operation(summary = "Update Quotas for a team")
