@@ -27,14 +27,16 @@ public class FlowUserEntity {
   private Boolean isShowHelp;
   private Date firstLoginDate;
   private Date lastLoginDate;
-  
+
   private Quotas quotas;
 
   private List<String> flowTeams;
 
   private UserStatus status;
-  
+
   private List<Team> teams;
+
+  private Boolean hasConsented;
 
   public UserStatus getStatus() {
     return status;
@@ -131,5 +133,12 @@ public class FlowUserEntity {
   public void setQuotas(Quotas quotas) {
     this.quotas = quotas;
   }
-  
+
+  public Boolean getHasConsented() {
+    return hasConsented;
+  }
+
+  public void setHasConsented(Boolean hasConsented) {
+    this.hasConsented = hasConsented;
+  }
 }

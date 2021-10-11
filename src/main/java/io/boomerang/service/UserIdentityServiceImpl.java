@@ -47,7 +47,9 @@ public class UserIdentityServiceImpl implements UserIdentityService {
     if (flowExternalUrlUser.isBlank()) {
       UserToken user = usertDetailsService.getUserDetails();
       String email = user.getEmail();
-      return flowUserService.getUserWithEmail(email);
+      FlowUserEntity entity = flowUserService.getUserWithEmail(email);
+      entity.setHasConsented(true);
+      return entity;
     } else {
       UserProfile userProfile = coreUserService.getInternalUserProfile();
       FlowUserEntity flowUser = new FlowUserEntity();
@@ -164,7 +166,7 @@ public class UserIdentityServiceImpl implements UserIdentityService {
       BeanUtils.copyProperties(userEntity, profile);
       return profile;
     } else {
-      FlowUserEntity userEntity =  getCurrentUser();
+      FlowUserEntity userEntity = getCurrentUser();
       UserProfile profile = new UserProfile();
       BeanUtils.copyProperties(userEntity, profile);
       return profile;
@@ -187,7 +189,7 @@ public class UserIdentityServiceImpl implements UserIdentityService {
     BeanUtils.copyProperties(flowUser, flowUserEntity);
     flowUser.setStatus(UserStatus.active);
     flowUser.setId(null);
-    flowUserEntity =  flowUserService.save(flowUser);
+    flowUserEntity = flowUserService.save(flowUser);
     FlowUser newUser = new FlowUser();
     BeanUtils.copyProperties(flowUserEntity, newUser);
     return newUser;
