@@ -346,6 +346,10 @@ public class WorkflowControllerTests extends FlowTests {
     response = controller.validateCron("5 0 * 8 *");
     assertEquals(true, response.isVaild());
     assertEquals("0 5 0 * 8 ? *", response.getCron());
+    
+    response = controller.validateCron("0 * * * *");
+    assertEquals(true, response.isVaild());
+    assertEquals("0 0 * * * ? *", response.getCron());
 
   }
 
