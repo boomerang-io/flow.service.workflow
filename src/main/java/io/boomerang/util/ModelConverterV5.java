@@ -10,6 +10,8 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Predicate;
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.boomerang.model.controller.TaskResult;
 import io.boomerang.model.projectstormv5.ConfigNodes;
 import io.boomerang.model.projectstormv5.Extras;
@@ -201,6 +203,13 @@ public class ModelConverterV5 {
 
   public static WorkflowRevision convertToRestModel(RevisionEntity convertedRevision) {
 
+    ObjectMapper objectMapper = new ObjectMapper();
+    try {
+      System.out.println("*********");
+      System.out.println(objectMapper.writeValueAsString(convertedRevision));
+    } catch (JsonProcessingException e) {
+    }
+
     WorkflowRevision revision = new WorkflowRevision();
 
     if (convertedRevision.getDag() == null) {
@@ -231,7 +240,7 @@ public class ModelConverterV5 {
 
     List<DAGTask> tasks = convertedRevision.getDag().getTasks();
     List<TaskNode> taskNodes = new LinkedList<>();
-    if (convertedRevision.getConfig() == null && convertedRevision.getConfig().getNodes() == null) {
+    if (revision.getConfig() != null && convertedRevision.getConfig().getNodes() == null) {
       revision.getConfig().setNodes(new LinkedList<>());
     }
     // List<ConfigNodes> configNodeList = new LinkedList<>();
