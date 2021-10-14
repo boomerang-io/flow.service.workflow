@@ -5,6 +5,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import io.boomerang.model.projectstormv5.RestConfig;
 import io.boomerang.mongo.model.ChangeLog;
 import io.boomerang.mongo.model.Dag;
 
@@ -25,6 +26,8 @@ public class RevisionEntity {
   private ChangeLog changelog;
 
   private String markdown;
+  
+  private RestConfig config;
 
   public Dag getDag() {
     return dag;
@@ -73,7 +76,12 @@ public class RevisionEntity {
   public void setMarkdown(String markdown) {
     this.markdown = markdown;
   }
-  
-  
 
+  public RestConfig getConfig() {
+    return config;
+  }
+
+  public void setConfig(RestConfig config) {
+    this.config = config;
+  }
 }
