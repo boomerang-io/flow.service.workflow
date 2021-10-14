@@ -22,8 +22,8 @@ import io.boomerang.model.projectstormv5.RestDag;
 import io.boomerang.model.projectstormv5.TaskNode;
 import io.boomerang.model.projectstormv5.WorkflowRevision;
 import io.boomerang.mongo.entity.RevisionEntity;
-import io.boomerang.mongo.model.KeyValuePair;
 import io.boomerang.mongo.model.Dag;
+import io.boomerang.mongo.model.KeyValuePair;
 import io.boomerang.mongo.model.TaskType;
 import io.boomerang.mongo.model.WorkflowExecutionCondition;
 import io.boomerang.mongo.model.next.DAGTask;
@@ -148,6 +148,7 @@ public class ModelConverterV5 {
     RevisionEntity entity = new RevisionEntity();
     entity.setVersion(revision.getVersion());
     entity.setMarkdown(revision.getMarkdown());
+    entity.setConfig(revision.getConfig());
 
     if (revision.getDag() == null) {
       return entity;
@@ -212,8 +213,8 @@ public class ModelConverterV5 {
     revision.setWorkFlowId(convertedRevision.getWorkFlowId());
     revision.setMarkdown(convertedRevision.getMarkdown());
 
-    RestConfig restConfig = new RestConfig();
-    revision.setConfig(restConfig);
+    revision.setConfig(
+        convertedRevision.getConfig() == null ? new RestConfig() : convertedRevision.getConfig());
 
     RestDag restDag = new RestDag();
     revision.setDag(restDag);
@@ -227,8 +228,12 @@ public class ModelConverterV5 {
 
     List<DAGTask> tasks = convertedRevision.getDag().getTasks();
     List<TaskNode> taskNodes = new LinkedList<>();
-    List<ConfigNodes> configNodeList = new LinkedList<>();
-    restConfig.setNodes(configNodeList);
+    
+    if (revision.getConfig() != null && revision.getConfig().getNodes() == null) {
+      revision.getConfig().setNodes(new LinkedList<>());
+    }
+
+    List<ConfigNodes> configNodeList = revision.getConfig().getNodes();
     restDag.setNodes(taskNodes);
     restDag.setLinks(links);
 
@@ -398,8 +403,9 @@ public class ModelConverterV5 {
     port.setSelected(false);
     port.setParentNode(taskId);
 
-    String[] taskTypeList = {CUSTOMTASKNAME, TEMPLATETASKNAME, "approval", "manual", "setwfstatus",
-        "setwfproperty", "eventwait", "releaselock", TaskType.script.toString(), "acquirelock", "runworkflow"};
+    String[] taskTypeList =
+        {CUSTOMTASKNAME, TEMPLATETASKNAME, "approval", "manual", "setwfstatus", "setwfproperty",
+            "eventwait", "releaselock", TaskType.script.toString(), "acquirelock", "runworkflow"};
     if (Arrays.stream(taskTypeList).anyMatch(x -> x.equals(type))) {
       port.setType("task");
     } else {
