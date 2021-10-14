@@ -245,11 +245,14 @@ public class EventProcessorImpl implements EventProcessor {
             JsonNode propertyValue =
                 JsonPath.using(jacksonConfig).parse(eventData).read(inputProperty.getJsonPath());
 
+         
             if (!propertyValue.isNull()) {
+              String value = propertyValue.toString();
+              value = value.replaceAll("^\"+|\"+$", "");
               logger.info(
                   "processProperties() - Property: " + inputProperty.getKey() + ", Json Path: "
-                      + inputProperty.getJsonPath() + ", Value: " + propertyValue.toString());
-              properties.put(inputProperty.getKey(), propertyValue.toString());
+                      + inputProperty.getJsonPath() + ", Value: " + value);
+              properties.put(inputProperty.getKey(),value);
             } else {
               logger.info("processProperties() - Skipping property: " + inputProperty.getKey());
             }
