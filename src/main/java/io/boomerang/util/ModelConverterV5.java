@@ -240,7 +240,7 @@ public class ModelConverterV5 {
 
     List<DAGTask> tasks = convertedRevision.getDag().getTasks();
     List<TaskNode> taskNodes = new LinkedList<>();
-    if (revision.getConfig() != null && convertedRevision.getConfig().getNodes() == null) {
+    if (revision.getConfig() != null && revision.getConfig().getNodes() == null) {
       revision.getConfig().setNodes(new LinkedList<>());
     }
     // List<ConfigNodes> configNodeList = new LinkedList<>();
