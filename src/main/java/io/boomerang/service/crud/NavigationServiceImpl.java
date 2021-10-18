@@ -38,7 +38,7 @@ public class NavigationServiceImpl implements NavigationService {
 
   @Autowired
   private FeatureService featureService;
-  
+
   @Value("${flow.apps.flow.url}")
   private String flowAppsUrl;
 
@@ -88,25 +88,25 @@ public class NavigationServiceImpl implements NavigationService {
       teamApprovers.setLink(flowAppsUrl + "/manage/team-parameters");
       teamApprovers.setType(NavigationType.link);
       management.getChildLinks().add(teamApprovers);
-      
+
       Navigation teamProperties = new Navigation();
       teamProperties.setName("Team Approvers");
       teamProperties.setLink(flowAppsUrl + "/manage/approver-groups");
       teamProperties.setType(NavigationType.link);
       management.getChildLinks().add(teamProperties);
-      
+
       Navigation teamTasks = new Navigation();
       teamTasks.setName("Team Tasks");
       teamTasks.setLink(flowAppsUrl + "/manage/task-templates");
       teamTasks.setType(NavigationType.link);
       management.getChildLinks().add(teamTasks);
-      
+
       Navigation teamTokens = new Navigation();
       teamTokens.setName("Team Tokens ");
       teamTokens.setLink(flowAppsUrl + "/manage/team-tokens");
       teamTokens.setType(NavigationType.link);
       management.getChildLinks().add(teamTokens);
-      
+
       response.add(management);
 
       if (isUserAdmin) {
@@ -119,7 +119,7 @@ public class NavigationServiceImpl implements NavigationService {
         if (((Boolean) features.getFeatures().get("team.management"))) {
           Navigation teams = new Navigation();
           teams.setName("Teams");
-          teams.setLink( flowAppsUrl + "/admin/teams");
+          teams.setLink(flowAppsUrl + "/admin/teams");
           teams.setType(NavigationType.link);
           admin.getChildLinks().add(teams);
         }
@@ -131,19 +131,19 @@ public class NavigationServiceImpl implements NavigationService {
           users.setType(NavigationType.link);
           admin.getChildLinks().add(users);
         }
-        
+
         Navigation properties = new Navigation();
         properties.setName("Global Parameters");
         properties.setLink(flowAppsUrl + "/admin/parameters");
         properties.setType(NavigationType.link);
         admin.getChildLinks().add(properties);
-        
+
         Navigation tokens = new Navigation();
         tokens.setName("Global Tokens");
         tokens.setLink(flowAppsUrl + "/admin/tokens");
         tokens.setType(NavigationType.link);
         admin.getChildLinks().add(tokens);
-        
+
 
         Navigation quotas = new Navigation();
         quotas.setName("Team Quotas");
@@ -190,6 +190,7 @@ public class NavigationServiceImpl implements NavigationService {
       }
 
       HttpHeaders headers = new HttpHeaders();
+      System.out.println("*******API TOKEN SERVICE USER TOKEN: " + apiTokenService.getUserToken());
       headers.add(AUTHORIZATION_HEADER, TOKEN_PREFIX + apiTokenService.getUserToken());
       HttpEntity<String> request = new HttpEntity<>(headers);
       ResponseEntity<List<Navigation>> response = restTemplate.exchange(uriComponents.toUriString(),
