@@ -18,6 +18,7 @@ import io.boomerang.model.FlowFeatures;
 import io.boomerang.model.Navigation;
 import io.boomerang.model.NavigationType;
 import io.boomerang.security.service.ApiTokenService;
+import io.boomerang.security.service.UserDetailsService;
 import io.boomerang.service.FeatureService;
 
 @Service
@@ -41,6 +42,9 @@ public class NavigationServiceImpl implements NavigationService {
 
   @Value("${flow.apps.flow.url}")
   private String flowAppsUrl;
+
+  @Autowired
+  private UserDetailsService identityService;
 
   @Override
   public List<Navigation> getNavigation(boolean isUserAdmin, String teamId) {
@@ -190,8 +194,8 @@ public class NavigationServiceImpl implements NavigationService {
       }
 
       HttpHeaders headers = new HttpHeaders();
-      System.out.println("*******API TOKEN SERVICE USER TOKEN: " + apiTokenService.getUserToken());
-      headers.add(AUTHORIZATION_HEADER, TOKEN_PREFIX + apiTokenService.getUserToken());
+      headers.add(AUTHORIZATION_HEADER, TOKEN_PREFIX
+          + apiTokenService.createJWTToken(identityService.getUserDetails().getEmail()));
       HttpEntity<String> request = new HttpEntity<>(headers);
       ResponseEntity<List<Navigation>> response = restTemplate.exchange(uriComponents.toUriString(),
           HttpMethod.GET, request, new ParameterizedTypeReference<List<Navigation>>() {});
