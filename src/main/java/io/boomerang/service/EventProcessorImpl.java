@@ -24,7 +24,7 @@ import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.Option;
-import com.jayway.jsonpath.spi.json.JacksonJsonProvider;
+import com.jayway.jsonpath.spi.json.JacksonJsonNodeJsonProvider;
 import com.jayway.jsonpath.spi.mapper.JacksonMappingProvider;
 import io.boomerang.model.FlowActivity;
 import io.boomerang.model.FlowExecutionRequest;
@@ -245,7 +245,7 @@ public class EventProcessorImpl implements EventProcessor {
   private Map<String, String> processProperties(JsonNode eventData, String workflowId) {
     Configuration jsonConfig =
         Configuration.builder().mappingProvider(new JacksonMappingProvider())
-            .jsonProvider(new JacksonJsonProvider())
+            .jsonProvider(new JacksonJsonNodeJsonProvider())
             .options(Option.DEFAULT_PATH_LEAF_TO_NULL).build();
     List<WorkflowProperty> inputProperties = workflowService.getWorkflow(workflowId).getProperties();
     Map<String, String> properties = new HashMap<>();
