@@ -1,5 +1,6 @@
 package io.boomerang.controller.api;
 
+import java.util.ArrayList;
 import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,12 +21,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import io.boomerang.model.FlowTeam;
+import io.boomerang.model.FlowUser;
 import io.boomerang.model.TeamQueryResult;
 import io.boomerang.model.WorkflowQuotas;
 import io.boomerang.model.profile.SortSummary;
 import io.boomerang.mongo.model.Quotas;
 import io.boomerang.mongo.model.TokenScope;
+import io.boomerang.mongo.service.FlowUserService;
 import io.boomerang.security.interceptors.AuthenticationScope;
+import io.boomerang.service.UserIdentityService;
 import io.boomerang.service.crud.TeamService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -42,6 +46,13 @@ public class TeamsV1Controller {
 
   @Autowired
   private TeamService teamService;
+
+  @Autowired
+  private UserIdentityService userIdentityService;
+
+  @Autowired
+  private FlowUserService flowUserService;
+
 
   @GetMapping(value = "/teams")
   @AuthenticationScope(scopes = {TokenScope.global})
@@ -83,7 +94,25 @@ public class TeamsV1Controller {
     if (isTeamManagementAvaliable()) {
       String teamName = flowTeam.getName();
       FlowTeam team = teamService.createStandaloneTeam(teamName, flowTeam.getQuotas());
-      return ResponseEntity.ok(team);
+
+      List<String> userIdsToAdd = new ArrayList<>();
+      if (flowTeam.getUsers() != null && !flowTeam.getUsers().isEmpty()) {
+        for (FlowUser flowUser : flowTeam.getUsers()) {
+          if (flowUserService.getUserWithEmail(flowUser.getEmail()) != null) {
+            userIdsToAdd.add(flowUserService.getUserWithEmail(flowUser.getEmail()).getId());
+          } else {
+            String[] userName = flowUser.getName().split(" ", 2);
+
+            userIdsToAdd.add(flowUserService
+                .getOrRegisterUser(flowUser.getName(), userName[0], userName[1], flowUser.getType())
+                .getId());
+
+          }
+          teamService.updateTeamMembers(team.getId(), userIdsToAdd);
+        }
+      }
+
+      return ResponseEntity.ok(teamService.getTeamByIdDetailed(team.getId()));
     } else {
       return ResponseEntity.badRequest().build();
     }
