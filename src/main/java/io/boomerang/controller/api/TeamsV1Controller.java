@@ -29,7 +29,6 @@ import io.boomerang.mongo.model.Quotas;
 import io.boomerang.mongo.model.TokenScope;
 import io.boomerang.mongo.service.FlowUserService;
 import io.boomerang.security.interceptors.AuthenticationScope;
-import io.boomerang.service.UserIdentityService;
 import io.boomerang.service.crud.TeamService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -46,9 +45,6 @@ public class TeamsV1Controller {
 
   @Autowired
   private TeamService teamService;
-
-  @Autowired
-  private UserIdentityService userIdentityService;
 
   @Autowired
   private FlowUserService flowUserService;
