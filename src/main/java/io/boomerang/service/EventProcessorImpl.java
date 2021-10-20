@@ -9,6 +9,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import org.apache.http.HttpStatus;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -16,15 +21,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.jayway.jsonpath.Configuration;
+import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.Option;
-import com.jayway.jsonpath.spi.json.JacksonJsonNodeJsonProvider;
+import com.jayway.jsonpath.spi.json.JacksonJsonProvider;
 import com.jayway.jsonpath.spi.mapper.JacksonMappingProvider;
-import org.apache.http.HttpStatus;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 import io.boomerang.model.FlowActivity;
 import io.boomerang.model.FlowExecutionRequest;
 import io.boomerang.model.eventing.EventResponse;
@@ -230,21 +231,31 @@ public class EventProcessorImpl implements EventProcessor {
     return null;
   }
 
+  /*
+   * Loop through a Workflow's parameters and if a JsonPath is set
+   * read the event payload and attempt to find a payload.
+   * 
+   * Notes:
+   * - We drop exceptions to ensure Workflow continues executing
+   * - We return null if path not found using DEFAULT_PATH_LEAF_TO_NULL. 
+   * 
+   * Reference: 
+   * - https://github.com/json-path/JsonPath#tweaking-configuration
+   */
   private Map<String, String> processProperties(JsonNode eventData, String workflowId) {
-    Configuration jacksonConfig =
+    Configuration jsonConfig =
         Configuration.builder().mappingProvider(new JacksonMappingProvider())
-            .jsonProvider(new JacksonJsonNodeJsonProvider())
+            .jsonProvider(new JacksonJsonProvider())
             .options(Option.DEFAULT_PATH_LEAF_TO_NULL).build();
     List<WorkflowProperty> inputProperties = workflowService.getWorkflow(workflowId).getProperties();
     Map<String, String> properties = new HashMap<>();
+    DocumentContext jsonContext = JsonPath.using(jsonConfig).parse(eventData);
     if (inputProperties != null) {
       try {
         inputProperties.forEach(inputProperty -> {
-          // TODO change to not parse the document every time
           if (inputProperty.getJsonPath() != null && !inputProperty.getJsonPath().isBlank()) {
-            JsonNode propertyValue =
-                JsonPath.using(jacksonConfig).parse(eventData).read(inputProperty.getJsonPath());
-
+            
+            JsonNode propertyValue = jsonContext.read(inputProperty.getJsonPath());
          
             if (!propertyValue.isNull()) {
               String value = propertyValue.toString();
@@ -259,7 +270,7 @@ public class EventProcessorImpl implements EventProcessor {
           }
         });
       } catch (Exception e) {
-        // TODO deal with exception
+        // Log and drop exception. We want the workflow to continue execution.
         logger.error(e.toString());
       }
     }
