@@ -1,6 +1,7 @@
 package io.boomerang.miscs.controller;
 
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -28,6 +29,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import io.boomerang.controller.InternalController;
 import io.boomerang.controller.WorkflowController;
 import io.boomerang.misc.FlowTests;
+import io.boomerang.model.CronValidationResponse;
 import io.boomerang.model.FlowWorkflowRevision;
 import io.boomerang.model.GenerateTokenResponse;
 import io.boomerang.model.RevisionResponse;
@@ -37,16 +39,16 @@ import io.boomerang.model.WorkflowSummary;
 import io.boomerang.model.projectstormv5.RestConfig;
 import io.boomerang.mongo.entity.RevisionEntity;
 import io.boomerang.mongo.entity.WorkflowEntity;
-import io.boomerang.mongo.model.WorkflowProperty;
+import io.boomerang.mongo.model.ActivityStorage;
 import io.boomerang.mongo.model.Storage;
 import io.boomerang.mongo.model.TaskConfigurationNode;
 import io.boomerang.mongo.model.TriggerEvent;
 import io.boomerang.mongo.model.TriggerScheduler;
 import io.boomerang.mongo.model.Triggers;
 import io.boomerang.mongo.model.WorkflowConfiguration;
+import io.boomerang.mongo.model.WorkflowProperty;
 import io.boomerang.mongo.model.WorkflowScope;
 import io.boomerang.mongo.model.WorkflowStatus;
-import io.boomerang.mongo.model.ActivityStorage;
 
 
 @ExtendWith(SpringExtension.class)
@@ -320,6 +322,34 @@ public class WorkflowControllerTests extends FlowTests {
     Assertions.assertEquals("params.hello", parameters.get(1));
     Assertions.assertEquals("system.params.workflow-id", parameters.get(2));
     Assertions.assertEquals("params.workflow-id", parameters.get(3));
+
+  }
+
+  @Test
+  public void testCronValidation() {
+    CronValidationResponse response = controller.validateCron("0 * * * * *");
+    assertEquals(false, response.isVaild());
+    assertEquals(null, response.getCron());
+
+    response = controller.validateCron("0 * * ? * *");
+    assertEquals(true, response.isVaild());
+    assertEquals("0 * * ? * *", response.getCron());
+
+    response = controller.validateCron("0 0 * ? * *");
+    assertEquals(true, response.isVaild());
+    assertEquals("0 0 * ? * *", response.getCron());
+
+    response = controller.validateCron("0 0 * ? * MON,TUE,WED,THU,FRI,SAT,SUN");
+    assertEquals(true, response.isVaild());
+    assertEquals("0 0 * ? * 2,3,4,5,6,7,1", response.getCron());
+
+    response = controller.validateCron("5 0 * 8 *");
+    assertEquals(true, response.isVaild());
+    assertEquals("0 5 0 * 8 ? *", response.getCron());
+    
+    response = controller.validateCron("0 * * * *");
+    assertEquals(true, response.isVaild());
+    assertEquals("0 0 * * * ? *", response.getCron());
 
   }
 

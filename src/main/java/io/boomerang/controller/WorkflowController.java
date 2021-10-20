@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import io.boomerang.model.CronValidationResponse;
 import io.boomerang.model.DuplicateRequest;
 import io.boomerang.model.FlowWorkflowRevision;
 import io.boomerang.model.GenerateTokenResponse;
@@ -50,7 +51,7 @@ public class WorkflowController {
   public GenerateTokenResponse createToken(@PathVariable String id, @RequestParam String label) {
     return workflowService.generateTriggerToken(id, label);
   }
-  
+
   @DeleteMapping(value = "{id}/token")
   public void deleteToken(@PathVariable String id, @RequestParam String label) {
     workflowService.deleteToken(id, label);
@@ -71,11 +72,13 @@ public class WorkflowController {
   public WorkflowSummary getWorkflowWithId(@PathVariable String id) {
     return workflowService.getWorkflow(id);
   }
+
   @PostMapping(value = "/{workFlowId}/duplicate")
-  public WorkflowSummary duplicateWorkflow(@PathVariable String workFlowId, @RequestBody(required = false) DuplicateRequest duplicateRequest) {
+  public WorkflowSummary duplicateWorkflow(@PathVariable String workFlowId,
+      @RequestBody(required = false) DuplicateRequest duplicateRequest) {
     return workflowService.duplicateWorkflow(workFlowId, duplicateRequest);
   }
-  
+
   @PostMapping(value = "")
   public WorkflowSummary insertWorkflow(@RequestBody WorkflowSummary workflowSummaryEntity) {
     workflowSummaryEntity.setStatus(WorkflowStatus.active);
@@ -132,18 +135,24 @@ public class WorkflowController {
 
   @PostMapping(value = "/import")
   public void importWorkflow(@RequestBody WorkflowExport export, @RequestParam Boolean update,
-      @RequestParam(required=false) String flowTeamId, @RequestParam(required=true) WorkflowScope scope) {
+      @RequestParam(required = false) String flowTeamId,
+      @RequestParam(required = true) WorkflowScope scope) {
     workflowService.importWorkflow(export, update, flowTeamId, scope);
   }
-  
-  @GetMapping(value= "/{workFlowId}/available-parameters")
-  public List<String> getWorkflowParameters(@PathVariable String workFlowId){
+
+  @GetMapping(value = "/{workFlowId}/available-parameters")
+  public List<String> getWorkflowParameters(@PathVariable String workFlowId) {
     return workflowService.getWorkflowParameters(workFlowId);
   }
 
   @PostMapping(value = "/{workFlowId}/available-parameters")
   public List<String> getWorkflowParametersWithBody(@PathVariable String workFlowId,
       @RequestBody FlowWorkflowRevision workflowSummaryEntity) {
-    return workflowService.getWorkflowParameters(workFlowId,workflowSummaryEntity);
+    return workflowService.getWorkflowParameters(workFlowId, workflowSummaryEntity);
+  }
+
+  @GetMapping(value = "/validate/cron")
+  public CronValidationResponse validateCron(@RequestParam String cron) {
+    return workflowService.validateCron(cron);
   }
 }

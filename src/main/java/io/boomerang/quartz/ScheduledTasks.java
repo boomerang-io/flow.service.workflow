@@ -46,11 +46,11 @@ public class ScheduledTasks {
     }
   }
 
- 
+
   public void scheduleWorkflow(WorkflowEntity workflow) {
-    
+
     if (workflow.getTriggers() != null && workflow.getTriggers().getScheduler() != null) {
-      
+
       String cronString = workflow.getTriggers().getScheduler().getSchedule();
       String timezone = workflow.getTriggers().getScheduler().getTimezone();
       if (cronString != null && timezone != null) {
@@ -64,7 +64,7 @@ public class ScheduledTasks {
         Scheduler scheduler = schedulerFactoryBean.getScheduler();
         JobDetail jobDetail =
             JobBuilder.newJob(FlowJob.class).withIdentity(workflowId, "flow").build();
-       
+
         try {
           if (!scheduler.checkExists(jobDetail.getKey())) {
             CronScheduleBuilder scheduleBuilder =

@@ -5,6 +5,7 @@ import java.util.Optional;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import io.boomerang.model.CronValidationResponse;
 import io.boomerang.model.DuplicateRequest;
 import io.boomerang.model.FlowWorkflowRevision;
 import io.boomerang.model.GenerateTokenResponse;
@@ -62,4 +63,6 @@ public interface WorkflowService {
   boolean canExecuteWorkflowForQuotasForUser();
 
   List<TemplateWorkflowSummary> getTemplateWorkflows();
+
+  CronValidationResponse validateCron(String cron);
 }
