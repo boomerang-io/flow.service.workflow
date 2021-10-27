@@ -479,12 +479,14 @@ public class WorkflowServiceImpl implements WorkflowService {
   public ResponseEntity<HttpStatus> validateWorkflowToken(String id,
       GenerateTokenResponse tokenPayload) {
     WorkflowEntity workflow = workFlowRepository.getWorkflow(id);
-    setupTriggerDefaults(workflow);
-    String token = tokenPayload.getToken();
-    WorkflowToken workflowToken = workflow.getTokens().stream()
-        .filter(customer -> token.equals(customer.getToken())).findAny().orElse(null);
-    if (workflowToken != null) {
-      return ResponseEntity.ok(HttpStatus.OK);
+    if (workflow != null) {
+      setupTriggerDefaults(workflow);
+      String token = tokenPayload.getToken();
+      WorkflowToken workflowToken = workflow.getTokens().stream()
+          .filter(customer -> token.equals(customer.getToken())).findAny().orElse(null);
+      if (workflowToken != null) {
+        return ResponseEntity.ok(HttpStatus.OK);
+      }
     }
     return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
   }
