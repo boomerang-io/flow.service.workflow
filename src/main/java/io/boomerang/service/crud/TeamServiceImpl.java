@@ -169,26 +169,42 @@ public class TeamServiceImpl implements TeamService {
   }
 
   @Override
-  public FlowTeam createStandaloneTeam(String name) {
+  public FlowTeam createStandaloneTeam(String name, Quotas quota) {
     TeamEntity flowTeamEntity = new TeamEntity();
     flowTeamEntity.setName(name);
     flowTeamEntity = flowTeamService.save(flowTeamEntity);
     flowTeamEntity.setHigherLevelGroupId(flowTeamEntity.getId());
     flowTeamEntity.setIsActive(true);
-    if (flowTeamEntity.getQuotas() == null) {
-      Quotas quotas = new Quotas();
-      quotas.setMaxWorkflowCount(Integer.valueOf(
-          flowSettingsService.getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_COUNT).getValue()));
-      quotas.setMaxWorkflowExecutionMonthly(Integer.valueOf(flowSettingsService
-          .getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_EXECUTION_MONTHLY).getValue()));
-      quotas.setMaxWorkflowStorage(Integer.valueOf(
-          flowSettingsService.getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_STORAGE).getValue().replace("Gi", "")));
-      quotas.setMaxWorkflowExecutionTime(Integer.valueOf(
-          flowSettingsService.getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_DURATION).getValue()));
-      quotas.setMaxConcurrentWorkflows(Integer.valueOf(
-          flowSettingsService.getConfiguration(TEAMS, MAX_TEAM_CONCURRENT_WORKFLOW).getValue()));
-      flowTeamEntity.setQuotas(quotas);
-    }
+
+    Quotas quotas = new Quotas();
+
+    quotas.setMaxWorkflowCount(quota.getMaxWorkflowCount() != null ? quota.getMaxWorkflowCount()
+        : Integer.valueOf(
+            flowSettingsService.getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_COUNT).getValue()));
+
+    quotas.setMaxWorkflowExecutionMonthly(
+        quotas.getMaxWorkflowExecutionMonthly() != null ? quota.getMaxWorkflowExecutionMonthly()
+            : Integer.valueOf(flowSettingsService
+                .getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_EXECUTION_MONTHLY).getValue()));
+
+    quotas
+        .setMaxWorkflowStorage(quota.getMaxWorkflowStorage() != null ? quota.getMaxWorkflowStorage()
+            : Integer.valueOf(flowSettingsService.getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_STORAGE)
+                .getValue().replace("Gi", "")));
+
+
+    quotas.setMaxWorkflowExecutionTime(quota.getMaxWorkflowExecutionTime() != null
+        ? quota.getMaxWorkflowExecutionTime()
+        : Integer.valueOf(
+            flowSettingsService.getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_DURATION).getValue()));
+
+    quotas.setMaxConcurrentWorkflows(quota.getMaxConcurrentWorkflows() != null
+        ? quota.getMaxConcurrentWorkflows()
+        : Integer.valueOf(
+            flowSettingsService.getConfiguration(TEAMS, MAX_TEAM_CONCURRENT_WORKFLOW).getValue()));
+
+    flowTeamEntity.setQuotas(quotas);
+
     flowTeamEntity = flowTeamService.save(flowTeamEntity);
 
     FlowTeam team = new FlowTeam();
@@ -562,13 +578,13 @@ public class TeamServiceImpl implements TeamService {
   private void setWorkflowStorage(List<WorkflowSummary> workflows, WorkflowQuotas workflowQuotas) {
     Integer currentWorkflowsPersistentStorage = 0;
     for (WorkflowSummary workflow : workflows) {
-      if(workflow.getStorage() == null) {
+      if (workflow.getStorage() == null) {
         workflow.setStorage(new Storage());
       }
-      if(workflow.getStorage().getActivity() == null) {
+      if (workflow.getStorage().getActivity() == null) {
         workflow.getStorage().setActivity(new ActivityStorage());
       }
-      
+
       if (workflow.getStorage().getActivity().getEnabled()) {
         currentWorkflowsPersistentStorage += 1;
       }
@@ -905,8 +921,8 @@ public class TeamServiceImpl implements TeamService {
       if (team.getApproverGroups() == null) {
         team.setApproverGroups(new LinkedList<ApproverGroup>());
       }
-      ApproverGroup group = team.getApproverGroups().stream()
-          .filter(x -> groupId.equals(x.getId())).findFirst().orElse(null);
+      ApproverGroup group = team.getApproverGroups().stream().filter(x -> groupId.equals(x.getId()))
+          .findFirst().orElse(null);
       if (group != null) {
         return this.createApproverGroupResponse(group, team);
       }

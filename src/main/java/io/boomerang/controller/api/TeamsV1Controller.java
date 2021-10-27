@@ -1,5 +1,6 @@
 package io.boomerang.controller.api;
 
+import java.util.ArrayList;
 import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,11 +21,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import io.boomerang.model.FlowTeam;
+import io.boomerang.model.FlowUser;
 import io.boomerang.model.TeamQueryResult;
 import io.boomerang.model.WorkflowQuotas;
 import io.boomerang.model.profile.SortSummary;
 import io.boomerang.mongo.model.Quotas;
 import io.boomerang.mongo.model.TokenScope;
+import io.boomerang.mongo.service.FlowUserService;
 import io.boomerang.security.interceptors.AuthenticationScope;
 import io.boomerang.service.crud.TeamService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -42,6 +45,10 @@ public class TeamsV1Controller {
 
   @Autowired
   private TeamService teamService;
+
+  @Autowired
+  private FlowUserService flowUserService;
+
 
   @GetMapping(value = "/teams")
   @AuthenticationScope(scopes = {TokenScope.global})
@@ -71,19 +78,37 @@ public class TeamsV1Controller {
     response.setupSortSummary(sortSummary);
     return ResponseEntity.ok(response);
   }
-  
+
   @PostMapping(value = "/teams")
   @AuthenticationScope(scopes = {TokenScope.global})
   @Operation(summary = "Create flow team")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
   public ResponseEntity<FlowTeam> addTeam(@RequestBody FlowTeam flowTeam) {
-    
-    
+
+
     if (isTeamManagementAvaliable()) {
       String teamName = flowTeam.getName();
-      FlowTeam team = teamService.createStandaloneTeam(teamName);
-      return ResponseEntity.ok(team);
+      FlowTeam team = teamService.createStandaloneTeam(teamName, flowTeam.getQuotas());
+
+      List<String> userIdsToAdd = new ArrayList<>();
+      if (flowTeam.getUsers() != null && !flowTeam.getUsers().isEmpty()) {
+        for (FlowUser flowUser : flowTeam.getUsers()) {
+          if (flowUserService.getUserWithEmail(flowUser.getEmail()) != null) {
+            userIdsToAdd.add(flowUserService.getUserWithEmail(flowUser.getEmail()).getId());
+          } else {
+            String[] userName = flowUser.getName().split(" ", 2);
+
+            userIdsToAdd.add(flowUserService
+                .getOrRegisterUser(flowUser.getEmail(), userName[0], userName[1], flowUser.getType())
+                .getId());
+
+          }
+          teamService.updateTeamMembers(team.getId(), userIdsToAdd);
+        }
+      }
+
+      return ResponseEntity.ok(teamService.getTeamByIdDetailed(team.getId()));
     } else {
       return ResponseEntity.badRequest().build();
     }
@@ -102,7 +127,7 @@ public class TeamsV1Controller {
       return ResponseEntity.badRequest().build();
     }
   }
-  
+
   @PatchMapping(value = "/teams/{teamId}/members")
   @AuthenticationScope(scopes = {TokenScope.global})
   @Operation(summary = "Update flow team members")
@@ -125,7 +150,7 @@ public class TeamsV1Controller {
       teamService.updateTeam(teamId, flow);
     }
   }
-  
+
   @GetMapping(value = "/teams/{teamId}/quotas")
   @AuthenticationScope(scopes = {TokenScope.global})
   @Operation(summary = "Get currrent team quotas")
@@ -134,7 +159,7 @@ public class TeamsV1Controller {
   public WorkflowQuotas getTeamQuotas(@PathVariable String teamId) {
     return teamService.getTeamQuotas(teamId);
   }
-  
+
   @PutMapping(value = "/teams/{teamId}/quotas")
   @AuthenticationScope(scopes = {TokenScope.global})
   @Operation(summary = "Update Quotas for a team")

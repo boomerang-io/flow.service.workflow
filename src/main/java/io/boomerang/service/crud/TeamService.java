@@ -11,14 +11,13 @@ import io.boomerang.model.WorkflowSummary;
 import io.boomerang.model.teams.ApproverGroupResponse;
 import io.boomerang.model.teams.CreateApproverGroupRequest;
 import io.boomerang.mongo.entity.FlowTeamConfiguration;
-import io.boomerang.mongo.entity.TeamEntity;
 import io.boomerang.mongo.entity.FlowUserEntity;
-import io.boomerang.mongo.model.ApproverGroup;
+import io.boomerang.mongo.entity.TeamEntity;
 import io.boomerang.mongo.model.Quotas;
 
 public interface TeamService {
 
-  FlowTeam createStandaloneTeam(String name);
+  FlowTeam createStandaloneTeam(String name, Quotas quotas);
 
   TeamQueryResult getAllAdminTeams(Pageable pageable);
 
