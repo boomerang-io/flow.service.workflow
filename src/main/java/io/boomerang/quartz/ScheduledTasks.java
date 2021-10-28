@@ -17,9 +17,11 @@ import org.quartz.TriggerBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.quartz.SchedulerFactoryBean;
 import org.springframework.stereotype.Component;
+import io.boomerang.model.CronValidationResponse;
 import io.boomerang.mongo.entity.WorkflowEntity;
 import io.boomerang.mongo.entity.WorkflowScheduleEntity;
 import io.boomerang.mongo.service.FlowWorkflowService;
+import io.boomerang.service.crud.WorkflowService;
 
 @Component
 public class ScheduledTasks {
@@ -31,6 +33,9 @@ public class ScheduledTasks {
 
   @Autowired
   private FlowWorkflowService flowWorkflowService;
+
+  @Autowired
+  private WorkflowService workflowService;
 
 
   public void cancelJob(String workflowId) throws SchedulerException {
@@ -47,15 +52,21 @@ public class ScheduledTasks {
     }
   }
 
-
   public void scheduleWorkflow(WorkflowScheduleEntity schedule) {
     String cronString = schedule.getSchedule();
     String timezone = schedule.getTimezone();
     if (cronString != null && timezone != null) {
       boolean validCron = org.quartz.CronExpression.isValidExpression(cronString);
       if (!validCron) {
-        logger.info("Invalid CRON: {}", cronString);
-        return;
+        logger.info("Invalid CRON: {}. Attempting to convert.", cronString);
+        CronValidationResponse response = workflowService.validateCron(cronString);
+        if (response.isVaild()) {
+          cronString = response.getCron();
+          logger.info("CRON converted: {}.", cronString);
+        } else {
+          logger.info("Invalid CRON: {}.", cronString);
+          return;
+        }
       }
       TimeZone timeZone = TimeZone.getTimeZone(timezone);
       String scheduleId = schedule.getId();
