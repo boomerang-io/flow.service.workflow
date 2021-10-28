@@ -328,28 +328,36 @@ public class WorkflowControllerTests extends FlowTests {
   @Test
   public void testCronValidation() {
     CronValidationResponse response = controller.validateCron("0 * * * * *");
-    assertEquals(false, response.isVaild());
+    assertEquals(false, response.isValid());
     assertEquals(null, response.getCron());
+    assertEquals(
+        "Failed to parse '0 * * * * *'. Invalid cron expression: 0 * * * * *. Both, a day-of-week AND a day-of-month parameter, are not supported.",
+        response.getMessage());
 
     response = controller.validateCron("0 * * ? * *");
-    assertEquals(true, response.isVaild());
+    assertEquals(true, response.isValid());
     assertEquals("0 * * ? * *", response.getCron());
+    assertEquals(null, response.getMessage());
 
     response = controller.validateCron("0 0 * ? * *");
-    assertEquals(true, response.isVaild());
+    assertEquals(true, response.isValid());
     assertEquals("0 0 * ? * *", response.getCron());
+    assertEquals(null, response.getMessage());
 
     response = controller.validateCron("0 0 * ? * MON,TUE,WED,THU,FRI,SAT,SUN");
-    assertEquals(true, response.isVaild());
+    assertEquals(true, response.isValid());
     assertEquals("0 0 * ? * 2,3,4,5,6,7,1", response.getCron());
+    assertEquals(null, response.getMessage());
 
     response = controller.validateCron("5 0 * 8 *");
-    assertEquals(true, response.isVaild());
+    assertEquals(true, response.isValid());
     assertEquals("0 5 0 * 8 ? *", response.getCron());
-    
+    assertEquals(null, response.getMessage());
+
     response = controller.validateCron("0 * * * *");
-    assertEquals(true, response.isVaild());
+    assertEquals(true, response.isValid());
     assertEquals("0 0 * * * ? *", response.getCron());
+    assertEquals(null, response.getMessage());
 
   }
 
