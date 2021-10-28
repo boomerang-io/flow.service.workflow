@@ -1197,6 +1197,7 @@ public class WorkflowServiceImpl implements WorkflowService {
         logger.info("Invalid CRON: {} . Cannot convert", cronString);
         response.setCron(null);
         response.setVaild(false);
+        response.setMessage(e.getMessage());
       }
 
       logger.info("Final CRON: {} .", cronString);
