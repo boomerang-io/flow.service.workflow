@@ -1181,7 +1181,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     try {
       cronString = parser.parse(cronString).asString();
       response.setCron(cronString);
-      response.setVaild(true);
+      response.setValid(true);
       logger.info("Final CRON: {} .", cronString);
     } catch (IllegalArgumentException e) {
       logger.info("Invalid CRON: {} . Attempting cron to quartz conversion", cronString);
@@ -1192,11 +1192,11 @@ public class WorkflowServiceImpl implements WorkflowService {
         Cron quartzCron = quartzMapper.map(cron);
         cronString = quartzCron.asString();
         response.setCron(cronString);
-        response.setVaild(true);
+        response.setValid(true);
       } catch (IllegalArgumentException exc) {
         logger.info("Invalid CRON: {} . Cannot convert", cronString);
         response.setCron(null);
-        response.setVaild(false);
+        response.setValid(false);
         response.setMessage(e.getMessage());
       }
 
