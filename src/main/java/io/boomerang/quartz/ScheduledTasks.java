@@ -60,7 +60,7 @@ public class ScheduledTasks {
       if (!validCron) {
         logger.info("Invalid CRON: {}. Attempting to convert.", cronString);
         CronValidationResponse response = workflowService.validateCron(cronString);
-        if (response.isVaild()) {
+        if (response.isValid()) {
           cronString = response.getCron();
           logger.info("CRON converted: {}.", cronString);
         } else {
