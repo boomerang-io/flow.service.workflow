@@ -1,10 +1,15 @@
 package io.boomerang.model;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+
+
 public class CronValidationResponse {
 
-  boolean vaild;
-  String cron;
-  String message;
+  private boolean vaild;
+  private String cron;
+  @JsonInclude(Include.NON_NULL)
+  private String message;
 
   public boolean isVaild() {
     return vaild;
