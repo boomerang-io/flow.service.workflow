@@ -4,6 +4,7 @@ public class CronValidationResponse {
 
   boolean vaild;
   String cron;
+  String message;
 
   public boolean isVaild() {
     return vaild;
@@ -21,5 +22,12 @@ public class CronValidationResponse {
     this.cron = cron;
   }
 
+  public String getMessage() {
+    return message;
+  }
+
+  public void setMessage(String message) {
+    this.message = message;
+  }
 
 }
