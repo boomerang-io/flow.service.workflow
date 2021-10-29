@@ -155,6 +155,8 @@ public class TaskServiceImpl implements TaskService {
         releaseLock(task, activity);
       } else if (taskType == TaskType.runworkflow) {
         this.runWorkflow(task, activity);
+      } else if (taskType == TaskType.runscheduledworkflow) {
+        this.runScheduledWorkflow(task, activity);
       } else if (taskType == TaskType.setwfstatus) {
         saveWorkflowStatus(task, activity);
         InternalTaskResponse response = new InternalTaskResponse();
@@ -235,6 +237,27 @@ public class TaskServiceImpl implements TaskService {
         taskExecution.setRunWorkflowId(request.getWorkflowId());
         taskActivityService.save(taskExecution);
       }
+    }
+
+    InternalTaskResponse response = new InternalTaskResponse();
+    response.setActivityId(task.getTaskActivityId());
+    response.setStatus(TaskStatus.completed);
+    this.endTask(response);
+  }
+
+  private void runScheduledWorkflow(Task task, ActivityEntity activity) {
+
+    if (task.getInputs() != null) {
+      RequestFlowExecution request = new RequestFlowExecution();
+      request.setWorkflowId(task.getInputs().get("workflowId"));
+      Map<String, String> properties = new HashMap<>();
+      for (Map.Entry<String, String> entry : task.getInputs().entrySet()) {
+        if (!"workflowId".equals(entry.getKey())) {
+          properties.put(entry.getKey(), entry.getValue());
+        }
+      }
+
+      //TODO: schedule the workflow to runOnce.
     }
 
     InternalTaskResponse response = new InternalTaskResponse();
