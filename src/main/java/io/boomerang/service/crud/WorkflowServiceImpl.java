@@ -90,9 +90,6 @@ public class WorkflowServiceImpl implements WorkflowService {
   private FlowWorkflowActivityService flowWorkflowActivityService;
 
   @Autowired
-  private ScheduledTasks taskScheduler;
-
-  @Autowired
   private FlowWorkflowService workFlowRepository;
 
   @Autowired
@@ -221,6 +218,7 @@ public class WorkflowServiceImpl implements WorkflowService {
         logger.info("Scheduling workflow: {}", scheduler.getSchedule());
         this.taskScheduler.scheduleWorkflow(entity);
       }
+//      TODO: move to a different method, and save that the scheduler trigger is enabled or disabled.
     }
 
     return summary;
@@ -332,85 +330,43 @@ public class WorkflowServiceImpl implements WorkflowService {
       entity.setTriggers(currentTriggers);
     }
     if (updatedTriggers != null) {
-      String currentTimezone = null;
-      boolean previous = false;
+//      String currentTimezone = null;
+//      boolean previous = false;
 
-      if (currentTriggers.getScheduler() != null) {
-        currentTimezone = currentTriggers.getScheduler().getTimezone();
-        previous = currentTriggers.getScheduler().getEnable();
-      }
-
-      TriggerScheduler scheduler = updatedTriggers.getScheduler();
-      updateSchedule(entity, currentTriggers, currentTimezone, previous, scheduler);
+//      if (currentTriggers.getScheduler() != null) {
+//        currentTimezone = currentTriggers.getScheduler().getTimezone();
+//        previous = currentTriggers.getScheduler().getEnable();
+//      }
+//
+//      TriggerScheduler scheduler = updatedTriggers.getScheduler();
+//      updateSchedule(entity, currentTriggers, currentTimezone, previous, scheduler);
 
       /* Save new triggers. */
-      currentTriggers.setSlack(updatedTriggers.getSlack());
-      currentTriggers.setWebhook(updatedTriggers.getWebhook());
+//      currentTriggers.setSlack(updatedTriggers.getSlack());
       currentTriggers.setManual(updatedTriggers.getManual());
-      currentTriggers.setDockerhub(updatedTriggers.getDockerhub());
+      currentTriggers.setScheduler(updatedTriggers.getScheduler());
+      currentTriggers.setWebhook(updatedTriggers.getWebhook());
+//      currentTriggers.setDockerhub(updatedTriggers.getDockerhub());
       currentTriggers.setCustom(updatedTriggers.getCustom());
 
       /* Set new tokens if needed. */
-      updateTokenForTrigger(updatedTriggers.getSlack());
-      updateTokenForTrigger(updatedTriggers.getWebhook());
-      updateTokenForTrigger(updatedTriggers.getDockerhub());
-      updateTokenForTrigger(updatedTriggers.getCustom());
+//      TODO: determine if we still need tokens on triggers
+//      updateTokenForTrigger(updatedTriggers.getSlack());
+//      updateTokenForTrigger(updatedTriggers.getWebhook());
+//      updateTokenForTrigger(updatedTriggers.getDockerhub());
+//      updateTokenForTrigger(updatedTriggers.getCustom());
 
     }
   }
 
-  private void updateTokenForTrigger(TriggerEvent updateTrigger) {
-    if (updateTrigger != null) {
-      boolean enabled = updateTrigger.getEnable();
-      if (enabled && updateTrigger.getToken() == null) {
-        updateTrigger.setToken(createUUID());
-      }
-    }
-  }
-
-  private void updateSchedule(final WorkflowEntity entity, Triggers previousTriggers,
-      String currentTimezone, boolean previous, TriggerScheduler scheduler) {
-    if (scheduler != null) {
-
-      String timezone = scheduler.getTimezone();
-
-      if (timezone == null) {
-        scheduler.setTimezone(currentTimezone);
-      }
-
-      entity.getTriggers().setScheduler(scheduler);
-
-      if (previousTriggers != null && previousTriggers.getScheduler() != null) {
-        previousTriggers.getScheduler().getEnable();
-      }
-
-      boolean current = scheduler.getEnable();
-
-      scheduleWorkflow(entity, previous, current);
-    }
-  }
-
-  private void scheduleWorkflow(final WorkflowEntity entity, boolean previous, boolean current) {
-    if (!previous && current) {
-      this.taskScheduler.scheduleWorkflow(entity);
-    } else if (previous && !current) {
-      try {
-        this.taskScheduler.cancelJob(entity.getId());
-      } catch (SchedulerException e) {
-        logger.info("Unable to schedule job. ");
-        logger.error(e);
-      }
-    } else if (current) {
-      try {
-        this.taskScheduler.cancelJob(entity.getId());
-        this.taskScheduler.scheduleWorkflow(entity);
-
-      } catch (SchedulerException e) {
-        logger.info("Unable to reschedule job. ");
-        logger.error(e);
-      }
-    }
-  }
+//  private void updateTokenForTrigger(TriggerEvent updateTrigger) {
+//    if (updateTrigger != null) {
+//      boolean enabled = updateTrigger.getEnable();
+//      if (enabled && updateTrigger.getToken() == null) {
+//        updateTrigger.setToken(createUUID());
+//      }
+//    }
+//  }
 
   @Override
   public WorkflowSummary updateWorkflowProperties(String workflowId,
