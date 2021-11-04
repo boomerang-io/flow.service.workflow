@@ -12,9 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.boomerang.client.ExernalUserService;
+import io.boomerang.client.ExternalUserService;
 import io.boomerang.client.model.UserProfile;
 import io.boomerang.model.FlowUser;
 import io.boomerang.model.OneTimeCode;
@@ -36,7 +34,7 @@ public class UserIdentityServiceImpl implements UserIdentityService {
   private UserDetailsService usertDetailsService;
 
   @Autowired
-  private ExernalUserService coreUserService;
+  private ExternalUserService coreUserService;
 
   @Autowired
   private FlowUserService flowUserService;

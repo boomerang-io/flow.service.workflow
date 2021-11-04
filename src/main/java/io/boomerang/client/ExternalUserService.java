@@ -2,7 +2,7 @@ package io.boomerang.client;
 
 import io.boomerang.client.model.UserProfile;
 
-public interface ExernalUserService {
+public interface ExternalUserService {
 
   public UserProfile getInternalUserProfile();
 
