@@ -18,7 +18,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
-import io.boomerang.client.ExernalUserService;
+import io.boomerang.client.ExternalUserService;
 import io.boomerang.client.ExternalTeamService;
 import io.boomerang.client.model.Team;
 import io.boomerang.client.model.UserProfile;
@@ -56,7 +56,7 @@ import io.boomerang.service.UserIdentityService;
 public class TeamServiceImpl implements TeamService {
 
   @Autowired
-  private ExernalUserService boomerangUserService;
+  private ExternalUserService boomerangUserService;
 
   @Autowired
   private ExternalTeamService externalTeamService;
