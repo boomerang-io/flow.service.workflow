@@ -630,7 +630,7 @@ public class TeamServiceImpl implements TeamService {
       for (WorkflowSummary summary : teamSummary.getWorkflows()) {
         String workflowId = summary.getId();
         FlowWorkflowRevision latestRevision =
-            workflowVersionService.getLatestWorkflowVersion(workflowId, false);
+            workflowVersionService.getLatestWorkflowVersion(workflowId);
         if (latestRevision != null) {
           summary.setTemplateUpgradesAvailable(latestRevision.isTemplateUpgradesAvailable());
         }
@@ -645,7 +645,7 @@ public class TeamServiceImpl implements TeamService {
     for (WorkflowSummary summary : workflowSummary) {
       String workflowId = summary.getId();
       FlowWorkflowRevision latestRevision =
-          workflowVersionService.getLatestWorkflowVersion(workflowId, false);
+          workflowVersionService.getLatestWorkflowVersion(workflowId);
       if (latestRevision != null) {
         summary.setTemplateUpgradesAvailable(latestRevision.isTemplateUpgradesAvailable());
       }

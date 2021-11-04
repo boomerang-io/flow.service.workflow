@@ -22,10 +22,8 @@ public class ExecutionController {
   @PostMapping(value = "/execute/{workflowId}")
   public FlowActivity executeWorkflow(@PathVariable String workflowId,
       @RequestParam Optional<String> trigger,
-      @RequestBody Optional<FlowExecutionRequest> executionRequest,
-      @RequestParam boolean triggeredByJob) {
+      @RequestBody Optional<FlowExecutionRequest> executionRequest) {
 
-    return executionService.executeWorkflow(workflowId, trigger, executionRequest, Optional.empty(),
-        triggeredByJob);
+    return executionService.executeWorkflow(workflowId, trigger, executionRequest, Optional.empty());
   }
 }

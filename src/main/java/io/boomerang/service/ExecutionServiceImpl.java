@@ -43,9 +43,9 @@ public class ExecutionServiceImpl implements ExecutionService {
   @Override
   public FlowActivity executeWorkflow(String workflowId, Optional<String> trigger,
       Optional<FlowExecutionRequest> executionRequest,
-      Optional<List<TaskWorkspace>> taskWorkspaces, boolean triggeredByJob) {
+      Optional<List<TaskWorkspace>> taskWorkspaces) {
 
-    final WorkflowEntity workflow = workflowService.getWorkflow(workflowId, triggeredByJob);
+    final WorkflowEntity workflow = workflowService.getWorkflow(workflowId);
 
     if (!workflowService.canExecuteWorkflow(workflowId, trigger)) {
       throw new BoomerangException(BoomerangError.WORKLOAD_MANUAL_DISABLED);

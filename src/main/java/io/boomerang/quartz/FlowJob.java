@@ -48,14 +48,13 @@ public class FlowJob extends QuartzJobBean {
     ExecutionController executionController = applicationContext.getBean(ExecutionController.class);
 
     String workflowId = jobDetail.getKey().getName();
-
+    
     Map<String, String> properties = new HashMap<>();
 
     FlowExecutionRequest request = new FlowExecutionRequest();
     request.setProperties(properties);
 
-    executionController.executeWorkflow(workflowId,
-        Optional.of(FlowTriggerEnum.scheduler.toString()), Optional.of(request), true);
+    executionController.executeWorkflow(workflowId, Optional.of(FlowTriggerEnum.scheduler.toString()), Optional.of(request));
   }
 
 

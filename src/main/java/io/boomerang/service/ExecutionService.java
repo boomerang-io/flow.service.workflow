@@ -9,5 +9,5 @@ import io.boomerang.model.controller.TaskWorkspace;
 public interface ExecutionService {
   public FlowActivity executeWorkflow(String workflowId,
       Optional<String> trigger,
-      Optional<FlowExecutionRequest> executionRequest, Optional<List<TaskWorkspace>> taskWorkspaces, boolean triggeredByJob);
+      Optional<FlowExecutionRequest> executionRequest, Optional<List<TaskWorkspace>> taskWorkspaces);
 }

@@ -104,7 +104,7 @@ public class ActionServiceImpl implements ActionService {
       boolean canBeApproved = false;
       if (approverGroupId != null) {
         String workflowId = approvalEntity.getWorkflowId();
-        WorkflowEntity workflow = this.workflowService.getWorkflow(workflowId, false);
+        WorkflowEntity workflow = this.workflowService.getWorkflow(workflowId);
         if (workflow.getScope() == WorkflowScope.team) {
           String teamId = workflow.getFlowTeamId();
           TeamEntity team = this.teamService.getTeamById(teamId);
@@ -113,8 +113,8 @@ public class ActionServiceImpl implements ActionService {
             ApproverGroup group = approverGroups.stream()
                 .filter(x -> approverGroupId.equals(x.getId())).findFirst().orElse(null);
             if (group != null) {
-              boolean partOfGroup =
-                  group.getApprovers().stream().anyMatch(x -> x.getUserId().equals(flowUserId));
+              boolean partOfGroup = group.getApprovers().stream()
+                  .anyMatch(x -> x.getUserId().equals(flowUserId));
               if (partOfGroup) {
                 canBeApproved = true;
               }
@@ -122,11 +122,11 @@ public class ActionServiceImpl implements ActionService {
           } else {
             canBeApproved = true;
           }
-        }
+        } 
       } else {
         canBeApproved = true;
       }
-
+      
       if (canBeApproved) {
         Audit audit = new Audit();
         audit.setActionDate(new Date());
@@ -135,16 +135,15 @@ public class ActionServiceImpl implements ActionService {
         audit.setApproved(request.isApproved());
         approvalEntity.getActioners().add(audit);
       }
-
-      long approvedCount =
-          approvalEntity.getActioners().stream().filter(x -> x.isApproved()).count();
+      
+      long approvedCount = approvalEntity.getActioners().stream().filter(x -> x.isApproved()).count();
       long numberOfActions = approvalEntity.getActioners().size();
-
+      
       if (numberOfActions >= numberApprovals) {
 
         InternalTaskResponse actionApprovalResponse = new InternalTaskResponse();
         actionApprovalResponse.setActivityId(approvalEntity.getTaskActivityId());
-
+        
         Map<String, String> outputProperties = new HashMap<>();
         boolean aproved = false;
         if (approvedCount == numberApprovals) {
@@ -162,8 +161,7 @@ public class ActionServiceImpl implements ActionService {
       actionApprovalResponse.setActivityId(approvalEntity.getTaskActivityId());
       Map<String, String> outputProperties = new HashMap<>();
 
-      actionApproval(request.isApproved(), approvalEntity, actionApprovalResponse,
-          outputProperties);
+      actionApproval(request.isApproved(), approvalEntity, actionApprovalResponse, outputProperties);
     }
   }
 
@@ -198,12 +196,11 @@ public class ActionServiceImpl implements ActionService {
     approval.setActioners(approvalEntity.getActioners());
 
     approval.setApprovalsRequired(approvalEntity.getNumberOfApprovers());
-
+    
     if (approvalEntity.getActioners() != null) {
-
-      long aprovalCount =
-          approvalEntity.getActioners().stream().filter(x -> x.isApproved()).count();
-
+      
+      long aprovalCount = approvalEntity.getActioners().stream().filter(x -> x.isApproved()).count();
+     
       approval.setNumberOfApprovals(aprovalCount);
       for (Audit audit : approvalEntity.getActioners()) {
         FlowUserEntity user = this.userIdentityService.getUserByID(audit.getApproverId());
@@ -214,19 +211,19 @@ public class ActionServiceImpl implements ActionService {
       }
       approval.setActioners(approvalEntity.getActioners());
     }
-
-    WorkflowSummary workflowSummary = workflowService.getWorkflow(approval.getWorkflowId(), false);
+    
+    WorkflowSummary workflowSummary = workflowService.getWorkflow(approval.getWorkflowId());
     approval.setWorkflowName(workflowSummary.getName());
     approval.setScope(workflowSummary.getScope());
-
+    
     if (approval.getTeamId() != null) {
       FlowTeam flowTeam = teamService.getTeamById(approval.getTeamId());
       approval.setTeamName(flowTeam.getName());
       approval.setTaskName("");
     }
+    
 
-
-
+   
     TaskExecutionEntity taskExecution = activityTaskService.findById(approval.getTaskActivityId());
     approval.setTaskName(taskExecution.getTaskName());
 
@@ -403,35 +400,29 @@ public class ActionServiceImpl implements ActionService {
   }
 
   @Override
-  public ActionSummary getActionSummary(Optional<Date> fromDate, Optional<Date> toDate,
-      Optional<List<String>> workflowIds, Optional<List<String>> teamIds,
-      Optional<ApprovalStatus> status, Optional<List<String>> scopes) {
+  public ActionSummary getActionSummary( Optional<Date> fromDate,  Optional<Date> toDate, Optional<List<String>> workflowIds, Optional<List<String>> teamIds, Optional<ApprovalStatus> status, Optional<List<String>> scopes)
+  {
     List<String> workflowIdsList = getWorkflowIdsForParams(workflowIds, teamIds, scopes);
-
+    
     ActionSummary summary = new ActionSummary();
-    long approvalCount = this.approvalService.getActionCountForType(ManualType.approval, fromDate,
-        toDate, workflowIdsList, status);
-    long manualCount = this.approvalService.getActionCountForType(ManualType.task, fromDate, toDate,
-        workflowIdsList, status);
-
-
-    long rejectedCount =
-        approvalService.getActionCountForStatus(ApprovalStatus.rejected, fromDate, toDate);
-    long approvedCount =
-        approvalService.getActionCountForStatus(ApprovalStatus.approved, fromDate, toDate);
-    long submittedCount =
-        approvalService.getActionCountForStatus(ApprovalStatus.submitted, fromDate, toDate);
+    long approvalCount = this.approvalService.getActionCountForType(ManualType.approval, fromDate, toDate, workflowIdsList, status);
+    long manualCount = this.approvalService.getActionCountForType(ManualType.task, fromDate, toDate,workflowIdsList, status);
+  
+    
+    long rejectedCount = approvalService.getActionCountForStatus(ApprovalStatus.rejected, fromDate, toDate);
+    long approvedCount = approvalService.getActionCountForStatus(ApprovalStatus.approved, fromDate, toDate);
+    long submittedCount = approvalService.getActionCountForStatus(ApprovalStatus.submitted, fromDate, toDate);
     long total = rejectedCount + approvedCount + submittedCount;
     long approvalRateCount = 0;
-
+    
     if (total != 0) {
-      approvalRateCount = (((approvedCount + rejectedCount) / total) * 100);
-    }
-
+      approvalRateCount = (((approvedCount +rejectedCount)  / total) * 100);
+    } 
+    
     summary.setApprovalsRate(approvalRateCount);
     summary.setManual(manualCount);
     summary.setApprovals(approvalCount);
-
+    
     return summary;
   }
 }

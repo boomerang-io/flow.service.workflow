@@ -278,7 +278,7 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
   public List<FlowTaskTemplate> getAllTaskTemplatesForWorkfow(String workflowId) {
     List<FlowTaskTemplate> templates = new LinkedList<>();
 
-    WorkflowSummary workflow = this.workflowService.getWorkflow(workflowId, false);
+    WorkflowSummary workflow = this.workflowService.getWorkflow(workflowId);
     String flowTeamId = workflow.getFlowTeamId();
     if (workflow.getScope() == WorkflowScope.team || workflow.getScope() == null) {
       templates = flowTaskTemplateService.getAllTaskTemplatesforTeamId(flowTeamId).stream()

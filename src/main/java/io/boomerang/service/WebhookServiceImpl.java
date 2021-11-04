@@ -49,7 +49,7 @@ public class WebhookServiceImpl implements WebhookService {
     FlowExecutionRequest executionRequest = new FlowExecutionRequest();
     executionRequest.setProperties(request.getProperties());
     executionRequest.setApplyQuotas(request.isApplyQuotas());
-
+    
     Optional<List<TaskWorkspace>> workspaces = Optional.empty();
 
     if (request.getTaskWorkspaces() != null) {
@@ -60,13 +60,13 @@ public class WebhookServiceImpl implements WebhookService {
     if (workflowId != null) {
       activity = executionService.executeWorkflow(workflowId,
           Optional.of(FlowTriggerEnum.webhook.toString()), Optional.of(executionRequest),
-          workspaces, false);
+          workspaces);
     }
     FlowWebhookResponse response = new FlowWebhookResponse();
     if (activity != null) {
       response.setActivityId(activity.getId());
       WorkflowEntity workflow = flowWorkflowService.getWorkflow(workflowId);
-
+      
       if (workflow.getScope() == WorkflowScope.team) {
         activity.setTeamId(workflow.getFlowTeamId());
         activity.setScope(WorkflowScope.team);
@@ -76,7 +76,7 @@ public class WebhookServiceImpl implements WebhookService {
       } else {
         activity.setScope(WorkflowScope.system);
       }
-
+      
       activityService.saveWorkflowActivity(activity);
     }
     return response;
