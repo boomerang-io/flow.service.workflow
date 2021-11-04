@@ -183,7 +183,7 @@ public class TeamServiceImpl implements TeamService {
             flowSettingsService.getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_COUNT).getValue()));
 
     quotas.setMaxWorkflowExecutionMonthly(
-        quotas.getMaxWorkflowExecutionMonthly() != null ? quota.getMaxWorkflowExecutionMonthly()
+        quota.getMaxWorkflowExecutionMonthly() != null ? quota.getMaxWorkflowExecutionMonthly()
             : Integer.valueOf(flowSettingsService
                 .getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_EXECUTION_MONTHLY).getValue()));
 
