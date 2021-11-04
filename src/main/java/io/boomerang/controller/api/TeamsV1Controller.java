@@ -88,6 +88,17 @@ public class TeamsV1Controller {
 
 
     if (isTeamManagementAvaliable()) {
+
+      List<String> userEmails = new ArrayList<>();
+      if (!flowTeam.getUsers().isEmpty() || flowTeam.getUsers() != null) {
+        for (FlowUser user : flowTeam.getUsers()) {
+          if (!userEmails.contains(user.getEmail().toLowerCase())) {
+            userEmails.add(user.getEmail().toLowerCase());
+          } else {
+            return ResponseEntity.badRequest().build();
+          }
+        }
+      }
       String teamName = flowTeam.getName();
       FlowTeam team = teamService.createStandaloneTeam(teamName, flowTeam.getQuotas());
 
@@ -99,9 +110,8 @@ public class TeamsV1Controller {
           } else {
             String[] userName = flowUser.getName().split(" ", 2);
 
-            userIdsToAdd.add(flowUserService
-                .getOrRegisterUser(flowUser.getEmail(), userName[0], userName[1], flowUser.getType())
-                .getId());
+            userIdsToAdd.add(flowUserService.getOrRegisterUser(flowUser.getEmail(), userName[0],
+                userName[1], flowUser.getType()).getId());
 
           }
           teamService.updateTeamMembers(team.getId(), userIdsToAdd);
