@@ -28,7 +28,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.server.ResponseStatusException;
 import com.cronutils.mapper.CronMapper;
 import com.cronutils.model.Cron;
@@ -161,10 +160,10 @@ public class WorkflowServiceImpl implements WorkflowService {
 
     final WorkflowEntity entity = workFlowRepository.getWorkflow(workflowId);
 
-    if (entity.getScope() == WorkflowScope.user
-        && !entity.getOwnerUserId().equals(userIdentityService.getCurrentUser().getId())) {
-      throw new HttpClientErrorException(HttpStatus.FORBIDDEN);
-    }
+//    if (entity.getScope() == WorkflowScope.user
+//        && !entity.getOwnerUserId().equals(userIdentityService.getCurrentUser().getId())) {
+//      throw new HttpClientErrorException(HttpStatus.FORBIDDEN);
+//    }
 
     setupTriggerDefaults(entity);
 
