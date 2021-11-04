@@ -89,13 +89,13 @@ public class ControllerClientImpl implements ControllerClient {
 
   @Value("${controller.terminatetask.url}")
   private String terminateTaskURL;
-  
+
   @Autowired
   private FlowWorkflowService workflowService;
-  
+
   private static final String CREATEWORKSPACEREQUEST = "Create Workflow Request";
   private static final String DELETEWORKSPACEREQUEST = "Delete Workspace Request";
-  
+
   private static final String CREATEWORKFLOWREQUEST = "Create Workflow Request";
   private static final String TERMINATEWORKFLOWREQUEST = "Terminate Workflow Request";
   private static final String CREATETEMPLATETASKREQUEST = "Create Template Task Request";
@@ -108,7 +108,7 @@ public class ControllerClientImpl implements ControllerClient {
 
   @Value("${controller.deleteworkspace.url}")
   private String deleteWorkspaceUrl;
-  
+
   @Override
   public boolean createFlow(String workflowId, String workflowName, String activityId,
       boolean enableStorage, List<KeyValuePair> labels, Map<String, String> properties) {
@@ -119,11 +119,11 @@ public class ControllerClientImpl implements ControllerClient {
     request.setWorkflowName(workflowName);
     request.setWorkflowId(workflowId);
     request.setParameters(properties);
- 
+
 
     if (enableStorage) {
       Workspace workspace = createWorkspaceRequest(activityId, "activity");
-      List<Workspace> workspaces = new LinkedList<>(); 
+      List<Workspace> workspaces = new LinkedList<>();
       workspaces.add(workspace);
       request.setWorkspaces(workspaces);
     }
@@ -221,14 +221,14 @@ public class ControllerClientImpl implements ControllerClient {
     return true;
   }
 
- 
-  
+
+
   @Override
   @Async("flowAsyncExecutor")
-  public void submitCustomTask(TaskService t, TaskClient flowTaskClient, Task task, String activityId, String workflowName,
-      List<KeyValuePair> labels) {
+  public void submitCustomTask(TaskService t, TaskClient flowTaskClient, Task task,
+      String activityId, String workflowName, List<KeyValuePair> labels) {
 
-   
+
     TaskResult taskResult = new TaskResult();
     TaskExecutionEntity taskExecution =
         taskService.findByTaskIdAndActivityId(task.getTaskId(), activityId);
@@ -248,11 +248,11 @@ public class ControllerClientImpl implements ControllerClient {
     request.setTaskName(task.getTaskName());
     request.setTaskActivityId(task.getTaskActivityId());
     request.setLabels(this.convertToMap(labels));
-    
+
     WorkflowEntity workflow = this.workflowService.getWorkflow(activity.getWorkflowId());
     List<TaskWorkspace> taskWorkspaces = buildTaskWorkspaceList(workflow, activityId);
     request.setWorkspaces(taskWorkspaces);
-    
+
     ControllerRequestProperties applicationProperties =
         propertyManager.buildRequestPropertyLayering(task, activityId, task.getWorkflowId());
 
@@ -405,15 +405,25 @@ public class ControllerClientImpl implements ControllerClient {
 
   @Override
   @Async("flowAsyncExecutor")
-  public void submitTemplateTask(TaskService t, TaskClient flowTaskClient,Task task, String activityId, String workflowName,
-      List<KeyValuePair> labels) {
+  public void submitTemplateTask(TaskService t, TaskClient flowTaskClient, Task task,
+      String activityId, String workflowName, List<KeyValuePair> labels) {
 
     ActivityEntity activity = this.activityService.findWorkflowActivity(activityId);
+
+    ObjectMapper objectMapper = new ObjectMapper();
+    try {
+      System.out.println("*****activityId***** " + activityId);
+      System.out.println("*****ActivityEntity*****");
+      System.out.println(objectMapper.writeValueAsString(activity));
+
+    } catch (JsonProcessingException e) {
+
+    }
 
     if (activity.getLabels() != null) {
       labels.addAll(activity.getLabels());
     }
-    
+
     TaskResult taskResult = new TaskResult();
     TaskExecutionEntity taskExecution =
         taskService.findByTaskIdAndActivityId(task.getTaskId(), activityId);
@@ -429,11 +439,11 @@ public class ControllerClientImpl implements ControllerClient {
     request.setTaskActivityId(task.getTaskActivityId());
     request.setLabels(this.convertToMap(labels));
 
-    
+
     WorkflowEntity workflow = this.workflowService.getWorkflow(activity.getWorkflowId());
     List<TaskWorkspace> taskWorkspaces = buildTaskWorkspaceList(workflow, activityId);
     request.setWorkspaces(taskWorkspaces);
-    
+
     ControllerRequestProperties applicationProperties =
         propertyManager.buildRequestPropertyLayering(task, activityId, task.getWorkflowId());
 
@@ -539,8 +549,7 @@ public class ControllerClientImpl implements ControllerClient {
     flowTaskClient.endTask(t, response);
   }
 
-  private List<TaskWorkspace> buildTaskWorkspaceList(WorkflowEntity workflow, String activityId) 
-  {
+  private List<TaskWorkspace> buildTaskWorkspaceList(WorkflowEntity workflow, String activityId) {
     List<TaskWorkspace> workspaces = new LinkedList<>();
     if (workflow.getStorage() != null) {
       Storage storage = workflow.getStorage();
@@ -555,11 +564,11 @@ public class ControllerClientImpl implements ControllerClient {
           if (activityStorage.getMountPath() != null && !activityStorage.getMountPath().isBlank()) {
             taskActivity.setMountPath(activityStorage.getMountPath());
           }
-       
-          
+
+
           workspaces.add(taskActivity);
         }
-        
+
         WorkflowStorage workflowStorage = storage.getWorkflow();
         if (workflowStorage != null && workflowStorage.getEnabled()) {
           TaskWorkspace taskWorkflow = new TaskWorkspace();
@@ -567,7 +576,7 @@ public class ControllerClientImpl implements ControllerClient {
           taskWorkflow.setId(workflow.getId());
           taskWorkflow.setReadOnly(false);
           taskWorkflow.setOptional(false);
-          
+
           if (workflowStorage.getMountPath() != null && !workflowStorage.getMountPath().isBlank()) {
             taskWorkflow.setMountPath(workflowStorage.getMountPath());
           }
@@ -599,8 +608,8 @@ public class ControllerClientImpl implements ControllerClient {
       }
 
       List<String> command = revision.getCommand();
-      
-   
+
+
       if (command != null && !command.isEmpty() && !checkForBlankValues(command)) {
         request.setCommand(revision.getCommand());
         List<String> cmdArgs = new LinkedList<>();
@@ -609,7 +618,7 @@ public class ControllerClientImpl implements ControllerClient {
               propertyManager.replaceValueWithProperty(line, activityId, applicationProperties);
           cmdArgs.add(newValue);
         }
-        
+
         request.setCommand(cmdArgs);
       }
       if (revision.getScript() != null && !revision.getScript().isBlank()) {
@@ -732,15 +741,15 @@ public class ControllerClientImpl implements ControllerClient {
   @Override
   @Async("flowAsyncExecutor")
   public void createWorkspace(String id) {
-    
+
     Workspace workspace = this.createWorkspaceRequest(id, "workflow");
-    
+
     try {
       logPayload(CREATEWORKSPACEREQUEST, workspace);
 
       Response response = restTemplate.postForObject(createWorkspaceUrl, workspace, Response.class);
       logPayload(DELETEWORKSPACEREQUEST, response);
-      
+
     } catch (HttpStatusCodeException statusCodeException) {
       LOGGER.error(ExceptionUtils.getStackTrace(statusCodeException));
 
@@ -774,7 +783,7 @@ public class ControllerClientImpl implements ControllerClient {
 
       Response response = restTemplate.postForObject(deleteWorkspaceUrl, workspace, Response.class);
       logPayload(DELETEWORKSPACEREQUEST, response);
-      
+
     } catch (HttpStatusCodeException statusCodeException) {
       LOGGER.error(ExceptionUtils.getStackTrace(statusCodeException));
 
@@ -797,6 +806,6 @@ public class ControllerClientImpl implements ControllerClient {
       LOGGER.error(ERRORLOGPRFIX, CREATEWORKFLOWREQUEST);
       LOGGER.error(ExceptionUtils.getStackTrace(ex));
     }
-    
+
   }
 }

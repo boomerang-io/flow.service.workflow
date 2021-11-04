@@ -12,6 +12,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.boomerang.client.ExernalUserService;
 import io.boomerang.client.model.UserProfile;
 import io.boomerang.model.FlowUser;
@@ -48,6 +50,19 @@ public class UserIdentityServiceImpl implements UserIdentityService {
       UserToken user = usertDetailsService.getUserDetails();
       String email = user.getEmail();
       FlowUserEntity entity = flowUserService.getUserWithEmail(email);
+
+      ObjectMapper objectMapper = new ObjectMapper();
+      try {
+        System.out.println("*****User Token*****");
+        System.out.println(objectMapper.writeValueAsString(user));
+        System.out.println("*****Email***** " + email);
+        System.out.println("*****UserEntity*****");
+        System.out.println(objectMapper.writeValueAsString(entity));
+      } catch (JsonProcessingException e) {
+
+      }
+
+
       entity.setHasConsented(true);
       return entity;
     } else {
