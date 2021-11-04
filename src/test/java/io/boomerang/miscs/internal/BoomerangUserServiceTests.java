@@ -20,7 +20,7 @@ import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.client.MockRestServiceServer;
-import io.boomerang.client.ExernalUserService;
+import io.boomerang.client.ExternalUserService;
 import io.boomerang.client.model.UserProfile;
 import io.boomerang.misc.FlowTests;
 
@@ -32,7 +32,7 @@ import io.boomerang.misc.FlowTests;
 class BoomerangUserServiceTests extends FlowTests {
 
   @Autowired
-  private ExernalUserService userService;
+  private ExternalUserService userService;
 
   @Test
   void testGetUserProfile() {
