@@ -1,5 +1,6 @@
 package io.boomerang.service.runner.misc;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -35,12 +36,12 @@ import io.boomerang.model.controller.Workspace;
 import io.boomerang.mongo.entity.ActivityEntity;
 import io.boomerang.mongo.entity.TaskExecutionEntity;
 import io.boomerang.mongo.entity.WorkflowEntity;
-import io.boomerang.mongo.model.KeyValuePair;
+import io.boomerang.mongo.model.ActivityStorage;
 import io.boomerang.mongo.model.ErrorResponse;
+import io.boomerang.mongo.model.KeyValuePair;
 import io.boomerang.mongo.model.Revision;
 import io.boomerang.mongo.model.Storage;
 import io.boomerang.mongo.model.TaskStatus;
-import io.boomerang.mongo.model.ActivityStorage;
 import io.boomerang.mongo.model.WorkflowStorage;
 import io.boomerang.mongo.model.internal.InternalTaskResponse;
 import io.boomerang.mongo.service.ActivityTaskService;
@@ -410,18 +411,9 @@ public class ControllerClientImpl implements ControllerClient {
 
     ActivityEntity activity = this.activityService.findWorkflowActivity(activityId);
 
-    ObjectMapper objectMapper = new ObjectMapper();
-    try {
-      System.out.println("*****activityId***** " + activityId);
-      System.out.println("*****ActivityEntity*****");
-      System.out.println(objectMapper.writeValueAsString(activity));
-      System.out.println("*****Labels*****");
-      System.out.println(objectMapper.writeValueAsString(labels));
-
-    } catch (JsonProcessingException e) {
-
+    if (labels == null) {
+      labels = new ArrayList<>();
     }
-
     if (activity.getLabels() != null) {
       labels.addAll(activity.getLabels());
     }
