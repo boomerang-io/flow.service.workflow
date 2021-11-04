@@ -28,13 +28,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.server.ResponseStatusException;
 import com.cronutils.mapper.CronMapper;
 import com.cronutils.model.Cron;
 import com.cronutils.model.CronType;
 import com.cronutils.model.definition.CronDefinitionBuilder;
 import com.cronutils.parser.CronParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.boomerang.client.model.Team;
 import io.boomerang.error.BoomerangError;
@@ -161,10 +161,11 @@ public class WorkflowServiceImpl implements WorkflowService {
 
     final WorkflowEntity entity = workFlowRepository.getWorkflow(workflowId);
 
-    // if (entity.getScope() == WorkflowScope.user
-    // && !entity.getOwnerUserId().equals(userIdentityService.getCurrentUser().getId())) {
+    // if (entity.getScope() == WorkflowScope.user && !entity.getOwnerUserId()
+    // .equals(userIdentityService.getUserByID(entity.getOwnerUserId()))) {
     // throw new HttpClientErrorException(HttpStatus.FORBIDDEN);
     // }
+
 
     setupTriggerDefaults(entity);
 
