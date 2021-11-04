@@ -90,7 +90,7 @@ public class TeamsV1Controller {
     if (isTeamManagementAvaliable()) {
 
       List<String> userEmails = new ArrayList<>();
-      if (!flowTeam.getUsers().isEmpty() || flowTeam.getUsers() != null) {
+      if (flowTeam.getUsers() != null && !flowTeam.getUsers().isEmpty()) {
         for (FlowUser user : flowTeam.getUsers()) {
           if (!userEmails.contains(user.getEmail().toLowerCase())) {
             userEmails.add(user.getEmail().toLowerCase());
