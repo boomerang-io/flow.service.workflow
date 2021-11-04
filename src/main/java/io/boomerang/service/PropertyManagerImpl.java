@@ -114,7 +114,7 @@ public class PropertyManagerImpl implements PropertyManager {
   private void buildReservedPropertyList(Map<String, String> reservedProperties,
       String workflowId) {
 
-    WorkflowEntity workflow = workflowService.getWorkflow(workflowId);
+    WorkflowEntity workflow = workflowService.getWorkflow(workflowId, false);
     if (workflow.getTokens() != null) {
       for (WorkflowToken token : workflow.getTokens()) {
         reservedProperties.put("system.tokens." + token.getLabel(), token.getToken());
@@ -214,10 +214,10 @@ public class PropertyManagerImpl implements PropertyManager {
     List<KeyValuePair> properties = null;
     if (activityId != null) {
       ActivityEntity activity = activityService.findWorkflowActivity(activityId);
-      workflow = workflowService.getWorkflow(activity.getWorkflowId());
+      workflow = workflowService.getWorkflow(activity.getWorkflowId(), false);
       properties = activity.getProperties();
     } else {
-      workflow = workflowService.getWorkflow(workflowId);
+      workflow = workflowService.getWorkflow(workflowId, false);
     }
 
     if (workflow.getProperties() != null) {
@@ -247,7 +247,7 @@ public class PropertyManagerImpl implements PropertyManager {
   public void buildSystemProperties(Task task, String activityId, String workflowId,
       Map<String, String> systemProperties) {
 
-    WorkflowEntity workflow = workflowService.getWorkflow(workflowId);
+    WorkflowEntity workflow = workflowService.getWorkflow(workflowId, false);
     if (activityId != null) {
       ActivityEntity activity = activityService.findWorkflowActivity(activityId);
       RevisionEntity revision =
@@ -281,7 +281,7 @@ public class PropertyManagerImpl implements PropertyManager {
 
   @Override
   public void buildTeamProperties(Map<String, String> teamProperties, String workflowId) {
-    WorkflowSummary workflow = workflowService.getWorkflow(workflowId);
+    WorkflowSummary workflow = workflowService.getWorkflow(workflowId, false);
 
     if (WorkflowScope.team.equals(workflow.getScope())) {
       TeamEntity flowTeamEntity = this.flowTeamService.findById(workflow.getFlowTeamId());

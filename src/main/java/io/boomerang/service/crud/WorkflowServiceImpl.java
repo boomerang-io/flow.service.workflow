@@ -157,14 +157,14 @@ public class WorkflowServiceImpl implements WorkflowService {
   }
 
   @Override
-  public WorkflowSummary getWorkflow(String workflowId) {
+  public WorkflowSummary getWorkflow(String workflowId, boolean triggeredByJob) {
 
     final WorkflowEntity entity = workFlowRepository.getWorkflow(workflowId);
 
-    // if (entity.getScope() == WorkflowScope.user && !entity.getOwnerUserId()
-    // .equals(userIdentityService.getUserByID(entity.getOwnerUserId()))) {
-    // throw new HttpClientErrorException(HttpStatus.FORBIDDEN);
-    // }
+    if (!triggeredByJob && entity.getScope() == WorkflowScope.user && !entity.getOwnerUserId()
+        .equals(userIdentityService.getUserByID(entity.getOwnerUserId()))) {
+      throw new HttpClientErrorException(HttpStatus.FORBIDDEN);
+    }
 
 
     setupTriggerDefaults(entity);

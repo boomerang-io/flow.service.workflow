@@ -59,7 +59,7 @@ public class WorkflowController {
 
   @GetMapping(value = "/{workFlowId}/revision")
   public FlowWorkflowRevision getWorkflowLatestVersion(@PathVariable String workFlowId) {
-    return workflowVersionService.getLatestWorkflowVersion(workFlowId);
+    return workflowVersionService.getLatestWorkflowVersion(workFlowId, false);
   }
 
   @GetMapping(value = "/{workFlowId}/revision/{version}")
@@ -70,7 +70,7 @@ public class WorkflowController {
 
   @GetMapping(value = "{id}/summary")
   public WorkflowSummary getWorkflowWithId(@PathVariable String id) {
-    return workflowService.getWorkflow(id);
+    return workflowService.getWorkflow(id, false);
   }
 
   @PostMapping(value = "/{workFlowId}/duplicate")

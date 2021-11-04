@@ -22,7 +22,7 @@ public interface WorkflowService {
 
   void deleteWorkflow(String workFlowid);
 
-  WorkflowSummary getWorkflow(String workflowId);
+  WorkflowSummary getWorkflow(String workflowId, boolean triggeredByJob);
 
   List<WorkflowSummary> getWorkflowsForTeam(String flowTeamId);
 
@@ -36,12 +36,13 @@ public interface WorkflowService {
 
   ResponseEntity<InputStreamResource> exportWorkflow(String workFlowId);
 
-  void importWorkflow(WorkflowExport export, Boolean update, String flowTeamId, WorkflowScope scope);
-  
+  void importWorkflow(WorkflowExport export, Boolean update, String flowTeamId,
+      WorkflowScope scope);
+
   boolean canExecuteWorkflowForQuotas(String teamId);
 
   boolean canExecuteWorkflow(String workFlowId, Optional<String> trigger);
-  
+
   public List<WorkflowShortSummary> getWorkflowShortSummaryList();
 
   ResponseEntity<HttpStatus> validateWorkflowToken(String id, GenerateTokenResponse tokenPayload);
@@ -49,7 +50,7 @@ public interface WorkflowService {
   void deleteToken(String id, String label);
 
   List<WorkflowSummary> getSystemWorkflows();
-  
+
   UserWorkflowSummary getUserWorkflows();
 
   List<WorkflowShortSummary> getSystemWorkflowShortSummaryList();

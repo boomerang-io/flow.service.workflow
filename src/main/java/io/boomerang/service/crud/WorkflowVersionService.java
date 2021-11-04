@@ -10,8 +10,6 @@ public interface WorkflowVersionService {
 
   void deleteWorkflowVersionWithId(String id);
 
-  FlowWorkflowRevision getLatestWorkflowVersion(String workflowId);
-
   long getLatestWorkflowVersionCount(String workflowId);
 
   FlowWorkflowRevision getWorkflowVersion(String workflowId, long verison);
@@ -21,5 +19,7 @@ public interface WorkflowVersionService {
   FlowWorkflowRevision insertWorkflowVersion(FlowWorkflowRevision flowWorkflowEntity);
 
   List<RevisionResponse> viewChangelog(Optional<String> workFlowId, Pageable pageable);
+
+  FlowWorkflowRevision getLatestWorkflowVersion(String workflowId, boolean triggeredByJob);
 
 }
