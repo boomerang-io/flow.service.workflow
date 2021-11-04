@@ -984,7 +984,7 @@ public class WorkflowServiceImpl implements WorkflowService {
       return null;
     }
 
-    final List<WorkflowEntity> workflows = workFlowRepository.getUserWorkflows(user.getId());
+    final List<WorkflowEntity> workflows = workflowRepository.getUserWorkflows(user.getId());
 
     final List<WorkflowSummary> newList = new LinkedList<>();
     for (final WorkflowEntity entity : workflows) {
@@ -1005,7 +1005,6 @@ public class WorkflowServiceImpl implements WorkflowService {
 
     return summary;
   }
-
 
   private WorkflowQuotas getQuotasForUser(FlowUserEntity user, List<WorkflowEntity> workflows) {
 
@@ -1114,7 +1113,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     }
 
     UserWorkflowSummary summary =
-        getUserWorkflows(workFlowRepository.getWorkflow(workflowId).getOwnerUserId());
+        getUserWorkflows(workflowRepository.getWorkflow(workflowId).getOwnerUserId());
 
     WorkflowQuotas workflowQuotas = summary.getUserQuotas();
     if (workflowQuotas.getCurrentConcurrentWorkflows() >= workflowQuotas.getMaxConcurrentWorkflows()
