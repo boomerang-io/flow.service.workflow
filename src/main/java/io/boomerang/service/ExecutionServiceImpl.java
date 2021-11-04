@@ -53,10 +53,9 @@ public class ExecutionServiceImpl implements ExecutionService {
         && !workflowService.canExecuteWorkflowForQuotas(workflow.getFlowTeamId())) {
       throw new BoomerangException(BoomerangError.TOO_MANY_REQUESTS);
     } else if (WorkflowScope.user.equals(workflow.getScope())
-        && !workflowService.canExecuteWorkflowForQuotasForUser()) { 
+        && !workflowService.canExecuteWorkflowForQuotasForUser(workflowId)) {
       throw new BoomerangException(BoomerangError.TOO_MANY_REQUESTS);
-    }
-    else {
+    } else {
       if (workflow.getStatus() == WorkflowStatus.active) {
         FlowExecutionRequest request = null;
         if (executionRequest.isPresent()) {
@@ -68,8 +67,8 @@ public class ExecutionServiceImpl implements ExecutionService {
 
         final RevisionEntity entity = this.flowRevisionService.getLatestWorkflowVersion(workflowId);
         if (entity != null) {
-          final ActivityEntity activity =
-              activityService.createFlowActivity(entity.getId(), trigger, request, taskWorkspaces, request.getLabels());
+          final ActivityEntity activity = activityService.createFlowActivity(entity.getId(),
+              trigger, request, taskWorkspaces, request.getLabels());
           flowExecutionService.executeWorkflowVersion(entity.getId(), activity.getId());
 
           final List<TaskExecutionResponse> steps =

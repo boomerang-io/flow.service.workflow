@@ -60,9 +60,11 @@ public interface WorkflowService {
 
   WorkflowSummary duplicateWorkflow(String id, DuplicateRequest duplicateRequest);
 
-  boolean canExecuteWorkflowForQuotasForUser();
+  boolean canExecuteWorkflowForQuotasForUser(String workflowId);
 
   List<TemplateWorkflowSummary> getTemplateWorkflows();
 
   CronValidationResponse validateCron(String cron);
+
+  UserWorkflowSummary getUserWorkflows(String userId);
 }

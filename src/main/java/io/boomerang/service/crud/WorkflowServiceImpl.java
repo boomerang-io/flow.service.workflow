@@ -1028,6 +1028,38 @@ public class WorkflowServiceImpl implements WorkflowService {
     return summary;
   }
 
+
+  @Override
+  public UserWorkflowSummary getUserWorkflows(String userId) {
+    FlowUserEntity user = userIdentityService.getUserByID(userId);
+
+    if (user == null) {
+      return null;
+    }
+
+    final List<WorkflowEntity> workflows = workFlowRepository.getUserWorkflows(user.getId());
+
+    final List<WorkflowSummary> newList = new LinkedList<>();
+    for (final WorkflowEntity entity : workflows) {
+      setupTriggerDefaults(entity);
+      final WorkflowSummary summary = new WorkflowSummary(entity);
+      updateSummaryInformation(summary);
+      if (WorkflowStatus.active == entity.getStatus()) {
+        newList.add(summary);
+      }
+
+    }
+    teamService.updateSummaryWithUpgradeFlags(newList);
+    UserWorkflowSummary summary = new UserWorkflowSummary();
+    summary.setWorkflows(newList);
+
+    WorkflowQuotas quotas = getQuotasForUser(user, workflows);
+    summary.setUserQuotas(quotas);
+
+    return summary;
+  }
+
+
   private WorkflowQuotas getQuotasForUser(FlowUserEntity user, List<WorkflowEntity> workflows) {
 
     final String configurationKey = "users";
@@ -1128,21 +1160,14 @@ public class WorkflowServiceImpl implements WorkflowService {
   }
 
   @Override
-  public boolean canExecuteWorkflowForQuotasForUser() {
+  public boolean canExecuteWorkflowForQuotasForUser(String workflowId) {
 
     if (!flowSettingsService.getConfiguration("features", "workflowQuotas").getBooleanValue()) {
       return true;
     }
 
-    UserWorkflowSummary summary = getUserWorkflows();
-
-    ObjectMapper objectMapper = new ObjectMapper();
-    try {
-      System.out.println("*******USER WORKFLOW SUMMARY");
-      System.out.println(objectMapper.writeValueAsString(summary));
-    } catch (JsonProcessingException e) {
- 
-    }
+    UserWorkflowSummary summary =
+        getUserWorkflows(workFlowRepository.getWorkflow(workflowId).getOwnerUserId());
 
     WorkflowQuotas workflowQuotas = summary.getUserQuotas();
     if (workflowQuotas.getCurrentConcurrentWorkflows() >= workflowQuotas.getMaxConcurrentWorkflows()
