@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.domain.Sort.Order;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.HttpClientErrorException;
 import io.boomerang.model.CronValidationResponse;
 import io.boomerang.model.DuplicateRequest;
 import io.boomerang.model.FlowWorkflowRevision;
@@ -26,9 +28,12 @@ import io.boomerang.model.GenerateTokenResponse;
 import io.boomerang.model.RevisionResponse;
 import io.boomerang.model.WorkflowExport;
 import io.boomerang.model.WorkflowSummary;
+import io.boomerang.mongo.entity.WorkflowEntity;
 import io.boomerang.mongo.model.WorkflowProperty;
 import io.boomerang.mongo.model.WorkflowScope;
 import io.boomerang.mongo.model.WorkflowStatus;
+import io.boomerang.mongo.service.FlowWorkflowService;
+import io.boomerang.service.UserIdentityService;
 import io.boomerang.service.crud.WorkflowService;
 import io.boomerang.service.crud.WorkflowVersionService;
 
@@ -41,6 +46,12 @@ public class WorkflowController {
 
   @Autowired
   private WorkflowVersionService workflowVersionService;
+
+  @Autowired
+  private FlowWorkflowService workFlowRepository;
+
+  @Autowired
+  private UserIdentityService userIdentityService;
 
   @DeleteMapping(value = "{id}")
   public void deleteWorkflowWithId(@PathVariable String id) {
@@ -59,6 +70,12 @@ public class WorkflowController {
 
   @GetMapping(value = "/{workFlowId}/revision")
   public FlowWorkflowRevision getWorkflowLatestVersion(@PathVariable String workFlowId) {
+    final WorkflowEntity entity = workFlowRepository.getWorkflow(workFlowId);
+
+    if (entity.getScope() == WorkflowScope.user
+        && !entity.getOwnerUserId().equals(userIdentityService.getCurrentUser().getId())) {
+      throw new HttpClientErrorException(HttpStatus.FORBIDDEN);
+    }
     return workflowVersionService.getLatestWorkflowVersion(workFlowId);
   }
 
@@ -70,6 +87,13 @@ public class WorkflowController {
 
   @GetMapping(value = "{id}/summary")
   public WorkflowSummary getWorkflowWithId(@PathVariable String id) {
+    final WorkflowEntity entity = workFlowRepository.getWorkflow(id);
+
+    if (entity.getScope() == WorkflowScope.user && !entity.getOwnerUserId()
+        .equals(userIdentityService.getUserByID(entity.getOwnerUserId()))) {
+      throw new HttpClientErrorException(HttpStatus.FORBIDDEN);
+    }
+
     return workflowService.getWorkflow(id);
   }
 
