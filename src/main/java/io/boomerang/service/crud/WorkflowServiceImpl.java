@@ -161,10 +161,11 @@ public class WorkflowServiceImpl implements WorkflowService {
 
     final WorkflowEntity entity = workFlowRepository.getWorkflow(workflowId);
 
-    if (entity.getScope() == WorkflowScope.user
-        && !entity.getOwnerUserId().equals(userIdentityService.getCurrentUser().getId())) {
-      throw new HttpClientErrorException(HttpStatus.FORBIDDEN);
-    }
+    // if (entity.getScope() == WorkflowScope.user && !entity.getOwnerUserId()
+    // .equals(userIdentityService.getUserByID(entity.getOwnerUserId()))) {
+    // throw new HttpClientErrorException(HttpStatus.FORBIDDEN);
+    // }
+
 
     setupTriggerDefaults(entity);
 
@@ -1028,6 +1029,38 @@ public class WorkflowServiceImpl implements WorkflowService {
     return summary;
   }
 
+
+  @Override
+  public UserWorkflowSummary getUserWorkflows(String userId) {
+    FlowUserEntity user = userIdentityService.getUserByID(userId);
+
+    if (user == null) {
+      return null;
+    }
+
+    final List<WorkflowEntity> workflows = workFlowRepository.getUserWorkflows(user.getId());
+
+    final List<WorkflowSummary> newList = new LinkedList<>();
+    for (final WorkflowEntity entity : workflows) {
+      setupTriggerDefaults(entity);
+      final WorkflowSummary summary = new WorkflowSummary(entity);
+      updateSummaryInformation(summary);
+      if (WorkflowStatus.active == entity.getStatus()) {
+        newList.add(summary);
+      }
+
+    }
+    teamService.updateSummaryWithUpgradeFlags(newList);
+    UserWorkflowSummary summary = new UserWorkflowSummary();
+    summary.setWorkflows(newList);
+
+    WorkflowQuotas quotas = getQuotasForUser(user, workflows);
+    summary.setUserQuotas(quotas);
+
+    return summary;
+  }
+
+
   private WorkflowQuotas getQuotasForUser(FlowUserEntity user, List<WorkflowEntity> workflows) {
 
     final String configurationKey = "users";
@@ -1128,13 +1161,14 @@ public class WorkflowServiceImpl implements WorkflowService {
   }
 
   @Override
-  public boolean canExecuteWorkflowForQuotasForUser() {
+  public boolean canExecuteWorkflowForQuotasForUser(String workflowId) {
 
     if (!flowSettingsService.getConfiguration("features", "workflowQuotas").getBooleanValue()) {
       return true;
     }
 
-    UserWorkflowSummary summary = getUserWorkflows();
+    UserWorkflowSummary summary =
+        getUserWorkflows(workFlowRepository.getWorkflow(workflowId).getOwnerUserId());
 
     WorkflowQuotas workflowQuotas = summary.getUserQuotas();
     if (workflowQuotas.getCurrentConcurrentWorkflows() >= workflowQuotas.getMaxConcurrentWorkflows()

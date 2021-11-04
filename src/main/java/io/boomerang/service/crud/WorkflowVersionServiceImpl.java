@@ -55,10 +55,10 @@ public class WorkflowVersionServiceImpl implements WorkflowVersionService {
 
     final WorkflowEntity entity = workFlowRepository.getWorkflow(workflowId);
 
-    if (entity.getScope() == WorkflowScope.user
-        && !entity.getOwnerUserId().equals(userIdentityService.getCurrentUser().getId())) {
-      throw new HttpClientErrorException(HttpStatus.FORBIDDEN);
-    }
+//    if (entity.getScope() == WorkflowScope.user
+//        && !entity.getOwnerUserId().equals(userIdentityService.getCurrentUser().getId())) {
+//      throw new HttpClientErrorException(HttpStatus.FORBIDDEN);
+//    }
 
     RevisionEntity revision = flowWorkflowService.getLatestWorkflowVersion(workflowId);
     if (revision == null) {
