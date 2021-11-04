@@ -89,8 +89,8 @@ public class WorkflowController {
   public WorkflowSummary getWorkflowWithId(@PathVariable String id) {
     final WorkflowEntity entity = workFlowRepository.getWorkflow(id);
 
-    if (entity.getScope() == WorkflowScope.user && !entity.getOwnerUserId()
-        .equals(userIdentityService.getUserByID(entity.getOwnerUserId()))) {
+    if (entity.getScope() == WorkflowScope.user
+        && !entity.getOwnerUserId().equals(userIdentityService.getCurrentUser().getId())) {
       throw new HttpClientErrorException(HttpStatus.FORBIDDEN);
     }
 
