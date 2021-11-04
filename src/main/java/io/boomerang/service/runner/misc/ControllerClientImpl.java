@@ -415,6 +415,8 @@ public class ControllerClientImpl implements ControllerClient {
       System.out.println("*****activityId***** " + activityId);
       System.out.println("*****ActivityEntity*****");
       System.out.println(objectMapper.writeValueAsString(activity));
+      System.out.println("*****Labels*****");
+      System.out.println(objectMapper.writeValueAsString(labels));
 
     } catch (JsonProcessingException e) {
 
