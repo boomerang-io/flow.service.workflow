@@ -34,6 +34,7 @@ import com.cronutils.model.Cron;
 import com.cronutils.model.CronType;
 import com.cronutils.model.definition.CronDefinitionBuilder;
 import com.cronutils.parser.CronParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.boomerang.client.model.Team;
 import io.boomerang.error.BoomerangError;
@@ -160,10 +161,10 @@ public class WorkflowServiceImpl implements WorkflowService {
 
     final WorkflowEntity entity = workFlowRepository.getWorkflow(workflowId);
 
-//    if (entity.getScope() == WorkflowScope.user
-//        && !entity.getOwnerUserId().equals(userIdentityService.getCurrentUser().getId())) {
-//      throw new HttpClientErrorException(HttpStatus.FORBIDDEN);
-//    }
+    // if (entity.getScope() == WorkflowScope.user
+    // && !entity.getOwnerUserId().equals(userIdentityService.getCurrentUser().getId())) {
+    // throw new HttpClientErrorException(HttpStatus.FORBIDDEN);
+    // }
 
     setupTriggerDefaults(entity);
 
@@ -1134,6 +1135,14 @@ public class WorkflowServiceImpl implements WorkflowService {
     }
 
     UserWorkflowSummary summary = getUserWorkflows();
+
+    ObjectMapper objectMapper = new ObjectMapper();
+    try {
+      System.out.println("*******USER WORKFLOW SUMMARY");
+      System.out.println(objectMapper.writeValueAsString(summary));
+    } catch (JsonProcessingException e) {
+ 
+    }
 
     WorkflowQuotas workflowQuotas = summary.getUserQuotas();
     if (workflowQuotas.getCurrentConcurrentWorkflows() >= workflowQuotas.getMaxConcurrentWorkflows()
