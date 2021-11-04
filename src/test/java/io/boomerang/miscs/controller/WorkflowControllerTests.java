@@ -359,6 +359,16 @@ public class WorkflowControllerTests extends FlowTests {
     assertEquals("0 0 * * * ? *", response.getCron());
     assertEquals(null, response.getMessage());
 
+    response = controller.validateCron("* * * * *");
+    assertEquals(true, response.isValid());
+    assertEquals("0 * * * * ? *", response.getCron());
+    assertEquals(null, response.getMessage());
+    
+    response = controller.validateCron("1 1 1 1 1");
+    assertEquals(false, response.isValid());
+    assertEquals(null, response.getCron());
+    assertEquals("Cron expression contains 5 parts but we expect one of [6, 7]", response.getMessage());
+
   }
 
   private void verifyTemplateVersions(FlowWorkflowRevision entity) {
