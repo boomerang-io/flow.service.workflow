@@ -18,7 +18,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import io.boomerang.client.model.ExternalTeam;
-import io.boomerang.model.FlowUser;
 import io.boomerang.mongo.entity.FlowUserEntity;
 import io.boomerang.mongo.entity.TeamEntity;
 import io.boomerang.mongo.model.Quotas;
