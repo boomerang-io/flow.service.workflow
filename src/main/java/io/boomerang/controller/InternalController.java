@@ -60,7 +60,6 @@ public class InternalController {
     taskService.endTask(request);
   }
 
-
   @GetMapping(value = "/workflows")
   @Deprecated
   public List<WorkflowShortSummary> getAllWorkflows() {
