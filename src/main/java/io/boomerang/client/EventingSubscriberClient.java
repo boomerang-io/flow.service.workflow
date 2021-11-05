@@ -6,6 +6,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
@@ -21,12 +22,10 @@ import io.nats.client.api.StorageType;
 import io.nats.client.api.StreamConfiguration;
 
 @Component
+@ConditionalOnProperty(value = "eventing.enabled", havingValue = "true", matchIfMissing = false)
 public class EventingSubscriberClient {
 
   private static final Logger logger = LogManager.getLogger(EventingSubscriberClient.class);
-
-  @Value("${eventing.enabled:false}")
-  private Boolean eventingEnabled;
 
   @Value("#{'${eventing.nats.server.urls}'.split(',')}")
   private List<String> serverUrls;
@@ -58,33 +57,30 @@ public class EventingSubscriberClient {
   @EventListener(ApplicationReadyEvent.class)
   void onApplicationReadyEvent() throws InterruptedException {
 
-    if (eventingEnabled) {
+    // @formatter:off
+    Options.Builder optionsBuilder = new Options.Builder()
+        .servers(serverUrls.toArray(new String[0]))
+        .reconnectWait(serverReconnectWaitTime)
+        .maxReconnects(serverReconnectMaxAttempts);
+    StreamConfiguration streamConfiguration = new StreamConfiguration.Builder()
+        .name(jetstreamStreamName)
+        .storageType(jetstreamStreamStorageType)
+        .subjects(jetstreamStreamSubject)
+        .build();
+    ConsumerConfiguration consumerConfiguration = new ConsumerConfiguration.Builder()
+        .durable(jetstreamConsumerDurableName)
+        .build();
+    PubSubConfiguration pubSubConfiguration = new PubSubConfiguration.Builder()
+        .automaticallyCreateStream(true)
+        .automaticallyCreateConsumer(true)
+        .build();
+    // @formatter:on
 
-      // @formatter:off
-      Options.Builder optionsBuilder = new Options.Builder()
-          .servers(serverUrls.toArray(new String[0]))
-          .reconnectWait(serverReconnectWaitTime)
-          .maxReconnects(serverReconnectMaxAttempts);
-      StreamConfiguration streamConfiguration = new StreamConfiguration.Builder()
-          .name(jetstreamStreamName)
-          .storageType(jetstreamStreamStorageType)
-          .subjects(jetstreamStreamSubject)
-          .build();
-      ConsumerConfiguration consumerConfiguration = new ConsumerConfiguration.Builder()
-          .durable(jetstreamConsumerDurableName)
-          .build();
-      PubSubConfiguration pubSubConfiguration = new PubSubConfiguration.Builder()
-          .automaticallyCreateStream(true)
-          .automaticallyCreateConsumer(true)
-          .build();
-      // @formatter:on
+    ConnectionPrimer connectionPrimer = new ConnectionPrimer(optionsBuilder);
+    PubSubTunnel pubSubTunnel = new PubSubTransceiver(connectionPrimer, streamConfiguration,
+        consumerConfiguration, pubSubConfiguration);
 
-      ConnectionPrimer connectionPrimer = new ConnectionPrimer(optionsBuilder);
-      PubSubTunnel pubSubTunnel = new PubSubTransceiver(connectionPrimer, streamConfiguration,
-          consumerConfiguration, pubSubConfiguration);
-
-      startSubscription(pubSubTunnel);
-    }
+    startSubscription(pubSubTunnel);
   }
 
   private void startSubscription(PubSubTunnel tunnel) {
