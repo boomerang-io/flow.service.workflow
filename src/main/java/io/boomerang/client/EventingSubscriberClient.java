@@ -99,6 +99,7 @@ public class EventingSubscriberClient {
         try {
           Thread.sleep(jetstreamConsumerResubscribeWaitTime.toMillis());
         } catch (Exception e) {
+          logger.warn("Sleep failed: resubscribing without a waiting time...");
         } finally {
           startSubscription(tunnel);
         }
