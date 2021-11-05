@@ -12,8 +12,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.boomerang.client.ExernalUserService;
 import io.boomerang.client.model.UserProfile;
 import io.boomerang.model.FlowUser;
@@ -187,14 +185,17 @@ public class UserIdentityServiceImpl implements UserIdentityService {
 
   @Override
   public FlowUser addFlowUser(FlowUser flowUser) {
-    FlowUserEntity flowUserEntity = new FlowUserEntity();
-    BeanUtils.copyProperties(flowUser, flowUserEntity);
-    flowUser.setStatus(UserStatus.active);
-    flowUser.setId(null);
-    flowUserEntity = flowUserService.save(flowUser);
-    FlowUser newUser = new FlowUser();
-    BeanUtils.copyProperties(flowUserEntity, newUser);
-    return newUser;
+    if (flowUserService.getUserWithEmail(flowUser.getEmail()) == null) {
+      FlowUserEntity flowUserEntity = new FlowUserEntity();
+      BeanUtils.copyProperties(flowUser, flowUserEntity);
+      flowUser.setStatus(UserStatus.active);
+      flowUser.setId(null);
+      flowUserEntity = flowUserService.save(flowUser);
+      FlowUser newUser = new FlowUser();
+      BeanUtils.copyProperties(flowUserEntity, newUser);
+      return newUser;
+    }
+    return new FlowUser();
   }
 
 }
