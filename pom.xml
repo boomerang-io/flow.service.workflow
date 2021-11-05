@@ -163,7 +163,6 @@
 		<dependency>
 			<groupId>org.mongodb</groupId>
 			<artifactId>mongodb-driver-sync</artifactId>
-			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.mongodb</groupId>
@@ -244,7 +243,7 @@
 		<dependency>
 			<groupId>io.boomerang</groupId>
 			<artifactId>lib-eventing</artifactId>
-			<version>0.2.1</version>
+			<version>0.2.2</version>
 		</dependency>
 		<dependency>
 			<groupId>io.boomerang</groupId>
@@ -320,7 +319,7 @@
 	<repositories>
 		<repository>
 			<id>github</id>
-			<url>https://maven.pkg.github.com/boomerang-io/flow.lib.streaming</url>
+			<url>https://maven.pkg.github.com/boomerang-io/*</url>
 		</repository>
 		<repository>
 			<id>jitpack.io</id>
