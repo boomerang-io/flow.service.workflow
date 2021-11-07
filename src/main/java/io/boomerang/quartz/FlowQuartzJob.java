@@ -19,9 +19,9 @@ import io.boomerang.mongo.model.FlowTriggerEnum;
 
 @PersistJobDataAfterExecution
 @DisallowConcurrentExecution
-public class FlowJob extends QuartzJobBean {
+public class FlowQuartzJob extends QuartzJobBean {
 
-  private static final Logger LOG = LoggerFactory.getLogger(FlowJob.class);
+  private static final Logger LOG = LoggerFactory.getLogger(FlowQuartzJob.class);
 
   private ApplicationContext applicationContext;
 
@@ -42,7 +42,7 @@ public class FlowJob extends QuartzJobBean {
   @Override
   protected void executeInternal(JobExecutionContext context) throws JobExecutionException {
     JobDetail jobDetail = context.getJobDetail();
-    LOG.info("This is the FlowJob, executed for {} with JobDetails = {}",
+    LOG.info("This is the FlowQuartzJob, executed for {} with JobDetails = {}",
         jobDetail.getKey().getName(), jobDetail.getJobDataMap());
 
     ExecutionController executionController = applicationContext.getBean(ExecutionController.class);

@@ -1,4 +1,4 @@
-package io.boomerang.quartz;
+  package io.boomerang.quartz;
 
 import java.util.List;
 import java.util.TimeZone;
@@ -19,6 +19,7 @@ import org.springframework.scheduling.quartz.SchedulerFactoryBean;
 import org.springframework.stereotype.Component;
 import io.boomerang.model.CronValidationResponse;
 import io.boomerang.mongo.entity.WorkflowEntity;
+import io.boomerang.mongo.entity.WorkflowScheduleEntity;
 import io.boomerang.mongo.service.FlowWorkflowService;
 import io.boomerang.service.crud.WorkflowService;
 
@@ -51,50 +52,46 @@ public class ScheduledTasks {
     }
   }
 
+  public void scheduleWorkflow(WorkflowScheduleEntity schedule) {
+    String cronString = schedule.getSchedule();
+    String timezone = schedule.getTimezone();
+    if (cronString != null && timezone != null) {
+      boolean validCron = org.quartz.CronExpression.isValidExpression(cronString);
+      if (!validCron) {
+        logger.info("Invalid CRON: {}. Attempting to convert.", cronString);
+        CronValidationResponse response = workflowService.validateCron(cronString);
+        if (response.isValid()) {
+          cronString = response.getCron();
+          logger.info("CRON converted: {}.", cronString);
+        } else {
+          logger.info("Invalid CRON: {}.", cronString);
+          return;
+        }
+      }
+      TimeZone timeZone = TimeZone.getTimeZone(timezone);
+      String scheduleId = schedule.getId();
+      String workflowId = schedule.getWorkflowId();
+      Scheduler scheduler = schedulerFactoryBean.getScheduler();
+      JobDetail jobDetail =
+          JobBuilder.newJob(FlowQuartzJob.class).withIdentity(scheduleId, workflowId).build();
 
-  public void scheduleWorkflow(WorkflowEntity workflow) {
+      try {
+        if (!scheduler.checkExists(jobDetail.getKey())) {
+          CronScheduleBuilder scheduleBuilder =
+              CronScheduleBuilder.cronSchedule(cronString).inTimeZone(timeZone);
 
-    if (workflow.getTriggers() != null && workflow.getTriggers().getScheduler() != null) {
-
-      String cronString = workflow.getTriggers().getScheduler().getSchedule();
-      String timezone = workflow.getTriggers().getScheduler().getTimezone();
-      if (cronString != null && timezone != null) {
-        boolean validCron = org.quartz.CronExpression.isValidExpression(cronString);
-        if (!validCron) {
-          logger.info("Invalid CRON: {}. Attempting to convert.", cronString);
-          CronValidationResponse response = workflowService.validateCron(cronString);
-          if (response.isValid()) {
-            cronString = response.getCron();
-            logger.info("CRON converted: {}.", cronString);
-          } else {
-            logger.info("Invalid CRON: {}.", cronString);
-            return;
+          CronTrigger trigger = TriggerBuilder.newTrigger().withIdentity(scheduleId, workflowId)
+              .withSchedule(scheduleBuilder).build();
+          try {
+            scheduler.scheduleJob(jobDetail, trigger);
+            logger.info("Scheduled Schedule: {} for Workflow: {}.", scheduleId, workflowId);
+          } catch (SchedulerException e) {
+            logger.error(e);
           }
         }
-        TimeZone timeZone = TimeZone.getTimeZone(timezone);
-        String workflowId = workflow.getId();
-        Scheduler scheduler = schedulerFactoryBean.getScheduler();
-        JobDetail jobDetail =
-            JobBuilder.newJob(FlowJob.class).withIdentity(workflowId, "flow").build();
-
-        try {
-          if (!scheduler.checkExists(jobDetail.getKey())) {
-            CronScheduleBuilder scheduleBuilder =
-                CronScheduleBuilder.cronSchedule(cronString).inTimeZone(timeZone);
-
-            CronTrigger trigger = TriggerBuilder.newTrigger().withIdentity(workflowId, "flow")
-                .withSchedule(scheduleBuilder).build();
-            try {
-              scheduler.scheduleJob(jobDetail, trigger);
-              logger.info("Scheduled Workflow: {}", workflowId);
-            } catch (SchedulerException e) {
-              logger.error(e);
-            }
-          }
-        } catch (SchedulerException e1) {
-          logger.error("Unable to schedule workflow");
-          logger.error(ExceptionUtils.getStackTrace(e1));
-        }
+      } catch (SchedulerException e1) {
+        logger.error("Unable to schedule workflow");
+        logger.error(ExceptionUtils.getStackTrace(e1));
       }
     }
   }

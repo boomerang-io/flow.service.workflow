@@ -58,6 +58,7 @@ import io.boomerang.mongo.entity.FlowUserEntity;
 import io.boomerang.mongo.entity.RevisionEntity;
 import io.boomerang.mongo.entity.WorkflowEntity;
 import io.boomerang.mongo.model.Dag;
+import io.boomerang.mongo.model.FlowTriggerEnum;
 import io.boomerang.mongo.model.Quotas;
 import io.boomerang.mongo.model.Revision;
 import io.boomerang.mongo.model.TaskStatus;
@@ -76,7 +77,6 @@ import io.boomerang.mongo.service.FlowTaskTemplateService;
 import io.boomerang.mongo.service.FlowWorkflowActivityService;
 import io.boomerang.mongo.service.FlowWorkflowService;
 import io.boomerang.mongo.service.RevisionService;
-import io.boomerang.quartz.ScheduledTasks;
 import io.boomerang.service.PropertyManager;
 import io.boomerang.service.UserIdentityService;
 import io.boomerang.service.runner.misc.ControllerClient;
@@ -86,10 +86,13 @@ import io.boomerang.util.ModelConverterV5;
 public class WorkflowServiceImpl implements WorkflowService {
 
   @Autowired
-  private FlowWorkflowActivityService flowWorkflowActivityService;
+  private FlowWorkflowActivityService workflowActivityService;
 
   @Autowired
-  private FlowWorkflowService workFlowRepository;
+  private FlowWorkflowService workflowRepository;
+
+  @Autowired
+  private WorkflowScheduleService workflowScheduleService;
 
   @Autowired
   private RevisionService workflowVersionService;
@@ -131,10 +134,10 @@ public class WorkflowServiceImpl implements WorkflowService {
   private final Logger logger = LogManager.getLogger(getClass());
 
   @Override
-  public void deleteWorkflow(String workFlowid) {
-    final WorkflowEntity entity = workFlowRepository.getWorkflow(workFlowid);
+  public void deleteWorkflow(String workflowId) {
+    final WorkflowEntity entity = workflowRepository.getWorkflow(workflowId);
     entity.setStatus(WorkflowStatus.deleted);
-    workFlowRepository.saveWorkflow(entity);
+    workflowRepository.saveWorkflow(entity);
 
     if (entity.getTriggers() != null) {
       Triggers trigger = entity.getTriggers();
@@ -142,7 +145,7 @@ public class WorkflowServiceImpl implements WorkflowService {
         TriggerScheduler scheduler = trigger.getScheduler();
         if (scheduler != null && scheduler.getEnable()) {
           try {
-            this.taskScheduler.cancelJob(entity.getId());
+            workflowScheduleService.deleteAllSchedules(workflowId);
           } catch (SchedulerException e) {
             logger.info("Unable to remove job. ");
             logger.error(e);
@@ -155,7 +158,7 @@ public class WorkflowServiceImpl implements WorkflowService {
   @Override
   public WorkflowSummary getWorkflow(String workflowId) {
 
-    final WorkflowEntity entity = workFlowRepository.getWorkflow(workflowId);
+    final WorkflowEntity entity = workflowRepository.getWorkflow(workflowId);
 
     setupTriggerDefaults(entity);
 
@@ -167,7 +170,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   @Override
   public List<WorkflowSummary> getWorkflowsForTeam(String flowTeamId) {
-    final List<WorkflowEntity> list = workFlowRepository.getWorkflowsForTeams(flowTeamId);
+    final List<WorkflowEntity> list = workflowRepository.getWorkflowsForTeams(flowTeamId);
     final List<WorkflowSummary> newList = new LinkedList<>();
     for (final WorkflowEntity entity : list) {
 
@@ -195,25 +198,14 @@ public class WorkflowServiceImpl implements WorkflowService {
       flowWorkflowEntity.setOwnerUserId(user.getId());
     }
 
-    WorkflowEntity entity = workFlowRepository.saveWorkflow(flowWorkflowEntity);
+    WorkflowEntity entity = workflowRepository.saveWorkflow(flowWorkflowEntity);
     if (isNewWorkflow) {
       this.generateTriggerToken(entity.getId(), "default");
     }
 
-    entity = workFlowRepository.getWorkflow(entity.getId());
+    entity = workflowRepository.getWorkflow(entity.getId());
 
     final WorkflowSummary summary = new WorkflowSummary(entity);
-
-
-    if (summary.getTriggers() != null) {
-      Triggers trigger = summary.getTriggers();
-      TriggerScheduler scheduler = trigger.getScheduler();
-      if (scheduler != null && scheduler.getEnable()) {
-        logger.info("Scheduling workflow: {}", scheduler.getSchedule());
-        this.taskScheduler.scheduleWorkflow(entity);
-      }
-//      TODO: move to a different method, and save that the scheduler trigger is enabled or disabled.
-    }
 
     return summary;
   }
@@ -235,16 +227,6 @@ public class WorkflowServiceImpl implements WorkflowService {
       flowWorkflowEntity.getTriggers().setManual(manual);
     }
 
-    if (flowWorkflowEntity.getTriggers().getSlack() == null) {
-      TriggerEvent slack = new TriggerEvent();
-      flowWorkflowEntity.getTriggers().setSlack(slack);
-    }
-
-    if (flowWorkflowEntity.getTriggers().getDockerhub() == null) {
-      TriggerEvent dockerhub = new TriggerEvent();
-      flowWorkflowEntity.getTriggers().setDockerhub(dockerhub);
-    }
-
     if (flowWorkflowEntity.getTriggers().getCustom() == null) {
       TriggerEvent custom = new TriggerEvent();
       flowWorkflowEntity.getTriggers().setCustom(custom);
@@ -264,7 +246,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   @Override
   public WorkflowSummary updateWorkflow(WorkflowSummary summary) {
-    final WorkflowEntity entity = workFlowRepository.getWorkflow(summary.getId());
+    final WorkflowEntity entity = workflowRepository.getWorkflow(summary.getId());
 
     entity.setFlowTeamId(summary.getFlowTeamId());
     entity.setName(summary.getName());
@@ -287,7 +269,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
     updateTriggers(entity, previousTriggers, trigger);
 
-    workFlowRepository.saveWorkflow(entity);
+    workflowRepository.saveWorkflow(entity);
     WorkflowSummary updatedSummary = new WorkflowSummary(entity);
     updateSummaryInformation(updatedSummary);
 
@@ -365,13 +347,13 @@ public class WorkflowServiceImpl implements WorkflowService {
   @Override
   public WorkflowSummary updateWorkflowProperties(String workflowId,
       List<WorkflowProperty> properties) {
-    final WorkflowEntity entity = workFlowRepository.getWorkflow(workflowId);
+    final WorkflowEntity entity = workflowRepository.getWorkflow(workflowId);
 
     if (entity.getScope() == WorkflowScope.team) {
       FlowUserEntity user = userIdentityService.getCurrentUser();
 
       FlowTeam team = teamService
-          .getTeamByIdDetailed(workFlowRepository.getWorkflow(workflowId).getFlowTeamId());
+          .getTeamByIdDetailed(workflowRepository.getWorkflow(workflowId).getFlowTeamId());
 
       List<String> userIds = new ArrayList<>();
       if (team.getUsers() != null) {
@@ -392,7 +374,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
         entity.setProperties(properties);
 
-        workFlowRepository.saveWorkflow(entity);
+        workflowRepository.saveWorkflow(entity);
 
         return new WorkflowSummary(entity);
       } else {
@@ -400,7 +382,7 @@ public class WorkflowServiceImpl implements WorkflowService {
       }
     } else {
       entity.setProperties(properties);
-      workFlowRepository.saveWorkflow(entity);
+      workflowRepository.saveWorkflow(entity);
       return new WorkflowSummary(entity);
     }
   }
@@ -408,7 +390,7 @@ public class WorkflowServiceImpl implements WorkflowService {
   @Override
   public GenerateTokenResponse generateTriggerToken(String id, String label) {
     GenerateTokenResponse tokenResponse = new GenerateTokenResponse();
-    WorkflowEntity entity = workFlowRepository.getWorkflow(id);
+    WorkflowEntity entity = workflowRepository.getWorkflow(id);
     List<WorkflowToken> tokens = entity.getTokens();
     if (tokens == null) {
       tokens = new LinkedList<>();
@@ -418,7 +400,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     newToken.setLabel(label);
     newToken.setToken(createUUID());
     tokens.add(newToken);
-    workFlowRepository.saveWorkflow(entity);
+    workflowRepository.saveWorkflow(entity);
 
     tokenResponse.setToken(newToken.getToken());
 
@@ -428,7 +410,7 @@ public class WorkflowServiceImpl implements WorkflowService {
   @Override
   public ResponseEntity<HttpStatus> validateWorkflowToken(String id,
       GenerateTokenResponse tokenPayload) {
-    WorkflowEntity workflow = workFlowRepository.getWorkflow(id);
+    WorkflowEntity workflow = workflowRepository.getWorkflow(id);
     if (workflow != null) {
       setupTriggerDefaults(workflow);
       String token = tokenPayload.getToken();
@@ -468,7 +450,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   @Override
   public ResponseEntity<InputStreamResource> exportWorkflow(String workFlowId) {
-    final WorkflowEntity entity = workFlowRepository.getWorkflow(workFlowId);
+    final WorkflowEntity entity = workflowRepository.getWorkflow(workFlowId);
     WorkflowExport export = new WorkflowExport(entity);
 
     export.setLatestRevision(workflowVersionService.getLatestWorkflowVersion(workFlowId));
@@ -532,7 +514,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
     if (templateIds.containsAll(importTemplateIds)) {
 
-      final WorkflowEntity entity = workFlowRepository.getWorkflow(export.getId());
+      final WorkflowEntity entity = workflowRepository.getWorkflow(export.getId());
 
       if (entity != null) {
         if (update != null && !update) {
@@ -571,7 +553,7 @@ public class WorkflowServiceImpl implements WorkflowService {
           entity.setOwnerUserId(null);
         }
 
-        WorkflowEntity workflow = workFlowRepository.saveWorkflow(entity);
+        WorkflowEntity workflow = workflowRepository.saveWorkflow(entity);
 
         revision.setId(null);
         revision.setWorkFlowId(workflow.getId());
@@ -602,7 +584,7 @@ public class WorkflowServiceImpl implements WorkflowService {
         newEntity.setStorage(export.getStorage());
         newEntity.setIcon(export.getIcon());
 
-        WorkflowEntity savedEntity = workFlowRepository.saveWorkflow(newEntity);
+        WorkflowEntity savedEntity = workflowRepository.saveWorkflow(newEntity);
 
         revision.setId(null);
         revision.setVersion(1);
@@ -648,7 +630,7 @@ public class WorkflowServiceImpl implements WorkflowService {
   @Override
   public List<WorkflowShortSummary> getWorkflowShortSummaryList() {
     List<WorkflowShortSummary> summaryList = new LinkedList<>();
-    List<WorkflowEntity> workfows = workFlowRepository.getAllWorkflows();
+    List<WorkflowEntity> workfows = workflowRepository.getAllWorkflows();
     for (WorkflowEntity workflow : workfows) {
 
       if (WorkflowStatus.active.equals(workflow.getStatus())) {
@@ -695,38 +677,52 @@ public class WorkflowServiceImpl implements WorkflowService {
     return summaryList;
   }
 
+  /*
+   * Checks if the Workflow can be executed based on an active workflow and enabled triggers.
+   * 
+   * If trigger is Manual or Schedule then a deeper check is used to check if those triggers are enabled.
+   * 
+   * @param     workflowId      the Workflows unique ID
+   * @param     Trigger         an optional Trigger object
+   * @return    Boolean         whether the workflow can execute or not
+   */
   @Override
-  public boolean canExecuteWorkflow(String workFlowId, Optional<String> trigger) {
+  public boolean canExecuteWorkflow(String workflowId, Optional<String> trigger) {
 
-
-    WorkflowEntity workflow = workFlowRepository.getWorkflow(workFlowId);
-    if (!trigger.isPresent() || !"manual".equals(trigger.get())) {
+    // Check no further if trigger not provided or is not Manual or Schedule
+    if (!trigger.isPresent() || (!FlowTriggerEnum.manual.toString().equals(trigger.get()) && (!FlowTriggerEnum.scheduler.toString().equals(trigger.get())))) {
       return true;
     }
-
-    Boolean isActive = teamService.getTeamById(workflow.getFlowTeamId()).getIsActive();
-    if (isActive == null || !isActive) {
-      return false;
-    }
-
+    
+    // Check if Workflow exists and is active
+    WorkflowEntity workflow = workflowRepository.getWorkflow(workflowId);
     if (workflow != null) {
+      Boolean isActive = teamService.getTeamById(workflow.getFlowTeamId()).getIsActive();
+      if (isActive == null || !isActive) {
+        return false;
+      }
+
       if (workflow.getTriggers() != null) {
         Triggers triggers = workflow.getTriggers();
-        if (triggers.getManual() != null) {
+        if (FlowTriggerEnum.manual.toString().equals(trigger.get()) && triggers.getManual() != null) {
           Trigger manualTrigger = triggers.getManual();
           if (manualTrigger != null) {
             return manualTrigger.getEnable();
           }
+        } else if (FlowTriggerEnum.scheduler.toString().equals(trigger.get()) && triggers.getScheduler() != null) {
+          Trigger scheduleTrigger = triggers.getScheduler();
+          if (scheduleTrigger != null) {
+            return scheduleTrigger.getEnable();
+          }
         }
-
       }
     }
-    return true;
+    return false;
   }
-
+  
   @Override
   public void deleteToken(String id, String label) {
-    WorkflowEntity entity = workFlowRepository.getWorkflow(id);
+    WorkflowEntity entity = workflowRepository.getWorkflow(id);
     List<WorkflowToken> tokens = entity.getTokens();
     if (tokens == null) {
       tokens = new LinkedList<>();
@@ -740,12 +736,12 @@ public class WorkflowServiceImpl implements WorkflowService {
       tokens.remove(token);
     }
 
-    workFlowRepository.saveWorkflow(entity);
+    workflowRepository.saveWorkflow(entity);
   }
 
   @Override
   public List<WorkflowSummary> getSystemWorkflows() {
-    final List<WorkflowEntity> list = workFlowRepository.getSystemWorkflows();
+    final List<WorkflowEntity> list = workflowRepository.getSystemWorkflows();
 
     final List<WorkflowSummary> newList = new LinkedList<>();
     for (final WorkflowEntity entity : list) {
@@ -770,7 +766,7 @@ public class WorkflowServiceImpl implements WorkflowService {
   public List<WorkflowShortSummary> getSystemWorkflowShortSummaryList() {
     List<WorkflowShortSummary> summaryList = new LinkedList<>();
 
-    List<WorkflowEntity> workfows = workFlowRepository.getSystemWorkflows();
+    List<WorkflowEntity> workfows = workflowRepository.getSystemWorkflows();
     for (WorkflowEntity workflow : workfows) {
 
       if (WorkflowStatus.active.equals(workflow.getStatus())) {
@@ -808,7 +804,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   private List<String> buildAvailableParamList(String workFlowId, RevisionEntity revision) {
     List<String> parameters = new ArrayList<>();
-    WorkflowEntity workflow = workFlowRepository.getWorkflow(workFlowId);
+    WorkflowEntity workflow = workflowRepository.getWorkflow(workFlowId);
 
     if (flowSettingsService.getConfiguration("features", "globalParameters").getBooleanValue()) {
       Map<String, String> globalProperties = new HashMap<>();
@@ -899,7 +895,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   @Override
   public WorkflowSummary duplicateWorkflow(String id, DuplicateRequest duplicateRequest) {
-    WorkflowEntity existingWorkflow = workFlowRepository.getWorkflow(id);
+    WorkflowEntity existingWorkflow = workflowRepository.getWorkflow(id);
     String newName = existingWorkflow.getName() + " (duplicate)";
     existingWorkflow.setId(null);
     existingWorkflow.setName(newName);
@@ -956,7 +952,7 @@ public class WorkflowServiceImpl implements WorkflowService {
       return null;
     }
 
-    final List<WorkflowEntity> workflows = workFlowRepository.getUserWorkflows(user.getId());
+    final List<WorkflowEntity> workflows = workflowRepository.getUserWorkflows(user.getId());
 
     final List<WorkflowSummary> newList = new LinkedList<>();
     for (final WorkflowEntity entity : workflows) {
@@ -1097,14 +1093,14 @@ public class WorkflowServiceImpl implements WorkflowService {
     for (WorkflowEntity workflow : workflows) {
       workflowIds.add(workflow.getId());
     }
-    return flowWorkflowActivityService.findbyWorkflowIdsAndStatus(workflowIds,
+    return workflowActivityService.findbyWorkflowIdsAndStatus(workflowIds,
         TaskStatus.inProgress);
   }
 
   private List<ActivityEntity> getMonthlyWorkflowActivities(Pageable page, String userId) {
     Calendar c = Calendar.getInstance();
     c.set(Calendar.DAY_OF_MONTH, 1);
-    return flowWorkflowActivityService
+    return workflowActivityService
         .findAllActivitiesForUser(Optional.of(c.getTime()), Optional.of(new Date()), userId, page)
         .getContent();
   }
@@ -1132,7 +1128,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   @Override
   public List<TemplateWorkflowSummary> getTemplateWorkflows() {
-    List<WorkflowEntity> workflows = this.workFlowRepository.getTemplateWorkflows();
+    List<WorkflowEntity> workflows = this.workflowRepository.getTemplateWorkflows();
     List<TemplateWorkflowSummary> summaryList = new LinkedList<>();
 
     for (WorkflowEntity workflow : workflows) {
