@@ -284,6 +284,10 @@ public class PropertyManagerImpl implements PropertyManager {
 
     if (WorkflowScope.team.equals(workflow.getScope())) {
       FlowTeamEntity flowTeamEntity = this.flowTeamService.findById(workflow.getFlowTeamId());
+      if (flowTeamEntity == null) {
+        return;
+      }
+      
       List<FlowTeamConfiguration> teamConfig = null;
       if (flowTeamEntity.getSettings() != null) {
         teamConfig = flowTeamEntity.getSettings().getProperties();
