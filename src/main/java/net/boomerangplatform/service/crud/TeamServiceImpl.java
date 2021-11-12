@@ -366,6 +366,17 @@ public class TeamServiceImpl implements TeamService {
   @Override
   public WorkflowQuotas getTeamQuotas(String teamId) {
     FlowTeamEntity team = flowTeamService.findById(teamId);
+    
+    if (team == null) {
+      WorkflowQuotas quotas = new WorkflowQuotas();
+      quotas.setMaxConcurrentWorkflows(Integer.MAX_VALUE);
+      quotas.setMaxWorkflowExecutionMonthly(Integer.MAX_VALUE);
+      quotas.setMaxWorkflowExecutionTime(Integer.MAX_VALUE);
+      quotas.setCurrentConcurrentWorkflows(0);
+      quotas.setCurrentWorkflowCount(0);
+      return quotas;
+    }
+    
     List<WorkflowSummary> workflows = workflowService.getWorkflowsForTeam(team.getId());
     Pageable page = Pageable.unpaged();
     List<ActivityEntity> concurrentActivities = getConcurrentWorkflowActivities(teamId);
