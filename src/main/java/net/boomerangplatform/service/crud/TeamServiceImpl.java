@@ -374,6 +374,8 @@ public class TeamServiceImpl implements TeamService {
       quotas.setMaxWorkflowExecutionTime(Integer.MAX_VALUE);
       quotas.setCurrentConcurrentWorkflows(0);
       quotas.setCurrentWorkflowCount(0);
+      quotas.setCurrentWorkflowExecutionMonthly(0);
+      
       return quotas;
     }
     
