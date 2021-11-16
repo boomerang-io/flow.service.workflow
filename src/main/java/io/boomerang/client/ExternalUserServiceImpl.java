@@ -18,7 +18,7 @@ import io.boomerang.security.service.ApiTokenService;
 import io.boomerang.security.service.UserDetailsService;
 
 @Service
-public class ExternalUserServiceImpl implements ExernalUserService {
+public class ExternalUserServiceImpl implements ExternalUserService {
 
   @Value("${flow.externalUrl.user}")
   private String externalUserUrl;

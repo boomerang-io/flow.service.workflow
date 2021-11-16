@@ -1,20 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
+
 	<groupId>net.boomerangplatform</groupId>
 	<artifactId>service-flow</artifactId>
 	<version>${version.name}</version>
 	<packaging>jar</packaging>
 	<name>service-flow</name>
 	<description>Service for Flow</description>
+
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
 		<version>2.5.3</version>
 		<relativePath />
 	</parent>
+
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<java.version>11</java.version>
@@ -28,6 +29,7 @@
 		<jsonwebtoken.version>0.10.7</jsonwebtoken.version>
 		<jackson.databind.version>2.9.9.3</jackson.databind.version>
 	</properties>
+
 	<dependencies>
 		<dependency>
 			<groupId>org.springdoc</groupId>
@@ -40,12 +42,6 @@
 			<version>3.48.0</version>
 		</dependency>
 		<dependency>
-			<groupId>org.springdoc</groupId>
-			<artifactId>springdoc-openapi-ui</artifactId>
-			<version>1.5.8</version>
-		</dependency>
-		<!-- https://mvnrepository.com/artifact/org.apache.commons/commons-configuration2 -->
-		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-configuration2</artifactId>
 			<version>2.7</version>
@@ -56,7 +52,7 @@
 			<version>2.11.1</version>
 		</dependency>
 		<dependency>
-			<groupId>com.github.alturkovic</groupId>
+			<groupId>com.github.alturkovic.distributed-lock</groupId>
 			<artifactId>distributed-lock-mongo</artifactId>
 			<version>1.4.2</version>
 		</dependency>
@@ -69,11 +65,6 @@
 			<groupId>com.jayway.jsonpath</groupId>
 			<artifactId>json-path</artifactId>
 			<version>2.4.0</version>
-		</dependency>
-		<dependency>
-			<groupId>io.boomerang</groupId>
-			<artifactId>lib-jetstream</artifactId>
-			<version>0.0.2</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -113,10 +104,6 @@
 			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-web</artifactId>
 			<scope>runtime</scope>
-		</dependency>
-		<dependency>
-			<groupId>commons-codec</groupId>
-			<artifactId>commons-codec</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.commons</groupId>
@@ -176,7 +163,6 @@
 		<dependency>
 			<groupId>org.mongodb</groupId>
 			<artifactId>mongodb-driver-sync</artifactId>
-			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.mongodb</groupId>
@@ -206,10 +192,6 @@
 		<dependency>
 			<groupId>org.springframework.data</groupId>
 			<artifactId>spring-data-mongodb</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.mongodb</groupId>
-			<artifactId>mongodb-driver-sync</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.security</groupId>
@@ -260,8 +242,8 @@
 		</dependency>
 		<dependency>
 			<groupId>io.boomerang</groupId>
-			<artifactId>lib-jetstream</artifactId>
-			<version>0.0.2</version>
+			<artifactId>lib-eventing</artifactId>
+			<version>0.2.2</version>
 		</dependency>
 		<dependency>
 			<groupId>io.boomerang</groupId>
@@ -274,6 +256,7 @@
 			<version>9.1.5</version>
 		</dependency>
 	</dependencies>
+
 	<build>
 		<plugins>
 			<plugin>
@@ -332,10 +315,15 @@
 		</resources>
 		<finalName>${project.name}</finalName>
 	</build>
+
 	<repositories>
 		<repository>
 			<id>github</id>
-			<url>https://maven.pkg.github.com/boomerang-io/flow.lib.streaming</url>
+			<url>https://maven.pkg.github.com/boomerang-io/*</url>
+		</repository>
+		<repository>
+			<id>jitpack.io</id>
+			<url>https://jitpack.io</url>
 		</repository>
 	</repositories>
 </project>
