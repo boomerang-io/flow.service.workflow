@@ -409,6 +409,14 @@ public class ControllerClientImpl implements ControllerClient {
   public void submitTemplateTask(TaskService t, TaskClient flowTaskClient, Task task,
       String activityId, String workflowName, List<KeyValuePair> labels) {
 
+    ObjectMapper objectMapper = new ObjectMapper();
+    try {
+      System.out.println("******TASK*******");
+      System.out.println(objectMapper.writeValueAsString(task));
+    } catch (JsonProcessingException e1) {
+
+    }
+
     ActivityEntity activity = this.activityService.findWorkflowActivity(activityId);
 
     if (labels == null) {
