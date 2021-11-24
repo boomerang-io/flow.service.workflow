@@ -330,8 +330,12 @@ public class PropertyManagerImpl implements PropertyManager {
 
 
       String extractedValue = m.group(0);
-      
+
       System.out.println("********extractedValue****" + extractedValue);
+      if (extractedValue.contains("echo -n '{")) {
+        extractedValue.substring(extractedValue.indexOf("param"));
+
+      }
       String replaceValue = null;
 
       int start = m.start() - 2;
