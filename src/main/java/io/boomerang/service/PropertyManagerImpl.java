@@ -109,16 +109,6 @@ public class PropertyManagerImpl implements PropertyManager {
       buildTaskInputProperties(applicationProperties, task, activityId);
     }
 
-    ObjectMapper objectMapper = new ObjectMapper();
-    try {
-
-      System.out.println("***********appPRoperties******");
-      System.out.println(objectMapper.writeValueAsString(applicationProperties));
-    } catch (JsonProcessingException e) {
-   
-    }
-
-
     return applicationProperties;
   }
 
@@ -322,6 +312,15 @@ public class PropertyManagerImpl implements PropertyManager {
       ControllerRequestProperties applicationProperties) {
 
     Map<String, String> executionProperties = applicationProperties.getMap(true);
+
+    ObjectMapper objectMapper = new ObjectMapper();
+    try {
+      System.out.println("********value****" + value);
+      System.out.println("********executionProps*****");
+      System.out.println(objectMapper.writeValueAsString(executionProperties));
+    } catch (JsonProcessingException e) {
+
+    }
 
     String regex = "(?<=\\$\\().+?(?=\\))";
     Pattern pattern = Pattern.compile(regex);
