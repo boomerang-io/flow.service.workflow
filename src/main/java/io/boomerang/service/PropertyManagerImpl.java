@@ -15,6 +15,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.boomerang.model.Task;
 import io.boomerang.model.WorkflowSummary;
 import io.boomerang.model.WorkflowToken;
@@ -105,6 +107,15 @@ public class PropertyManagerImpl implements PropertyManager {
 
     if (task != null) {
       buildTaskInputProperties(applicationProperties, task, activityId);
+    }
+
+    ObjectMapper objectMapper = new ObjectMapper();
+    try {
+
+      System.out.println("***********appPRoperties******");
+      System.out.println(objectMapper.writeValueAsString(applicationProperties));
+    } catch (JsonProcessingException e) {
+   
     }
 
 
