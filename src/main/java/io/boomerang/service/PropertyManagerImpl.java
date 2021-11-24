@@ -332,7 +332,7 @@ public class PropertyManagerImpl implements PropertyManager {
       String extractedValue = m.group(0);
 
       System.out.println("********extractedValue****" + extractedValue);
-      if (extractedValue.contains("echo -n '{")) {
+      if (extractedValue.contains("echo -n '{") && extractedValue.contains("param")) {
         extractedValue.substring(extractedValue.indexOf("param"));
 
       }
