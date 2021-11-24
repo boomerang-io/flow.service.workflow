@@ -315,7 +315,6 @@ public class PropertyManagerImpl implements PropertyManager {
 
     ObjectMapper objectMapper = new ObjectMapper();
     try {
-      System.out.println("********value****" + value);
       System.out.println("********executionProps*****");
       System.out.println(objectMapper.writeValueAsString(executionProperties));
     } catch (JsonProcessingException e) {
@@ -328,12 +327,18 @@ public class PropertyManagerImpl implements PropertyManager {
     List<String> originalValues = new LinkedList<>();
     List<String> newValues = new LinkedList<>();
     while (m.find()) {
+
+
       String extractedValue = m.group(0);
+      
+      System.out.println("********extractedValue****" + extractedValue);
       String replaceValue = null;
 
       int start = m.start() - 2;
       int end = m.end() + 1;
       String[] components = extractedValue.split("\\.");
+
+      System.out.println("********componentsLength****" + components.length);
 
       if (components.length == 2) {
         List<String> reservedList = Arrays.asList(reserved);
