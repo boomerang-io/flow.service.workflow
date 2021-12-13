@@ -1,5 +1,6 @@
 package io.boomerang.mongo.entity;
 
+import java.util.Date;
 import org.springframework.data.mongodb.core.mapping.Document;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -13,6 +14,7 @@ public class WorkflowScheduleEntity {
 
   private String id;
   private String workflowId;
+  private Date creationDate;
   private WorkflowScheduleStatus status = WorkflowScheduleStatus.active;
   private String schedule;
   private String timezone;
@@ -30,6 +32,12 @@ public class WorkflowScheduleEntity {
   public void setWorkflowId(String workflowId) {
     this.workflowId = workflowId;
   }
+  public Date getCreationDate() {
+    return creationDate;
+  }
+  public void setCreationDate(Date creationDate) {
+    this.creationDate = creationDate;
+  }  
   public WorkflowScheduleStatus getStatus() {
     return status;
   }
@@ -53,5 +61,5 @@ public class WorkflowScheduleEntity {
   }
   public void setAdvancedCron(Boolean advancedCron) {
     this.advancedCron = advancedCron;
-  }  
+  }
 }

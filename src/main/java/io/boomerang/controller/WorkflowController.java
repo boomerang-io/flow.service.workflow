@@ -179,4 +179,11 @@ public class WorkflowController {
   public CronValidationResponse validateCron(@RequestParam String cron) {
     return workflowService.validateCron(cron);
   }
+  
+  @PostMapping(value = "/{id}/token")
+  public void importWorkflow(@RequestBody WorkflowExport export, @RequestParam Boolean update,
+      @RequestParam(required = false) String flowTeamId,
+      @RequestParam(required = true) WorkflowScope scope) {
+    workflowService.importWorkflow(export, update, flowTeamId, scope);
+  }
 }
