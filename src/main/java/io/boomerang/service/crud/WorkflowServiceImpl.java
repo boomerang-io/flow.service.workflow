@@ -139,6 +139,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     entity.setStatus(WorkflowStatus.deleted);
     workflowRepository.saveWorkflow(entity);
 
+//    TODO: do we both with all the trigger checks or just try, and safely fail, deleting them.
     if (entity.getTriggers() != null) {
       Triggers trigger = entity.getTriggers();
       if (trigger != null) {

@@ -29,11 +29,13 @@ import io.boomerang.model.RevisionResponse;
 import io.boomerang.model.WorkflowExport;
 import io.boomerang.model.WorkflowSummary;
 import io.boomerang.mongo.entity.WorkflowEntity;
+import io.boomerang.mongo.entity.WorkflowScheduleEntity;
 import io.boomerang.mongo.model.WorkflowProperty;
 import io.boomerang.mongo.model.WorkflowScope;
 import io.boomerang.mongo.model.WorkflowStatus;
 import io.boomerang.mongo.service.FlowWorkflowService;
 import io.boomerang.service.UserIdentityService;
+import io.boomerang.service.crud.WorkflowScheduleService;
 import io.boomerang.service.crud.WorkflowService;
 import io.boomerang.service.crud.WorkflowVersionService;
 
@@ -52,6 +54,9 @@ public class WorkflowController {
 
   @Autowired
   private UserIdentityService userIdentityService;
+
+  @Autowired
+  private WorkflowScheduleService workflowScheduleService;
 
   @DeleteMapping(value = "{id}")
   public void deleteWorkflowWithId(@PathVariable String id) {
@@ -179,4 +184,11 @@ public class WorkflowController {
   public CronValidationResponse validateCron(@RequestParam String cron) {
     return workflowService.validateCron(cron);
   }
+  
+  @PostMapping(value = "/{workFlowId}/schedule")
+  public void scheduleWorkflow(@PathVariable String workFlowId,
+      @RequestBody WorkflowScheduleEntity workflowScheduleEntity) {
+     workflowScheduleService.createSchedule(workflowScheduleEntity);
+  }
+
 }

@@ -6,6 +6,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.quartz.SchedulerException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 import io.boomerang.mongo.entity.WorkflowEntity;
 import io.boomerang.mongo.entity.WorkflowScheduleEntity;
 import io.boomerang.mongo.model.WorkflowScheduleStatus;
@@ -13,6 +14,7 @@ import io.boomerang.mongo.service.FlowWorkflowScheduleService;
 import io.boomerang.mongo.service.FlowWorkflowService;
 import io.boomerang.quartz.ScheduledTasks;
 
+@Service
 public class WorkflowScheduleServiceImpl implements WorkflowScheduleService {
 
   private final Logger logger = LogManager.getLogger(getClass());
