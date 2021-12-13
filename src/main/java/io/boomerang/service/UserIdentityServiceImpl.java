@@ -12,7 +12,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
+<<<<<<< HEAD
 import io.boomerang.client.ExternalUserService;
+=======
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.boomerang.client.ExernalUserService;
+>>>>>>> 755c1a9 (Npe debugg logging (#125))
 import io.boomerang.client.model.UserProfile;
 import io.boomerang.model.FlowUser;
 import io.boomerang.model.OneTimeCode;
