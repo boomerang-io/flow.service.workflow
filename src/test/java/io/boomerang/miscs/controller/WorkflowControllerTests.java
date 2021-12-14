@@ -244,6 +244,8 @@ public class WorkflowControllerTests extends FlowTests {
     schedule.setTimezone("timezone");
 
     workflowScheduleService.createSchedule(schedule);
+    
+    //TODO: add logic to do one test with the scehdule trigger enabled and one without. and make sure things get updated.
   }
 
   @Test
@@ -252,8 +254,6 @@ public class WorkflowControllerTests extends FlowTests {
 
     TriggerScheduler scheduler = new TriggerScheduler();
     scheduler.setEnable(true);
-    scheduler.setSchedule("0 00 20 ? * TUE,WED,THU *");
-    scheduler.setTimezone("timezone");
 
     TriggerEvent webhook = new TriggerEvent();
     webhook.setEnable(false);
@@ -263,8 +263,6 @@ public class WorkflowControllerTests extends FlowTests {
     Assertions.assertNotNull(entity.getTriggers());
     Assertions.assertNotNull(entity.getTriggers().getWebhook());
     Assertions.assertEquals(false, entity.getTriggers().getScheduler().getEnable());
-    Assertions.assertEquals("", entity.getTriggers().getScheduler().getSchedule());
-    Assertions.assertEquals("", entity.getTriggers().getScheduler().getTimezone());
     Assertions.assertEquals(true, entity.getTriggers().getWebhook().getEnable());
     Assertions.assertEquals("A5DF2F840C0DFF496D516B4F75BD947C9BC44756A8AE8571FC45FCB064323641",
         entity.getTriggers().getWebhook().getToken());
@@ -278,9 +276,6 @@ public class WorkflowControllerTests extends FlowTests {
     Assertions.assertEquals("5d1a188af6ca2c00014c4314", updatedEntity.getId());
 
     Assertions.assertEquals(true, updatedEntity.getTriggers().getScheduler().getEnable());
-    Assertions.assertEquals("0 00 20 ? * TUE,WED,THU *",
-        updatedEntity.getTriggers().getScheduler().getSchedule());
-    Assertions.assertEquals("timezone", updatedEntity.getTriggers().getScheduler().getTimezone());
     Assertions.assertEquals(false, updatedEntity.getTriggers().getWebhook().getEnable());
     Assertions.assertEquals("A5DF2F840C0DFF496D516B4F75BD947C9BC44756A8AE8571FC45FCB064323641",
         updatedEntity.getTriggers().getWebhook().getToken());
