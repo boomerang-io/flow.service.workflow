@@ -55,9 +55,11 @@ public class WorkflowScheduleServiceImpl implements WorkflowScheduleService {
   @Override
   public void createSchedule(final WorkflowScheduleEntity schedule) {
 //    TODO: do we have to map a model to the entity for external consumption
+    logger.info("*** Inside Create Schedule ***");
     if (schedule != null) {
       WorkflowEntity wfEntity = workflowRepository.getWorkflow(schedule.getWorkflowId());
       if (wfEntity != null && wfEntity.getTriggers().getScheduler().getEnable()) {
+        logger.info("*** Inside Checks ***");
           //TODO: do we have to check if any of the elements on the Schedule are invalid? such as the cron?
           workflowScheduleRepository.saveSchedule(schedule);
           if (WorkflowScheduleStatus.active.equals(schedule.getStatus())) {

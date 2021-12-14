@@ -29,11 +29,13 @@ import io.boomerang.model.RevisionResponse;
 import io.boomerang.model.WorkflowExport;
 import io.boomerang.model.WorkflowSummary;
 import io.boomerang.mongo.entity.WorkflowEntity;
+import io.boomerang.mongo.entity.WorkflowScheduleEntity;
 import io.boomerang.mongo.model.WorkflowProperty;
 import io.boomerang.mongo.model.WorkflowScope;
 import io.boomerang.mongo.model.WorkflowStatus;
 import io.boomerang.mongo.service.FlowWorkflowService;
 import io.boomerang.service.UserIdentityService;
+import io.boomerang.service.crud.WorkflowScheduleService;
 import io.boomerang.service.crud.WorkflowService;
 import io.boomerang.service.crud.WorkflowVersionService;
 
@@ -46,6 +48,9 @@ public class WorkflowController {
 
   @Autowired
   private WorkflowVersionService workflowVersionService;
+
+  @Autowired
+  private WorkflowScheduleService workflowScheduleService;
 
   @Autowired
   private FlowWorkflowService workFlowRepository;
@@ -180,10 +185,8 @@ public class WorkflowController {
     return workflowService.validateCron(cron);
   }
   
-  @PostMapping(value = "/{id}/token")
-  public void importWorkflow(@RequestBody WorkflowExport export, @RequestParam Boolean update,
-      @RequestParam(required = false) String flowTeamId,
-      @RequestParam(required = true) WorkflowScope scope) {
-    workflowService.importWorkflow(export, update, flowTeamId, scope);
+  @PostMapping(value = "/{workflowId}/schedules")
+  public void createSchedule(@PathVariable String workflowId, @RequestBody WorkflowScheduleEntity schedule) {
+    workflowScheduleService.createSchedule(schedule);
   }
 }

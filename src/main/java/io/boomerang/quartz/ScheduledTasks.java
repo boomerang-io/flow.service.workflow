@@ -73,7 +73,9 @@ public class ScheduledTasks {
       String workflowId = schedule.getWorkflowId();
       Scheduler scheduler = schedulerFactoryBean.getScheduler();
       JobDetail jobDetail =
-          JobBuilder.newJob(FlowQuartzJob.class).withIdentity(scheduleId, workflowId).build();
+          JobBuilder.newJob(WorkflowExecuteJob.class).withIdentity(scheduleId, workflowId).build();
+      
+      logger.info(jobDetail.toString());
 
       try {
         if (!scheduler.checkExists(jobDetail.getKey())) {
@@ -82,6 +84,8 @@ public class ScheduledTasks {
 
           CronTrigger trigger = TriggerBuilder.newTrigger().withIdentity(scheduleId, workflowId)
               .withSchedule(scheduleBuilder).build();
+          
+          //TODO: for runOnce SimpleScheduleBuilder
           try {
             scheduler.scheduleJob(jobDetail, trigger);
             logger.info("Scheduled Schedule: {} for Workflow: {}.", scheduleId, workflowId);

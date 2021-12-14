@@ -39,6 +39,7 @@ import io.boomerang.model.WorkflowSummary;
 import io.boomerang.model.projectstormv5.RestConfig;
 import io.boomerang.mongo.entity.RevisionEntity;
 import io.boomerang.mongo.entity.WorkflowEntity;
+import io.boomerang.mongo.entity.WorkflowScheduleEntity;
 import io.boomerang.mongo.model.ActivityStorage;
 import io.boomerang.mongo.model.Storage;
 import io.boomerang.mongo.model.TaskConfigurationNode;
@@ -47,8 +48,10 @@ import io.boomerang.mongo.model.TriggerScheduler;
 import io.boomerang.mongo.model.Triggers;
 import io.boomerang.mongo.model.WorkflowConfiguration;
 import io.boomerang.mongo.model.WorkflowProperty;
+import io.boomerang.mongo.model.WorkflowScheduleStatus;
 import io.boomerang.mongo.model.WorkflowScope;
 import io.boomerang.mongo.model.WorkflowStatus;
+import io.boomerang.service.crud.WorkflowScheduleService;
 
 
 @ExtendWith(SpringExtension.class)
@@ -63,6 +66,9 @@ public class WorkflowControllerTests extends FlowTests {
 
   @Autowired
   private InternalController internalController;
+  
+  @Autowired
+  private WorkflowScheduleService workflowScheduleService;
 
   @Test
   public void testInternalWorkflowListing() {
@@ -226,6 +232,18 @@ public class WorkflowControllerTests extends FlowTests {
             getOptionalOrder(Direction.ASC), getOptionalString("sort"), 0, 2147483647);
     Assertions.assertEquals(1, response.size());
     Assertions.assertEquals(1, response.get(0).getVersion());
+  }
+  
+  @Test
+  @Disabled
+  public void testCreateWorkflowSchedule() {
+
+    WorkflowScheduleEntity schedule = new WorkflowScheduleEntity();
+    schedule.setStatus(WorkflowScheduleStatus.active);
+    schedule.setSchedule("0 00 20 ? * TUE,WED,THU *");
+    schedule.setTimezone("timezone");
+
+    workflowScheduleService.createSchedule(schedule);
   }
 
   @Test
