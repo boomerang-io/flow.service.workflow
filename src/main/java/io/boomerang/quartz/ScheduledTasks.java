@@ -88,6 +88,7 @@ public class ScheduledTasks {
           //TODO: for runOnce SimpleScheduleBuilder
           try {
             scheduler.scheduleJob(jobDetail, trigger);
+//            scheduler.start();
             logger.info("Scheduled Schedule: {} for Workflow: {}.", scheduleId, workflowId);
           } catch (SchedulerException e) {
             logger.error(e);

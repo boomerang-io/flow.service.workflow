@@ -44,7 +44,6 @@ public class WorkflowScheduleServiceImpl implements WorkflowScheduleService {
       try {
         this.taskScheduler.cancelJob(schedule.getId());
         this.taskScheduler.scheduleWorkflow(schedule);
-
       } catch (SchedulerException e) {
         logger.info("Unable to reschedule job.");
         logger.error(e);
