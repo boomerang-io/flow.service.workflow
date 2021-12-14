@@ -19,7 +19,6 @@ import io.boomerang.mongo.entity.ActivityEntity;
 import io.boomerang.mongo.entity.RevisionEntity;
 import io.boomerang.mongo.entity.WorkflowEntity;
 import io.boomerang.mongo.model.WorkflowScope;
-import io.boomerang.mongo.model.WorkflowStatus;
 import io.boomerang.mongo.service.RevisionService;
 import io.boomerang.service.crud.FlowActivityService;
 import io.boomerang.service.crud.WorkflowService;
