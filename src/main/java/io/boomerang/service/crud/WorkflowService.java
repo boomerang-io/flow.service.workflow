@@ -67,4 +67,6 @@ public interface WorkflowService {
   CronValidationResponse validateCron(String cron);
 
   UserWorkflowSummary getUserWorkflows(String userId);
+
+  boolean canExecuteTeamWorkflow(String teamId);
 }

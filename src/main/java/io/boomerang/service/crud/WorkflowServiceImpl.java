@@ -612,22 +612,6 @@ public class WorkflowServiceImpl implements WorkflowService {
   }
 
   @Override
-  public boolean canExecuteWorkflowForQuotas(String teamId) {
-    if (!flowSettingsService.getConfiguration("features", "workflowQuotas").getBooleanValue()) {
-      return true;
-    }
-
-    WorkflowQuotas workflowQuotas = teamService.getTeamQuotas(teamId);
-    if (workflowQuotas.getCurrentConcurrentWorkflows() >= workflowQuotas.getMaxConcurrentWorkflows()
-        || workflowQuotas.getCurrentWorkflowExecutionMonthly() >= workflowQuotas
-            .getMaxWorkflowExecutionMonthly()) {
-      return false;
-    } else {
-      return true;
-    }
-  }
-
-  @Override
   public List<WorkflowShortSummary> getWorkflowShortSummaryList() {
     List<WorkflowShortSummary> summaryList = new LinkedList<>();
     List<WorkflowEntity> workfows = workflowRepository.getAllWorkflows();
@@ -688,20 +672,14 @@ public class WorkflowServiceImpl implements WorkflowService {
    */
   @Override
   public boolean canExecuteWorkflow(String workflowId, Optional<String> trigger) {
-
     // Check no further if trigger not provided or is not Manual or Schedule
     if (!trigger.isPresent() || (!FlowTriggerEnum.manual.toString().equals(trigger.get()) && (!FlowTriggerEnum.scheduler.toString().equals(trigger.get())))) {
       return true;
     }
     
-    // Check if Workflow exists and is active
+    // Check if Workflow exists and is active. Then check triggers are enabled.
     WorkflowEntity workflow = workflowRepository.getWorkflow(workflowId);
-    if (workflow != null) {
-      Boolean isActive = teamService.getTeamById(workflow.getFlowTeamId()).getIsActive();
-      if (isActive == null || !isActive) {
-        return false;
-      }
-
+    if (workflow != null && WorkflowStatus.active.equals(workflow.getStatus())) {
       if (workflow.getTriggers() != null) {
         Triggers triggers = workflow.getTriggers();
         if (FlowTriggerEnum.manual.toString().equals(trigger.get()) && triggers.getManual() != null) {
@@ -718,6 +696,35 @@ public class WorkflowServiceImpl implements WorkflowService {
       }
     }
     return false;
+  }
+  
+  /*
+   * Checks if the Workflow's Team is active and is of scope Team can be executed based on an active workflow and enabled triggers.
+   * 
+   * If trigger is Manual or Schedule then a deeper check is used to check if those triggers are enabled.
+   * 
+   * @param     teamId      the Workflows Team ID
+   * @return    Boolean         whether the workflow can execute or not
+   */
+  @Override
+  public boolean canExecuteTeamWorkflow(String teamId) {
+    return teamService.getTeamById(teamId).getIsActive();
+  }
+  
+  @Override
+  public boolean canExecuteWorkflowForQuotas(String teamId) {
+    if (!flowSettingsService.getConfiguration("features", "workflowQuotas").getBooleanValue()) {
+      return true;
+    }
+
+    WorkflowQuotas workflowQuotas = teamService.getTeamQuotas(teamId);
+    if (workflowQuotas.getCurrentConcurrentWorkflows() >= workflowQuotas.getMaxConcurrentWorkflows()
+        || workflowQuotas.getCurrentWorkflowExecutionMonthly() >= workflowQuotas
+            .getMaxWorkflowExecutionMonthly()) {
+      return false;
+    } else {
+      return true;
+    }
   }
   
   @Override
