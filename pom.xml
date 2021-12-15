@@ -333,10 +333,6 @@
 			<id>boomeranglib-maven</id>
 			<url>https://tools.boomerangplatform.net/artifactory/boomeranglib-maven</url>
 		</repository>
-		<repository>
-			<id>michaelklishin</id>
-			<url>https://dl.bintray.com/michaelklishin/maven/</url>
-		</repository>
 	</repositories>
 
 </project>
