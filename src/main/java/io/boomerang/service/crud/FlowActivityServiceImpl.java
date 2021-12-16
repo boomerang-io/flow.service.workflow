@@ -89,6 +89,7 @@ import io.boomerang.service.UserIdentityService;
 import io.boomerang.service.refactor.ControllerRequestProperties;
 import io.boomerang.service.runner.misc.ControllerClient;
 import io.boomerang.util.DateUtil;
+import io.boomerang.util.ParameterMapper;
 
 @Service
 public class FlowActivityServiceImpl implements FlowActivityService {
@@ -223,16 +224,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
     }
 
     if (request.getProperties() != null) {
-      Map<String, String> properties = request.getProperties();
-      List<KeyValuePair> propertyList = new LinkedList<>();
-      for (Map.Entry<String, String> entry : properties.entrySet()) {
-        String key = entry.getKey();
-        String value = properties.get(key);
-        KeyValuePair prop = new KeyValuePair();
-        prop.setKey(key);
-        prop.setValue(value);
-        propertyList.add(prop);
-      }
+      List<KeyValuePair> propertyList = ParameterMapper.mapToKeyValuePairList(request.getProperties());
       activity.setProperties(propertyList);
     }
     return flowActivityService.saveWorkflowActivity(activity);
