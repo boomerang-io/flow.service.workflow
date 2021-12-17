@@ -192,6 +192,11 @@ public class WorkflowController {
     return workflowScheduleService.getSchedules(workflowId);
   }
   
+  @GetMapping(value = "/{workflowId}/schedules/calendar")
+  public List<Date> getSchedulesForDates(@PathVariable String workflowId, @RequestParam Date startDate, @RequestParam Date endDate) {
+    return workflowScheduleService.getSchedulesForDates(workflowId, startDate, endDate);
+  }
+  
   @PatchMapping(value = "/{workflowId}/schedule")
   public WorkflowSchedule createSchedule(@PathVariable String workflowId, @RequestBody WorkflowSchedule schedule) {
     return workflowScheduleService.createSchedule(workflowId, schedule);
@@ -203,7 +208,7 @@ public class WorkflowController {
   }
   
   @GetMapping(value = "/{workflowId}/schedule/{scheduleId}/calendar")
-  public List<Date> getSchedules(@PathVariable String workflowId, @PathVariable String scheduleId, @RequestParam Date startDate, @RequestParam Date endDate) {
+  public List<Date> getScheduleForDates(@PathVariable String workflowId, @PathVariable String scheduleId, @RequestParam Date startDate, @RequestParam Date endDate) {
     return workflowScheduleService.getScheduleForDates(workflowId, scheduleId, startDate, endDate);
   }
   

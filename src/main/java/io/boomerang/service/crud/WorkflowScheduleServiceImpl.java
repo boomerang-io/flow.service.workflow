@@ -65,6 +65,14 @@ public class WorkflowScheduleServiceImpl implements WorkflowScheduleService {
   
   @Override
   public List<Date> getSchedulesForDates(final String workflowId, Date fromDate, Date toDate) {
+    List<Date> scheduleDates = new LinkedList<>();
+    final List<WorkflowScheduleEntity> scheduleEntities = workflowScheduleRepository.getSchedulesForWorkflow(workflowId);
+    if (scheduleEntities != null) {
+      scheduleEntities.forEach(e -> {
+        scheduleDates.addAll(getScheduleForDates(workflowId, e.getId(), fromDate, toDate));
+      });
+      return scheduleDates;
+    }
     return null;
   }
   
