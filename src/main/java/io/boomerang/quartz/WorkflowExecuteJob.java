@@ -3,7 +3,6 @@ package io.boomerang.quartz;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import org.quartz.DisallowConcurrentExecution;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -13,22 +12,16 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.scheduling.quartz.QuartzJobBean;
 import org.springframework.scheduling.quartz.SchedulerFactoryBean;
-import org.springframework.stereotype.Component;
 import io.boomerang.controller.ExecutionController;
 import io.boomerang.model.FlowExecutionRequest;
 import io.boomerang.mongo.model.FlowTriggerEnum;
 
 @PersistJobDataAfterExecution
-@DisallowConcurrentExecution
-//@Component
 public class WorkflowExecuteJob extends QuartzJobBean {
 
   private static final Logger logger = LoggerFactory.getLogger(WorkflowExecuteJob.class);
 
   private ApplicationContext applicationContext;
-  
-//  @Autowired
-//  ExecutionController executionController;
 
   /**
    * This method is called by Spring since we set the
@@ -47,7 +40,7 @@ public class WorkflowExecuteJob extends QuartzJobBean {
   @Override
   protected void executeInternal(JobExecutionContext context) throws JobExecutionException {
     JobDetail jobDetail = context.getJobDetail();
-    logger.info("This is the FlowQuartzJob, executed for {} with JobDetails = {}",
+    logger.info("This is the Quartz WorkflowExecuteJob, executed for {} with JobDetails = {}",
         jobDetail.getKey().getName(), jobDetail.getJobDataMap());
     
     if (applicationContext == null) {
@@ -58,9 +51,8 @@ public class WorkflowExecuteJob extends QuartzJobBean {
 
     String workflowId = jobDetail.getKey().getGroup();
     
-    logger.info(workflowId);
-    
     Map<String, String> properties = new HashMap<>();
+    
     
     //TODO: get the workflow parameters off the schedule
 

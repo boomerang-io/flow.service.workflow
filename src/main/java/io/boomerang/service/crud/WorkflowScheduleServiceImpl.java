@@ -1,18 +1,32 @@
 package io.boomerang.service.crud;
 
+
+import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.Optional;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.quartz.SchedulerException;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import com.cronutils.mapper.CronMapper;
+import com.cronutils.model.Cron;
+import com.cronutils.model.CronType;
+import com.cronutils.model.definition.CronDefinitionBuilder;
+import com.cronutils.parser.CronParser;
+import io.boomerang.model.CronValidationResponse;
+import io.boomerang.model.WorkflowSchedule;
 import io.boomerang.mongo.entity.WorkflowEntity;
 import io.boomerang.mongo.entity.WorkflowScheduleEntity;
+import io.boomerang.mongo.model.KeyValuePair;
 import io.boomerang.mongo.model.WorkflowScheduleStatus;
+import io.boomerang.mongo.model.WorkflowScheduleType;
 import io.boomerang.mongo.service.FlowWorkflowScheduleService;
 import io.boomerang.mongo.service.FlowWorkflowService;
-import io.boomerang.quartz.ScheduledTasks;
+import io.boomerang.quartz.QuartzSchedulerService;
+import io.boomerang.util.ParameterMapper;
 
 @Service
 public class WorkflowScheduleServiceImpl implements WorkflowScheduleService {
@@ -20,74 +34,123 @@ public class WorkflowScheduleServiceImpl implements WorkflowScheduleService {
   private final Logger logger = LogManager.getLogger(getClass());
 
   @Autowired
-  private ScheduledTasks taskScheduler;
+  private QuartzSchedulerService taskScheduler;
 
   @Autowired
   private FlowWorkflowScheduleService workflowScheduleRepository;
 
   @Autowired
   private FlowWorkflowService workflowRepository;
-
-  private void scheduleWorkflow(final WorkflowScheduleEntity schedule, WorkflowScheduleStatus previousStatus, WorkflowScheduleStatus currentStatus) {
-    boolean previous = WorkflowScheduleStatus.active.equals(previousStatus);
-    boolean current = WorkflowScheduleStatus.active.equals(currentStatus);
-    if (!previous && current) {
-      this.taskScheduler.scheduleWorkflow(schedule);
-    } else if (previous && !current) {
+  
+  @Override
+  public List<WorkflowSchedule> getSchedules(String workflowId) {
+    List<WorkflowSchedule> schedules = new LinkedList<>();
+    final List<WorkflowScheduleEntity> entities = workflowScheduleRepository.getSchedulesForWorkflow(workflowId);
+    if (entities != null) {
+      entities.forEach(e -> {
+        schedules.add(new WorkflowSchedule(e));
+      });
+    }
+    return schedules;
+  }
+  
+  @Override
+  public WorkflowSchedule getSchedule(String workflowId, String scheduleId) {
+    final WorkflowScheduleEntity scheduleEntity = workflowScheduleRepository.getSchedule(scheduleId);
+    if (scheduleEntity != null && workflowId.equals(scheduleEntity.getWorkflowId())) {
+      return new WorkflowSchedule(scheduleEntity);
+    }
+    return null;
+  }
+  
+  @Override
+  public List<Date> getSchedulesForDates(final String workflowId, Date fromDate, Date toDate) {
+    return null;
+  }
+  
+  @Override
+  public List<Date> getScheduleForDates(final String workflowId, final String scheduleId, Date fromDate, Date toDate) {
+    final WorkflowScheduleEntity scheduleEntity = workflowScheduleRepository.getSchedule(scheduleId);
+    if (scheduleEntity != null && workflowId.equals(scheduleEntity.getWorkflowId())) {
       try {
-        this.taskScheduler.cancelJob(schedule.getId());
+        return this.taskScheduler.getJobTriggerDates(scheduleEntity, fromDate, toDate);
       } catch (SchedulerException e) {
-        logger.info("Unable to cancel schedule job.");
-        logger.error(e);
-      }
-    } else if (current) {
-      try {
-        this.taskScheduler.cancelJob(schedule.getId());
-        this.taskScheduler.scheduleWorkflow(schedule);
-      } catch (SchedulerException e) {
-        logger.info("Unable to reschedule job.");
-        logger.error(e);
+        // TODO Auto-generated catch block
+        e.printStackTrace();
       }
     }
+    return null;
   }
   
   @Override
-  public void createSchedule(final WorkflowScheduleEntity schedule) {
-//    TODO: do we have to map a model to the entity for external consumption
-    logger.info("*** Inside Create Schedule ***");
-    if (schedule != null) {
+  public WorkflowSchedule createSchedule(final String workflowId, final WorkflowSchedule schedule) {
+//  TODO: do we have to check if they have authorization to create a workflow against that team?
+//  TODO: do we have to check if any of the elements on the Schedule are invalid? such as the cron?
+//  TODO: return an error if the minimum required fields arent provided.
+
+    if (schedule != null && schedule.getWorkflowId() != null && workflowId.equals(schedule.getWorkflowId())) {
       WorkflowEntity wfEntity = workflowRepository.getWorkflow(schedule.getWorkflowId());
-      if (wfEntity != null && wfEntity.getTriggers().getScheduler().getEnable()) {
-        logger.info("*** Inside Checks ***");
-          //TODO: do we have to check if any of the elements on the Schedule are invalid? such as the cron?
-          workflowScheduleRepository.saveSchedule(schedule);
-          if (WorkflowScheduleStatus.active.equals(schedule.getStatus())) {
-            scheduleWorkflow(schedule, null, schedule.getStatus());
+      if (wfEntity != null) {
+          schedule.setCreationDate(new Date());
+          WorkflowScheduleEntity scheduleEntity = new WorkflowScheduleEntity();
+          BeanUtils.copyProperties(schedule, scheduleEntity);
+          if (schedule.getParametersMap() != null && !schedule.getParametersMap().isEmpty()) {
+            List<KeyValuePair> propertyList = ParameterMapper.mapToKeyValuePairList(schedule.getParametersMap());
+            scheduleEntity.setParameters(propertyList);
           }
+          workflowScheduleRepository.saveSchedule(scheduleEntity);
+          Boolean enableJob = false;
+          if (WorkflowScheduleStatus.active.equals(schedule.getStatus()) && wfEntity.getTriggers().getScheduler().getEnable()) {
+            enableJob = true;
+          }
+          createOrUpdateSchedule(scheduleEntity, enableJob);
+          return new WorkflowSchedule(scheduleEntity);
         }
       }
-//      TODO: return an error stating the Scheduler Trigger is not enabled.
+    return null;
   }
   
   @Override
-  public void updateSchedule(final WorkflowScheduleEntity schedule) {
-//    TODO: do we have to map a model to the entity for external consumption
-    if (schedule != null) {
-      WorkflowEntity wfEntity = workflowRepository.getWorkflow(schedule.getWorkflowId());
-      if (wfEntity != null && wfEntity.getTriggers().getScheduler().getEnable()) {
-        WorkflowScheduleEntity previousSchedule = workflowScheduleRepository.getSchedule(schedule.getId());
-        if (previousSchedule != null) {
-          //schedule exists and so we can update it.
-          //TODO: do we have to check if any of the elements on the Schedule are invalid? such as the cron?
-          workflowScheduleRepository.saveSchedule(schedule);
-          if (WorkflowScheduleStatus.active.equals(schedule.getStatus())) {
-            scheduleWorkflow(schedule, previousSchedule.getStatus(), schedule.getStatus());
+  public WorkflowSchedule updateSchedule(final String workflowId, final String scheduleId, final WorkflowSchedule patchSchedule) {
+    if (patchSchedule != null) {
+      WorkflowEntity wfEntity = workflowRepository.getWorkflow(workflowId);
+      if (wfEntity != null) {
+        WorkflowScheduleEntity scheduleEntity = workflowScheduleRepository.getSchedule(scheduleId);
+        if (scheduleEntity != null) {
+          BeanUtils.copyProperties(patchSchedule, scheduleEntity, "id", "workflowId", "creationDate", "parameters", "parametersMap");
+          if (patchSchedule.getParametersMap() != null && !patchSchedule.getParametersMap().isEmpty()) {
+            List<KeyValuePair> propertyList = ParameterMapper.mapToKeyValuePairList(patchSchedule.getParametersMap());
+            scheduleEntity.setParameters(propertyList);
           }
+          workflowScheduleRepository.saveSchedule(scheduleEntity);
+          Boolean enableJob = false;
+          if (WorkflowScheduleStatus.active.equals(scheduleEntity.getStatus()) && wfEntity.getTriggers().getScheduler().getEnable()) {
+            enableJob = true;
+          }
+          createOrUpdateSchedule(scheduleEntity, enableJob);
+          return new WorkflowSchedule(scheduleEntity);
         }
-        //TODO: return a failure that the schedule can't be updated because it didn't exist
+      }        
+    }
+    return null;
+  }
+
+  private void createOrUpdateSchedule(final WorkflowScheduleEntity schedule, Boolean enableJob) {
+    try {
+      if (WorkflowScheduleType.runOnce.equals(schedule.getType())) {
+        this.taskScheduler.createOrUpdateRunOnceJob(schedule);
+      } else {
+        this.taskScheduler.createOrUpdateCronJob(schedule);
       }
-//      TODO: return an error stating the Scheduler Trigger is not enabled.
-        
+      if (!enableJob) {
+        this.taskScheduler.pauseJob(schedule);
+      }
+    } catch (SchedulerException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    } catch (Exception e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
     }
   }
   
@@ -97,7 +160,7 @@ public class WorkflowScheduleServiceImpl implements WorkflowScheduleService {
     if (schedule!= null && !WorkflowScheduleStatus.deleted.equals(schedule.getStatus())) {
       schedule.setStatus(WorkflowScheduleStatus.active);
       workflowScheduleRepository.saveSchedule(schedule);
-//        TODO: Schedule the quartz job
+      this.taskScheduler.resumeJob(schedule);
     } else {
 //        TODO: return that it couldn't be enabled or doesn't exist
     }
@@ -109,33 +172,74 @@ public class WorkflowScheduleServiceImpl implements WorkflowScheduleService {
     if (schedule!= null && !WorkflowScheduleStatus.deleted.equals(schedule.getStatus())) {
       schedule.setStatus(WorkflowScheduleStatus.inactive);
       workflowScheduleRepository.saveSchedule(schedule);
-//        TODO: remove the scheduled quartz job
+      this.taskScheduler.pauseJob(schedule);
     } else {
 //        TODO: return that it couldn't be disabled or doesn't exist
     }
   }
   
   @Override
-  public void deleteAllSchedules(String workflowId) {
+  public void deleteAllSchedules(final String workflowId) {
+//    TODO: get this integrated with the deleteWorkflow
     final List<WorkflowScheduleEntity> entities = workflowScheduleRepository.getSchedulesForWorkflow(workflowId);
     if (entities != null) {
       entities.forEach(s -> {
-        deleteSchedule(s.getId(), Optional.of(s));
+        deleteSchedule(workflowId, s.getId());
       });
     }
   }
   
-  private void deleteSchedule(String scheduleId, Optional<WorkflowScheduleEntity> workflowSchedule) {
+  @Override
+  public ResponseEntity<?> deleteSchedule(final String workflowId, final String scheduleId) {
     try {
-      this.taskScheduler.cancelJob(scheduleId);
-      if (workflowSchedule.isEmpty()) {
-        workflowSchedule = Optional.ofNullable(workflowScheduleRepository.getSchedule(scheduleId));
+      WorkflowScheduleEntity scheduleEntity = workflowScheduleRepository.getSchedule(scheduleId);
+      if (scheduleEntity != null && workflowId.equals(scheduleEntity.getWorkflowId())) {
+        scheduleEntity.setStatus(WorkflowScheduleStatus.deleted);
+        workflowScheduleRepository.saveSchedule(scheduleEntity);
+        this.taskScheduler.cancelJob(scheduleEntity);
+      } else {
+        return ResponseEntity.badRequest().build();
       }
-      workflowSchedule.get().setStatus(WorkflowScheduleStatus.deleted);
-      workflowScheduleRepository.saveSchedule(workflowSchedule.get());
     } catch (SchedulerException e) {
       logger.info("Unable to delete schedule {}.", scheduleId);
       logger.error(e);
+      return ResponseEntity.internalServerError().build();
     }
+    return ResponseEntity.ok().build();
+  }
+  
+  @Override
+  public CronValidationResponse validateCron(String cronString) {
+
+    logger.info("CRON: {}", cronString);
+
+    CronValidationResponse response = new CronValidationResponse();
+    CronParser parser =
+        new CronParser(CronDefinitionBuilder.instanceDefinitionFor(CronType.QUARTZ));
+    try {
+      cronString = parser.parse(cronString).asString();
+      response.setCron(cronString);
+      response.setValid(true);
+      logger.info("Final CRON: {} .", cronString);
+    } catch (IllegalArgumentException e) {
+      logger.info("Invalid CRON: {} . Attempting cron to quartz conversion", cronString);
+      parser = new CronParser(CronDefinitionBuilder.instanceDefinitionFor(CronType.CRON4J));
+      try {
+        Cron cron = parser.parse(cronString);
+        CronMapper quartzMapper = CronMapper.fromCron4jToQuartz();
+        Cron quartzCron = quartzMapper.map(cron);
+        cronString = quartzCron.asString();
+        response.setCron(cronString);
+        response.setValid(true);
+      } catch (IllegalArgumentException exc) {
+        logger.info("Invalid CRON: {} . Cannot convert", cronString);
+        response.setCron(null);
+        response.setValid(false);
+        response.setMessage(e.getMessage());
+      }
+
+      logger.info("Final CRON: {} .", cronString);
+    }
+    return response;
   }
 }

@@ -1,5 +1,6 @@
 package io.boomerang.controller;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,9 +28,9 @@ import io.boomerang.model.FlowWorkflowRevision;
 import io.boomerang.model.GenerateTokenResponse;
 import io.boomerang.model.RevisionResponse;
 import io.boomerang.model.WorkflowExport;
+import io.boomerang.model.WorkflowSchedule;
 import io.boomerang.model.WorkflowSummary;
 import io.boomerang.mongo.entity.WorkflowEntity;
-import io.boomerang.mongo.entity.WorkflowScheduleEntity;
 import io.boomerang.mongo.model.WorkflowProperty;
 import io.boomerang.mongo.model.WorkflowScope;
 import io.boomerang.mongo.model.WorkflowStatus;
@@ -182,11 +183,37 @@ public class WorkflowController {
 
   @GetMapping(value = "/validate/cron")
   public CronValidationResponse validateCron(@RequestParam String cron) {
-    return workflowService.validateCron(cron);
+    return workflowScheduleService.validateCron(cron);
   }
   
-  @PostMapping(value = "/{workflowId}/schedules")
-  public void createSchedule(@PathVariable String workflowId, @RequestBody WorkflowScheduleEntity schedule) {
-    workflowScheduleService.createSchedule(schedule);
+//  TODO: move under schedulesController
+  @GetMapping(value = "/{workflowId}/schedules")
+  public List<WorkflowSchedule> getSchedules(@PathVariable String workflowId) {
+    return workflowScheduleService.getSchedules(workflowId);
+  }
+  
+  @PatchMapping(value = "/{workflowId}/schedule")
+  public WorkflowSchedule createSchedule(@PathVariable String workflowId, @RequestBody WorkflowSchedule schedule) {
+    return workflowScheduleService.createSchedule(workflowId, schedule);
+  }
+  
+  @GetMapping(value = "/{workflowId}/schedule/{scheduleId}")
+  public WorkflowSchedule getSchedule(@PathVariable String workflowId, @PathVariable String scheduleId) {
+    return workflowScheduleService.getSchedule(workflowId, scheduleId);
+  }
+  
+  @GetMapping(value = "/{workflowId}/schedule/{scheduleId}/calendar")
+  public List<Date> getSchedules(@PathVariable String workflowId, @PathVariable String scheduleId, @RequestParam Date startDate, @RequestParam Date endDate) {
+    return workflowScheduleService.getScheduleForDates(workflowId, scheduleId, startDate, endDate);
+  }
+  
+  @PatchMapping(value = "/{workflowId}/schedule/{scheduleId}")
+  public WorkflowSchedule updateSchedule(@PathVariable String workflowId, @PathVariable String scheduleId, @RequestBody WorkflowSchedule schedule) {
+    return workflowScheduleService.updateSchedule(workflowId, scheduleId, schedule);
+  }
+  
+  @DeleteMapping(value = "/{workflowId}/schedules/{scheduleId}")
+  public ResponseEntity<?> updateSchedule(@PathVariable String workflowId, @PathVariable String scheduleId) {
+    return workflowScheduleService.deleteSchedule(workflowId, scheduleId);
   }
 }

@@ -1,6 +1,7 @@
 package io.boomerang.mongo.entity;
 
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
 import org.springframework.data.mongodb.core.mapping.Document;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -18,13 +19,15 @@ public class WorkflowScheduleEntity {
   private String id;
   private String workflowId;
   private String name;
+  private String description;
   private Date creationDate;
   private WorkflowScheduleType type = WorkflowScheduleType.cron;
   private WorkflowScheduleStatus status = WorkflowScheduleStatus.active;
   private List<KeyValuePair> labels;
-  private String schedule;
+  private String cronSchedule;
+  private String dateSchedule;
   private String timezone;
-  private Boolean advancedCron;
+  private List<KeyValuePair> parameters = new LinkedList<>();
   
   public String getId() {
     return id;
@@ -43,6 +46,12 @@ public class WorkflowScheduleEntity {
   }
   public void setName(String name) {
     this.name = name;
+  }
+  public String getDescription() {
+    return description;
+  }
+  public void setDescription(String description) {
+    this.description = description;
   }
   public Date getCreationDate() {
     return creationDate;
@@ -68,11 +77,17 @@ public class WorkflowScheduleEntity {
   public void setLabels(List<KeyValuePair> labels) {
     this.labels = labels;
   }
-  public String getSchedule() {
-    return schedule;
+  public String getCronSchedule() {
+    return cronSchedule;
   }
-  public void setSchedule(String schedule) {
-    this.schedule = schedule;
+  public void setCronSchedule(String cronSchedule) {
+    this.cronSchedule = cronSchedule;
+  }
+  public String getDateSchedule() {
+    return dateSchedule;
+  }
+  public void setDateSchedule(String dateSchedule) {
+    this.dateSchedule = dateSchedule;
   }
   public String getTimezone() {
     return timezone;
@@ -80,10 +95,10 @@ public class WorkflowScheduleEntity {
   public void setTimezone(String timezone) {
     this.timezone = timezone;
   }
-  public Boolean getAdvancedCron() {
-    return advancedCron;
+  public List<KeyValuePair> getParameters() {
+    return parameters;
   }
-  public void setAdvancedCron(Boolean advancedCron) {
-    this.advancedCron = advancedCron;
+  public void setParameters(List<KeyValuePair> parameters) {
+    this.parameters = parameters;
   }
 }

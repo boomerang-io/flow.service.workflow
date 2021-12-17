@@ -1,5 +1,6 @@
 package io.boomerang.util;
 
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +30,16 @@ public class ParameterMapper {
       }
     }
     return parameterList;
+  }
+  
+  public static Map<String, String> keyValuePairListToMap(List<KeyValuePair> parameterList) {
+    Map<String, String> parameterMap = new HashMap<>();
+    if (parameterList != null) {
+      parameterList.stream().forEach(p -> {
+        parameterMap.put(p.getKey(), p.getValue());
+      });
+    }
+    return parameterMap;
   }
 
 }
