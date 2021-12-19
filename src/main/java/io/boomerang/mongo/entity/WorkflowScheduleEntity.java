@@ -4,6 +4,7 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.format.annotation.DateTimeFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -20,12 +21,13 @@ public class WorkflowScheduleEntity {
   private String workflowId;
   private String name;
   private String description;
+  @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
   private Date creationDate;
   private WorkflowScheduleType type = WorkflowScheduleType.cron;
   private WorkflowScheduleStatus status = WorkflowScheduleStatus.active;
   private List<KeyValuePair> labels;
   private String cronSchedule;
-  private String dateSchedule;
+  private Date dateSchedule;
   private String timezone;
   private List<KeyValuePair> parameters = new LinkedList<>();
   
@@ -83,10 +85,10 @@ public class WorkflowScheduleEntity {
   public void setCronSchedule(String cronSchedule) {
     this.cronSchedule = cronSchedule;
   }
-  public String getDateSchedule() {
+  public Date getDateSchedule() {
     return dateSchedule;
   }
-  public void setDateSchedule(String dateSchedule) {
+  public void setDateSchedule(Date dateSchedule) {
     this.dateSchedule = dateSchedule;
   }
   public String getTimezone() {

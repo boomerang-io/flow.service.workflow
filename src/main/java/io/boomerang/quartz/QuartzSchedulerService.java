@@ -1,7 +1,5 @@
 package io.boomerang.quartz;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
@@ -86,19 +84,10 @@ public class QuartzSchedulerService {
   public void createOrUpdateRunOnceJob(WorkflowScheduleEntity schedule) throws Exception {
     String scheduleId = schedule.getId();
     String workflowId = schedule.getWorkflowId();
-//  TODO: figure out timezone
-//  TimeZone timeZone = TimeZone.getTimeZone(schedule.getTimezone());
-    SimpleDateFormat dateformatter = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss"); 
-    Date runDate;
-    try {
-      runDate = dateformatter.parse(schedule.getDateSchedule());
-    } catch (ParseException e2) {
-        throw new SchedulerException(e2.getMessage());
-    } 
     Scheduler scheduler = schedulerFactoryBean.getScheduler();
     JobDetail jobDetail = JobBuilder.newJob(WorkflowExecuteJob.class).withIdentity(scheduleId, workflowId).build();
     SimpleScheduleBuilder simpleScheduleBuilder = SimpleScheduleBuilder.simpleSchedule().withRepeatCount(0);
-    SimpleTrigger trigger = TriggerBuilder.newTrigger().withIdentity(scheduleId, workflowId).startAt(runDate)
+    SimpleTrigger trigger = TriggerBuilder.newTrigger().withIdentity(scheduleId, workflowId).startAt(schedule.getDateSchedule())
         .withSchedule(simpleScheduleBuilder).build();
     try {
       if (!scheduler.checkExists(jobDetail.getKey())) {
@@ -132,6 +121,8 @@ public class QuartzSchedulerService {
   public List<Date> getJobTriggerDates(WorkflowScheduleEntity schedule, Date fromDate, Date toDate) throws SchedulerException {
     Scheduler scheduler = schedulerFactoryBean.getScheduler();
     Trigger trigger = scheduler.getTrigger(new TriggerKey(schedule.getId(), schedule.getWorkflowId()));
+    logger.info(trigger.getNextFireTime().toString());
+    logger.info("Retrieving Dates from: " + fromDate.toString() + ", to: " + toDate.toString());
     return org.quartz.TriggerUtils.computeFireTimesBetween((OperableTrigger) trigger, new BaseCalendar(), fromDate, toDate);
   }
 }

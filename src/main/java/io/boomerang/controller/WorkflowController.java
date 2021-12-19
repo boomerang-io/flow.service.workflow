@@ -10,6 +10,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.domain.Sort.Order;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -197,7 +198,7 @@ public class WorkflowController {
     return workflowScheduleService.getSchedulesForDates(workflowId, startDate, endDate);
   }
   
-  @PatchMapping(value = "/{workflowId}/schedule")
+  @PostMapping(value = "/{workflowId}/schedule")
   public WorkflowSchedule createSchedule(@PathVariable String workflowId, @RequestBody WorkflowSchedule schedule) {
     return workflowScheduleService.createSchedule(workflowId, schedule);
   }
@@ -208,7 +209,7 @@ public class WorkflowController {
   }
   
   @GetMapping(value = "/{workflowId}/schedule/{scheduleId}/calendar")
-  public List<Date> getScheduleForDates(@PathVariable String workflowId, @PathVariable String scheduleId, @RequestParam Date startDate, @RequestParam Date endDate) {
+  public List<Date> getScheduleForDates(@PathVariable String workflowId, @PathVariable String scheduleId, @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date startDate, @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date endDate) {
     return workflowScheduleService.getScheduleForDates(workflowId, scheduleId, startDate, endDate);
   }
   
