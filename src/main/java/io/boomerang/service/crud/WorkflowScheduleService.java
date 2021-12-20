@@ -31,4 +31,8 @@ public interface WorkflowScheduleService {
   List<Date> getSchedulesForDates(String workflowId, Date fromDate, Date toDate);
 
   List<Date> getScheduleForDates(String workflowId, String scheduleId, Date fromDate, Date toDate);
+
+  void disableAllSchedules(String workflowId);
+
+  void enableAllSchedules(String workflowId);
 }

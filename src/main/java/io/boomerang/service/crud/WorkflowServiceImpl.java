@@ -300,43 +300,24 @@ public class WorkflowServiceImpl implements WorkflowService {
       entity.setTriggers(currentTriggers);
     }
     if (updatedTriggers != null) {
-//      String currentTimezone = null;
-//      boolean previous = false;
-
-//      if (currentTriggers.getScheduler() != null) {
-//        currentTimezone = currentTriggers.getScheduler().getTimezone();
-//        previous = currentTriggers.getScheduler().getEnable();
-//      }
-//
-//      TriggerScheduler scheduler = updatedTriggers.getScheduler();
-//      updateSchedule(entity, currentTriggers, currentTimezone, previous, scheduler);
+      boolean currentSchedulerEnabled = false;
+      if (currentTriggers.getScheduler() != null) {
+        currentSchedulerEnabled = currentTriggers.getScheduler().getEnable();
+      }
+      boolean updatedSchedulerEnabled = updatedTriggers.getScheduler().getEnable();
+      if (updatedTriggers.getScheduler().getEnable() == false) {
+        workflowScheduleService.disableAllSchedules(entity.getId());
+      } else if (currentSchedulerEnabled == false && updatedSchedulerEnabled == true) {
+        workflowScheduleService.enableAllSchedules(entity.getId());
+      }
 
       /* Save new triggers. */
-//      currentTriggers.setSlack(updatedTriggers.getSlack());
       currentTriggers.setManual(updatedTriggers.getManual());
       currentTriggers.setScheduler(updatedTriggers.getScheduler());
       currentTriggers.setWebhook(updatedTriggers.getWebhook());
-//      currentTriggers.setDockerhub(updatedTriggers.getDockerhub());
       currentTriggers.setCustom(updatedTriggers.getCustom());
-
-      /* Set new tokens if needed. */
-//      TODO: determine if we still need tokens on triggers
-//      updateTokenForTrigger(updatedTriggers.getSlack());
-//      updateTokenForTrigger(updatedTriggers.getWebhook());
-//      updateTokenForTrigger(updatedTriggers.getDockerhub());
-//      updateTokenForTrigger(updatedTriggers.getCustom());
-
     }
   }
-
-//  private void updateTokenForTrigger(TriggerEvent updateTrigger) {
-//    if (updateTrigger != null) {
-//      boolean enabled = updateTrigger.getEnable();
-//      if (enabled && updateTrigger.getToken() == null) {
-//        updateTrigger.setToken(createUUID());
-//      }
-//    }
-//  }
 
   @Override
   public WorkflowSummary updateWorkflowProperties(String workflowId,

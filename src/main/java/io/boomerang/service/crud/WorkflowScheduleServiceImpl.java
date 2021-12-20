@@ -163,6 +163,21 @@ public class WorkflowScheduleServiceImpl implements WorkflowScheduleService {
   }
   
   @Override
+  public void enableAllSchedules(final String workflowId) {
+    final List<WorkflowScheduleEntity> entities = workflowScheduleRepository.getSchedulesForWorkflow(workflowId);
+    if (entities != null) {
+      entities.forEach(s -> {
+        try {
+          enableSchedule(s.getId());
+        } catch (SchedulerException e) {
+          // TODO Auto-generated catch block
+          e.printStackTrace();
+        }
+      });
+    }
+  }
+  
+  @Override
   public void enableSchedule(String scheduleId) throws SchedulerException {
     WorkflowScheduleEntity schedule = workflowScheduleRepository.getSchedule(scheduleId);
     if (schedule!= null && !WorkflowScheduleStatus.deleted.equals(schedule.getStatus())) {
@@ -171,6 +186,21 @@ public class WorkflowScheduleServiceImpl implements WorkflowScheduleService {
       this.taskScheduler.resumeJob(schedule);
     } else {
 //        TODO: return that it couldn't be enabled or doesn't exist
+    }
+  }
+  
+  @Override
+  public void disableAllSchedules(final String workflowId) {
+    final List<WorkflowScheduleEntity> entities = workflowScheduleRepository.getSchedulesForWorkflow(workflowId);
+    if (entities != null) {
+      entities.forEach(s -> {
+        try {
+          disableSchedule(s.getId());
+        } catch (SchedulerException e) {
+          // TODO Auto-generated catch block
+          e.printStackTrace();
+        }
+      });
     }
   }
   
