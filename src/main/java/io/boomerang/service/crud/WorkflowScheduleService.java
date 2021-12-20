@@ -35,4 +35,10 @@ public interface WorkflowScheduleService {
   void disableAllSchedules(String workflowId);
 
   void enableAllSchedules(String workflowId);
+
+  void enableAllTriggerSchedules(String workflowId);
+
+  void disableTriggerSchedule(String scheduleId) throws SchedulerException;
+
+  void disableAllTriggerSchedules(String workflowId);
 }

@@ -306,9 +306,9 @@ public class WorkflowServiceImpl implements WorkflowService {
       }
       boolean updatedSchedulerEnabled = updatedTriggers.getScheduler().getEnable();
       if (updatedTriggers.getScheduler().getEnable() == false) {
-        workflowScheduleService.disableAllSchedules(entity.getId());
+        workflowScheduleService.disableAllTriggerSchedules(entity.getId());
       } else if (currentSchedulerEnabled == false && updatedSchedulerEnabled == true) {
-        workflowScheduleService.enableAllSchedules(entity.getId());
+        workflowScheduleService.enableAllTriggerSchedules(entity.getId());
       }
 
       /* Save new triggers. */

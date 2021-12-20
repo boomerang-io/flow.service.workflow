@@ -4,6 +4,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import io.boomerang.mongo.entity.WorkflowScheduleEntity;
+import io.boomerang.mongo.model.WorkflowScheduleStatus;
 import io.boomerang.mongo.repository.FlowWorkflowScheduleRepository;
 
 @Service
@@ -30,5 +31,10 @@ public class FlowWorkflowScheduleServiceImpl implements FlowWorkflowScheduleServ
   @Override
   public WorkflowScheduleEntity saveSchedule(WorkflowScheduleEntity entity) {
     return workflowScheduleRepository.save(entity);
+  }
+
+  @Override
+  public List<WorkflowScheduleEntity> getSchedulesForWorkflowWithStatus(String workflowId, WorkflowScheduleStatus status) {
+    return workflowScheduleRepository.findByWorkflowIdAndStatus(workflowId, status);
   }
 }

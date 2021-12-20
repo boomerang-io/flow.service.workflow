@@ -2,8 +2,6 @@ package io.boomerang.mongo.repository;
 
 import java.util.Date;
 import java.util.List;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 import io.boomerang.mongo.entity.ActivityEntity;
@@ -23,4 +21,6 @@ public interface FlowWorkflowScheduleRepository
 
   List<WorkflowScheduleEntity> findByWorkflowIdAndStatusIn(
       String workflowId, List<WorkflowScheduleStatus> statuses);
+  
+  List<WorkflowScheduleEntity> findByWorkflowIdAndStatus(String workflowId, WorkflowScheduleStatus status);
 }
