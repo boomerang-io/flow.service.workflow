@@ -29,6 +29,7 @@ import io.boomerang.model.GenerateTokenResponse;
 import io.boomerang.model.RevisionResponse;
 import io.boomerang.model.WorkflowExport;
 import io.boomerang.model.WorkflowSchedule;
+import io.boomerang.model.WorkflowScheduleCalendar;
 import io.boomerang.model.WorkflowSummary;
 import io.boomerang.mongo.entity.WorkflowEntity;
 import io.boomerang.mongo.model.WorkflowProperty;
@@ -193,7 +194,7 @@ public class WorkflowController {
   }
   
   @GetMapping(value = "/{workflowId}/schedules/calendar")
-  public List<Date> getSchedulesForDates(@PathVariable String workflowId, @RequestParam Long fromDate, @RequestParam Long toDate) {
+  public List<WorkflowScheduleCalendar> getSchedulesForDates(@PathVariable String workflowId, @RequestParam Long fromDate, @RequestParam Long toDate) {
     if (fromDate != null && toDate != null) {
       Date from = new Date(fromDate * 1000);
       Date to = new Date(toDate * 1000);

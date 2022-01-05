@@ -18,6 +18,7 @@ import com.cronutils.model.definition.CronDefinitionBuilder;
 import com.cronutils.parser.CronParser;
 import io.boomerang.model.CronValidationResponse;
 import io.boomerang.model.WorkflowSchedule;
+import io.boomerang.model.WorkflowScheduleCalendar;
 import io.boomerang.mongo.entity.WorkflowEntity;
 import io.boomerang.mongo.entity.WorkflowScheduleEntity;
 import io.boomerang.mongo.model.KeyValuePair;
@@ -64,14 +65,17 @@ public class WorkflowScheduleServiceImpl implements WorkflowScheduleService {
   }
   
   @Override
-  public List<Date> getSchedulesForDates(final String workflowId, Date fromDate, Date toDate) {
-    List<Date> scheduleDates = new LinkedList<>();
+  public List<WorkflowScheduleCalendar> getSchedulesForDates(final String workflowId, Date fromDate, Date toDate) {
+    List<WorkflowScheduleCalendar> scheduleCalendars = new LinkedList<>();
     final List<WorkflowScheduleEntity> scheduleEntities = workflowScheduleRepository.getSchedulesForWorkflow(workflowId);
     if (scheduleEntities != null) {
       scheduleEntities.forEach(e -> {
-        scheduleDates.addAll(getScheduleForDates(workflowId, e.getId(), fromDate, toDate));
+        WorkflowScheduleCalendar scheduleCalendar = new WorkflowScheduleCalendar();
+        scheduleCalendar.setScheduleId(e.getId());
+        scheduleCalendar.setDates(getScheduleForDates(workflowId, e.getId(), fromDate, toDate));
+        scheduleCalendars.add(scheduleCalendar);
       });
-      return scheduleDates;
+      return scheduleCalendars;
     }
     return null;
   }

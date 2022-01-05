@@ -6,6 +6,7 @@ import org.quartz.SchedulerException;
 import org.springframework.http.ResponseEntity;
 import io.boomerang.model.CronValidationResponse;
 import io.boomerang.model.WorkflowSchedule;
+import io.boomerang.model.WorkflowScheduleCalendar;
 
 public interface WorkflowScheduleService {
 
@@ -28,7 +29,7 @@ public interface WorkflowScheduleService {
 
   CronValidationResponse validateCron(String cronString);
 
-  List<Date> getSchedulesForDates(String workflowId, Date fromDate, Date toDate);
+  List<WorkflowScheduleCalendar> getSchedulesForDates(String workflowId, Date fromDate, Date toDate);
 
   List<Date> getScheduleForDates(String workflowId, String scheduleId, Date fromDate, Date toDate);
 
