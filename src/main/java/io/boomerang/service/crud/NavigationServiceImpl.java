@@ -81,6 +81,13 @@ public class NavigationServiceImpl implements NavigationService {
       insights.setLink(flowAppsUrl + "/insights");
       response.add(insights);
 
+      Navigation schedules = new Navigation();
+      actions.setName("Schedules");
+      actions.setType(NavigationType.link);
+      actions.setIcon("CalendarHeatMap16");
+      actions.setLink(flowAppsUrl + "/schedules");
+      response.add(schedules);
+
       Navigation management = new Navigation();
       management.setName("Manage");
       management.setIcon("SettingsAdjust16");
