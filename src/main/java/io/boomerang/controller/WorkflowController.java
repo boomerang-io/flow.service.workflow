@@ -10,7 +10,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.domain.Sort.Order;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -194,8 +193,15 @@ public class WorkflowController {
   }
   
   @GetMapping(value = "/{workflowId}/schedules/calendar")
-  public List<Date> getSchedulesForDates(@PathVariable String workflowId, @RequestParam Date startDate, @RequestParam Date endDate) {
-    return workflowScheduleService.getSchedulesForDates(workflowId, startDate, endDate);
+  public List<Date> getSchedulesForDates(@PathVariable String workflowId, @RequestParam Long fromDate, @RequestParam Long toDate) {
+    if (fromDate != null && toDate != null) {
+      Date from = new Date(fromDate * 1000);
+      Date to = new Date(toDate * 1000);
+      return workflowScheduleService.getSchedulesForDates(workflowId, from, to);
+    }
+    return null;
+//    TODO:
+//    return ResponseEntity.badRequest().build();
   }
   
   @PostMapping(value = "/{workflowId}/schedule")
@@ -209,8 +215,15 @@ public class WorkflowController {
   }
   
   @GetMapping(value = "/{workflowId}/schedule/{scheduleId}/calendar")
-  public List<Date> getScheduleForDates(@PathVariable String workflowId, @PathVariable String scheduleId, @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date startDate, @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date endDate) {
-    return workflowScheduleService.getScheduleForDates(workflowId, scheduleId, startDate, endDate);
+  public List<Date> getScheduleForDates(@PathVariable String workflowId, @PathVariable String scheduleId, @RequestParam Long fromDate, @RequestParam Long toDate) {
+    if (fromDate != null && toDate != null) {
+      Date from = new Date(fromDate * 1000);
+      Date to = new Date(toDate * 1000);
+      return workflowScheduleService.getScheduleForDates(workflowId, scheduleId, from, to);
+    }
+    return null;
+//    TODO:
+//    return ResponseEntity.badRequest().build();
   }
   
   @PatchMapping(value = "/{workflowId}/schedule/{scheduleId}")
