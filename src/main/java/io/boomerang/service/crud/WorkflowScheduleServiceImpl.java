@@ -56,9 +56,9 @@ public class WorkflowScheduleServiceImpl implements WorkflowScheduleService {
   }
   
   @Override
-  public WorkflowSchedule getSchedule(String workflowId, String scheduleId) {
+  public WorkflowSchedule getSchedule(String scheduleId) {
     final WorkflowScheduleEntity scheduleEntity = workflowScheduleRepository.getSchedule(scheduleId);
-    if (scheduleEntity != null && workflowId.equals(scheduleEntity.getWorkflowId())) {
+    if (scheduleEntity != null) {
       return new WorkflowSchedule(scheduleEntity);
     }
     return null;
@@ -72,7 +72,7 @@ public class WorkflowScheduleServiceImpl implements WorkflowScheduleService {
       scheduleEntities.forEach(e -> {
         WorkflowScheduleCalendar scheduleCalendar = new WorkflowScheduleCalendar();
         scheduleCalendar.setScheduleId(e.getId());
-        scheduleCalendar.setDates(getScheduleForDates(workflowId, e.getId(), fromDate, toDate));
+        scheduleCalendar.setDates(getScheduleForDates(e.getId(), fromDate, toDate));
         scheduleCalendars.add(scheduleCalendar);
       });
       return scheduleCalendars;
@@ -81,9 +81,9 @@ public class WorkflowScheduleServiceImpl implements WorkflowScheduleService {
   }
   
   @Override
-  public List<Date> getScheduleForDates(final String workflowId, final String scheduleId, Date fromDate, Date toDate) {
+  public List<Date> getScheduleForDates(final String scheduleId, Date fromDate, Date toDate) {
     final WorkflowScheduleEntity scheduleEntity = workflowScheduleRepository.getSchedule(scheduleId);
-    if (scheduleEntity != null && workflowId.equals(scheduleEntity.getWorkflowId())) {
+    if (scheduleEntity != null) {
       try {
         return this.taskScheduler.getJobTriggerDates(scheduleEntity, fromDate, toDate);
       } catch (SchedulerException e) {
@@ -95,12 +95,12 @@ public class WorkflowScheduleServiceImpl implements WorkflowScheduleService {
   }
   
   @Override
-  public WorkflowSchedule createSchedule(final String workflowId, final WorkflowSchedule schedule) {
+  public WorkflowSchedule createSchedule(final WorkflowSchedule schedule) {
 //  TODO: do we have to check if they have authorization to create a workflow against that team?
 //  TODO: do we have to check if any of the elements on the Schedule are invalid? such as the cron?
 //  TODO: return an error if the minimum required fields arent provided.
 
-    if (schedule != null && schedule.getWorkflowId() != null && workflowId.equals(schedule.getWorkflowId())) {
+    if (schedule != null && schedule.getWorkflowId() != null) {
       WorkflowEntity wfEntity = workflowRepository.getWorkflow(schedule.getWorkflowId());
       if (wfEntity != null) {
           schedule.setCreationDate(new Date());
@@ -123,26 +123,25 @@ public class WorkflowScheduleServiceImpl implements WorkflowScheduleService {
   }
   
   @Override
-  public WorkflowSchedule updateSchedule(final String workflowId, final String scheduleId, final WorkflowSchedule patchSchedule) {
+  public WorkflowSchedule updateSchedule(final String scheduleId, final WorkflowSchedule patchSchedule) {
     if (patchSchedule != null) {
-      WorkflowEntity wfEntity = workflowRepository.getWorkflow(workflowId);
-      if (wfEntity != null) {
-        WorkflowScheduleEntity scheduleEntity = workflowScheduleRepository.getSchedule(scheduleId);
-        if (scheduleEntity != null) {
-          BeanUtils.copyProperties(patchSchedule, scheduleEntity, "id", "workflowId", "creationDate", "parameters", "parametersMap");
-          if (patchSchedule.getParametersMap() != null && !patchSchedule.getParametersMap().isEmpty()) {
-            List<KeyValuePair> propertyList = ParameterMapper.mapToKeyValuePairList(patchSchedule.getParametersMap());
-            scheduleEntity.setParameters(propertyList);
-          }
-          workflowScheduleRepository.saveSchedule(scheduleEntity);
-          Boolean enableJob = false;
-          if (WorkflowScheduleStatus.active.equals(scheduleEntity.getStatus()) && wfEntity.getTriggers().getScheduler().getEnable()) {
-            enableJob = true;
-          }
-          createOrUpdateSchedule(scheduleEntity, enableJob);
-          return new WorkflowSchedule(scheduleEntity);
+      WorkflowScheduleEntity scheduleEntity = workflowScheduleRepository.getSchedule(scheduleId);
+      if (scheduleEntity != null) {
+        BeanUtils.copyProperties(patchSchedule, scheduleEntity, "id", "workflowId", "creationDate", "parameters", "parametersMap");
+        if (patchSchedule.getParametersMap() != null && !patchSchedule.getParametersMap().isEmpty()) {
+          List<KeyValuePair> propertyList = ParameterMapper.mapToKeyValuePairList(patchSchedule.getParametersMap());
+          scheduleEntity.setParameters(propertyList);
         }
-      }        
+        workflowScheduleRepository.saveSchedule(scheduleEntity);
+
+        WorkflowEntity wfEntity = workflowRepository.getWorkflow(scheduleEntity.getWorkflowId());
+        Boolean enableJob = false;
+        if (WorkflowScheduleStatus.active.equals(scheduleEntity.getStatus()) && wfEntity != null && wfEntity.getTriggers().getScheduler().getEnable()) {
+          enableJob = true;
+        }
+        createOrUpdateSchedule(scheduleEntity, enableJob);
+        return new WorkflowSchedule(scheduleEntity);
+      }
     }
     return null;
   }
@@ -268,16 +267,16 @@ public class WorkflowScheduleServiceImpl implements WorkflowScheduleService {
     final List<WorkflowScheduleEntity> entities = workflowScheduleRepository.getSchedulesForWorkflow(workflowId);
     if (entities != null) {
       entities.forEach(s -> {
-        deleteSchedule(workflowId, s.getId());
+        deleteSchedule(s.getId());
       });
     }
   }
   
   @Override
-  public ResponseEntity<?> deleteSchedule(final String workflowId, final String scheduleId) {
+  public ResponseEntity<?> deleteSchedule(final String scheduleId) {
     try {
       WorkflowScheduleEntity scheduleEntity = workflowScheduleRepository.getSchedule(scheduleId);
-      if (scheduleEntity != null && workflowId.equals(scheduleEntity.getWorkflowId())) {
+      if (scheduleEntity != null) {
         scheduleEntity.setStatus(WorkflowScheduleStatus.deleted);
         workflowScheduleRepository.saveSchedule(scheduleEntity);
         this.taskScheduler.cancelJob(scheduleEntity);

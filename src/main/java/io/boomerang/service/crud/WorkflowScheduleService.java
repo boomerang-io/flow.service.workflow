@@ -16,22 +16,22 @@ public interface WorkflowScheduleService {
 
   void deleteAllSchedules(String workflowId) throws SchedulerException;
 
-  WorkflowSchedule createSchedule(String workflowId, WorkflowSchedule schedule);
+  WorkflowSchedule createSchedule(WorkflowSchedule schedule);
 
   List<WorkflowSchedule> getSchedules(String workflowId);
 
-  WorkflowSchedule getSchedule(String workflowId, String scheduleId);
+  WorkflowSchedule getSchedule(String scheduleId);
 
-  ResponseEntity<?> deleteSchedule(String workflowId, String scheduleId);
+  ResponseEntity<?> deleteSchedule(String scheduleId);
 
-  WorkflowSchedule updateSchedule(String workflowId, String scheduleId,
+  WorkflowSchedule updateSchedule(String scheduleId,
       WorkflowSchedule patchSchedule);
 
   CronValidationResponse validateCron(String cronString);
 
   List<WorkflowScheduleCalendar> getSchedulesForDates(String workflowId, Date fromDate, Date toDate);
 
-  List<Date> getScheduleForDates(String workflowId, String scheduleId, Date fromDate, Date toDate);
+  List<Date> getScheduleForDates(String scheduleId, Date fromDate, Date toDate);
 
   void disableAllSchedules(String workflowId);
 
