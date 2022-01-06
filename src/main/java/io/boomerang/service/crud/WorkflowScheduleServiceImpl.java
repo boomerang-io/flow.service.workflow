@@ -28,6 +28,7 @@ import io.boomerang.mongo.model.WorkflowScheduleType;
 import io.boomerang.mongo.service.FlowWorkflowScheduleService;
 import io.boomerang.mongo.service.FlowWorkflowService;
 import io.boomerang.quartz.QuartzSchedulerService;
+import io.boomerang.service.FilterService;
 import io.boomerang.util.ParameterMapper;
 
 @Service
@@ -44,12 +45,17 @@ public class WorkflowScheduleServiceImpl implements WorkflowScheduleService {
   @Autowired
   private FlowWorkflowService workflowRepository;
   
+  @Autowired
+  private FilterService filterService;
+  
   @Override
   public List<WorkflowSchedule> getSchedules(Optional<List<String>> workflowIds,
       Optional<List<String>> teamIds, Optional<List<String>> statuses, Optional<List<String>> types,
-      Optional<List<String>> scopes, Optional<List<String>> labels) {
+      Optional<List<String>> scopes) {
     List<WorkflowSchedule> schedules = new LinkedList<>();
-    final List<WorkflowScheduleEntity> entities = workflowScheduleRepository.getSchedulesForWorkflow(workflowId);
+
+    List<String> filteredWorkflowIds = filterService.getFilteredWorkflowIds(workflowIds, teamIds, scopes);
+    final List<WorkflowScheduleEntity> entities = workflowScheduleRepository.getAllSchedules(filteredWorkflowIds, statuses, types);
     if (entities != null) {
       entities.forEach(e -> {
         schedules.add(new WorkflowSchedule(e));

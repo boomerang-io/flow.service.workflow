@@ -39,10 +39,9 @@ public class SchedulesController {
       @RequestParam Optional<List<String>> workflowIds,
       @RequestParam Optional<List<String>> teamIds, 
       @RequestParam Optional<List<String>> statuses,
-      @RequestParam Optional<List<String>> types,
-      @RequestParam Optional<List<String>> labels) {
+      @RequestParam Optional<List<String>> types) {
       return workflowScheduleService.getSchedules(workflowIds, teamIds, statuses,
-          types, scopes, labels);
+          types, scopes);
   }
   
   @GetMapping(value = "/calendar")

@@ -21,7 +21,7 @@ public interface WorkflowScheduleService {
 
   List<WorkflowSchedule> getSchedules(Optional<List<String>> workflowIds,
       Optional<List<String>> teamIds, Optional<List<String>> statuses, Optional<List<String>> types,
-      Optional<List<String>> scopes, Optional<List<String>> labels);
+      Optional<List<String>> scopes);
 
   WorkflowSchedule getSchedule(String scheduleId);
 
