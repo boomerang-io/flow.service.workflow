@@ -24,6 +24,11 @@ public class FlowWorkflowScheduleServiceImpl implements FlowWorkflowScheduleServ
   }
 
   @Override
+  public List<WorkflowScheduleEntity> getSchedules(List<String> ids) {
+    return workflowScheduleRepository.findByIdIn(ids);
+  }
+
+  @Override
   public List<WorkflowScheduleEntity> getSchedulesForWorkflow(String workflowId) {
     return workflowScheduleRepository.findByWorkflowId(workflowId);
   }

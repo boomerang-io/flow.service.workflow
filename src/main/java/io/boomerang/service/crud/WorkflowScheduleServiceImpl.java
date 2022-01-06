@@ -4,6 +4,7 @@ package io.boomerang.service.crud;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.quartz.SchedulerException;
@@ -44,7 +45,21 @@ public class WorkflowScheduleServiceImpl implements WorkflowScheduleService {
   private FlowWorkflowService workflowRepository;
   
   @Override
-  public List<WorkflowSchedule> getSchedules(String workflowId) {
+  public List<WorkflowSchedule> getSchedules(Optional<List<String>> workflowIds,
+      Optional<List<String>> teamIds, Optional<List<String>> statuses, Optional<List<String>> types,
+      Optional<List<String>> scopes, Optional<List<String>> labels) {
+    List<WorkflowSchedule> schedules = new LinkedList<>();
+    final List<WorkflowScheduleEntity> entities = workflowScheduleRepository.getSchedulesForWorkflow(workflowId);
+    if (entities != null) {
+      entities.forEach(e -> {
+        schedules.add(new WorkflowSchedule(e));
+      });
+    }
+    return schedules;
+  }
+  
+  @Override
+  public List<WorkflowSchedule> getSchedulesForWorkflow(String workflowId) {
     List<WorkflowSchedule> schedules = new LinkedList<>();
     final List<WorkflowScheduleEntity> entities = workflowScheduleRepository.getSchedulesForWorkflow(workflowId);
     if (entities != null) {
@@ -65,14 +80,14 @@ public class WorkflowScheduleServiceImpl implements WorkflowScheduleService {
   }
   
   @Override
-  public List<WorkflowScheduleCalendar> getSchedulesForDates(final String workflowId, Date fromDate, Date toDate) {
+  public List<WorkflowScheduleCalendar> getCalendarsForSchedules(final List<String> scheduleIds, Date fromDate, Date toDate) {
     List<WorkflowScheduleCalendar> scheduleCalendars = new LinkedList<>();
-    final List<WorkflowScheduleEntity> scheduleEntities = workflowScheduleRepository.getSchedulesForWorkflow(workflowId);
+    final List<WorkflowScheduleEntity> scheduleEntities = workflowScheduleRepository.getSchedules(scheduleIds);
     if (scheduleEntities != null) {
       scheduleEntities.forEach(e -> {
         WorkflowScheduleCalendar scheduleCalendar = new WorkflowScheduleCalendar();
         scheduleCalendar.setScheduleId(e.getId());
-        scheduleCalendar.setDates(getScheduleForDates(e.getId(), fromDate, toDate));
+        scheduleCalendar.setDates(getCalendarForDates(e.getId(), fromDate, toDate));
         scheduleCalendars.add(scheduleCalendar);
       });
       return scheduleCalendars;
@@ -81,7 +96,23 @@ public class WorkflowScheduleServiceImpl implements WorkflowScheduleService {
   }
   
   @Override
-  public List<Date> getScheduleForDates(final String scheduleId, Date fromDate, Date toDate) {
+  public List<WorkflowScheduleCalendar> getCalendarsForWorkflow(final String workflowId, Date fromDate, Date toDate) {
+    List<WorkflowScheduleCalendar> scheduleCalendars = new LinkedList<>();
+    final List<WorkflowScheduleEntity> scheduleEntities = workflowScheduleRepository.getSchedulesForWorkflow(workflowId);
+    if (scheduleEntities != null) {
+      scheduleEntities.forEach(e -> {
+        WorkflowScheduleCalendar scheduleCalendar = new WorkflowScheduleCalendar();
+        scheduleCalendar.setScheduleId(e.getId());
+        scheduleCalendar.setDates(getCalendarForDates(e.getId(), fromDate, toDate));
+        scheduleCalendars.add(scheduleCalendar);
+      });
+      return scheduleCalendars;
+    }
+    return null;
+  }
+  
+  @Override
+  public List<Date> getCalendarForDates(final String scheduleId, Date fromDate, Date toDate) {
     final WorkflowScheduleEntity scheduleEntity = workflowScheduleRepository.getSchedule(scheduleId);
     if (scheduleEntity != null) {
       try {

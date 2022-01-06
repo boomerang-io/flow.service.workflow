@@ -2,6 +2,7 @@ package io.boomerang.service.crud;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import org.quartz.SchedulerException;
 import org.springframework.http.ResponseEntity;
 import io.boomerang.model.CronValidationResponse;
@@ -18,7 +19,9 @@ public interface WorkflowScheduleService {
 
   WorkflowSchedule createSchedule(WorkflowSchedule schedule);
 
-  List<WorkflowSchedule> getSchedules(String workflowId);
+  List<WorkflowSchedule> getSchedules(Optional<List<String>> workflowIds,
+      Optional<List<String>> teamIds, Optional<List<String>> statuses, Optional<List<String>> types,
+      Optional<List<String>> scopes, Optional<List<String>> labels);
 
   WorkflowSchedule getSchedule(String scheduleId);
 
@@ -29,9 +32,7 @@ public interface WorkflowScheduleService {
 
   CronValidationResponse validateCron(String cronString);
 
-  List<WorkflowScheduleCalendar> getSchedulesForDates(String workflowId, Date fromDate, Date toDate);
-
-  List<Date> getScheduleForDates(String scheduleId, Date fromDate, Date toDate);
+  List<Date> getCalendarForDates(String scheduleId, Date fromDate, Date toDate);
 
   void disableAllSchedules(String workflowId);
 
@@ -42,4 +43,12 @@ public interface WorkflowScheduleService {
   void disableTriggerSchedule(String scheduleId) throws SchedulerException;
 
   void disableAllTriggerSchedules(String workflowId);
+
+  List<WorkflowScheduleCalendar> getCalendarsForWorkflow(String workflowId, Date fromDate,
+      Date toDate);
+
+  List<WorkflowScheduleCalendar> getCalendarsForSchedules(List<String> scheduleIds, Date fromDate,
+      Date toDate);
+
+  List<WorkflowSchedule> getSchedulesForWorkflow(String workflowId);
 }
