@@ -69,13 +69,4 @@ public class ActivityV1Controller {
   public ResponseEntity<FlowActivity> terminateActivity(@PathVariable String activityId) {
     return webhookService.terminateActivity(activityId);
   }
-
-  @GetMapping(value = "/activity/{activityId}")
-  @AuthenticationScope(scopes = {TokenScope.global, TokenScope.team, TokenScope.user})
-  @Operation(summary = "Retrieve a single workfloow execution")
-  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
-      @ApiResponse(responseCode = "400", description = "Bad Request")})
-  public FlowActivity getWebhookStatus(@PathVariable String activityId) {
-    return webhookService.getFlowActivity(activityId);
-  }
 }
