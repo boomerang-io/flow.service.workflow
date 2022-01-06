@@ -134,8 +134,8 @@ public class TeamServiceImpl implements TeamService {
           flowSettingsService.getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_COUNT).getValue()));
       quotas.setMaxWorkflowExecutionMonthly(Integer.valueOf(flowSettingsService
           .getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_EXECUTION_MONTHLY).getValue()));
-      quotas.setMaxWorkflowStorage(Integer.valueOf(
-          flowSettingsService.getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_STORAGE).getValue().replace("Gi", "")));
+      quotas.setMaxWorkflowStorage(Integer.valueOf(flowSettingsService
+          .getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_STORAGE).getValue().replace("Gi", "")));
       quotas.setMaxWorkflowExecutionTime(Integer.valueOf(
           flowSettingsService.getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_DURATION).getValue()));
       quotas.setMaxConcurrentWorkflows(Integer.valueOf(
@@ -172,33 +172,36 @@ public class TeamServiceImpl implements TeamService {
   public FlowTeam createStandaloneTeam(String name, Quotas quota) {
     TeamEntity flowTeamEntity = new TeamEntity();
     flowTeamEntity.setName(name);
-    flowTeamEntity = flowTeamService.save(flowTeamEntity);
-    flowTeamEntity.setHigherLevelGroupId(flowTeamEntity.getId());
     flowTeamEntity.setIsActive(true);
+    flowTeamEntity.setHigherLevelGroupId(flowTeamEntity.getId());
+    flowTeamEntity = flowTeamService.save(flowTeamEntity);
 
     Quotas quotas = new Quotas();
 
-    quotas.setMaxWorkflowCount(quota.getMaxWorkflowCount() != null ? quota.getMaxWorkflowCount()
-        : Integer.valueOf(
-            flowSettingsService.getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_COUNT).getValue()));
+    quotas.setMaxWorkflowCount(
+        quota != null && quota.getMaxWorkflowCount() != null ? quota.getMaxWorkflowCount()
+            : Integer.valueOf(
+                flowSettingsService.getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_COUNT).getValue()));
 
     quotas.setMaxWorkflowExecutionMonthly(
-        quota.getMaxWorkflowExecutionMonthly() != null ? quota.getMaxWorkflowExecutionMonthly()
+        quota != null && quota.getMaxWorkflowExecutionMonthly() != null
+            ? quota.getMaxWorkflowExecutionMonthly()
             : Integer.valueOf(flowSettingsService
                 .getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_EXECUTION_MONTHLY).getValue()));
 
-    quotas
-        .setMaxWorkflowStorage(quota.getMaxWorkflowStorage() != null ? quota.getMaxWorkflowStorage()
+    quotas.setMaxWorkflowStorage(
+        quota != null && quota.getMaxWorkflowStorage() != null ? quota.getMaxWorkflowStorage()
             : Integer.valueOf(flowSettingsService.getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_STORAGE)
                 .getValue().replace("Gi", "")));
 
 
-    quotas.setMaxWorkflowExecutionTime(quota.getMaxWorkflowExecutionTime() != null
+    quotas.setMaxWorkflowExecutionTime(quota != null && quota.getMaxWorkflowExecutionTime() != null
         ? quota.getMaxWorkflowExecutionTime()
         : Integer.valueOf(
             flowSettingsService.getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_DURATION).getValue()));
 
-    quotas.setMaxConcurrentWorkflows(quota.getMaxConcurrentWorkflows() != null
+    quotas.setMaxConcurrentWorkflows(quota != null
+        && quota.getMaxConcurrentWorkflows() != null
         ? quota.getMaxConcurrentWorkflows()
         : Integer.valueOf(
             flowSettingsService.getConfiguration(TEAMS, MAX_TEAM_CONCURRENT_WORKFLOW).getValue()));
@@ -415,6 +418,18 @@ public class TeamServiceImpl implements TeamService {
   @Override
   public WorkflowQuotas getTeamQuotas(String teamId) {
     TeamEntity team = flowTeamService.findById(teamId);
+
+    if (team == null) {
+      WorkflowQuotas quotas = new WorkflowQuotas();
+      quotas.setMaxConcurrentWorkflows(Integer.MAX_VALUE);
+      quotas.setMaxWorkflowExecutionMonthly(Integer.MAX_VALUE);
+      quotas.setMaxWorkflowExecutionTime(Integer.MAX_VALUE);
+      quotas.setCurrentConcurrentWorkflows(0);
+      quotas.setCurrentWorkflowCount(0);
+      quotas.setCurrentWorkflowExecutionMonthly(0);
+      return quotas;
+    }
+
     List<WorkflowSummary> workflows = workflowService.getWorkflowsForTeam(team.getId());
     Pageable page = Pageable.unpaged();
     List<ActivityEntity> concurrentActivities = getConcurrentWorkflowActivities(teamId);
