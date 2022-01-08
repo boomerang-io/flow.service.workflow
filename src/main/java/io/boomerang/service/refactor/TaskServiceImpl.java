@@ -1,5 +1,7 @@
 package io.boomerang.service.refactor;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
@@ -23,15 +25,16 @@ import com.github.alturkovic.lock.exception.LockNotAvailableException;
 import io.boomerang.model.ApprovalStatus;
 import io.boomerang.model.RequestFlowExecution;
 import io.boomerang.model.Task;
+import io.boomerang.model.WorkflowSchedule;
 import io.boomerang.mongo.entity.ActivityEntity;
 import io.boomerang.mongo.entity.ApprovalEntity;
 import io.boomerang.mongo.entity.FlowTaskTemplateEntity;
 import io.boomerang.mongo.entity.RevisionEntity;
 import io.boomerang.mongo.entity.TaskExecutionEntity;
 import io.boomerang.mongo.entity.WorkflowEntity;
-import io.boomerang.mongo.model.KeyValuePair;
 import io.boomerang.mongo.model.Dag;
 import io.boomerang.mongo.model.ErrorResponse;
+import io.boomerang.mongo.model.KeyValuePair;
 import io.boomerang.mongo.model.ManualType;
 import io.boomerang.mongo.model.Revision;
 import io.boomerang.mongo.model.TaskStatus;
@@ -48,6 +51,7 @@ import io.boomerang.mongo.service.FlowWorkflowService;
 import io.boomerang.mongo.service.RevisionService;
 import io.boomerang.service.PropertyManager;
 import io.boomerang.service.crud.FlowActivityService;
+import io.boomerang.service.crud.WorkflowScheduleService;
 import io.boomerang.service.runner.misc.ControllerClient;
 
 @Service
@@ -94,6 +98,9 @@ public class TaskServiceImpl implements TaskService {
   
   @Autowired
   private FlowActivityService flowActivityService;
+  
+  @Autowired
+  private WorkflowScheduleService scheduleService;
 
 
   @Override
@@ -246,23 +253,42 @@ public class TaskServiceImpl implements TaskService {
   }
 
   private void runScheduledWorkflow(Task task, ActivityEntity activity) {
-
-    if (task.getInputs() != null) {
-      RequestFlowExecution request = new RequestFlowExecution();
-      request.setWorkflowId(task.getInputs().get("workflowId"));
-      Map<String, String> properties = new HashMap<>();
-      for (Map.Entry<String, String> entry : task.getInputs().entrySet()) {
-        if (!"workflowId".equals(entry.getKey())) {
-          properties.put(entry.getKey(), entry.getValue());
-        }
-      }
-
-      //TODO: schedule the workflow to runOnce.
-    }
-
     InternalTaskResponse response = new InternalTaskResponse();
     response.setActivityId(task.getTaskActivityId());
     response.setStatus(TaskStatus.completed);
+    
+    if (task.getInputs() != null) {
+      RequestFlowExecution request = new RequestFlowExecution();
+      request.setWorkflowId(task.getInputs().get("workflowId"));
+      String timezone = task.getInputs().get("timezone");
+      SimpleDateFormat formatter = new SimpleDateFormat("dd-M-yyyy hh:mm:ss a");
+      Date date = null;
+      try {
+        date = formatter.parse(task.getInputs().get("scheduleDate"));
+      } catch (ParseException e) {
+        e.printStackTrace();
+        response.setStatus(TaskStatus.failure);
+        this.endTask(response);
+      }
+      Map<String, String> properties = new HashMap<>();
+      for (Map.Entry<String, String> entry : task.getInputs().entrySet()) {
+        if (!"workflowId".equals(entry.getKey()) && !"scheduleDate".equals(entry.getKey()) && !"timezone".equals(entry.getKey())) {
+          properties.put(entry.getKey(), entry.getValue());
+        }
+      }
+      
+      WorkflowSchedule schedule = new WorkflowSchedule();
+      schedule.setName(task.getWorkflowName());
+      schedule.setParametersMap(properties);
+      schedule.setCreationDate(activity.getCreationDate());
+      schedule.setDateSchedule(date);
+      schedule.setTimezone(timezone);
+      scheduleService.createSchedule(schedule);
+      //TODO: Add a taskExecution with the ScheduleId so it can be deep linked.
+    } else {
+      response.setStatus(TaskStatus.failure);
+    }
+
     this.endTask(response);
   }
 
