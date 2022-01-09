@@ -35,6 +35,11 @@ public class ScheduleServiceImpl implements ScheduleService {
   public List<WorkflowScheduleEntity> getSchedules(List<String> ids) {
     return workflowScheduleRepository.findByIdIn(ids);
   }
+  
+  @Override
+  public List<WorkflowScheduleEntity> getSchedulesNotDeleted(List<String> ids) {
+    return workflowScheduleRepository.findByIdInAndStatusNot(ids, WorkflowScheduleStatus.deleted);
+  }
 
   @Override
   public List<WorkflowScheduleEntity> getSchedulesForWorkflow(String workflowId) {

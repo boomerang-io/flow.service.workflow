@@ -98,7 +98,7 @@ public class WorkflowScheduleServiceImpl implements WorkflowScheduleService {
   @Override
   public List<WorkflowScheduleCalendar> getCalendarsForSchedules(final List<String> scheduleIds, Date fromDate, Date toDate) {
     List<WorkflowScheduleCalendar> scheduleCalendars = new LinkedList<>();
-    final List<WorkflowScheduleEntity> scheduleEntities = workflowScheduleRepository.getSchedules(scheduleIds);
+    final List<WorkflowScheduleEntity> scheduleEntities = workflowScheduleRepository.getSchedulesNotDeleted(scheduleIds);
     if (scheduleEntities != null) {
       scheduleEntities.forEach(e -> {
         WorkflowScheduleCalendar scheduleCalendar = new WorkflowScheduleCalendar();
@@ -114,7 +114,7 @@ public class WorkflowScheduleServiceImpl implements WorkflowScheduleService {
   @Override
   public List<WorkflowScheduleCalendar> getCalendarsForWorkflow(final String workflowId, Date fromDate, Date toDate) {
     List<WorkflowScheduleCalendar> scheduleCalendars = new LinkedList<>();
-    final List<WorkflowScheduleEntity> scheduleEntities = workflowScheduleRepository.getSchedulesForWorkflow(workflowId);
+    final List<WorkflowScheduleEntity> scheduleEntities = workflowScheduleRepository.getSchedulesForWorkflowNotDeleted(workflowId);
     if (scheduleEntities != null) {
       scheduleEntities.forEach(e -> {
         WorkflowScheduleCalendar scheduleCalendar = new WorkflowScheduleCalendar();
@@ -134,8 +134,7 @@ public class WorkflowScheduleServiceImpl implements WorkflowScheduleService {
       try {
         return this.taskScheduler.getJobTriggerDates(scheduleEntity, fromDate, toDate);
       } catch (SchedulerException e) {
-        // TODO Auto-generated catch block
-        e.printStackTrace();
+        logger.info("Unable to retrieve calendar for Schedule: {}, skipping.", scheduleEntity.getId());
       }
     }
     return null;

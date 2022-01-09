@@ -25,5 +25,7 @@ public interface ScheduleService {
 
   List<WorkflowScheduleEntity> getSchedulesForWorkflowNotDeleted(String workflowId);
 
+  List<WorkflowScheduleEntity> getSchedulesNotDeleted(List<String> ids);
+
 
 }
