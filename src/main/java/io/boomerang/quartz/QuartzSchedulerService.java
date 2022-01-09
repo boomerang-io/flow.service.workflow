@@ -121,14 +121,14 @@ public class QuartzSchedulerService {
   public List<Date> getJobTriggerDates(WorkflowScheduleEntity schedule, Date fromDate, Date toDate) throws SchedulerException {
     Scheduler scheduler = schedulerFactoryBean.getScheduler();
     Trigger trigger = scheduler.getTrigger(new TriggerKey(schedule.getId(), schedule.getWorkflowId()));
-    logger.info(trigger.getNextFireTime().toString());
-    logger.info("Retrieving Dates from: " + fromDate.toString() + ", to: " + toDate.toString());
+    logger.info("Retrieving Dates from: " + fromDate.toString() + ", to: " + toDate.toString() + ", for Schedule: " + schedule.getId());
     return org.quartz.TriggerUtils.computeFireTimesBetween((OperableTrigger) trigger, new BaseCalendar(), fromDate, toDate);
   }
   
   public Date getNextTriggerDate(WorkflowScheduleEntity schedule) throws SchedulerException {
     Scheduler scheduler = schedulerFactoryBean.getScheduler();
     Trigger trigger = scheduler.getTrigger(new TriggerKey(schedule.getId(), schedule.getWorkflowId()));
+    logger.info("Retrieving Next Schedule Date for Schedule: " + schedule.getId());
     return trigger.getNextFireTime();
   }
 }
