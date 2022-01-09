@@ -55,7 +55,7 @@ public class FlowWorkflowScheduleServiceImpl implements FlowWorkflowScheduleServ
   public List<WorkflowScheduleEntity> getAllSchedules(List<String> workflowIds,
       Optional<List<String>> statuses, Optional<List<String>> types) {
     
-    Criteria criteria = buildCriteriaList(workflowIds, types, statuses);
+    Criteria criteria = buildCriteriaList(workflowIds, statuses, types);
     Query query = new Query(criteria);
     List<WorkflowScheduleEntity> list = this.mongoTemplate.find(query, WorkflowScheduleEntity.class);
     return list;
