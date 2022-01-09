@@ -58,7 +58,7 @@ public class WorkflowScheduleServiceImpl implements WorkflowScheduleService {
     final List<WorkflowScheduleEntity> entities = workflowScheduleRepository.getAllSchedules(filteredWorkflowIds, statuses, types);
     if (entities != null) {
       entities.forEach(e -> {
-        schedules.add(new WorkflowSchedule(e));
+        schedules.add(convertScheduleEntityToModel(e));
       });
     }
     return schedules;
@@ -70,7 +70,7 @@ public class WorkflowScheduleServiceImpl implements WorkflowScheduleService {
     final List<WorkflowScheduleEntity> entities = workflowScheduleRepository.getSchedulesForWorkflow(workflowId);
     if (entities != null) {
       entities.forEach(e -> {
-        schedules.add(new WorkflowSchedule(e));
+        schedules.add(convertScheduleEntityToModel(e));
       });
     }
     return schedules;
@@ -80,9 +80,20 @@ public class WorkflowScheduleServiceImpl implements WorkflowScheduleService {
   public WorkflowSchedule getSchedule(String scheduleId) {
     final WorkflowScheduleEntity scheduleEntity = workflowScheduleRepository.getSchedule(scheduleId);
     if (scheduleEntity != null) {
-      return new WorkflowSchedule(scheduleEntity);
+      return convertScheduleEntityToModel(scheduleEntity);
     }
     return null;
+  }
+  
+  private WorkflowSchedule convertScheduleEntityToModel(WorkflowScheduleEntity entity) {
+    WorkflowSchedule schedule = new WorkflowSchedule(entity);
+    try {
+      schedule.setNextScheduleDate(this.taskScheduler.getNextTriggerDate(entity));
+    } catch (SchedulerException e1) {
+      //Skip setting next schedule date but don't fail.
+      e1.printStackTrace();
+    }
+    return schedule;
   }
   
   @Override

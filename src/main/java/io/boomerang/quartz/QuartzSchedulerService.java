@@ -125,4 +125,10 @@ public class QuartzSchedulerService {
     logger.info("Retrieving Dates from: " + fromDate.toString() + ", to: " + toDate.toString());
     return org.quartz.TriggerUtils.computeFireTimesBetween((OperableTrigger) trigger, new BaseCalendar(), fromDate, toDate);
   }
+  
+  public Date getNextTriggerDate(WorkflowScheduleEntity schedule) throws SchedulerException {
+    Scheduler scheduler = schedulerFactoryBean.getScheduler();
+    Trigger trigger = scheduler.getTrigger(new TriggerKey(schedule.getId(), schedule.getWorkflowId()));
+    return trigger.getNextFireTime();
+  }
 }

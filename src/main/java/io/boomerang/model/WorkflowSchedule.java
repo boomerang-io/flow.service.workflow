@@ -1,5 +1,6 @@
 package io.boomerang.model;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import org.springframework.beans.BeanUtils;
@@ -16,6 +17,8 @@ public class WorkflowSchedule extends WorkflowScheduleEntity {
    */
   @JsonProperty("parameters")
   private Map<String, String> parametersMap = new HashMap<>();
+  
+  private Date nextScheduleDate;
 
   public WorkflowSchedule() {
   }
@@ -31,5 +34,13 @@ public class WorkflowSchedule extends WorkflowScheduleEntity {
 
   public void setParametersMap(Map<String, String> parametersMap) {
     this.parametersMap = parametersMap;
+  }
+
+  public Date getNextScheduleDate() {
+    return nextScheduleDate;
+  }
+
+  public void setNextScheduleDate(Date nextScheduleDate) {
+    this.nextScheduleDate = nextScheduleDate;
   }
 }
