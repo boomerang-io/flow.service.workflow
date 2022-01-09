@@ -13,7 +13,7 @@ import io.boomerang.mongo.model.WorkflowScheduleStatus;
 import io.boomerang.mongo.repository.FlowWorkflowScheduleRepository;
 
 @Service
-public class FlowWorkflowScheduleServiceImpl implements FlowWorkflowScheduleService {
+public class ScheduleServiceImpl implements ScheduleService {
 
   @Autowired
   private FlowWorkflowScheduleRepository workflowScheduleRepository;
@@ -40,6 +40,11 @@ public class FlowWorkflowScheduleServiceImpl implements FlowWorkflowScheduleServ
   public List<WorkflowScheduleEntity> getSchedulesForWorkflow(String workflowId) {
     return workflowScheduleRepository.findByWorkflowId(workflowId);
   }
+  
+  @Override
+  public List<WorkflowScheduleEntity> getSchedulesForWorkflowNotDeleted(String workflowId) {
+    return workflowScheduleRepository.findByWorkflowIdAndStatusNot(workflowId, WorkflowScheduleStatus.deleted);
+  }
 
   @Override
   public WorkflowScheduleEntity saveSchedule(WorkflowScheduleEntity entity) {
@@ -52,16 +57,15 @@ public class FlowWorkflowScheduleServiceImpl implements FlowWorkflowScheduleServ
   }
 
   @Override
-  public List<WorkflowScheduleEntity> getAllSchedules(List<String> workflowIds,
+  public List<WorkflowScheduleEntity> getAllSchedulesNotDeleted(List<String> workflowIds,
       Optional<List<String>> statuses, Optional<List<String>> types) {
-    
-    Criteria criteria = buildCriteriaList(workflowIds, statuses, types);
+    Criteria criteria = this.buildAllSchedulesCriteriaList(workflowIds, statuses, types);
     Query query = new Query(criteria);
     List<WorkflowScheduleEntity> list = this.mongoTemplate.find(query, WorkflowScheduleEntity.class);
     return list;
   }
 
-  private Criteria buildCriteriaList(List<String> workflowIds,
+  private Criteria buildAllSchedulesCriteriaList(List<String> workflowIds,
       Optional<List<String>> statuses, Optional<List<String>> types) {
     List<Criteria> criterias = new ArrayList<>();
     
@@ -74,6 +78,9 @@ public class FlowWorkflowScheduleServiceImpl implements FlowWorkflowScheduleServ
       Criteria dynamicCriteria = Criteria.where("status").in(statuses.get());
       criterias.add(dynamicCriteria);
     }
+    
+    Criteria statusCriteria = Criteria.where("status").ne(WorkflowScheduleStatus.deleted);
+    criterias.add(statusCriteria);
     
     Criteria workflowIdsCriteria = Criteria.where("workflowId").in(workflowIds);
     criterias.add(workflowIdsCriteria);

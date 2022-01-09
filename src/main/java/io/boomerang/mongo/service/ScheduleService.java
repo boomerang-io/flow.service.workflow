@@ -5,7 +5,7 @@ import java.util.Optional;
 import io.boomerang.mongo.entity.WorkflowScheduleEntity;
 import io.boomerang.mongo.model.WorkflowScheduleStatus;
 
-public interface FlowWorkflowScheduleService {
+public interface ScheduleService {
 
   void deleteSchedule(String id);
 
@@ -20,8 +20,10 @@ public interface FlowWorkflowScheduleService {
 
   List<WorkflowScheduleEntity> getSchedules(List<String> ids);
 
-  List<WorkflowScheduleEntity> getAllSchedules(List<String> workflowIds,
+  List<WorkflowScheduleEntity> getAllSchedulesNotDeleted(List<String> workflowIds,
       Optional<List<String>> statuses, Optional<List<String>> types);
+
+  List<WorkflowScheduleEntity> getSchedulesForWorkflowNotDeleted(String workflowId);
 
 
 }

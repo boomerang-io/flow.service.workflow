@@ -25,7 +25,7 @@ import io.boomerang.mongo.entity.WorkflowScheduleEntity;
 import io.boomerang.mongo.model.KeyValuePair;
 import io.boomerang.mongo.model.WorkflowScheduleStatus;
 import io.boomerang.mongo.model.WorkflowScheduleType;
-import io.boomerang.mongo.service.FlowWorkflowScheduleService;
+import io.boomerang.mongo.service.ScheduleService;
 import io.boomerang.mongo.service.FlowWorkflowService;
 import io.boomerang.quartz.QuartzSchedulerService;
 import io.boomerang.service.FilterService;
@@ -40,7 +40,7 @@ public class WorkflowScheduleServiceImpl implements WorkflowScheduleService {
   private QuartzSchedulerService taskScheduler;
 
   @Autowired
-  private FlowWorkflowScheduleService workflowScheduleRepository;
+  private ScheduleService workflowScheduleRepository;
 
   @Autowired
   private FlowWorkflowService workflowRepository;
@@ -55,7 +55,7 @@ public class WorkflowScheduleServiceImpl implements WorkflowScheduleService {
     List<WorkflowSchedule> schedules = new LinkedList<>();
 
     List<String> filteredWorkflowIds = filterService.getFilteredWorkflowIds(workflowIds, teamIds, scopes);
-    final List<WorkflowScheduleEntity> entities = workflowScheduleRepository.getAllSchedules(filteredWorkflowIds, statuses, types);
+    final List<WorkflowScheduleEntity> entities = workflowScheduleRepository.getAllSchedulesNotDeleted(filteredWorkflowIds, statuses, types);
     if (entities != null) {
       entities.forEach(e -> {
         schedules.add(convertScheduleEntityToModel(e));
@@ -67,7 +67,7 @@ public class WorkflowScheduleServiceImpl implements WorkflowScheduleService {
   @Override
   public List<WorkflowSchedule> getSchedulesForWorkflow(String workflowId) {
     List<WorkflowSchedule> schedules = new LinkedList<>();
-    final List<WorkflowScheduleEntity> entities = workflowScheduleRepository.getSchedulesForWorkflow(workflowId);
+    final List<WorkflowScheduleEntity> entities = workflowScheduleRepository.getSchedulesForWorkflowNotDeleted(workflowId);
     if (entities != null) {
       entities.forEach(e -> {
         schedules.add(convertScheduleEntityToModel(e));
@@ -89,9 +89,8 @@ public class WorkflowScheduleServiceImpl implements WorkflowScheduleService {
     WorkflowSchedule schedule = new WorkflowSchedule(entity);
     try {
       schedule.setNextScheduleDate(this.taskScheduler.getNextTriggerDate(entity));
-    } catch (SchedulerException e1) {
-      //Skip setting next schedule date but don't fail.
-      e1.printStackTrace();
+    } catch (Exception e) {
+      logger.info("Unable to retrieve next schedule date for {}, skipping.", entity.getId());
     }
     return schedule;
   }

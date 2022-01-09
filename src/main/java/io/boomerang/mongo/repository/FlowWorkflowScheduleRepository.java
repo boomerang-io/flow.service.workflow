@@ -15,6 +15,8 @@ public interface FlowWorkflowScheduleRepository
 
   List<WorkflowScheduleEntity> findByWorkflowId(String workflowId);
 
+  List<WorkflowScheduleEntity> findByWorkflowIdAndStatusNot(String workflowId, WorkflowScheduleStatus status);
+
   List<WorkflowScheduleEntity> findByIdIn(List<String> ids);
 
   List<WorkflowScheduleEntity> findByWorkflowIdAndStatusIn(
