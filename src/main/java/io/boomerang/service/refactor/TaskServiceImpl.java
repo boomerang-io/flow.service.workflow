@@ -39,6 +39,7 @@ import io.boomerang.mongo.model.ManualType;
 import io.boomerang.mongo.model.Revision;
 import io.boomerang.mongo.model.TaskStatus;
 import io.boomerang.mongo.model.TaskType;
+import io.boomerang.mongo.model.WorkflowScheduleType;
 import io.boomerang.mongo.model.internal.InternalTaskRequest;
 import io.boomerang.mongo.model.internal.InternalTaskResponse;
 import io.boomerang.mongo.model.next.DAGTask;
@@ -284,6 +285,10 @@ public class TaskServiceImpl implements TaskService {
       schedule.setCreationDate(activity.getCreationDate());
       schedule.setDateSchedule(date);
       schedule.setTimezone(timezone);
+      schedule.setType(WorkflowScheduleType.runOnce);
+      List<KeyValuePair> labels = new LinkedList<>();
+      labels.add(new KeyValuePair("workflowName",task.getWorkflowName()));
+      schedule.setLabels(labels);
       scheduleService.createSchedule(schedule);
       //TODO: Add a taskExecution with the ScheduleId so it can be deep linked.
     } else {
