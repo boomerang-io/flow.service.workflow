@@ -264,7 +264,7 @@ public class TaskServiceImpl implements TaskService {
       SimpleDateFormat formatter = new SimpleDateFormat("dd-M-yyyy hh:mm:ss a");
       Date date = null;
       try {
-        date = formatter.parse(task.getInputs().get("scheduleDate"));
+        date = formatter.parse(task.getInputs().get("dateSchedule"));
       } catch (ParseException e) {
         e.printStackTrace();
         response.setStatus(TaskStatus.failure);
@@ -272,13 +272,14 @@ public class TaskServiceImpl implements TaskService {
       }
       Map<String, String> properties = new HashMap<>();
       for (Map.Entry<String, String> entry : task.getInputs().entrySet()) {
-        if (!"workflowId".equals(entry.getKey()) && !"scheduleDate".equals(entry.getKey()) && !"timezone".equals(entry.getKey())) {
+        if (!"workflowId".equals(entry.getKey()) && !"dateSchedule".equals(entry.getKey()) && !"timezone".equals(entry.getKey())) {
           properties.put(entry.getKey(), entry.getValue());
         }
       }
       
       WorkflowSchedule schedule = new WorkflowSchedule();
       schedule.setName(task.getWorkflowName());
+      schedule.setDescription("This schedule was generated through automation from your workflow");
       schedule.setParametersMap(properties);
       schedule.setCreationDate(activity.getCreationDate());
       schedule.setDateSchedule(date);
