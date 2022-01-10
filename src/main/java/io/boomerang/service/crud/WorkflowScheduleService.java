@@ -40,8 +40,6 @@ public interface WorkflowScheduleService {
 
   void enableAllTriggerSchedules(String workflowId);
 
-  void disableTriggerSchedule(String scheduleId) throws SchedulerException;
-
   void disableAllTriggerSchedules(String workflowId);
 
   List<WorkflowScheduleCalendar> getCalendarsForWorkflow(String workflowId, Date fromDate,

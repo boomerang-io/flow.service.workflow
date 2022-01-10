@@ -255,7 +255,7 @@ public class WorkflowScheduleServiceImpl implements WorkflowScheduleService {
   
   @Override
   public void disableAllTriggerSchedules(final String workflowId) {
-    final List<WorkflowScheduleEntity> entities = workflowScheduleRepository.getSchedulesForWorkflow(workflowId);
+    final List<WorkflowScheduleEntity> entities = workflowScheduleRepository.getSchedulesForWorkflowWithStatus(workflowId, WorkflowScheduleStatus.active);
     if (entities != null) {
       entities.forEach(s -> {
         try {
@@ -268,8 +268,7 @@ public class WorkflowScheduleServiceImpl implements WorkflowScheduleService {
     }
   }
   
-  @Override
-  public void disableTriggerSchedule(String scheduleId) throws SchedulerException {
+  private void disableTriggerSchedule(String scheduleId) throws SchedulerException {
     WorkflowScheduleEntity schedule = workflowScheduleRepository.getSchedule(scheduleId);
     if (schedule!= null && !WorkflowScheduleStatus.deleted.equals(schedule.getStatus())) {
       schedule.setStatus(WorkflowScheduleStatus.trigger_disabled);
