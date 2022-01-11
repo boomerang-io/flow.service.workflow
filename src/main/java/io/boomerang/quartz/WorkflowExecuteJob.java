@@ -9,12 +9,17 @@ import org.quartz.JobExecutionException;
 import org.quartz.PersistJobDataAfterExecution;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.scheduling.quartz.QuartzJobBean;
 import org.springframework.scheduling.quartz.SchedulerFactoryBean;
 import io.boomerang.controller.ExecutionController;
 import io.boomerang.model.FlowExecutionRequest;
+import io.boomerang.model.WorkflowSchedule;
 import io.boomerang.mongo.model.FlowTriggerEnum;
+import io.boomerang.mongo.model.WorkflowScheduleType;
+import io.boomerang.service.crud.WorkflowScheduleService;
+import io.boomerang.util.ParameterMapper;
 
 @PersistJobDataAfterExecution
 public class WorkflowExecuteJob extends QuartzJobBean {
@@ -22,6 +27,9 @@ public class WorkflowExecuteJob extends QuartzJobBean {
   private static final Logger logger = LoggerFactory.getLogger(WorkflowExecuteJob.class);
 
   private ApplicationContext applicationContext;
+
+  @Autowired
+  private WorkflowScheduleService workflowScheduleService;
 
   /**
    * This method is called by Spring since we set the
@@ -53,8 +61,16 @@ public class WorkflowExecuteJob extends QuartzJobBean {
     
     Map<String, String> properties = new HashMap<>();
     
-    
-    //TODO: get the workflow parameters off the schedule
+    WorkflowSchedule schedule = workflowScheduleService.getSchedule(jobDetail.getKey().getName());
+    if (schedule != null) {
+      if (schedule.getParameters() != null) {
+        properties = ParameterMapper.keyValuePairListToMap(schedule.getParameters());
+      }
+      if (schedule.getType().equals(WorkflowScheduleType.runOnce)) {
+        workflowScheduleService.deleteSchedule(schedule.getId());
+        //TODO: confirm if we delete or mark completed
+      }
+    }
 
     FlowExecutionRequest request = new FlowExecutionRequest();
     request.setProperties(properties);
