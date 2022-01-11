@@ -92,6 +92,7 @@ public class WorkflowScheduleServiceImpl implements WorkflowScheduleService {
     } catch (Exception e) {
       logger.info("Unable to retrieve next schedule date for {}, skipping.", entity.getId());
     }
+    logger.info("Schedule:" + schedule.toString());
     return schedule;
   }
   
