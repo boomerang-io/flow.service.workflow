@@ -1006,7 +1006,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
           flowSettingsService.getConfiguration("users", "max.user.workflow.duration").getValue());
     } else if (scope == WorkflowScope.team) {
       maxDuration = Integer.parseInt(
-          flowSettingsService.getConfiguration("teams", "max.user.workflow.duration").getValue());
+          flowSettingsService.getConfiguration("teams", "max.team.workflow.duration").getValue());
     }
 
     List<TaskExecutionEntity> activites = taskService.findTaskActiivtyForActivity(activityId);
