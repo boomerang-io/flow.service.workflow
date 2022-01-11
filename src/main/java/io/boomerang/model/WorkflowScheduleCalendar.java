@@ -1,6 +1,10 @@
 package io.boomerang.model;
 
 import java.util.Date;
+
+/*
+ * Maps a list of Dates returned by Quartz utils to a schedule for displaying on the calendar
+ */
 import java.util.List;
 
 public class WorkflowScheduleCalendar {

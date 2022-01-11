@@ -31,6 +31,12 @@ import io.boomerang.quartz.QuartzSchedulerService;
 import io.boomerang.service.FilterService;
 import io.boomerang.util.ParameterMapper;
 
+/*
+ * Workflow Schedule Serivce provides all the methods for both the Schedules page and the individual Workflow Schedule
+ * and abstracts the quartz implementation.
+ * 
+ * @since Flow 3.6.0
+ */
 @Service
 public class WorkflowScheduleServiceImpl implements WorkflowScheduleService {
 
@@ -48,6 +54,11 @@ public class WorkflowScheduleServiceImpl implements WorkflowScheduleService {
   @Autowired
   private FilterService filterService;
   
+  /*
+   * Provides an all encompassing schedule retrieval method with optional filters. Ignores deleted schedules.
+   * 
+   * @return list of Workflow Schedules
+   */
   @Override
   public List<WorkflowSchedule> getSchedules(Optional<List<String>> workflowIds,
       Optional<List<String>> teamIds, Optional<List<String>> statuses, Optional<List<String>> types,
@@ -64,6 +75,11 @@ public class WorkflowScheduleServiceImpl implements WorkflowScheduleService {
     return schedules;
   }
   
+  /*
+   * Retrieves all non deleted schedules for a specific workflow.
+   * 
+   * @return list of Workflow Schedules
+   */
   @Override
   public List<WorkflowSchedule> getSchedulesForWorkflow(String workflowId) {
     List<WorkflowSchedule> schedules = new LinkedList<>();
@@ -76,6 +92,11 @@ public class WorkflowScheduleServiceImpl implements WorkflowScheduleService {
     return schedules;
   }
   
+  /*
+   * Retrieves a specific schedule
+   * 
+   * @return a single Workflow Schedule
+   */
   @Override
   public WorkflowSchedule getSchedule(String scheduleId) {
     final WorkflowScheduleEntity scheduleEntity = workflowScheduleRepository.getSchedule(scheduleId);
@@ -85,6 +106,11 @@ public class WorkflowScheduleServiceImpl implements WorkflowScheduleService {
     return null;
   }
   
+  /*
+   * Helper method to convert from Entity to Model as well as adding in the next schedule date.
+   * 
+   * @return the single returnable schedule.
+   */
   private WorkflowSchedule convertScheduleEntityToModel(WorkflowScheduleEntity entity) {
     WorkflowSchedule schedule = new WorkflowSchedule(entity);
     try {
@@ -95,6 +121,11 @@ public class WorkflowScheduleServiceImpl implements WorkflowScheduleService {
     return schedule;
   }
   
+  /*
+   * Retrieves the calendar dates between a start and end date period for the schedules provided.
+   * 
+   * @return list of Schedule Calendars
+   */
   @Override
   public List<WorkflowScheduleCalendar> getCalendarsForSchedules(final List<String> scheduleIds, Date fromDate, Date toDate) {
     List<WorkflowScheduleCalendar> scheduleCalendars = new LinkedList<>();
@@ -106,11 +137,15 @@ public class WorkflowScheduleServiceImpl implements WorkflowScheduleService {
         scheduleCalendar.setDates(getCalendarForDates(e.getId(), fromDate, toDate));
         scheduleCalendars.add(scheduleCalendar);
       });
-      return scheduleCalendars;
     }
-    return null;
+    return scheduleCalendars;
   }
   
+  /*
+   * Retrieves the calendar dates between a start and end date period for a specific workflow
+   * 
+   * @return list of Schedule Calendars
+   */
   @Override
   public List<WorkflowScheduleCalendar> getCalendarsForWorkflow(final String workflowId, Date fromDate, Date toDate) {
     List<WorkflowScheduleCalendar> scheduleCalendars = new LinkedList<>();
@@ -122,11 +157,15 @@ public class WorkflowScheduleServiceImpl implements WorkflowScheduleService {
         scheduleCalendar.setDates(getCalendarForDates(e.getId(), fromDate, toDate));
         scheduleCalendars.add(scheduleCalendar);
       });
-      return scheduleCalendars;
     }
-    return null;
+    return scheduleCalendars;
   }
   
+  /*
+   * Retrieves the calendar dates between a start and end date period for a specific schedule
+   * 
+   * @return a list of dates for a single Schedule Calendar
+   */
   @Override
   public List<Date> getCalendarForDates(final String scheduleId, Date fromDate, Date toDate) {
     final WorkflowScheduleEntity scheduleEntity = workflowScheduleRepository.getSchedule(scheduleId);
@@ -142,6 +181,11 @@ public class WorkflowScheduleServiceImpl implements WorkflowScheduleService {
     return new LinkedList<>();
   }
   
+  /*
+   * Create a schedule based on the payload which includes the Workflow Id.
+   * 
+   * @return echos the created schedule
+   */
   @Override
   public WorkflowSchedule createSchedule(final WorkflowSchedule schedule) {
 //  TODO: do we have to check if they have authorization to create a workflow against that team?
@@ -170,6 +214,11 @@ public class WorkflowScheduleServiceImpl implements WorkflowScheduleService {
     return null;
   }
   
+  /*
+   * Update a schedule based on the payload and the Schedules Id.
+   * 
+   * @return echos the updated schedule
+   */
   @Override
   public WorkflowSchedule updateSchedule(final String scheduleId, final WorkflowSchedule patchSchedule) {
     if (patchSchedule != null) {
@@ -194,6 +243,10 @@ public class WorkflowScheduleServiceImpl implements WorkflowScheduleService {
     return null;
   }
 
+  /*
+   * Helper method to determine if we are updating a cron or runonce schedule. It also handles
+   * pausing a schedule if the status is set to pause.
+   */
   private void createOrUpdateSchedule(final WorkflowScheduleEntity schedule, Boolean enableJob) {
     try {
       if (WorkflowScheduleType.runOnce.equals(schedule.getType())) {
@@ -213,21 +266,10 @@ public class WorkflowScheduleServiceImpl implements WorkflowScheduleService {
     }
   }
   
-  @Override
-  public void enableAllSchedules(final String workflowId) {
-    final List<WorkflowScheduleEntity> entities = workflowScheduleRepository.getSchedulesForWorkflow(workflowId);
-    if (entities != null) {
-      entities.forEach(s -> {
-        try {
-          enableSchedule(s.getId());
-        } catch (SchedulerException e) {
-          // TODO Auto-generated catch block
-          e.printStackTrace();
-        }
-      });
-    }
-  }
-  
+  /*
+   * Enables all schedules that have been disabled by the trigger being disabled. This is needed to 
+   * differentiate between user paused and trigger disabled schedules.
+   */
   @Override
   public void enableAllTriggerSchedules(final String workflowId) {
     final List<WorkflowScheduleEntity> entities = workflowScheduleRepository.getSchedulesForWorkflowWithStatus(workflowId, WorkflowScheduleStatus.trigger_disabled);
@@ -243,6 +285,9 @@ public class WorkflowScheduleServiceImpl implements WorkflowScheduleService {
     }
   }
   
+  /* 
+   * Enables a specific schedule
+   */
   @Override
   public void enableSchedule(String scheduleId) throws SchedulerException {
     WorkflowScheduleEntity schedule = workflowScheduleRepository.getSchedule(scheduleId);
@@ -255,13 +300,21 @@ public class WorkflowScheduleServiceImpl implements WorkflowScheduleService {
     }
   }
   
+  /*
+   * Disables all schedules that are currently active and is used when the trigger is disabled.
+   */
   @Override
   public void disableAllTriggerSchedules(final String workflowId) {
     final List<WorkflowScheduleEntity> entities = workflowScheduleRepository.getSchedulesForWorkflowWithStatus(workflowId, WorkflowScheduleStatus.active);
     if (entities != null) {
       entities.forEach(s -> {
         try {
-          disableTriggerSchedule(s.getId());
+          WorkflowScheduleEntity schedule = workflowScheduleRepository.getSchedule(s.getId());
+          if (schedule!= null) {
+            schedule.setStatus(WorkflowScheduleStatus.trigger_disabled);
+            workflowScheduleRepository.saveSchedule(schedule);
+            this.taskScheduler.pauseJob(schedule);
+          }
         } catch (SchedulerException e) {
           // TODO Auto-generated catch block
           e.printStackTrace();
@@ -270,32 +323,9 @@ public class WorkflowScheduleServiceImpl implements WorkflowScheduleService {
     }
   }
   
-  private void disableTriggerSchedule(String scheduleId) throws SchedulerException {
-    WorkflowScheduleEntity schedule = workflowScheduleRepository.getSchedule(scheduleId);
-    if (schedule!= null && !WorkflowScheduleStatus.deleted.equals(schedule.getStatus())) {
-      schedule.setStatus(WorkflowScheduleStatus.trigger_disabled);
-      workflowScheduleRepository.saveSchedule(schedule);
-      this.taskScheduler.pauseJob(schedule);
-    } else {
-//        TODO: return that it couldn't be disabled or doesn't exist
-    }
-  }
-  
-  @Override
-  public void disableAllSchedules(final String workflowId) {
-    final List<WorkflowScheduleEntity> entities = workflowScheduleRepository.getSchedulesForWorkflow(workflowId);
-    if (entities != null) {
-      entities.forEach(s -> {
-        try {
-          disableSchedule(s.getId());
-        } catch (SchedulerException e) {
-          // TODO Auto-generated catch block
-          e.printStackTrace();
-        }
-      });
-    }
-  }
-  
+  /*
+   * Disable a specific schedule
+   */
   @Override
   public void disableSchedule(String scheduleId) throws SchedulerException {
     WorkflowScheduleEntity schedule = workflowScheduleRepository.getSchedule(scheduleId);
@@ -308,6 +338,9 @@ public class WorkflowScheduleServiceImpl implements WorkflowScheduleService {
     }
   }
   
+  /*
+   * Mark all schedules as deleted and cancel the quartz jobs. This is used when a workflow is deleted.
+   */
   @Override
   public void deleteAllSchedules(final String workflowId) {
 //    TODO: get this integrated with the deleteWorkflow
@@ -319,6 +352,9 @@ public class WorkflowScheduleServiceImpl implements WorkflowScheduleService {
     }
   }
   
+  /*
+   * Mark a single schedule as deleted and cancel the quartz jobs. Used by the UI when deleting a schedule.
+   */
   @Override
   public ResponseEntity<?> deleteSchedule(final String scheduleId) {
     try {
@@ -338,6 +374,12 @@ public class WorkflowScheduleServiceImpl implements WorkflowScheduleService {
     return ResponseEntity.ok().build();
   }
   
+  /*
+   * Helper method to validate the cron provided by the user.
+   * 
+   * @since 3.4.0
+   * @return a cron validation response.
+   */
   @Override
   public CronValidationResponse validateCron(String cronString) {
 
