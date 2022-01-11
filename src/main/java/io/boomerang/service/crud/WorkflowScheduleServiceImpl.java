@@ -133,7 +133,8 @@ public class WorkflowScheduleServiceImpl implements WorkflowScheduleService {
     if (scheduleEntity != null) {
       try {
         return this.taskScheduler.getJobTriggerDates(scheduleEntity, fromDate, toDate);
-      } catch (SchedulerException e) {
+      } catch (Exception e) {
+        e.printStackTrace();
         logger.info("Unable to retrieve calendar for Schedule: {}, skipping.", scheduleEntity.getId());
       }
     }
