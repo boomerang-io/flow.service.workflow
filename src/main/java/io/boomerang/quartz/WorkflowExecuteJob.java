@@ -9,7 +9,6 @@ import org.quartz.JobExecutionException;
 import org.quartz.PersistJobDataAfterExecution;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.scheduling.quartz.QuartzJobBean;
 import org.springframework.scheduling.quartz.SchedulerFactoryBean;
@@ -27,9 +26,6 @@ public class WorkflowExecuteJob extends QuartzJobBean {
   private static final Logger logger = LoggerFactory.getLogger(WorkflowExecuteJob.class);
 
   private ApplicationContext applicationContext;
-
-  @Autowired
-  private WorkflowScheduleService workflowScheduleService;
 
   /**
    * This method is called by Spring since we set the
@@ -56,6 +52,7 @@ public class WorkflowExecuteJob extends QuartzJobBean {
     }
 
     ExecutionController executionController = applicationContext.getBean(ExecutionController.class);
+    WorkflowScheduleService workflowScheduleService = applicationContext.getBean(WorkflowScheduleService.class);
 
     String workflowId = jobDetail.getKey().getGroup();
     
@@ -67,6 +64,7 @@ public class WorkflowExecuteJob extends QuartzJobBean {
         properties = ParameterMapper.keyValuePairListToMap(schedule.getParameters());
       }
       if (schedule.getType().equals(WorkflowScheduleType.runOnce)) {
+        logger.info("Executing runOnce schedule: {}, and marking as deleted.", schedule.getId());
         workflowScheduleService.deleteSchedule(schedule.getId());
         //TODO: confirm if we delete or mark completed
       }
