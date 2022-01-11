@@ -66,6 +66,7 @@ import io.boomerang.mongo.entity.RevisionEntity;
 import io.boomerang.mongo.entity.TaskExecutionEntity;
 import io.boomerang.mongo.entity.WorkflowEntity;
 import io.boomerang.mongo.model.KeyValuePair;
+import io.boomerang.mongo.model.Quotas;
 import io.boomerang.mongo.model.Dag;
 import io.boomerang.mongo.model.ErrorResponse;
 import io.boomerang.mongo.model.FlowTriggerEnum;
@@ -1005,8 +1006,12 @@ public class FlowActivityServiceImpl implements FlowActivityService {
       maxDuration = Integer.parseInt(
           flowSettingsService.getConfiguration("users", "max.user.workflow.duration").getValue());
     } else if (scope == WorkflowScope.team) {
-      maxDuration = Integer.parseInt(
-          flowSettingsService.getConfiguration("teams", "max.team.workflow.duration").getValue());
+      Quotas teamQuotas = teamService.getTeamById(workflow.getFlowTeamId()).getQuotas();
+
+      maxDuration = teamQuotas != null && teamQuotas.getMaxWorkflowExecutionTime() != null
+          ? teamQuotas.getMaxWorkflowExecutionTime()
+          : Integer.parseInt(flowSettingsService
+              .getConfiguration("teams", "max.team.workflow.duration").getValue());
     }
 
     List<TaskExecutionEntity> activites = taskService.findTaskActiivtyForActivity(activityId);
