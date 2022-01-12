@@ -1024,7 +1024,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
 
     System.out.println("********total duration***** "+ totalDuration);
     
-    System.out.println("********maxDuration < totalDuration***** "+ (maxDuration < totalDuration);
+    System.out.println(maxDuration < totalDuration);
     if (maxDuration < totalDuration) {
       return true;
     }
