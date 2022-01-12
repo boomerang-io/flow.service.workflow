@@ -997,7 +997,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
     long maxDuration = TimeUnit.MINUTES.toMillis(this.maxWorkflowDuration);
     System.out.println("********max duration app.prop***** "+ maxDuration);
     if (scope == WorkflowScope.user) {
-      maxDuration = Integer.parseInt(flowSettingsService.getConfiguration("users", "max.user.workflow.duration").getValue());
+      maxDuration = TimeUnit.MINUTES.toMillis(Integer.parseInt(flowSettingsService.getConfiguration("users", "max.user.workflow.duration").getValue()));
       System.out.println("********usermax duration***** "+ maxDuration);
     } else if (scope == WorkflowScope.team) {
       /** Retrieve from settings. */
