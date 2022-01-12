@@ -97,7 +97,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
   @Autowired
   private FlowSettingsService flowSettingsService;
 
-  
+
   @Autowired
   private FlowWorkflowActivityService flowActivityService;
 
@@ -896,7 +896,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
     if (error != null) {
       activity.setError(error);
     }
-    
+
     flowActivityService.saveWorkflowActivity(activity);
 
     String workflowId = activity.getWorkflowId();
@@ -993,11 +993,16 @@ public class FlowActivityServiceImpl implements FlowActivityService {
     }
     
     long maxDuration = TimeUnit.MINUTES.toMillis(this.maxWorkflowDuration);
+    System.out.println("********max duration app.prop***** "+ maxDuration);
     if (scope == WorkflowScope.user) {
       maxDuration = Integer.parseInt(flowSettingsService.getConfiguration("users", "max.user.workflow.duration").getValue());
+      System.out.println("********usermax duration***** "+ maxDuration);
     } else if (scope == WorkflowScope.team) {
       /** Retrieve from settings. */
+      System.out.println("*******team*max duration***** "+ maxDuration);
     }
+    
+    System.out.println("********max duration***** "+ maxDuration);
     
     List<TaskExecutionEntity> activites = taskService.findTaskActiivtyForActivity(activityId);
 
@@ -1017,6 +1022,9 @@ public class FlowActivityServiceImpl implements FlowActivityService {
       }
     }
 
+    System.out.println("********total duration***** "+ totalDuration);
+    
+    System.out.println("********maxDuration < totalDuration***** "+ (maxDuration < totalDuration);
     if (maxDuration < totalDuration) {
       return true;
     }
