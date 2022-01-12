@@ -985,29 +985,27 @@ public class FlowActivityServiceImpl implements FlowActivityService {
 
   @Override
   public boolean hasExceededExecutionQuotas(String activityId) {
-    
+
     ActivityEntity activity = flowActivityService.findWorkflowActivtyById(activityId);
     String workflowId = activity.getWorkflowId();
     final WorkflowEntity workflow = workflowService.getWorkflow(workflowId);
     WorkflowScope scope = workflow.getScope();
-    if(scope == WorkflowScope.system) {
+    if (scope == WorkflowScope.system) {
       return false;
     }
-    
+
     long maxDuration = TimeUnit.MINUTES.toMillis(this.maxWorkflowDuration);
-    System.out.println("********max duration app.prop***** "+ maxDuration);
     if (scope == WorkflowScope.user) {
-      maxDuration = TimeUnit.MINUTES.toMillis(Integer.parseInt(flowSettingsService.getConfiguration("users", "max.user.workflow.duration").getValue()));
-      System.out.println("********usermax duration***** "+ maxDuration);
+      maxDuration = TimeUnit.MINUTES.toMillis(Integer.parseInt(
+          flowSettingsService.getConfiguration("users", "max.user.workflow.duration").getValue()));
+
     } else if (scope == WorkflowScope.team) {
-      /** Retrieve from settings. */
-      System.out.println("*******team*max duration***** "+ maxDuration);
+      maxDuration = TimeUnit.MINUTES.toMillis(teamService.getTeamById(workflow.getFlowTeamId())
+          .getQuotas().getMaxWorkflowExecutionTime());
     }
-    
-    System.out.println("********max duration***** "+ maxDuration);
-    
+
     List<TaskExecutionEntity> activites = taskService.findTaskActiivtyForActivity(activityId);
-    
+
     ObjectMapper objectMapper = new ObjectMapper();
     try {
       System.out.println("********activites***** ");
@@ -1018,7 +1016,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
     }
 
     long totalDuration = 0;
-   
+
     for (TaskExecutionEntity task : activites) {
       if (task.getTaskType() == TaskType.template || task.getTaskType() == TaskType.customtask) {
 
@@ -1033,8 +1031,8 @@ public class FlowActivityServiceImpl implements FlowActivityService {
       }
     }
 
-    System.out.println("********total duration***** "+ totalDuration);
-    
+    System.out.println("********total duration***** " + totalDuration);
+
     System.out.println(maxDuration < totalDuration);
     if (maxDuration < totalDuration) {
       return true;
