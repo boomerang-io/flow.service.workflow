@@ -1,8 +1,5 @@
 package io.boomerang.service.refactor;
 
-import java.sql.Time;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Comparator;
 import java.util.Date;
@@ -266,13 +263,12 @@ public class TaskServiceImpl implements TaskService {
       String futurePeriod = task.getInputs().get("futurePeriod");
       Date executionDate = activity.getCreationDate();
       String timezone = task.getInputs().get("timezone");
-      LOGGER.info("*******Run Scheduled Workflow System Task******");
-      LOGGER.info("Scheduling new task in " + futureIn + " " + futurePeriod);
+      LOGGER.debug("*******Run Scheduled Workflow System Task******");
+      LOGGER.debug("Scheduling new task in " + futureIn + " " + futurePeriod);
       
       if (futureIn != null && futureIn != 0 && StringUtils.indexOfAny(futurePeriod, new String[]{"minutes", "hours", "days", "weeks", "months"}) >= 0) {
         Calendar executionCal = Calendar.getInstance();
         executionCal.setTime(executionDate);
-        LOGGER.info("Current execution DateTime: " + executionCal.getTime().toString());
         Integer calField = Calendar.MINUTE;
         switch (futurePeriod) {
           case "hours":
@@ -290,17 +286,15 @@ public class TaskServiceImpl implements TaskService {
             break;
         }
         executionCal.add(calField, futureIn);
-        LOGGER.info("With execution DateTime set to: " + executionCal.getTime().toString());
         if (!futurePeriod.equals("minutes") && !futurePeriod.equals("hours")) {
           String[] hoursTime = task.getInputs().get("time").split(":");
-          LOGGER.info("Hours: " + hoursTime[0] + ", Minutes: " + hoursTime[1]);
           Integer hours = Integer.valueOf(hoursTime[0]);
           Integer minutes = Integer.valueOf(hoursTime[1]);
-          LOGGER.info("With time to be set to: " + task.getInputs().get("time"));
+          LOGGER.debug("With time to be set to: " + task.getInputs().get("time"));
           executionCal.set(Calendar.HOUR, hours);
           executionCal.set(Calendar.MINUTE, minutes);
         }
-        LOGGER.info("With execution DateTime set to: " + executionCal.getTime().toString());
+        LOGGER.debug("With execution set to: " + executionCal.getTime().toString());
         
         //Define new properties removing the System Task specific properties
         Map<String, String> properties = new HashMap<>();
@@ -314,7 +308,7 @@ public class TaskServiceImpl implements TaskService {
         WorkflowSchedule schedule = new WorkflowSchedule();
         schedule.setWorkflowId(workflowId);
         schedule.setName(task.getTaskName());
-        schedule.setDescription("This schedule was generated through automation from your workflow");
+        schedule.setDescription("This schedule was generated through a Run Scheduled Workflow task.");
         schedule.setParametersMap(properties);
         schedule.setCreationDate(activity.getCreationDate());
         schedule.setDateSchedule(executionCal.getTime());
@@ -325,7 +319,7 @@ public class TaskServiceImpl implements TaskService {
         schedule.setLabels(labels);
         WorkflowSchedule workflowSchedule = scheduleService.createSchedule(schedule);
         if (workflowSchedule!= null && workflowSchedule.getId() != null) {
-          LOGGER.info("Workflow Scheudle (" + workflowSchedule.getId() + ") created.");
+          LOGGER.debug("Workflow Scheudle (" + workflowSchedule.getId() + ") created.");
           //TODO: Add a taskExecution with the ScheduleId so it can be deep linked.
           response.setStatus(TaskStatus.completed);
         }
