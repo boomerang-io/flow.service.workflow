@@ -712,8 +712,9 @@ public class TaskServiceImpl implements TaskService {
 
 
         newTask.setDecisionValue(dagTask.getDecisionValue());
-      } else if (dagTask.getType() == TaskType.manual || 
-          dagTask.getType() == TaskType.runworkflow
+      } else if (dagTask.getType() == TaskType.manual 
+          || dagTask.getType() == TaskType.runworkflow
+          || dagTask.getType() == TaskType.runscheduledworkflow
           || dagTask.getType() == TaskType.setwfproperty
           || dagTask.getType() == TaskType.setwfstatus
           || dagTask.getType() == TaskType.acquirelock
