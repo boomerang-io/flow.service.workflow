@@ -261,8 +261,7 @@ public class TaskServiceImpl implements TaskService {
     response.setStatus(TaskStatus.failure);
     
     if (task.getInputs() != null) {
-      RequestFlowExecution request = new RequestFlowExecution();
-      request.setWorkflowId(task.getInputs().get("workflowId"));
+      String workflowId = task.getInputs().get("workflowId");
       Integer futureIn = Integer.valueOf(task.getInputs().get("futureIn"));
       String futurePeriod = task.getInputs().get("futurePeriod");
       Date executionDate = activity.getCreationDate();
@@ -313,7 +312,7 @@ public class TaskServiceImpl implements TaskService {
         
         //Define and create the schedule
         WorkflowSchedule schedule = new WorkflowSchedule();
-        schedule.setWorkflowId(task.getWorkflowId());
+        schedule.setWorkflowId(workflowId);
         schedule.setName(task.getTaskName());
         schedule.setDescription("This schedule was generated through automation from your workflow");
         schedule.setParametersMap(properties);
