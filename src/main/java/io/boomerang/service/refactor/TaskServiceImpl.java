@@ -278,17 +278,17 @@ public class TaskServiceImpl implements TaskService {
         switch (futurePeriod) {
           case "hours":
             calField = Calendar.HOUR;
-            LOGGER.info("calField set to: " + calField);
+            break;
           case "days":
             calField = Calendar.DATE;
-            LOGGER.info("calField set to: " + calField);
+            break;
           case "weeks":
             futureIn = futureIn * 7;
             calField = Calendar.DATE;
-            LOGGER.info("calField set to: " + calField);
+            break;
           case "months":
             calField = Calendar.MONTH;   
-            LOGGER.info("calField set to: " + calField);
+            break;
         }
         executionCal.add(calField, futureIn);
         LOGGER.info("With execution DateTime set to: " + executionCal.getTime().toString());
