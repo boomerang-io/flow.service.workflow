@@ -39,6 +39,7 @@ import io.boomerang.model.WorkflowSummary;
 import io.boomerang.model.projectstormv5.RestConfig;
 import io.boomerang.mongo.entity.RevisionEntity;
 import io.boomerang.mongo.entity.WorkflowEntity;
+import io.boomerang.mongo.entity.WorkflowScheduleEntity;
 import io.boomerang.mongo.model.ActivityStorage;
 import io.boomerang.mongo.model.Storage;
 import io.boomerang.mongo.model.TaskConfigurationNode;
@@ -47,8 +48,10 @@ import io.boomerang.mongo.model.TriggerScheduler;
 import io.boomerang.mongo.model.Triggers;
 import io.boomerang.mongo.model.WorkflowConfiguration;
 import io.boomerang.mongo.model.WorkflowProperty;
+import io.boomerang.mongo.model.WorkflowScheduleStatus;
 import io.boomerang.mongo.model.WorkflowScope;
 import io.boomerang.mongo.model.WorkflowStatus;
+import io.boomerang.service.crud.WorkflowScheduleService;
 
 
 @ExtendWith(SpringExtension.class)
@@ -63,6 +66,9 @@ public class WorkflowControllerTests extends FlowTests {
 
   @Autowired
   private InternalController internalController;
+  
+  @Autowired
+  private WorkflowScheduleService workflowScheduleService;
 
   @Test
   public void testInternalWorkflowListing() {
@@ -227,6 +233,20 @@ public class WorkflowControllerTests extends FlowTests {
     Assertions.assertEquals(1, response.size());
     Assertions.assertEquals(1, response.get(0).getVersion());
   }
+  
+  @Test
+  @Disabled
+  public void testCreateWorkflowSchedule() {
+
+    WorkflowScheduleEntity schedule = new WorkflowScheduleEntity();
+    schedule.setStatus(WorkflowScheduleStatus.active);
+    schedule.setSchedule("0 00 20 ? * TUE,WED,THU *");
+    schedule.setTimezone("timezone");
+
+    workflowScheduleService.createSchedule(schedule);
+    
+    //TODO: add logic to do one test with the scehdule trigger enabled and one without. and make sure things get updated.
+  }
 
   @Test
   @Disabled
@@ -234,8 +254,6 @@ public class WorkflowControllerTests extends FlowTests {
 
     TriggerScheduler scheduler = new TriggerScheduler();
     scheduler.setEnable(true);
-    scheduler.setSchedule("0 00 20 ? * TUE,WED,THU *");
-    scheduler.setTimezone("timezone");
 
     TriggerEvent webhook = new TriggerEvent();
     webhook.setEnable(false);
@@ -245,8 +263,6 @@ public class WorkflowControllerTests extends FlowTests {
     Assertions.assertNotNull(entity.getTriggers());
     Assertions.assertNotNull(entity.getTriggers().getWebhook());
     Assertions.assertEquals(false, entity.getTriggers().getScheduler().getEnable());
-    Assertions.assertEquals("", entity.getTriggers().getScheduler().getSchedule());
-    Assertions.assertEquals("", entity.getTriggers().getScheduler().getTimezone());
     Assertions.assertEquals(true, entity.getTriggers().getWebhook().getEnable());
     Assertions.assertEquals("A5DF2F840C0DFF496D516B4F75BD947C9BC44756A8AE8571FC45FCB064323641",
         entity.getTriggers().getWebhook().getToken());
@@ -260,9 +276,6 @@ public class WorkflowControllerTests extends FlowTests {
     Assertions.assertEquals("5d1a188af6ca2c00014c4314", updatedEntity.getId());
 
     Assertions.assertEquals(true, updatedEntity.getTriggers().getScheduler().getEnable());
-    Assertions.assertEquals("0 00 20 ? * TUE,WED,THU *",
-        updatedEntity.getTriggers().getScheduler().getSchedule());
-    Assertions.assertEquals("timezone", updatedEntity.getTriggers().getScheduler().getTimezone());
     Assertions.assertEquals(false, updatedEntity.getTriggers().getWebhook().getEnable());
     Assertions.assertEquals("A5DF2F840C0DFF496D516B4F75BD947C9BC44756A8AE8571FC45FCB064323641",
         updatedEntity.getTriggers().getWebhook().getToken());

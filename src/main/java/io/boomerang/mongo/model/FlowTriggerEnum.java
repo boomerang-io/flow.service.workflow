@@ -4,7 +4,7 @@ import java.util.Arrays;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum FlowTriggerEnum {
-  manual("manual"), scheduler("scheduler"), webhook("webhook"),slack("slack"), dockerhub("dockerhub"), custom("custom");
+  manual("manual"), scheduler("scheduler"), webhook("webhook"), custom("custom");
 
   private String trigger;
 
