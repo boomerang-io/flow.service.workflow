@@ -255,9 +255,6 @@ public class TaskServiceImpl implements TaskService {
   }
 
   private void runScheduledWorkflow(Task task, ActivityEntity activity) {
-    InternalTaskResponse response = new InternalTaskResponse();
-    response.setActivityId(task.getTaskActivityId());
-    response.setStatus(TaskStatus.completed);
     
     if (task.getInputs() != null) {
       RequestFlowExecution request = new RequestFlowExecution();
@@ -291,9 +288,10 @@ public class TaskServiceImpl implements TaskService {
           LOGGER.info("With time set to " + futureTime);
           executionDate.setTime(futureTime);
         }
-      } else {
-        response.setStatus(TaskStatus.failure);
-        this.endTask(response);
+//      } else {
+//        TODO: return a failure
+//        response.setStatus(TaskStatus.failure);
+//        this.endTask(response);
       }
 //      String timezone = task.getInputs().get("timezone");
 //      SimpleDateFormat formatter = new SimpleDateFormat("dd-M-yyyy hh:mm:ss a");
@@ -325,10 +323,14 @@ public class TaskServiceImpl implements TaskService {
       schedule.setLabels(labels);
       scheduleService.createSchedule(schedule);
       //TODO: Add a taskExecution with the ScheduleId so it can be deep linked.
-    } else {
-      response.setStatus(TaskStatus.failure);
+//    } else {
+//      TODO: return a failure
+//      response.setStatus(TaskStatus.failure);
     }
 
+    InternalTaskResponse response = new InternalTaskResponse();
+    response.setActivityId(task.getTaskActivityId());
+    response.setStatus(TaskStatus.completed);
     this.endTask(response);
   }
 
