@@ -287,9 +287,11 @@ public class TaskServiceImpl implements TaskService {
         }
         executionCal.add(calField, futureIn);
         if (!futurePeriod.equals("minutes") && !futurePeriod.equals("hours")) {
-          Integer hours = Integer.valueOf(task.getInputs().get("futureAtTime").split(":")[0]);
-          Integer minutes = Integer.valueOf(task.getInputs().get("futureAtTime").split(":")[1]);
-          LOGGER.info("With time to be set to: " + task.getInputs().get("futureAtTime"));
+          String[] hoursTime = task.getInputs().get("time").split(":");
+          LOGGER.info("Hours: " + hoursTime[0] + ", Minutes: " + hoursTime[1]);
+          Integer hours = Integer.valueOf(hoursTime[0]);
+          Integer minutes = Integer.valueOf(hoursTime[1]);
+          LOGGER.info("With time to be set to: " + task.getInputs().get("time"));
           executionCal.set(Calendar.HOUR, hours);
           executionCal.set(Calendar.MINUTE, minutes);
         }
