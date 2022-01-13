@@ -273,6 +273,7 @@ public class TaskServiceImpl implements TaskService {
       if (futureIn != null && futureIn != 0 && StringUtils.indexOfAny(futurePeriod, new String[]{"minutes", "hours", "days", "weeks", "months"}) >= 0) {
         Calendar executionCal = Calendar.getInstance();
         executionCal.setTime(executionDate);
+        LOGGER.info("Current execution DateTime: " + executionCal.getTime().toString());
         Integer calField = Calendar.MINUTE;
         switch (futurePeriod) {
           case "hours":
@@ -307,6 +308,7 @@ public class TaskServiceImpl implements TaskService {
         
         //Define and create the schedule
         WorkflowSchedule schedule = new WorkflowSchedule();
+        schedule.setWorkflowId(task.getWorkflowId());
         schedule.setName(task.getWorkflowName());
         schedule.setDescription("This schedule was generated through automation from your workflow");
         schedule.setParametersMap(properties);
@@ -318,7 +320,7 @@ public class TaskServiceImpl implements TaskService {
         labels.add(new KeyValuePair("workflowName",task.getWorkflowName()));
         schedule.setLabels(labels);
         WorkflowSchedule workflowSchedule = scheduleService.createSchedule(schedule);
-        if (workflowSchedule.getId() != null) {
+        if (workflowSchedule!= null && workflowSchedule.getId() != null) {
           LOGGER.info("Workflow Scheudle (" + workflowSchedule.getId() + ") created.");
           //TODO: Add a taskExecution with the ScheduleId so it can be deep linked.
           response.setStatus(TaskStatus.completed);
