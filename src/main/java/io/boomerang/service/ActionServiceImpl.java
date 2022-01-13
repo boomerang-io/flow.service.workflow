@@ -7,7 +7,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -24,23 +23,21 @@ import io.boomerang.model.WorkflowSummary;
 import io.boomerang.model.teams.Action;
 import io.boomerang.mongo.entity.ActivityEntity;
 import io.boomerang.mongo.entity.ApprovalEntity;
-import io.boomerang.mongo.entity.TeamEntity;
 import io.boomerang.mongo.entity.FlowUserEntity;
 import io.boomerang.mongo.entity.RevisionEntity;
 import io.boomerang.mongo.entity.TaskExecutionEntity;
+import io.boomerang.mongo.entity.TeamEntity;
 import io.boomerang.mongo.entity.WorkflowEntity;
 import io.boomerang.mongo.model.ApproverGroup;
 import io.boomerang.mongo.model.Audit;
 import io.boomerang.mongo.model.KeyValuePair;
 import io.boomerang.mongo.model.ManualType;
 import io.boomerang.mongo.model.TaskStatus;
-import io.boomerang.mongo.model.UserType;
 import io.boomerang.mongo.model.WorkflowScope;
 import io.boomerang.mongo.model.internal.InternalTaskResponse;
 import io.boomerang.mongo.model.next.DAGTask;
 import io.boomerang.mongo.service.ActivityTaskService;
 import io.boomerang.mongo.service.ApprovalService;
-import io.boomerang.mongo.service.FlowWorkflowService;
 import io.boomerang.mongo.service.RevisionService;
 import io.boomerang.service.crud.FlowActivityService;
 import io.boomerang.service.crud.TeamService;
@@ -83,7 +80,7 @@ public class ActionServiceImpl implements ActionService {
   private PropertyManager propertyManager;
 
   @Autowired
-  private FlowWorkflowService flowWorkflowService;
+  private FilterService filterService;
 
   @Override
   public void actionApproval(ApprovalRequest request) {
@@ -282,7 +279,7 @@ public class ActionServiceImpl implements ActionService {
       Optional<List<String>> scopes, String property, Direction direction,
       Optional<ApprovalStatus> status) {
 
-    List<String> workflowIdsList = getWorkflowIdsForParams(workflowIds, teamIds, scopes);
+    List<String> workflowIdsList = filterService.getFilteredWorkflowIds(workflowIds, teamIds, scopes);
     ListActionResponse response = new ListActionResponse();
 
     Page<ApprovalEntity> records =
@@ -323,86 +320,10 @@ public class ActionServiceImpl implements ActionService {
     return pageable;
   }
 
-  private List<String> getWorkflowIdsForParams(Optional<List<String>> workflowIds,
-      Optional<List<String>> teamIds, Optional<List<String>> scopes) {
-    final FlowUserEntity user = userIdentityService.getCurrentUser();
-    List<String> workflowIdsList = new LinkedList<>();
-
-    if (!workflowIds.isPresent()) {
-      if (scopes.isPresent() && !scopes.get().isEmpty()) {
-
-        List<String> scopeList = scopes.get();
-        if (scopeList.contains("user")) {
-          addUserWorkflows(user, workflowIdsList);
-        }
-        if (scopeList.contains("system") && user.getType() == UserType.admin) {
-          addSystemWorkflows(workflowIdsList);
-        }
-        if (scopeList.contains("team")) {
-          addTeamWorkflows(user, workflowIdsList, teamIds);
-        }
-      } else {
-
-        addUserWorkflows(user, workflowIdsList);
-        addTeamWorkflows(user, workflowIdsList, teamIds);
-        if (user.getType() == UserType.admin) {
-          addSystemWorkflows(workflowIdsList);
-        }
-      }
-    } else {
-      List<String> requestWorkflowList = workflowIds.get();
-      workflowIdsList.addAll(requestWorkflowList);
-    }
-    return workflowIdsList;
-  }
-
-  private void addTeamWorkflows(final FlowUserEntity user, List<String> workflowIdsList,
-      Optional<List<String>> teamIds) {
-
-    if (teamIds.isPresent() && !teamIds.get().isEmpty()) {
-      List<WorkflowEntity> allTeamWorkflows =
-          this.flowWorkflowService.getWorkflowsForTeams(teamIds.get());
-      List<String> allTeamWorkflowsIds =
-          allTeamWorkflows.stream().map(WorkflowEntity::getId).collect(Collectors.toList());
-      workflowIdsList.addAll(allTeamWorkflowsIds);
-    } else {
-      if (user.getType() == UserType.admin) {
-        List<WorkflowEntity> allTeamWorkflows = this.flowWorkflowService.getTeamWorkflows();
-        List<String> workflowIds =
-            allTeamWorkflows.stream().map(WorkflowEntity::getId).collect(Collectors.toList());
-        workflowIdsList.addAll(workflowIds);
-      } else {
-        List<TeamEntity> flowTeam = teamService.getUsersTeamListing(user);
-        List<String> flowTeamIds =
-            flowTeam.stream().map(TeamEntity::getId).collect(Collectors.toList());
-        List<WorkflowEntity> teamWorkflows =
-            this.flowWorkflowService.getWorkflowsForTeams(flowTeamIds);
-        List<String> allTeamWorkflowsIds =
-            teamWorkflows.stream().map(WorkflowEntity::getId).collect(Collectors.toList());
-        workflowIdsList.addAll(allTeamWorkflowsIds);
-      }
-    }
-  }
-
-  private void addSystemWorkflows(List<String> workflowIdsList) {
-    List<WorkflowEntity> systemWorkflows = this.flowWorkflowService.getSystemWorkflows();
-    List<String> systemWorkflowsIds =
-        systemWorkflows.stream().map(WorkflowEntity::getId).collect(Collectors.toList());
-    workflowIdsList.addAll(systemWorkflowsIds);
-  }
-
-  private void addUserWorkflows(final FlowUserEntity user, List<String> workflowIdsList) {
-    String userId = user.getId();
-    List<WorkflowEntity> userWorkflows = this.flowWorkflowService.getUserWorkflows(userId);
-    List<String> userWorkflowIds =
-        userWorkflows.stream().map(WorkflowEntity::getId).collect(Collectors.toList());
-    workflowIdsList.addAll(userWorkflowIds);
-  }
-
   @Override
   public ActionSummary getActionSummary( Optional<Date> fromDate,  Optional<Date> toDate, Optional<List<String>> workflowIds, Optional<List<String>> teamIds, Optional<ApprovalStatus> status, Optional<List<String>> scopes)
   {
-    List<String> workflowIdsList = getWorkflowIdsForParams(workflowIds, teamIds, scopes);
+    List<String> workflowIdsList = filterService.getFilteredWorkflowIds(workflowIds, teamIds, scopes);
     
     ActionSummary summary = new ActionSummary();
     long approvalCount = this.approvalService.getActionCountForType(ManualType.approval, fromDate, toDate, workflowIdsList, status);
