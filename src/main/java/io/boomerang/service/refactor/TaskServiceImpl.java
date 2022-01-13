@@ -270,7 +270,7 @@ public class TaskServiceImpl implements TaskService {
       LOGGER.info("*******Run Scheduled Workflow System Task******");
       LOGGER.info("Scheduling new task in " + futureIn + " " + futurePeriod);
       
-      if (futureIn != null && futureIn != 0 && StringUtils.indexOfAny(futurePeriod, new String[]{"Minutes", "Hours", "Days", "Weeks", "Months"}) >= 0) {
+      if (futureIn != null && futureIn != 0 && StringUtils.indexOfAny(futurePeriod, new String[]{"minutes", "hours", "days", "weeks", "months"}) >= 0) {
         Calendar executionCal = Calendar.getInstance();
         executionCal.setTime(executionDate);
         Integer calField = Calendar.MINUTE;
@@ -286,10 +286,10 @@ public class TaskServiceImpl implements TaskService {
             calField = Calendar.MONTH;   
         }
         executionCal.add(calField, futureIn);
-        if (!futurePeriod.equals("Minutes") && !futurePeriod.equals("Hours")) {
-          Integer hours = Integer.valueOf(task.getInputs().get("futureIn").split(":")[0]);
-          Integer minutes = Integer.valueOf(task.getInputs().get("futureIn").split(":")[1]);
-          LOGGER.info("With time to be set to: " + task.getInputs().get("futureIn"));
+        if (!futurePeriod.equals("minutes") && !futurePeriod.equals("hours")) {
+          Integer hours = Integer.valueOf(task.getInputs().get("futureAtTime").split(":")[0]);
+          Integer minutes = Integer.valueOf(task.getInputs().get("futureAtTime").split(":")[1]);
+          LOGGER.info("With time to be set to: " + task.getInputs().get("futureAtTime"));
           executionCal.set(Calendar.HOUR, hours);
           executionCal.set(Calendar.MINUTE, minutes);
         }
