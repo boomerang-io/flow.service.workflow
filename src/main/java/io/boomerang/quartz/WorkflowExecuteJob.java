@@ -3,7 +3,6 @@ package io.boomerang.quartz;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import org.quartz.DisallowConcurrentExecution;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -15,13 +14,16 @@ import org.springframework.scheduling.quartz.QuartzJobBean;
 import org.springframework.scheduling.quartz.SchedulerFactoryBean;
 import io.boomerang.controller.ExecutionController;
 import io.boomerang.model.FlowExecutionRequest;
+import io.boomerang.model.WorkflowSchedule;
 import io.boomerang.mongo.model.FlowTriggerEnum;
+import io.boomerang.mongo.model.WorkflowScheduleType;
+import io.boomerang.service.crud.WorkflowScheduleService;
+import io.boomerang.util.ParameterMapper;
 
 @PersistJobDataAfterExecution
-@DisallowConcurrentExecution
-public class FlowJob extends QuartzJobBean {
+public class WorkflowExecuteJob extends QuartzJobBean {
 
-  private static final Logger LOG = LoggerFactory.getLogger(FlowJob.class);
+  private static final Logger logger = LoggerFactory.getLogger(WorkflowExecuteJob.class);
 
   private ApplicationContext applicationContext;
 
@@ -42,20 +44,34 @@ public class FlowJob extends QuartzJobBean {
   @Override
   protected void executeInternal(JobExecutionContext context) throws JobExecutionException {
     JobDetail jobDetail = context.getJobDetail();
-    LOG.info("This is the FlowJob, executed for {} with JobDetails = {}",
+    logger.info("This is the Quartz WorkflowExecuteJob, executed for {} with JobDetails = {}",
         jobDetail.getKey().getName(), jobDetail.getJobDataMap());
+    
+    if (applicationContext == null) {
+      logger.info("applicationContext is null");
+    }
 
     ExecutionController executionController = applicationContext.getBean(ExecutionController.class);
+    WorkflowScheduleService workflowScheduleService = applicationContext.getBean(WorkflowScheduleService.class);
 
-    String workflowId = jobDetail.getKey().getName();
+    String workflowId = jobDetail.getKey().getGroup();
     
     Map<String, String> properties = new HashMap<>();
+    
+    WorkflowSchedule schedule = workflowScheduleService.getSchedule(jobDetail.getKey().getName());
+    if (schedule != null) {
+      if (schedule.getParameters() != null) {
+        properties = ParameterMapper.keyValuePairListToMap(schedule.getParameters());
+      }
+      if (schedule.getType().equals(WorkflowScheduleType.runOnce)) {
+        logger.info("Executing runOnce schedule: {}, and marking as completed.", schedule.getId());
+        workflowScheduleService.completeSchedule(schedule.getId());
+      }
+    }
 
     FlowExecutionRequest request = new FlowExecutionRequest();
     request.setProperties(properties);
 
     executionController.executeWorkflow(workflowId, Optional.of(FlowTriggerEnum.scheduler.toString()), Optional.of(request));
   }
-
-
 }

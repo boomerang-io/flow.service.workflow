@@ -1,5 +1,6 @@
 package io.boomerang.controller;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,12 +22,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.HttpClientErrorException;
-import io.boomerang.model.CronValidationResponse;
+import io.boomerang.error.BoomerangException;
 import io.boomerang.model.DuplicateRequest;
 import io.boomerang.model.FlowWorkflowRevision;
 import io.boomerang.model.GenerateTokenResponse;
 import io.boomerang.model.RevisionResponse;
 import io.boomerang.model.WorkflowExport;
+import io.boomerang.model.WorkflowSchedule;
+import io.boomerang.model.WorkflowScheduleCalendar;
 import io.boomerang.model.WorkflowSummary;
 import io.boomerang.mongo.entity.WorkflowEntity;
 import io.boomerang.mongo.model.WorkflowProperty;
@@ -34,6 +37,7 @@ import io.boomerang.mongo.model.WorkflowScope;
 import io.boomerang.mongo.model.WorkflowStatus;
 import io.boomerang.mongo.service.FlowWorkflowService;
 import io.boomerang.service.UserIdentityService;
+import io.boomerang.service.crud.WorkflowScheduleService;
 import io.boomerang.service.crud.WorkflowService;
 import io.boomerang.service.crud.WorkflowVersionService;
 
@@ -52,6 +56,9 @@ public class WorkflowController {
 
   @Autowired
   private UserIdentityService userIdentityService;
+
+  @Autowired
+  private WorkflowScheduleService workflowScheduleService;
 
   @DeleteMapping(value = "{id}")
   public void deleteWorkflowWithId(@PathVariable String id) {
@@ -174,9 +181,21 @@ public class WorkflowController {
       @RequestBody FlowWorkflowRevision workflowSummaryEntity) {
     return workflowService.getWorkflowParameters(workFlowId, workflowSummaryEntity);
   }
-
-  @GetMapping(value = "/validate/cron")
-  public CronValidationResponse validateCron(@RequestParam String cron) {
-    return workflowService.validateCron(cron);
+  
+  @GetMapping(value = "/{workflowId}/schedules")
+  public List<WorkflowSchedule> getSchedulesForWorkflow(
+      @PathVariable String workflowId) {
+    return workflowScheduleService.getSchedulesForWorkflow(workflowId);
+  }
+  
+  @GetMapping(value = "/{workflowId}/schedules/calendar")
+  public List<WorkflowScheduleCalendar> getCalendarsForWorkflow(@PathVariable String workflowId, @RequestParam Long fromDate, @RequestParam Long toDate) {
+    if (workflowId != null && fromDate != null && toDate != null) {
+      Date from = new Date(fromDate * 1000);
+      Date to = new Date(toDate * 1000);
+      return workflowScheduleService.getCalendarsForWorkflow(workflowId, from, to);
+    } else {
+      throw new BoomerangException(0, "Invalid fromDate or toDate", HttpStatus.BAD_REQUEST);
+    }
   }
 }

@@ -19,7 +19,6 @@ import io.boomerang.mongo.entity.ActivityEntity;
 import io.boomerang.mongo.entity.RevisionEntity;
 import io.boomerang.mongo.entity.WorkflowEntity;
 import io.boomerang.mongo.model.WorkflowScope;
-import io.boomerang.mongo.model.WorkflowStatus;
 import io.boomerang.mongo.service.RevisionService;
 import io.boomerang.service.crud.FlowActivityService;
 import io.boomerang.service.crud.WorkflowService;
@@ -47,8 +46,14 @@ public class ExecutionServiceImpl implements ExecutionService {
 
     final WorkflowEntity workflow = workflowService.getWorkflow(workflowId);
 
+    // Check if Workflow is active and triggers enabled
     if (!workflowService.canExecuteWorkflow(workflowId, trigger)) {
-      throw new BoomerangException(BoomerangError.WORKLOAD_MANUAL_DISABLED);
+      throw new BoomerangException(BoomerangError.WORKFLOW_TRIGGER_DISABLED);
+    // Check if team is active if scope is of team
+    } else if (WorkflowScope.team.equals(workflow.getScope()) 
+        && !workflowService.canExecuteTeamWorkflow(workflow.getFlowTeamId())) {
+        throw new BoomerangException(BoomerangError.WORKFLOW_TEAM_INACTIVE);
+    // Check if team quotas are exceeded if scope is of team
     } else if (WorkflowScope.team.equals(workflow.getScope())
         && !workflowService.canExecuteWorkflowForQuotas(workflow.getFlowTeamId())) {
       throw new BoomerangException(BoomerangError.TOO_MANY_REQUESTS);
@@ -56,7 +61,6 @@ public class ExecutionServiceImpl implements ExecutionService {
         && !workflowService.canExecuteWorkflowForQuotasForUser(workflowId)) {
       throw new BoomerangException(BoomerangError.TOO_MANY_REQUESTS);
     } else {
-      if (workflow.getStatus() == WorkflowStatus.active) {
         FlowExecutionRequest request = null;
         if (executionRequest.isPresent()) {
           request = executionRequest.get();
@@ -80,10 +84,6 @@ public class ExecutionServiceImpl implements ExecutionService {
           LOGGER.error("No revision to execute");
         }
         return null;
-      } else {
-        LOGGER.error("The workflow status is not active");
-        return null;
-      }
     }
   }
 
