@@ -278,15 +278,20 @@ public class TaskServiceImpl implements TaskService {
         switch (futurePeriod) {
           case "hours":
             calField = Calendar.HOUR;
+            LOGGER.info("calField set to: " + calField);
           case "days":
             calField = Calendar.DATE;
+            LOGGER.info("calField set to: " + calField);
           case "weeks":
             futureIn = futureIn * 7;
             calField = Calendar.DATE;
+            LOGGER.info("calField set to: " + calField);
           case "months":
             calField = Calendar.MONTH;   
+            LOGGER.info("calField set to: " + calField);
         }
         executionCal.add(calField, futureIn);
+        LOGGER.info("With execution DateTime set to: " + executionCal.getTime().toString());
         if (!futurePeriod.equals("minutes") && !futurePeriod.equals("hours")) {
           String[] hoursTime = task.getInputs().get("time").split(":");
           LOGGER.info("Hours: " + hoursTime[0] + ", Minutes: " + hoursTime[1]);
@@ -309,7 +314,7 @@ public class TaskServiceImpl implements TaskService {
         //Define and create the schedule
         WorkflowSchedule schedule = new WorkflowSchedule();
         schedule.setWorkflowId(task.getWorkflowId());
-        schedule.setName(task.getWorkflowName());
+        schedule.setName(task.getTaskName());
         schedule.setDescription("This schedule was generated through automation from your workflow");
         schedule.setParametersMap(properties);
         schedule.setCreationDate(activity.getCreationDate());
