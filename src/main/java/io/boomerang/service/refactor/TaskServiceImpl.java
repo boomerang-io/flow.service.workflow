@@ -1,5 +1,6 @@
 package io.boomerang.service.refactor;
 
+import java.sql.Time;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -166,10 +167,6 @@ public class TaskServiceImpl implements TaskService {
         this.runWorkflow(task, activity);
       } else if (taskType == TaskType.runscheduledworkflow) {
         this.runScheduledWorkflow(task, activity);
-        InternalTaskResponse response = new InternalTaskResponse();
-        response.setActivityId(taskExecution.getId());
-        response.setStatus(TaskStatus.completed);
-        this.endTask(response);
       } else if (taskType == TaskType.setwfstatus) {
         saveWorkflowStatus(task, activity);
         InternalTaskResponse response = new InternalTaskResponse();
@@ -259,13 +256,15 @@ public class TaskServiceImpl implements TaskService {
   }
 
   private void runScheduledWorkflow(Task task, ActivityEntity activity) {
-    LOGGER.info("Task Input Size: " + task.getInputs().size());
+    InternalTaskResponse response = new InternalTaskResponse();
+    response.setActivityId(task.getTaskActivityId());
+    response.setStatus(TaskStatus.failure);
+    
     if (task.getInputs() != null) {
       RequestFlowExecution request = new RequestFlowExecution();
       request.setWorkflowId(task.getInputs().get("workflowId"));
       Integer futureIn = Integer.valueOf(task.getInputs().get("futureIn"));
       String futurePeriod = task.getInputs().get("futurePeriod");
-      Long futureTime = Long.valueOf(task.getInputs().get("futureTime"));
       Date executionDate = activity.getCreationDate();
       String timezone = task.getInputs().get("timezone");
       LOGGER.info("*******Run Scheduled Workflow System Task******");
@@ -284,58 +283,45 @@ public class TaskServiceImpl implements TaskService {
             futureIn = futureIn * 7;
             calField = Calendar.DATE;
           case "Months":
-            calField = Calendar.MONTH;
-            
+            calField = Calendar.MONTH;   
         }
         executionCal.add(calField, futureIn);
         if (!futurePeriod.equals("Minutes") && !futurePeriod.equals("Hours")) {
-          LOGGER.info("With time set to " + futureTime);
-          executionDate.setTime(futureTime);
+          Integer hours = Integer.valueOf(task.getInputs().get("futureIn").split(":")[0]);
+          Integer minutes = Integer.valueOf(task.getInputs().get("futureIn").split(":")[1]);
+          LOGGER.info("With time to be set to: " + task.getInputs().get("futureIn"));
+          executionCal.set(Calendar.HOUR, hours);
+          executionCal.set(Calendar.MINUTE, minutes);
         }
-//      } else {
-//        TODO: return a failure
-//        response.setStatus(TaskStatus.failure);
-//        this.endTask(response);
-      }
-//      String timezone = task.getInputs().get("timezone");
-//      SimpleDateFormat formatter = new SimpleDateFormat("dd-M-yyyy hh:mm:ss a");
-//      Date date = null;
-//      try {
-//        date = formatter.parse(task.getInputs().get("dateSchedule"));
-//      } catch (ParseException e) {
-//        e.printStackTrace();
-//        response.setStatus(TaskStatus.failure);
-//        this.endTask(response);
-//      }
-      Map<String, String> properties = new HashMap<>();
-      for (Map.Entry<String, String> entry : task.getInputs().entrySet()) {
-        if (!"workflowId".equals(entry.getKey()) && !"futureIn".equals(entry.getKey()) && !"futurePeriod".equals(entry.getKey()) && !"futureTime".equals(entry.getKey())) {
-          properties.put(entry.getKey(), entry.getValue());
+        LOGGER.info("With execution DateTime set to: " + executionCal.getTime().toString());
+        
+        //Define new properties removing the System Task specific properties
+        Map<String, String> properties = new HashMap<>();
+        for (Map.Entry<String, String> entry : task.getInputs().entrySet()) {
+          if (!"workflowId".equals(entry.getKey()) && !"futureIn".equals(entry.getKey()) && !"futurePeriod".equals(entry.getKey()) && !"futureTime".equals(entry.getKey())) {
+            properties.put(entry.getKey(), entry.getValue());
+          }
         }
+        
+        //Define and create the schedule
+        WorkflowSchedule schedule = new WorkflowSchedule();
+        schedule.setName(task.getWorkflowName());
+        schedule.setDescription("This schedule was generated through automation from your workflow");
+        schedule.setParametersMap(properties);
+        schedule.setCreationDate(activity.getCreationDate());
+        schedule.setDateSchedule(executionCal.getTime());
+        schedule.setTimezone(timezone);
+        schedule.setType(WorkflowScheduleType.runOnce);
+        List<KeyValuePair> labels = new LinkedList<>();
+        labels.add(new KeyValuePair("workflowName",task.getWorkflowName()));
+        schedule.setLabels(labels);
+        scheduleService.createSchedule(schedule);
+        //TODO: Add a taskExecution with the ScheduleId so it can be deep linked.
+        response.setStatus(TaskStatus.completed);
       }
-      
-      WorkflowSchedule schedule = new WorkflowSchedule();
-      schedule.setName(task.getWorkflowName());
-      schedule.setDescription("This schedule was generated through automation from your workflow");
-      schedule.setParametersMap(properties);
-      schedule.setCreationDate(activity.getCreationDate());
-      schedule.setDateSchedule(executionDate);
-      schedule.setTimezone(timezone);
-      schedule.setType(WorkflowScheduleType.runOnce);
-      List<KeyValuePair> labels = new LinkedList<>();
-      labels.add(new KeyValuePair("workflowName",task.getWorkflowName()));
-      schedule.setLabels(labels);
-      scheduleService.createSchedule(schedule);
-      //TODO: Add a taskExecution with the ScheduleId so it can be deep linked.
-//    } else {
-//      TODO: return a failure
-//      response.setStatus(TaskStatus.failure);
     }
 
-//    InternalTaskResponse response = new InternalTaskResponse();
-//    response.setActivityId(task.getTaskActivityId());
-//    response.setStatus(TaskStatus.completed);
-//    this.endTask(response);
+    this.endTask(response);
   }
 
   private void createLock(Task task, ActivityEntity activity) {
