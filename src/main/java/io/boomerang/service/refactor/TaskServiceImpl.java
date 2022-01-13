@@ -259,7 +259,7 @@ public class TaskServiceImpl implements TaskService {
   }
 
   private void runScheduledWorkflow(Task task, ActivityEntity activity) {
-    
+    LOGGER.info("Task Input Size: " + task.getInputs().size());
     if (task.getInputs() != null) {
       RequestFlowExecution request = new RequestFlowExecution();
       request.setWorkflowId(task.getInputs().get("workflowId"));
