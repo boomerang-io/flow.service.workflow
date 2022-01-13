@@ -90,9 +90,7 @@ public class ScheduleServiceImpl implements ScheduleService {
     
     if (statuses.isPresent()) {
       Criteria dynamicCriteria = Criteria.where("status")
-          .in(statuses.get()
-          .removeIf(s -> s.equals(WorkflowScheduleStatus.deleted.toString())
-              || s.equals(WorkflowScheduleStatus.completed.toString())));
+          .in(statuses.get());
       criterias.add(dynamicCriteria);
     }
     
