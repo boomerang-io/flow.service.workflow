@@ -46,8 +46,6 @@ import org.springframework.web.client.RequestCallback;
 import org.springframework.web.client.ResponseExtractor;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.boomerang.model.Execution;
 import io.boomerang.model.FlowActivity;
 import io.boomerang.model.FlowExecutionRequest;
@@ -62,15 +60,15 @@ import io.boomerang.model.controller.TaskWorkspace;
 import io.boomerang.model.teams.Action;
 import io.boomerang.mongo.entity.ActivityEntity;
 import io.boomerang.mongo.entity.FlowTaskTemplateEntity;
-import io.boomerang.mongo.entity.TeamEntity;
 import io.boomerang.mongo.entity.FlowUserEntity;
 import io.boomerang.mongo.entity.RevisionEntity;
 import io.boomerang.mongo.entity.TaskExecutionEntity;
+import io.boomerang.mongo.entity.TeamEntity;
 import io.boomerang.mongo.entity.WorkflowEntity;
-import io.boomerang.mongo.model.KeyValuePair;
 import io.boomerang.mongo.model.Dag;
 import io.boomerang.mongo.model.ErrorResponse;
 import io.boomerang.mongo.model.FlowTriggerEnum;
+import io.boomerang.mongo.model.KeyValuePair;
 import io.boomerang.mongo.model.Revision;
 import io.boomerang.mongo.model.TaskStatus;
 import io.boomerang.mongo.model.TaskTemplateConfig;
@@ -1014,15 +1012,6 @@ public class FlowActivityServiceImpl implements FlowActivityService {
 
     List<TaskExecutionEntity> activites = taskService.findTaskActiivtyForActivity(activityId);
 
-    ObjectMapper objectMapper = new ObjectMapper();
-    try {
-      System.out.println("********activites***** ");
-      System.out.println(objectMapper.writeValueAsString(activites));
-    } catch (JsonProcessingException e) {
-
-      e.printStackTrace();
-    }
-
     long totalDuration = 0;
 
     for (TaskExecutionEntity task : activites) {
@@ -1039,9 +1028,6 @@ public class FlowActivityServiceImpl implements FlowActivityService {
       }
     }
 
-    System.out.println("********total duration***** " + totalDuration);
-
-    System.out.println(maxDuration < totalDuration);
     if (maxDuration < totalDuration) {
       return true;
     }
