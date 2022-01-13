@@ -275,14 +275,14 @@ public class TaskServiceImpl implements TaskService {
         executionCal.setTime(executionDate);
         Integer calField = Calendar.MINUTE;
         switch (futurePeriod) {
-          case "Hours":
+          case "hours":
             calField = Calendar.HOUR;
-          case "Days":
+          case "days":
             calField = Calendar.DATE;
-          case "Weeks":
+          case "weeks":
             futureIn = futureIn * 7;
             calField = Calendar.DATE;
-          case "Months":
+          case "months":
             calField = Calendar.MONTH;   
         }
         executionCal.add(calField, futureIn);
@@ -317,9 +317,12 @@ public class TaskServiceImpl implements TaskService {
         List<KeyValuePair> labels = new LinkedList<>();
         labels.add(new KeyValuePair("workflowName",task.getWorkflowName()));
         schedule.setLabels(labels);
-        scheduleService.createSchedule(schedule);
-        //TODO: Add a taskExecution with the ScheduleId so it can be deep linked.
-        response.setStatus(TaskStatus.completed);
+        WorkflowSchedule workflowSchedule = scheduleService.createSchedule(schedule);
+        if (workflowSchedule.getId() != null) {
+          LOGGER.info("Workflow Scheudle (" + workflowSchedule.getId() + ") created.");
+          //TODO: Add a taskExecution with the ScheduleId so it can be deep linked.
+          response.setStatus(TaskStatus.completed);
+        }
       }
     }
 
