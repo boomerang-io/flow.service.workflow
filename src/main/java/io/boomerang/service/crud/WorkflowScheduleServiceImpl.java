@@ -66,7 +66,7 @@ public class WorkflowScheduleServiceImpl implements WorkflowScheduleService {
     List<WorkflowSchedule> schedules = new LinkedList<>();
 
     List<String> filteredWorkflowIds = filterService.getFilteredWorkflowIds(workflowIds, teamIds, scopes);
-    final List<WorkflowScheduleEntity> entities = workflowScheduleRepository.getAllSchedulesNotDeleted(filteredWorkflowIds, statuses, types);
+    final List<WorkflowScheduleEntity> entities = workflowScheduleRepository.getAllSchedulesNotCompletedOrDeleted(filteredWorkflowIds, statuses, types);
     if (entities != null) {
       entities.forEach(e -> {
         schedules.add(convertScheduleEntityToModel(e));
@@ -83,7 +83,7 @@ public class WorkflowScheduleServiceImpl implements WorkflowScheduleService {
   @Override
   public List<WorkflowSchedule> getSchedulesForWorkflow(String workflowId) {
     List<WorkflowSchedule> schedules = new LinkedList<>();
-    final List<WorkflowScheduleEntity> entities = workflowScheduleRepository.getSchedulesForWorkflowNotDeleted(workflowId);
+    final List<WorkflowScheduleEntity> entities = workflowScheduleRepository.getSchedulesForWorkflowNotCompletedOrDeleted(workflowId);
     if (entities != null) {
       entities.forEach(e -> {
         schedules.add(convertScheduleEntityToModel(e));
@@ -129,7 +129,7 @@ public class WorkflowScheduleServiceImpl implements WorkflowScheduleService {
   @Override
   public List<WorkflowScheduleCalendar> getCalendarsForSchedules(final List<String> scheduleIds, Date fromDate, Date toDate) {
     List<WorkflowScheduleCalendar> scheduleCalendars = new LinkedList<>();
-    final List<WorkflowScheduleEntity> scheduleEntities = workflowScheduleRepository.getSchedulesNotDeleted(scheduleIds);
+    final List<WorkflowScheduleEntity> scheduleEntities = workflowScheduleRepository.getSchedulesNotCompletedOrDeleted(scheduleIds);
     if (scheduleEntities != null) {
       scheduleEntities.forEach(e -> {
         WorkflowScheduleCalendar scheduleCalendar = new WorkflowScheduleCalendar();
@@ -149,7 +149,7 @@ public class WorkflowScheduleServiceImpl implements WorkflowScheduleService {
   @Override
   public List<WorkflowScheduleCalendar> getCalendarsForWorkflow(final String workflowId, Date fromDate, Date toDate) {
     List<WorkflowScheduleCalendar> scheduleCalendars = new LinkedList<>();
-    final List<WorkflowScheduleEntity> scheduleEntities = workflowScheduleRepository.getSchedulesForWorkflowNotDeleted(workflowId);
+    final List<WorkflowScheduleEntity> scheduleEntities = workflowScheduleRepository.getSchedulesForWorkflowNotCompletedOrDeleted(workflowId);
     if (scheduleEntities != null) {
       scheduleEntities.forEach(e -> {
         WorkflowScheduleCalendar scheduleCalendar = new WorkflowScheduleCalendar();
@@ -336,6 +336,28 @@ public class WorkflowScheduleServiceImpl implements WorkflowScheduleService {
     } else {
 //        TODO: return that it couldn't be disabled or doesn't exist
     }
+  }
+  
+  /*
+   * Disable a specific schedule
+   */
+  @Override
+  public ResponseEntity<?> completeSchedule(String scheduleId) {
+    WorkflowScheduleEntity schedule = workflowScheduleRepository.getSchedule(scheduleId);
+    if (schedule!= null && !WorkflowScheduleStatus.deleted.equals(schedule.getStatus())) {
+      schedule.setStatus(WorkflowScheduleStatus.completed);
+      try {
+        workflowScheduleRepository.saveSchedule(schedule);
+        this.taskScheduler.pauseJob(schedule);
+      } catch (SchedulerException e) {
+        logger.info("Unable to delete schedule {}.", scheduleId);
+        logger.error(e);
+        return ResponseEntity.internalServerError().build();
+      }
+    } else {
+//        TODO: return that it couldn't be disabled or doesn't exist
+    }
+    return ResponseEntity.ok().build();
   }
   
   /*

@@ -1,6 +1,7 @@
 package io.boomerang.mongo.service;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +21,14 @@ public class ScheduleServiceImpl implements ScheduleService {
   
   @Autowired
   private MongoTemplate mongoTemplate;
+  
+  private List<WorkflowScheduleStatus> getStatusesNotCompletedOrDeleted() {
+    List<WorkflowScheduleStatus> statuses = new LinkedList<>();
+    statuses.add(WorkflowScheduleStatus.active);
+    statuses.add(WorkflowScheduleStatus.inactive);
+    statuses.add(WorkflowScheduleStatus.trigger_disabled);
+    return statuses;
+  }
 
   @Override
   public void deleteSchedule(String id) {
@@ -37,8 +46,8 @@ public class ScheduleServiceImpl implements ScheduleService {
   }
   
   @Override
-  public List<WorkflowScheduleEntity> getSchedulesNotDeleted(List<String> ids) {
-    return workflowScheduleRepository.findByIdInAndStatusNot(ids, WorkflowScheduleStatus.deleted);
+  public List<WorkflowScheduleEntity> getSchedulesNotCompletedOrDeleted(List<String> ids) {
+    return workflowScheduleRepository.findByIdInAndStatusIn(ids, getStatusesNotCompletedOrDeleted());
   }
 
   @Override
@@ -47,8 +56,8 @@ public class ScheduleServiceImpl implements ScheduleService {
   }
   
   @Override
-  public List<WorkflowScheduleEntity> getSchedulesForWorkflowNotDeleted(String workflowId) {
-    return workflowScheduleRepository.findByWorkflowIdAndStatusNot(workflowId, WorkflowScheduleStatus.deleted);
+  public List<WorkflowScheduleEntity> getSchedulesForWorkflowNotCompletedOrDeleted(String workflowId) {
+    return workflowScheduleRepository.findByWorkflowIdAndStatusIn(workflowId, getStatusesNotCompletedOrDeleted());
   }
 
   @Override
@@ -62,7 +71,7 @@ public class ScheduleServiceImpl implements ScheduleService {
   }
 
   @Override
-  public List<WorkflowScheduleEntity> getAllSchedulesNotDeleted(List<String> workflowIds,
+  public List<WorkflowScheduleEntity> getAllSchedulesNotCompletedOrDeleted(List<String> workflowIds,
       Optional<List<String>> statuses, Optional<List<String>> types) {
     Criteria criteria = this.buildAllSchedulesCriteriaList(workflowIds, statuses, types);
     Query query = new Query(criteria);
@@ -80,12 +89,12 @@ public class ScheduleServiceImpl implements ScheduleService {
     }
     
     if (statuses.isPresent()) {
-      Criteria dynamicCriteria = Criteria.where("status").in(statuses.get());
+      Criteria dynamicCriteria = Criteria.where("status")
+          .in(statuses.get()
+          .removeIf(s -> s.equals(WorkflowScheduleStatus.deleted.toString())
+              || s.equals(WorkflowScheduleStatus.completed.toString())));
       criterias.add(dynamicCriteria);
     }
-    
-    Criteria statusCriteria = Criteria.where("status").ne(WorkflowScheduleStatus.deleted);
-    criterias.add(statusCriteria);
     
     Criteria workflowIdsCriteria = Criteria.where("workflowId").in(workflowIds);
     criterias.add(workflowIdsCriteria);

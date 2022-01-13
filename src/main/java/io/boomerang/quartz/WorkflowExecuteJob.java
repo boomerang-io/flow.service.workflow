@@ -64,9 +64,8 @@ public class WorkflowExecuteJob extends QuartzJobBean {
         properties = ParameterMapper.keyValuePairListToMap(schedule.getParameters());
       }
       if (schedule.getType().equals(WorkflowScheduleType.runOnce)) {
-        logger.info("Executing runOnce schedule: {}, and marking as deleted.", schedule.getId());
-        workflowScheduleService.deleteSchedule(schedule.getId());
-        //TODO: confirm if we delete or mark completed
+        logger.info("Executing runOnce schedule: {}, and marking as completed.", schedule.getId());
+        workflowScheduleService.completeSchedule(schedule.getId());
       }
     }
 

@@ -20,12 +20,10 @@ public interface ScheduleService {
 
   List<WorkflowScheduleEntity> getSchedules(List<String> ids);
 
-  List<WorkflowScheduleEntity> getAllSchedulesNotDeleted(List<String> workflowIds,
+  List<WorkflowScheduleEntity> getSchedulesForWorkflowNotCompletedOrDeleted(String workflowId);
+
+  List<WorkflowScheduleEntity> getSchedulesNotCompletedOrDeleted(List<String> ids);
+
+  List<WorkflowScheduleEntity> getAllSchedulesNotCompletedOrDeleted(List<String> workflowIds,
       Optional<List<String>> statuses, Optional<List<String>> types);
-
-  List<WorkflowScheduleEntity> getSchedulesForWorkflowNotDeleted(String workflowId);
-
-  List<WorkflowScheduleEntity> getSchedulesNotDeleted(List<String> ids);
-
-
 }

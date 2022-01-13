@@ -45,4 +45,6 @@ public interface WorkflowScheduleService {
       Date toDate);
 
   List<WorkflowSchedule> getSchedulesForWorkflow(String workflowId);
+
+  ResponseEntity<?> completeSchedule(String scheduleId);
 }
