@@ -166,6 +166,10 @@ public class TaskServiceImpl implements TaskService {
         this.runWorkflow(task, activity);
       } else if (taskType == TaskType.runscheduledworkflow) {
         this.runScheduledWorkflow(task, activity);
+        InternalTaskResponse response = new InternalTaskResponse();
+        response.setActivityId(taskExecution.getId());
+        response.setStatus(TaskStatus.completed);
+        this.endTask(response);
       } else if (taskType == TaskType.setwfstatus) {
         saveWorkflowStatus(task, activity);
         InternalTaskResponse response = new InternalTaskResponse();
@@ -328,10 +332,10 @@ public class TaskServiceImpl implements TaskService {
 //      response.setStatus(TaskStatus.failure);
     }
 
-    InternalTaskResponse response = new InternalTaskResponse();
-    response.setActivityId(task.getTaskActivityId());
-    response.setStatus(TaskStatus.completed);
-    this.endTask(response);
+//    InternalTaskResponse response = new InternalTaskResponse();
+//    response.setActivityId(task.getTaskActivityId());
+//    response.setStatus(TaskStatus.completed);
+//    this.endTask(response);
   }
 
   private void createLock(Task task, ActivityEntity activity) {
