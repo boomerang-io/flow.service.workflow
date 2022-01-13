@@ -2,6 +2,7 @@ package io.boomerang.service.refactor;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
@@ -261,19 +262,52 @@ public class TaskServiceImpl implements TaskService {
     if (task.getInputs() != null) {
       RequestFlowExecution request = new RequestFlowExecution();
       request.setWorkflowId(task.getInputs().get("workflowId"));
+      Integer futureIn = Integer.valueOf(task.getInputs().get("futureIn"));
+      String futurePeriod = task.getInputs().get("futurePeriod");
+      Long futureTime = Long.valueOf(task.getInputs().get("futureTime"));
+      Date executionDate = activity.getCreationDate();
       String timezone = task.getInputs().get("timezone");
-      SimpleDateFormat formatter = new SimpleDateFormat("dd-M-yyyy hh:mm:ss a");
-      Date date = null;
-      try {
-        date = formatter.parse(task.getInputs().get("dateSchedule"));
-      } catch (ParseException e) {
-        e.printStackTrace();
+      LOGGER.info("*******Run Scheduled Workflow System Task******");
+      LOGGER.info("Scheduling new task in " + futureIn + " " + futurePeriod);
+      
+      if (futureIn != null && futureIn != 0 && StringUtils.indexOfAny(futurePeriod, new String[]{"Minutes", "Hours", "Days", "Weeks", "Months"}) >= 0) {
+        Calendar executionCal = Calendar.getInstance();
+        executionCal.setTime(executionDate);
+        Integer calField = Calendar.MINUTE;
+        switch (futurePeriod) {
+          case "Hours":
+            calField = Calendar.HOUR;
+          case "Days":
+            calField = Calendar.DATE;
+          case "Weeks":
+            futureIn = futureIn * 7;
+            calField = Calendar.DATE;
+          case "Months":
+            calField = Calendar.MONTH;
+            
+        }
+        executionCal.add(calField, futureIn);
+        if (!futurePeriod.equals("Minutes") && !futurePeriod.equals("Hours")) {
+          LOGGER.info("With time set to " + futureTime);
+          executionDate.setTime(futureTime);
+        }
+      } else {
         response.setStatus(TaskStatus.failure);
         this.endTask(response);
       }
+//      String timezone = task.getInputs().get("timezone");
+//      SimpleDateFormat formatter = new SimpleDateFormat("dd-M-yyyy hh:mm:ss a");
+//      Date date = null;
+//      try {
+//        date = formatter.parse(task.getInputs().get("dateSchedule"));
+//      } catch (ParseException e) {
+//        e.printStackTrace();
+//        response.setStatus(TaskStatus.failure);
+//        this.endTask(response);
+//      }
       Map<String, String> properties = new HashMap<>();
       for (Map.Entry<String, String> entry : task.getInputs().entrySet()) {
-        if (!"workflowId".equals(entry.getKey()) && !"dateSchedule".equals(entry.getKey()) && !"timezone".equals(entry.getKey())) {
+        if (!"workflowId".equals(entry.getKey()) && !"futureIn".equals(entry.getKey()) && !"futurePeriod".equals(entry.getKey()) && !"futureTime".equals(entry.getKey())) {
           properties.put(entry.getKey(), entry.getValue());
         }
       }
@@ -283,7 +317,7 @@ public class TaskServiceImpl implements TaskService {
       schedule.setDescription("This schedule was generated through automation from your workflow");
       schedule.setParametersMap(properties);
       schedule.setCreationDate(activity.getCreationDate());
-      schedule.setDateSchedule(date);
+      schedule.setDateSchedule(executionDate);
       schedule.setTimezone(timezone);
       schedule.setType(WorkflowScheduleType.runOnce);
       List<KeyValuePair> labels = new LinkedList<>();
