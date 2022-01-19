@@ -42,7 +42,6 @@ public class FilterServiceImpl implements FilterService {
 
     if (!workflowIds.isPresent()) {
       if (scopes.isPresent() && !scopes.get().isEmpty()) {
-
         List<String> scopeList = scopes.get();
         if (scopeList.contains("user")) {
           addUserWorkflows(user, workflowIdsList);
@@ -53,8 +52,9 @@ public class FilterServiceImpl implements FilterService {
         if (scopeList.contains("team")) {
           addTeamWorkflows(user, workflowIdsList, teamIds);
         }
+      } else if (teamIds.isPresent() && !teamIds.get().isEmpty()) {
+        addTeamWorkflows(user, workflowIdsList, teamIds);
       } else {
-
         addUserWorkflows(user, workflowIdsList);
         addTeamWorkflows(user, workflowIdsList, teamIds);
         if (user.getType() == UserType.admin) {
