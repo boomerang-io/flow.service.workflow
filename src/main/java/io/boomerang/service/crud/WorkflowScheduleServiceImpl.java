@@ -224,7 +224,7 @@ public class WorkflowScheduleServiceImpl implements WorkflowScheduleService {
     if (patchSchedule != null) {
       WorkflowScheduleEntity scheduleEntity = workflowScheduleRepository.getSchedule(scheduleId);
       if (scheduleEntity != null) {
-        BeanUtils.copyProperties(patchSchedule, scheduleEntity, "id", "workflowId", "creationDate", "parameters", "parametersMap");
+        BeanUtils.copyProperties(patchSchedule, scheduleEntity, "id", "creationDate", "parameters", "parametersMap");
         if (patchSchedule.getParametersMap() != null && !patchSchedule.getParametersMap().isEmpty()) {
           List<KeyValuePair> propertyList = ParameterMapper.mapToKeyValuePairList(patchSchedule.getParametersMap());
           scheduleEntity.setParameters(propertyList);
