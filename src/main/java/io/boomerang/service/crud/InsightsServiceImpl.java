@@ -86,6 +86,7 @@ import io.boomerang.mongo.service.FlowWorkflowActivityService;
 import io.boomerang.mongo.service.FlowWorkflowService;
 import io.boomerang.mongo.service.RevisionService;
 import io.boomerang.service.ActionService;
+import io.boomerang.service.FilterService;
 import io.boomerang.service.PropertyManager;
 import io.boomerang.service.UserIdentityService;
 import io.boomerang.service.refactor.ControllerRequestProperties;
@@ -99,9 +100,14 @@ public class InsightsServiceImpl implements InsightsService {
   @Autowired
   private FlowWorkflowActivityService activitiesService;
 
+  @Autowired
+  private FilterService filterService;
+
   @Override
   public InsightsSummary getInsights(Optional<Date> from, Optional<Date> to,
       Pageable pageable, Optional<List<String>> workflowIds, Optional<List<String>> teamIds, Optional<List<String>> scopes) {
+    
+    final List<String> workflowIdsList = filterService.getFilteredWorkflowIds(workflowIds, teamIds, scopes);
 
     final Page<ActivityEntity> records = activitiesService.getAllActivities(from, to, pageable,
         Optional.of(workflowIdsList), statuses, triggers);

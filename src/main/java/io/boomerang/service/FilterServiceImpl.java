@@ -110,5 +110,4 @@ public class FilterServiceImpl implements FilterService {
         userWorkflows.stream().map(WorkflowEntity::getId).collect(Collectors.toList());
     workflowIdsList.addAll(userWorkflowIds);
   }
-
 }
