@@ -1,5 +1,6 @@
 package io.boomerang.service.refactor;
 
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Comparator;
 import java.util.Date;
@@ -8,12 +9,14 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.TimeZone;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.retry.backoff.FixedBackOffPolicy;
 import org.springframework.retry.policy.SimpleRetryPolicy;
 import org.springframework.retry.support.RetryTemplate;
@@ -290,11 +293,14 @@ public class TaskServiceImpl implements TaskService {
           String[] hoursTime = task.getInputs().get("time").split(":");
           Integer hours = Integer.valueOf(hoursTime[0]);
           Integer minutes = Integer.valueOf(hoursTime[1]);
-          LOGGER.debug("With time to be set to: " + task.getInputs().get("time"));
+          LOGGER.debug("With time to be set to: " + task.getInputs().get("time") + " in " + timezone);
+          executionCal.setTimeZone(TimeZone.getTimeZone(timezone));
           executionCal.set(Calendar.HOUR, hours);
           executionCal.set(Calendar.MINUTE, minutes);
+          LOGGER.debug("With execution set to: " + executionCal.getTime().toString() + " in " + timezone);
+          executionCal.setTimeZone(TimeZone.getTimeZone("UTC"));
         }
-        LOGGER.debug("With execution set to: " + executionCal.getTime().toString());
+        LOGGER.debug("With execution set to: " + executionCal.getTime().toString() + " in UTC");
         
         //Define new properties removing the System Task specific properties
         Map<String, String> properties = new HashMap<>();
