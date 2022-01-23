@@ -9,7 +9,6 @@ import org.springframework.data.domain.Sort.Direction;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import io.boomerang.model.FlowActivity;
 import io.boomerang.model.FlowExecutionRequest;
-import io.boomerang.model.InsightsSummary;
 import io.boomerang.model.ListActivityResponse;
 import io.boomerang.model.TaskExecutionResponse;
 import io.boomerang.model.controller.TaskWorkspace;
@@ -38,9 +37,6 @@ public interface FlowActivityService {
   public List<TaskExecutionResponse> getTaskExecutions(String activityId);
   
   TaskExecutionEntity saveTaskExecution(TaskExecutionEntity task);
-
-  InsightsSummary getInsightsSummary(Optional<Date> from, Optional<Date> to, Pageable pageable,
-      Optional<String> teamId);
 
   StreamingResponseBody getTaskLog(String activityId, String taskId);
 

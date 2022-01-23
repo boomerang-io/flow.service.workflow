@@ -48,10 +48,8 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.boomerang.model.Execution;
 import io.boomerang.model.FlowActivity;
 import io.boomerang.model.FlowExecutionRequest;
-import io.boomerang.model.InsightsSummary;
 import io.boomerang.model.ListActivityResponse;
 import io.boomerang.model.Sort;
 import io.boomerang.model.Task;
@@ -80,7 +78,6 @@ import io.boomerang.mongo.model.next.DAGTask;
 import io.boomerang.mongo.service.ActivityTaskService;
 import io.boomerang.mongo.service.FlowSettingsService;
 import io.boomerang.mongo.service.FlowTaskTemplateService;
-import io.boomerang.mongo.service.FlowTeamService;
 import io.boomerang.mongo.service.FlowWorkflowActivityService;
 import io.boomerang.mongo.service.FlowWorkflowService;
 import io.boomerang.mongo.service.RevisionService;
@@ -113,9 +110,6 @@ public class FlowActivityServiceImpl implements FlowActivityService {
 
   @Autowired
   private FlowWorkflowService workflowService;
-
-  @Autowired
-  private FlowTeamService flowTeamService;
 
   @Autowired
   private FilterService filterService;
@@ -558,91 +552,6 @@ public class FlowActivityServiceImpl implements FlowActivityService {
   @Override
   public TaskExecutionEntity saveTaskExecution(TaskExecutionEntity task) {
     return taskService.save(task);
-  }
-
-  @Override
-  @Deprecated
-  public InsightsSummary getInsightsSummary(Optional<Date> from, Optional<Date> to,
-      Pageable pageable, Optional<String> teamId) {
-
-    final Page<ActivityEntity> records = flowActivityService.findAllActivities(from, to, pageable);
-    final InsightsSummary response = new InsightsSummary();
-    final List<FlowActivity> activities = filterService.convertActivityEntityToFlowActivity(records.getContent());
-    List<Execution> executions = new ArrayList<>();
-    Long totalExecutionTime = 0L;
-    Long executionTime;
-
-    for (FlowActivity activity : activities) {
-
-      executionTime = activity.getDuration();
-
-      if (executionTime != null) {
-        totalExecutionTime = totalExecutionTime + executionTime;
-      }
-
-      addActivityDetail(teamId, executions, activity);
-    }
-    response.setTotalActivitiesExecuted(executions.size());
-    response.setExecutions(executions);
-
-    if (response.getTotalActivitiesExecuted() != 0) {
-      response.setMedianExecutionTime(totalExecutionTime / executions.size());
-
-    } else {
-      response.setMedianExecutionTime(0L);
-    }
-    return response;
-  }
-
-  @Deprecated
-  private void addActivityDetail(Optional<String> teamId, List<Execution> executions,
-      FlowActivity activity) {
-    String teamName = null;
-    String workflowName = null;
-    String workflowId = activity.getWorkflowId();
-    String activityTeamId = null;
-    WorkflowEntity workflow = workflowService.getWorkflow(workflowId);
-    if (workflow != null) {
-      workflowName = workflow.getName();
-
-      if (WorkflowScope.team.equals(workflow.getScope())) {
-        activityTeamId = workflowService.getWorkflow(workflowId).getFlowTeamId();
-        TeamEntity team = flowTeamService.findById(activityTeamId);
-
-        if (team != null) {
-          teamName = team.getName();
-
-        } else {
-          teamName = null;
-        }
-      }
-    }
-
-    if (teamId.isPresent()) {
-      String teamID = teamId.get();
-
-      if (activityTeamId != null && teamID.equals(activityTeamId)) {
-        Execution execution = createExecution(activity, teamName, workflowName, workflowId);
-        executions.add(execution);
-      }
-    } else {
-      Execution execution = createExecution(activity, teamName, workflowName, workflowId);
-      executions.add(execution);
-    }
-  }
-
-  @Deprecated
-  private Execution createExecution(FlowActivity activity, String teamName, String workflowName,
-      String workflowId) {
-    Execution execution = new Execution();
-    execution.setActivityId(activity.getId());
-    execution.setStatus(activity.getStatus());
-    execution.setDuration(activity.getDuration());
-    execution.setCreationDate(activity.getCreationDate());
-    execution.setTeamName(teamName);
-    execution.setWorkflowName(workflowName);
-    execution.setWorkflowId(workflowId);
-    return execution;
   }
 
   @Override
