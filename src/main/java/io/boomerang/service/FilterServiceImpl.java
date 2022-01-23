@@ -6,6 +6,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import io.boomerang.model.FlowActivity;
+import io.boomerang.mongo.entity.ActivityEntity;
 import io.boomerang.mongo.entity.FlowUserEntity;
 import io.boomerang.mongo.entity.TeamEntity;
 import io.boomerang.mongo.entity.WorkflowEntity;
@@ -24,6 +26,33 @@ public class FilterServiceImpl implements FilterService {
 
   @Autowired
   private FlowWorkflowService flowWorkflowService;
+  
+  /*
+   * Converts from ActivityEntity DB model to consumable FlowActivity
+   * 
+   * @param list of ActivityEntity's
+   * @return list of FlowActivity
+   */
+  @Override
+  public List<FlowActivity> convertActivityEntityToFlowActivity(List<ActivityEntity> records) {
+
+    final List<FlowActivity> flowActivities = new LinkedList<>();
+
+    for (final ActivityEntity record : records) {
+      final FlowActivity flow = new FlowActivity(record);
+      final WorkflowEntity workflow = flowWorkflowService.getWorkflow(record.getWorkflowId());
+
+      if (workflow != null) {
+        flow.setWorkflowName(workflow.getName());
+        flow.setDescription(workflow.getDescription());
+        flow.setIcon(workflow.getIcon());
+        flow.setShortDescription(workflow.getShortDescription());
+      }
+
+      flowActivities.add(flow);
+    }
+    return flowActivities;
+  }
   
   /*
    * Generates the workflowIds based on optional lists of workflowIds, scopes, and teamIds

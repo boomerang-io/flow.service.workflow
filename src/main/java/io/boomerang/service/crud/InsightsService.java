@@ -10,5 +10,6 @@ public interface InsightsService {
 
   InsightsSummary getInsights(Optional<Date> from, Optional<Date> to, Pageable pageable,
       Optional<List<String>> workflowIds, Optional<List<String>> teamIds,
-      Optional<List<String>> scopes);
+      Optional<List<String>> scopes,
+      Optional<List<String>> statuses, Optional<List<String>> triggers);
 }

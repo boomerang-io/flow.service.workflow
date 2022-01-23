@@ -26,7 +26,7 @@ public interface FlowWorkflowActivityService {
 
   ActivityEntity saveWorkflowActivity(ActivityEntity entity);
 
-  Page<ActivityEntity> getAllActivites(Optional<Date> from, Optional<Date> to,
+  Page<ActivityEntity> getAllActivities(Optional<Date> from, Optional<Date> to,
       Pageable page, Optional<List<String>> workflowIds, Optional<List<String>> statuses,
       Optional<List<String>> triggers);
   

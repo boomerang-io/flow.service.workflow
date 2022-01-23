@@ -162,26 +162,6 @@ public class FlowActivityServiceImpl implements FlowActivityService {
 
   private static final Logger LOGGER = LogManager.getLogger();
 
-  private List<FlowActivity> convert(List<ActivityEntity> records) {
-
-    final List<FlowActivity> flowActivities = new LinkedList<>();
-
-    for (final ActivityEntity record : records) {
-      final FlowActivity flow = new FlowActivity(record);
-      final WorkflowEntity workflow = workflowService.getWorkflow(record.getWorkflowId());
-
-      if (workflow != null) {
-        flow.setWorkflowName(workflow.getName());
-        flow.setDescription(workflow.getDescription());
-        flow.setIcon(workflow.getIcon());
-        flow.setShortDescription(workflow.getShortDescription());
-      }
-
-      flowActivities.add(flow);
-    }
-    return flowActivities;
-  }
-
   @Override
   public ActivityEntity createFlowActivity(String workflowVersionId, Optional<String> trigger,
       FlowExecutionRequest request, Optional<List<TaskWorkspace>> taskWorkspaces,
@@ -248,9 +228,9 @@ public class FlowActivityServiceImpl implements FlowActivityService {
 
 
     ListActivityResponse response = new ListActivityResponse();
-    Page<ActivityEntity> records = flowActivityService.getAllActivites(from, to, page,
+    Page<ActivityEntity> records = flowActivityService.getAllActivities(from, to, page,
         Optional.of(workflowIdsList), statuses, triggers);
-    final List<FlowActivity> activities = convert(records.getContent());
+    final List<FlowActivity> activities = filterService.convertActivityEntityToFlowActivity(records.getContent());
     List<FlowActivity> activitiesFiltered = new ArrayList<>();
     for (FlowActivity activity : activities) {
       String workFlowId = activity.getWorkflowId();
@@ -325,7 +305,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
 
 
     List<ActivityEntity> flowWorkflowActivityEntities =
-        flowActivityService.getAllActivites(from, to, pageable, getOptional(workflowIdsList),
+        flowActivityService.getAllActivities(from, to, pageable, getOptional(workflowIdsList),
             Optional.empty(), getOptional(triggers)).getContent();
 
     Map<String, Long> result = flowWorkflowActivityEntities.stream()
@@ -400,7 +380,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
     final Page<ActivityEntity> records = flowActivityService.findAllActivities(from, to, page);
     final ListActivityResponse response = new ListActivityResponse();
 
-    final List<FlowActivity> activities = convert(records.getContent());
+    final List<FlowActivity> activities = filterService.convertActivityEntityToFlowActivity(records.getContent());
     io.boomerang.model.Pageable pageable = createPageable(records, property, direction);
     response.setPageable(pageable);
     response.setRecords(activities);
@@ -587,7 +567,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
 
     final Page<ActivityEntity> records = flowActivityService.findAllActivities(from, to, pageable);
     final InsightsSummary response = new InsightsSummary();
-    final List<FlowActivity> activities = convert(records.getContent());
+    final List<FlowActivity> activities = filterService.convertActivityEntityToFlowActivity(records.getContent());
     List<Execution> executions = new ArrayList<>();
     Long totalExecutionTime = 0L;
     Long executionTime;
@@ -614,6 +594,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
     return response;
   }
 
+  @Deprecated
   private void addActivityDetail(Optional<String> teamId, List<Execution> executions,
       FlowActivity activity) {
     String teamName = null;
@@ -650,6 +631,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
     }
   }
 
+  @Deprecated
   private Execution createExecution(FlowActivity activity, String teamName, String workflowName,
       String workflowId) {
     Execution execution = new Execution();
@@ -904,7 +886,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
         mongoTemplate.find(activityQuery.with(pageable), ActivityEntity.class), pageable,
         () -> mongoTemplate.count(activityQuery, ActivityEntity.class));
 
-    List<FlowActivity> activityRecords = this.convert(activityPages.getContent());
+    List<FlowActivity> activityRecords = filterService.convertActivityEntityToFlowActivity(activityPages.getContent());
 
     return activityRecords;
   }

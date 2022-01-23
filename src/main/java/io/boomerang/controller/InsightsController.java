@@ -74,7 +74,9 @@ public class InsightsController {
       @RequestParam(defaultValue = "0") int page,
       @RequestParam(defaultValue = "2147483647") int size, 
       @RequestParam Optional<Long> fromDate,
-      @RequestParam Optional<Long> toDate) {
+      @RequestParam Optional<Long> toDate, 
+      @RequestParam Optional<List<String>> statuses,
+      @RequestParam Optional<List<String>> triggers) {
 
     Optional<Date> from = Optional.empty();
     Optional<Date> to = Optional.empty();
@@ -97,8 +99,7 @@ public class InsightsController {
     }
     final Pageable pageable = PageRequest.of(page, size, pagingSort);
     
-
-    return insightsService.getInsights(from, to, pageable, workflowIds, teamIds, scopes);
+    return insightsService.getInsights(from, to, pageable, workflowIds, teamIds, scopes, statuses, triggers);
 //    return flowActivityService.getAllActivites(from, to, pageable, workflowIds, teamIds, statuses,
 //        triggers, scopes, sort.get(), order.get());
   }
