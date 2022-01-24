@@ -123,7 +123,7 @@ public class ControllerClientImpl implements ControllerClient {
 
 
     if (enableStorage) {
-      Workspace workspace = createWorkspaceRequest(workflowId, "workflow");
+      Workspace workspace = createWorkspaceRequest(activityId, "activity");
       List<Workspace> workspaces = new LinkedList<>();
       workspaces.add(workspace);
       request.setWorkspaces(workspaces);
@@ -178,22 +178,22 @@ public class ControllerClientImpl implements ControllerClient {
     return true;
   }
 
-  private Workspace createWorkspaceRequest(String id, String name) {
+  private Workspace createWorkspaceRequest(String activityId, String name) {
     Workspace workspace = new Workspace();
-    workspace.setId(id);
+    workspace.setId(activityId);
     workspace.setName(name);
     String storageClassName =
-        this.flowSettinigs.getConfiguration("workflow", "storage.class").getValue();
+        this.flowSettinigs.getConfiguration("activity", "storage.class").getValue();
     if (storageClassName != null && !storageClassName.isBlank()) {
       workspace.setClassName(storageClassName);
     }
     String storageAccessMode =
-        this.flowSettinigs.getConfiguration("workflow", "storage.accessMode").getValue();
+        this.flowSettinigs.getConfiguration("activity", "storage.accessMode").getValue();
     if (storageAccessMode != null && !storageAccessMode.isBlank()) {
       workspace.setAccessMode(storageAccessMode);
     }
     String storageDefaultSize =
-        this.flowSettinigs.getConfiguration("workflow", "storage.size").getValue();
+        this.flowSettinigs.getConfiguration("activity", "storage.size").getValue();
     if (storageDefaultSize != null && !storageDefaultSize.isBlank()) {
       workspace.setSize(storageDefaultSize);
     }
