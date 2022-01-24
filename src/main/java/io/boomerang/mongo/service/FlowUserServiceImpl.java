@@ -19,16 +19,11 @@ public class FlowUserServiceImpl implements FlowUserService {
   private FlowUserRepository flowUserRepository;
 
   @Override
-  public FlowUserEntity getOrRegisterUser(String email, String firstName, String lastName, UserType usertype) {
+  public FlowUserEntity getOrRegisterUser(String email, String name, UserType usertype) {
 
     Long count = this.flowUserRepository.countByEmailIgnoreCase(email);
     if (count == 1) {
       return this.flowUserRepository.findByEmailIgnoreCase(email);
-    }
-
-    String name = String.format("%s %s", Optional.ofNullable(firstName).orElse(""), Optional.ofNullable(lastName).orElse("")).trim();
-    if (firstName == null && lastName == null && email != null) {
-      name = email;
     }
 
     FlowUserEntity userEntity = new FlowUserEntity();

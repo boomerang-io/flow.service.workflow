@@ -15,7 +15,7 @@ public interface FlowUserService {
 
   public Optional<FlowUserEntity> getUserById(String id);
 
-  public FlowUserEntity getOrRegisterUser(String email, String firstName, String lastName,
+  public FlowUserEntity getOrRegisterUser(String email, String name,
       UserType userType);
 
   Page<FlowUserEntity> findBySearchTerm(String term, Pageable pageable);

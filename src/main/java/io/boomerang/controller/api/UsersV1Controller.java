@@ -1,6 +1,7 @@
 package io.boomerang.controller.api;
 
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 import io.boomerang.model.FlowUser;
 import io.boomerang.model.UserQueryResult;
 import io.boomerang.model.profile.SortSummary;
+import io.boomerang.mongo.entity.FlowUserEntity;
 import io.boomerang.mongo.model.TokenScope;
 import io.boomerang.security.interceptors.AuthenticationScope;
 import io.boomerang.service.UserIdentityService;
@@ -38,6 +40,22 @@ public class UsersV1Controller {
 
   @Autowired
   private UserIdentityService userIdentityService;
+
+  @GetMapping(value = "/users/{userId}")
+  @AuthenticationScope(scopes = {TokenScope.global})
+  @Operation(summary = "Get a Boomerang Flow user details")
+  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
+      @ApiResponse(responseCode = "404", description = "Not Found")})
+  public ResponseEntity<FlowUser> getFlowUser(@PathVariable String userId) {
+    FlowUserEntity flowUser = userIdentityService.getUserByID(userId);
+    if (userIdentityService.getUserByID(userId) != null) {
+      FlowUser user = new FlowUser();
+      BeanUtils.copyProperties(flowUser, user);
+      return ResponseEntity.ok(user);
+    } else {
+      return ResponseEntity.notFound().build();
+    }
+  }
 
   @PatchMapping(value = "/users/{userId}")
   @AuthenticationScope(scopes = {TokenScope.global})
