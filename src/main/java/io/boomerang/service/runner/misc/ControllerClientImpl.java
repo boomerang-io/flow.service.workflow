@@ -123,7 +123,7 @@ public class ControllerClientImpl implements ControllerClient {
 
 
     if (enableStorage) {
-      Workspace workspace = createWorkspaceRequest(activityId, "activity");
+      Workspace workspace = createWorkspaceRequest(workflowId, "workflow");
       List<Workspace> workspaces = new LinkedList<>();
       workspaces.add(workspace);
       request.setWorkspaces(workspaces);
@@ -178,9 +178,9 @@ public class ControllerClientImpl implements ControllerClient {
     return true;
   }
 
-  private Workspace createWorkspaceRequest(String activityId, String name) {
+  private Workspace createWorkspaceRequest(String id, String name) {
     Workspace workspace = new Workspace();
-    workspace.setId(activityId);
+    workspace.setId(id);
     workspace.setName(name);
     String storageClassName =
         this.flowSettinigs.getConfiguration("workflow", "storage.class").getValue();
