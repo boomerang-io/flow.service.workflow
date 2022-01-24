@@ -1,5 +1,6 @@
 package io.boomerang.service;
 
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -58,6 +59,7 @@ public class UserIdentityServiceImpl implements UserIdentityService {
       }
       BeanUtils.copyProperties(userProfile, flowUser);
       flowUser.setTeams(null);
+      
       String email = userProfile.getEmail();
       FlowUserEntity dbUser = flowUserService.getUserWithEmail(email);
       if (dbUser == null) {
@@ -76,7 +78,11 @@ public class UserIdentityServiceImpl implements UserIdentityService {
     String email = userDetails.getEmail();
     String firstName = userDetails.getFirstName();
     String lastName = userDetails.getLastName();
-    return flowUserService.getOrRegisterUser(email, firstName, lastName, userType);
+    String name = String.format("%s %s", Optional.ofNullable(firstName).orElse(""), Optional.ofNullable(lastName).orElse("")).trim();
+    if (firstName == null && lastName == null && email != null) {
+      name = email;
+    }
+    return flowUserService.getOrRegisterUser(email, name, userType);
   }
 
   @Override
@@ -186,11 +192,16 @@ public class UserIdentityServiceImpl implements UserIdentityService {
   @Override
   public FlowUser addFlowUser(FlowUser flowUser) {
     if (flowUserService.getUserWithEmail(flowUser.getEmail()) == null) {
-      FlowUserEntity flowUserEntity = new FlowUserEntity();
-      BeanUtils.copyProperties(flowUser, flowUserEntity);
-      flowUser.setStatus(UserStatus.active);
-      flowUser.setId(null);
+
+      String email = flowUser.getEmail();
+      String name = flowUser.getName();
+      UserType type = flowUser.getType();
+      FlowUserEntity flowUserEntity = flowUserService.getOrRegisterUser(email, name, type);
+      flowUserEntity.setQuotas(flowUser.getQuotas());
+      flowUserEntity.setHasConsented(true);
+      
       flowUserEntity = flowUserService.save(flowUser);
+      
       FlowUser newUser = new FlowUser();
       BeanUtils.copyProperties(flowUserEntity, newUser);
       return newUser;

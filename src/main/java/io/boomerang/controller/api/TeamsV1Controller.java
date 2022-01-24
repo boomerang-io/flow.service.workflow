@@ -110,10 +110,8 @@ public class TeamsV1Controller {
           if (flowUserService.getUserWithEmail(flowUser.getEmail()) != null) {
             userIdsToAdd.add(flowUserService.getUserWithEmail(flowUser.getEmail()).getId());
           } else {
-            String[] userName = flowUser.getName().split(" ", 2);
-
-            userIdsToAdd.add(flowUserService.getOrRegisterUser(flowUser.getEmail(), userName[0],
-                userName[1], flowUser.getType()).getId());
+            String userName = flowUser.getName();
+            userIdsToAdd.add(flowUserService.getOrRegisterUser(flowUser.getEmail(), userName,flowUser.getType()).getId());
 
           }
           teamService.updateTeamMembers(team.getId(), userIdsToAdd);

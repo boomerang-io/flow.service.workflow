@@ -43,6 +43,10 @@ public class ManagementController {
   @Autowired
   private UserIdentityService userIdentityService;
 
+  @GetMapping(value = "/users/{userId}")
+  public FlowUserEntity getUserProfile(@PathVariable String userId) {
+    return userIdentityService.getUserByID(userId);
+  }
 
   @PatchMapping(value = "/users/{userId}")
   public void updateFlowUser(@PathVariable String userId, @RequestBody FlowUser flowUser) {
