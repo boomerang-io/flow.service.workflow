@@ -95,11 +95,12 @@ public class EventingSubscriberClient {
       @Override
       public void subscriptionFailed(PubSubTunnel tunnel, Exception exception) {
         logger.debug(
-            "Failed to subscribe for consuming messages from NATS Jetstream. Resubscribing...");
+            "Failed to subscribe for consuming messages from NATS Jetstream. Resubscribing...",
+            exception);
         try {
           Thread.sleep(jetstreamConsumerResubscribeWaitTime.toMillis());
         } catch (Exception e) {
-          logger.warn("Sleep failed: resubscribing without a waiting time...");
+          logger.warn("Sleep failed: resubscribing without a waiting time...", e);
         } finally {
           startSubscription(tunnel);
         }
