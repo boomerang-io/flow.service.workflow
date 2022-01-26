@@ -18,8 +18,8 @@ import io.boomerang.model.FlowFeatures;
 import io.boomerang.model.Navigation;
 import io.boomerang.model.NavigationType;
 import io.boomerang.security.service.ApiTokenService;
-import io.boomerang.security.service.UserDetailsService;
 import io.boomerang.service.FeatureService;
+import io.boomerang.service.UserIdentityService;
 
 @Service
 public class NavigationServiceImpl implements NavigationService {
@@ -44,7 +44,7 @@ public class NavigationServiceImpl implements NavigationService {
   private String flowAppsUrl;
 
   @Autowired
-  private UserDetailsService identityService;
+  private UserIdentityService identityService;
 
   @Override
   public List<Navigation> getNavigation(boolean isUserAdmin, String teamId) {

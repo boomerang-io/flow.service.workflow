@@ -22,26 +22,26 @@ import io.boomerang.mongo.entity.ActivityEntity;
 import io.boomerang.mongo.entity.FlowGlobalConfigEntity;
 import io.boomerang.mongo.entity.FlowTaskTemplateEntity;
 import io.boomerang.mongo.entity.FlowTeamConfiguration;
-import io.boomerang.mongo.entity.TeamEntity;
 import io.boomerang.mongo.entity.RevisionEntity;
 import io.boomerang.mongo.entity.TaskExecutionEntity;
+import io.boomerang.mongo.entity.TeamEntity;
 import io.boomerang.mongo.entity.WorkflowEntity;
-import io.boomerang.mongo.model.KeyValuePair;
 import io.boomerang.mongo.model.Dag;
-import io.boomerang.mongo.model.WorkflowProperty;
+import io.boomerang.mongo.model.KeyValuePair;
 import io.boomerang.mongo.model.Revision;
 import io.boomerang.mongo.model.TaskTemplateConfig;
+import io.boomerang.mongo.model.WorkflowProperty;
 import io.boomerang.mongo.model.WorkflowScope;
 import io.boomerang.mongo.model.next.DAGTask;
 import io.boomerang.mongo.service.ActivityTaskService;
 import io.boomerang.mongo.service.FlowGlobalConfigService;
+import io.boomerang.mongo.service.FlowSettingsService;
 import io.boomerang.mongo.service.FlowTaskTemplateService;
 import io.boomerang.mongo.service.FlowTeamService;
 import io.boomerang.mongo.service.RevisionService;
 import io.boomerang.service.crud.FlowActivityService;
 import io.boomerang.service.crud.WorkflowService;
 import io.boomerang.service.refactor.ControllerRequestProperties;
-import io.boomerang.mongo.service.FlowSettingsService;
 
 @Service
 public class PropertyManagerImpl implements PropertyManager {

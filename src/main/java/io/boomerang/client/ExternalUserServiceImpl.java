@@ -15,7 +15,7 @@ import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 import io.boomerang.client.model.UserProfile;
 import io.boomerang.security.service.ApiTokenService;
-import io.boomerang.security.service.UserDetailsService;
+import io.boomerang.service.UserIdentityService;
 
 @Service
 public class ExternalUserServiceImpl implements ExternalUserService {
@@ -28,7 +28,7 @@ public class ExternalUserServiceImpl implements ExternalUserService {
   private RestTemplate restTemplate;
   
   @Autowired
-  private UserDetailsService userDetailsService;
+  private UserIdentityService userDetailsService;
 
   private static final String AUTHORIZATION_HEADER = "Authorization";
   private static final String TOKEN_PREFIX = "Bearer ";

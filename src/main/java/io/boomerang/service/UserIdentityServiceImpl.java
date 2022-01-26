@@ -1,6 +1,5 @@
 package io.boomerang.service;
 
-import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -11,6 +10,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import io.boomerang.client.ExternalUserService;
@@ -19,11 +19,14 @@ import io.boomerang.model.FlowUser;
 import io.boomerang.model.OneTimeCode;
 import io.boomerang.model.UserQueryResult;
 import io.boomerang.mongo.entity.FlowUserEntity;
+import io.boomerang.mongo.model.TokenScope;
 import io.boomerang.mongo.model.UserStatus;
 import io.boomerang.mongo.model.UserType;
 import io.boomerang.mongo.service.FlowUserService;
+import io.boomerang.security.model.GlobalToken;
+import io.boomerang.security.model.TeamToken;
 import io.boomerang.security.model.UserToken;
-import io.boomerang.security.service.UserDetailsService;
+import io.boomerang.security.service.impl.NoLogging;
 
 @Service
 public class UserIdentityServiceImpl implements UserIdentityService {
@@ -32,7 +35,7 @@ public class UserIdentityServiceImpl implements UserIdentityService {
   private String flowExternalUrlUser;
 
   @Autowired
-  private UserDetailsService usertDetailsService;
+  private UserIdentityService usertDetailsService;
 
   @Autowired
   private ExternalUserService coreUserService;
@@ -207,6 +210,40 @@ public class UserIdentityServiceImpl implements UserIdentityService {
       return newUser;
     }
     return new FlowUser();
+  }
+  
+  @Override
+  @NoLogging
+  public UserToken getUserDetails() {
+    if (SecurityContextHolder.getContext() != null
+        && SecurityContextHolder.getContext().getAuthentication() != null
+        && SecurityContextHolder.getContext().getAuthentication().getDetails() != null
+        && SecurityContextHolder.getContext().getAuthentication()
+            .getDetails() instanceof UserToken) {
+      return (UserToken) SecurityContextHolder.getContext().getAuthentication().getDetails();
+    } else {
+      return new UserToken("boomerang@us.ibm.com", "boomerang", "joe");
+    }
+  }
+
+  
+  @Override
+  public TokenScope getCurrentScope() {
+    if (SecurityContextHolder.getContext() != null
+        && SecurityContextHolder.getContext().getAuthentication() != null
+        && SecurityContextHolder.getContext().getAuthentication().getDetails() != null) {
+      Object details = SecurityContextHolder.getContext().getAuthentication()
+          .getDetails();
+      if (details instanceof UserToken) {
+        return TokenScope.user;
+      } else if (details instanceof TeamToken ) {
+        return TokenScope.team;
+      }
+      else if (details instanceof GlobalToken) {
+        return TokenScope.global;
+      }
+    }
+    return null;
   }
 
 }

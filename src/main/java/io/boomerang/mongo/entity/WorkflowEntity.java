@@ -9,8 +9,8 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import io.boomerang.model.WorkflowToken;
 import io.boomerang.mongo.model.KeyValuePair;
 import io.boomerang.mongo.model.Storage;
-import io.boomerang.mongo.model.WorkflowProperty;
 import io.boomerang.mongo.model.Triggers;
+import io.boomerang.mongo.model.WorkflowProperty;
 import io.boomerang.mongo.model.WorkflowScope;
 import io.boomerang.mongo.model.WorkflowStatus;
 
