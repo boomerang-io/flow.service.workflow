@@ -2,7 +2,6 @@ package io.boomerang;
 
 import java.time.Clock;
 import java.util.concurrent.Executor;
-import com.github.alturkovic.lock.mongo.configuration.EnableMongoDistributedLock;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.boot.SpringApplication;
@@ -11,6 +10,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import com.github.alturkovic.lock.mongo.configuration.EnableMongoDistributedLock;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeIn;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;

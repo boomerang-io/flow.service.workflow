@@ -6,13 +6,13 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
 import io.boomerang.mongo.model.TokenScope;
-import io.boomerang.security.service.UserDetailsService;
+import io.boomerang.service.UserIdentityService;
 
 public class SecurityInterceptor implements HandlerInterceptor {
 
-  private UserDetailsService userDetailsService;
+  private UserIdentityService userDetailsService;
 
-  public SecurityInterceptor(UserDetailsService userDetailsService) {
+  public SecurityInterceptor(UserIdentityService userDetailsService) {
     this.userDetailsService = userDetailsService;
   }
 
