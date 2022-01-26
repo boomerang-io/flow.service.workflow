@@ -8,6 +8,8 @@ import io.boomerang.model.FlowUser;
 import io.boomerang.model.OneTimeCode;
 import io.boomerang.model.UserQueryResult;
 import io.boomerang.mongo.entity.FlowUserEntity;
+import io.boomerang.mongo.model.TokenScope;
+import io.boomerang.security.model.UserToken;
 
 public interface UserIdentityService {
 
@@ -30,5 +32,9 @@ public interface UserIdentityService {
   public void deleteFlowUser(String userId);
 
   public FlowUser addFlowUser(FlowUser flowUser);
+
+  public UserToken getUserDetails();
+
+  public TokenScope getCurrentScope();
 
 }

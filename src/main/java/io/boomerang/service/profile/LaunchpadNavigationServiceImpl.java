@@ -20,7 +20,7 @@ import io.boomerang.model.profile.NavigationResponse;
 import io.boomerang.model.profile.Platform;
 import io.boomerang.security.model.UserToken;
 import io.boomerang.security.service.ApiTokenService;
-import io.boomerang.security.service.UserDetailsService;
+import io.boomerang.service.UserIdentityService;
 
 @Service
 public class LaunchpadNavigationServiceImpl implements LaunchpadNavigationService {
@@ -60,7 +60,7 @@ public class LaunchpadNavigationServiceImpl implements LaunchpadNavigationServic
   private ApiTokenService apiTokenService;
   
   @Autowired
-  private UserDetailsService identityService;
+  private UserIdentityService identityService;
   
   @Override
   public NavigationResponse getLaunchpadNavigation(boolean isUserAdmin) {
