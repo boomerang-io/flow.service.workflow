@@ -4,6 +4,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import io.boomerang.model.FlowActivity;
@@ -11,12 +13,15 @@ import io.boomerang.mongo.entity.ActivityEntity;
 import io.boomerang.mongo.entity.FlowUserEntity;
 import io.boomerang.mongo.entity.TeamEntity;
 import io.boomerang.mongo.entity.WorkflowEntity;
+import io.boomerang.mongo.model.TokenScope;
 import io.boomerang.mongo.model.UserType;
 import io.boomerang.mongo.service.FlowWorkflowService;
 import io.boomerang.service.crud.TeamService;
 
 @Service
 public class FilterServiceImpl implements FilterService {
+
+  private static final Logger LOGGER = LogManager.getLogger();
 
   @Autowired
   private UserIdentityService userIdentityService;
@@ -66,27 +71,49 @@ public class FilterServiceImpl implements FilterService {
   @Override
   public List<String> getFilteredWorkflowIds(Optional<List<String>> workflowIds,
       Optional<List<String>> teamIds, Optional<List<String>> scopes) {
-    final FlowUserEntity user = userIdentityService.getCurrentUser();
+    
+    FlowUserEntity user = null;
+    Boolean isAdmin = false;
+    LOGGER.info("Current User Scope: " + userIdentityService.getCurrentScope());
+    switch(userIdentityService.getCurrentScope()) {
+      case user:
+        user = userIdentityService.getCurrentUser();
+        if (user.getType() == UserType.admin) {
+          isAdmin = true;
+        }
+        break;
+      case team:
+        
+        break;
+      case global:
+        break;
+    }
+    if (TokenScope.user.equals(userIdentityService.getCurrentScope())) {
+    } else if (TokenScope.global.equals(userIdentityService.getCurrentScope())) {
+      isAdmin = true;
+    }
     List<String> workflowIdsList = new LinkedList<>();
 
     if (!workflowIds.isPresent()) {
       if (scopes.isPresent() && !scopes.get().isEmpty()) {
         List<String> scopeList = scopes.get();
-        if (scopeList.contains("user")) {
+        if (scopeList.contains("user") && user != null) {
           addUserWorkflows(user, workflowIdsList);
         }
-        if (scopeList.contains("system") && user.getType() == UserType.admin) {
+        if (scopeList.contains("system") && isAdmin) {
           addSystemWorkflows(workflowIdsList);
         }
         if (scopeList.contains("team")) {
-          addTeamWorkflows(user, workflowIdsList, teamIds);
+          addTeamWorkflows(isAdmin, user, workflowIdsList, teamIds);
         }
       } else if (teamIds.isPresent() && !teamIds.get().isEmpty()) {
-        addTeamWorkflows(user, workflowIdsList, teamIds);
+        addTeamWorkflows(isAdmin, user, workflowIdsList, teamIds);
       } else {
-        addUserWorkflows(user, workflowIdsList);
-        addTeamWorkflows(user, workflowIdsList, teamIds);
-        if (user.getType() == UserType.admin) {
+        if (user != null) {
+          addUserWorkflows(user, workflowIdsList);
+        }
+        addTeamWorkflows(isAdmin, user, workflowIdsList, teamIds);
+        if (isAdmin) {
           addSystemWorkflows(workflowIdsList);
         }
       }
@@ -97,32 +124,24 @@ public class FilterServiceImpl implements FilterService {
     return workflowIdsList;
   }
 
-  private void addTeamWorkflows(final FlowUserEntity user, List<String> workflowIdsList,
+  private void addTeamWorkflows(Boolean isAdmin, final FlowUserEntity user, List<String> workflowIdsList,
       Optional<List<String>> teamIds) {
-
+    List<WorkflowEntity> teamWorkflows = null;
     if (teamIds.isPresent() && !teamIds.get().isEmpty()) {
-      List<WorkflowEntity> allTeamWorkflows =
-          this.flowWorkflowService.getWorkflowsForTeams(teamIds.get());
-      List<String> allTeamWorkflowsIds =
-          allTeamWorkflows.stream().map(WorkflowEntity::getId).collect(Collectors.toList());
-      workflowIdsList.addAll(allTeamWorkflowsIds);
+      teamWorkflows = this.flowWorkflowService.getWorkflowsForTeams(teamIds.get());
     } else {
-      if (user.getType() == UserType.admin) {
-        List<WorkflowEntity> allTeamWorkflows = this.flowWorkflowService.getTeamWorkflows();
-        List<String> workflowIds =
-            allTeamWorkflows.stream().map(WorkflowEntity::getId).collect(Collectors.toList());
-        workflowIdsList.addAll(workflowIds);
-      } else {
+      if (isAdmin) {
+        teamWorkflows = this.flowWorkflowService.getTeamWorkflows();
+      } else if (user != null) {
         List<TeamEntity> flowTeam = teamService.getUsersTeamListing(user);
         List<String> flowTeamIds =
             flowTeam.stream().map(TeamEntity::getId).collect(Collectors.toList());
-        List<WorkflowEntity> teamWorkflows =
-            this.flowWorkflowService.getWorkflowsForTeams(flowTeamIds);
-        List<String> allTeamWorkflowsIds =
-            teamWorkflows.stream().map(WorkflowEntity::getId).collect(Collectors.toList());
-        workflowIdsList.addAll(allTeamWorkflowsIds);
+        teamWorkflows = this.flowWorkflowService.getWorkflowsForTeams(flowTeamIds);
       }
     }
+    List<String> teamWorkflowsIds =
+        teamWorkflows.stream().map(WorkflowEntity::getId).collect(Collectors.toList());
+    workflowIdsList.addAll(teamWorkflowsIds);
   }
 
   private void addSystemWorkflows(List<String> workflowIdsList) {
