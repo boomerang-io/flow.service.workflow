@@ -9,6 +9,7 @@ import io.boomerang.model.OneTimeCode;
 import io.boomerang.model.UserQueryResult;
 import io.boomerang.mongo.entity.FlowUserEntity;
 import io.boomerang.mongo.model.TokenScope;
+import io.boomerang.security.model.Token;
 import io.boomerang.security.model.UserToken;
 
 public interface UserIdentityService {
@@ -36,5 +37,7 @@ public interface UserIdentityService {
   public UserToken getUserDetails();
 
   public TokenScope getCurrentScope();
+  
+  public Token getRequestIdentity();
 
 }

@@ -103,7 +103,10 @@ public class FlowAuthorizationFilter extends BasicAuthenticationFilter {
         authToken.setDetails(t);
         return authToken;
       } else if (token.getScope() == TokenScope.team) {
-        Token t = new TeamToken();
+        TeamToken t = new TeamToken();
+        String teamId = token.getTeamId();
+        t.setTeamId(teamId);
+        
         final FlowAuthenticationToken authToken = new FlowAuthenticationToken(authorities);
         authToken.setDetails(t);
         return authToken;

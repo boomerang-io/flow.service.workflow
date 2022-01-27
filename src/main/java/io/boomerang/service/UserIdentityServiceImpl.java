@@ -25,6 +25,7 @@ import io.boomerang.mongo.model.UserType;
 import io.boomerang.mongo.service.FlowUserService;
 import io.boomerang.security.model.GlobalToken;
 import io.boomerang.security.model.TeamToken;
+import io.boomerang.security.model.Token;
 import io.boomerang.security.model.UserToken;
 import io.boomerang.security.service.impl.NoLogging;
 
@@ -244,6 +245,21 @@ public class UserIdentityServiceImpl implements UserIdentityService {
       }
     }
     return null;
+  }
+
+
+  @Override
+  public Token getRequestIdentity() {
+    if (SecurityContextHolder.getContext() != null
+        && SecurityContextHolder.getContext().getAuthentication() != null
+        && SecurityContextHolder.getContext().getAuthentication().getDetails() != null) {
+      Object details = SecurityContextHolder.getContext().getAuthentication()
+          .getDetails();
+      return (Token) details;
+    }
+    else {
+      return null;
+    }
   }
 
 }
