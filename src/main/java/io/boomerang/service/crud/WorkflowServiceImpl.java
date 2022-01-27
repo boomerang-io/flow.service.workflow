@@ -164,7 +164,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   @Override
   public List<WorkflowSummary> getWorkflowsForTeam(String flowTeamId) {
-    final List<WorkflowEntity> list = workflowRepository.getWorkflowsForTeams(flowTeamId);
+    final List<WorkflowEntity> list = workflowRepository.getWorkflowsForTeam(flowTeamId);
     final List<WorkflowSummary> newList = new LinkedList<>();
     for (final WorkflowEntity entity : list) {
 
@@ -934,7 +934,7 @@ public class WorkflowServiceImpl implements WorkflowService {
       return null;
     }
 
-    final List<WorkflowEntity> workflows = workflowRepository.getUserWorkflows(user.getId());
+    final List<WorkflowEntity> workflows = workflowRepository.getWorkflowsForUser(user.getId());
 
     final List<WorkflowSummary> newList = new LinkedList<>();
     for (final WorkflowEntity entity : workflows) {
@@ -965,7 +965,7 @@ public class WorkflowServiceImpl implements WorkflowService {
       return null;
     }
 
-    final List<WorkflowEntity> workflows = workflowRepository.getUserWorkflows(user.getId());
+    final List<WorkflowEntity> workflows = workflowRepository.getWorkflowsForUser(user.getId());
 
     final List<WorkflowSummary> newList = new LinkedList<>();
     for (final WorkflowEntity entity : workflows) {

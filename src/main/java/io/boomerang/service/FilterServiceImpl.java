@@ -74,6 +74,7 @@ public class FilterServiceImpl implements FilterService {
     
     FlowUserEntity user = null;
     Boolean isAdmin = false;
+    
     LOGGER.info("Current User Scope: " + userIdentityService.getCurrentScope());
     switch(userIdentityService.getCurrentScope()) {
       case user:
@@ -86,14 +87,11 @@ public class FilterServiceImpl implements FilterService {
         
         break;
       case global:
+        isAdmin = true;
         break;
     }
-    if (TokenScope.user.equals(userIdentityService.getCurrentScope())) {
-    } else if (TokenScope.global.equals(userIdentityService.getCurrentScope())) {
-      isAdmin = true;
-    }
-    List<String> workflowIdsList = new LinkedList<>();
 
+    List<String> workflowIdsList = new LinkedList<>();
     if (!workflowIds.isPresent()) {
       if (scopes.isPresent() && !scopes.get().isEmpty()) {
         List<String> scopeList = scopes.get();
@@ -106,8 +104,6 @@ public class FilterServiceImpl implements FilterService {
         if (scopeList.contains("team")) {
           addTeamWorkflows(isAdmin, user, workflowIdsList, teamIds);
         }
-      } else if (teamIds.isPresent() && !teamIds.get().isEmpty()) {
-        addTeamWorkflows(isAdmin, user, workflowIdsList, teamIds);
       } else {
         if (user != null) {
           addUserWorkflows(user, workflowIdsList);
@@ -153,7 +149,7 @@ public class FilterServiceImpl implements FilterService {
 
   private void addUserWorkflows(final FlowUserEntity user, List<String> workflowIdsList) {
     String userId = user.getId();
-    List<WorkflowEntity> userWorkflows = this.flowWorkflowService.getUserWorkflows(userId);
+    List<WorkflowEntity> userWorkflows = this.flowWorkflowService.getWorkflowsForUser(userId);
     List<String> userWorkflowIds =
         userWorkflows.stream().map(WorkflowEntity::getId).collect(Collectors.toList());
     workflowIdsList.addAll(userWorkflowIds);
