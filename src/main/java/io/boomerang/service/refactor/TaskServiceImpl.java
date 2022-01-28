@@ -301,10 +301,17 @@ public class TaskServiceImpl implements TaskService {
         LOGGER.debug("With execution set to: " + executionCal.getTime().toString() + " in UTC");
         
         //Define new properties removing the System Task specific properties
+        ControllerRequestProperties requestProperties = propertyManager
+            .buildRequestPropertyLayering(task, activity.getId(), activity.getWorkflowId());
+        
         Map<String, String> properties = new HashMap<>();
         for (Map.Entry<String, String> entry : task.getInputs().entrySet()) {
-          if (!"workflowId".equals(entry.getKey()) && !"futureIn".equals(entry.getKey()) && !"futurePeriod".equals(entry.getKey()) && !"futureTime".equals(entry.getKey())) {
-            properties.put(entry.getKey(), entry.getValue());
+          if (!"workflowId".equals(entry.getKey()) && !"futureIn".equals(entry.getKey()) && !"futurePeriod".equals(entry.getKey()) && !"time".equals(entry.getKey())) {
+            String value = entry.getValue();
+            if (value != null) {
+              value = propertyManager.replaceValueWithProperty(value, activity.getId(), requestProperties);
+            }
+            properties.put(entry.getKey(), value);
           }
         }
         
