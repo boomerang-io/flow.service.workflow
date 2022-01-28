@@ -306,7 +306,7 @@ public class TaskServiceImpl implements TaskService {
         
         Map<String, String> properties = new HashMap<>();
         for (Map.Entry<String, String> entry : task.getInputs().entrySet()) {
-          if (!"workflowId".equals(entry.getKey()) && !"futureIn".equals(entry.getKey()) && !"futurePeriod".equals(entry.getKey()) && !"time".equals(entry.getKey())) {
+          if (!"workflowId".equals(entry.getKey()) && !"futureIn".equals(entry.getKey()) && !"futurePeriod".equals(entry.getKey()) && !"time".equals(entry.getKey()) && !"timezone".equals(entry.getKey())) {
             String value = entry.getValue();
             if (value != null) {
               value = propertyManager.replaceValueWithProperty(value, activity.getId(), requestProperties);
