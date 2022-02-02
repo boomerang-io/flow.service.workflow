@@ -49,7 +49,7 @@
         }
     ],
     "description" : "Define how the system utilizes and interacts with storage.",
-    "key" : "workspace",
+    "key" : "workflow",
     "lastModiifed" : ISODate("2021-02-09T15:55:26.799Z"),
     "name" : "Workspace Configuration - Workflow Storage",
     "type" : "ValuesList",
