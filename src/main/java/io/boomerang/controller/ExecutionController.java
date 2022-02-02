@@ -23,8 +23,6 @@ public class ExecutionController {
   public FlowActivity executeWorkflow(@PathVariable String workflowId,
       @RequestParam Optional<String> trigger,
       @RequestBody Optional<FlowExecutionRequest> executionRequest) {
-    
-    System.out.println("****** EXECUTE WORKFLOW CONTROLLER*****");
 
     return executionService.executeWorkflow(workflowId, trigger, executionRequest, Optional.empty());
   }
