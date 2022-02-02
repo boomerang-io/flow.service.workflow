@@ -182,17 +182,17 @@ public class ControllerClientImpl implements ControllerClient {
     workspace.setId(activityId);
     workspace.setName(name);
     String storageClassName =
-        this.flowSettinigs.getConfiguration("workspace", "storage.class").getValue();
+        this.flowSettinigs.getConfiguration("workflow", "storage.class").getValue();
     if (storageClassName != null && !storageClassName.isBlank()) {
       workspace.setClassName(storageClassName);
     }
     String storageAccessMode =
-        this.flowSettinigs.getConfiguration("workspace", "storage.accessMode").getValue();
+        this.flowSettinigs.getConfiguration("workflow", "storage.accessMode").getValue();
     if (storageAccessMode != null && !storageAccessMode.isBlank()) {
       workspace.setAccessMode(storageAccessMode);
     }
     String storageDefaultSize =
-        this.flowSettinigs.getConfiguration("workspace", "storage.size").getValue();
+        this.flowSettinigs.getConfiguration("workflow", "storage.size").getValue();
     if (storageDefaultSize != null && !storageDefaultSize.isBlank()) {
       workspace.setSize(storageDefaultSize);
     }
