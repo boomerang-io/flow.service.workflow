@@ -48,10 +48,10 @@ public class FeatureServiceImpl implements FeatureService {
         settingsService.getConfiguration("features", "insights").getBooleanValue());
 
     quotas.put("maxActivityStorageSize", settingsService
-        .getConfiguration("workflow", "max.storage.size").getValue().replace("Gi", ""));
+        .getConfiguration("activity", "max.storage.size").getValue().replace("Gi", ""));
 
     quotas.put("maxWorkflowStorageSize", settingsService
-        .getConfiguration("workspace", "max.storage.size").getValue().replace("Gi", ""));
+        .getConfiguration("workflow", "max.storage.size").getValue().replace("Gi", ""));
 
     flowFeatures.setFeatures(features);
     flowFeatures.setQuotas(quotas);
