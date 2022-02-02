@@ -28,13 +28,13 @@ import io.boomerang.mongo.entity.FlowTaskTemplateEntity;
 import io.boomerang.mongo.entity.RevisionEntity;
 import io.boomerang.mongo.entity.TaskExecutionEntity;
 import io.boomerang.mongo.entity.WorkflowEntity;
-import io.boomerang.mongo.model.KeyValuePair;
+import io.boomerang.mongo.model.ActivityStorage;
 import io.boomerang.mongo.model.Dag;
+import io.boomerang.mongo.model.KeyValuePair;
 import io.boomerang.mongo.model.Revision;
 import io.boomerang.mongo.model.Storage;
 import io.boomerang.mongo.model.TaskStatus;
 import io.boomerang.mongo.model.TaskType;
-import io.boomerang.mongo.model.ActivityStorage;
 import io.boomerang.mongo.model.internal.InternalTaskRequest;
 import io.boomerang.mongo.model.next.DAGTask;
 import io.boomerang.mongo.model.next.Dependency;
@@ -239,8 +239,6 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
       final Graph<String, DefaultEdge> graph, final List<Task> tasksToRun)
       throws ExecutionException {
 
-    System.out.println("*****executeWorkfowAsync****");
-
     if (tasksToRun.size() == 2) {
       final ActivityEntity activityEntity =
           this.flowActivityService.findWorkflowActivity(activityId);
@@ -324,7 +322,6 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
 
   @Override
   public CompletableFuture<Boolean> executeWorkflowVersion(String workFlowId, String activityId) {
-    System.out.println("*******executeWorkflowVersion");
     final RevisionEntity entity = this.flowRevisionService.getWorkflowlWithId(workFlowId);
     final List<Task> tasks = createTaskList(entity);
     prepareExecution(tasks, activityId);
@@ -332,7 +329,6 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
   }
 
   private Supplier<Boolean> createProcess(String activityId, List<Task> tasks) {
-    System.out.println("*******createProcesss");
     return () -> {
       final Task start = getTaskByName(tasks, TaskType.start);
       final Task end = getTaskByName(tasks, TaskType.end);
