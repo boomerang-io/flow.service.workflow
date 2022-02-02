@@ -114,7 +114,7 @@ public class ControllerClientImpl implements ControllerClient {
   public boolean createFlow(String workflowId, String workflowName, String activityId,
       boolean enableStorage, List<KeyValuePair> labels, Map<String, String> properties) {
 
-    System.out.println("******create workflow enable storage "+ enableStorage);
+    System.out.println("******create workflow enable storage " + enableStorage);
 
     final Workflow request = new Workflow();
     request.setWorkflowActivityId(activityId);
@@ -180,6 +180,7 @@ public class ControllerClientImpl implements ControllerClient {
   }
 
   private Workspace createWorkspaceRequest(String activityId, String name) {
+    System.out.println("****** createWorkspaceRequest");
     Workspace workspace = new Workspace();
     workspace.setId(activityId);
     workspace.setName(name);
