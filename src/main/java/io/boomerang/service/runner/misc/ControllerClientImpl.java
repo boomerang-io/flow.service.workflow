@@ -67,7 +67,7 @@ public class ControllerClientImpl implements ControllerClient {
   private String createWorkflowURL;
 
   @Autowired
-  private FlowSettingsService flowSettinigs;
+  private FlowSettingsService flowSettings;
 
   @Autowired
   private PropertyManager propertyManager;
@@ -182,17 +182,17 @@ public class ControllerClientImpl implements ControllerClient {
     workspace.setId(activityId);
     workspace.setName(name);
     String storageClassName =
-        this.flowSettinigs.getConfiguration("activity", "storage.class").getValue();
+        this.flowSettings.getConfiguration("activity", "storage.class").getValue();
     if (storageClassName != null && !storageClassName.isBlank()) {
       workspace.setClassName(storageClassName);
     }
     String storageAccessMode =
-        this.flowSettinigs.getConfiguration("activity", "storage.accessMode").getValue();
+        this.flowSettings.getConfiguration("activity", "storage.accessMode").getValue();
     if (storageAccessMode != null && !storageAccessMode.isBlank()) {
       workspace.setAccessMode(storageAccessMode);
     }
     String storageDefaultSize =
-        this.flowSettinigs.getConfiguration("activity", "storage.size").getValue();
+        this.flowSettings.getConfiguration("activity", "storage.size").getValue();
     if (storageDefaultSize != null && !storageDefaultSize.isBlank()) {
       workspace.setSize(storageDefaultSize);
     }
@@ -596,7 +596,7 @@ public class ControllerClientImpl implements ControllerClient {
         request.setImage(revision.getImage());
       } else {
         String workerImage =
-            this.flowSettinigs.getConfiguration("controller", "worker.image").getValue();
+            this.flowSettings.getConfiguration("controller", "worker.image").getValue();
         request.setImage(workerImage);
       }
 
@@ -650,13 +650,13 @@ public class ControllerClientImpl implements ControllerClient {
     TaskConfiguration taskConfiguration = new TaskConfiguration();
     TaskDeletion taskDeletion = TaskDeletion.Never;
     String settingsPolicy =
-        this.flowSettinigs.getConfiguration("controller", "job.deletion.policy").getValue();
+        this.flowSettings.getConfiguration("controller", "job.deletion.policy").getValue();
     if (settingsPolicy != null) {
       taskDeletion = TaskDeletion.valueOf(settingsPolicy);
     }
     boolean enableDebug = false;
     String enableDebugFlag =
-        this.flowSettinigs.getConfiguration("controller", "enable.debug").getValue();
+        this.flowSettings.getConfiguration("controller", "enable.debug").getValue();
     if (settingsPolicy != null) {
       enableDebug = Boolean.parseBoolean(enableDebugFlag);
     }
@@ -665,7 +665,7 @@ public class ControllerClientImpl implements ControllerClient {
     taskConfiguration.setDebug(Boolean.valueOf(enableDebug));
 
     String taskTimeout =
-        this.flowSettinigs.getConfiguration("controller", "task.timeout.configuration").getValue();
+        this.flowSettings.getConfiguration("controller", "task.timeout.configuration").getValue();
 
     if (taskTimeout != null) {
       int timeout = Integer.parseInt(taskTimeout);
