@@ -60,26 +60,26 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
   @Autowired
   private TaskService taskService;
 
-  
+
 
   @Autowired
   private FlowTaskTemplateService taskTemplateService;
 
   @Autowired
   private FlowTaskTemplateService templateService;
-  
+
   @Autowired
   private FlowWorkflowActivityService activityService;
 
   @Autowired
   private TaskClient taskClient;
-  
+
   @Autowired
   private DAGUtility dagUtility;
-  
+
   @Autowired
   private WorkflowService workflowService;
- 
+
   @Autowired
   private ControllerClient controllerClient;
 
@@ -99,13 +99,14 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
 
       final String workFlowId = revisionEntity.getWorkFlowId();
       newTask.setWorkflowId(workFlowId);
-      
-      if (dagTask.getType() == TaskType.script || dagTask.getType() == TaskType.template || dagTask.getType() == TaskType.customtask) {
+
+      if (dagTask.getType() == TaskType.script || dagTask.getType() == TaskType.template
+          || dagTask.getType() == TaskType.customtask) {
         String templateId = dagTask.getTemplateId();
         final FlowTaskTemplateEntity flowTaskTemplate =
             templateService.getTaskTemplateWithId(templateId);
         newTask.setTemplateId(flowTaskTemplate.getId());
-        
+
         Integer templateVersion = dagTask.getTemplateVersion();
         List<Revision> revisions = flowTaskTemplate.getRevisions();
         if (revisions != null) {
@@ -136,11 +137,11 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
         }
 
         newTask.setInputs(properties);
-        
+
         if (newTask.getResults() == null) {
           newTask.setResults(dagTask.getResults());
         }
-      
+
       } else if (dagTask.getType() == TaskType.decision) {
         newTask.setDecisionValue(dagTask.getDecisionValue());
       }
@@ -161,22 +162,22 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
     final Task start = getTaskByName(tasks, TaskType.start);
     final Task end = getTaskByName(tasks, TaskType.end);
     final Graph<String, DefaultEdge> graph = createGraph(tasks);
-    
+
     final ActivityEntity activityEntity = activityService.findWorkflowActivtyById(activityId);
 
     boolean validWorkflow = dagUtility.validateWorkflow(activityEntity);
-    
+
     if (!validWorkflow) {
       activityEntity.setStatus(TaskStatus.invalid);
       activityEntity.setStatusMessage("Failed to run workflow: Incomplete workflow");
       activityService.saveWorkflowActivity(activityEntity);
       throw new InvalidWorkflowRuntimeException();
     }
-    
+
     createTaskPlan(tasks, activityId, start, end, graph);
   }
 
- 
+
   private void createTaskPlan(List<Task> tasks, String activityId, final Task start, final Task end,
       final Graph<String, DefaultEdge> graph) {
 
@@ -200,15 +201,15 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
       taskExecution.setOrder(order);
       taskExecution.setTaskName(task.getTaskName());
       taskExecution.setTaskType(task.getTaskType());
-     
+
       if (task.getTemplateId() != null) {
         final FlowTaskTemplateEntity taskTemplateEntity =
             taskTemplateService.getTaskTemplateWithId(task.getTemplateId());
         taskExecution.setTemplateId(taskTemplateEntity.getId());
         taskExecution.setTemplateRevision(task.getRevision().getVersion());
       }
-      
- 
+
+
       taskExecution = this.flowActivityService.saveTaskExecution(taskExecution);
 
       task.setTaskActivityId(taskExecution.getId());
@@ -238,103 +239,106 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
       final Graph<String, DefaultEdge> graph, final List<Task> tasksToRun)
       throws ExecutionException {
 
+    System.out.println("*****executeWorkfowAsync****");
+
     if (tasksToRun.size() == 2) {
-      final ActivityEntity activityEntity =        this.flowActivityService.findWorkflowActivity(activityId);
+      final ActivityEntity activityEntity =
+          this.flowActivityService.findWorkflowActivity(activityId);
       activityEntity.setStatus(TaskStatus.completed);
       activityEntity.setCreationDate(new Date());
       activityService.saveWorkflowActivity(activityEntity);
 
       return;
     }
-    
-    final ActivityEntity activityEntity =        this.flowActivityService.findWorkflowActivity(activityId);
+
+    final ActivityEntity activityEntity = this.flowActivityService.findWorkflowActivity(activityId);
     activityEntity.setStatus(TaskStatus.inProgress);
     activityEntity.setCreationDate(new Date());
     activityService.saveWorkflowActivity(activityEntity);
-    
+
     WorkflowEntity workflow = workflowService.getWorkflow(activityEntity.getWorkflowId());
-    if(workflow.getStorage() == null) {
+    if (workflow.getStorage() == null) {
       workflow.setStorage(new Storage());
     }
-    if(workflow.getStorage().getActivity() == null) {
+    if (workflow.getStorage().getActivity() == null) {
       workflow.getStorage().setActivity(new ActivityStorage());
     }
-   
+
     boolean enablePVC = workflow.getStorage().getActivity().getEnabled();
-    
+
     String workflowName = workflow.getName();
     String workflowId = workflow.getId();
-    
+
     Map<String, String> executionProperties = new HashMap<>();
     Map<String, Object> inputs = new HashMap<>();
     try {
       for (Entry<String, Object> entry : inputs.entrySet()) {
         if (entry.getValue() != null) {
-          executionProperties.put(entry.getKey(), entry.getValue().toString()); 
+          executionProperties.put(entry.getKey(), entry.getValue().toString());
+        } else {
+          executionProperties.put(entry.getKey(), null);
         }
-        else {
-          executionProperties.put(entry.getKey(), null); 
-        }
-       
+
       }
     } catch (Exception e) {
       e.printStackTrace();
     }
-   
+
     List<KeyValuePair> labels = workflow.getLabels();
 
-    controllerClient.createFlow(workflowId, workflowName, activityId, enablePVC, labels, executionProperties);
-    
-    final Task startTask =  tasksToRun.stream().filter(tsk -> TaskType.start.equals(tsk.getTaskType())).findAny().orElse(null);
-    executeNextStep(activityEntity, tasksToRun,startTask, start, end, graph);
+    controllerClient.createFlow(workflowId, workflowName, activityId, enablePVC, labels,
+        executionProperties);
+
+    final Task startTask = tasksToRun.stream()
+        .filter(tsk -> TaskType.start.equals(tsk.getTaskType())).findAny().orElse(null);
+    executeNextStep(activityEntity, tasksToRun, startTask, start, end, graph);
   }
-  
-  private void executeNextStep(ActivityEntity workflowActivity, List<Task> tasks,
-      Task currentTask, final Task start, final Task end,
-      final Graph<String, DefaultEdge> graph) {
-    
+
+  private void executeNextStep(ActivityEntity workflowActivity, List<Task> tasks, Task currentTask,
+      final Task start, final Task end, final Graph<String, DefaultEdge> graph) {
+
     try {
       List<Task> nextNodes = this.getTasksDependants(tasks, currentTask);
       for (Task next : nextNodes) {
-     
+
         final List<String> nodes =
             GraphProcessor.createOrderedTaskList(graph, start.getTaskId(), end.getTaskId());
-        
+
         if (nodes.contains(next.getTaskId())) {
           InternalTaskRequest taskRequest = new InternalTaskRequest();
           taskRequest.setActivityId(next.getTaskActivityId());
           taskClient.startTask(taskService, taskRequest);
-        }       
+        }
       }
     } catch (Exception e) {
       e.printStackTrace();
     }
-   
+
   }
-  
+
   private List<Task> getTasksDependants(List<Task> tasks, Task currentTask) {
-   return
-        tasks.stream().filter(c -> c.getDependencies().contains(currentTask.getTaskId()))
-            .collect(Collectors.toList());
+    return tasks.stream().filter(c -> c.getDependencies().contains(currentTask.getTaskId()))
+        .collect(Collectors.toList());
   }
 
 
   @Override
   public CompletableFuture<Boolean> executeWorkflowVersion(String workFlowId, String activityId) {
-    final RevisionEntity entity =
-        this.flowRevisionService.getWorkflowlWithId(workFlowId);
+    System.out.println("*******executeWorkflowVersion");
+    final RevisionEntity entity = this.flowRevisionService.getWorkflowlWithId(workFlowId);
     final List<Task> tasks = createTaskList(entity);
     prepareExecution(tasks, activityId);
     return CompletableFuture.supplyAsync(createProcess(activityId, tasks));
   }
 
   private Supplier<Boolean> createProcess(String activityId, List<Task> tasks) {
+    System.out.println("*******createProcesss");
     return () -> {
       final Task start = getTaskByName(tasks, TaskType.start);
       final Task end = getTaskByName(tasks, TaskType.end);
       final Graph<String, DefaultEdge> graph = createGraph(tasks);
       try {
- 
+
         executeWorkflowAsync(activityId, start, end, graph, tasks);
       } catch (ExecutionException e) {
         LOGGER.error(ExceptionUtils.getStackTrace(e));

@@ -114,6 +114,7 @@ public class ControllerClientImpl implements ControllerClient {
   public boolean createFlow(String workflowId, String workflowName, String activityId,
       boolean enableStorage, List<KeyValuePair> labels, Map<String, String> properties) {
 
+    System.out.println("******create workflow enable storage "+ enableStorage);
 
     final Workflow request = new Workflow();
     request.setWorkflowActivityId(activityId);
