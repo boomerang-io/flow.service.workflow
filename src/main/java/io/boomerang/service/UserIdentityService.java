@@ -5,6 +5,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import io.boomerang.client.model.UserProfile;
 import io.boomerang.model.FlowUser;
+import io.boomerang.model.FlowUserProfile;
 import io.boomerang.model.OneTimeCode;
 import io.boomerang.model.UserQueryResult;
 import io.boomerang.mongo.entity.FlowUserEntity;
@@ -19,6 +20,7 @@ public interface UserIdentityService {
   public FlowUserEntity getCurrentUser();
 
   public FlowUserEntity getUserByID(String userId);
+  public FlowUserProfile getFullUserProfile(String userId);
 
   UserQueryResult getUserViaSearchTerm(String searchTerm, Pageable pageable);
 

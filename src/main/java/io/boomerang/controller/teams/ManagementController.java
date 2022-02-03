@@ -45,7 +45,7 @@ public class ManagementController {
 
   @GetMapping(value = "/users/{userId}")
   public FlowUserEntity getUserProfile(@PathVariable String userId) {
-    return userIdentityService.getUserByID(userId);
+    return userIdentityService.getFullUserProfile(userId);
   }
 
   @PatchMapping(value = "/users/{userId}")

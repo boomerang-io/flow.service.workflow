@@ -16,8 +16,10 @@ import org.springframework.web.client.HttpClientErrorException;
 import io.boomerang.client.ExternalUserService;
 import io.boomerang.client.model.UserProfile;
 import io.boomerang.model.FlowUser;
+import io.boomerang.model.FlowUserProfile;
 import io.boomerang.model.OneTimeCode;
 import io.boomerang.model.UserQueryResult;
+import io.boomerang.model.UserWorkflowSummary;
 import io.boomerang.mongo.entity.FlowUserEntity;
 import io.boomerang.mongo.model.TokenScope;
 import io.boomerang.mongo.model.UserStatus;
@@ -28,6 +30,7 @@ import io.boomerang.security.model.TeamToken;
 import io.boomerang.security.model.Token;
 import io.boomerang.security.model.UserToken;
 import io.boomerang.security.service.impl.NoLogging;
+import io.boomerang.service.crud.WorkflowService;
 
 @Service
 public class UserIdentityServiceImpl implements UserIdentityService {
@@ -46,6 +49,9 @@ public class UserIdentityServiceImpl implements UserIdentityService {
 
   @Value("${boomerang.otc}")
   private String corePlatformOTC;
+  
+  @Autowired
+  private WorkflowService workflowService;
 
   @Override
   public FlowUserEntity getCurrentUser() {
@@ -94,14 +100,18 @@ public class UserIdentityServiceImpl implements UserIdentityService {
     if (flowExternalUrlUser.isBlank()) {
       Optional<FlowUserEntity> flowUser = flowUserService.getUserById(userId);
       if (flowUser.isPresent()) {
-        return flowUser.get();
+        FlowUserEntity profile = new FlowUserEntity();
+        BeanUtils.copyProperties(flowUser.get(), profile);
+       
+        return profile;
       }
     } else {
       UserProfile userProfile = coreUserService.getUserProfileById(userId);
-      FlowUserEntity flowUser = new FlowUserEntity();
+      FlowUserProfile flowUser = new FlowUserProfile();
       if (userProfile != null) {
         BeanUtils.copyProperties(userProfile, flowUser);
         flowUser.setType(userProfile.getType());
+            
         return flowUser;
       }
     }
@@ -260,6 +270,40 @@ public class UserIdentityServiceImpl implements UserIdentityService {
     else {
       return null;
     }
+  }
+
+
+  @Override
+  public FlowUserProfile getFullUserProfile(String userId) {
+    if (flowExternalUrlUser.isBlank()) {
+      Optional<FlowUserEntity> flowUser = flowUserService.getUserById(userId);
+      if (flowUser.isPresent()) {
+        FlowUserProfile profile = new FlowUserProfile();
+        BeanUtils.copyProperties(flowUser.get(), profile);
+        UserWorkflowSummary workflowList = workflowService.getUserWorkflows(profile.getId());
+        
+        if (workflowList != null) {
+          profile.setWorkflows(workflowList.getWorkflows());
+        }
+        
+        return profile;
+      }
+    } else {
+      UserProfile userProfile = coreUserService.getUserProfileById(userId);
+      FlowUserProfile flowUser = new FlowUserProfile();
+      if (userProfile != null) {
+        BeanUtils.copyProperties(userProfile, flowUser);
+        flowUser.setType(userProfile.getType());
+        
+        UserWorkflowSummary workflowList = workflowService.getUserWorkflows(userProfile.getId());
+        if (workflowList != null) {
+          flowUser.setWorkflows(workflowList.getWorkflows());
+        }
+        
+        return flowUser;
+      }
+    }
+    return null;
   }
 
 }
