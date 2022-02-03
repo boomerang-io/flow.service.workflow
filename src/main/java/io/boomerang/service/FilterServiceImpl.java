@@ -13,7 +13,6 @@ import io.boomerang.mongo.entity.ActivityEntity;
 import io.boomerang.mongo.entity.FlowUserEntity;
 import io.boomerang.mongo.entity.TeamEntity;
 import io.boomerang.mongo.entity.WorkflowEntity;
-import io.boomerang.mongo.model.TokenScope;
 import io.boomerang.mongo.model.UserType;
 import io.boomerang.mongo.service.FlowWorkflowService;
 import io.boomerang.service.crud.TeamService;
