@@ -474,8 +474,14 @@ public class WorkflowServiceImpl implements WorkflowService {
       for (FlowTaskTemplateEntity template : templates) {
         templateIds.add(template.getId());
       }
-    }
 
+    } else if (scope == WorkflowScope.user) {
+      List<FlowTaskTemplateEntity> templates = templateService.getAllGlobalTasks();
+      for (FlowTaskTemplateEntity template : templates) {
+        templateIds.add(template.getId());
+      }
+
+    }
 
     RevisionEntity revision = export.getLatestRevision();
     List<DAGTask> nodes = revision.getDag().getTasks();
@@ -639,30 +645,36 @@ public class WorkflowServiceImpl implements WorkflowService {
   /*
    * Checks if the Workflow can be executed based on an active workflow and enabled triggers.
    * 
-   * If trigger is Manual or Schedule then a deeper check is used to check if those triggers are enabled.
+   * If trigger is Manual or Schedule then a deeper check is used to check if those triggers are
+   * enabled.
    * 
-   * @param     workflowId      the Workflows unique ID
-   * @param     Trigger         an optional Trigger object
-   * @return    Boolean         whether the workflow can execute or not
+   * @param workflowId the Workflows unique ID
+   * 
+   * @param Trigger an optional Trigger object
+   * 
+   * @return Boolean whether the workflow can execute or not
    */
   @Override
   public boolean canExecuteWorkflow(String workflowId, Optional<String> trigger) {
     // Check no further if trigger not provided or is not Manual or Schedule
-    if (!trigger.isPresent() || (!FlowTriggerEnum.manual.toString().equals(trigger.get()) && (!FlowTriggerEnum.scheduler.toString().equals(trigger.get())))) {
+    if (!trigger.isPresent() || (!FlowTriggerEnum.manual.toString().equals(trigger.get())
+        && (!FlowTriggerEnum.scheduler.toString().equals(trigger.get())))) {
       return true;
     }
-    
+
     // Check if Workflow exists and is active. Then check triggers are enabled.
     WorkflowEntity workflow = workflowRepository.getWorkflow(workflowId);
     if (workflow != null && WorkflowStatus.active.equals(workflow.getStatus())) {
       if (workflow.getTriggers() != null) {
         Triggers triggers = workflow.getTriggers();
-        if (FlowTriggerEnum.manual.toString().equals(trigger.get()) && triggers.getManual() != null) {
+        if (FlowTriggerEnum.manual.toString().equals(trigger.get())
+            && triggers.getManual() != null) {
           Trigger manualTrigger = triggers.getManual();
           if (manualTrigger != null) {
             return manualTrigger.getEnable();
           }
-        } else if (FlowTriggerEnum.scheduler.toString().equals(trigger.get()) && triggers.getScheduler() != null) {
+        } else if (FlowTriggerEnum.scheduler.toString().equals(trigger.get())
+            && triggers.getScheduler() != null) {
           Trigger scheduleTrigger = triggers.getScheduler();
           if (scheduleTrigger != null) {
             return scheduleTrigger.getEnable();
@@ -672,20 +684,23 @@ public class WorkflowServiceImpl implements WorkflowService {
     }
     return false;
   }
-  
+
   /*
-   * Checks if the Workflow's Team is active and is of scope Team can be executed based on an active workflow and enabled triggers.
+   * Checks if the Workflow's Team is active and is of scope Team can be executed based on an active
+   * workflow and enabled triggers.
    * 
-   * If trigger is Manual or Schedule then a deeper check is used to check if those triggers are enabled.
+   * If trigger is Manual or Schedule then a deeper check is used to check if those triggers are
+   * enabled.
    * 
-   * @param     teamId      the Workflows Team ID
-   * @return    Boolean         whether the workflow can execute or not
+   * @param teamId the Workflows Team ID
+   * 
+   * @return Boolean whether the workflow can execute or not
    */
   @Override
   public boolean canExecuteTeamWorkflow(String teamId) {
     return teamService.getTeamById(teamId).getIsActive();
   }
-  
+
   @Override
   public boolean canExecuteWorkflowForQuotas(String teamId) {
     if (!flowSettingsService.getConfiguration("features", "workflowQuotas").getBooleanValue()) {
@@ -701,7 +716,7 @@ public class WorkflowServiceImpl implements WorkflowService {
       return true;
     }
   }
-  
+
   @Override
   public void deleteToken(String id, String label) {
     WorkflowEntity entity = workflowRepository.getWorkflow(id);
@@ -1075,8 +1090,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     for (WorkflowEntity workflow : workflows) {
       workflowIds.add(workflow.getId());
     }
-    return workflowActivityService.findbyWorkflowIdsAndStatus(workflowIds,
-        TaskStatus.inProgress);
+    return workflowActivityService.findbyWorkflowIdsAndStatus(workflowIds, TaskStatus.inProgress);
   }
 
   private List<ActivityEntity> getMonthlyWorkflowActivities(Pageable page, String userId) {
