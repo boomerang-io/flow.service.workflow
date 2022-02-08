@@ -292,11 +292,21 @@ public class WorkflowScheduleServiceImpl implements WorkflowScheduleService {
   public void enableSchedule(String scheduleId) throws SchedulerException {
     WorkflowScheduleEntity schedule = workflowScheduleRepository.getSchedule(scheduleId);
     if (schedule!= null && !WorkflowScheduleStatus.deleted.equals(schedule.getStatus())) {
-      schedule.setStatus(WorkflowScheduleStatus.active);
+      if (WorkflowScheduleType.runOnce.equals(schedule.getType())) {
+        Date currentDate = new Date();
+        logger.info("Current DateTime: ", currentDate.getTime());
+        logger.info("Schedule DateTime: ", schedule.getDateSchedule().getTime());
+        if (schedule.getDateSchedule().getTime() < currentDate.getTime()) {
+          logger.info("Cannot enable schedule (" + schedule.getId() + ") as it is in the past.");
+          schedule.setStatus(WorkflowScheduleStatus.error);
+        } else {
+          schedule.setStatus(WorkflowScheduleStatus.active);
+        }
+      } else {
+        schedule.setStatus(WorkflowScheduleStatus.active);
+      }
       workflowScheduleRepository.saveSchedule(schedule);
       this.taskScheduler.resumeJob(schedule);
-    } else {
-//        TODO: return that it couldn't be enabled or doesn't exist
     }
   }
   
