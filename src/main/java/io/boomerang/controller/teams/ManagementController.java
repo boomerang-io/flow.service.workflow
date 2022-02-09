@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import io.boomerang.model.FlowTeam;
 import io.boomerang.model.FlowUser;
+import io.boomerang.model.FlowUserProfile;
 import io.boomerang.model.UserQueryResult;
 import io.boomerang.model.profile.SortSummary;
 import io.boomerang.mongo.entity.FlowUserEntity;
@@ -44,7 +45,7 @@ public class ManagementController {
   private UserIdentityService userIdentityService;
 
   @GetMapping(value = "/users/{userId}")
-  public FlowUserEntity getUserProfile(@PathVariable String userId) {
+  public FlowUserProfile getUserProfile(@PathVariable String userId) {
     return userIdentityService.getFullUserProfile(userId);
   }
 
