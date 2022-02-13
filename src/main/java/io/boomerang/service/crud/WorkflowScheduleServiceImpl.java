@@ -202,11 +202,12 @@ public class WorkflowScheduleServiceImpl implements WorkflowScheduleService {
             List<KeyValuePair> propertyList = ParameterMapper.mapToKeyValuePairList(schedule.getParametersMap());
             scheduleEntity.setParameters(propertyList);
           }
-          workflowScheduleRepository.saveSchedule(scheduleEntity);
           Boolean enableJob = false;
           if (WorkflowScheduleStatus.active.equals(schedule.getStatus()) && wfEntity.getTriggers().getScheduler().getEnable()) {
+            scheduleEntity.setStatus(WorkflowScheduleStatus.trigger_disabled);
             enableJob = true;
           }
+          workflowScheduleRepository.saveSchedule(scheduleEntity);
           createOrUpdateSchedule(scheduleEntity, enableJob);
           return new WorkflowSchedule(scheduleEntity);
         }
