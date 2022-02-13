@@ -82,7 +82,7 @@ public class SchedulesController {
   }
   
   @DeleteMapping(value = "/{scheduleId}")
-  public ResponseEntity<?> updateSchedule(@PathVariable String scheduleId) {
+  public ResponseEntity<?> deleteSchedule(@PathVariable String scheduleId) {
     return workflowScheduleService.deleteSchedule(scheduleId);
   }
 }
