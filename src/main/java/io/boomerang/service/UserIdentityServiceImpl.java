@@ -30,6 +30,7 @@ import io.boomerang.security.model.TeamToken;
 import io.boomerang.security.model.Token;
 import io.boomerang.security.model.UserToken;
 import io.boomerang.security.service.impl.NoLogging;
+import io.boomerang.service.crud.TeamService;
 import io.boomerang.service.crud.WorkflowService;
 
 @Service
@@ -49,9 +50,13 @@ public class UserIdentityServiceImpl implements UserIdentityService {
 
   @Value("${boomerang.otc}")
   private String corePlatformOTC;
-  
+
   @Autowired
   private WorkflowService workflowService;
+
+
+  @Autowired
+  private TeamService flowTeamService;
 
   @Override
   public FlowUserEntity getCurrentUser() {
@@ -69,7 +74,7 @@ public class UserIdentityServiceImpl implements UserIdentityService {
       }
       BeanUtils.copyProperties(userProfile, flowUser);
       flowUser.setTeams(null);
-      
+
       String email = userProfile.getEmail();
       FlowUserEntity dbUser = flowUserService.getUserWithEmail(email);
       if (dbUser == null) {
@@ -88,7 +93,8 @@ public class UserIdentityServiceImpl implements UserIdentityService {
     String email = userDetails.getEmail();
     String firstName = userDetails.getFirstName();
     String lastName = userDetails.getLastName();
-    String name = String.format("%s %s", Optional.ofNullable(firstName).orElse(""), Optional.ofNullable(lastName).orElse("")).trim();
+    String name = String.format("%s %s", Optional.ofNullable(firstName).orElse(""),
+        Optional.ofNullable(lastName).orElse("")).trim();
     if (firstName == null && lastName == null && email != null) {
       name = email;
     }
@@ -102,7 +108,7 @@ public class UserIdentityServiceImpl implements UserIdentityService {
       if (flowUser.isPresent()) {
         FlowUserEntity profile = new FlowUserEntity();
         BeanUtils.copyProperties(flowUser.get(), profile);
-       
+
         return profile;
       }
     } else {
@@ -111,7 +117,7 @@ public class UserIdentityServiceImpl implements UserIdentityService {
       if (userProfile != null) {
         BeanUtils.copyProperties(userProfile, flowUser);
         flowUser.setType(userProfile.getType());
-            
+
         return flowUser;
       }
     }
@@ -213,16 +219,16 @@ public class UserIdentityServiceImpl implements UserIdentityService {
       FlowUserEntity flowUserEntity = flowUserService.getOrRegisterUser(email, name, type);
       flowUserEntity.setQuotas(flowUser.getQuotas());
       flowUserEntity.setHasConsented(true);
-      
+
       flowUserEntity = flowUserService.save(flowUser);
-      
+
       FlowUser newUser = new FlowUser();
       BeanUtils.copyProperties(flowUserEntity, newUser);
       return newUser;
     }
     return new FlowUser();
   }
-  
+
   @Override
   @NoLogging
   public UserToken getUserDetails() {
@@ -237,20 +243,18 @@ public class UserIdentityServiceImpl implements UserIdentityService {
     }
   }
 
-  
+
   @Override
   public TokenScope getCurrentScope() {
     if (SecurityContextHolder.getContext() != null
         && SecurityContextHolder.getContext().getAuthentication() != null
         && SecurityContextHolder.getContext().getAuthentication().getDetails() != null) {
-      Object details = SecurityContextHolder.getContext().getAuthentication()
-          .getDetails();
+      Object details = SecurityContextHolder.getContext().getAuthentication().getDetails();
       if (details instanceof UserToken) {
         return TokenScope.user;
-      } else if (details instanceof TeamToken ) {
+      } else if (details instanceof TeamToken) {
         return TokenScope.team;
-      }
-      else if (details instanceof GlobalToken) {
+      } else if (details instanceof GlobalToken) {
         return TokenScope.global;
       }
     }
@@ -263,11 +267,9 @@ public class UserIdentityServiceImpl implements UserIdentityService {
     if (SecurityContextHolder.getContext() != null
         && SecurityContextHolder.getContext().getAuthentication() != null
         && SecurityContextHolder.getContext().getAuthentication().getDetails() != null) {
-      Object details = SecurityContextHolder.getContext().getAuthentication()
-          .getDetails();
+      Object details = SecurityContextHolder.getContext().getAuthentication().getDetails();
       return (Token) details;
-    }
-    else {
+    } else {
       return null;
     }
   }
@@ -281,11 +283,11 @@ public class UserIdentityServiceImpl implements UserIdentityService {
         FlowUserProfile profile = new FlowUserProfile();
         BeanUtils.copyProperties(flowUser.get(), profile);
         UserWorkflowSummary workflowList = workflowService.getUserWorkflows(profile.getId());
-        
+
         if (workflowList != null) {
           profile.setWorkflows(workflowList.getWorkflows());
         }
-        
+        setUserTeams(profile);
         return profile;
       }
     } else {
@@ -294,16 +296,29 @@ public class UserIdentityServiceImpl implements UserIdentityService {
       if (userProfile != null) {
         BeanUtils.copyProperties(userProfile, flowUser);
         flowUser.setType(userProfile.getType());
-        
+
         UserWorkflowSummary workflowList = workflowService.getUserWorkflows(userProfile.getId());
         if (workflowList != null) {
           flowUser.setWorkflows(workflowList.getWorkflows());
         }
-        
+
+        setUserTeams(flowUser);
+
         return flowUser;
       }
     }
     return null;
   }
+
+
+  private void setUserTeams(FlowUserProfile flowUser) {
+    if (flowUser.getType() == UserType.admin) {
+      flowUser.setUserTeams(flowTeamService.getAllTeamsListing());
+    } else {
+      flowUser.setUserTeams(flowTeamService.getUsersTeamListing(flowUser));
+    }
+  }
+
+
 
 }
