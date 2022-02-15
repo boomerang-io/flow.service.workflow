@@ -77,5 +77,7 @@ public interface TeamService {
 
   ApproverGroupResponse getSingleAproverGroup(String teamId, String groupId);
 
+  List<TeamEntity> getAllTeamsListing();
+
 
 }
