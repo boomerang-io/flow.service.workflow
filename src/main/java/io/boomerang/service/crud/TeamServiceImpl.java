@@ -289,7 +289,8 @@ public class TeamServiceImpl implements TeamService {
     return teamWorkFlowSummary;
   }
 
-  private List<TeamEntity> getAllTeamsListing() {
+  @Override
+  public List<TeamEntity> getAllTeamsListing() {
     List<TeamEntity> flowTeams = null;
     if (!flowExternalUrlTeam.isBlank()) {
       flowTeams = this.externalTeamService.getExternalTeams(flowExternalUrlTeam);
