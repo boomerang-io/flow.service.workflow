@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import io.boomerang.client.model.Team;
+import io.boomerang.mongo.model.KeyValuePair;
 import io.boomerang.mongo.model.Quotas;
 import io.boomerang.mongo.model.UserStatus;
 import io.boomerang.mongo.model.UserType;
@@ -37,6 +38,8 @@ public class FlowUserEntity {
   private List<Team> teams;
 
   private Boolean hasConsented;
+  
+  private List<KeyValuePair> labels;
 
   public UserStatus getStatus() {
     return status;
@@ -140,5 +143,13 @@ public class FlowUserEntity {
 
   public void setHasConsented(Boolean hasConsented) {
     this.hasConsented = hasConsented;
+  }
+
+  public List<KeyValuePair> getLabels() {
+    return labels;
+  }
+
+  public void setLabels(List<KeyValuePair> labels) {
+    this.labels = labels;
   }
 }

@@ -165,7 +165,12 @@ public class UserIdentityServiceImpl implements UserIdentityService {
     Optional<FlowUserEntity> userOptional = this.flowUserService.getUserById(userId);
     if (userOptional.isPresent()) {
       FlowUserEntity user = userOptional.get();
-      user.setType(updatedFlowUser.getType());
+      if (updatedFlowUser.getType() != null) {
+        user.setType(updatedFlowUser.getType());
+      }
+      if (updatedFlowUser.getLabels() != null) {
+        user.setLabels(updatedFlowUser.getLabels());
+      }
       this.flowUserService.save(user);
     }
   }
