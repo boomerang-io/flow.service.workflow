@@ -23,7 +23,7 @@ import io.nats.client.api.StreamConfiguration;
 
 @Component
 @ConditionalOnProperty(value = "eventing.enabled", havingValue = "true", matchIfMissing = false)
-public class EventingSubscriberClient {
+public class EventingSubscriberClient implements SubHandler {
 
   private static final Logger logger = LogManager.getLogger(EventingSubscriberClient.class);
 
@@ -80,36 +80,29 @@ public class EventingSubscriberClient {
     PubSubTunnel pubSubTunnel = new PubSubTransceiver(connectionPrimer, streamConfiguration,
         consumerConfiguration, pubSubConfiguration);
 
-    startSubscription(pubSubTunnel);
+    pubSubTunnel.subscribe(this);
   }
 
-  private void startSubscription(PubSubTunnel tunnel) {
+  @Override
+  public void subscriptionSucceeded(PubSubTunnel tunnel) {
+    logger.info("Successfully subscribed to consume messages from NATS Jetstream.");
+  }
 
-    tunnel.subscribe(new SubHandler() {
+  @Override
+  public void subscriptionFailed(PubSubTunnel tunnel, Exception exception) {
+    logger.debug("Failed to subscribe for consuming messages from NATS Jetstream. Resubscribing...",
+        exception);
+    try {
+      Thread.sleep(jetstreamConsumerResubscribeWaitTime.toMillis());
+    } catch (Exception e) {
+      logger.warn("Sleep failed: resubscribing without a waiting time...", e);
+    } finally {
+      tunnel.subscribe(this);
+    }
+  }
 
-      @Override
-      public void subscriptionSucceeded(PubSubTunnel tunnel) {
-        logger.info("Successfully subscribed to consume messages from NATS Jetstream.");
-      }
-
-      @Override
-      public void subscriptionFailed(PubSubTunnel tunnel, Exception exception) {
-        logger.debug(
-            "Failed to subscribe for consuming messages from NATS Jetstream. Resubscribing...",
-            exception);
-        try {
-          Thread.sleep(jetstreamConsumerResubscribeWaitTime.toMillis());
-        } catch (Exception e) {
-          logger.warn("Sleep failed: resubscribing without a waiting time...", e);
-        } finally {
-          startSubscription(tunnel);
-        }
-      }
-
-      @Override
-      public void newMessageReceived(PubSubTunnel tunnel, String subject, String message) {
-        eventProcessor.processNATSMessage(message);
-      }
-    });
+  @Override
+  public void newMessageReceived(PubSubTunnel tunnel, String subject, String message) {
+    eventProcessor.processNATSMessage(message);
   }
 }
