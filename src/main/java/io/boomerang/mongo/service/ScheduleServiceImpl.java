@@ -27,6 +27,7 @@ public class ScheduleServiceImpl implements ScheduleService {
     statuses.add(WorkflowScheduleStatus.active);
     statuses.add(WorkflowScheduleStatus.inactive);
     statuses.add(WorkflowScheduleStatus.trigger_disabled);
+    statuses.add(WorkflowScheduleStatus.error);
     return statuses;
   }
 

@@ -202,11 +202,12 @@ public class WorkflowScheduleServiceImpl implements WorkflowScheduleService {
             List<KeyValuePair> propertyList = ParameterMapper.mapToKeyValuePairList(schedule.getParametersMap());
             scheduleEntity.setParameters(propertyList);
           }
-          workflowScheduleRepository.saveSchedule(scheduleEntity);
           Boolean enableJob = false;
           if (WorkflowScheduleStatus.active.equals(schedule.getStatus()) && wfEntity.getTriggers().getScheduler().getEnable()) {
+            scheduleEntity.setStatus(WorkflowScheduleStatus.trigger_disabled);
             enableJob = true;
           }
+          workflowScheduleRepository.saveSchedule(scheduleEntity);
           createOrUpdateSchedule(scheduleEntity, enableJob);
           return new WorkflowSchedule(scheduleEntity);
         }
@@ -224,18 +225,55 @@ public class WorkflowScheduleServiceImpl implements WorkflowScheduleService {
     if (patchSchedule != null) {
       WorkflowScheduleEntity scheduleEntity = workflowScheduleRepository.getSchedule(scheduleId);
       if (scheduleEntity != null) {
+        /*
+         * The copy ignores certain fields
+         * - ID and creationDate to ensure data integrity
+         * - parameters and parametersMap due to the need to convert the property structure
+         */
+        WorkflowScheduleStatus previousStatus = scheduleEntity.getStatus();
         BeanUtils.copyProperties(patchSchedule, scheduleEntity, "id", "creationDate", "parameters", "parametersMap");
         if (patchSchedule.getParametersMap() != null && !patchSchedule.getParametersMap().isEmpty()) {
           List<KeyValuePair> propertyList = ParameterMapper.mapToKeyValuePairList(patchSchedule.getParametersMap());
           scheduleEntity.setParameters(propertyList);
         }
-        workflowScheduleRepository.saveSchedule(scheduleEntity);
-
+        
+        /*
+         * Complex Status checking to determine what can and can't be enabled
+         */
+        //Check if job is trying to be enabled with date in the past
+        WorkflowScheduleStatus newStatus = scheduleEntity.getStatus();
         WorkflowEntity wfEntity = workflowRepository.getWorkflow(scheduleEntity.getWorkflowId());
-        Boolean enableJob = false;
-        if (WorkflowScheduleStatus.active.equals(scheduleEntity.getStatus()) && wfEntity != null && wfEntity.getTriggers().getScheduler().getEnable()) {
-          enableJob = true;
+        Boolean enableJob = true;
+        if (!previousStatus.equals(newStatus)) {
+          if (WorkflowScheduleStatus.active.equals(previousStatus) && WorkflowScheduleStatus.inactive.equals(newStatus)) {
+            scheduleEntity.setStatus(WorkflowScheduleStatus.inactive);
+            enableJob = false;
+          } else if (WorkflowScheduleStatus.inactive.equals(previousStatus) && WorkflowScheduleStatus.active.equals(newStatus)) {
+            if (wfEntity != null && !wfEntity.getTriggers().getScheduler().getEnable()) {
+              scheduleEntity.setStatus(WorkflowScheduleStatus.trigger_disabled);
+              enableJob = false;
+            }
+            if (WorkflowScheduleType.runOnce.equals(scheduleEntity.getType())) {
+              Date currentDate = new Date();
+              if (scheduleEntity.getDateSchedule().getTime() < currentDate.getTime()) {
+                logger.info("Cannot enable schedule (" + scheduleEntity.getId() + ") as it is in the past.");
+                scheduleEntity.setStatus(WorkflowScheduleStatus.error);
+                workflowScheduleRepository.saveSchedule(scheduleEntity);
+                try {
+                  this.taskScheduler.cancelJob(scheduleEntity);
+                } catch (SchedulerException e) {
+                  e.printStackTrace();
+                }
+                return new WorkflowSchedule(scheduleEntity);
+              }
+            }
+          }
+        } else {
+          if (WorkflowScheduleStatus.inactive.equals(newStatus)) {
+            enableJob = false;
+          }
         }
+        workflowScheduleRepository.saveSchedule(scheduleEntity);
         createOrUpdateSchedule(scheduleEntity, enableJob);
         return new WorkflowSchedule(scheduleEntity);
       }
@@ -288,15 +326,26 @@ public class WorkflowScheduleServiceImpl implements WorkflowScheduleService {
   /* 
    * Enables a specific schedule
    */
-  @Override
-  public void enableSchedule(String scheduleId) throws SchedulerException {
+  private void enableSchedule(String scheduleId) throws SchedulerException {
     WorkflowScheduleEntity schedule = workflowScheduleRepository.getSchedule(scheduleId);
     if (schedule!= null && !WorkflowScheduleStatus.deleted.equals(schedule.getStatus())) {
-      schedule.setStatus(WorkflowScheduleStatus.active);
-      workflowScheduleRepository.saveSchedule(schedule);
-      this.taskScheduler.resumeJob(schedule);
-    } else {
-//        TODO: return that it couldn't be enabled or doesn't exist
+      if (WorkflowScheduleType.runOnce.equals(schedule.getType())) {
+        Date currentDate = new Date();
+        logger.info("Current DateTime: ", currentDate.getTime());
+        logger.info("Schedule DateTime: ", schedule.getDateSchedule().getTime());
+        if (schedule.getDateSchedule().getTime() < currentDate.getTime()) {
+          logger.info("Cannot enable schedule (" + schedule.getId() + ") as it is in the past.");
+          schedule.setStatus(WorkflowScheduleStatus.error);
+        } else {
+          schedule.setStatus(WorkflowScheduleStatus.active);
+          workflowScheduleRepository.saveSchedule(schedule);
+          this.taskScheduler.resumeJob(schedule);
+        }
+      } else {
+        schedule.setStatus(WorkflowScheduleStatus.active);
+        workflowScheduleRepository.saveSchedule(schedule);
+        this.taskScheduler.resumeJob(schedule);
+      }
     }
   }
   
@@ -326,8 +375,7 @@ public class WorkflowScheduleServiceImpl implements WorkflowScheduleService {
   /*
    * Disable a specific schedule
    */
-  @Override
-  public void disableSchedule(String scheduleId) throws SchedulerException {
+  private void disableSchedule(String scheduleId) throws SchedulerException {
     WorkflowScheduleEntity schedule = workflowScheduleRepository.getSchedule(scheduleId);
     if (schedule!= null && !WorkflowScheduleStatus.deleted.equals(schedule.getStatus())) {
       schedule.setStatus(WorkflowScheduleStatus.inactive);
