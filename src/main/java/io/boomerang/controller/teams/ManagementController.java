@@ -24,6 +24,8 @@ import io.boomerang.model.FlowUserProfile;
 import io.boomerang.model.UserQueryResult;
 import io.boomerang.model.profile.SortSummary;
 import io.boomerang.mongo.entity.FlowUserEntity;
+import io.boomerang.mongo.entity.TeamEntity;
+import io.boomerang.mongo.model.KeyValuePair;
 import io.boomerang.service.UserIdentityService;
 import io.boomerang.service.crud.TeamService;
 
@@ -129,6 +131,15 @@ public class ManagementController {
     if (isTeamManagementAvaliable()) {
       teamService.updateTeamMembers(teamId, teamMembers);
     }
+  }
+
+  @PatchMapping("/teams/{teamId}/labels")
+  public TeamEntity updateTeamLabels(@PathVariable String teamId,
+      @RequestBody List<KeyValuePair> labels) {
+    if (isTeamManagementAvaliable()) {
+      return teamService.updateTeamLabels(teamId, labels);
+    }
+    return new TeamEntity();
   }
 
   @PutMapping(value = "/teams/{teamId}")

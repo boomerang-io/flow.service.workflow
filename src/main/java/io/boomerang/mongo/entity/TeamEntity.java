@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import io.boomerang.mongo.model.ApproverGroup;
+import io.boomerang.mongo.model.KeyValuePair;
 import io.boomerang.mongo.model.Quotas;
 import io.boomerang.mongo.model.Settings;
 
@@ -24,9 +25,11 @@ public class TeamEntity {
   private String name;
 
   private Settings settings;
-  
+
   private Quotas quotas;
   private List<ApproverGroup> approverGroups;
+
+  private List<KeyValuePair> labels;
 
   public String getHigherLevelGroupId() {
     return higherLevelGroupId;
@@ -82,5 +85,13 @@ public class TeamEntity {
 
   public void setApproverGroups(List<ApproverGroup> approverGroups) {
     this.approverGroups = approverGroups;
+  }
+
+  public List<KeyValuePair> getLabels() {
+    return labels;
+  }
+
+  public void setLabels(List<KeyValuePair> labels) {
+    this.labels = labels;
   }
 }

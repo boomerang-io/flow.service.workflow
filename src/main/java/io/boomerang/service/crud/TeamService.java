@@ -13,6 +13,7 @@ import io.boomerang.model.teams.CreateApproverGroupRequest;
 import io.boomerang.mongo.entity.FlowTeamConfiguration;
 import io.boomerang.mongo.entity.FlowUserEntity;
 import io.boomerang.mongo.entity.TeamEntity;
+import io.boomerang.mongo.model.KeyValuePair;
 import io.boomerang.mongo.model.Quotas;
 
 public interface TeamService {
@@ -79,5 +80,5 @@ public interface TeamService {
 
   List<TeamEntity> getAllTeamsListing();
 
-
+  TeamEntity updateTeamLabels(String teamId, List<KeyValuePair> labels);
 }
