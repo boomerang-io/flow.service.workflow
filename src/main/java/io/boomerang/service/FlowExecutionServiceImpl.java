@@ -168,6 +168,7 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
     boolean validWorkflow = dagUtility.validateWorkflow(activityEntity);
 
     if (!validWorkflow) {
+      //Workflow activity changed to invalid
       activityEntity.setStatus(TaskStatus.invalid);
       activityEntity.setStatusMessage("Failed to run workflow: Incomplete workflow");
       activityService.saveWorkflowActivity(activityEntity);
@@ -242,6 +243,7 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
     if (tasksToRun.size() == 2) {
       final ActivityEntity activityEntity =
           this.flowActivityService.findWorkflowActivity(activityId);
+      //Workflow activity changed to completed
       activityEntity.setStatus(TaskStatus.completed);
       activityEntity.setCreationDate(new Date());
       activityService.saveWorkflowActivity(activityEntity);

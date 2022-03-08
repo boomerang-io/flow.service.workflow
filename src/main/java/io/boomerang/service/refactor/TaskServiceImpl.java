@@ -536,11 +536,14 @@ public class TaskServiceImpl implements TaskService {
     boolean workflowCompleted = dagUtility.validateWorkflow(activity);
     
     if (activity.getStatusOverride() != null) {
+      //Workflow activity changed to the override status
       activity.setStatus(activity.getStatusOverride());
     } else {
       if (workflowCompleted) {
+        //Workflow activity changed to completed
         activity.setStatus(TaskStatus.completed);
       } else {
+        //Workflow activity changed to failure
         activity.setStatus(TaskStatus.failure);
       }
     }
