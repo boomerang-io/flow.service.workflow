@@ -6,12 +6,14 @@ import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.w3c.dom.events.Event;
 import io.boomerang.model.FlowSettings;
 import io.boomerang.mongo.entity.FlowSettingsEntity;
 import io.boomerang.mongo.model.Config;
 import io.boomerang.mongo.model.ConfigurationType;
 import io.boomerang.mongo.service.FlowSettingsService;
 import io.boomerang.util.DateUtil;
+import net.boomerangplatform.mongo.model.CoreProperty;
 
 @Service
 public class ConfigurationServiceImpl implements ConfigurationService {
@@ -21,7 +23,7 @@ public class ConfigurationServiceImpl implements ConfigurationService {
 
   @Override
   public List<FlowSettings> getAllSettings() {
-  
+
 
     final List<FlowSettings> settingList = new LinkedList<>();
     final List<FlowSettingsEntity> entityList = serviceSettings.getAllConfigurations();
@@ -42,6 +44,18 @@ public class ConfigurationServiceImpl implements ConfigurationService {
       }
       entity.setLastModiifed(DateUtil.asDate(LocalDateTime.now()));
 
+      if (entity.getKey().equals("eventing")) {
+        boolean enableEventing = entity.getConfig().stream()
+            .filter(c -> c.getKey().equals("enable.eventing")).findFirst().get().getBooleanValue();
+        if (enableEventing) {
+          for (Config config : entity.getConfig()) {
+            config.setValue("false");
+          }
+        }
+
+
+      }
+
       serviceSettings.updateConfiguration(entity);
     }
 
@@ -60,4 +74,5 @@ public class ConfigurationServiceImpl implements ConfigurationService {
       }
     }
   }
+
 }
