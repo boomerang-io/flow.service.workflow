@@ -240,6 +240,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   @Override
   public WorkflowSummary updateWorkflow(WorkflowSummary summary) {
+    validateUserForWorkflow(summary.getId());
     final WorkflowEntity entity = workflowRepository.getWorkflow(summary.getId());
 
     entity.setFlowTeamId(summary.getFlowTeamId());
@@ -325,41 +326,48 @@ public class WorkflowServiceImpl implements WorkflowService {
     final WorkflowEntity entity = workflowRepository.getWorkflow(workflowId);
 
     if (entity.getScope() == WorkflowScope.team) {
-      FlowUserEntity user = userIdentityService.getCurrentUser();
 
-      FlowTeam team = teamService
-          .getTeamByIdDetailed(workflowRepository.getWorkflow(workflowId).getFlowTeamId());
+      validateUserForWorkflow(workflowId);
 
-      List<String> userIds = new ArrayList<>();
-      if (team.getUsers() != null) {
-        for (FlowUserEntity teamUser : team.getUsers()) {
-          userIds.add(teamUser.getId());
-        }
-      }
+      entity.setProperties(properties);
 
-      List<String> userTeamIds = new ArrayList<>();
-      if (user.getTeams() != null) {
-        for (Team userTeam : user.getTeams()) {
-          userTeamIds.add(userTeam.getId());
-        }
-      }
+      workflowRepository.saveWorkflow(entity);
 
-      if (user.getType() == UserType.admin || user.getType() == UserType.operator
-          || userIds.contains(user.getId()) || userTeamIds.contains(team.getHigherLevelGroupId())) {
+      return new WorkflowSummary(entity);
 
-        entity.setProperties(properties);
+    } else
 
-        workflowRepository.saveWorkflow(entity);
-
-        return new WorkflowSummary(entity);
-      } else {
-        throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-      }
-    } else {
+    {
       entity.setProperties(properties);
       workflowRepository.saveWorkflow(entity);
       return new WorkflowSummary(entity);
     }
+  }
+
+  private void validateUserForWorkflow(String workflowId) {
+    FlowUserEntity user = userIdentityService.getCurrentUser();
+
+    FlowTeam team =
+        teamService.getTeamByIdDetailed(workflowRepository.getWorkflow(workflowId).getFlowTeamId());
+
+    List<String> userIds = new ArrayList<>();
+    if (team.getUsers() != null) {
+      for (FlowUserEntity teamUser : team.getUsers()) {
+        userIds.add(teamUser.getId());
+      }
+    }
+
+    List<String> userTeamIds = new ArrayList<>();
+    if (user.getTeams() != null) {
+      for (Team userTeam : user.getTeams()) {
+        userTeamIds.add(userTeam.getId());
+      }
+    }
+    if (user.getType() != UserType.admin && user.getType() != UserType.operator
+        && !userIds.contains(user.getId()) && !userTeamIds.contains(team.getHigherLevelGroupId())) {
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+    }
+
   }
 
   @Override

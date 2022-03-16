@@ -18,6 +18,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.server.ResponseStatusException;
 import io.boomerang.client.ExternalTeamService;
 import io.boomerang.client.ExternalUserService;
 import io.boomerang.client.model.Team;
@@ -82,6 +83,12 @@ public class TeamServiceImpl implements TeamService {
 
   @Autowired
   private FlowSettingsService flowSettingsService;
+
+  @Autowired
+  private UserIdentityService userIdentityService;
+
+  @Autowired
+  private TeamService teamService;
 
   public static final String TEAMS = "teams";
   public static final String MAX_TEAM_WORKFLOW_COUNT = "max.team.workflow.count";
@@ -149,6 +156,7 @@ public class TeamServiceImpl implements TeamService {
   @Override
   public FlowTeamConfiguration createNewTeamProperty(String teamId,
       FlowTeamConfiguration property) {
+    validateUserForTeam(teamId);
     TeamEntity flowTeamEntity = flowTeamService.findById(teamId);
 
     if (flowTeamEntity.getSettings() == null) {
@@ -167,6 +175,27 @@ public class TeamServiceImpl implements TeamService {
     flowTeamService.save(flowTeamEntity);
 
     return property;
+  }
+
+  private void validateUserForTeam(String teamId) {
+    FlowUserEntity user = userIdentityService.getCurrentUser();
+    FlowTeam team = teamService.getTeamByIdDetailed(teamId);
+    List<String> userIds = new ArrayList<>();
+    if (team.getUsers() != null) {
+      for (FlowUserEntity teamUser : team.getUsers()) {
+        userIds.add(teamUser.getId());
+      }
+    }
+    List<String> userTeamIds = new ArrayList<>();
+    if (user.getTeams() != null) {
+      for (Team userTeam : user.getTeams()) {
+        userTeamIds.add(userTeam.getId());
+      }
+    }
+    if (user.getType() != UserType.admin && user.getType() != UserType.operator
+        && !userIds.contains(user.getId()) && !userTeamIds.contains(team.getHigherLevelGroupId())) {
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+    }
   }
 
   @Override
@@ -269,6 +298,7 @@ public class TeamServiceImpl implements TeamService {
 
   @Override
   public List<FlowTeamConfiguration> getAllTeamProperties(String teamId) {
+    validateUserForTeam(teamId);
     TeamEntity flowTeamEntity = flowTeamService.findById(teamId);
 
     if (flowTeamEntity.getSettings() != null
@@ -418,6 +448,7 @@ public class TeamServiceImpl implements TeamService {
 
   @Override
   public WorkflowQuotas getTeamQuotas(String teamId) {
+    validateUserForTeam(teamId);
     TeamEntity team = flowTeamService.findById(teamId);
 
     if (team == null) {
@@ -610,6 +641,7 @@ public class TeamServiceImpl implements TeamService {
 
   @Override
   public Quotas updateQuotasForTeam(String teamId, Quotas quotas) {
+    validateUserForTeam(teamId);
     TeamEntity team = flowTeamService.findById(teamId);
     team.setQuotas(quotas);
     return flowTeamService.save(team).getQuotas();
@@ -671,6 +703,7 @@ public class TeamServiceImpl implements TeamService {
 
   @Override
   public void updateTeam(String teamId, FlowTeam flow) {
+    validateUser();
     TeamEntity team = flowTeamService.findById(teamId);
     if (flow.getName() != null) {
       team.setName(flow.getName());
@@ -749,6 +782,7 @@ public class TeamServiceImpl implements TeamService {
 
   @Override
   public Quotas updateTeamQuotas(String teamId, Quotas quotas) {
+    validateUserForTeam(teamId);
     TeamEntity team = flowTeamService.findById(teamId);
 
     if (team.getQuotas() == null) {
