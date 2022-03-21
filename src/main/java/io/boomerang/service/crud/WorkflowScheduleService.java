@@ -11,12 +11,6 @@ import io.boomerang.model.WorkflowScheduleCalendar;
 
 public interface WorkflowScheduleService {
 
-  void enableSchedule(String scheduleId) throws SchedulerException;
-
-  void disableSchedule(String scheduleId) throws SchedulerException;
-
-  void deleteAllSchedules(String workflowId) throws SchedulerException;
-
   WorkflowSchedule createSchedule(WorkflowSchedule schedule);
 
   List<WorkflowSchedule> getSchedules(Optional<List<String>> workflowIds,
@@ -37,6 +31,8 @@ public interface WorkflowScheduleService {
   void enableAllTriggerSchedules(String workflowId);
 
   void disableAllTriggerSchedules(String workflowId);
+
+  void deleteAllSchedules(String workflowId) throws SchedulerException;
 
   List<WorkflowScheduleCalendar> getCalendarsForWorkflow(String workflowId, Date fromDate,
       Date toDate);

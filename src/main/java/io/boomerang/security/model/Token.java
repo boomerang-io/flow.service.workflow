@@ -10,7 +10,7 @@ public class Token {
     return scope;
   }
 
-  public void setScope(TokenScope scope) {
+  protected void setScope(TokenScope scope) {
     this.scope = scope;
   }
 

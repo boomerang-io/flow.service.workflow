@@ -16,8 +16,10 @@ import org.springframework.web.client.HttpClientErrorException;
 import io.boomerang.client.ExternalUserService;
 import io.boomerang.client.model.UserProfile;
 import io.boomerang.model.FlowUser;
+import io.boomerang.model.FlowUserProfile;
 import io.boomerang.model.OneTimeCode;
 import io.boomerang.model.UserQueryResult;
+import io.boomerang.model.UserWorkflowSummary;
 import io.boomerang.mongo.entity.FlowUserEntity;
 import io.boomerang.mongo.model.TokenScope;
 import io.boomerang.mongo.model.UserStatus;
@@ -27,6 +29,11 @@ import io.boomerang.security.model.GlobalToken;
 import io.boomerang.security.model.TeamToken;
 import io.boomerang.security.model.UserToken;
 import io.boomerang.security.service.impl.NoLogging;
+import io.boomerang.security.model.Token;
+import io.boomerang.security.model.UserToken;
+import io.boomerang.security.service.impl.NoLogging;
+import io.boomerang.service.crud.TeamService;
+import io.boomerang.service.crud.WorkflowService;
 
 @Service
 public class UserIdentityServiceImpl implements UserIdentityService {
@@ -46,6 +53,13 @@ public class UserIdentityServiceImpl implements UserIdentityService {
   @Value("${boomerang.otc}")
   private String corePlatformOTC;
 
+  @Autowired
+  private WorkflowService workflowService;
+
+
+  @Autowired
+  private TeamService flowTeamService;
+
   @Override
   public FlowUserEntity getCurrentUser() {
     if (flowExternalUrlUser.isBlank()) {
@@ -62,7 +76,6 @@ public class UserIdentityServiceImpl implements UserIdentityService {
       }
       BeanUtils.copyProperties(userProfile, flowUser);
       flowUser.setTeams(null);
-      
       String email = userProfile.getEmail();
       FlowUserEntity dbUser = flowUserService.getUserWithEmail(email);
       if (dbUser == null) {
@@ -81,7 +94,8 @@ public class UserIdentityServiceImpl implements UserIdentityService {
     String email = userDetails.getEmail();
     String firstName = userDetails.getFirstName();
     String lastName = userDetails.getLastName();
-    String name = String.format("%s %s", Optional.ofNullable(firstName).orElse(""), Optional.ofNullable(lastName).orElse("")).trim();
+    String name = String.format("%s %s", Optional.ofNullable(firstName).orElse(""),
+        Optional.ofNullable(lastName).orElse("")).trim();
     if (firstName == null && lastName == null && email != null) {
       name = email;
     }
@@ -93,14 +107,18 @@ public class UserIdentityServiceImpl implements UserIdentityService {
     if (flowExternalUrlUser.isBlank()) {
       Optional<FlowUserEntity> flowUser = flowUserService.getUserById(userId);
       if (flowUser.isPresent()) {
-        return flowUser.get();
+        FlowUserEntity profile = new FlowUserEntity();
+        BeanUtils.copyProperties(flowUser.get(), profile);
+
+        return profile;
       }
     } else {
       UserProfile userProfile = coreUserService.getUserProfileById(userId);
-      FlowUserEntity flowUser = new FlowUserEntity();
+      FlowUserProfile flowUser = new FlowUserProfile();
       if (userProfile != null) {
         BeanUtils.copyProperties(userProfile, flowUser);
         flowUser.setType(userProfile.getType());
+
         return flowUser;
       }
     }
@@ -148,7 +166,12 @@ public class UserIdentityServiceImpl implements UserIdentityService {
     Optional<FlowUserEntity> userOptional = this.flowUserService.getUserById(userId);
     if (userOptional.isPresent()) {
       FlowUserEntity user = userOptional.get();
-      user.setType(updatedFlowUser.getType());
+      if (updatedFlowUser.getType() != null) {
+        user.setType(updatedFlowUser.getType());
+      }
+      if (updatedFlowUser.getLabels() != null) {
+        user.setLabels(updatedFlowUser.getLabels());
+      }
       this.flowUserService.save(user);
     }
   }
@@ -202,9 +225,7 @@ public class UserIdentityServiceImpl implements UserIdentityService {
       FlowUserEntity flowUserEntity = flowUserService.getOrRegisterUser(email, name, type);
       flowUserEntity.setQuotas(flowUser.getQuotas());
       flowUserEntity.setHasConsented(true);
-      
       flowUserEntity = flowUserService.save(flowUser);
-      
       FlowUser newUser = new FlowUser();
       BeanUtils.copyProperties(flowUserEntity, newUser);
       return newUser;
@@ -245,5 +266,97 @@ public class UserIdentityServiceImpl implements UserIdentityService {
     }
     return null;
   }
+
+  @Override
+  @NoLogging
+  public UserToken getUserDetails() {
+    if (SecurityContextHolder.getContext() != null
+        && SecurityContextHolder.getContext().getAuthentication() != null
+        && SecurityContextHolder.getContext().getAuthentication().getDetails() != null
+        && SecurityContextHolder.getContext().getAuthentication()
+            .getDetails() instanceof UserToken) {
+      return (UserToken) SecurityContextHolder.getContext().getAuthentication().getDetails();
+    } else {
+      return new UserToken("boomerang@us.ibm.com", "boomerang", "joe");
+    }
+  }
+
+
+  @Override
+  public TokenScope getCurrentScope() {
+    if (SecurityContextHolder.getContext() != null
+        && SecurityContextHolder.getContext().getAuthentication() != null
+        && SecurityContextHolder.getContext().getAuthentication().getDetails() != null) {
+      Object details = SecurityContextHolder.getContext().getAuthentication().getDetails();
+      if (details instanceof UserToken) {
+        return TokenScope.user;
+      } else if (details instanceof TeamToken) {
+        return TokenScope.team;
+      } else if (details instanceof GlobalToken) {
+        return TokenScope.global;
+      }
+    }
+    return null;
+  }
+
+
+  @Override
+  public Token getRequestIdentity() {
+    if (SecurityContextHolder.getContext() != null
+        && SecurityContextHolder.getContext().getAuthentication() != null
+        && SecurityContextHolder.getContext().getAuthentication().getDetails() != null) {
+      Object details = SecurityContextHolder.getContext().getAuthentication().getDetails();
+      return (Token) details;
+    } else {
+      return null;
+    }
+  }
+
+
+  @Override
+  public FlowUserProfile getFullUserProfile(String userId) {
+    if (flowExternalUrlUser.isBlank()) {
+      Optional<FlowUserEntity> flowUser = flowUserService.getUserById(userId);
+      if (flowUser.isPresent()) {
+        FlowUserProfile profile = new FlowUserProfile();
+        BeanUtils.copyProperties(flowUser.get(), profile);
+        UserWorkflowSummary workflowList = workflowService.getUserWorkflows(profile.getId());
+
+        if (workflowList != null) {
+          profile.setWorkflows(workflowList.getWorkflows());
+        }
+        setUserTeams(profile);
+        return profile;
+      }
+    } else {
+      UserProfile userProfile = coreUserService.getUserProfileById(userId);
+      FlowUserProfile flowUser = new FlowUserProfile();
+      if (userProfile != null) {
+        BeanUtils.copyProperties(userProfile, flowUser);
+        flowUser.setType(userProfile.getType());
+
+        UserWorkflowSummary workflowList = workflowService.getUserWorkflows(userProfile.getId());
+        if (workflowList != null) {
+          flowUser.setWorkflows(workflowList.getWorkflows());
+        }
+
+        setUserTeams(flowUser);
+
+        return flowUser;
+      }
+    }
+    return null;
+  }
+
+
+  private void setUserTeams(FlowUserProfile flowUser) {
+    if (flowUser.getType() == UserType.admin) {
+      flowUser.setUserTeams(flowTeamService.getAllTeamsListing());
+    } else {
+      flowUser.setUserTeams(flowTeamService.getUsersTeamListing(flowUser));
+    }
+  }
+
+
 
 }

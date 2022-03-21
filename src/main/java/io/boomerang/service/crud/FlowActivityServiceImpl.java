@@ -48,6 +48,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.boomerang.model.Execution;
 import io.boomerang.model.FlowActivity;
 import io.boomerang.model.FlowExecutionRequest;
 import io.boomerang.model.ListActivityResponse;
@@ -823,15 +824,6 @@ public class FlowActivityServiceImpl implements FlowActivityService {
 
     List<TaskExecutionEntity> activites = taskService.findTaskActiivtyForActivity(activityId);
 
-    ObjectMapper objectMapper = new ObjectMapper();
-    try {
-      System.out.println("********activites***** ");
-      System.out.println(objectMapper.writeValueAsString(activites));
-    } catch (JsonProcessingException e) {
-
-      e.printStackTrace();
-    }
-
     long totalDuration = 0;
 
     for (TaskExecutionEntity task : activites) {
@@ -848,9 +840,6 @@ public class FlowActivityServiceImpl implements FlowActivityService {
       }
     }
 
-    System.out.println("********total duration***** " + totalDuration);
-
-    System.out.println(maxDuration < totalDuration);
     if (maxDuration < totalDuration) {
       return true;
     }

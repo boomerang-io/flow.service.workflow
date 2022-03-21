@@ -103,6 +103,8 @@ public class FilterServiceImpl implements FilterService {
         if (scopeList.contains("team")) {
           addTeamWorkflows(isAdmin, user, workflowIdsList, teamIds);
         }
+      } else if (teamIds.isPresent() && !teamIds.get().isEmpty()) {
+        addTeamWorkflows(user, workflowIdsList, teamIds);
       } else {
         if (user != null) {
           addUserWorkflows(user, workflowIdsList);
