@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import io.boomerang.model.FlowActivity;
 import io.boomerang.mongo.entity.ActivityEntity;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 import io.boomerang.mongo.entity.FlowUserEntity;
 import io.boomerang.mongo.entity.TeamEntity;
 import io.boomerang.mongo.entity.WorkflowEntity;
@@ -59,6 +61,7 @@ public class FilterServiceImpl implements FilterService {
   }
   
   /*
+  
    * Generates the workflowIds based on optional lists of workflowIds, scopes, and teamIds
    * 
    * @param list of WorkflowIds
@@ -69,8 +72,7 @@ public class FilterServiceImpl implements FilterService {
    */
   @Override
   public List<String> getFilteredWorkflowIds(Optional<List<String>> workflowIds,
-      Optional<List<String>> teamIds, Optional<List<String>> scopes) {
-    
+      Optional<List<String>> teamIds, Optional<List<String>> scopes) {   
     FlowUserEntity user = null;
     Boolean isAdmin = false;
     
@@ -150,7 +152,7 @@ public class FilterServiceImpl implements FilterService {
 
   private void addUserWorkflows(final FlowUserEntity user, List<String> workflowIdsList) {
     String userId = user.getId();
-    List<WorkflowEntity> userWorkflows = this.flowWorkflowService.getWorkflowsForUser(userId);
+    List<WorkflowEntity> userWorkflows = this.flowWorkflowService.getUserWorkflows(userId);
     List<String> userWorkflowIds =
         userWorkflows.stream().map(WorkflowEntity::getId).collect(Collectors.toList());
     workflowIdsList.addAll(userWorkflowIds);

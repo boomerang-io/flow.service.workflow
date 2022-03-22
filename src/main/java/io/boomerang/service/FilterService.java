@@ -11,5 +11,4 @@ public interface FilterService {
       Optional<List<String>> teamIds, Optional<List<String>> scopes);
 
   List<FlowActivity> convertActivityEntityToFlowActivity(List<ActivityEntity> records);
-
 }
