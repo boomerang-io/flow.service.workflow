@@ -104,7 +104,7 @@ public class FilterServiceImpl implements FilterService {
           addTeamWorkflows(isAdmin, user, workflowIdsList, teamIds);
         }
       } else if (teamIds.isPresent() && !teamIds.get().isEmpty()) {
-        addTeamWorkflows(user, workflowIdsList, teamIds);
+        addTeamWorkflows(isAdmin, user, workflowIdsList, teamIds);
       } else {
         if (user != null) {
           addUserWorkflows(user, workflowIdsList);

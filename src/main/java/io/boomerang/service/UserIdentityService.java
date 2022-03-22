@@ -40,4 +40,6 @@ public interface UserIdentityService {
 
   public TokenScope getCurrentScope();
 
+  Token getRequestIdentity();
+
 }
