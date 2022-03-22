@@ -152,7 +152,7 @@ public class FilterServiceImpl implements FilterService {
 
   private void addUserWorkflows(final FlowUserEntity user, List<String> workflowIdsList) {
     String userId = user.getId();
-    List<WorkflowEntity> userWorkflows = this.flowWorkflowService.getUserWorkflows(userId);
+    List<WorkflowEntity> userWorkflows = this.flowWorkflowService.getWorkflowsForUser(userId);
     List<String> userWorkflowIds =
         userWorkflows.stream().map(WorkflowEntity::getId).collect(Collectors.toList());
     workflowIdsList.addAll(userWorkflowIds);
