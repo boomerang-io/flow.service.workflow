@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -22,6 +24,8 @@ import io.boomerang.service.FilterService;
 
 @Service
 public class InsightsServiceImpl implements InsightsService {
+
+  private static final Logger LOGGER = LogManager.getLogger();
   
   @Autowired
   private FlowWorkflowActivityService activitiesService;
@@ -42,8 +46,13 @@ public class InsightsServiceImpl implements InsightsService {
     
     final List<String> workflowIdsList = filterService.getFilteredWorkflowIds(workflowIds, teamIds, scopes);
 
+    LOGGER.debug("--> Workflow IDs: " + workflowIdsList.toString());
+    
     final Page<ActivityEntity> records = activitiesService.getAllActivities(from, to, pageable,
         Optional.of(workflowIdsList), statuses, triggers);
+    
+    LOGGER.debug("--> Number of Workflow Records: " + records.getSize());
+    
     final InsightsSummary response = new InsightsSummary();
     final List<FlowActivity> activities = filterService.convertActivityEntityToFlowActivity(records.getContent());
     List<Execution> executions = new ArrayList<>();
