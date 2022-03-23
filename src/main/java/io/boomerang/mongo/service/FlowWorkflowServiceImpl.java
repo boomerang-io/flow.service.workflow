@@ -25,13 +25,18 @@ public class FlowWorkflowServiceImpl implements FlowWorkflowService {
   }
 
   @Override
-  public List<WorkflowEntity> getWorkflowsForTeams(String flowId) {
+  public List<WorkflowEntity> getWorkflowsForTeam(String flowId) {
     return workFlowRepository.findByFlowTeamId(flowId);
   }
 
   @Override
   public List<WorkflowEntity> getWorkflowsForTeams(List<String> flowTeamIds) {
     return workFlowRepository.findByFlowTeamIdIn(flowTeamIds);
+  }
+
+  @Override
+  public List<WorkflowEntity> getWorkflowsForUser(String id) {
+    return workFlowRepository.findByScopeAndOwnerUserIdAndStatus(WorkflowScope.user, id, WorkflowStatus.active);
   }
 
   @Override
@@ -70,8 +75,8 @@ public class FlowWorkflowServiceImpl implements FlowWorkflowService {
   }
 
   @Override
-  public List<WorkflowEntity> getUserWorkflows(String id) {
-    return workFlowRepository.findByScopeAndOwnerUserIdAndStatus(WorkflowScope.user, id, WorkflowStatus.active);
+  public List<WorkflowEntity> getUserWorkflows() {
+    return workFlowRepository.findByScope(WorkflowScope.user);
   }
 
   @Override

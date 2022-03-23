@@ -224,7 +224,6 @@ public class UserIdentityServiceImpl implements UserIdentityService {
       FlowUserEntity flowUserEntity = flowUserService.getOrRegisterUser(email, name, type);
       flowUserEntity.setQuotas(flowUser.getQuotas());
       flowUserEntity.setHasConsented(true);
-
       flowUserEntity = flowUserService.save(flowUser);
 
       FlowUser newUser = new FlowUser();
@@ -266,7 +265,6 @@ public class UserIdentityServiceImpl implements UserIdentityService {
     return null;
   }
 
-
   @Override
   public Token getRequestIdentity() {
     if (SecurityContextHolder.getContext() != null
@@ -278,7 +276,6 @@ public class UserIdentityServiceImpl implements UserIdentityService {
       return null;
     }
   }
-
 
   @Override
   public FlowUserProfile getFullUserProfile(String userId) {
@@ -323,7 +320,4 @@ public class UserIdentityServiceImpl implements UserIdentityService {
       flowUser.setUserTeams(flowTeamService.getUsersTeamListing(flowUser));
     }
   }
-
-
-
 }

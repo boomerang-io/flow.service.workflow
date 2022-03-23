@@ -55,9 +55,11 @@ public class TeamsV1Controller {
   @Operation(summary = "Search for flow team")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
-  public ResponseEntity<TeamQueryResult> getTeams(@RequestParam(required = false) String query,
+  public ResponseEntity<TeamQueryResult> getTeams(
+      @RequestParam(required = false) String query,
       @RequestParam(defaultValue = "ASC") Direction order,
-      @RequestParam(required = false) String sort, @RequestParam(defaultValue = "0") int page,
+      @RequestParam(required = false) String sort, 
+      @RequestParam(defaultValue = "0") int page,
       @RequestParam(defaultValue = "100") int size) {
 
     SortSummary sortSummary = new SortSummary();

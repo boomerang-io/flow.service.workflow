@@ -46,10 +46,11 @@ import org.springframework.web.client.RequestCallback;
 import org.springframework.web.client.ResponseExtractor;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.boomerang.model.Execution;
 import io.boomerang.model.FlowActivity;
 import io.boomerang.model.FlowExecutionRequest;
-import io.boomerang.model.InsightsSummary;
 import io.boomerang.model.ListActivityResponse;
 import io.boomerang.model.Sort;
 import io.boomerang.model.Task;
@@ -73,17 +74,16 @@ import io.boomerang.mongo.model.Revision;
 import io.boomerang.mongo.model.TaskStatus;
 import io.boomerang.mongo.model.TaskTemplateConfig;
 import io.boomerang.mongo.model.TaskType;
-import io.boomerang.mongo.model.UserType;
 import io.boomerang.mongo.model.WorkflowScope;
 import io.boomerang.mongo.model.next.DAGTask;
 import io.boomerang.mongo.service.ActivityTaskService;
 import io.boomerang.mongo.service.FlowSettingsService;
 import io.boomerang.mongo.service.FlowTaskTemplateService;
-import io.boomerang.mongo.service.FlowTeamService;
 import io.boomerang.mongo.service.FlowWorkflowActivityService;
 import io.boomerang.mongo.service.FlowWorkflowService;
 import io.boomerang.mongo.service.RevisionService;
 import io.boomerang.service.ActionService;
+import io.boomerang.service.FilterService;
 import io.boomerang.service.PropertyManager;
 import io.boomerang.service.UserIdentityService;
 import io.boomerang.service.refactor.ControllerRequestProperties;
@@ -96,7 +96,6 @@ public class FlowActivityServiceImpl implements FlowActivityService {
 
   @Autowired
   private FlowSettingsService flowSettingsService;
-
 
   @Autowired
   private FlowWorkflowActivityService flowActivityService;
@@ -114,7 +113,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
   private FlowWorkflowService workflowService;
 
   @Autowired
-  private FlowTeamService flowTeamService;
+  private FilterService filterService;
 
   @Value("${controller.rest.url.base}")
   private String controllerBaseUrl;
@@ -157,26 +156,6 @@ public class FlowActivityServiceImpl implements FlowActivityService {
   private RevisionService revisionService;
 
   private static final Logger LOGGER = LogManager.getLogger();
-
-  private List<FlowActivity> convert(List<ActivityEntity> records) {
-
-    final List<FlowActivity> flowActivities = new LinkedList<>();
-
-    for (final ActivityEntity record : records) {
-      final FlowActivity flow = new FlowActivity(record);
-      final WorkflowEntity workflow = workflowService.getWorkflow(record.getWorkflowId());
-
-      if (workflow != null) {
-        flow.setWorkflowName(workflow.getName());
-        flow.setDescription(workflow.getDescription());
-        flow.setIcon(workflow.getIcon());
-        flow.setShortDescription(workflow.getShortDescription());
-      }
-
-      flowActivities.add(flow);
-    }
-    return flowActivities;
-  }
 
   @Override
   public ActivityEntity createFlowActivity(String workflowVersionId, Optional<String> trigger,
@@ -240,13 +219,13 @@ public class FlowActivityServiceImpl implements FlowActivityService {
       Optional<List<String>> workflowIds, Optional<List<String>> teamIds,
       Optional<List<String>> statuses, Optional<List<String>> triggers,
       Optional<List<String>> scopes, String property, Direction direction) {
-    List<String> workflowIdsList = getWorkflowIdsForParams(workflowIds, teamIds, scopes);
+    List<String> workflowIdsList = filterService.getFilteredWorkflowIds(workflowIds, teamIds, scopes);
 
 
     ListActivityResponse response = new ListActivityResponse();
-    Page<ActivityEntity> records = flowActivityService.getAllActivites(from, to, page,
+    Page<ActivityEntity> records = flowActivityService.getAllActivities(from, to, page,
         Optional.of(workflowIdsList), statuses, triggers);
-    final List<FlowActivity> activities = convert(records.getContent());
+    final List<FlowActivity> activities = filterService.convertActivityEntityToFlowActivity(records.getContent());
     List<FlowActivity> activitiesFiltered = new ArrayList<>();
     for (FlowActivity activity : activities) {
       String workFlowId = activity.getWorkflowId();
@@ -259,83 +238,6 @@ public class FlowActivityServiceImpl implements FlowActivityService {
     response.setRecords(activities);
 
     return response;
-  }
-
-  private List<String> getWorkflowIdsForParams(Optional<List<String>> workflowIds,
-      Optional<List<String>> teamIds, Optional<List<String>> scopes) {
-
-
-    final FlowUserEntity user = userIdentityService.getCurrentUser();
-    List<String> workflowIdsList = new LinkedList<>();
-
-    if (!workflowIds.isPresent()) {
-      if (scopes.isPresent() && !scopes.get().isEmpty()) {
-
-        List<String> scopeList = scopes.get();
-        if (scopeList.contains("user")) {
-          addUserWorkflows(user, workflowIdsList);
-        }
-        if (scopeList.contains("system") && user.getType() == UserType.admin) {
-          addSystemWorkflows(workflowIdsList);
-        }
-        if (scopeList.contains("team")) {
-          addTeamWorkflows(user, workflowIdsList, teamIds);
-        }
-      } else {
-
-        addUserWorkflows(user, workflowIdsList);
-        addTeamWorkflows(user, workflowIdsList, teamIds);
-        if (user.getType() == UserType.admin) {
-          addSystemWorkflows(workflowIdsList);
-        }
-      }
-    } else {
-      List<String> requestWorkflowList = workflowIds.get();
-      workflowIdsList.addAll(requestWorkflowList);
-    }
-    return workflowIdsList;
-  }
-
-  private void addTeamWorkflows(final FlowUserEntity user, List<String> workflowIdsList,
-      Optional<List<String>> teamIds) {
-
-    if (teamIds.isPresent() && !teamIds.get().isEmpty()) {
-      List<WorkflowEntity> allTeamWorkflows =
-          this.workflowService.getWorkflowsForTeams(teamIds.get());
-      List<String> allTeamWorkflowsIds =
-          allTeamWorkflows.stream().map(WorkflowEntity::getId).collect(Collectors.toList());
-      workflowIdsList.addAll(allTeamWorkflowsIds);
-    } else {
-      if (user.getType() == UserType.admin) {
-        List<WorkflowEntity> allTeamWorkflows = this.workflowService.getTeamWorkflows();
-        List<String> workflowIds =
-            allTeamWorkflows.stream().map(WorkflowEntity::getId).collect(Collectors.toList());
-        workflowIdsList.addAll(workflowIds);
-      } else {
-        List<TeamEntity> flowTeam = teamService.getUsersTeamListing(user);
-        List<String> flowTeamIds =
-            flowTeam.stream().map(TeamEntity::getId).collect(Collectors.toList());
-        List<WorkflowEntity> teamWorkflows = this.workflowService.getWorkflowsForTeams(flowTeamIds);
-        List<String> allTeamWorkflowsIds =
-            teamWorkflows.stream().map(WorkflowEntity::getId).collect(Collectors.toList());
-        workflowIdsList.addAll(allTeamWorkflowsIds);
-      }
-    }
-  }
-
-  private void addSystemWorkflows(List<String> workflowIdsList) {
-    List<WorkflowEntity> systemWorkflows = this.workflowService.getSystemWorkflows();
-    List<String> systemWorkflowsIds =
-        systemWorkflows.stream().map(WorkflowEntity::getId).collect(Collectors.toList());
-    workflowIdsList.addAll(systemWorkflowsIds);
-  }
-
-  private void addUserWorkflows(final FlowUserEntity user, List<String> workflowIdsList) {
-    String userId = user.getId();
-    List<WorkflowEntity> userWorkflows = this.workflowService.getUserWorkflows(userId);
-    List<String> userWorkflowIds =
-        userWorkflows.stream().map(WorkflowEntity::getId).collect(Collectors.toList());
-    workflowIdsList.addAll(userWorkflowIds);
   }
 
   protected io.boomerang.model.Pageable createPageable(final Page<ActivityEntity> records,
@@ -390,7 +292,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
       List<String> triggers, Optional<List<String>> workflowIds, Optional<List<String>> scopes,
       Long fromDate, Long toDate) {
 
-    List<String> workflowIdsList = getWorkflowIdsForParams(workflowIds, teamIds, scopes);
+    List<String> workflowIdsList = filterService.getFilteredWorkflowIds(workflowIds, teamIds, scopes);
     Optional<Date> to =
         toDate == null ? Optional.empty() : Optional.of(DateUtil.asDate(getDateTime(toDate)));
     Optional<Date> from =
@@ -398,7 +300,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
 
 
     List<ActivityEntity> flowWorkflowActivityEntities =
-        flowActivityService.getAllActivites(from, to, pageable, getOptional(workflowIdsList),
+        flowActivityService.getAllActivities(from, to, pageable, getOptional(workflowIdsList),
             Optional.empty(), getOptional(triggers)).getContent();
 
     Map<String, Long> result = flowWorkflowActivityEntities.stream()
@@ -473,7 +375,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
     final Page<ActivityEntity> records = flowActivityService.findAllActivities(from, to, page);
     final ListActivityResponse response = new ListActivityResponse();
 
-    final List<FlowActivity> activities = convert(records.getContent());
+    final List<FlowActivity> activities = filterService.convertActivityEntityToFlowActivity(records.getContent());
     io.boomerang.model.Pageable pageable = createPageable(records, property, direction);
     response.setPageable(pageable);
     response.setRecords(activities);
@@ -651,88 +553,6 @@ public class FlowActivityServiceImpl implements FlowActivityService {
   @Override
   public TaskExecutionEntity saveTaskExecution(TaskExecutionEntity task) {
     return taskService.save(task);
-  }
-
-  @Override
-  public InsightsSummary getInsightsSummary(Optional<Date> from, Optional<Date> to,
-      Pageable pageable, Optional<String> teamId) {
-
-    final Page<ActivityEntity> records = flowActivityService.findAllActivities(from, to, pageable);
-    final InsightsSummary response = new InsightsSummary();
-    final List<FlowActivity> activities = convert(records.getContent());
-    List<Execution> executions = new ArrayList<>();
-    Long totalExecutionTime = 0L;
-    Long executionTime;
-
-    for (FlowActivity activity : activities) {
-
-      executionTime = activity.getDuration();
-
-      if (executionTime != null) {
-        totalExecutionTime = totalExecutionTime + executionTime;
-      }
-
-      addActivityDetail(teamId, executions, activity);
-    }
-    response.setTotalActivitiesExecuted(executions.size());
-    response.setExecutions(executions);
-
-    if (response.getTotalActivitiesExecuted() != 0) {
-      response.setMedianExecutionTime(totalExecutionTime / executions.size());
-
-    } else {
-      response.setMedianExecutionTime(0L);
-    }
-    return response;
-  }
-
-  private void addActivityDetail(Optional<String> teamId, List<Execution> executions,
-      FlowActivity activity) {
-    String teamName = null;
-    String workflowName = null;
-    String workflowId = activity.getWorkflowId();
-    String activityTeamId = null;
-    WorkflowEntity workflow = workflowService.getWorkflow(workflowId);
-    if (workflow != null) {
-      workflowName = workflow.getName();
-
-      if (WorkflowScope.team.equals(workflow.getScope())) {
-        activityTeamId = workflowService.getWorkflow(workflowId).getFlowTeamId();
-        TeamEntity team = flowTeamService.findById(activityTeamId);
-
-        if (team != null) {
-          teamName = team.getName();
-
-        } else {
-          teamName = null;
-        }
-      }
-    }
-
-    if (teamId.isPresent()) {
-      String teamID = teamId.get();
-
-      if (activityTeamId != null && teamID.equals(activityTeamId)) {
-        Execution execution = createExecution(activity, teamName, workflowName, workflowId);
-        executions.add(execution);
-      }
-    } else {
-      Execution execution = createExecution(activity, teamName, workflowName, workflowId);
-      executions.add(execution);
-    }
-  }
-
-  private Execution createExecution(FlowActivity activity, String teamName, String workflowName,
-      String workflowId) {
-    Execution execution = new Execution();
-    execution.setActivityId(activity.getId());
-    execution.setStatus(activity.getStatus());
-    execution.setDuration(activity.getDuration());
-    execution.setCreationDate(activity.getCreationDate());
-    execution.setTeamName(teamName);
-    execution.setWorkflowName(workflowName);
-    execution.setWorkflowId(workflowId);
-    return execution;
   }
 
   @Override
@@ -976,7 +796,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
         mongoTemplate.find(activityQuery.with(pageable), ActivityEntity.class), pageable,
         () -> mongoTemplate.count(activityQuery, ActivityEntity.class));
 
-    List<FlowActivity> activityRecords = this.convert(activityPages.getContent());
+    List<FlowActivity> activityRecords = filterService.convertActivityEntityToFlowActivity(activityPages.getContent());
 
     return activityRecords;
   }

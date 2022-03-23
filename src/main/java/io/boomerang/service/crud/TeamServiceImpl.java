@@ -303,7 +303,7 @@ public class TeamServiceImpl implements TeamService {
   }
 
   private List<ActivityEntity> getConcurrentWorkflowActivities(String teamId) {
-    List<WorkflowEntity> teamWorkflows = flowWorkflowService.getWorkflowsForTeams(teamId);
+    List<WorkflowEntity> teamWorkflows = flowWorkflowService.getWorkflowsForTeam(teamId);
     List<String> workflowIds = new ArrayList<>();
     for (WorkflowEntity workflow : teamWorkflows) {
       workflowIds.add(workflow.getId());

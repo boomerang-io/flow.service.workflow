@@ -24,7 +24,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import io.boomerang.model.FlowActivity;
-import io.boomerang.model.InsightsSummary;
 import io.boomerang.model.ListActivityResponse;
 import io.boomerang.model.TaskExecutionResponse;
 import io.boomerang.model.TeamWorkflowSummary;
@@ -193,38 +192,6 @@ public class ActivityController {
 
     return flowActivityService.getActivitySummary(getPageable(page, size, sort), teamIds, triggers,
         workflowIds, scopes, fromDate, toDate);
-  }
-
-  @GetMapping(value = "/insights")
-  public InsightsSummary getInsightsSummary(
-      @RequestParam(defaultValue = "ASC") Optional<Direction> order,
-      @RequestParam Optional<String> sort, @RequestParam Optional<String> teamId,
-      @RequestParam(defaultValue = "0") int page,
-      @RequestParam(defaultValue = "2147483647") int size, @RequestParam Optional<Long> fromDate,
-      @RequestParam Optional<Long> toDate) {
-
-    Optional<Date> from = Optional.empty();
-    Optional<Date> to = Optional.empty();
-    if (fromDate.isPresent()) {
-      from = Optional.of(new Date(fromDate.get()));
-    }
-    if (toDate.isPresent()) {
-      to = Optional.of(new Date(toDate.get()));
-    }
-    Sort pagingSort = Sort.by(new Order(Direction.DESC, CREATIONDATESORT));
-    if (sort.isPresent()) {
-      Direction direction = Direction.ASC;
-      final String sortByKey = sort.get();
-
-      if (order.isPresent()) {
-        direction = order.get();
-      }
-      pagingSort = Sort.by(new Order(direction, sortByKey));
-    }
-    final Pageable pageable = PageRequest.of(page, size, pagingSort);
-
-    return flowActivityService.getInsightsSummary(from, to, pageable, teamId);
-
   }
 
   @GetMapping(value = "/activity/{activityId}/log/{taskId}")

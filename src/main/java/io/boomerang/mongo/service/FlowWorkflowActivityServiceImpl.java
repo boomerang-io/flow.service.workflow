@@ -69,7 +69,7 @@ public class FlowWorkflowActivityServiceImpl implements FlowWorkflowActivityServ
   }
 
   @Override
-  public Page<ActivityEntity> getAllActivites(Optional<Date> from, Optional<Date> to, Pageable page,
+  public Page<ActivityEntity> getAllActivities(Optional<Date> from, Optional<Date> to, Pageable page,
       Optional<List<String>> workflowIds, Optional<List<String>> statuses,
       Optional<List<String>> triggers) {
 

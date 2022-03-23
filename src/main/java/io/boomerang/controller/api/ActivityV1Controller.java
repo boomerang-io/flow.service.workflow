@@ -35,7 +35,7 @@ public class ActivityV1Controller {
   @Autowired
   private FlowActivityService activityService;
 
-  @GetMapping(value = "/activites")
+  @GetMapping(value = "/activities")
   @AuthenticationScope(scopes = {TokenScope.global, TokenScope.team, TokenScope.user})
   @Operation(summary = "Search for workflow execution activites")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),

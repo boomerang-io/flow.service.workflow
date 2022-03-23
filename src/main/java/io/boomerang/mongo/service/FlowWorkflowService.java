@@ -11,7 +11,7 @@ public interface FlowWorkflowService {
 
   List<WorkflowEntity> getAllWorkflows();
   
-  List<WorkflowEntity> getWorkflowsForTeams(String flowId);
+  List<WorkflowEntity> getWorkflowsForTeam(String flowId);
 
   List<WorkflowEntity> getWorkflowsForTeams(List<String> flowTeamIds);
 
@@ -28,7 +28,9 @@ public interface FlowWorkflowService {
   List<WorkflowEntity> getSystemWorkflows();
   List<WorkflowEntity> getTeamWorkflows();
   List<WorkflowEntity> getTemplateWorkflows();
-  List<WorkflowEntity> getUserWorkflows(String id);
+  List<WorkflowEntity> getWorkflowsForUser(String id);
+
+  List<WorkflowEntity> getUserWorkflows();
 
 
 }
