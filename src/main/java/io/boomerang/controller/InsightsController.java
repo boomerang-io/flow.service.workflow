@@ -42,10 +42,10 @@ public class InsightsController {
     Optional<Date> from = Optional.empty();
     Optional<Date> to = Optional.empty();
     if (fromDate.isPresent()) {
-      from = Optional.of(new Date(fromDate.get() * 1000));
+      from = Optional.of(new Date(fromDate.get()));
     }
     if (toDate.isPresent()) {
-      to = Optional.of(new Date(toDate.get() * 1000));
+      to = Optional.of(new Date(toDate.get()));
     }
 
     Sort pagingSort = Sort.by(new Order(Direction.DESC, CREATIONDATESORT));
