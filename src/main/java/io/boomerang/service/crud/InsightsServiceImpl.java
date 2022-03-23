@@ -46,12 +46,12 @@ public class InsightsServiceImpl implements InsightsService {
     
     final List<String> workflowIdsList = filterService.getFilteredWorkflowIds(workflowIds, teamIds, scopes);
 
-    LOGGER.debug("--> Workflow IDs: " + workflowIdsList.toString());
+    LOGGER.debug("\n\n     Workflow IDs: " + workflowIdsList.toString());
     
     final Page<ActivityEntity> records = activitiesService.getAllActivities(from, to, pageable,
         Optional.of(workflowIdsList), statuses, triggers);
     
-    LOGGER.debug("--> Number of Workflow Records: " + records.getSize());
+    LOGGER.debug("\n\n     Number of Workflow Records: " + records.getSize());
     
     final InsightsSummary response = new InsightsSummary();
     final List<FlowActivity> activities = filterService.convertActivityEntityToFlowActivity(records.getContent());

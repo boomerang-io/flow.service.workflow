@@ -31,6 +31,8 @@ public class InsightsV1Controller {
   @Autowired
   private InsightsService insightsService;
 
+  private static final String CREATIONDATESORT = "creationDate";
+
   @GetMapping(value = "/insights")
   @AuthenticationScope(scopes = {TokenScope.global, TokenScope.team, TokenScope.user})
   @Operation(summary = "Retrieve insights for a team.")
@@ -43,7 +45,7 @@ public class InsightsV1Controller {
       @RequestParam Optional<List<String>> workflowIds,
       @RequestParam Optional<List<String>> teamIds, 
       @RequestParam(defaultValue = "0") int page,
-      @RequestParam(defaultValue = "2147483647") int size, 
+      @RequestParam(defaultValue = "10") int size, 
       @RequestParam Optional<Long> fromDate,
       @RequestParam Optional<Long> toDate, 
       @RequestParam Optional<List<String>> statuses,
@@ -57,8 +59,17 @@ public class InsightsV1Controller {
     if (toDate.isPresent()) {
       to = Optional.of(new Date(toDate.get()));
     }
-    Sort pagingSort = Sort.by(new Order(Direction.DESC, "creationDate"));
-    final Pageable pageable = PageRequest.of(0, 10, pagingSort);
+    Sort pagingSort = Sort.by(new Order(Direction.DESC, CREATIONDATESORT));
+    if (sort.isPresent()) {
+      Direction direction = Direction.ASC;
+      final String sortByKey = sort.get();
+      if (order.isPresent()) {
+        direction = order.get();
+
+      }
+      pagingSort = Sort.by(new Order(direction, sortByKey));
+    }
+    final Pageable pageable = PageRequest.of(page, size, pagingSort);
 
     return insightsService.getInsights(from, to, pageable, workflowIds, teamIds, scopes, statuses, triggers);
   }
