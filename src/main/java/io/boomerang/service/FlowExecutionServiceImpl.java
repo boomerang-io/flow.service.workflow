@@ -60,8 +60,6 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
   @Autowired
   private TaskService taskService;
 
-
-
   @Autowired
   private FlowTaskTemplateService taskTemplateService;
 
@@ -168,6 +166,7 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
     boolean validWorkflow = dagUtility.validateWorkflow(activityEntity);
 
     if (!validWorkflow) {
+    //Workflow activity changed to invalid
       activityEntity.setStatus(TaskStatus.invalid);
       activityEntity.setStatusMessage("Failed to run workflow: Incomplete workflow");
       activityService.saveWorkflowActivity(activityEntity);
@@ -197,6 +196,7 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
       TaskExecutionEntity taskExecution = new TaskExecutionEntity();
       taskExecution.setActivityId(activityId);
       taskExecution.setTaskId(task.getTaskId());
+   // Workflow activity task status set to not started
       taskExecution.setFlowTaskStatus(TaskStatus.notstarted);
       taskExecution.setOrder(order);
       taskExecution.setTaskName(task.getTaskName());
@@ -242,6 +242,7 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
     if (tasksToRun.size() == 2) {
       final ActivityEntity activityEntity =
           this.flowActivityService.findWorkflowActivity(activityId);
+    //Workflow activity changed to completed
       activityEntity.setStatus(TaskStatus.completed);
       activityEntity.setCreationDate(new Date());
       activityService.saveWorkflowActivity(activityEntity);
@@ -250,6 +251,7 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
     }
 
     final ActivityEntity activityEntity = this.flowActivityService.findWorkflowActivity(activityId);
+ // Workflow activity status set to in progress
     activityEntity.setStatus(TaskStatus.inProgress);
     activityEntity.setCreationDate(new Date());
     activityService.saveWorkflowActivity(activityEntity);

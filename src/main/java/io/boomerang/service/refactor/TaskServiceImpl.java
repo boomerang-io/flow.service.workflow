@@ -96,10 +96,10 @@ public class TaskServiceImpl implements TaskService {
 
   @Autowired
   private TaskClient flowClient;
-  
+
   @Autowired
   private FlowActivityService flowActivityService;
-  
+
   @Autowired
   private WorkflowScheduleService scheduleService;
 
@@ -133,6 +133,7 @@ public class TaskServiceImpl implements TaskService {
 
     TaskType taskType = task.getTaskType();
     taskExecution.setStartTime(new Date());
+    // Workflow activity task status set to in progress
     taskExecution.setFlowTaskStatus(TaskStatus.inProgress);
     taskExecution = taskActivityService.save(taskExecution);
 
@@ -153,7 +154,8 @@ public class TaskServiceImpl implements TaskService {
         this.endTask(response);
       } else if (taskType == TaskType.template || taskType == TaskType.script) {
         List<KeyValuePair> labels = workflow.getLabels();
-        controllerClient.submitTemplateTask(this, flowClient, task, activityId, workflowName, labels);
+        controllerClient.submitTemplateTask(this, flowClient, task, activityId, workflowName,
+            labels);
       } else if (taskType == TaskType.customtask) {
         List<KeyValuePair> labels = workflow.getLabels();
         controllerClient.submitCustomTask(this, flowClient, task, activityId, workflowName, labels);
@@ -257,7 +259,7 @@ public class TaskServiceImpl implements TaskService {
     InternalTaskResponse response = new InternalTaskResponse();
     response.setActivityId(task.getTaskActivityId());
     response.setStatus(TaskStatus.failure);
-    
+
     if (task.getInputs() != null) {
       String workflowId = task.getInputs().get("workflowId");
       Integer futureIn = Integer.valueOf(task.getInputs().get("futureIn"));
@@ -266,8 +268,9 @@ public class TaskServiceImpl implements TaskService {
       String timezone = task.getInputs().get("timezone");
       LOGGER.debug("*******Run Scheduled Workflow System Task******");
       LOGGER.debug("Scheduling new task in " + futureIn + " " + futurePeriod);
-      
-      if (futureIn != null && futureIn != 0 && StringUtils.indexOfAny(futurePeriod, new String[]{"minutes", "hours", "days", "weeks", "months"}) >= 0) {
+
+      if (futureIn != null && futureIn != 0 && StringUtils.indexOfAny(futurePeriod,
+          new String[] {"minutes", "hours", "days", "weeks", "months"}) >= 0) {
         Calendar executionCal = Calendar.getInstance();
         executionCal.setTime(executionDate);
         Integer calField = Calendar.MINUTE;
@@ -283,7 +286,7 @@ public class TaskServiceImpl implements TaskService {
             calField = Calendar.DATE;
             break;
           case "months":
-            calField = Calendar.MONTH;   
+            calField = Calendar.MONTH;
             break;
         }
         executionCal.add(calField, futureIn);
@@ -291,47 +294,53 @@ public class TaskServiceImpl implements TaskService {
           String[] hoursTime = task.getInputs().get("time").split(":");
           Integer hours = Integer.valueOf(hoursTime[0]);
           Integer minutes = Integer.valueOf(hoursTime[1]);
-          LOGGER.debug("With time to be set to: " + task.getInputs().get("time") + " in " + timezone);
+          LOGGER
+              .debug("With time to be set to: " + task.getInputs().get("time") + " in " + timezone);
           executionCal.setTimeZone(TimeZone.getTimeZone(timezone));
           executionCal.set(Calendar.HOUR, hours);
           executionCal.set(Calendar.MINUTE, minutes);
-          LOGGER.debug("With execution set to: " + executionCal.getTime().toString() + " in " + timezone);
+          LOGGER.debug(
+              "With execution set to: " + executionCal.getTime().toString() + " in " + timezone);
           executionCal.setTimeZone(TimeZone.getTimeZone("UTC"));
         }
         LOGGER.debug("With execution set to: " + executionCal.getTime().toString() + " in UTC");
-        
-        //Define new properties removing the System Task specific properties
+
+        // Define new properties removing the System Task specific properties
         ControllerRequestProperties requestProperties = propertyManager
             .buildRequestPropertyLayering(task, activity.getId(), activity.getWorkflowId());
-        
+
         Map<String, String> properties = new HashMap<>();
         for (Map.Entry<String, String> entry : task.getInputs().entrySet()) {
-          if (!"workflowId".equals(entry.getKey()) && !"futureIn".equals(entry.getKey()) && !"futurePeriod".equals(entry.getKey()) && !"time".equals(entry.getKey()) && !"timezone".equals(entry.getKey())) {
+          if (!"workflowId".equals(entry.getKey()) && !"futureIn".equals(entry.getKey())
+              && !"futurePeriod".equals(entry.getKey()) && !"time".equals(entry.getKey())
+              && !"timezone".equals(entry.getKey())) {
             String value = entry.getValue();
             if (value != null) {
-              value = propertyManager.replaceValueWithProperty(value, activity.getId(), requestProperties);
+              value = propertyManager.replaceValueWithProperty(value, activity.getId(),
+                  requestProperties);
             }
             properties.put(entry.getKey(), value);
           }
         }
-        
-        //Define and create the schedule
+
+        // Define and create the schedule
         WorkflowSchedule schedule = new WorkflowSchedule();
         schedule.setWorkflowId(workflowId);
         schedule.setName(task.getTaskName());
-        schedule.setDescription("This schedule was generated through a Run Scheduled Workflow task.");
+        schedule
+            .setDescription("This schedule was generated through a Run Scheduled Workflow task.");
         schedule.setParametersMap(properties);
         schedule.setCreationDate(activity.getCreationDate());
         schedule.setDateSchedule(executionCal.getTime());
         schedule.setTimezone(timezone);
         schedule.setType(WorkflowScheduleType.runOnce);
         List<KeyValuePair> labels = new LinkedList<>();
-        labels.add(new KeyValuePair("workflowName",task.getWorkflowName()));
+        labels.add(new KeyValuePair("workflowName", task.getWorkflowName()));
         schedule.setLabels(labels);
         WorkflowSchedule workflowSchedule = scheduleService.createSchedule(schedule);
-        if (workflowSchedule!= null && workflowSchedule.getId() != null) {
+        if (workflowSchedule != null && workflowSchedule.getId() != null) {
           LOGGER.debug("Workflow Scheudle (" + workflowSchedule.getId() + ") created.");
-          //TODO: Add a taskExecution with the ScheduleId so it can be deep linked.
+          // TODO: Add a taskExecution with the ScheduleId so it can be deep linked.
           response.setStatus(TaskStatus.completed);
         }
       }
@@ -358,6 +367,7 @@ public class TaskServiceImpl implements TaskService {
 
     LOGGER.debug("[{}] Creating wait for event task", taskExecution.getActivityId());
 
+    // Workflow activity task status set to waiting
     taskExecution.setFlowTaskStatus(TaskStatus.waiting);
     taskActivityService.save(taskExecution);
 
@@ -371,6 +381,7 @@ public class TaskServiceImpl implements TaskService {
 
   private void createApprovalNotification(TaskExecutionEntity taskExecution, Task task,
       ActivityEntity activity, WorkflowEntity workflow, ManualType type) {
+    // Workflow activity task status set to waiting
     taskExecution.setFlowTaskStatus(TaskStatus.waiting);
     taskExecution = taskActivityService.save(taskExecution);
     ApprovalEntity approval = new ApprovalEntity();
@@ -382,12 +393,12 @@ public class TaskServiceImpl implements TaskService {
     approval.setType(type);
     approval.setCreationDate(new Date());
     approval.setNumberOfApprovers(1);
-    
+
     if (ManualType.approval == type) {
       if (task.getInputs() != null) {
         String approverGroupId = task.getInputs().get("approverGroupId");
         String numberOfApprovers = task.getInputs().get("numberOfApprovers");
-        
+
         if (approverGroupId != null && !approverGroupId.isBlank()) {
           approval.setApproverGroupId(approverGroupId);
         }
@@ -435,6 +446,7 @@ public class TaskServiceImpl implements TaskService {
 
     if (workflowActivity.getStatus() == TaskStatus.cancelled) {
       LOGGER.error("[{}] Workflow has been marked as cancelled, not ending task", activityId);
+      // Workflow activity task status set to cancelled
       activity.setFlowTaskStatus(TaskStatus.cancelled);
       long duration = new Date().getTime() - activity.getStartTime().getTime();
       activity.setDuration(duration);
@@ -454,7 +466,7 @@ public class TaskServiceImpl implements TaskService {
 
     workflowActivity = this.activityService.findWorkflowActivtyById(activity.getActivityId());
 
-
+    // Workflow activity task status set to request.getStatus()
     activity.setFlowTaskStatus(request.getStatus());
     long duration = new Date().getTime() - activity.getStartTime().getTime();
     activity.setDuration(duration);
@@ -479,15 +491,16 @@ public class TaskServiceImpl implements TaskService {
     updatePendingAprovalStatus(workflowActivity);
 
     activity.setFlowTaskStatus(request.getStatus());
-    
+
     String workflowActivityId = workflowActivity.getId();
-    
+
     if (this.flowActivityService.hasExceededExecutionQuotas(workflowActivityId)) {
       LOGGER.error("Workflow has been cancelled due to its max workflow duration has exceeded.");
       ErrorResponse response = new ErrorResponse();
-      response.setMessage("Workflow execution terminated due to exceeding maxinum workflow duration.");
+      response
+          .setMessage("Workflow execution terminated due to exceeding maxinum workflow duration.");
       response.setCode("001");
-    
+
       this.flowActivityService.cancelWorkflowActivity(workflowActivityId, response);
     } else {
       executeNextStep(workflowActivity, tasks, currentTask, finishedAll);
@@ -534,13 +547,16 @@ public class TaskServiceImpl implements TaskService {
 
     this.controllerClient.terminateFlow(workflow.getId(), workflow.getName(), activity.getId());
     boolean workflowCompleted = dagUtility.validateWorkflow(activity);
-    
+
     if (activity.getStatusOverride() != null) {
+      // Workflow activity changed to the override status
       activity.setStatus(activity.getStatusOverride());
     } else {
       if (workflowCompleted) {
+        // Workflow activity changed to completed
         activity.setStatus(TaskStatus.completed);
       } else {
+        // Workflow activity changed to failure
         activity.setStatus(TaskStatus.failure);
       }
     }
@@ -714,12 +730,10 @@ public class TaskServiceImpl implements TaskService {
 
 
         newTask.setDecisionValue(dagTask.getDecisionValue());
-      } else if (dagTask.getType() == TaskType.manual 
-          || dagTask.getType() == TaskType.runworkflow
+      } else if (dagTask.getType() == TaskType.manual || dagTask.getType() == TaskType.runworkflow
           || dagTask.getType() == TaskType.runscheduledworkflow
           || dagTask.getType() == TaskType.setwfproperty
-          || dagTask.getType() == TaskType.setwfstatus
-          || dagTask.getType() == TaskType.acquirelock
+          || dagTask.getType() == TaskType.setwfstatus || dagTask.getType() == TaskType.acquirelock
           || dagTask.getType() == TaskType.releaselock) {
 
         TaskExecutionEntity task =
