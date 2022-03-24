@@ -27,7 +27,6 @@ public class UserValidationServiceImpl implements UserValidationService {
   @Autowired
   private FlowWorkflowService workflowRepository;
 
-
   @Override
   public void validateUserForTeam(String teamId) {
     FlowUserEntity user = userIdentityService.getCurrentUser();
