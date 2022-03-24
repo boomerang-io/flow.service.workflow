@@ -28,9 +28,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.boomerang.client.model.Team;
 import io.boomerang.error.BoomerangError;
 import io.boomerang.error.BoomerangException;
 import io.boomerang.model.DuplicateRequest;
@@ -61,7 +59,6 @@ import io.boomerang.mongo.model.Trigger;
 import io.boomerang.mongo.model.TriggerEvent;
 import io.boomerang.mongo.model.TriggerScheduler;
 import io.boomerang.mongo.model.Triggers;
-import io.boomerang.mongo.model.UserType;
 import io.boomerang.mongo.model.WorkflowProperty;
 import io.boomerang.mongo.model.WorkflowScope;
 import io.boomerang.mongo.model.WorkflowStatus;
@@ -71,6 +68,7 @@ import io.boomerang.mongo.service.FlowTaskTemplateService;
 import io.boomerang.mongo.service.FlowWorkflowActivityService;
 import io.boomerang.mongo.service.FlowWorkflowService;
 import io.boomerang.mongo.service.RevisionService;
+import io.boomerang.security.service.UserValidationService;
 import io.boomerang.service.PropertyManager;
 import io.boomerang.service.UserIdentityService;
 import io.boomerang.service.runner.misc.ControllerClient;
@@ -109,6 +107,9 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   @Autowired
   private FlowSettingsService flowSettingsService;
+  
+  @Autowired
+  private UserValidationService userValidationService;
 
   @Value("${max.workflow.count}")
   private Integer maxWorkflowCount;
@@ -241,6 +242,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   @Override
   public WorkflowSummary updateWorkflow(WorkflowSummary summary) {
+    userValidationService.validateUserForWorkflow(summary.getId());
     final WorkflowEntity entity = workflowRepository.getWorkflow(summary.getId());
 
     entity.setFlowTeamId(summary.getFlowTeamId());
@@ -326,36 +328,10 @@ public class WorkflowServiceImpl implements WorkflowService {
     final WorkflowEntity entity = workflowRepository.getWorkflow(workflowId);
 
     if (entity.getScope() == WorkflowScope.team) {
-      FlowUserEntity user = userIdentityService.getCurrentUser();
-
-      FlowTeam team = teamService
-          .getTeamByIdDetailed(workflowRepository.getWorkflow(workflowId).getFlowTeamId());
-
-      List<String> userIds = new ArrayList<>();
-      if (team.getUsers() != null) {
-        for (FlowUserEntity teamUser : team.getUsers()) {
-          userIds.add(teamUser.getId());
-        }
-      }
-
-      List<String> userTeamIds = new ArrayList<>();
-      if (user.getTeams() != null) {
-        for (Team userTeam : user.getTeams()) {
-          userTeamIds.add(userTeam.getId());
-        }
-      }
-
-      if (user.getType() == UserType.admin || user.getType() == UserType.operator
-          || userIds.contains(user.getId()) || userTeamIds.contains(team.getHigherLevelGroupId())) {
-
-        entity.setProperties(properties);
-
-        workflowRepository.saveWorkflow(entity);
-
-        return new WorkflowSummary(entity);
-      } else {
-        throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-      }
+      userValidationService.validateUserForWorkflow(workflowId);
+      entity.setProperties(properties);
+      workflowRepository.saveWorkflow(entity);
+      return new WorkflowSummary(entity);
     } else {
       entity.setProperties(properties);
       workflowRepository.saveWorkflow(entity);
@@ -1145,5 +1121,4 @@ public class WorkflowServiceImpl implements WorkflowService {
     }
     return summaryList;
   }
-
 }

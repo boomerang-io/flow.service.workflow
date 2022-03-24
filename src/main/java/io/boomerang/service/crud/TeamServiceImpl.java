@@ -51,6 +51,7 @@ import io.boomerang.mongo.service.FlowTeamService;
 import io.boomerang.mongo.service.FlowUserService;
 import io.boomerang.mongo.service.FlowWorkflowActivityService;
 import io.boomerang.mongo.service.FlowWorkflowService;
+import io.boomerang.security.service.UserValidationService;
 import io.boomerang.service.UserIdentityService;
 
 @Service
@@ -82,6 +83,9 @@ public class TeamServiceImpl implements TeamService {
 
   @Autowired
   private FlowSettingsService flowSettingsService;
+
+  @Autowired
+  private UserValidationService userValidationService;
 
   public static final String TEAMS = "teams";
   public static final String MAX_TEAM_WORKFLOW_COUNT = "max.team.workflow.count";
@@ -149,6 +153,7 @@ public class TeamServiceImpl implements TeamService {
   @Override
   public FlowTeamConfiguration createNewTeamProperty(String teamId,
       FlowTeamConfiguration property) {
+    userValidationService.validateUserForTeam(teamId);
     TeamEntity flowTeamEntity = flowTeamService.findById(teamId);
 
     if (flowTeamEntity.getSettings() == null) {
@@ -269,6 +274,7 @@ public class TeamServiceImpl implements TeamService {
 
   @Override
   public List<FlowTeamConfiguration> getAllTeamProperties(String teamId) {
+    userValidationService.validateUserForTeam(teamId);
     TeamEntity flowTeamEntity = flowTeamService.findById(teamId);
 
     if (flowTeamEntity.getSettings() != null
@@ -418,6 +424,7 @@ public class TeamServiceImpl implements TeamService {
 
   @Override
   public WorkflowQuotas getTeamQuotas(String teamId) {
+    userValidationService.validateUserForTeam(teamId);
     TeamEntity team = flowTeamService.findById(teamId);
 
     if (team == null) {
@@ -610,6 +617,7 @@ public class TeamServiceImpl implements TeamService {
 
   @Override
   public Quotas updateQuotasForTeam(String teamId, Quotas quotas) {
+    userValidationService.validateUserForTeam(teamId);
     TeamEntity team = flowTeamService.findById(teamId);
     team.setQuotas(quotas);
     return flowTeamService.save(team).getQuotas();
@@ -671,6 +679,7 @@ public class TeamServiceImpl implements TeamService {
 
   @Override
   public void updateTeam(String teamId, FlowTeam flow) {
+    validateUser();
     TeamEntity team = flowTeamService.findById(teamId);
     if (flow.getName() != null) {
       team.setName(flow.getName());
@@ -749,6 +758,7 @@ public class TeamServiceImpl implements TeamService {
 
   @Override
   public Quotas updateTeamQuotas(String teamId, Quotas quotas) {
+    userValidationService.validateUserForTeam(teamId);
     TeamEntity team = flowTeamService.findById(teamId);
 
     if (team.getQuotas() == null) {
