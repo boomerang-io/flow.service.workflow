@@ -962,6 +962,4 @@ public class TeamServiceImpl implements TeamService {
     team.setLabels(labels);
     return flowTeamService.save(team);
   }
-
-
 }
