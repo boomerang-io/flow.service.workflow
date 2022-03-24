@@ -41,10 +41,17 @@ public class ConfigurationServiceImpl implements ConfigurationService {
         setConfigsValue(setting, entity);
       }
       entity.setLastModiifed(DateUtil.asDate(LocalDateTime.now()));
-
+      if (entity.getKey().equals("eventing")) {
+        boolean eventingDisabled = !entity.getConfig().stream()
+            .filter(c -> c.getKey().equals("enable.eventing")).findFirst().get().getBooleanValue();
+        if (eventingDisabled) {
+          for (Config config : entity.getConfig()) {
+            config.setValue("false");
+          }
+        }
+      }
       serviceSettings.updateConfiguration(entity);
     }
-
     return this.getAllSettings();
   }
 
