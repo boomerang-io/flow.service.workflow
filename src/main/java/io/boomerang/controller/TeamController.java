@@ -68,6 +68,7 @@ public class TeamController {
 
   @GetMapping(value = "/teams/{teamId}/properties")
   public List<FlowTeamConfiguration> getAllTeamProperties(@PathVariable String teamId) {
+    userValidationService.validateUserForTeam(teamId);
     return flowTeamService.getAllTeamProperties(teamId);
   }
   
@@ -91,6 +92,7 @@ public class TeamController {
   @PostMapping(value = "/teams/{teamId}/properties")
   public FlowTeamConfiguration createNewTeamProperty(@PathVariable String teamId,
       @RequestBody FlowTeamConfiguration property) {
+    userValidationService.validateUserForTeam(teamId);
     return flowTeamService.createNewTeamProperty(teamId, property);
   }
 
@@ -107,11 +109,13 @@ public class TeamController {
 
   @PatchMapping(value = "/teams/{teamId}/quotas")
   public Quotas updateTeamQuotas(@PathVariable String teamId, @RequestBody Quotas quotas) {
+    userValidationService.validateUserForTeam(teamId);
     return flowTeamService.updateTeamQuotas(teamId, quotas);
   }
 
   @PutMapping(value = "/teams/{teamId}/quotas")
   public Quotas updateQuotasForTeam(@PathVariable String teamId, @RequestBody Quotas quotas) {
+    userValidationService.validateUserForTeam(teamId);
     return flowTeamService.updateQuotasForTeam(teamId, quotas);
   }
 
