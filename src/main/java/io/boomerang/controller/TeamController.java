@@ -32,6 +32,7 @@ import io.boomerang.mongo.entity.FlowUserEntity;
 import io.boomerang.mongo.entity.TeamEntity;
 import io.boomerang.mongo.model.Quotas;
 import io.boomerang.mongo.model.UserType;
+import io.boomerang.security.service.UserValidationService;
 import io.boomerang.service.UserIdentityService;
 import io.boomerang.service.crud.TeamService;
 
@@ -44,6 +45,9 @@ public class TeamController {
 
   @Autowired
   private UserIdentityService userIdentityService;
+  
+  @Autowired
+  private UserValidationService userValidationService;
 
   @PostMapping(value = "/teams")
   public void createCiTeam(@RequestBody CreateFlowTeam createCiTeamRequest) {
@@ -92,6 +96,7 @@ public class TeamController {
 
   @GetMapping(value = "/teams/{teamId}/quotas")
   public WorkflowQuotas getTeamQuotas(@PathVariable String teamId) {
+    userValidationService.validateUserForTeam(teamId);
     return flowTeamService.getTeamQuotas(teamId);
   }
 

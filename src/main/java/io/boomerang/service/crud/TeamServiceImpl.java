@@ -424,7 +424,6 @@ public class TeamServiceImpl implements TeamService {
 
   @Override
   public WorkflowQuotas getTeamQuotas(String teamId) {
-    userValidationService.validateUserForTeam(teamId);
     TeamEntity team = flowTeamService.findById(teamId);
 
     if (team == null) {
