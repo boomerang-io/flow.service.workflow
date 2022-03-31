@@ -1,4 +1,4 @@
-package io.boomerang.miscs.controller;
+package io.boomerang.tests.controller;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.springframework.test.web.client.ExpectedCount.times;
@@ -30,7 +30,6 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 import io.boomerang.controller.ActivityController;
 import io.boomerang.misc.FlowTests;
 import io.boomerang.model.FlowActivity;
-import io.boomerang.model.InsightsSummary;
 import io.boomerang.model.ListActivityResponse;
 import io.boomerang.mongo.model.TaskStatus;
 
@@ -105,25 +104,6 @@ class ActivityControllerTests extends FlowTests {
     Assertions.assertEquals(Integer.valueOf(6), response.getPageable().getNumberOfElements());
     Assertions.assertEquals(Long.valueOf(6), response.getPageable().getTotalElements());
     Assertions.assertEquals(Integer.valueOf(1), response.getPageable().getTotalPages());
-  }
-
-
-  @Test
-  void testGetInsightsSummary() {
-    InsightsSummary summary = activityController.getInsightsSummary(getOptionalOrder(Direction.ASC),
-        getOptionalString("sort"), getOptionalString("5d1a1841f6ca2c00014c4309"), 0, 2147483647,
-        Optional.empty(), Optional.empty());
-
-    Assertions.assertEquals(6, summary.getExecutions().size());
-    Long executiontime =
-        (summary.getExecutions().get(0).getDuration() + summary.getExecutions().get(1).getDuration()
-            + summary.getExecutions().get(2).getDuration()
-            + summary.getExecutions().get(3).getDuration()
-            + summary.getExecutions().get(4).getDuration()
-            + summary.getExecutions().get(5).getDuration()) / summary.getExecutions().size();
-    Assertions.assertEquals(executiontime, summary.getMedianExecutionTime());
-    Assertions.assertEquals(6, summary.getTotalActivitiesExecuted().intValue());
-
   }
 
   @Test

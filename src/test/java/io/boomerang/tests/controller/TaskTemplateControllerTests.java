@@ -1,4 +1,4 @@
-package io.boomerang.miscs.controller;
+package io.boomerang.tests.controller;
 
 import java.util.ArrayList;
 import java.util.List;

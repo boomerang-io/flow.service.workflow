@@ -1,4 +1,4 @@
-package io.boomerang.miscs.controller;
+package io.boomerang.tests.controller;
 
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
