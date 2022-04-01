@@ -223,6 +223,11 @@ public class WorkflowServiceImpl implements WorkflowService {
       flowWorkflowEntity.getTriggers().setManual(manual);
     }
 
+    if (flowWorkflowEntity.getTriggers().getScheduler() == null) {
+      TriggerScheduler schedule = new TriggerScheduler();
+      flowWorkflowEntity.getTriggers().setScheduler(schedule);
+    }
+
     if (flowWorkflowEntity.getTriggers().getCustom() == null) {
       TriggerEvent custom = new TriggerEvent();
       flowWorkflowEntity.getTriggers().setCustom(custom);
