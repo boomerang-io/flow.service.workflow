@@ -199,7 +199,7 @@ public class EventProcessorImpl implements EventProcessor {
       cloudEventLabels.add(property);
       executionRequest.setLabels(cloudEventLabels);
       executionRequest.setProperties(processProperties(eventData, workflowId));
-
+      executionRequest.setEventProperties(processEventProperties(eventData));
       FlowActivity activity = executionService.executeWorkflow(workflowId, Optional.of(trigger),
           Optional.of(executionRequest), Optional.empty());
       response.setActivityId(activity.getId());
@@ -231,7 +231,16 @@ public class EventProcessorImpl implements EventProcessor {
     return null;
   }
 
-  /*
+  private Map<String, String> processEventProperties(JsonNode eventData) {
+	
+	String initiator_id = "initiator_id";
+	String context = "context";
+	Map<String, String> result = new HashMap<>();
+	//get Event properties from JsonPath?
+	return result;
+}
+
+/*
    * Loop through a Workflow's parameters and if a JsonPath is set
    * read the event payload and attempt to find a payload.
    * 

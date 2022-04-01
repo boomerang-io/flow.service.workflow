@@ -10,6 +10,15 @@ public class FlowExecutionRequest {
   private boolean applyQuotas;
   
   private Map<String, String> properties;
+  private Map<String, String> eventProperties;
+
+  public Map<String, String> getEventProperties() {
+	return eventProperties;
+  }
+
+  public void setEventProperties(Map<String, String> eventProperties) {
+	this.eventProperties = eventProperties;
+  }
 
   public Map<String, String> getProperties() {
     return properties;
