@@ -21,7 +21,7 @@ import io.boomerang.mongo.model.FlowTriggerEnum;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT)
-@ActiveProfiles("test")
+@ActiveProfiles("local")
 @WithMockUser(roles = {"admin"})
 @WithUserDetails("mdroy@us.ibm.com")
 public class ExecutionControllerTests extends FlowTests {

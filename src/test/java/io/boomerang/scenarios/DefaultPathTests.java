@@ -34,7 +34,7 @@ import io.boomerang.tests.MongoConfig;
 @SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT)
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = {Application.class, MongoConfig.class})
-@ActiveProfiles("test")
+@ActiveProfiles("local")
 @Disabled
 public class DefaultPathTests extends IntegrationTests {
 
