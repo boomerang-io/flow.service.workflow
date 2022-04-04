@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.util.Calendar;
 import java.util.Date;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -68,7 +67,7 @@ public class SchedulesControllerTests extends FlowTests {
     assertEquals(false, response.isValid());
     assertEquals(null, response.getCron());
     assertEquals(
-        "Failed to parse '0 * * * * *'. Invalid cron expression: 0 * * * * *. Both, a day-of-week AND a day-of-month parameter, are not supported.",
+        "Failed to parse cron expression. Invalid cron expression: 0 * * * * *. Both, a day-of-week AND a day-of-month parameter, are not supported.",
         response.getMessage());
 
     response = controller.validateCron("0 * * ? * *");

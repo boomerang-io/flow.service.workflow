@@ -254,7 +254,7 @@ public class WorkflowControllerTests extends FlowTests {
 
     Assertions.assertEquals(true, updatedEntity.getTriggers().getScheduler().getEnable());
     Assertions.assertEquals(false, updatedEntity.getTriggers().getWebhook().getEnable());
-    Assertions.assertEquals("A5DF2F840C0DFF496D516B4F75BD947C9BC44756A8AE8571FC45FCB064323641",
+    Assertions.assertEquals("token",
         updatedEntity.getTriggers().getWebhook().getToken());
   }
 
