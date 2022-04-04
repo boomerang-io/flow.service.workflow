@@ -1,7 +1,7 @@
 package net.boomerangplatform.scenarios;
 
 import static org.hamcrest.CoreMatchers.containsString;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.client.ExpectedCount.times;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.jsonPath;
@@ -15,9 +15,9 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import net.boomerangplatform.model.FlowActivity;
 import net.boomerangplatform.model.FlowWebhookResponse;
@@ -32,12 +32,12 @@ import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.client.MockRestServiceServer;
 
-@RunWith(SpringJUnit4ClassRunner.class)
+@ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT)
-@ActiveProfiles("local")
+@ActiveProfiles("test")
 @WithMockUser(roles = {"admin"})
 @WithUserDetails("mdroy@us.ibm.com")
 public class SimpleExecuteTests extends IntegrationTests {
@@ -59,7 +59,7 @@ public class SimpleExecuteTests extends IntegrationTests {
     taskWorkspace.setOptional(false);
     taskWorkspace.setReadOnly(false);
     taskWorkspace.setWorkspaceId("12345");
-    taskWorkspace.setWorkspaceName("Test");
+    taskWorkspace.setWorkspaceName("test");
 
     List<TaskWorkspace> taskWorkspaceList = new LinkedList<>();
     taskWorkspaceList.add(taskWorkspace);
@@ -80,7 +80,7 @@ public class SimpleExecuteTests extends IntegrationTests {
   }
 
   @Override
-  @Before
+  @BeforeEach
   public void setUp() throws IOException {
     super.setUp();
     mockServer = MockRestServiceServer.bindTo(this.restTemplate).ignoreExpectOrder(true).build();

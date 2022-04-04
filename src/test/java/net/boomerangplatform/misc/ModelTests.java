@@ -1,6 +1,6 @@
 package net.boomerangplatform.misc;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import com.openpojo.reflection.filters.FilterPackageInfo;
 import com.openpojo.validation.Validator;
 import com.openpojo.validation.ValidatorBuilder;

@@ -15,16 +15,13 @@ import de.flapdoodle.embed.mongo.Command;
 import de.flapdoodle.embed.mongo.MongodExecutable;
 import de.flapdoodle.embed.mongo.MongodProcess;
 import de.flapdoodle.embed.mongo.MongodStarter;
-import de.flapdoodle.embed.mongo.config.DownloadConfigBuilder;
-import de.flapdoodle.embed.mongo.config.ExtractedArtifactStoreBuilder;
-import de.flapdoodle.embed.mongo.config.IMongodConfig;
-import de.flapdoodle.embed.mongo.config.MongodConfigBuilder;
-import de.flapdoodle.embed.mongo.config.RuntimeConfigBuilder;
+import de.flapdoodle.embed.mongo.config.Defaults;
+import de.flapdoodle.embed.mongo.config.MongodConfig;
 import de.flapdoodle.embed.mongo.distribution.Version;
-import de.flapdoodle.embed.process.config.IRuntimeConfig;
+import de.flapdoodle.embed.process.config.RuntimeConfig;
 import de.flapdoodle.embed.process.config.io.ProcessOutput;
+import de.flapdoodle.embed.process.config.store.DownloadConfig;
 import de.flapdoodle.embed.process.config.store.HttpProxyFactory;
-import de.flapdoodle.embed.process.config.store.IDownloadConfig;
 
 @Configurable
 public class MongoConfig implements InitializingBean, DisposableBean {
@@ -44,33 +41,35 @@ public class MongoConfig implements InitializingBean, DisposableBean {
   public void afterPropertiesSet() throws Exception {
     String proxyHost = System.getProperty("http.proxyHost");
     String proxyPort = System.getProperty("http.proxyPort");
-
-    MongodStarter starter;
+    
+    MongodStarter starter = null;
     ProcessOutput processOutput = enableMongoLogs ? ProcessOutput.getDefaultInstance("mongo")
         : ProcessOutput.getDefaultInstanceSilent();
     Command command = Command.MongoD;
-    if (!StringUtils.isEmpty(proxyHost) && !StringUtils.isEmpty(proxyPort)) {
+    if (StringUtils.hasText(proxyHost) && StringUtils.hasText(proxyPort)) {
 
-      final IDownloadConfig downloadConfig = new DownloadConfigBuilder().defaultsForCommand(command)
+      final DownloadConfig downloadConfig = Defaults.downloadConfigFor(command)
           .proxyFactory(new HttpProxyFactory(proxyHost, Integer.parseInt(proxyPort))).build();
 
-      IRuntimeConfig runtimeConfig =
-          new RuntimeConfigBuilder().defaults(command).processOutput(processOutput)
-              .artifactStore(
-                  new ExtractedArtifactStoreBuilder().defaults(command).download(downloadConfig))
+      RuntimeConfig runtimeConfig =
+          Defaults.runtimeConfigFor(command).processOutput(processOutput).artifactStore(
+              Defaults.extractedArtifactStoreFor(command).withDownloadConfig(downloadConfig))
               .build();
+
       starter = MongodStarter.getInstance(runtimeConfig);
     } else {
-      IRuntimeConfig runtimeConfig =
-          new RuntimeConfigBuilder().defaults(command).processOutput(processOutput).build();
+      RuntimeConfig runtimeConfig =
+          Defaults.runtimeConfigFor(command).processOutput(processOutput).build();
       starter = MongodStarter.getInstance(runtimeConfig);
     }
+    if (starter != null) {
 
-    IMongodConfig mongodConfig = new MongodConfigBuilder().version(Version.Main.PRODUCTION).build();
-    executable = starter.prepare(mongodConfig);
-    MongodProcess mongodProcess = executable.start();
+      MongodConfig mongodConfig = MongodConfig.builder().version(Version.Main.PRODUCTION).build();
+      executable = starter.prepare(mongodConfig);
+      MongodProcess mongodProcess = executable.start();
 
-    this.mongoPort = mongodProcess.getConfig().net().getPort();
+      this.mongoPort = mongodProcess.getConfig().net().getPort();
+    }
   }
 
 

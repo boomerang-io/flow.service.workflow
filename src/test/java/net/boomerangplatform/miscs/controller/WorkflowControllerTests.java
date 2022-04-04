@@ -1,19 +1,19 @@
 package net.boomerangplatform.miscs.controller;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
@@ -25,7 +25,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import net.boomerangplatform.controller.InternalController;
@@ -50,9 +50,9 @@ import net.boomerangplatform.mongo.model.WorkflowScope;
 import net.boomerangplatform.mongo.model.WorkflowStatus;
 
 
-@RunWith(SpringJUnit4ClassRunner.class)
+@ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT)
-@ActiveProfiles("local")
+@ActiveProfiles("test")
 @WithMockUser(roles = {"admin"})
 @WithUserDetails("mdroy@us.ibm.com")
 public class WorkflowControllerTests extends FlowTests {
@@ -225,7 +225,7 @@ public class WorkflowControllerTests extends FlowTests {
   }
 
   @Test
-  @Ignore
+  @Disabled
   public void testUpdateWorkflowTriggers() {
 
     TriggerScheduler scheduler = new TriggerScheduler();
@@ -265,7 +265,7 @@ public class WorkflowControllerTests extends FlowTests {
   }
 
   @Test
-  @Ignore
+  @Disabled
   public void testUpdateWorkflowTriggerNull() {
 
     WorkflowSummary entity = controller.getWorkflowWithId("5d1a188af6ca2c00014c4314");
@@ -281,7 +281,7 @@ public class WorkflowControllerTests extends FlowTests {
   }
 
   @Test
-  @Ignore
+  @Disabled
   public void testUpdateWorkflowTriggerEvent() {
 
   }

@@ -11,6 +11,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import com.github.alturkovic.lock.mongo.configuration.EnableMongoDistributedLock;
+import io.swagger.v3.oas.models.OpenAPI;
 
 @SpringBootApplication
 @EnableScheduling
@@ -46,6 +47,11 @@ public class Application {
     executor.setThreadNamePrefix("WorfklowServiceExecutor-");
     executor.initialize();
     return executor;
+  }
+  
+  @Bean
+  public OpenAPI api() {
+    return new OpenAPI();
   }
 
 }

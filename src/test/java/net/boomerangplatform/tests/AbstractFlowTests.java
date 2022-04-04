@@ -6,8 +6,8 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.bson.Document;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -25,14 +25,14 @@ public abstract class AbstractFlowTests {
 
   protected abstract String[] getCollections();
 
-  @Before
+  @BeforeEach
   public void setUp() throws IOException {
     init();
     clearAllCollections();
     setupDB();
   }
 
-  @After
+  @AfterEach
   public void tearDown() {
 
   }

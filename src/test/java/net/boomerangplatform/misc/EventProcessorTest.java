@@ -1,6 +1,5 @@
 package net.boomerangplatform.misc;
 
-import static org.junit.Assert.assertNotNull;
 import java.io.IOException;
 import java.net.URI;
 import java.time.ZonedDateTime;
@@ -9,7 +8,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.Configuration;
