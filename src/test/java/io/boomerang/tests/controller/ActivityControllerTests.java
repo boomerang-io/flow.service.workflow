@@ -1,6 +1,7 @@
 package io.boomerang.tests.controller;
 
 import static org.hamcrest.CoreMatchers.containsString;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.client.ExpectedCount.times;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
@@ -16,6 +17,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -31,7 +33,11 @@ import io.boomerang.controller.ActivityController;
 import io.boomerang.misc.FlowTests;
 import io.boomerang.model.FlowActivity;
 import io.boomerang.model.ListActivityResponse;
+import io.boomerang.mongo.entity.FlowUserEntity;
 import io.boomerang.mongo.model.TaskStatus;
+import io.boomerang.mongo.model.TokenScope;
+import io.boomerang.mongo.model.UserType;
+import io.boomerang.service.UserIdentityService;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT)
@@ -42,6 +48,9 @@ class ActivityControllerTests extends FlowTests {
 
   @Autowired
   private ActivityController activityController;
+  
+  @MockBean
+  private UserIdentityService service;
 
   @Test
   void testGetFlowActivity() {
@@ -65,6 +74,15 @@ class ActivityControllerTests extends FlowTests {
 
   @Test
   void testGetFlowActivitiesTeamAndWorkflowFiltered() {
+    
+    FlowUserEntity user = new FlowUserEntity();
+    user.setEmail("amhudson@us.ibm.com");
+    user.setName("Adrienne Hudson");
+    user.setType(UserType.admin);
+
+    when(service.getCurrentScope()).thenReturn(TokenScope.user);
+    when(service.getCurrentUser()).thenReturn(user);
+    
     List<String> workflowIds = new ArrayList<>();
     workflowIds.add("5d1a188af6ca2c00014c4314");
 
@@ -89,6 +107,15 @@ class ActivityControllerTests extends FlowTests {
 
   @Test
   void testGetFlowActivitiesTeamFiltered() {
+    
+    FlowUserEntity user = new FlowUserEntity();
+    user.setEmail("amhudson@us.ibm.com");
+    user.setName("Adrienne Hudson");
+    user.setType(UserType.admin);
+
+    when(service.getCurrentScope()).thenReturn(TokenScope.user);
+    when(service.getCurrentUser()).thenReturn(user);
+    
 
     List<String> teamIds = new ArrayList<>();
     teamIds.add("5d1a1841f6ca2c00014c4309");
@@ -108,6 +135,14 @@ class ActivityControllerTests extends FlowTests {
 
   @Test
   void testGetActivitySummary() {
+    FlowUserEntity user = new FlowUserEntity();
+    user.setEmail("amhudson@us.ibm.com");
+    user.setName("Adrienne Hudson");
+    user.setType(UserType.admin);
+
+    when(service.getCurrentScope()).thenReturn(TokenScope.user);
+    when(service.getCurrentUser()).thenReturn(user);
+    
     Map<String, Long> activitySummary = activityController.getFlowActivitySummary(Direction.ASC, 0,
         2147483647, null, Optional.empty(), null, Optional.empty(), Optional.empty(), null, null);
 
