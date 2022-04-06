@@ -26,7 +26,7 @@ import io.cloudevents.v1.AttributesImpl;
 import io.cloudevents.v1.http.Unmarshallers;
 
 @ExtendWith(SpringExtension.class)
-@SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT)
+@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("local")
 @WithMockUser(roles = {"admin"})
 @WithUserDetails("mdroy@us.ibm.com")
@@ -35,24 +35,17 @@ public class TestCloudEvent {
   @Test
   public void testCloudEvent() {
     Map<String, Object> headers = new HashMap<>();
-    String natsMessage = "{\n"
-        + "  \"data\" : {\n"
-        + "    \"name\" : \"tyson\"\n"
-        + "  },\n"
+    String natsMessage = "{\n" + "  \"data\" : {\n" + "    \"name\" : \"tyson\"\n" + "  },\n"
         + "  \"id\" : \"145d1c2c-5ea0-4ba8-a354-aa3bad8209c9\",\n"
         + "  \"source\" : \"http://wdc2.cloud.boomerangplatform.net/listener/webhook/wfe\",\n"
-        + "  \"specversion\" : \"1.0\",\n"
-        + "  \"type\" : \"io.boomerang.eventing.wfe\",\n"
+        + "  \"specversion\" : \"1.0\",\n" + "  \"type\" : \"io.boomerang.eventing.wfe\",\n"
         + "  \"subject\" : \"/5f7f8cf69a7d401d9e584c90/6010b41bbadf2e7743e03324/bar\",\n"
-        + "  \"time\" : 1.6117074537076776E9,\n"
-        + "  \"status\" : \"success\"\n"
-        + "}"; 
+        + "  \"time\" : 1.6117074537076776E9,\n" + "  \"status\" : \"success\"\n" + "}";
     try {
-      
+
       ZonedDateTime now = ZonedDateTime.now();
-      String formattedDate = DateTimeFormatter.
-          ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSSSSS").
-          format(now) + 'Z';
+      String formattedDate =
+          DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSSSSS").format(now) + 'Z';
       JsonNode timeNode = new TextNode(formattedDate);
       JsonNode payload = getJsonNode(natsMessage);
       ((ObjectNode) payload).set("time", timeNode);

@@ -11,8 +11,8 @@ import com.openpojo.validation.test.impl.SetterTester;
 
 public class ModelTests {
 
-  private static final String[] packages = {"io.boomerang.model","io.boomerang.mongo.entity",
-      "io.boomerang.model.profile"};
+  private static final String[] packages =
+      {"io.boomerang.model", "io.boomerang.mongo.entity", "io.boomerang.model.profile"};
 
   @Test
   public void verifyExternalServiceModels() {

@@ -50,10 +50,10 @@ public class MongoConfig implements InitializingBean, DisposableBean {
       final DownloadConfig downloadConfig = Defaults.downloadConfigFor(command)
           .proxyFactory(new HttpProxyFactory(proxyHost, Integer.parseInt(proxyPort))).build();
 
-      RuntimeConfig runtimeConfig =
-          Defaults.runtimeConfigFor(command).processOutput(processOutput).artifactStore(
+      RuntimeConfig runtimeConfig = Defaults.runtimeConfigFor(command).processOutput(processOutput)
+          .artifactStore(
               Defaults.extractedArtifactStoreFor(command).withDownloadConfig(downloadConfig))
-              .build();
+          .build();
 
       starter = MongodStarter.getInstance(runtimeConfig);
     } else {

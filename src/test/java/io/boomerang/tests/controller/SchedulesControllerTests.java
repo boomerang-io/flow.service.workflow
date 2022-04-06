@@ -24,7 +24,7 @@ import io.boomerang.service.crud.WorkflowScheduleService;
 
 
 @ExtendWith(SpringExtension.class)
-@SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT)
+@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("local")
 @WithMockUser(roles = {"admin"})
 @WithUserDetails("mdroy@us.ibm.com")
@@ -32,14 +32,14 @@ public class SchedulesControllerTests extends FlowTests {
 
   @Autowired
   private SchedulesController controller;
-  
+
   @Autowired
   private WorkflowScheduleService workflowScheduleService;
-  
+
   @Test
   /*
-   * Test creates a new RunOnce schedule 7 days in the future
-   * Similar to the method used in TaskServiceImpl for the Run Scheduled Workflow System Task
+   * Test creates a new RunOnce schedule 7 days in the future Similar to the method used in
+   * TaskServiceImpl for the Run Scheduled Workflow System Task
    */
   public void testCreateWorkflowSchedule() {
 
@@ -99,11 +99,12 @@ public class SchedulesControllerTests extends FlowTests {
     assertEquals(true, response.isValid());
     assertEquals("0 * * * * ? *", response.getCron());
     assertEquals(null, response.getMessage());
-    
+
     response = controller.validateCron("1 1 1 1 1");
     assertEquals(false, response.isValid());
     assertEquals(null, response.getCron());
-    assertEquals("Cron expression contains 5 parts but we expect one of [6, 7]", response.getMessage());
+    assertEquals("Cron expression contains 5 parts but we expect one of [6, 7]",
+        response.getMessage());
 
   }
 }

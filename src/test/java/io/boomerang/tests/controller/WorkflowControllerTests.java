@@ -50,7 +50,7 @@ import io.boomerang.mongo.model.WorkflowStatus;
 
 
 @ExtendWith(SpringExtension.class)
-@SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT)
+@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("local")
 @WithMockUser(roles = {"admin"})
 @WithUserDetails("mdroy@us.ibm.com")
@@ -254,8 +254,7 @@ public class WorkflowControllerTests extends FlowTests {
 
     Assertions.assertEquals(true, updatedEntity.getTriggers().getScheduler().getEnable());
     Assertions.assertEquals(false, updatedEntity.getTriggers().getWebhook().getEnable());
-    Assertions.assertEquals("token",
-        updatedEntity.getTriggers().getWebhook().getToken());
+    Assertions.assertEquals("token", updatedEntity.getTriggers().getWebhook().getToken());
   }
 
   @Test

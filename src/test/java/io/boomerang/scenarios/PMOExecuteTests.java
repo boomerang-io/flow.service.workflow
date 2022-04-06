@@ -34,12 +34,12 @@ import io.boomerang.service.UserIdentityService;
 import io.boomerang.tests.IntegrationTests;
 
 @ExtendWith(SpringExtension.class)
-@SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT)
+@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("local")
 @WithMockUser(roles = {"admin"})
 @WithUserDetails("mdroy@us.ibm.com")
 class PMOExecuteTests extends IntegrationTests {
-  
+
   @MockBean
   private UserIdentityService service;
 
@@ -52,25 +52,25 @@ class PMOExecuteTests extends IntegrationTests {
 
     when(service.getCurrentScope()).thenReturn(TokenScope.user);
     when(service.getCurrentUser()).thenReturn(user);
-    
+
     String workflowId = "5fd0099a2dfe2d6d5e4295de";
 
     FlowActivity activity = submitWorkflow(workflowId);
 
     String id = activity.getId();
     Thread.sleep(10000);
-    
+
     List<Action> approvals = this.getApprovals();
 
     this.approveWorkflow(true, approvals.get(0).getId());
-    
+
     Thread.sleep(5000);
-    
+
     approvals = this.getApprovals();
 
-    
+
     this.approveWorkflow(true, approvals.get(0).getId());
-    
+
     Thread.sleep(5000);
     FlowActivity finalActivity = this.checkWorkflowActivity(id);
     Assertions.assertEquals(TaskStatus.completed, finalActivity.getStatus());
@@ -84,9 +84,9 @@ class PMOExecuteTests extends IntegrationTests {
     super.setUp();
     mockServer = MockRestServiceServer.bindTo(this.restTemplate).ignoreExpectOrder(true).build();
 
-//    mockServer.expect(manyTimes(), requestTo(containsString("internal/users/user")))
-//        .andExpect(method(HttpMethod.GET)).andRespond(
-//            withSuccess(getMockFile("mock/users/users.json"), MediaType.APPLICATION_JSON));
+    // mockServer.expect(manyTimes(), requestTo(containsString("internal/users/user")))
+    // .andExpect(method(HttpMethod.GET)).andRespond(
+    // withSuccess(getMockFile("mock/users/users.json"), MediaType.APPLICATION_JSON));
     mockServer.expect(times(1), requestTo(containsString("controller/workflow/execute")))
         .andExpect(method(HttpMethod.POST)).andRespond(withStatus(HttpStatus.OK));
 
@@ -100,9 +100,7 @@ class PMOExecuteTests extends IntegrationTests {
   @Override
   protected void getTestCaseData(Map<String, List<String>> data) {
     data.put("flow_workflows", Arrays.asList("tests/scenarios/pmo/pmo-workflow.json"));
-    data.put("flow_workflows_revisions",
-        Arrays.asList(
-            "tests/scenarios/pmo/pmo-revision1.json"));
+    data.put("flow_workflows_revisions", Arrays.asList("tests/scenarios/pmo/pmo-revision1.json"));
   }
 
 }

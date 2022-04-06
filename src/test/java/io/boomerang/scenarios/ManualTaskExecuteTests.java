@@ -34,18 +34,18 @@ import io.boomerang.service.UserIdentityService;
 import io.boomerang.tests.IntegrationTests;
 
 @ExtendWith(SpringExtension.class)
-@SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT)
+@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("local")
 @WithMockUser(roles = {"admin"})
 @WithUserDetails("mdroy@us.ibm.com")
 class ManualTaskExecuteTests extends IntegrationTests {
-  
+
   @MockBean
   private UserIdentityService service;
 
   @Test
   void testExecution() throws Exception {
-    
+
     FlowUserEntity user = new FlowUserEntity();
     user.setEmail("amhudson@us.ibm.com");
     user.setName("Adrienne Hudson");
@@ -53,7 +53,7 @@ class ManualTaskExecuteTests extends IntegrationTests {
 
     when(service.getCurrentScope()).thenReturn(TokenScope.user);
     when(service.getCurrentUser()).thenReturn(user);
-    
+
     String workflowId = "5f4fc9e95683833cf0b1335b";
     FlowActivity activity = submitWorkflow(workflowId);
     String id = activity.getId();
@@ -61,10 +61,10 @@ class ManualTaskExecuteTests extends IntegrationTests {
     FlowActivity waitingAprpoval = this.checkWorkflowActivity(id);
     Assertions.assertEquals(TaskStatus.inProgress, waitingAprpoval.getStatus());
     List<Action> approvals = this.getApprovals();
-    Assertions.assertEquals("Mark down here manual",  approvals.get(0).getInstructions());
-    
+    Assertions.assertEquals("Mark down here manual", approvals.get(0).getInstructions());
+
     this.approveWorkflow(true, approvals.get(0).getId());
-  
+
     Thread.sleep(5000);
     FlowActivity finalActivity = this.checkWorkflowActivity(id);
     Assertions.assertEquals(TaskStatus.completed, finalActivity.getStatus());
@@ -77,16 +77,16 @@ class ManualTaskExecuteTests extends IntegrationTests {
     super.setUp();
     mockServer = MockRestServiceServer.bindTo(this.restTemplate).ignoreExpectOrder(true).build();
 
-//    mockServer.expect(manyTimes(), requestTo(containsString("internal/users/user")))
-//        .andExpect(method(HttpMethod.GET)).andRespond(
-//            withSuccess(getMockFile("mock/users/users.json"), MediaType.APPLICATION_JSON));
+    // mockServer.expect(manyTimes(), requestTo(containsString("internal/users/user")))
+    // .andExpect(method(HttpMethod.GET)).andRespond(
+    // withSuccess(getMockFile("mock/users/users.json"), MediaType.APPLICATION_JSON));
     mockServer.expect(times(1), requestTo(containsString("controller/workflow/execute")))
         .andExpect(method(HttpMethod.POST)).andRespond(withStatus(HttpStatus.OK));
-    
-   
-        
+
+
+
     mockServer.expect(times(1), requestTo(containsString("controller/workflow/terminate")))
-    .andExpect(method(HttpMethod.POST)).andRespond(withStatus(HttpStatus.OK));
+        .andExpect(method(HttpMethod.POST)).andRespond(withStatus(HttpStatus.OK));
 
 
   }

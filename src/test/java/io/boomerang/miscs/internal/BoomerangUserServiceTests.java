@@ -25,7 +25,7 @@ import io.boomerang.client.model.UserProfile;
 import io.boomerang.misc.FlowTests;
 
 @ExtendWith(SpringExtension.class)
-@SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT)
+@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("local")
 @WithMockUser(roles = {"admin"})
 @WithUserDetails("mdroy@us.ibm.com")
@@ -37,7 +37,7 @@ class BoomerangUserServiceTests extends FlowTests {
   @Test
   void testGetUserProfile() {
     UserProfile userProfile = userService.getInternalUserProfile();
-    Assertions.assertEquals( "trbula@us.ibm.com", userProfile.getEmail());
+    Assertions.assertEquals("trbula@us.ibm.com", userProfile.getEmail());
   }
 
   @Override
@@ -49,8 +49,8 @@ class BoomerangUserServiceTests extends FlowTests {
     mockServer = MockRestServiceServer.bindTo(restTemplate).ignoreExpectOrder(true).build();
     mockServer
         .expect(manyTimes(), requestTo(containsString("http://localhost:8084/internal/users/user")))
-        .andExpect(method(HttpMethod.GET)).andRespond(
-            withSuccess(getMockFile("mock/users/users.json"), MediaType.APPLICATION_JSON));
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withSuccess(getMockFile("mock/users/users.json"), MediaType.APPLICATION_JSON));
 
   }
 }
