@@ -48,6 +48,7 @@ public class SchedulesControllerTests extends FlowTests {
     newSchedule.setType(WorkflowScheduleType.runOnce);
     newSchedule.setStatus(WorkflowScheduleStatus.active);
     newSchedule.setTimezone("Australia/Melbourne");
+    newSchedule.setWorkflowId("5d1a188af6ca2c00014c4314");
     Date executionDate = new Date();
     Calendar executionCal = Calendar.getInstance();
     executionCal.setTime(executionDate);
