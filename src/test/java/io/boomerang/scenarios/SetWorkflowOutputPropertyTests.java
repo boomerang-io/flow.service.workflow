@@ -31,7 +31,7 @@ import io.boomerang.mongo.model.TaskStatus;
 import io.boomerang.tests.IntegrationTests;
 
 @ExtendWith(SpringExtension.class)
-@SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT)
+@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("local")
 @WithMockUser(roles = {"admin"})
 @WithUserDetails("mdroy@us.ibm.com")
@@ -50,11 +50,11 @@ public class SetWorkflowOutputPropertyTests extends IntegrationTests {
     Assertions.assertNotNull(finalActivity.getDuration());
     mockServer.verify();
     List<KeyValuePair> outputProperties = finalActivity.getOutputProperties();
-    
+
     Assertions.assertEquals(1, outputProperties.size());
     KeyValuePair outputProperty = outputProperties.get(0);
-    Assertions.assertEquals("test-beep",outputProperty.getValue());
-    Assertions.assertEquals("bar",outputProperty.getKey());
+    Assertions.assertEquals("test-beep", outputProperty.getValue());
+    Assertions.assertEquals("bar", outputProperty.getKey());
   }
 
   @Override
@@ -64,8 +64,8 @@ public class SetWorkflowOutputPropertyTests extends IntegrationTests {
     mockServer = MockRestServiceServer.bindTo(this.restTemplate).ignoreExpectOrder(true).build();
 
     mockServer.expect(times(2), requestTo(containsString("internal/users/user")))
-        .andExpect(method(HttpMethod.GET)).andRespond(
-            withSuccess(getMockFile("mock/users/users.json"), MediaType.APPLICATION_JSON));
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withSuccess(getMockFile("mock/users/users.json"), MediaType.APPLICATION_JSON));
     mockServer.expect(times(1), requestTo(containsString("controller/workflow/execute")))
         .andExpect(method(HttpMethod.POST)).andRespond(withStatus(HttpStatus.OK));
     mockServer.expect(times(1), requestTo(containsString("controller/task/execute")))

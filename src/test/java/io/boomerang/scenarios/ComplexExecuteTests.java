@@ -31,14 +31,14 @@ import io.boomerang.mongo.model.TaskStatus;
 import io.boomerang.tests.IntegrationTests;
 
 @ExtendWith(SpringExtension.class)
-@SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT)
+@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("local")
 @WithMockUser(roles = {"admin"})
 @WithUserDetails("mdroy@us.ibm.com")
 class ComplexExecuteTests extends IntegrationTests {
 
   @Test
-   void testExecution() throws Exception {
+  void testExecution() throws Exception {
     String workflowId = "5f5fddd25683833cf0b133ff";
 
     FlowActivity activity = submitWorkflow(workflowId);
@@ -58,15 +58,15 @@ class ComplexExecuteTests extends IntegrationTests {
     mockServer = MockRestServiceServer.bindTo(this.restTemplate).ignoreExpectOrder(true).build();
 
     mockServer.expect(manyTimes(), requestTo(containsString("internal/users/user")))
-        .andExpect(method(HttpMethod.GET)).andRespond(
-            withSuccess(getMockFile("mock/users/users.json"), MediaType.APPLICATION_JSON));
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withSuccess(getMockFile("mock/users/users.json"), MediaType.APPLICATION_JSON));
     mockServer.expect(times(1), requestTo(containsString("controller/workflow/execute")))
-        .andExpect(jsonPath("$.labels.foo").value("bar"))
-        .andExpect(method(HttpMethod.POST)).andRespond(withStatus(HttpStatus.OK));
+        .andExpect(jsonPath("$.labels.foo").value("bar")).andExpect(method(HttpMethod.POST))
+        .andRespond(withStatus(HttpStatus.OK));
 
     mockServer.expect(times(5), requestTo(containsString("controller/task/execute")))
-        .andExpect(jsonPath("$.labels.foo").value("bar"))
-        .andExpect(method(HttpMethod.POST)).andRespond(withStatus(HttpStatus.OK));
+        .andExpect(jsonPath("$.labels.foo").value("bar")).andExpect(method(HttpMethod.POST))
+        .andRespond(withStatus(HttpStatus.OK));
 
     mockServer.expect(times(1), requestTo(containsString("controller/workflow/terminate")))
         .andExpect(method(HttpMethod.POST)).andRespond(withStatus(HttpStatus.OK));
@@ -76,8 +76,7 @@ class ComplexExecuteTests extends IntegrationTests {
   protected void getTestCaseData(Map<String, List<String>> data) {
     data.put("flow_workflows", Arrays.asList("tests/scenarios/complex/complex-workflow.json"));
     data.put("flow_workflows_revisions",
-        Arrays.asList(
-            "tests/scenarios/complex/complex-revision1.json"));
+        Arrays.asList("tests/scenarios/complex/complex-revision1.json"));
   }
 
 }

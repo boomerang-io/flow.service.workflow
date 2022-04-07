@@ -11,7 +11,6 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Assertions;
@@ -34,13 +33,12 @@ import org.springframework.test.web.client.MockRestServiceServer;
 import io.boomerang.model.FlowActivity;
 import io.boomerang.model.FlowWebhookResponse;
 import io.boomerang.model.RequestFlowExecution;
-import io.boomerang.model.controller.TaskWorkspace;
 import io.boomerang.mongo.model.TaskStatus;
 import io.boomerang.service.refactor.TaskClient;
 import io.boomerang.tests.IntegrationTests;
 
 @ExtendWith(SpringExtension.class)
-@SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT)
+@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("local")
 @WithMockUser(roles = {"admin"})
 @WithUserDetails("mdroy@us.ibm.com")
@@ -49,13 +47,14 @@ public class RunWorkflowExecutionTest extends IntegrationTests {
 
   @SpyBean
   private TaskClient taskClient;
-  
+
   @Test
   public void testExecution() throws Exception {
-  
-   
-    doReturn(null).when(taskClient).submitWebhookEvent(ArgumentMatchers.any(RequestFlowExecution.class));
- 
+
+
+    doReturn(null).when(taskClient)
+        .submitWebhookEvent(ArgumentMatchers.any(RequestFlowExecution.class));
+
     String workflowId = "603936f5c3a72a0d655fb337";
     RequestFlowExecution request = new RequestFlowExecution();
 
@@ -81,18 +80,18 @@ public class RunWorkflowExecutionTest extends IntegrationTests {
     super.setUp();
     mockServer = MockRestServiceServer.bindTo(this.restTemplate).ignoreExpectOrder(true).build();
     mockServer.expect(times(1), requestTo(containsString("controller/workflow/execute")))
-        .andExpect(method(HttpMethod.POST))
-        .andRespond(withStatus(HttpStatus.OK));
+        .andExpect(method(HttpMethod.POST)).andRespond(withStatus(HttpStatus.OK));
     mockServer.expect(times(1), requestTo(containsString("internal/users/user")))
-       .andExpect(method(HttpMethod.GET)).andRespond(
-           withSuccess(getMockFile("mock/users/users.json"), MediaType.APPLICATION_JSON));
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withSuccess(getMockFile("mock/users/users.json"), MediaType.APPLICATION_JSON));
     mockServer.expect(times(1), requestTo(containsString("controller/workflow/terminate")))
         .andExpect(method(HttpMethod.POST)).andRespond(withStatus(HttpStatus.OK));
   }
 
   @Override
   protected void getTestCaseData(Map<String, List<String>> data) {
-    data.put("flow_workflows", Arrays.asList("tests/scenarios/runworkflow/runworkflow-workflow.json"));
+    data.put("flow_workflows",
+        Arrays.asList("tests/scenarios/runworkflow/runworkflow-workflow.json"));
     data.put("flow_workflows_revisions",
         Arrays.asList("tests/scenarios/runworkflow/runworkflow-revision.json"));
   }

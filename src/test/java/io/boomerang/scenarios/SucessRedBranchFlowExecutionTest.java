@@ -34,7 +34,7 @@ import io.boomerang.mongo.model.TaskStatus;
 import io.boomerang.tests.IntegrationTests;
 
 @ExtendWith(SpringExtension.class)
-@SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT)
+@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("local")
 @WithMockUser(roles = {"admin"})
 @WithUserDetails("mdroy@us.ibm.com")
@@ -58,13 +58,16 @@ public class SucessRedBranchFlowExecutionTest extends IntegrationTests {
     Assertions.assertEquals(TaskStatus.completed, finalActivity.getStatus());
     Assertions.assertNotNull(finalActivity.getDuration());
     mockServer.verify();
-    
-    
+
+
     List<TaskExecutionResponse> steps = finalActivity.getSteps();
-    TaskExecutionResponse executeShell1 = steps.stream().filter(e -> e.getTaskName().equals("Execute Shell 1")).findFirst().orElse(null);
-    TaskExecutionResponse executeShell2 = steps.stream().filter(e -> e.getTaskName().equals("Execute Shell 2")).findFirst().orElse(null);
-    TaskExecutionResponse executeShell3 = steps.stream().filter(e -> e.getTaskName().equals("Execute Shell 3")).findFirst().orElse(null);
-    
+    TaskExecutionResponse executeShell1 = steps.stream()
+        .filter(e -> e.getTaskName().equals("Execute Shell 1")).findFirst().orElse(null);
+    TaskExecutionResponse executeShell2 = steps.stream()
+        .filter(e -> e.getTaskName().equals("Execute Shell 2")).findFirst().orElse(null);
+    TaskExecutionResponse executeShell3 = steps.stream()
+        .filter(e -> e.getTaskName().equals("Execute Shell 3")).findFirst().orElse(null);
+
     Assertions.assertEquals(TaskStatus.skipped, executeShell1.getFlowTaskStatus());
     Assertions.assertEquals(TaskStatus.completed, executeShell2.getFlowTaskStatus());
     Assertions.assertEquals(TaskStatus.completed, executeShell3.getFlowTaskStatus());
@@ -77,8 +80,8 @@ public class SucessRedBranchFlowExecutionTest extends IntegrationTests {
     mockServer = MockRestServiceServer.bindTo(this.restTemplate).ignoreExpectOrder(true).build();
     mockServer
         .expect(manyTimes(), requestTo(containsString("http://localhost:8084/internal/users/user")))
-        .andExpect(method(HttpMethod.GET)).andRespond(
-            withSuccess(getMockFile("mock/users/users.json"), MediaType.APPLICATION_JSON));
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withSuccess(getMockFile("mock/users/users.json"), MediaType.APPLICATION_JSON));
     mockServer.expect(times(1), requestTo(containsString("controller/workflow/execute")))
         .andExpect(method(HttpMethod.POST)).andRespond(withStatus(HttpStatus.OK));
     mockServer.expect(times(1), requestTo(containsString("controller/task/execute")))

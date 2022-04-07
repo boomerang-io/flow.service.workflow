@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.util.Calendar;
 import java.util.Date;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +24,7 @@ import io.boomerang.service.crud.WorkflowScheduleService;
 
 
 @ExtendWith(SpringExtension.class)
-@SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT)
+@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("local")
 @WithMockUser(roles = {"admin"})
 @WithUserDetails("mdroy@us.ibm.com")
@@ -33,14 +32,14 @@ public class SchedulesControllerTests extends FlowTests {
 
   @Autowired
   private SchedulesController controller;
-  
+
   @Autowired
   private WorkflowScheduleService workflowScheduleService;
-  
+
   @Test
   /*
-   * Test creates a new RunOnce schedule 7 days in the future
-   * Similar to the method used in TaskServiceImpl for the Run Scheduled Workflow System Task
+   * Test creates a new RunOnce schedule 7 days in the future Similar to the method used in
+   * TaskServiceImpl for the Run Scheduled Workflow System Task
    */
   public void testCreateWorkflowSchedule() {
 
@@ -49,6 +48,7 @@ public class SchedulesControllerTests extends FlowTests {
     newSchedule.setType(WorkflowScheduleType.runOnce);
     newSchedule.setStatus(WorkflowScheduleStatus.active);
     newSchedule.setTimezone("Australia/Melbourne");
+    newSchedule.setWorkflowId("5d1a188af6ca2c00014c4314");
     Date executionDate = new Date();
     Calendar executionCal = Calendar.getInstance();
     executionCal.setTime(executionDate);
@@ -68,7 +68,7 @@ public class SchedulesControllerTests extends FlowTests {
     assertEquals(false, response.isValid());
     assertEquals(null, response.getCron());
     assertEquals(
-        "Failed to parse '0 * * * * *'. Invalid cron expression: 0 * * * * *. Both, a day-of-week AND a day-of-month parameter, are not supported.",
+        "Failed to parse cron expression. Invalid cron expression: 0 * * * * *. Both, a day-of-week AND a day-of-month parameter, are not supported.",
         response.getMessage());
 
     response = controller.validateCron("0 * * ? * *");
@@ -100,11 +100,12 @@ public class SchedulesControllerTests extends FlowTests {
     assertEquals(true, response.isValid());
     assertEquals("0 * * * * ? *", response.getCron());
     assertEquals(null, response.getMessage());
-    
+
     response = controller.validateCron("1 1 1 1 1");
     assertEquals(false, response.isValid());
     assertEquals(null, response.getCron());
-    assertEquals("Cron expression contains 5 parts but we expect one of [6, 7]", response.getMessage());
+    assertEquals("Cron expression contains 5 parts but we expect one of [6, 7]",
+        response.getMessage());
 
   }
 }

@@ -23,8 +23,7 @@ public class ModelConversionV5Test {
 
     String json = new String(Files.readAllBytes(resource.toPath()));
     ObjectMapper objectMapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
-    RevisionEntity entity =
-        objectMapper.readValue(json, RevisionEntity.class);
+    RevisionEntity entity = objectMapper.readValue(json, RevisionEntity.class);
 
     WorkflowRevision convertedRevision = ModelConverterV5.convertToRestModel(entity);
 
