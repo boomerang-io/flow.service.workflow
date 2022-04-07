@@ -1,4 +1,4 @@
-package io.boomerang.miscs.controller;
+package io.boomerang.tests.controller;
 
 import java.util.Optional;
 import org.junit.jupiter.api.Assertions;
@@ -20,7 +20,7 @@ import io.boomerang.model.FlowExecutionRequest;
 import io.boomerang.mongo.model.FlowTriggerEnum;
 
 @ExtendWith(SpringExtension.class)
-@SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT)
+@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("local")
 @WithMockUser(roles = {"admin"})
 @WithUserDetails("mdroy@us.ibm.com")
@@ -38,7 +38,7 @@ public class ExecutionControllerTests extends FlowTests {
 
     Assertions.assertNull(activity);
   }
-  
+
   @Test
   public void testExecuteWorkflowExceedQuotaMax() {
     try {

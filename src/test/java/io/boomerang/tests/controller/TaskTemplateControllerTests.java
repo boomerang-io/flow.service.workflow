@@ -1,4 +1,4 @@
-package io.boomerang.miscs.controller;
+package io.boomerang.tests.controller;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,6 +11,7 @@ import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import io.boomerang.controller.TaskTemplateController;
 import io.boomerang.misc.FlowTests;
 import io.boomerang.model.FlowTaskTemplate;
@@ -18,10 +19,9 @@ import io.boomerang.model.tekton.TektonTask;
 import io.boomerang.mongo.model.ChangeLog;
 import io.boomerang.mongo.model.FlowTaskTemplateStatus;
 import io.boomerang.mongo.model.Revision;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 @ExtendWith(SpringExtension.class)
-@SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT)
+@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("local")
 @WithMockUser(roles = {"admin"})
 @WithUserDetails("mdroy@us.ibm.com")
@@ -90,7 +90,8 @@ public class TaskTemplateControllerTests extends FlowTests {
     Assertions.assertEquals(1, updatedEntity.getCurrentVersion());
 
     Assertions.assertNotNull(updatedEntity.getRevisions().get(0).getChangelog().getUserId());
-    Assertions.assertEquals("reason", updatedEntity.getRevisions().get(0).getChangelog().getReason());
+    Assertions.assertEquals("reason",
+        updatedEntity.getRevisions().get(0).getChangelog().getReason());
     Assertions.assertEquals(true, updatedEntity.isVerified());
   }
 
@@ -108,21 +109,21 @@ public class TaskTemplateControllerTests extends FlowTests {
         controller.getTaskTemplateWithId("5bd9d0825a5df954ad5bb5c3").getStatus());
 
   }
-  
+
   @Test
   public void testLatestTaskYaml() {
     String templateId = "5bd9d0825a5df954ad5bb5c3";
-    
+
     TektonTask task = this.controller.getTaskTemplateYamlWithId(templateId);
     Assertions.assertNotNull(task);
     Assertions.assertNotNull(task.getSpec());
     Assertions.assertNotNull(task.getSpec().getParams());
   }
-  
+
   @Test
   public void testLatestTaskYamlWithRevision() {
     String templateId = "5bd9d0825a5df954ad5bb5c3";
-    
+
     TektonTask task = this.controller.getTaskTemplateYamlWithIdandRevision(templateId, 1);
     Assertions.assertNotNull(task.getSpec().getParams());
   }

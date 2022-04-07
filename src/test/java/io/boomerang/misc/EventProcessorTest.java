@@ -8,6 +8,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -24,17 +25,15 @@ import io.cloudevents.v1.AttributesImpl;
 import io.cloudevents.v1.CloudEventBuilder;
 import io.cloudevents.v1.CloudEventImpl;
 import io.cloudevents.v1.http.Unmarshallers;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Assertions.*;
 
 public class EventProcessorTest {
 
   @Test
   public void testCloudEventProcessing() throws IOException {
-//    Build Cloud Event
+    // Build Cloud Event
     String payload = buildEvent();
-    
-//    Unmarshall Cloud Event
+
+    // Unmarshall Cloud Event
     Map<String, Object> headers = new HashMap<>();
     headers.put("Content-Type", "application/cloudevents+json");
 
@@ -45,15 +44,15 @@ public class EventProcessorTest {
 
     System.out.println("Process Message - Attributes: " + event.getAttributes().toString());
     System.out.println("Process Message - Payload: " + event.getData().get().toString());
-    
+
     JsonNode cloudEventData = event.getData().get();
-    if (cloudEventData != null) {     
+    if (cloudEventData != null) {
       System.out.println("Process Message - data as JsonNode: " + cloudEventData);
-    };
-    
+    } ;
+
     processTrigger(cloudEventData, "1234", "dockerhub");
   }
-  
+
   private String buildEvent() throws IOException {
     final String eventId = UUID.randomUUID().toString();
     final String eventType = "io.boomerang.eventing.test";
@@ -61,19 +60,13 @@ public class EventProcessorTest {
     String payloadAsString = TestUtil.getMockFile("json/event-dockerhub-payload.json");
     ObjectMapper mapper = new ObjectMapper();
     JsonNode payload = mapper.readTree(payloadAsString);
-    
+
     System.out.println("Payload: " + payload.toPrettyString());
-        
+
     final CloudEventImpl<JsonNode> cloudEvent =
-    CloudEventBuilder.<JsonNode>builder()
-      .withType(eventType)
-      .withId(eventId)
-      .withSource(uri)
-      .withData(payload)
-      .withSubject("test")
-      .withTime(ZonedDateTime.now())
-      .build();
-    
+        CloudEventBuilder.<JsonNode>builder().withType(eventType).withId(eventId).withSource(uri)
+            .withData(payload).withSubject("test").withTime(ZonedDateTime.now()).build();
+
     final String jsonPayload = Json.encode(cloudEvent);
     System.out.println("CloudEvent: " + jsonPayload);
 
@@ -83,49 +76,51 @@ public class EventProcessorTest {
   private void processTrigger(JsonNode payload, String workflowId, String trigger) {
     System.out.println("processTrigger() - Starting");
 
-//    ObjectMapper mapper = new ObjectMapper(); 
-//    JsonNode jsonPayload = mapper.convertValue(payload, JsonNode.class);
+    // ObjectMapper mapper = new ObjectMapper();
+    // JsonNode jsonPayload = mapper.convertValue(payload, JsonNode.class);
     Configuration jacksonConfig =
         Configuration.builder().mappingProvider(new JacksonMappingProvider())
-        .jsonProvider(new JacksonJsonNodeJsonProvider())
-        .options(Option.DEFAULT_PATH_LEAF_TO_NULL)
-        .build();
+            .jsonProvider(new JacksonJsonNodeJsonProvider())
+            .options(Option.DEFAULT_PATH_LEAF_TO_NULL).build();
     List<WorkflowProperty> inputProperties = new LinkedList<>();
-//  Test String property that exists
+    // Test String property that exists
     WorkflowProperty flowProperty1 = new WorkflowProperty();
     flowProperty1.setKey("callback_url");
     inputProperties.add(flowProperty1);
-//    Test Array property that exists
+    // Test Array property that exists
     WorkflowProperty flowProperty2 = new WorkflowProperty();
     flowProperty2.setKey("push_data.images");
     inputProperties.add(flowProperty2);
-//  Test String property that does not exist
-  WorkflowProperty flowProperty3 = new WorkflowProperty();
-  flowProperty3.setKey("notPresent");
-  inputProperties.add(flowProperty3);
+    // Test String property that does not exist
+    WorkflowProperty flowProperty3 = new WorkflowProperty();
+    flowProperty3.setKey("notPresent");
+    inputProperties.add(flowProperty3);
     Map<String, String> properties = new HashMap<>();
     if (inputProperties != null) {
-//      JsonNode parsedEventData = JsonPath.using(jacksonConfig).parse(payload);
+      // JsonNode parsedEventData = JsonPath.using(jacksonConfig).parse(payload);
       Assertions.assertNotNull(inputProperties);
       try {
-      inputProperties.forEach(inputProperty -> {
-        JsonNode propertyValue =
-            JsonPath.using(jacksonConfig).parse(payload).read("$." + inputProperty.getKey());
-//            JsonPath.read(parsedEventData, "$." + inputProperty.getKey());
+        inputProperties.forEach(inputProperty -> {
+          JsonNode propertyValue =
+              JsonPath.using(jacksonConfig).parse(payload).read("$." + inputProperty.getKey());
+          // JsonPath.read(parsedEventData, "$." + inputProperty.getKey());
 
-        if (!propertyValue.isNull()) {
-          properties.put(inputProperty.getKey(), propertyValue.toString());
-        }
-      });
+          if (!propertyValue.isNull()) {
+            properties.put(inputProperty.getKey(), propertyValue.toString());
+          }
+        });
       } catch (Exception e) {
         System.out.println("processTrigger() - Error: " + e.toString());
       }
-      
-//      Assertions.assertEquals(properties.get("callback_url").toString(), "https://registry.hub.docker.com/u/svendowideit/testhook/hook/2141b5bi5i5b02bec211i4eeih0242eg11000a/");
+
+      // Assertions.assertEquals(properties.get("callback_url").toString(),
+      // "https://registry.hub.docker.com/u/svendowideit/testhook/hook/2141b5bi5i5b02bec211i4eeih0242eg11000a/");
     }
-    
+
     properties.put("io.boomerang.triggers.data", payload.toString());
 
-    properties.forEach((k, v) -> {System.out.println(k + "=" + v);});
+    properties.forEach((k, v) -> {
+      System.out.println(k + "=" + v);
+    });
   }
 }
