@@ -34,7 +34,7 @@
                 "templateId" : "5c37af285616d5f3544568fd",
                 "type": "decision",
                 "label": "Switch 1",
-                "decisionValue": "${p:color}",
+                "decisionValue": "$(params.color)",
                 "metadata": {
                     "position": {
                         "x": 455.0,

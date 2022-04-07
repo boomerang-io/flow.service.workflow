@@ -38,12 +38,20 @@
             ],
             "value" : "ReadWriteMany",
             "readOnly" : false
+        }, 
+        {
+            "description" : "Maximum storage size",
+            "key" : "max.storage.size",
+            "label" : "Maximum storage size",
+            "type" : "text",
+            "value" : "5Gi",
+            "readOnly" : false
         }
     ],
     "description" : "Define how the system utilizes and interacts with storage.",
-    "key" : "workspace",
+    "key" : "workflow",
     "lastModiifed" : ISODate("2021-02-09T15:55:26.799Z"),
-    "name" : "Workspace Configuration",
+    "name" : "Workspace Configuration - Workflow Storage",
     "type" : "ValuesList",
     "_class" : "net.boomerangplatform.mongo.entity.FlowSettingsEntity"
 }

@@ -2,7 +2,7 @@ FROM adoptopenjdk/openjdk11:latest
 ARG BMRG_TAG
 ENV JAVA_OPTS=""
 ENV BMRG_HOME=/opt/boomerang
-ENV BMRG_SVC=service-flow-$BMRG_TAG
+ENV BMRG_SVC=service-flow
 
 WORKDIR $BMRG_HOME
 ADD target/$BMRG_SVC.jar service.jar

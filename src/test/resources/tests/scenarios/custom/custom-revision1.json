@@ -78,11 +78,11 @@
                     },
                     {
                         "key": "command",
-                        "value": "${p:bar}"
+                        "value": "$(params.bar)"
                     },
                     {
                         "key": "arguments",
-                        "value": "${p:foo}"
+                        "value": "$(params.foo)"
                     }
                 ],
 				"dependencies": [

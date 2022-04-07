@@ -20,6 +20,10 @@
 			"token": ""
 		}
 	},
-	"enablePersistentStorage": true,
+	"storage": {
+		"workflow": {
+			"enabled": true
+		}
+	},
 	"scope": "team"
 }
