@@ -58,11 +58,11 @@ public class TestCloudEvent {
     }
   }
 
-  private JsonNode getJsonNode(String jsonString)
-      throws IOException, JsonParseException, JsonProcessingException {
-    ObjectMapper mapper = new ObjectMapper();
-    JsonFactory factory = mapper.getFactory();
-    JsonParser parser = factory.createParser(jsonString);
-    JsonNode actualObj = mapper.readTree(parser);
-    return actualObj;
+	private JsonNode getJsonNode(String jsonString) throws IOException, JsonParseException, JsonProcessingException {
+		ObjectMapper mapper = new ObjectMapper();
+		JsonFactory factory = mapper.getFactory();
+		JsonParser parser = factory.createParser(jsonString);
+		JsonNode actualObj = mapper.readTree(parser);
+		return actualObj;
+	}
 }

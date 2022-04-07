@@ -47,7 +47,6 @@ public class BoomerangTestConfiguration {
   public void initializeLocalMongoConnection() throws IOException {
 
     MongodStarter starter = MongodStarter.getDefaultInstance();
-<<<<<<< HEAD:src/test/java/net/boomerangplatform/tests/BoomerangTestConfiguration.java
     IFeatureAwareVersion version = de.flapdoodle.embed.mongo.distribution.Versions
         .withFeatures(de.flapdoodle.embed.process.distribution.Version.of("4.0.0"), Version.Main.PRODUCTION.getFeatures());
 
@@ -55,16 +54,6 @@ public class BoomerangTestConfiguration {
             MongodConfig.builder().version(version).putArgs("--replSet", "fancy")
                 .cmdOptions(MongoCmdOptions.builder().useNoJournal(false).build())
                 .net(new Net(BIND_IP, PORT, Network.localhostIsIPv6())).build();
-=======
-    IFeatureAwareVersion version = de.flapdoodle.embed.mongo.distribution.Versions.withFeatures(
-        de.flapdoodle.embed.process.distribution.Version.of("4.0.0"),
-        Version.Main.PRODUCTION.getFeatures());
-    MongodConfig mongodConfig =
-        MongodConfig.builder().version(version).putArgs("--replSet", "fancy")
-            .cmdOptions(MongoCmdOptions.builder().useNoJournal(false).build())
-            .net(new Net(BIND_IP, PORT, Network.localhostIsIPv6())).build();
->>>>>>> main:src/test/java/io/boomerang/tests/BoomerangTestConfiguration.java
-
     MongodExecutable mongodExecutable = starter.prepare(mongodConfig);
     mongod = mongodExecutable.start();
     mongo = new MongoClient(BIND_IP, PORT);
@@ -86,19 +75,12 @@ public class BoomerangTestConfiguration {
 
   private MongoImportProcess startMongoImport(String dbName, String collection, String jsonFile,
       Boolean jsonArray, Boolean upsert, Boolean drop) throws IOException {
-<<<<<<< HEAD:src/test/java/net/boomerangplatform/tests/BoomerangTestConfiguration.java
-    
+  
     MongoImportConfig mongoImportConfig = MongoImportConfig.builder()
             .version(Version.Main.PRODUCTION).net(new Net(BIND_IP, PORT, Network.localhostIsIPv6()))
             .databaseName(dbName).collectionName(collection).isUpsertDocuments(upsert)
             .isDropCollection(drop).isJsonArray(jsonArray)
             .importFile(jsonFile).build();
-=======
-    MongoImportConfig mongoImportConfig = MongoImportConfig.builder()
-        .version(Version.Main.PRODUCTION).net(new Net(BIND_IP, PORT, Network.localhostIsIPv6()))
-        .databaseName(dbName).collectionName(collection).isUpsertDocuments(upsert)
-        .isDropCollection(drop).isJsonArray(jsonArray).importFile(jsonFile).build();
->>>>>>> main:src/test/java/io/boomerang/tests/BoomerangTestConfiguration.java
 
     MongoImportExecutable mongoImportExecutable =
         MongoImportStarter.getDefaultInstance().prepare(mongoImportConfig);

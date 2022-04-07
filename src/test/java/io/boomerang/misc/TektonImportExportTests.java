@@ -1,19 +1,12 @@
 package io.boomerang.misc;
 
-<<<<<<< HEAD:src/test/java/net/boomerangplatform/misc/TektonImportExportTests.java
 import static org.junit.jupiter.api.Assertions.assertEquals;
-=======
->>>>>>> main:src/test/java/io/boomerang/misc/TektonImportExportTests.java
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-<<<<<<< HEAD:src/test/java/net/boomerangplatform/misc/TektonImportExportTests.java
-=======
-import org.junit.jupiter.api.Assertions;
->>>>>>> main:src/test/java/io/boomerang/misc/TektonImportExportTests.java
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.ClassPathResource;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -36,16 +29,16 @@ public class TektonImportExportTests {
   @Test
   public void testYamlImportCostel() throws IOException {
     TektonTask task = loadTektonTask("yaml/import2.yaml");
-    Assertions.assertEquals("tekton.dev/v1beta1", task.getApiVersion());
-    Assertions.assertEquals("Task", task.getKind());
+    assertEquals("tekton.dev/v1beta1", task.getApiVersion());
+    assertEquals("Task", task.getKind());
 
   }
 
   @Test
   public void testYamlImport() throws IOException {
     TektonTask task = loadTektonTask("yaml/import.yaml");
-    Assertions.assertEquals("tekton.dev/v1beta1", task.getApiVersion());
-    Assertions.assertEquals("Task", task.getKind());
+    assertEquals("tekton.dev/v1beta1", task.getApiVersion());
+    assertEquals("Task", task.getKind());
     Metadata metadata = task.getMetadata();
     testMetadata(metadata);
     testSpec(task);
@@ -56,15 +49,15 @@ public class TektonImportExportTests {
     FlowTaskTemplateEntity flowTaskTemplate = loadFlowTemplate();
     TektonTask task = TektonConverter.convertFlowTaskToTekton(flowTaskTemplate, Optional.empty());
     logObjectASYaml(task);
-    Assertions.assertEquals("Task", task.getKind());
+     assertEquals("Task", task.getKind());
   }
 
   @Test
   public void testYamlConversion() throws IOException {
     TektonTask task = loadTektonTask("yaml/import.yaml");
     FlowTaskTemplateEntity entity = TektonConverter.convertTektonTaskToNewFlowTask(task);
-    Assertions.assertEquals("example-task-name", entity.getName());
-    Assertions.assertEquals("Worker", entity.getCategory());
+     assertEquals("example-task-name", entity.getName());
+     assertEquals("Worker", entity.getCategory());
     logObjectASJson(entity);
   }
 
@@ -101,45 +94,45 @@ public class TektonImportExportTests {
   }
 
   private void testMetadata(Metadata metadata) {
-    Assertions.assertEquals("example-task-name", metadata.getName());
+     assertEquals("example-task-name", metadata.getName());
 
     Labels labels = metadata.getLabels();
-    Assertions.assertEquals("value", labels.otherFields().get("key"));
+     assertEquals("value", labels.otherFields().get("key"));
 
     Annotations annotations = metadata.getAnnotations();
-    Assertions.assertEquals(5, annotations.otherFields().size());
+     assertEquals(5, annotations.otherFields().size());
 
     Map<String, Object> mappings = annotations.otherFields();
 
-    Assertions.assertEquals("fix", mappings.get("boomerang.io/icon"));
-    Assertions.assertEquals("Worker", mappings.get("boomerang.io/category"));
-    Assertions.assertEquals(1, mappings.get("boomerang.io/revision"));
-    Assertions.assertEquals("cool task", mappings.get("description"));
+     assertEquals("fix", mappings.get("boomerang.io/icon"));
+     assertEquals("Worker", mappings.get("boomerang.io/category"));
+     assertEquals(1, mappings.get("boomerang.io/revision"));
+     assertEquals("cool task", mappings.get("description"));
   }
 
   private void testSpec(TektonTask task) {
     Spec spec = task.getSpec();
     List<Param> params = spec.getParams();
-    Assertions.assertEquals(1, params.size());
+     assertEquals(1, params.size());
 
     Param param = params.get(0);
-    Assertions.assertEquals("pathToDockerFile", param.getName());
-    Assertions.assertEquals("string", param.getType().toString());
-    Assertions.assertEquals("The path to the dockerfile to build", param.getDescription());
+     assertEquals("pathToDockerFile", param.getName());
+     assertEquals("string", param.getType().toString());
+     assertEquals("The path to the dockerfile to build", param.getDescription());
 
     List<Step> steps = spec.getSteps();
-    Assertions.assertEquals(1, steps.size());
+     assertEquals(1, steps.size());
     Step step = steps.get(0);
-    Assertions.assertEquals("ubuntu", step.getImage());
-    Assertions.assertEquals("ubuntu-example", step.getName());
-    Assertions.assertEquals("entrypoint", step.getCommand().get(0));
+     assertEquals("ubuntu", step.getImage());
+     assertEquals("ubuntu-example", step.getName());
+     assertEquals("entrypoint", step.getCommand().get(0));
     testArguments(step);
   }
 
   private void testArguments(Step step) {
     List<String> args = step.getArgs();
-    Assertions.assertEquals("ubuntu-build-example", args.get(0));
-    Assertions.assertEquals("SECRETS-example.md", args.get(1));
+     assertEquals("ubuntu-build-example", args.get(0));
+     assertEquals("SECRETS-example.md", args.get(1));
   }
 
 }

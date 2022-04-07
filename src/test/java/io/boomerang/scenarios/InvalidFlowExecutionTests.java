@@ -27,13 +27,8 @@ import io.boomerang.model.FlowActivity;
 import io.boomerang.tests.IntegrationTests;
 
 @ExtendWith(SpringExtension.class)
-<<<<<<< HEAD:src/test/java/net/boomerangplatform/scenarios/InvalidFlowExecutionTests.java
-@SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT)
-@ActiveProfiles("test")
-=======
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
-@ActiveProfiles("local")
->>>>>>> main:src/test/java/io/boomerang/scenarios/InvalidFlowExecutionTests.java
+@ActiveProfiles("test")
 @WithMockUser(roles = {"admin"})
 @WithUserDetails("mdroy@us.ibm.com")
 @Disabled

@@ -40,11 +40,6 @@ public class MongoConfig implements InitializingBean, DisposableBean {
   public void afterPropertiesSet() throws Exception {
     String proxyHost = System.getProperty("http.proxyHost");
     String proxyPort = System.getProperty("http.proxyPort");
-<<<<<<< HEAD:src/test/java/net/boomerangplatform/tests/MongoConfig.java
-    
-=======
-
->>>>>>> main:src/test/java/io/boomerang/tests/MongoConfig.java
     MongodStarter starter = null;
     ProcessOutput processOutput = enableMongoLogs ? ProcessOutput.getDefaultInstance("mongo")
         : ProcessOutput.getDefaultInstanceSilent();
@@ -54,17 +49,10 @@ public class MongoConfig implements InitializingBean, DisposableBean {
       final DownloadConfig downloadConfig = Defaults.downloadConfigFor(command)
           .proxyFactory(new HttpProxyFactory(proxyHost, Integer.parseInt(proxyPort))).build();
 
-<<<<<<< HEAD:src/test/java/net/boomerangplatform/tests/MongoConfig.java
-      RuntimeConfig runtimeConfig =
-          Defaults.runtimeConfigFor(command).processOutput(processOutput).artifactStore(
-              Defaults.extractedArtifactStoreFor(command).withDownloadConfig(downloadConfig))
-              .build();
-=======
       RuntimeConfig runtimeConfig = Defaults.runtimeConfigFor(command).processOutput(processOutput)
           .artifactStore(
               Defaults.extractedArtifactStoreFor(command).withDownloadConfig(downloadConfig))
           .build();
->>>>>>> main:src/test/java/io/boomerang/tests/MongoConfig.java
 
       starter = MongodStarter.getInstance(runtimeConfig);
     } else {

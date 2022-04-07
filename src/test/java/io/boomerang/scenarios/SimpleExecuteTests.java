@@ -1,11 +1,9 @@
 package io.boomerang.scenarios;
 
+
 import static org.hamcrest.CoreMatchers.containsString;
-<<<<<<< HEAD:src/test/java/net/boomerangplatform/scenarios/SimpleExecuteTests.java
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-=======
->>>>>>> main:src/test/java/io/boomerang/scenarios/SimpleExecuteTests.java
 import static org.springframework.test.web.client.ExpectedCount.times;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.jsonPath;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
@@ -17,10 +15,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-<<<<<<< HEAD:src/test/java/net/boomerangplatform/scenarios/SimpleExecuteTests.java
-=======
-import org.junit.jupiter.api.Assertions;
->>>>>>> main:src/test/java/io/boomerang/scenarios/SimpleExecuteTests.java
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -41,79 +35,61 @@ import io.boomerang.mongo.model.TaskStatus;
 import io.boomerang.tests.IntegrationTests;
 
 @ExtendWith(SpringExtension.class)
-<<<<<<< HEAD:src/test/java/net/boomerangplatform/scenarios/SimpleExecuteTests.java
-@SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT)
-@ActiveProfiles("test")
-=======
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
-@ActiveProfiles("local")
->>>>>>> main:src/test/java/io/boomerang/scenarios/SimpleExecuteTests.java
+@ActiveProfiles("test")
 @WithMockUser(roles = {"admin"})
 @WithUserDetails("mdroy@us.ibm.com")
 class SimpleExecuteTests extends IntegrationTests {
 
-  @Test
-  void testExecution() throws Exception {
-    mockServer
-        .expect(times(1), requestTo(containsString("http://localhost:8084/internal/users/user")))
-        .andExpect(method(HttpMethod.GET))
-        .andRespond(withSuccess(getMockFile("mock/users/users.json"), MediaType.APPLICATION_JSON));
+	@Test
+	  void testExecution() throws Exception {
+	    mockServer
+	        .expect(times(1), requestTo(containsString("http://localhost:8084/internal/users/user")))
+	        .andExpect(method(HttpMethod.GET))
+	        .andRespond(withSuccess(getMockFile("mock/users/users.json"), MediaType.APPLICATION_JSON));
 
 
-    String workflowId = "5f4fc9e95683833cf0b1335b";
-    RequestFlowExecution request = new RequestFlowExecution();
+	    String workflowId = "5f4fc9e95683833cf0b1335b";
+	    RequestFlowExecution request = new RequestFlowExecution();
 
-    request.setWorkflowId(workflowId);
+	    request.setWorkflowId(workflowId);
 
-<<<<<<< HEAD:src/test/java/net/boomerangplatform/scenarios/SimpleExecuteTests.java
-    TaskWorkspace taskWorkspace = new TaskWorkspace();
-    taskWorkspace.setOptional(false);
-    taskWorkspace.setReadOnly(false);
-    taskWorkspace.setWorkspaceId("12345");
-    taskWorkspace.setWorkspaceName("test");
 
-    List<TaskWorkspace> taskWorkspaceList = new LinkedList<>();
-    taskWorkspaceList.add(taskWorkspace);
+	    Map<String, String> map = new HashMap<>();
+	    map.put("foobar", "Hello World");
+	    request.setProperties(map);
+	    FlowWebhookResponse activity = this.submitInternalWorkflow(workflowId, request);
 
-    request.setTaskWorkspaces(taskWorkspaceList);
-=======
->>>>>>> main:src/test/java/io/boomerang/scenarios/SimpleExecuteTests.java
+	    String id = activity.getActivityId();
+	    Thread.sleep(5000);
+	    FlowActivity finalActivity = this.checkWorkflowActivity(id);
+	    assertEquals(TaskStatus.completed, finalActivity.getStatus());
+	    assertNotNull(finalActivity.getDuration());
+	    mockServer.verify();
+	  }
 
-    Map<String, String> map = new HashMap<>();
-    map.put("foobar", "Hello World");
-    request.setProperties(map);
-    FlowWebhookResponse activity = this.submitInternalWorkflow(workflowId, request);
+	  @Override
+	  @BeforeEach
+	  public void setUp() throws IOException {
+	    super.setUp();
+	    mockServer = MockRestServiceServer.bindTo(this.restTemplate).ignoreExpectOrder(true).build();
 
-    String id = activity.getActivityId();
-    Thread.sleep(5000);
-    FlowActivity finalActivity = this.checkWorkflowActivity(id);
-    Assertions.assertEquals(TaskStatus.completed, finalActivity.getStatus());
-    Assertions.assertNotNull(finalActivity.getDuration());
-    mockServer.verify();
-  }
+	    mockServer.expect(times(1), requestTo(containsString("controller/workflow/execute")))
+	        .andRespond(withStatus(HttpStatus.OK));
+	    mockServer.expect(times(1), requestTo(containsString("controller/task/execute")))
+	        .andExpect(method(HttpMethod.POST)).andExpect(jsonPath("$.configuration.timeout").value(90))
+	        .andRespond(withStatus(HttpStatus.OK));
 
-  @Override
-  @BeforeEach
-  public void setUp() throws IOException {
-    super.setUp();
-    mockServer = MockRestServiceServer.bindTo(this.restTemplate).ignoreExpectOrder(true).build();
+	    mockServer.expect(times(1), requestTo(containsString("controller/workflow/terminate")))
+	        .andExpect(method(HttpMethod.POST)).andRespond(withStatus(HttpStatus.OK));
+	  }
 
-    mockServer.expect(times(1), requestTo(containsString("controller/workflow/execute")))
-        .andRespond(withStatus(HttpStatus.OK));
-    mockServer.expect(times(1), requestTo(containsString("controller/task/execute")))
-        .andExpect(method(HttpMethod.POST)).andExpect(jsonPath("$.configuration.timeout").value(90))
-        .andRespond(withStatus(HttpStatus.OK));
+	  @Override
+	  protected void getTestCaseData(Map<String, List<String>> data) {
+	    data.put("flow_workflows", Arrays.asList("tests/scenarios/simple/simple-workflow.json"));
+	    data.put("flow_workflows_revisions",
+	        Arrays.asList("tests/scenarios/simple/simple-revision1.json",
+	            "tests/scenarios/simple/simple-revision2.json"));
+	  }
 
-    mockServer.expect(times(1), requestTo(containsString("controller/workflow/terminate")))
-        .andExpect(method(HttpMethod.POST)).andRespond(withStatus(HttpStatus.OK));
-  }
-
-  @Override
-  protected void getTestCaseData(Map<String, List<String>> data) {
-    data.put("flow_workflows", Arrays.asList("tests/scenarios/simple/simple-workflow.json"));
-    data.put("flow_workflows_revisions",
-        Arrays.asList("tests/scenarios/simple/simple-revision1.json",
-            "tests/scenarios/simple/simple-revision2.json"));
-  }
-
-}
+	}

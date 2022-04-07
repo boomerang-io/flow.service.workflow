@@ -11,15 +11,13 @@ import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import com.github.alturkovic.lock.mongo.configuration.EnableMongoDistributedLock;
-<<<<<<< HEAD:src/main/java/net/boomerangplatform/Application.java
-import io.swagger.v3.oas.models.OpenAPI;
-=======
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeIn;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.info.Info;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
->>>>>>> main:src/main/java/io/boomerang/Application.java
+import io.swagger.v3.oas.models.OpenAPI;
+
 
 @SpringBootApplication
 @EnableScheduling
@@ -58,13 +56,9 @@ public class Application {
     executor.initialize();
     return executor;
   }
-<<<<<<< HEAD:src/main/java/net/boomerangplatform/Application.java
   
   @Bean
   public OpenAPI api() {
     return new OpenAPI();
   }
-
-=======
->>>>>>> main:src/main/java/io/boomerang/Application.java
 }

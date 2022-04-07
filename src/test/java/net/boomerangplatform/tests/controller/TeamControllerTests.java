@@ -14,13 +14,9 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import net.boomerangplatform.controller.TeamController;
-import net.boomerangplatform.misc.FlowTests;
-import net.boomerangplatform.model.CreateFlowTeam;
-import net.boomerangplatform.model.WorkflowQuotas;
-import net.boomerangplatform.mongo.entity.FlowTeamConfiguration;
-import net.boomerangplatform.mongo.entity.FlowTeamEntity;
-import net.boomerangplatform.mongo.model.Quotas;
+
+import io.boomerang.controller.TeamController;
+import io.boomerang.mongo.entity.FlowTeamConfiguration;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT)

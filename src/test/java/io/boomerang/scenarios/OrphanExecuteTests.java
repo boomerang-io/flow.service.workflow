@@ -1,12 +1,10 @@
 package io.boomerang.scenarios;
 
+
 import static org.hamcrest.CoreMatchers.containsString;
-<<<<<<< HEAD:src/test/java/net/boomerangplatform/scenarios/OrphanExecuteTests.java
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.client.ExpectedCount.times;
-=======
->>>>>>> main:src/test/java/io/boomerang/scenarios/OrphanExecuteTests.java
 import static org.springframework.test.web.client.ExpectedCount.manyTimes;
 import static org.springframework.test.web.client.ExpectedCount.times;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
@@ -17,10 +15,6 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-<<<<<<< HEAD:src/test/java/net/boomerangplatform/scenarios/OrphanExecuteTests.java
-=======
-import org.junit.jupiter.api.Assertions;
->>>>>>> main:src/test/java/io/boomerang/scenarios/OrphanExecuteTests.java
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -39,13 +33,8 @@ import io.boomerang.mongo.model.TaskStatus;
 import io.boomerang.tests.IntegrationTests;
 
 @ExtendWith(SpringExtension.class)
-<<<<<<< HEAD:src/test/java/net/boomerangplatform/scenarios/OrphanExecuteTests.java
-@SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT)
-@ActiveProfiles("test")
-=======
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
-@ActiveProfiles("local")
->>>>>>> main:src/test/java/io/boomerang/scenarios/OrphanExecuteTests.java
+@ActiveProfiles("test")
 @WithMockUser(roles = {"admin"})
 @WithUserDetails("mdroy@us.ibm.com")
 public class OrphanExecuteTests extends IntegrationTests {
@@ -59,8 +48,8 @@ public class OrphanExecuteTests extends IntegrationTests {
     String id = activity.getId();
     Thread.sleep(5000);
     FlowActivity finalActivity = this.checkWorkflowActivity(id);
-    Assertions.assertEquals(TaskStatus.completed, finalActivity.getStatus());
-    Assertions.assertNotNull(finalActivity.getDuration());
+    assertEquals(TaskStatus.completed, finalActivity.getStatus());
+    assertNotNull(finalActivity.getDuration());
     mockServer.verify();
   }
 

@@ -1,11 +1,9 @@
 package io.boomerang.scenarios;
 
+
 import static org.hamcrest.CoreMatchers.containsString;
-<<<<<<< HEAD:src/test/java/net/boomerangplatform/scenarios/DefaultPathTests.java
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-=======
->>>>>>> main:src/test/java/io/boomerang/scenarios/DefaultPathTests.java
 import static org.springframework.test.web.client.ExpectedCount.times;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
@@ -15,10 +13,6 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-<<<<<<< HEAD:src/test/java/net/boomerangplatform/scenarios/DefaultPathTests.java
-=======
-import org.junit.jupiter.api.Assertions;
->>>>>>> main:src/test/java/io/boomerang/scenarios/DefaultPathTests.java
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -39,17 +33,10 @@ import io.boomerang.mongo.model.TaskStatus;
 import io.boomerang.tests.IntegrationTests;
 import io.boomerang.tests.MongoConfig;
 
-<<<<<<< HEAD:src/test/java/net/boomerangplatform/scenarios/DefaultPathTests.java
-@SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT)
-@ExtendWith(SpringExtension.class)
-@ContextConfiguration(classes = {Application.class, MongoConfig.class})
-@ActiveProfiles("test")
-=======
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = {Application.class, MongoConfig.class})
-@ActiveProfiles("local")
->>>>>>> main:src/test/java/io/boomerang/scenarios/DefaultPathTests.java
+@ActiveProfiles("test")
 @Disabled
 public class DefaultPathTests extends IntegrationTests {
 
@@ -64,7 +51,7 @@ public class DefaultPathTests extends IntegrationTests {
     Thread.sleep(5000);
 
     FlowActivity waitingAprpoval = this.checkWorkflowActivity(id);
-    Assertions.assertEquals(TaskStatus.inProgress, waitingAprpoval.getStatus());
+    assertEquals(TaskStatus.inProgress, waitingAprpoval.getStatus());
     List<Action> approvals = this.getApprovals();
     this.approveWorkflow(true, approvals.get(0).getId());
 
@@ -75,7 +62,7 @@ public class DefaultPathTests extends IntegrationTests {
 
     mockServer.verify();
 
-    Assertions.assertNotNull(activit2);
+    assertNotNull(activit2);
 
   }
 

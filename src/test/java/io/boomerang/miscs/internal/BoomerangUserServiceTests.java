@@ -1,19 +1,12 @@
 package io.boomerang.miscs.internal;
 
 import static org.hamcrest.CoreMatchers.containsString;
-<<<<<<< HEAD:src/test/java/net/boomerangplatform/miscs/internal/BoomerangUserServiceTests.java
 import static org.junit.jupiter.api.Assertions.assertEquals;
-=======
->>>>>>> main:src/test/java/io/boomerang/miscs/internal/BoomerangUserServiceTests.java
 import static org.springframework.test.web.client.ExpectedCount.manyTimes;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 import java.io.IOException;
-<<<<<<< HEAD:src/test/java/net/boomerangplatform/miscs/internal/BoomerangUserServiceTests.java
-=======
-import org.junit.jupiter.api.Assertions;
->>>>>>> main:src/test/java/io/boomerang/miscs/internal/BoomerangUserServiceTests.java
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,13 +25,8 @@ import io.boomerang.client.model.UserProfile;
 import io.boomerang.misc.FlowTests;
 
 @ExtendWith(SpringExtension.class)
-<<<<<<< HEAD:src/test/java/net/boomerangplatform/miscs/internal/BoomerangUserServiceTests.java
-@SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT)
-@ActiveProfiles("test")
-=======
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
-@ActiveProfiles("local")
->>>>>>> main:src/test/java/io/boomerang/miscs/internal/BoomerangUserServiceTests.java
+@ActiveProfiles("test")
 @WithMockUser(roles = {"admin"})
 @WithUserDetails("mdroy@us.ibm.com")
 class BoomerangUserServiceTests extends FlowTests {
@@ -49,7 +37,7 @@ class BoomerangUserServiceTests extends FlowTests {
   @Test
   void testGetUserProfile() {
     UserProfile userProfile = userService.getInternalUserProfile();
-    Assertions.assertEquals("trbula@us.ibm.com", userProfile.getEmail());
+    assertEquals("trbula@us.ibm.com", userProfile.getEmail());
   }
 
   @Override
