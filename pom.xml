@@ -43,7 +43,6 @@
 				<version>6.2.3.Final</version>
 			</dependency>
 		</dependencies>
-		
 	</dependencyManagement>
 	<dependencies>
 		<dependency>

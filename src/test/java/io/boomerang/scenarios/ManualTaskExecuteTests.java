@@ -1,6 +1,5 @@
 package io.boomerang.scenarios;
 
-
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;

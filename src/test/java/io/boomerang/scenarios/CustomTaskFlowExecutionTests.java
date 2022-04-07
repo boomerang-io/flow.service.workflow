@@ -37,7 +37,6 @@ import io.boomerang.tests.IntegrationTests;
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
-
 @WithMockUser(roles = {"admin"})
 @WithUserDetails("mdroy@us.ibm.com")
 class CustomTaskFlowExecutionTests extends IntegrationTests {

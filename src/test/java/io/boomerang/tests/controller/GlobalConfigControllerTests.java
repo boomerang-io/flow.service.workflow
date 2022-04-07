@@ -11,9 +11,9 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import net.boomerangplatform.controller.GlobalConfigController;
-import net.boomerangplatform.misc.FlowTests;
-import net.boomerangplatform.service.config.model.GlobalConfig;
+import io.boomerang.controller.GlobalConfigController;
+import io.boomerang.misc.FlowTests;
+import io.boomerang.service.config.model.GlobalConfig;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
@@ -36,7 +36,7 @@ public class GlobalConfigControllerTests extends FlowTests {
     globalConfigController.createNewGlobalConfig(newConfig);
 
     List<GlobalConfig> allConfigs = this.globalConfigController.getAllGlobalConfigurations();
-    Assertions.assertEquals(1, allConfigs.size());
+    assertEquals(1, allConfigs.size());
 
     GlobalConfig updatedConfig = allConfigs.get(0);
     updatedConfig.setDescription("New Description");
@@ -44,7 +44,7 @@ public class GlobalConfigControllerTests extends FlowTests {
     updatedConfig =
         this.globalConfigController.updateGlobalConfig(updatedConfig, updatedConfig.getId());
 
-    Assertions.assertEquals("New Description", updatedConfig.getDescription());
+    assertEquals("New Description", updatedConfig.getDescription());
 
     this.globalConfigController.deleteConfiguration(updatedConfig.getId());
 

@@ -40,6 +40,7 @@ public class MongoConfig implements InitializingBean, DisposableBean {
   public void afterPropertiesSet() throws Exception {
     String proxyHost = System.getProperty("http.proxyHost");
     String proxyPort = System.getProperty("http.proxyPort");
+
     MongodStarter starter = null;
     ProcessOutput processOutput = enableMongoLogs ? ProcessOutput.getDefaultInstance("mongo")
         : ProcessOutput.getDefaultInstanceSilent();
