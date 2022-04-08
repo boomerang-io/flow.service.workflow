@@ -10,6 +10,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.TimeZone;
 import java.util.stream.Collectors;
+import com.github.alturkovic.lock.Lock;
+import com.github.alturkovic.lock.exception.LockNotAvailableException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -20,8 +22,6 @@ import org.springframework.retry.policy.SimpleRetryPolicy;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import com.github.alturkovic.lock.Lock;
-import com.github.alturkovic.lock.exception.LockNotAvailableException;
 import io.boomerang.model.ApprovalStatus;
 import io.boomerang.model.RequestFlowExecution;
 import io.boomerang.model.Task;
@@ -133,7 +133,7 @@ public class TaskServiceImpl implements TaskService {
 
     TaskType taskType = task.getTaskType();
     taskExecution.setStartTime(new Date());
-    // Workflow activity task status set to in progress
+    // TODO: Eventing - Workflow activity task status set to in progress
     taskExecution.setFlowTaskStatus(TaskStatus.inProgress);
     taskExecution = taskActivityService.save(taskExecution);
 
@@ -367,7 +367,7 @@ public class TaskServiceImpl implements TaskService {
 
     LOGGER.debug("[{}] Creating wait for event task", taskExecution.getActivityId());
 
-    // Workflow activity task status set to waiting
+    // TODO: Eventing - Workflow activity task status set to waiting
     taskExecution.setFlowTaskStatus(TaskStatus.waiting);
     taskActivityService.save(taskExecution);
 
@@ -381,7 +381,7 @@ public class TaskServiceImpl implements TaskService {
 
   private void createApprovalNotification(TaskExecutionEntity taskExecution, Task task,
       ActivityEntity activity, WorkflowEntity workflow, ManualType type) {
-    // Workflow activity task status set to waiting
+    // TODO: Eventing - Workflow activity task status set to waiting
     taskExecution.setFlowTaskStatus(TaskStatus.waiting);
     taskExecution = taskActivityService.save(taskExecution);
     ApprovalEntity approval = new ApprovalEntity();
@@ -446,7 +446,7 @@ public class TaskServiceImpl implements TaskService {
 
     if (workflowActivity.getStatus() == TaskStatus.cancelled) {
       LOGGER.error("[{}] Workflow has been marked as cancelled, not ending task", activityId);
-      // Workflow activity task status set to cancelled
+      // TODO: Eventing - Workflow activity task status set to cancelled
       activity.setFlowTaskStatus(TaskStatus.cancelled);
       long duration = new Date().getTime() - activity.getStartTime().getTime();
       activity.setDuration(duration);
@@ -466,7 +466,7 @@ public class TaskServiceImpl implements TaskService {
 
     workflowActivity = this.activityService.findWorkflowActivtyById(activity.getActivityId());
 
-    // Workflow activity task status set to request.getStatus()
+    // TODO: Eventing - Workflow activity task status set to request.getStatus()
     activity.setFlowTaskStatus(request.getStatus());
     long duration = new Date().getTime() - activity.getStartTime().getTime();
     activity.setDuration(duration);
@@ -549,14 +549,14 @@ public class TaskServiceImpl implements TaskService {
     boolean workflowCompleted = dagUtility.validateWorkflow(activity);
 
     if (activity.getStatusOverride() != null) {
-      // Workflow activity changed to the override status
+      // TODO: Eventing - Workflow activity changed to the override status
       activity.setStatus(activity.getStatusOverride());
     } else {
       if (workflowCompleted) {
-        // Workflow activity changed to completed
+        // TODO: Eventing - Workflow activity changed to completed
         activity.setStatus(TaskStatus.completed);
       } else {
-        // Workflow activity changed to failure
+        // TODO: Eventing - Workflow activity changed to failure
         activity.setStatus(TaskStatus.failure);
       }
     }
