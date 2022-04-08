@@ -173,7 +173,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
 
     activity.setScope(workflow.getScope());
     activity.setCreationDate(new Date());
-    // Workflow activity changed to in progress
+    // TODO: Eventing - Workflow activity changed to in progress
     activity.setStatus(TaskStatus.inProgress);
 
     List<KeyValuePair> corePropertyList = new LinkedList<>();
@@ -714,7 +714,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
   @Override
   public void cancelWorkflowActivity(String activityId, ErrorResponse error) {
     ActivityEntity activity = flowActivityService.findWorkflowActivtyById(activityId);
-    // Workflow activity changed to cancelled
+    // TODO: Eventing - Workflow activity changed to cancelled
     activity.setStatus(TaskStatus.cancelled);
 
     if (error != null) {
@@ -745,7 +745,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
       if (taskExecution.getFlowTaskStatus() == TaskStatus.notstarted
           || taskExecution.getFlowTaskStatus() == TaskStatus.inProgress
           || taskExecution.getFlowTaskStatus() == TaskStatus.waiting) {
-        // Workflow activity task status set to cancelled
+        // TODO: Eventing - Workflow activity task status set to cancelled
         taskExecution.setFlowTaskStatus(TaskStatus.cancelled);
       }
       taskService.save(taskExecution);

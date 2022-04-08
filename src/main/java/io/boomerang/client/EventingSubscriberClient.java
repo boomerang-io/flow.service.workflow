@@ -12,9 +12,9 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import io.boomerang.eventing.nats.ConnectionPrimer;
 import io.boomerang.eventing.nats.jetstream.PubSubConfiguration;
-import io.boomerang.eventing.nats.jetstream.PubSubTransceiver;
-import io.boomerang.eventing.nats.jetstream.PubSubTunnel;
+import io.boomerang.eventing.nats.jetstream.PullBasedSubReceiver;
 import io.boomerang.eventing.nats.jetstream.SubHandler;
+import io.boomerang.eventing.nats.jetstream.SubOnlyTunnel;
 import io.boomerang.service.EventProcessor;
 import io.nats.client.Options;
 import io.nats.client.api.ConsumerConfiguration;
@@ -77,19 +77,19 @@ public class EventingSubscriberClient implements SubHandler {
     // @formatter:on
 
     ConnectionPrimer connectionPrimer = new ConnectionPrimer(optionsBuilder);
-    PubSubTunnel pubSubTunnel = new PubSubTransceiver(connectionPrimer, streamConfiguration,
+    SubOnlyTunnel subOnlyTunnel = new PullBasedSubReceiver(connectionPrimer, streamConfiguration,
         consumerConfiguration, pubSubConfiguration);
 
-    pubSubTunnel.subscribe(this);
+    subOnlyTunnel.subscribe(this);
   }
 
   @Override
-  public void subscriptionSucceeded(PubSubTunnel tunnel) {
+  public void subscriptionSucceeded(SubOnlyTunnel tunnel) {
     logger.info("Successfully subscribed to consume messages from NATS Jetstream.");
   }
 
   @Override
-  public void subscriptionFailed(PubSubTunnel tunnel, Exception exception) {
+  public void subscriptionFailed(SubOnlyTunnel tunnel, Exception exception) {
     logger.debug("Failed to subscribe for consuming messages from NATS Jetstream. Resubscribing...",
         exception);
     try {
@@ -102,7 +102,7 @@ public class EventingSubscriberClient implements SubHandler {
   }
 
   @Override
-  public void newMessageReceived(PubSubTunnel tunnel, String subject, String message) {
+  public void newMessageReceived(SubOnlyTunnel tunnel, String subject, String message) {
     eventProcessor.processNATSMessage(message);
   }
 }
