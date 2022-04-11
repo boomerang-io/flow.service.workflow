@@ -1,7 +1,9 @@
 package io.boomerang.tests.controller;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+
 import java.util.Optional;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,7 +23,7 @@ import io.boomerang.mongo.model.FlowTriggerEnum;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
-@ActiveProfiles("local")
+@ActiveProfiles("test")
 @WithMockUser(roles = {"admin"})
 @WithUserDetails("mdroy@us.ibm.com")
 public class ExecutionControllerTests extends FlowTests {
@@ -36,7 +38,7 @@ public class ExecutionControllerTests extends FlowTests {
     FlowActivity activity = executionController.executeWorkflow(workflowId,
         Optional.of(FlowTriggerEnum.manual.toString()), Optional.of(new FlowExecutionRequest()));
 
-    Assertions.assertNull(activity);
+    assertNull(activity);
   }
 
   @Test
@@ -45,9 +47,9 @@ public class ExecutionControllerTests extends FlowTests {
       executionController.executeWorkflow("5d1a188af6ca2c00014c4314", // workflow1.json
           Optional.of(FlowTriggerEnum.manual.toString()), Optional.of(new FlowExecutionRequest()));
     } catch (BoomerangException e) {
-      Assertions.assertEquals(429, e.getCode());
-      Assertions.assertEquals("TOO_MANY_REQUESTS", e.getDescription());
-      Assertions.assertEquals(HttpStatus.TOO_MANY_REQUESTS, e.getHttpStatus());
+       assertEquals(429, e.getCode());
+       assertEquals("TOO_MANY_REQUESTS", e.getDescription());
+       assertEquals(HttpStatus.TOO_MANY_REQUESTS, e.getHttpStatus());
     }
   }
 

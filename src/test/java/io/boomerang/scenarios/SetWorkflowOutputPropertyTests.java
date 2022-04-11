@@ -2,6 +2,8 @@
 package io.boomerang.scenarios;
 
 import static org.hamcrest.CoreMatchers.containsString;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.test.web.client.ExpectedCount.times;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
@@ -11,7 +13,6 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,7 +33,7 @@ import io.boomerang.tests.IntegrationTests;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
-@ActiveProfiles("local")
+@ActiveProfiles("test")
 @WithMockUser(roles = {"admin"})
 @WithUserDetails("mdroy@us.ibm.com")
 public class SetWorkflowOutputPropertyTests extends IntegrationTests {
@@ -46,15 +47,15 @@ public class SetWorkflowOutputPropertyTests extends IntegrationTests {
     String id = activity.getId();
     Thread.sleep(5000);
     FlowActivity finalActivity = this.checkWorkflowActivity(id);
-    Assertions.assertEquals(TaskStatus.completed, finalActivity.getStatus());
-    Assertions.assertNotNull(finalActivity.getDuration());
+     assertEquals(TaskStatus.completed, finalActivity.getStatus());
+     assertNotNull(finalActivity.getDuration());
     mockServer.verify();
     List<KeyValuePair> outputProperties = finalActivity.getOutputProperties();
 
-    Assertions.assertEquals(1, outputProperties.size());
+     assertEquals(1, outputProperties.size());
     KeyValuePair outputProperty = outputProperties.get(0);
-    Assertions.assertEquals("test-beep", outputProperty.getValue());
-    Assertions.assertEquals("bar", outputProperty.getKey());
+     assertEquals("test-beep", outputProperty.getValue());
+     assertEquals("bar", outputProperty.getKey());
   }
 
   @Override

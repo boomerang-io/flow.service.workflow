@@ -1,6 +1,7 @@
 package io.boomerang.scenarios;
 
 import static org.hamcrest.CoreMatchers.containsString;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.test.web.client.ExpectedCount.manyTimes;
 import static org.springframework.test.web.client.ExpectedCount.times;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.jsonPath;
@@ -14,7 +15,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -36,7 +36,7 @@ import io.boomerang.tests.IntegrationTests;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
-@ActiveProfiles("local")
+@ActiveProfiles("test")
 @WithMockUser(roles = {"admin"})
 @WithUserDetails("mdroy@us.ibm.com")
 class CustomTaskFlowExecutionTests extends IntegrationTests {
@@ -61,7 +61,7 @@ class CustomTaskFlowExecutionTests extends IntegrationTests {
     Thread.sleep(5000);
     FlowActivity finalActivity = this.checkWorkflowActivity(id);
 
-    Assertions.assertNotNull(finalActivity.getDuration());
+    assertNotNull(finalActivity.getDuration());
     mockServer.verify();
 
   }

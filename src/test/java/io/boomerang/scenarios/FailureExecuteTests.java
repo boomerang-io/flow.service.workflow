@@ -1,8 +1,10 @@
 package io.boomerang.scenarios;
 
 import static org.hamcrest.CoreMatchers.containsString;
-import static org.springframework.test.web.client.ExpectedCount.manyTimes;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.test.web.client.ExpectedCount.times;
+import static org.springframework.test.web.client.ExpectedCount.manyTimes;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.jsonPath;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
@@ -12,7 +14,6 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,7 +33,7 @@ import io.boomerang.tests.IntegrationTests;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
-@ActiveProfiles("local")
+@ActiveProfiles("test")
 @WithMockUser(roles = {"admin"})
 @WithUserDetails("mdroy@us.ibm.com")
 public class FailureExecuteTests extends IntegrationTests {
@@ -46,17 +47,17 @@ public class FailureExecuteTests extends IntegrationTests {
     String id = activity.getId();
     Thread.sleep(10000);
     FlowActivity finalActivity = this.checkWorkflowActivity(id);
-    Assertions.assertEquals(TaskStatus.failure, finalActivity.getStatus());
-    Assertions.assertNotNull(finalActivity.getDuration());
+     assertEquals(TaskStatus.failure, finalActivity.getStatus());
+     assertNotNull(finalActivity.getDuration());
 
-    Assertions.assertEquals(TaskStatus.failure,
+     assertEquals(TaskStatus.failure,
         finalActivity.getSteps().get(0).getFlowTaskStatus());
-    Assertions.assertEquals(TaskStatus.skipped,
+     assertEquals(TaskStatus.skipped,
         finalActivity.getSteps().get(1).getFlowTaskStatus());
     mockServer.verify();
-    Assertions.assertNotNull(finalActivity.getSteps().get(0).getError());
-    Assertions.assertNotNull(finalActivity.getSteps().get(0).getError());
-    Assertions.assertEquals("This is a special error",
+     assertNotNull(finalActivity.getSteps().get(0).getError());
+     assertNotNull(finalActivity.getSteps().get(0).getError());
+     assertEquals("This is a special error",
         finalActivity.getSteps().get(0).getError().getMessage());
   }
 
