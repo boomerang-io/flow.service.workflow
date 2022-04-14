@@ -9,7 +9,9 @@ import org.springframework.web.server.ResponseStatusException;
 import io.boomerang.client.model.Team;
 import io.boomerang.model.FlowTeam;
 import io.boomerang.mongo.entity.FlowUserEntity;
+import io.boomerang.mongo.entity.WorkflowEntity;
 import io.boomerang.mongo.model.UserType;
+import io.boomerang.mongo.model.WorkflowScope;
 import io.boomerang.mongo.service.FlowWorkflowService;
 import io.boomerang.security.service.UserValidationService;
 import io.boomerang.service.UserIdentityService;
@@ -52,27 +54,39 @@ public class UserValidationServiceImpl implements UserValidationService {
   @Override
   public void validateUserForWorkflow(String workflowId) {
     FlowUserEntity user = userIdentityService.getCurrentUser();
+    WorkflowEntity workflow = workflowRepository.getWorkflow(workflowId);
+    WorkflowScope scope = workflow.getScope();
+    if (workflow.getScope() == WorkflowScope.team) {
 
-    FlowTeam team =
-        teamService.getTeamByIdDetailed(workflowRepository.getWorkflow(workflowId).getFlowTeamId());
+      FlowTeam team = teamService.getTeamByIdDetailed(workflow.getFlowTeamId());
 
-    List<String> userIds = new ArrayList<>();
-    if (team.getUsers() != null) {
-      for (FlowUserEntity teamUser : team.getUsers()) {
-        userIds.add(teamUser.getId());
+      List<String> userIds = new ArrayList<>();
+      if (team.getUsers() != null) {
+        for (FlowUserEntity teamUser : team.getUsers()) {
+          userIds.add(teamUser.getId());
+        }
+      }
+
+      List<String> userTeamIds = new ArrayList<>();
+      if (user.getTeams() != null) {
+        for (Team userTeam : user.getTeams()) {
+          userTeamIds.add(userTeam.getId());
+        }
+      }
+      if (user.getType() != UserType.admin && user.getType() != UserType.operator
+          && !userIds.contains(user.getId())
+          && !userTeamIds.contains(team.getHigherLevelGroupId())) {
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN);
       }
     }
 
-    List<String> userTeamIds = new ArrayList<>();
-    if (user.getTeams() != null) {
-      for (Team userTeam : user.getTeams()) {
-        userTeamIds.add(userTeam.getId());
-      }
+    if (scope == WorkflowScope.user && !user.getId().equals(workflow.getOwnerUserId())) {
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN);
     }
-    if (user.getType() != UserType.admin && user.getType() != UserType.operator
-        && !userIds.contains(user.getId()) && !userTeamIds.contains(team.getHigherLevelGroupId())) {
+
+    if (scope == WorkflowScope.system && user.getType() != UserType.admin
+        && user.getType() != UserType.operator) {
       throw new ResponseStatusException(HttpStatus.FORBIDDEN);
     }
   }
-
 }
