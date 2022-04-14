@@ -31,7 +31,6 @@
 		<jacoco.version>0.8.2</jacoco.version>
 		<jsonwebtoken.version>0.10.7</jsonwebtoken.version>
 		<jackson.databind.version>2.9.9.3</jackson.databind.version>
-		<log4j2.version>2.17.0</log4j2.version>
 		<spring.version>5.2.20.RELEASE</spring.version>
 		<log4j2.version>2.17.2</log4j2.version>
 	</properties>
