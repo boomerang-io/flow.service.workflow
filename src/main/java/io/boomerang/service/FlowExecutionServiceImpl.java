@@ -196,7 +196,6 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
       TaskExecutionEntity taskExecution = new TaskExecutionEntity();
       taskExecution.setActivityId(activityId);
       taskExecution.setTaskId(task.getTaskId());
-      // TODO: Eventing - Workflow activity task status set to not started
       taskExecution.setFlowTaskStatus(TaskStatus.notstarted);
       taskExecution.setOrder(order);
       taskExecution.setTaskName(task.getTaskName());
@@ -251,7 +250,7 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
     }
 
     final ActivityEntity activityEntity = this.flowActivityService.findWorkflowActivity(activityId);
-    // TODO: Eventing - Workflow activity status set to in progress
+    // TODO: Eventing - Workflow activity status set to in progress (might already be in progress)
     activityEntity.setStatus(TaskStatus.inProgress);
     activityEntity.setCreationDate(new Date());
     activityService.saveWorkflowActivity(activityEntity);
