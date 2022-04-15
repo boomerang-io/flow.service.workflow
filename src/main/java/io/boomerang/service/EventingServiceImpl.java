@@ -1,4 +1,4 @@
-package io.boomerang.client;
+package io.boomerang.service;
 
 import java.time.Duration;
 import java.util.List;
@@ -9,24 +9,24 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import io.boomerang.eventing.nats.ConnectionPrimer;
 import io.boomerang.eventing.nats.jetstream.PubSubConfiguration;
 import io.boomerang.eventing.nats.jetstream.PubSubTransceiver;
 import io.boomerang.eventing.nats.jetstream.PubSubTunnel;
 import io.boomerang.eventing.nats.jetstream.SubHandler;
 import io.boomerang.eventing.nats.jetstream.SubOnlyTunnel;
-import io.boomerang.service.EventProcessor;
+import io.boomerang.mongo.entity.ActivityEntity;
 import io.nats.client.Options;
 import io.nats.client.api.ConsumerConfiguration;
 import io.nats.client.api.StorageType;
 import io.nats.client.api.StreamConfiguration;
 
-@Component
+@Service
 @ConditionalOnProperty(value = "eventing.enabled", havingValue = "true", matchIfMissing = false)
-public class EventingClient implements SubHandler {
+public class EventingServiceImpl implements EventingService, SubHandler {
 
-  private static final Logger logger = LogManager.getLogger(EventingClient.class);
+  private static final Logger logger = LogManager.getLogger(EventingServiceImpl.class);
 
   @Value("#{'${eventing.nats.server.urls}'.split(',')}")
   private List<String> serverUrls;
@@ -110,5 +110,22 @@ public class EventingClient implements SubHandler {
   @Override
   public void newMessageReceived(SubOnlyTunnel tunnel, String subject, String message) {
     eventProcessor.processNATSMessage(message);
+  }
+
+  /**
+   * This method will publish a Cloud Event encoded as a string to the NATS server. Please make sure
+   * the status of the {@link ActivityEntity} is updated when invoking this method.
+   * 
+   * @param activityEntity Activity entity.
+   * 
+   * @note Do not invoke this method with if the status of the {@link ActivityEntity} has not been
+   *       changed, as this would result in publishing a Cloud Event with the same status multiple
+   *       times.
+   */
+  @Override
+  public void publishWorkflowActivityStatusUpdateCE(ActivityEntity activityEntity) {
+
+    logger.error("---- Workflow with ID " + activityEntity.getWorkflowId()
+        + " has changed its status to " + activityEntity.getStatus() + " ----");
   }
 }
