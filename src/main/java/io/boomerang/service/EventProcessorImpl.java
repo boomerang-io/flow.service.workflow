@@ -92,17 +92,19 @@ public class EventProcessorImpl implements EventProcessor {
     Map<String, Object> headers = Map.of("Content-Type", "application/cloudevents+json");
     String requestStatus = getStatusFromPayload(message);
 
-    try {
-      CloudEvent<AttributesImpl, JsonNode> event = Unmarshallers.structured(JsonNode.class)
-          .withHeaders(() -> headers).withPayload(() -> message).unmarshal();
+    // Unmarshall the NATS message to a Cloud Event
+    CloudEvent<AttributesImpl, JsonNode> event = null;
 
-      createResponseEvent(event.getAttributes().getId(), event.getAttributes().getType(),
-          event.getAttributes().getSource(), event.getAttributes().getSubject().orElse(""),
-          event.getAttributes().getTime().orElse(ZonedDateTime.now()),
-          processEvent(event, requestStatus));
+    try {
+      event = Unmarshallers.structured(JsonNode.class).withHeaders(() -> headers)
+          .withPayload(() -> message).unmarshal();
     } catch (Exception e) {
       logger.error("Could not unmarshal NATS message to a Cloud Event", e);
+      return;
     }
+
+    // Process the event
+    processEvent(event, requestStatus);
   }
 
   private String getStatusFromPayload(String message) {
