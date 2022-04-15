@@ -745,7 +745,6 @@ public class FlowActivityServiceImpl implements FlowActivityService {
       if (taskExecution.getFlowTaskStatus() == TaskStatus.notstarted
           || taskExecution.getFlowTaskStatus() == TaskStatus.inProgress
           || taskExecution.getFlowTaskStatus() == TaskStatus.waiting) {
-        // TODO: Eventing - Workflow activity task status set to cancelled
         taskExecution.setFlowTaskStatus(TaskStatus.cancelled);
       }
       taskService.save(taskExecution);

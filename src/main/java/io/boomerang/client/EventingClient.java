@@ -12,7 +12,8 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import io.boomerang.eventing.nats.ConnectionPrimer;
 import io.boomerang.eventing.nats.jetstream.PubSubConfiguration;
-import io.boomerang.eventing.nats.jetstream.PullBasedSubReceiver;
+import io.boomerang.eventing.nats.jetstream.PubSubTransceiver;
+import io.boomerang.eventing.nats.jetstream.PubSubTunnel;
 import io.boomerang.eventing.nats.jetstream.SubHandler;
 import io.boomerang.eventing.nats.jetstream.SubOnlyTunnel;
 import io.boomerang.service.EventProcessor;
@@ -23,9 +24,9 @@ import io.nats.client.api.StreamConfiguration;
 
 @Component
 @ConditionalOnProperty(value = "eventing.enabled", havingValue = "true", matchIfMissing = false)
-public class EventingSubscriberClient implements SubHandler {
+public class EventingClient implements SubHandler {
 
-  private static final Logger logger = LogManager.getLogger(EventingSubscriberClient.class);
+  private static final Logger logger = LogManager.getLogger(EventingClient.class);
 
   @Value("#{'${eventing.nats.server.urls}'.split(',')}")
   private List<String> serverUrls;
@@ -54,6 +55,10 @@ public class EventingSubscriberClient implements SubHandler {
   @Autowired
   private EventProcessor eventProcessor;
 
+  private ConnectionPrimer connectionPrimer;
+
+  private PubSubTunnel pubSubTunnel;
+
   @EventListener(ApplicationReadyEvent.class)
   void onApplicationReadyEvent() throws InterruptedException {
 
@@ -76,11 +81,12 @@ public class EventingSubscriberClient implements SubHandler {
         .build();
     // @formatter:on
 
-    ConnectionPrimer connectionPrimer = new ConnectionPrimer(optionsBuilder);
-    SubOnlyTunnel subOnlyTunnel = new PullBasedSubReceiver(connectionPrimer, streamConfiguration,
+    connectionPrimer = new ConnectionPrimer(optionsBuilder);
+    pubSubTunnel = new PubSubTransceiver(connectionPrimer, streamConfiguration,
         consumerConfiguration, pubSubConfiguration);
 
-    subOnlyTunnel.subscribe(this);
+    // Start subscription
+    pubSubTunnel.subscribe(this);
   }
 
   @Override
