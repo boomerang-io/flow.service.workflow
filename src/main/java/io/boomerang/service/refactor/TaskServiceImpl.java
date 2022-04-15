@@ -158,46 +158,56 @@ public class TaskServiceImpl implements TaskService {
     if (canRunTask) {
       LOGGER.debug("[{}] Can run task? {}", taskId, canRunTask);
 
-      if (taskType == TaskType.decision) {
-        InternalTaskResponse response = new InternalTaskResponse();
-        response.setActivityId(taskExecution.getId());
-        response.setStatus(TaskStatus.completed);
-        processDecision(task, activity.getId());
-        endTask(response);
-      } else if (taskType == TaskType.template || taskType == TaskType.script) {
-        List<KeyValuePair> labels = workflow.getLabels();
-        controllerClient.submitTemplateTask(this, taskClient, task, activity.getId(), workflowName,
-            labels);
-      } else if (taskType == TaskType.customtask) {
-        List<KeyValuePair> labels = workflow.getLabels();
-        controllerClient.submitCustomTask(this, taskClient, task, activity.getId(), workflowName,
-            labels);
-      } else if (taskType == TaskType.acquirelock) {
-        createLock(task, activity);
-      } else if (taskType == TaskType.releaselock) {
-        releaseLock(task, activity);
-      } else if (taskType == TaskType.runworkflow) {
-        runWorkflow(task, activity);
-      } else if (taskType == TaskType.runscheduledworkflow) {
-        runScheduledWorkflow(task, activity);
-      } else if (taskType == TaskType.setwfstatus) {
-        saveWorkflowStatus(task, activity);
-        InternalTaskResponse response = new InternalTaskResponse();
-        response.setActivityId(taskExecution.getId());
-        response.setStatus(TaskStatus.completed);
-        endTask(response);
-      } else if (taskType == TaskType.setwfproperty) {
-        saveWorkflowProperty(task, activity);
-        InternalTaskResponse response = new InternalTaskResponse();
-        response.setActivityId(taskExecution.getId());
-        response.setStatus(TaskStatus.completed);
-        endTask(response);
-      } else if (taskType == TaskType.approval) {
-        createApprovalNotification(taskExecution, task, activity, workflow, ManualType.approval);
-      } else if (taskType == TaskType.manual) {
-        createApprovalNotification(taskExecution, task, activity, workflow, ManualType.task);
-      } else if (taskType == TaskType.eventwait) {
-        createWaitForEventTask(taskExecution, activity, workflow);
+      List<KeyValuePair> labels = workflow.getLabels();
+      InternalTaskResponse endTaskResponse = new InternalTaskResponse();
+      endTaskResponse.setActivityId(taskExecution.getId());
+      endTaskResponse.setStatus(TaskStatus.completed);
+
+      switch (task.getTaskType()) {
+        case decision:
+          processDecision(task, activity.getId());
+          endTask(endTaskResponse);
+          break;
+        case template:
+        case script:
+          controllerClient.submitTemplateTask(this, taskClient, task, activity.getId(),
+              workflowName, labels);
+          break;
+        case customtask:
+          controllerClient.submitCustomTask(this, taskClient, task, activity.getId(), workflowName,
+              labels);
+          break;
+        case acquirelock:
+          createLock(task, activity);
+          break;
+        case releaselock:
+          releaseLock(task, activity);
+          break;
+        case runworkflow:
+          runWorkflow(task, activity);
+          break;
+        case runscheduledworkflow:
+          runScheduledWorkflow(task, activity);
+          break;
+        case setwfstatus:
+          saveWorkflowStatus(task, activity);
+          endTask(endTaskResponse);
+          break;
+        case setwfproperty:
+          saveWorkflowProperty(task, activity);
+          endTask(endTaskResponse);
+          break;
+        case approval:
+          createApprovalNotification(taskExecution, task, activity, workflow, ManualType.approval);
+          break;
+        case manual:
+          createApprovalNotification(taskExecution, task, activity, workflow, ManualType.task);
+          break;
+        case eventwait:
+          createWaitForEventTask(taskExecution, activity, workflow);
+          break;
+        default:
+          break;
       }
     } else {
       LOGGER.debug("[{}] Skipping task", taskId);
