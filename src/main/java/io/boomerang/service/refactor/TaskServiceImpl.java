@@ -132,7 +132,6 @@ public class TaskServiceImpl implements TaskService {
 
     TaskType taskType = task.getTaskType();
     taskExecution.setStartTime(new Date());
-    // TODO: Eventing - Workflow activity task status set to in progress
     taskExecution.setFlowTaskStatus(TaskStatus.inProgress);
     taskExecution = taskActivityService.save(taskExecution);
 
@@ -446,7 +445,7 @@ public class TaskServiceImpl implements TaskService {
   public void endTask(InternalTaskResponse request) {
 
     String activityId = request.getActivityId();
-    LOGGER.info("[{}] Recieved end task request", activityId);
+    LOGGER.info("[{}] Received end task request", activityId);
     TaskExecutionEntity activity = taskActivityService.findById(activityId);
 
     ActivityEntity workflowActivity =
@@ -454,9 +453,9 @@ public class TaskServiceImpl implements TaskService {
 
     if (workflowActivity.getStatus() == TaskStatus.cancelled) {
       LOGGER.error("[{}] Workflow has been marked as cancelled, not ending task", activityId);
-      // TODO: Eventing - Workflow activity task status set to cancelled
-      activity.setFlowTaskStatus(TaskStatus.cancelled);
       long duration = new Date().getTime() - activity.getStartTime().getTime();
+
+      activity.setFlowTaskStatus(TaskStatus.cancelled);
       activity.setDuration(duration);
       taskActivityService.save(activity);
       return;

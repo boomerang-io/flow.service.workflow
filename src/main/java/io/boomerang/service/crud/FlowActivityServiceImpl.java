@@ -173,7 +173,6 @@ public class FlowActivityServiceImpl implements FlowActivityService {
 
     activity.setScope(workflow.getScope());
     activity.setCreationDate(new Date());
-    // TODO: Eventing - Workflow activity changed to in progress
     activity.setStatus(TaskStatus.inProgress);
 
     List<KeyValuePair> corePropertyList = new LinkedList<>();
