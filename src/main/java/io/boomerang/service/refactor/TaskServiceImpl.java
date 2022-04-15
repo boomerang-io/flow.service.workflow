@@ -112,7 +112,7 @@ public class TaskServiceImpl implements TaskService {
   public void createTask(InternalTaskRequest request) {
 
     String taskId = request.getActivityId();
-    LOGGER.debug("[{}] Recieved creating task request", taskId);
+    LOGGER.debug("[{}] Received creating task request", taskId);
 
     TaskExecutionEntity taskExecution = taskActivityService.findById(taskId);
     ActivityEntity activity =
@@ -516,7 +516,7 @@ public class TaskServiceImpl implements TaskService {
     LOGGER.debug("[{}] Obtained lock", activityId);
 
     workflowActivity = activityService.findWorkflowActivtyById(activity.getActivityId());
-    updatePendingAprovalStatus(workflowActivity);
+    updatePendingApprovalStatus(workflowActivity);
 
     activity.setFlowTaskStatus(request.getStatus());
 
@@ -526,7 +526,7 @@ public class TaskServiceImpl implements TaskService {
       LOGGER.error("Workflow has been cancelled due to its max workflow duration has exceeded.");
       ErrorResponse response = new ErrorResponse();
       response
-          .setMessage("Workflow execution terminated due to exceeding maxinum workflow duration.");
+          .setMessage("Workflow execution terminated due to exceeding maximum workflow duration.");
       response.setCode("001");
 
       flowActivityService.cancelWorkflowActivity(workflowActivityId, response);
@@ -537,7 +537,7 @@ public class TaskServiceImpl implements TaskService {
     LOGGER.debug("[{}] Released lock", activityId);
   }
 
-  private void updatePendingAprovalStatus(ActivityEntity workflowActivity) {
+  private void updatePendingApprovalStatus(ActivityEntity workflowActivity) {
     long count = approvalService.getApprovalCountForActivity(workflowActivity.getId(),
         ApprovalStatus.submitted);
     boolean existingApprovals = (count > 0);
@@ -598,7 +598,7 @@ public class TaskServiceImpl implements TaskService {
       boolean finishedAll) {
     LOGGER.debug("[{}] Looking at next tasks", workflowActivity.getId());
     LOGGER.debug("Testing at next tasks");
-    List<Task> nextNodes = getTasksDependants(tasks, currentTask);
+    List<Task> nextNodes = getTasksDependencies(tasks, currentTask);
     LOGGER.debug("Testing at next tasks: {}", nextNodes.size());
 
     for (Task next : nextNodes) {
@@ -632,13 +632,13 @@ public class TaskServiceImpl implements TaskService {
   private boolean finishedAll(ActivityEntity workflowActivity, List<Task> tasks, Task currentTask) {
     boolean finishedAll = true;
 
-    List<Task> nextNodes = getTasksDependants(tasks, currentTask);
+    List<Task> nextNodes = getTasksDependencies(tasks, currentTask);
     for (Task next : nextNodes) {
       if (next.getTaskType() == TaskType.end) {
-        List<String> deps = next.getDependencies();
-        for (String dep : deps) {
+        List<String> dependencies = next.getDependencies();
+        for (String dependency : dependencies) {
           TaskExecutionEntity task =
-              taskActivityService.findByTaskIdAndActivityId(dep, workflowActivity.getId());
+              taskActivityService.findByTaskIdAndActivityId(dependency, workflowActivity.getId());
           if (task == null) {
             continue;
           }
@@ -656,10 +656,10 @@ public class TaskServiceImpl implements TaskService {
   }
 
   private boolean canExecuteTask(ActivityEntity workflowActivity, Task next) {
-    List<String> deps = next.getDependencies();
-    for (String dep : deps) {
+    List<String> dependencies = next.getDependencies();
+    for (String dependency : dependencies) {
       TaskExecutionEntity task =
-          taskActivityService.findByTaskIdAndActivityId(dep, workflowActivity.getId());
+          taskActivityService.findByTaskIdAndActivityId(dependency, workflowActivity.getId());
       if (task != null) {
         TaskStatus status = task.getFlowTaskStatus();
         if (status == TaskStatus.inProgress || status == TaskStatus.notstarted
@@ -671,7 +671,7 @@ public class TaskServiceImpl implements TaskService {
     return true;
   }
 
-  private List<Task> getTasksDependants(List<Task> tasks, Task currentTask) {
+  private List<Task> getTasksDependencies(List<Task> tasks, Task currentTask) {
     return tasks.stream().filter(c -> c.getDependencies().contains(currentTask.getTaskId()))
         .collect(Collectors.toList());
   }
