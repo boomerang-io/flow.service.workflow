@@ -285,7 +285,6 @@ public class ControllerClientImpl implements ControllerClient {
     request.setArguments(args);
     final Date startDate = new Date();
     taskExecution.setStartTime(startDate);
-    // TODO: Eventing - Workflow activity task status set to in progress
     taskExecution.setFlowTaskStatus(TaskStatus.inProgress);
     taskExecution = taskService.save(taskExecution);
 
@@ -321,11 +320,9 @@ public class ControllerClientImpl implements ControllerClient {
       final Date finishDate = new Date();
       final long duration = finishDate.getTime() - startDate.getTime();
       taskExecution.setDuration(duration);
-      // TODO: Eventing - Workflow activity task status set to completed
       taskExecution.setFlowTaskStatus(TaskStatus.completed);
 
       if (response != null && !"0".equals(response.getCode())) {
-        // TODO: Eventing - Workflow activity task status set to failure
         taskExecution.setFlowTaskStatus(TaskStatus.failure);
         ErrorResponse error = new ErrorResponse();
         error.setCode(response.getCode());
@@ -337,7 +334,6 @@ public class ControllerClientImpl implements ControllerClient {
       }
     } catch (HttpStatusCodeException statusCodeException) {
       LOGGER.error(ExceptionUtils.getStackTrace(statusCodeException));
-      // TODO: Eventing - Workflow activity task status set to failure
       taskExecution.setFlowTaskStatus(TaskStatus.failure);
       taskResult.setStatus(TaskStatus.failure);
       String body = statusCodeException.getResponseBodyAsString();
@@ -357,7 +353,6 @@ public class ControllerClientImpl implements ControllerClient {
         e.printStackTrace();
       }
     } catch (RestClientException ex) {
-      // TODO: Eventing - Workflow activity task status set to failure
       taskExecution.setFlowTaskStatus(TaskStatus.failure);
       taskResult.setStatus(TaskStatus.failure);
       LOGGER.error(ERRORLOGPRFIX, CREATECUSTOMTASKREQUEST);
@@ -458,7 +453,6 @@ public class ControllerClientImpl implements ControllerClient {
     final Date startDate = new Date();
 
     taskExecution.setStartTime(startDate);
-    // TODO: Eventing - Workflow activity task status set to in progress
     taskExecution.setFlowTaskStatus(TaskStatus.inProgress);
     taskExecution = taskService.save(taskExecution);
 
@@ -495,10 +489,8 @@ public class ControllerClientImpl implements ControllerClient {
       final long duration = finishDate.getTime() - startDate.getTime();
 
       taskExecution.setDuration(duration);
-      // TODO: Eventing - Workflow activity task status set to completed
       taskExecution.setFlowTaskStatus(TaskStatus.completed);
       if (response != null && !"0".equals(response.getCode())) {
-        // TODO: Eventing - Workflow activity task status set to failure
         taskExecution.setFlowTaskStatus(TaskStatus.failure);
         taskResult.setStatus(TaskStatus.failure);
 
@@ -512,7 +504,6 @@ public class ControllerClientImpl implements ControllerClient {
       LOGGER.info("Task result: {}", taskResult.getStatus());
     } catch (HttpStatusCodeException statusCodeException) {
       LOGGER.error(ExceptionUtils.getStackTrace(statusCodeException));
-      // TODO: Eventing - Workflow activity task status set to failure
       taskExecution.setFlowTaskStatus(TaskStatus.failure);
       taskResult.setStatus(TaskStatus.failure);
       String body = statusCodeException.getResponseBodyAsString();
@@ -532,7 +523,6 @@ public class ControllerClientImpl implements ControllerClient {
         e.printStackTrace();
       }
     } catch (RestClientException ex) {
-      // TODO: Eventing - Workflow activity task status set to failure
       taskExecution.setFlowTaskStatus(TaskStatus.failure);
       taskResult.setStatus(TaskStatus.failure);
 
