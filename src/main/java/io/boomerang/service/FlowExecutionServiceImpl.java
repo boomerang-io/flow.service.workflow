@@ -52,6 +52,8 @@ import io.boomerang.util.GraphProcessor;
 @Service
 public class FlowExecutionServiceImpl implements FlowExecutionService {
 
+  private static final Logger LOGGER = LogManager.getLogger(FlowExecutionServiceImpl.class);
+
   @Autowired
   private FlowActivityService flowActivityService;
 
@@ -81,7 +83,8 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
   @Autowired
   private ControllerClient controllerClient;
 
-  private static final Logger LOGGER = LogManager.getLogger(FlowExecutionServiceImpl.class);
+  @Autowired
+  private EventingService eventingService;
 
   private List<Task> createTaskList(RevisionEntity revisionEntity) { // NOSONAR
 
@@ -166,10 +169,11 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
     boolean validWorkflow = dagUtility.validateWorkflow(activityEntity);
 
     if (!validWorkflow) {
-      // TODO: Eventing - Workflow activity changed to invalid
       activityEntity.setStatus(TaskStatus.invalid);
       activityEntity.setStatusMessage("Failed to run workflow: Incomplete workflow");
       activityService.saveWorkflowActivity(activityEntity);
+      eventingService.publishWorkflowActivityStatusUpdateCE(activityEntity);
+
       throw new InvalidWorkflowRuntimeException();
     }
 
@@ -237,23 +241,25 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
   private void executeWorkflowAsync(String activityId, final Task start, final Task end,
       final Graph<String, DefaultEdge> graph, final List<Task> tasksToRun)
       throws ExecutionException {
+        final ActivityEntity activityEntity = this.flowActivityService.findWorkflowActivity(activityId);
 
     if (tasksToRun.size() == 2) {
-      final ActivityEntity activityEntity =
-          this.flowActivityService.findWorkflowActivity(activityId);
-      // TODO: Eventing - Workflow activity changed to completed
       activityEntity.setStatus(TaskStatus.completed);
       activityEntity.setCreationDate(new Date());
       activityService.saveWorkflowActivity(activityEntity);
+      eventingService.publishWorkflowActivityStatusUpdateCE(activityEntity);
 
       return;
     }
 
-    final ActivityEntity activityEntity = this.flowActivityService.findWorkflowActivity(activityId);
-    // TODO: Eventing - Workflow activity status set to in progress (might already be in progress)
+    TaskStatus oldStatus = activityEntity.getStatus();
     activityEntity.setStatus(TaskStatus.inProgress);
     activityEntity.setCreationDate(new Date());
     activityService.saveWorkflowActivity(activityEntity);
+
+    if (oldStatus != activityEntity.getStatus()) {
+      eventingService.publishWorkflowActivityStatusUpdateCE(activityEntity);
+    }
 
     WorkflowEntity workflow = workflowService.getWorkflow(activityEntity.getWorkflowId());
     if (workflow.getStorage() == null) {
