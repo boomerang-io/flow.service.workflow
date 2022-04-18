@@ -118,7 +118,7 @@ public class ManagementController {
   }
 
   @DeleteMapping(value = "/teams/{teamId}")
-  public void addTeam(@PathVariable String teamId) {
+  public void deactivateTeam(@PathVariable String teamId) {
     if (isTeamManagementAvaliable()) {
       teamService.deactivateTeam(teamId);
     }

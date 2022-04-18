@@ -47,7 +47,9 @@ public class BoomerangTestConfiguration {
   public void initializeLocalMongoConnection() throws IOException {
 
     MongodStarter starter = MongodStarter.getDefaultInstance();
-    IFeatureAwareVersion version = de.flapdoodle.embed.mongo.distribution.Versions.withFeatures(de.flapdoodle.embed.process.distribution.Version.of("4.0.0"), Version.Main.PRODUCTION.getFeatures());
+    IFeatureAwareVersion version = de.flapdoodle.embed.mongo.distribution.Versions.withFeatures(
+        de.flapdoodle.embed.process.distribution.Version.of("4.0.0"),
+        Version.Main.PRODUCTION.getFeatures());
     MongodConfig mongodConfig =
         MongodConfig.builder().version(version).putArgs("--replSet", "fancy")
             .cmdOptions(MongoCmdOptions.builder().useNoJournal(false).build())
@@ -77,8 +79,7 @@ public class BoomerangTestConfiguration {
     MongoImportConfig mongoImportConfig = MongoImportConfig.builder()
         .version(Version.Main.PRODUCTION).net(new Net(BIND_IP, PORT, Network.localhostIsIPv6()))
         .databaseName(dbName).collectionName(collection).isUpsertDocuments(upsert)
-        .isDropCollection(drop).isJsonArray(jsonArray)
-        .importFile(jsonFile).build();
+        .isDropCollection(drop).isJsonArray(jsonArray).importFile(jsonFile).build();
 
     MongoImportExecutable mongoImportExecutable =
         MongoImportStarter.getDefaultInstance().prepare(mongoImportConfig);

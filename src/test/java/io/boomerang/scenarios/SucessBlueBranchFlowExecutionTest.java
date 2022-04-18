@@ -34,7 +34,7 @@ import io.boomerang.mongo.model.TaskStatus;
 import io.boomerang.tests.IntegrationTests;
 
 @ExtendWith(SpringExtension.class)
-@SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT)
+@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("local")
 @WithMockUser(roles = {"admin"})
 @WithUserDetails("mdroy@us.ibm.com")
@@ -57,19 +57,23 @@ public class SucessBlueBranchFlowExecutionTest extends IntegrationTests {
     Assertions.assertEquals(TaskStatus.completed, finalActivity.getStatus());
     Assertions.assertNotNull(finalActivity.getDuration());
     mockServer.verify();
-    
-     
+
+
     List<TaskExecutionResponse> steps = finalActivity.getSteps();
-    TaskExecutionResponse executeShell1 = steps.stream().filter(e -> e.getTaskName().equals("Execute Shell 1")).findFirst().orElse(null);
-    TaskExecutionResponse executeShell2 = steps.stream().filter(e -> e.getTaskName().equals("Execute Shell 2")).findFirst().orElse(null);
-    TaskExecutionResponse executeShell3 = steps.stream().filter(e -> e.getTaskName().equals("Execute Shell 3")).findFirst().orElse(null);
-    TaskExecutionResponse switchStep = steps.stream().filter(e -> e.getTaskName().equals("Switch 1")).findFirst().orElse(null);
-    
+    TaskExecutionResponse executeShell1 = steps.stream()
+        .filter(e -> e.getTaskName().equals("Execute Shell 1")).findFirst().orElse(null);
+    TaskExecutionResponse executeShell2 = steps.stream()
+        .filter(e -> e.getTaskName().equals("Execute Shell 2")).findFirst().orElse(null);
+    TaskExecutionResponse executeShell3 = steps.stream()
+        .filter(e -> e.getTaskName().equals("Execute Shell 3")).findFirst().orElse(null);
+    TaskExecutionResponse switchStep =
+        steps.stream().filter(e -> e.getTaskName().equals("Switch 1")).findFirst().orElse(null);
+
     Assertions.assertEquals(TaskStatus.completed, executeShell1.getFlowTaskStatus());
     Assertions.assertEquals(TaskStatus.skipped, executeShell2.getFlowTaskStatus());
     Assertions.assertEquals(TaskStatus.completed, executeShell3.getFlowTaskStatus());
     Assertions.assertEquals(TaskStatus.completed, switchStep.getFlowTaskStatus());
-    
+
     Assertions.assertEquals("blue", switchStep.getSwitchValue());
   }
 
@@ -80,8 +84,8 @@ public class SucessBlueBranchFlowExecutionTest extends IntegrationTests {
     mockServer = MockRestServiceServer.bindTo(this.restTemplate).ignoreExpectOrder(true).build();
     mockServer
         .expect(manyTimes(), requestTo(containsString("http://localhost:8084/internal/users/user")))
-        .andExpect(method(HttpMethod.GET)).andRespond(
-            withSuccess(getMockFile("mock/users/users.json"), MediaType.APPLICATION_JSON));
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withSuccess(getMockFile("mock/users/users.json"), MediaType.APPLICATION_JSON));
     mockServer.expect(times(1), requestTo(containsString("controller/workflow/execute")))
         .andExpect(method(HttpMethod.POST)).andRespond(withStatus(HttpStatus.OK));
     mockServer.expect(times(1), requestTo(containsString("controller/task/execute")))
@@ -89,9 +93,10 @@ public class SucessBlueBranchFlowExecutionTest extends IntegrationTests {
         .andExpect(method(HttpMethod.POST)).andRespond(withStatus(HttpStatus.OK));
     mockServer.expect(times(1), requestTo(containsString("controller/task/execute")))
         .andExpect(jsonPath("$.taskName").value("Execute Shell 3"))
-        .andExpect(method(HttpMethod.POST)).andRespond(withSuccess(getMockFile("tests/scenarios/branch/branch-response1.json"),
+        .andExpect(method(HttpMethod.POST))
+        .andRespond(withSuccess(getMockFile("tests/scenarios/branch/branch-response1.json"),
             MediaType.APPLICATION_JSON));
-    
+
     mockServer.expect(times(1), requestTo(containsString("controller/workflow/terminate")))
         .andExpect(method(HttpMethod.POST)).andRespond(withStatus(HttpStatus.OK));
   }

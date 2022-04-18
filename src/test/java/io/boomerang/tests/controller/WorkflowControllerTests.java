@@ -1,7 +1,6 @@
-package io.boomerang.miscs.controller;
+package io.boomerang.tests.controller;
 
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -29,7 +28,6 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import io.boomerang.controller.InternalController;
 import io.boomerang.controller.WorkflowController;
 import io.boomerang.misc.FlowTests;
-import io.boomerang.model.CronValidationResponse;
 import io.boomerang.model.FlowWorkflowRevision;
 import io.boomerang.model.GenerateTokenResponse;
 import io.boomerang.model.RevisionResponse;
@@ -39,7 +37,6 @@ import io.boomerang.model.WorkflowSummary;
 import io.boomerang.model.projectstormv5.RestConfig;
 import io.boomerang.mongo.entity.RevisionEntity;
 import io.boomerang.mongo.entity.WorkflowEntity;
-import io.boomerang.mongo.entity.WorkflowScheduleEntity;
 import io.boomerang.mongo.model.ActivityStorage;
 import io.boomerang.mongo.model.Storage;
 import io.boomerang.mongo.model.TaskConfigurationNode;
@@ -48,14 +45,12 @@ import io.boomerang.mongo.model.TriggerScheduler;
 import io.boomerang.mongo.model.Triggers;
 import io.boomerang.mongo.model.WorkflowConfiguration;
 import io.boomerang.mongo.model.WorkflowProperty;
-import io.boomerang.mongo.model.WorkflowScheduleStatus;
 import io.boomerang.mongo.model.WorkflowScope;
 import io.boomerang.mongo.model.WorkflowStatus;
-import io.boomerang.service.crud.WorkflowScheduleService;
 
 
 @ExtendWith(SpringExtension.class)
-@SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT)
+@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("local")
 @WithMockUser(roles = {"admin"})
 @WithUserDetails("mdroy@us.ibm.com")
@@ -66,9 +61,6 @@ public class WorkflowControllerTests extends FlowTests {
 
   @Autowired
   private InternalController internalController;
-  
-  @Autowired
-  private WorkflowScheduleService workflowScheduleService;
 
   @Test
   public void testInternalWorkflowListing() {
@@ -233,23 +225,8 @@ public class WorkflowControllerTests extends FlowTests {
     Assertions.assertEquals(1, response.size());
     Assertions.assertEquals(1, response.get(0).getVersion());
   }
-  
-  @Test
-  @Disabled
-  public void testCreateWorkflowSchedule() {
-
-    WorkflowScheduleEntity schedule = new WorkflowScheduleEntity();
-    schedule.setStatus(WorkflowScheduleStatus.active);
-    schedule.setSchedule("0 00 20 ? * TUE,WED,THU *");
-    schedule.setTimezone("timezone");
-
-    workflowScheduleService.createSchedule(schedule);
-    
-    //TODO: add logic to do one test with the scehdule trigger enabled and one without. and make sure things get updated.
-  }
 
   @Test
-  @Disabled
   public void testUpdateWorkflowTriggers() {
 
     TriggerScheduler scheduler = new TriggerScheduler();
@@ -277,8 +254,7 @@ public class WorkflowControllerTests extends FlowTests {
 
     Assertions.assertEquals(true, updatedEntity.getTriggers().getScheduler().getEnable());
     Assertions.assertEquals(false, updatedEntity.getTriggers().getWebhook().getEnable());
-    Assertions.assertEquals("A5DF2F840C0DFF496D516B4F75BD947C9BC44756A8AE8571FC45FCB064323641",
-        updatedEntity.getTriggers().getWebhook().getToken());
+    Assertions.assertEquals("token", updatedEntity.getTriggers().getWebhook().getToken());
   }
 
   @Test
@@ -335,52 +311,6 @@ public class WorkflowControllerTests extends FlowTests {
     Assertions.assertEquals("params.hello", parameters.get(1));
     Assertions.assertEquals("system.params.workflow-id", parameters.get(2));
     Assertions.assertEquals("params.workflow-id", parameters.get(3));
-
-  }
-
-  @Test
-  public void testCronValidation() {
-    CronValidationResponse response = controller.validateCron("0 * * * * *");
-    assertEquals(false, response.isValid());
-    assertEquals(null, response.getCron());
-    assertEquals(
-        "Failed to parse '0 * * * * *'. Invalid cron expression: 0 * * * * *. Both, a day-of-week AND a day-of-month parameter, are not supported.",
-        response.getMessage());
-
-    response = controller.validateCron("0 * * ? * *");
-    assertEquals(true, response.isValid());
-    assertEquals("0 * * ? * *", response.getCron());
-    assertEquals(null, response.getMessage());
-
-    response = controller.validateCron("0 0 * ? * *");
-    assertEquals(true, response.isValid());
-    assertEquals("0 0 * ? * *", response.getCron());
-    assertEquals(null, response.getMessage());
-
-    response = controller.validateCron("0 0 * ? * MON,TUE,WED,THU,FRI,SAT,SUN");
-    assertEquals(true, response.isValid());
-    assertEquals("0 0 * ? * 2,3,4,5,6,7,1", response.getCron());
-    assertEquals(null, response.getMessage());
-
-    response = controller.validateCron("5 0 * 8 *");
-    assertEquals(true, response.isValid());
-    assertEquals("0 5 0 * 8 ? *", response.getCron());
-    assertEquals(null, response.getMessage());
-
-    response = controller.validateCron("0 * * * *");
-    assertEquals(true, response.isValid());
-    assertEquals("0 0 * * * ? *", response.getCron());
-    assertEquals(null, response.getMessage());
-
-    response = controller.validateCron("* * * * *");
-    assertEquals(true, response.isValid());
-    assertEquals("0 * * * * ? *", response.getCron());
-    assertEquals(null, response.getMessage());
-    
-    response = controller.validateCron("1 1 1 1 1");
-    assertEquals(false, response.isValid());
-    assertEquals(null, response.getCron());
-    assertEquals("Cron expression contains 5 parts but we expect one of [6, 7]", response.getMessage());
 
   }
 

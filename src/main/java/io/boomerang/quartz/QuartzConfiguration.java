@@ -5,6 +5,7 @@ import java.util.Properties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.PropertiesFactoryBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,6 +14,10 @@ import org.springframework.scheduling.quartz.SchedulerFactoryBean;
 import io.boomerang.mongo.service.MongoConfiguration;
 
 @Configuration
+@ConditionalOnProperty(
+    value="flow.scheduling.enabled", 
+    havingValue = "true", 
+    matchIfMissing = true)
 public class QuartzConfiguration {
 
   @Value("${spring.data.mongodb.uri}")

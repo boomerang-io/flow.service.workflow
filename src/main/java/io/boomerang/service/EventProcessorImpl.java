@@ -9,11 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
-import org.apache.http.HttpStatus;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -26,6 +21,11 @@ import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.Option;
 import com.jayway.jsonpath.spi.json.JacksonJsonNodeJsonProvider;
 import com.jayway.jsonpath.spi.mapper.JacksonMappingProvider;
+import org.apache.http.HttpStatus;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 import io.boomerang.model.FlowActivity;
 import io.boomerang.model.FlowExecutionRequest;
 import io.boomerang.model.eventing.EventResponse;
@@ -61,9 +61,8 @@ public class EventProcessorImpl implements EventProcessor {
       JsonNode payload) {
 
     ZonedDateTime now = ZonedDateTime.now();
-    String formattedDate = DateTimeFormatter.
-        ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSSSSS").
-        format(now) + 'Z';
+    String formattedDate =
+        DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSSSSS").format(now) + 'Z';
     JsonNode timeNode = new TextNode(formattedDate);
     ((ObjectNode) payload).set("time", timeNode);
 
@@ -93,13 +92,19 @@ public class EventProcessorImpl implements EventProcessor {
     Map<String, Object> headers = Map.of("Content-Type", "application/cloudevents+json");
     String requestStatus = getStatusFromPayload(message);
 
-    CloudEvent<AttributesImpl, JsonNode> event = Unmarshallers.structured(JsonNode.class)
-        .withHeaders(() -> headers).withPayload(() -> message).unmarshal();
+    // Unmarshall the NATS message to a Cloud Event
+    CloudEvent<AttributesImpl, JsonNode> event = null;
 
-    createResponseEvent(event.getAttributes().getId(), event.getAttributes().getType(),
-        event.getAttributes().getSource(), event.getAttributes().getSubject().orElse(""),
-        event.getAttributes().getTime().orElse(ZonedDateTime.now()),
-        processEvent(event, requestStatus));
+    try {
+      event = Unmarshallers.structured(JsonNode.class).withHeaders(() -> headers)
+          .withPayload(() -> message).unmarshal();
+    } catch (Exception e) {
+      logger.error("Could not unmarshal NATS message to a Cloud Event", e);
+      return;
+    }
+
+    // Process the event
+    processEvent(event, requestStatus);
   }
 
   private String getStatusFromPayload(String message) {
@@ -239,40 +244,37 @@ public class EventProcessorImpl implements EventProcessor {
 	//get Event properties from JsonPath?
 	return result;
 }
-
-/*
-   * Loop through a Workflow's parameters and if a JsonPath is set
-   * read the event payload and attempt to find a payload.
+  
+  /*
+   * Loop through a Workflow's parameters and if a JsonPath is set read the event payload and
+   * attempt to find a payload.
    * 
-   * Notes:
-   * - We drop exceptions to ensure Workflow continues executing
-   * - We return null if path not found using DEFAULT_PATH_LEAF_TO_NULL. 
+   * Notes: - We drop exceptions to ensure Workflow continues executing - We return null if path not
+   * found using DEFAULT_PATH_LEAF_TO_NULL.
    * 
-   * Reference: 
-   * - https://github.com/json-path/JsonPath#tweaking-configuration
+   * Reference: - https://github.com/json-path/JsonPath#tweaking-configuration
    */
   private Map<String, String> processProperties(JsonNode eventData, String workflowId) {
-    Configuration jsonConfig =
-        Configuration.builder().mappingProvider(new JacksonMappingProvider())
-            .jsonProvider(new JacksonJsonNodeJsonProvider())
-            .options(Option.DEFAULT_PATH_LEAF_TO_NULL).build();
-    List<WorkflowProperty> inputProperties = workflowService.getWorkflow(workflowId).getProperties();
+    Configuration jsonConfig = Configuration.builder().mappingProvider(new JacksonMappingProvider())
+        .jsonProvider(new JacksonJsonNodeJsonProvider()).options(Option.DEFAULT_PATH_LEAF_TO_NULL)
+        .build();
+    List<WorkflowProperty> inputProperties =
+        workflowService.getWorkflow(workflowId).getProperties();
     Map<String, String> properties = new HashMap<>();
     DocumentContext jsonContext = JsonPath.using(jsonConfig).parse(eventData);
     if (inputProperties != null) {
       try {
         inputProperties.forEach(inputProperty -> {
           if (inputProperty.getJsonPath() != null && !inputProperty.getJsonPath().isBlank()) {
-            
+
             JsonNode propertyValue = jsonContext.read(inputProperty.getJsonPath());
-         
+
             if (!propertyValue.isNull()) {
               String value = propertyValue.toString();
               value = value.replaceAll("^\"+|\"+$", "");
-              logger.info(
-                  "processProperties() - Property: " + inputProperty.getKey() + ", Json Path: "
-                      + inputProperty.getJsonPath() + ", Value: " + value);
-              properties.put(inputProperty.getKey(),value);
+              logger.info("processProperties() - Property: " + inputProperty.getKey()
+                  + ", Json Path: " + inputProperty.getJsonPath() + ", Value: " + value);
+              properties.put(inputProperty.getKey(), value);
             } else {
               logger.info("processProperties() - Skipping property: " + inputProperty.getKey());
             }

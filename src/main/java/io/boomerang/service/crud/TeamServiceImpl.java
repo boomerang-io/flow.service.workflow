@@ -671,6 +671,7 @@ public class TeamServiceImpl implements TeamService {
 
   @Override
   public void updateTeam(String teamId, FlowTeam flow) {
+    validateUser();
     TeamEntity team = flowTeamService.findById(teamId);
     if (flow.getName() != null) {
       team.setName(flow.getName());

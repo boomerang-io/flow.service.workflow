@@ -31,7 +31,7 @@ import io.boomerang.mongo.model.TaskStatus;
 import io.boomerang.tests.IntegrationTests;
 import io.boomerang.tests.MongoConfig;
 
-@SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT)
+@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = {Application.class, MongoConfig.class})
 @ActiveProfiles("local")
@@ -72,15 +72,15 @@ public class DefaultPathTests extends IntegrationTests {
 
 
     mockServer.expect(times(4), requestTo(containsString("internal/users/user")))
-        .andExpect(method(HttpMethod.GET)).andRespond(
-            withSuccess(getMockFile("mock/users/users.json"), MediaType.APPLICATION_JSON));
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withSuccess(getMockFile("mock/users/users.json"), MediaType.APPLICATION_JSON));
 
     mockServer.expect(times(1), requestTo(containsString("controller/workflow/execute")))
         .andExpect(method(HttpMethod.POST)).andRespond(withStatus(HttpStatus.OK));
 
     mockServer.expect(times(1), requestTo(containsString("users/user/5e736fb0a97b78000125ebe3")))
-        .andExpect(method(HttpMethod.GET)).andRespond(
-            withSuccess(getMockFile("mock/users/users.json"), MediaType.APPLICATION_JSON));
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withSuccess(getMockFile("mock/users/users.json"), MediaType.APPLICATION_JSON));
 
     mockServer.expect(times(1), requestTo(containsString("controller/task/execute")))
         .andExpect(method(HttpMethod.POST)).andRespond(withStatus(HttpStatus.OK));
