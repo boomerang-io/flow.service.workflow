@@ -8,8 +8,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.Configuration;
@@ -98,7 +98,7 @@ public class EventProcessorTest {
     Map<String, String> properties = new HashMap<>();
     if (inputProperties != null) {
       // JsonNode parsedEventData = JsonPath.using(jacksonConfig).parse(payload);
-      Assertions.assertNotNull(inputProperties);
+      assertNotNull(inputProperties);
       try {
         inputProperties.forEach(inputProperty -> {
           JsonNode propertyValue =

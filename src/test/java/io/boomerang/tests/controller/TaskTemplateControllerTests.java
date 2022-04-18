@@ -1,8 +1,10 @@
 package io.boomerang.tests.controller;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
 import java.util.ArrayList;
 import java.util.List;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +24,7 @@ import io.boomerang.mongo.model.Revision;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
-@ActiveProfiles("local")
+@ActiveProfiles("test")
 @WithMockUser(roles = {"admin"})
 @WithUserDetails("mdroy@us.ibm.com")
 public class TaskTemplateControllerTests extends FlowTests {
@@ -33,19 +35,19 @@ public class TaskTemplateControllerTests extends FlowTests {
   @Test
   public void testGetTaskTemplateWithId() {
     FlowTaskTemplate template = controller.getTaskTemplateWithId("5bd9d0825a5df954ad5bb5c3");
-    Assertions.assertEquals("5bd9d0825a5df954ad5bb5c3", template.getId());
-    Assertions.assertEquals(1, template.getCurrentVersion());
-    Assertions.assertEquals(true, template.isVerified());
+     assertEquals("5bd9d0825a5df954ad5bb5c3", template.getId());
+     assertEquals(1, template.getCurrentVersion());
+     assertEquals(true, template.isVerified());
 
   }
 
   @Test
   public void testGetAllTaskTemplates() {
     List<FlowTaskTemplate> templates = controller.getAllTaskTemplates(null, null);
-    Assertions.assertEquals(6, templates.size());
-    Assertions.assertEquals(1, templates.get(0).getCurrentVersion());
-    Assertions.assertEquals(true, templates.get(0).isVerified());
-    Assertions.assertEquals(false, templates.get(1).isVerified());
+     assertEquals(6, templates.size());
+     assertEquals(1, templates.get(0).getCurrentVersion());
+     assertEquals(true, templates.get(0).isVerified());
+     assertEquals(false, templates.get(1).isVerified());
 
   }
 
@@ -57,8 +59,8 @@ public class TaskTemplateControllerTests extends FlowTests {
     entity.setName("TestTaskTemplate");
     entity.setNodetype("custom");
     FlowTaskTemplate testTemplate = controller.insertTaskTemplate(entity);
-    Assertions.assertEquals("TestTaskTemplate", testTemplate.getName());
-    Assertions.assertEquals(false, testTemplate.isVerified());
+     assertEquals("TestTaskTemplate", testTemplate.getName());
+     assertEquals(false, testTemplate.isVerified());
 
   }
 
@@ -84,28 +86,28 @@ public class TaskTemplateControllerTests extends FlowTests {
 
     entity.setRevisions(revisions);
     FlowTaskTemplate updatedEntity = controller.updateTaskTemplate(entity);
-    Assertions.assertEquals(updatedEntity.getId(), entity.getId());
-    Assertions.assertEquals("test", updatedEntity.getDescription());
-    // Assertions.assertEquals(date, updatedEntity.getCreatedDate());
-    Assertions.assertEquals(1, updatedEntity.getCurrentVersion());
+     assertEquals(updatedEntity.getId(), entity.getId());
+     assertEquals("test", updatedEntity.getDescription());
+    //  assertEquals(date, updatedEntity.getCreatedDate());
+     assertEquals(1, updatedEntity.getCurrentVersion());
 
-    Assertions.assertNotNull(updatedEntity.getRevisions().get(0).getChangelog().getUserId());
-    Assertions.assertEquals("reason",
+     assertNotNull(updatedEntity.getRevisions().get(0).getChangelog().getUserId());
+     assertEquals("reason",
         updatedEntity.getRevisions().get(0).getChangelog().getReason());
-    Assertions.assertEquals(true, updatedEntity.isVerified());
+     assertEquals(true, updatedEntity.isVerified());
   }
 
   @Test
   public void testDeleteTaskTemplate() {
     controller.deleteTaskTemplateWithId("5bd9d0825a5df954ad5bb5c3");
-    Assertions.assertNotNull(controller.getTaskTemplateWithId("5bd9d0825a5df954ad5bb5c3"));
-    Assertions.assertEquals(FlowTaskTemplateStatus.inactive,
+     assertNotNull(controller.getTaskTemplateWithId("5bd9d0825a5df954ad5bb5c3"));
+     assertEquals(FlowTaskTemplateStatus.inactive,
         controller.getTaskTemplateWithId("5bd9d0825a5df954ad5bb5c3").getStatus());
 
 
     controller.activateTaskTemplate("5bd9d0825a5df954ad5bb5c3");
-    Assertions.assertNotNull(controller.getTaskTemplateWithId("5bd9d0825a5df954ad5bb5c3"));
-    Assertions.assertEquals(FlowTaskTemplateStatus.active,
+     assertNotNull(controller.getTaskTemplateWithId("5bd9d0825a5df954ad5bb5c3"));
+     assertEquals(FlowTaskTemplateStatus.active,
         controller.getTaskTemplateWithId("5bd9d0825a5df954ad5bb5c3").getStatus());
 
   }
@@ -115,9 +117,9 @@ public class TaskTemplateControllerTests extends FlowTests {
     String templateId = "5bd9d0825a5df954ad5bb5c3";
 
     TektonTask task = this.controller.getTaskTemplateYamlWithId(templateId);
-    Assertions.assertNotNull(task);
-    Assertions.assertNotNull(task.getSpec());
-    Assertions.assertNotNull(task.getSpec().getParams());
+     assertNotNull(task);
+     assertNotNull(task.getSpec());
+     assertNotNull(task.getSpec().getParams());
   }
 
   @Test
@@ -125,7 +127,7 @@ public class TaskTemplateControllerTests extends FlowTests {
     String templateId = "5bd9d0825a5df954ad5bb5c3";
 
     TektonTask task = this.controller.getTaskTemplateYamlWithIdandRevision(templateId, 1);
-    Assertions.assertNotNull(task.getSpec().getParams());
+     assertNotNull(task.getSpec().getParams());
   }
 
 }

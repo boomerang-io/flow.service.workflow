@@ -1,7 +1,7 @@
 package io.boomerang.tests.controller;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.util.List;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +17,7 @@ import io.boomerang.service.config.model.GlobalConfig;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
-@ActiveProfiles("local")
+@ActiveProfiles("test")
 @WithMockUser(roles = {"admin"})
 @WithUserDetails("mdroy@us.ibm.com")
 public class GlobalConfigControllerTests extends FlowTests {
@@ -36,7 +36,7 @@ public class GlobalConfigControllerTests extends FlowTests {
     globalConfigController.createNewGlobalConfig(newConfig);
 
     List<GlobalConfig> allConfigs = this.globalConfigController.getAllGlobalConfigurations();
-    Assertions.assertEquals(1, allConfigs.size());
+    assertEquals(1, allConfigs.size());
 
     GlobalConfig updatedConfig = allConfigs.get(0);
     updatedConfig.setDescription("New Description");
@@ -44,7 +44,7 @@ public class GlobalConfigControllerTests extends FlowTests {
     updatedConfig =
         this.globalConfigController.updateGlobalConfig(updatedConfig, updatedConfig.getId());
 
-    Assertions.assertEquals("New Description", updatedConfig.getDescription());
+    assertEquals("New Description", updatedConfig.getDescription());
 
     this.globalConfigController.deleteConfiguration(updatedConfig.getId());
 
