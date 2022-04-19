@@ -1,7 +1,14 @@
 package io.boomerang.service;
 
+import java.io.IOException;
+import java.net.URI;
+import java.text.MessageFormat;
 import java.time.Duration;
+import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,12 +19,22 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 import io.boomerang.eventing.nats.ConnectionPrimer;
+import io.boomerang.eventing.nats.jetstream.PubOnlyConfiguration;
+import io.boomerang.eventing.nats.jetstream.PubOnlyTunnel;
 import io.boomerang.eventing.nats.jetstream.PubSubConfiguration;
 import io.boomerang.eventing.nats.jetstream.PubSubTransceiver;
 import io.boomerang.eventing.nats.jetstream.PubSubTunnel;
+import io.boomerang.eventing.nats.jetstream.PubTransmitter;
 import io.boomerang.eventing.nats.jetstream.SubHandler;
 import io.boomerang.eventing.nats.jetstream.SubOnlyTunnel;
+import io.boomerang.eventing.nats.jetstream.exception.StreamNotFoundException;
+import io.boomerang.eventing.nats.jetstream.exception.SubjectMismatchException;
 import io.boomerang.mongo.entity.ActivityEntity;
+import io.boomerang.mongo.model.TaskStatus;
+import io.cloudevents.json.Json;
+import io.cloudevents.v03.CloudEventBuilder;
+import io.cloudevents.v03.CloudEventImpl;
+import io.nats.client.JetStreamApiException;
 import io.nats.client.Options;
 import io.nats.client.api.ConsumerConfiguration;
 import io.nats.client.api.StorageType;
@@ -59,7 +76,7 @@ public class EventingServiceImpl implements EventingService, SubHandler {
 
   private ConnectionPrimer connectionPrimer;
 
-  private PubSubTunnel pubSubTunnel;
+  private PubOnlyTunnel pubOnlyTunnel;
 
   @EventListener(ApplicationReadyEvent.class)
   void onApplicationReadyEvent() throws InterruptedException {
@@ -84,7 +101,7 @@ public class EventingServiceImpl implements EventingService, SubHandler {
     // @formatter:on
 
     connectionPrimer = new ConnectionPrimer(optionsBuilder);
-    pubSubTunnel = new PubSubTransceiver(connectionPrimer, streamConfiguration,
+    PubSubTunnel pubSubTunnel = new PubSubTransceiver(connectionPrimer, streamConfiguration,
         consumerConfiguration, pubSubConfiguration);
 
     // Start subscription
@@ -127,7 +144,69 @@ public class EventingServiceImpl implements EventingService, SubHandler {
   @Override
   public void publishWorkflowActivityStatusUpdateCE(ActivityEntity activityEntity) {
 
-    logger.error("---- Workflow with ID " + activityEntity.getWorkflowId()
-        + " has changed its status to " + activityEntity.getStatus() + " ----");
+    // Create cloud event
+    String type = "io.boomerang.eventing.status-update";
+    String id = UUID.randomUUID().toString();
+    String subject = MessageFormat.format("/{0}/status/{1}", activityEntity.getWorkflowId(),
+        activityEntity.getStatus());
+    URI source = URI.create("io.boomerang.service.EventingServiceImpl");
+    Map<String, TaskStatus> data = Map.of("status", activityEntity.getStatus());
+
+    // @formatter:off
+    CloudEventImpl<Map<String, TaskStatus>> cloudEvent = CloudEventBuilder.<Map<String, TaskStatus>>builder()
+        .withType(type)
+        .withId(id)
+        .withSubject(subject)
+        .withSource(source)
+        .withData(data)
+        .withTime(ZonedDateTime.now())
+        .build();
+    // @formatter:on
+
+    // Publish cloud event
+    String natsMessageSubject = MessageFormat.format("{0}.{1}", getStatusUpdateSubjectPrefix(),
+        StringUtils.lowerCase(activityEntity.getStatus().toString()));
+
+    try {
+      getPubOnlyTunnel().publish(natsMessageSubject, Json.encode(cloudEvent));
+    } catch (StreamNotFoundException | SubjectMismatchException e) {
+      logger.error("Stream is not configured properly!", e);
+    } catch (IllegalStateException | IOException | JetStreamApiException e) {
+      logger.error("An exception occurred while publishing the message to NATS server!", e);
+    }
+
+    logger.debug("Workflow with ID " + activityEntity.getWorkflowId()
+        + " has changed its status to " + activityEntity.getStatus());
+  }
+
+  private String getStatusUpdateSubjectPrefix() {
+    final String statusUpdateSubjectSuffix = "status-update";
+
+    if (jetstreamStreamSubject.endsWith(">")) {
+      return StringUtils.chop(jetstreamStreamSubject) + statusUpdateSubjectSuffix;
+    } else {
+      return jetstreamStreamSubject + "." + statusUpdateSubjectSuffix;
+    }
+  }
+
+  private PubOnlyTunnel getPubOnlyTunnel() {
+
+    if (pubOnlyTunnel == null) {
+
+      // @formatter:off
+      StreamConfiguration streamConfiguration = new StreamConfiguration.Builder()
+          .name(jetstreamStreamName + "-status")
+          .storageType(jetstreamStreamStorageType)
+          .subjects(getStatusUpdateSubjectPrefix() + ".>")
+          .build();
+      PubOnlyConfiguration pubOnlyConfiguration = new PubOnlyConfiguration.Builder()
+          .automaticallyCreateStream(true)
+          .build();
+      // @formatter:on
+      pubOnlyTunnel =
+          new PubTransmitter(connectionPrimer, streamConfiguration, pubOnlyConfiguration);
+    }
+
+    return pubOnlyTunnel;
   }
 }
