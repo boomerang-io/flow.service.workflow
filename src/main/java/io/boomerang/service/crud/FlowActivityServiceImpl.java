@@ -80,6 +80,7 @@ import io.boomerang.mongo.service.FlowWorkflowActivityService;
 import io.boomerang.mongo.service.FlowWorkflowService;
 import io.boomerang.mongo.service.RevisionService;
 import io.boomerang.service.ActionService;
+import io.boomerang.service.EventingService;
 import io.boomerang.service.FilterService;
 import io.boomerang.service.PropertyManager;
 import io.boomerang.service.UserIdentityService;
@@ -90,6 +91,19 @@ import io.boomerang.util.ParameterMapper;
 
 @Service
 public class FlowActivityServiceImpl implements FlowActivityService {
+
+  @Value("${controller.rest.url.base}")
+  private String controllerBaseUrl;
+
+  @Value("${controller.rest.url.streamlogs}")
+  private String getStreamDownloadPath;
+
+  @Value("${max.workflow.duration}")
+  private long maxWorkflowDuration;
+
+  @Autowired
+  @Qualifier("internalRestTemplate")
+  private RestTemplate restTemplate;
 
   @Autowired
   private FlowSettingsService flowSettingsService;
@@ -112,20 +126,6 @@ public class FlowActivityServiceImpl implements FlowActivityService {
   @Autowired
   private FilterService filterService;
 
-  @Value("${controller.rest.url.base}")
-  private String controllerBaseUrl;
-
-  @Value("${controller.rest.url.streamlogs}")
-  private String getStreamDownloadPath;
-
-  @Autowired
-  @Qualifier("internalRestTemplate")
-  private RestTemplate restTemplate;
-
-
-  @Value("${max.workflow.duration}")
-  private long maxWorkflowDuration;
-
   @Autowired
   private ActionService approvalService;
 
@@ -145,12 +145,14 @@ public class FlowActivityServiceImpl implements FlowActivityService {
   @Lazy
   private ControllerClient controllerClient;
 
-
   @Autowired
   private MongoTemplate mongoTemplate;
 
   @Autowired
   private RevisionService revisionService;
+
+  @Autowired
+  private EventingService eventingService;
 
   private static final Logger LOGGER = LogManager.getLogger();
 
@@ -173,8 +175,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
 
     activity.setScope(workflow.getScope());
     activity.setCreationDate(new Date());
-    // TODO: Eventing - Workflow activity changed to in progress
-    activity.setStatus(TaskStatus.inProgress);
+    activity.setStatus(TaskStatus.notstarted);
 
     List<KeyValuePair> corePropertyList = new LinkedList<>();
     if (labels != null) {
@@ -721,14 +722,11 @@ public class FlowActivityServiceImpl implements FlowActivityService {
   @Override
   public void cancelWorkflowActivity(String activityId, ErrorResponse error) {
     ActivityEntity activity = flowActivityService.findWorkflowActivtyById(activityId);
-    // TODO: Eventing - Workflow activity changed to cancelled
     activity.setStatus(TaskStatus.cancelled);
-
-    if (error != null) {
-      activity.setError(error);
-    }
+    Optional.ofNullable(error).ifPresent(activity::setError);
 
     flowActivityService.saveWorkflowActivity(activity);
+    eventingService.publishWorkflowActivityStatusUpdateCE(activity);
 
     String workflowId = activity.getWorkflowId();
     final WorkflowEntity workflow = workflowService.getWorkflow(workflowId);
@@ -752,7 +750,6 @@ public class FlowActivityServiceImpl implements FlowActivityService {
       if (taskExecution.getFlowTaskStatus() == TaskStatus.notstarted
           || taskExecution.getFlowTaskStatus() == TaskStatus.inProgress
           || taskExecution.getFlowTaskStatus() == TaskStatus.waiting) {
-        // TODO: Eventing - Workflow activity task status set to cancelled
         taskExecution.setFlowTaskStatus(TaskStatus.cancelled);
       }
       taskService.save(taskExecution);
