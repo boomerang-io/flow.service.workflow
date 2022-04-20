@@ -204,7 +204,7 @@ public class EventProcessorImpl implements EventProcessor {
       cloudEventLabels.add(property);
       executionRequest.setLabels(cloudEventLabels);
       executionRequest.setProperties(processProperties(eventData, workflowId));
-      executionRequest.setEventProperties(processEventProperties(eventData));
+      executionRequest.setEventProperties(processEventProperties(event.getExtensions()));
       FlowActivity activity = executionService.executeWorkflow(workflowId, Optional.of(trigger),
           Optional.of(executionRequest), Optional.empty());
       response.setActivityId(activity.getId());
@@ -236,12 +236,19 @@ public class EventProcessorImpl implements EventProcessor {
     return null;
   }
 
-  private Map<String, String> processEventProperties(JsonNode eventData) {
-	
-	String initiator_id = "initiator_id";
-	String context = "context";
+  private Map<String, String> processEventProperties(Map<String,Object> extensions) {
+	//Names of Extension Attributes
+	String initiatorId = "initiatorid";
+	String initiatorContext = "initiatorcontext";
 	Map<String, String> result = new HashMap<>();
-	//get Event properties from JsonPath?
+	if (!extensions.isEmpty()) {
+		if (extensions.get(initiatorId) != null) {
+			result.put(initiatorId, String.valueOf(extensions.get(initiatorId)));
+		}
+		if (extensions.get(initiatorContext) != null) {
+			result.put(initiatorContext, String.valueOf(extensions.get(initiatorContext)));
+		}
+	}
 	return result;
 }
   
