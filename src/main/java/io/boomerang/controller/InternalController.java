@@ -21,12 +21,11 @@ import io.boomerang.model.FlowSettings;
 import io.boomerang.model.FlowWebhookResponse;
 import io.boomerang.model.GenerateTokenResponse;
 import io.boomerang.model.RequestFlowExecution;
+import io.boomerang.model.WFETriggerResponse;
 import io.boomerang.model.WorkflowShortSummary;
 import io.boomerang.model.eventing.EventResponse;
-import io.boomerang.mongo.entity.RevisionEntity;
 import io.boomerang.mongo.model.internal.InternalTaskRequest;
 import io.boomerang.mongo.model.internal.InternalTaskResponse;
-import io.boomerang.mongo.service.RevisionService;
 import io.boomerang.service.EventProcessor;
 import io.boomerang.service.WebhookService;
 import io.boomerang.service.crud.ConfigurationService;
@@ -52,9 +51,6 @@ public class InternalController {
 
   @Autowired
   private ConfigurationService configurationService;
-
-  @Autowired
-  private RevisionService revisionService;
 
   @PostMapping(value = "/task/start")
   public void startTask(@RequestBody InternalTaskRequest request) {
@@ -121,16 +117,9 @@ public class InternalController {
   }
 
   @GetMapping(value = "/activity/triggerWFE")
-  public String getRevisionProperty(@RequestParam String workflowId,
+  public ResponseEntity<WFETriggerResponse> getRevisionProperties(@RequestParam String workflowId,
       @RequestParam long workflowVersion, @RequestParam String taskId,
       @RequestParam String propertyKey) {
-    RevisionEntity revision =
-        revisionService.findRevisionTaskProperty(workflowId, workflowVersion, taskId, propertyKey);
-
-    return revision.getDag().getTasks().stream().filter(r -> r.getTaskId().equals(taskId))
-        .findFirst().get().getProperties().stream().filter(p -> p.getKey().equals(propertyKey))
-        .findFirst().get().getValue();
-
+    return workflowService.getRevisionProperties(workflowId, workflowVersion, taskId, propertyKey);
   }
-
 }
