@@ -116,7 +116,7 @@ public class InternalController {
     return configurationService.updateSettings(settings);
   }
 
-  @GetMapping(value = "/activity/triggerWFE")
+  @GetMapping(value = "/activity/revision-properties")
   public ResponseEntity<WFETriggerResponse> getRevisionProperties(@RequestParam String workflowId,
       @RequestParam long workflowVersion, @RequestParam String taskId,
       @RequestParam String propertyKey) {
