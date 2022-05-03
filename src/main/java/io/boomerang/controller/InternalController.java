@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.fasterxml.jackson.databind.JsonNode;
 import io.boomerang.model.FlowActivity;
@@ -20,6 +21,7 @@ import io.boomerang.model.FlowSettings;
 import io.boomerang.model.FlowWebhookResponse;
 import io.boomerang.model.GenerateTokenResponse;
 import io.boomerang.model.RequestFlowExecution;
+import io.boomerang.model.WFETriggerResponse;
 import io.boomerang.model.WorkflowShortSummary;
 import io.boomerang.model.eventing.EventResponse;
 import io.boomerang.mongo.model.internal.InternalTaskRequest;
@@ -114,4 +116,10 @@ public class InternalController {
     return configurationService.updateSettings(settings);
   }
 
+  @GetMapping(value = "/activity/revision-properties")
+  public ResponseEntity<WFETriggerResponse> getRevisionProperties(@RequestParam String workflowId,
+      @RequestParam long workflowVersion, @RequestParam String taskId,
+      @RequestParam String propertyKey) {
+    return workflowService.getRevisionProperties(workflowId, workflowVersion, taskId, propertyKey);
+  }
 }

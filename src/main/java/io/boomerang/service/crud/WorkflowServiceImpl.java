@@ -37,6 +37,7 @@ import io.boomerang.model.FlowWorkflowRevision;
 import io.boomerang.model.GenerateTokenResponse;
 import io.boomerang.model.TemplateWorkflowSummary;
 import io.boomerang.model.UserWorkflowSummary;
+import io.boomerang.model.WFETriggerResponse;
 import io.boomerang.model.WorkflowExport;
 import io.boomerang.model.WorkflowQuotas;
 import io.boomerang.model.WorkflowShortSummary;
@@ -107,9 +108,12 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   @Autowired
   private FlowSettingsService flowSettingsService;
-  
+
   @Autowired
   private UserValidationService userValidationService;
+
+  @Autowired
+  private RevisionService revisionService;
 
   @Value("${max.workflow.count}")
   private Integer maxWorkflowCount;
@@ -1125,5 +1129,31 @@ public class WorkflowServiceImpl implements WorkflowService {
       }
     }
     return summaryList;
+  }
+
+  @Override
+  public ResponseEntity<WFETriggerResponse> getRevisionProperties(String workflowId,
+      long workflowVersion, String taskId, String propertyKey) {
+
+    WFETriggerResponse response = new WFETriggerResponse();
+
+    RevisionEntity revision =
+        revisionService.findRevisionTaskProperty(workflowId, workflowVersion, taskId, propertyKey);
+
+    String prop = null;
+    String token = null;
+
+    try {
+      prop = revision.getDag().getTasks().stream().filter(r -> r.getTaskId().equals(taskId))
+          .findFirst().get().getProperties().stream().filter(p -> p.getKey().equals(propertyKey))
+          .findFirst().get().getValue();
+      response.setTopic(prop);
+      token = workflowRepository.getWorkflow(workflowId).getTokens().get(0).getToken();
+      response.setWorkflowToken(token);
+    } catch (Exception e) {
+      return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+    return new ResponseEntity<>(response, HttpStatus.OK);
+
   }
 }
