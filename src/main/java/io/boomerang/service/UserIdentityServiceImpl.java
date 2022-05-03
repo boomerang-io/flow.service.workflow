@@ -3,6 +3,8 @@ package io.boomerang.service;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -57,6 +59,8 @@ public class UserIdentityServiceImpl implements UserIdentityService {
 
   @Autowired
   private TeamService flowTeamService;
+
+  private static final Logger LOGGER = LogManager.getLogger();
 
   @Override
   public FlowUserEntity getCurrentUser() {
@@ -222,9 +226,10 @@ public class UserIdentityServiceImpl implements UserIdentityService {
       String name = flowUser.getName();
       UserType type = flowUser.getType();
       FlowUserEntity flowUserEntity = flowUserService.getOrRegisterUser(email, name, type);
+      LOGGER.debug(flowUserEntity.toString());
       flowUserEntity.setQuotas(flowUser.getQuotas());
       flowUserEntity.setHasConsented(true);
-      flowUserEntity = flowUserService.save(flowUser);
+      flowUserEntity = flowUserService.save(flowUserEntity);
 
       FlowUser newUser = new FlowUser();
       BeanUtils.copyProperties(flowUserEntity, newUser);
