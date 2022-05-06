@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.InvalidPropertiesFormatException;
 import java.util.Map;
+import java.util.Optional;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.cloudevents.CloudEvent;
@@ -29,8 +30,7 @@ public class EventTrigger extends Event {
     EventType eventType;
 
     try {
-      String eventTypeString =
-          cloudEvent.getType().replace(EVENT_TYPE_PREFIX, "").toUpperCase();
+      String eventTypeString = cloudEvent.getType().replace(EVENT_TYPE_PREFIX, "").toUpperCase();
       eventType = EventType.valueOf(eventTypeString);
     } catch (Exception e) {
       throw new InvalidPropertiesFormatException(
@@ -48,6 +48,8 @@ public class EventTrigger extends Event {
     eventTrigger.setId(cloudEvent.getId());
     eventTrigger.setSource(cloudEvent.getSource());
     eventTrigger.setSubject(cloudEvent.getSubject());
+    eventTrigger.setToken(Optional.ofNullable(cloudEvent.getExtension(EXTENSION_ATTRIBUTE_TOKEN))
+        .orElseGet(() -> "").toString());
     eventTrigger.setDate(new Date(cloudEvent.getTime().toInstant().toEpochMilli()));
     eventTrigger.setType(eventType);
 
@@ -67,9 +69,13 @@ public class EventTrigger extends Event {
     Map<String, String> properties = new HashMap<>();
     PojoCloudEventData<JsonNode> cloudEventData = CloudEventUtils.mapData(cloudEvent,
         PojoCloudEventDataMapper.from(objectMapper, JsonNode.class));
-    cloudEventData.getValue().fields()
-        .forEachRemaining(entry -> properties.put(entry.getKey(), entry.getValue().toString()));
-    eventTrigger.setProperties(properties);
+
+    if (cloudEventData != null) {
+      cloudEventData.getValue().fields()
+          .forEachRemaining(entry -> properties.put(entry.getKey(), entry.getValue().toString()));
+    }
+
+    eventTrigger.properties = properties;
 
     return eventTrigger;
   }

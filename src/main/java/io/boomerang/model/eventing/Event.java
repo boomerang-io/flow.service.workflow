@@ -9,6 +9,8 @@ public class Event {
 
   protected static final String EVENT_TYPE_PREFIX = "io.boomerang.eventing.";
 
+  protected static final String EXTENSION_ATTRIBUTE_TOKEN = "token";
+
   private String id;
 
   private URI source;
