@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import io.boomerang.model.eventing.Event;
 import io.boomerang.model.eventing.EventCancel;
 import io.boomerang.model.eventing.EventTrigger;
 import io.boomerang.model.eventing.EventWFE;
@@ -276,5 +277,72 @@ public class CloudEventTest {
 
     Assertions.assertThrows(InvalidPropertiesFormatException.class,
         () -> EventCancel.fromCloudEvent(cloudEvent));
+  }
+
+  @Test
+  public void testGenericEventForTriggerEvent() {
+
+    // @formatter:off
+    String cloudEventData = String.join("", "{",
+        "\"id\":\"36965047-1191-4aff-8e17-fe4e8c8e528a\"",
+        ",\"type\":\"io.boomerang.eventing.trigger\"",
+        ",\"source\":\"http://wdc2.cloud.boomerangplatform.net/listener/event\"",
+        ",\"specversion\":\"1.0\"",
+        ",\"datacontenttype\":\"application/json\"",
+        ",\"subject\":\"/5f7f8cf69a7d401d9e584c90/foobar\"",
+        ",\"time\":\"2022-04-30T11:33:22Z\"",
+        "}");
+    // @formatter:on
+
+    CloudEvent cloudEvent = EventFormatProvider.getInstance().resolveFormat(JsonFormat.CONTENT_TYPE)
+        .deserialize(cloudEventData.getBytes());
+
+    Event event = Assertions.assertDoesNotThrow(() -> Event.fromCloudEvent(cloudEvent));
+    Assertions.assertInstanceOf(EventTrigger.class, event);
+  }
+
+  @Test
+  public void testGenericEventForWfeEvent() {
+
+    // @formatter:off
+    String cloudEventData = String.join("", "{",
+        "\"id\":\"36965047-1191-4aff-8e17-fe4e8c8e528a\"",
+        ",\"type\":\"io.boomerang.eventing.wfe\"",
+        ",\"source\":\"http://wdc2.cloud.boomerangplatform.net/listener/event\"",
+        ",\"specversion\":\"1.0\"",
+        ",\"status\":\"success\"",
+        ",\"datacontenttype\":\"application/json\"",
+        ",\"subject\":\"/5f7f8cf69a7d401d9e584c90/cb4007aaf8b79b41ad598e25/foobar\"",
+        ",\"time\":\"2022-05-06T12:45:15Z\"",
+        "}");
+    // @formatter:on
+
+    CloudEvent cloudEvent = EventFormatProvider.getInstance().resolveFormat(JsonFormat.CONTENT_TYPE)
+        .deserialize(cloudEventData.getBytes());
+
+    Event event = Assertions.assertDoesNotThrow(() -> Event.fromCloudEvent(cloudEvent));
+    Assertions.assertInstanceOf(EventWFE.class, event);
+  }
+
+  @Test
+  public void testGenericEventForCancelEvent() {
+
+    // @formatter:off
+    String cloudEventData = String.join("", "{",
+        "\"id\":\"36965047-1191-4aff-8e17-fe4e8c8e528a\"",
+        ",\"type\":\"io.boomerang.eventing.cancel\"",
+        ",\"source\":\"http://wdc2.cloud.boomerangplatform.net/listener/event\"",
+        ",\"specversion\":\"1.0\"",
+        ",\"datacontenttype\":\"application/json\"",
+        ",\"subject\":\"/5f7f8cf69a7d401d9e584c90/cb4007aaf8b79b41ad598e25\"",
+        ",\"time\":\"2022-04-30T11:33:22Z\"",
+        "}");
+    // @formatter:on
+
+    CloudEvent cloudEvent = EventFormatProvider.getInstance().resolveFormat(JsonFormat.CONTENT_TYPE)
+        .deserialize(cloudEventData.getBytes());
+
+    Event event = Assertions.assertDoesNotThrow(() -> Event.fromCloudEvent(cloudEvent));
+    Assertions.assertInstanceOf(EventCancel.class, event);
   }
 }
