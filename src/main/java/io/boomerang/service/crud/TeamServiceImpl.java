@@ -38,6 +38,7 @@ import io.boomerang.mongo.entity.FlowTeamConfiguration;
 import io.boomerang.mongo.entity.FlowUserEntity;
 import io.boomerang.mongo.entity.TeamEntity;
 import io.boomerang.mongo.entity.WorkflowEntity;
+import io.boomerang.mongo.model.AbstractConfigurationProperty;
 import io.boomerang.mongo.model.ActivityStorage;
 import io.boomerang.mongo.model.ApproverGroup;
 import io.boomerang.mongo.model.KeyValuePair;
@@ -150,7 +151,8 @@ public class TeamServiceImpl implements TeamService {
   public FlowTeamConfiguration createNewTeamProperty(String teamId,
       FlowTeamConfiguration property) {
     TeamEntity flowTeamEntity = flowTeamService.findById(teamId);
-
+    final String passKeyStr="password";
+    
     if (flowTeamEntity.getSettings() == null) {
       flowTeamEntity.setSettings(new Settings());
       flowTeamEntity = flowTeamService.save(flowTeamEntity);
@@ -165,6 +167,10 @@ public class TeamServiceImpl implements TeamService {
     property.setId(newUuid);
     configItems.add(property);
     flowTeamService.save(flowTeamEntity);
+    //If the property is a password, do not return its value, for security reasons.
+    if (passKeyStr.equals(property.getType()) && property.getDefaultValue() != null) {
+    	property.setDefaultValue(null);
+    }
 
     return property;
   }
@@ -273,12 +279,23 @@ public class TeamServiceImpl implements TeamService {
 
     if (flowTeamEntity.getSettings() != null
         && flowTeamEntity.getSettings().getProperties() != null) {
+    	filterPasswordValue(flowTeamEntity.getSettings() == null ? null:flowTeamEntity.getSettings().getProperties());
       return flowTeamEntity.getSettings().getProperties();
     } else {
       return Collections.emptyList();
     }
   }
 
+  private List<? extends AbstractConfigurationProperty> filterPasswordValue (List<? extends AbstractConfigurationProperty> properties) {
+	  final String passTypeStr = "password";
+	  //If the property is a password, do not return its value, for security reasons.
+	  if (properties == null)  return null;
+		Optional<? extends AbstractConfigurationProperty> passProp = properties.stream().filter(f -> passTypeStr.equals(f.getType()) && f.getDefaultValue() != null).findAny();
+		if (passProp.isPresent()) passProp.get().setDefaultValue(null);
+		return properties;
+  }
+  
+  
   @Override
   public List<TeamWorkflowSummary> getAllTeams() {
 
@@ -286,6 +303,10 @@ public class TeamServiceImpl implements TeamService {
 
     final List<TeamWorkflowSummary> teamWorkFlowSummary =
         populateWorkflowSummaryInformation(flowTeams);
+    //remove sensitive password in Team->Settings->properties and also in Team->Workflows->properties
+    teamWorkFlowSummary.stream().forEach(f->filterPasswordValue(f.getSettings() == null ? null:f.getSettings().getProperties()));
+    teamWorkFlowSummary.stream().forEach(t->t.getWorkflows().stream().forEach(w->filterPasswordValue(w.getProperties())));   
+    
     return teamWorkFlowSummary;
   }
 

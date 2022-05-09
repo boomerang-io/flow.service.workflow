@@ -160,6 +160,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
     final WorkflowSummary summary = new WorkflowSummary(entity);
     updateSummaryInformation(summary);
+    filterPasswordValue(summary.getProperties());
     return summary;
   }
 
@@ -336,14 +337,25 @@ public class WorkflowServiceImpl implements WorkflowService {
       userValidationService.validateUserForWorkflow(workflowId);
       entity.setProperties(properties);
       workflowRepository.saveWorkflow(entity);
+      filterPasswordValue(properties);
       return new WorkflowSummary(entity);
     } else {
       entity.setProperties(properties);
       workflowRepository.saveWorkflow(entity);
+      filterPasswordValue(properties);
       return new WorkflowSummary(entity);
     }
   }
 
+  private List<WorkflowProperty> filterPasswordValue (List<WorkflowProperty> properties) {
+	  final String passTypeStr = "password";
+	  if (properties == null) return null;
+	  //If the property is a password, do not return its value, for security reasons.
+		Optional<WorkflowProperty> passProp = properties.stream().filter(f -> passTypeStr.equals(f.getType()) && f.getDefaultValue() != null).findAny();
+		if (passProp.isPresent()) passProp.get().setDefaultValue(null);
+		return properties;
+  }
+  
   @Override
   public GenerateTokenResponse generateTriggerToken(String id, String label) {
     GenerateTokenResponse tokenResponse = new GenerateTokenResponse();
