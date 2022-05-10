@@ -12,7 +12,6 @@
 				"key": "Key",
 				"label": "asdf",
 				"type": "password",
-				"defaultValue": "sensitive password"
 			}
 		]
 	},
