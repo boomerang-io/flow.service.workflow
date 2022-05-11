@@ -25,4 +25,7 @@ public interface RevisionService {
 
   Page<RevisionEntity> getAllWorkflowVersions(Optional<String> workFlowId,
       Pageable pageable);
+
+  RevisionEntity findRevisionTaskProperty(String workflowId, long workflowVersion, String taskId,
+      String propertyKey);
 }
