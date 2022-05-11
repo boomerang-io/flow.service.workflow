@@ -8,6 +8,8 @@ import java.util.Map;
 import java.util.Optional;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.TextNode;
+import com.fasterxml.jackson.databind.node.ValueNode;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.CloudEventUtils;
 import io.cloudevents.core.data.PojoCloudEventData;
@@ -15,7 +17,7 @@ import io.cloudevents.jackson.PojoCloudEventDataMapper;
 
 public class EventTrigger extends Event {
 
-  protected static final String EXTENSION_ATTRIBUTE_INITIATOR_ID = "initiator_id";
+  protected static final String EXTENSION_ATTRIBUTE_INITIATOR_ID = "initiatorid";
 
   protected static final String EXTENSION_ATTRIBUTE_CONTEXT = "context";
 
@@ -69,8 +71,8 @@ public class EventTrigger extends Event {
           "For trigger cloud event types, the subject must have the format: \"/<workflow_id>/<workflow_custom_topic>\"");
     }
 
-    eventTrigger.workflowId = subjectTokens[0];
-    eventTrigger.topic = subjectTokens[1];
+    eventTrigger.setWorkflowId(subjectTokens[0]);
+    eventTrigger.setTopic(subjectTokens[1]);
 
     // Map the properties
     ObjectMapper objectMapper = new ObjectMapper();
@@ -83,16 +85,14 @@ public class EventTrigger extends Event {
           .forEachRemaining(entry -> properties.put(entry.getKey(), entry.getValue().toString()));
     }
 
-    eventTrigger.properties = properties;
+    eventTrigger.setProperties(properties);
 
     // Map initiator ID and the context
-    eventTrigger.initiatorId = cloudEvent.getExtension(EXTENSION_ATTRIBUTE_INITIATOR_ID).toString();
-
-    Object contextObject = cloudEvent.getExtension(EXTENSION_ATTRIBUTE_CONTEXT);
-
-    if (contextObject != null) {
-      eventTrigger.context = objectMapper.valueToTree(contextObject);
-    }
+    Optional.ofNullable(cloudEvent.getExtension(EXTENSION_ATTRIBUTE_INITIATOR_ID))
+        .ifPresent((initiatorId) -> eventTrigger.setInitiatorId(initiatorId.toString()));
+    Optional.ofNullable(cloudEvent.getExtension(EXTENSION_ATTRIBUTE_CONTEXT))
+        .ifPresent((contextObject) -> eventTrigger
+            .setContext(objectMapper.convertValue(contextObject, ValueNode.class)));
 
     return eventTrigger;
   }

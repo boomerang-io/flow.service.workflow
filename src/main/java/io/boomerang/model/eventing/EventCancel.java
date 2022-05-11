@@ -52,8 +52,8 @@ public class EventCancel extends Event {
           "For cancel cloud event types, the subject must have the format: \"/<workflow_id>/<workflow_activity_id>\"");
     }
 
-    eventCancel.workflowId = subjectTokens[0];
-    eventCancel.workflowActivityId = subjectTokens[1];
+    eventCancel.setWorkflowId(subjectTokens[0]);
+    eventCancel.setWorkflowActivityId(subjectTokens[1]);
 
     return eventCancel;
   }
