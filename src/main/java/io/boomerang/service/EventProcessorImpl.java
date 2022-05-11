@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.stream.Collectors;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -197,14 +199,8 @@ public class EventProcessorImpl implements EventProcessor {
 
       FlowExecutionRequest executionRequest = new FlowExecutionRequest();
 
-      List<KeyValuePair> cloudEventLabels = new LinkedList<>();
-      KeyValuePair property = new KeyValuePair();
-      property.setKey("eventId");
-      property.setValue(event.getAttributes().getId());
-      cloudEventLabels.add(property);
-      executionRequest.setLabels(cloudEventLabels);
+      executionRequest.setLabels(processEventLabels(event));
       executionRequest.setProperties(processProperties(eventData, workflowId));
-      executionRequest.setEventProperties(processEventProperties(event.getExtensions()));
       FlowActivity activity = executionService.executeWorkflow(workflowId, Optional.of(trigger),
           Optional.of(executionRequest), Optional.empty());
       response.setActivityId(activity.getId());
@@ -236,21 +232,27 @@ public class EventProcessorImpl implements EventProcessor {
     return null;
   }
 
-  private Map<String, String> processEventProperties(Map<String,Object> extensions) {
-	//Names of Extension Attributes
-	String initiatorId = "initiatorid";
-	String initiatorContext = "initiatorcontext";
-	Map<String, String> result = new HashMap<>();
-	if (!extensions.isEmpty()) {
-		if (extensions.get(initiatorId) != null) {
-			result.put(initiatorId, String.valueOf(extensions.get(initiatorId)));
+	private List<KeyValuePair> processEventLabels(CloudEvent<AttributesImpl, JsonNode> event) {
+		// TODO Where is this prefix coming from?
+		String prefix = "io.boomerang.event";
+		String separator = "/";
+		// Attributes
+		String eventId = "id";
+		List<String> extensionAttributesNames = List.of("initiatorid", "initiatorcontext");
+
+		List<KeyValuePair> cloudEventLabels = new LinkedList<>();
+		KeyValuePair property = new KeyValuePair();
+		property.setKey(prefix + separator + eventId);
+		property.setValue(event.getAttributes().getId());
+		cloudEventLabels.add(property);
+		Map<String, Object> extensionAttributes = event.getExtensions();
+		if (!extensionAttributes.isEmpty()) {
+			extensionAttributesNames.stream().filter(extensionAttributes::containsKey)
+					.map(e -> new KeyValuePair(prefix + separator + e, String.valueOf(extensionAttributes.get(e))))
+					.collect(Collectors.toCollection(() -> cloudEventLabels));
 		}
-		if (extensions.get(initiatorContext) != null) {
-			result.put(initiatorContext, String.valueOf(extensions.get(initiatorContext)));
-		}
+		return cloudEventLabels;
 	}
-	return result;
-}
   
   /*
    * Loop through a Workflow's parameters and if a JsonPath is set read the event payload and

@@ -207,12 +207,6 @@ public class FlowActivityServiceImpl implements FlowActivityService {
       activity.setProperties(propertyList);
     }
     
-    if (request.getEventProperties() != null) {
-        List<KeyValuePair> propertyList =
-            ParameterMapper.mapToKeyValuePairList(request.getEventProperties());
-        activity.setEventProperties(propertyList);
-      }
-    
     return flowActivityService.saveWorkflowActivity(activity);
   }
 

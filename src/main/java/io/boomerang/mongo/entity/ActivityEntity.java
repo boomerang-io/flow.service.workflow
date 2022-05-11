@@ -53,8 +53,6 @@ public class ActivityEntity   {
 
   private List<KeyValuePair> properties;
 
-  private List<KeyValuePair> eventProperties;
-
   private List<KeyValuePair> outputProperties;
   
   private boolean isAwaitingApproval;
@@ -141,14 +139,6 @@ public class ActivityEntity   {
   public void setProperties(List<KeyValuePair> properties) {
     this.properties = properties;
   }
-  
-  public List<KeyValuePair> getEventProperties() {
-	return eventProperties;
-  }
-
-  public void setEventProperties(List<KeyValuePair> eventProperties) {
-	this.eventProperties = eventProperties;
-	}
 
   public String getStatusMessage() {
     return statusMessage;
