@@ -15,9 +15,17 @@ import io.cloudevents.jackson.PojoCloudEventDataMapper;
 
 public class EventTrigger extends Event {
 
+  protected static final String EXTENSION_ATTRIBUTE_INITIATOR_ID = "initiator_id";
+
+  protected static final String EXTENSION_ATTRIBUTE_CONTEXT = "context";
+
   private String workflowId;
 
   private String topic;
+
+  private String initiatorId;
+
+  private JsonNode context;
 
   private Map<String, String> properties;
 
@@ -53,7 +61,7 @@ public class EventTrigger extends Event {
     eventTrigger.setDate(new Date(cloudEvent.getTime().toInstant().toEpochMilli()));
     eventTrigger.setType(eventType);
 
-    // Extract workflow ID and topic from the subject
+    // Map workflow ID and topic from the subject
     String[] subjectTokens = eventTrigger.getSubject().trim().replaceFirst("^/", "").split("/");
 
     if (subjectTokens.length != 2) {
@@ -64,7 +72,7 @@ public class EventTrigger extends Event {
     eventTrigger.workflowId = subjectTokens[0];
     eventTrigger.topic = subjectTokens[1];
 
-    // Extract the properties
+    // Map the properties
     ObjectMapper objectMapper = new ObjectMapper();
     Map<String, String> properties = new HashMap<>();
     PojoCloudEventData<JsonNode> cloudEventData = CloudEventUtils.mapData(cloudEvent,
@@ -76,6 +84,15 @@ public class EventTrigger extends Event {
     }
 
     eventTrigger.properties = properties;
+
+    // Map initiator ID and the context
+    eventTrigger.initiatorId = cloudEvent.getExtension(EXTENSION_ATTRIBUTE_INITIATOR_ID).toString();
+
+    Object contextObject = cloudEvent.getExtension(EXTENSION_ATTRIBUTE_CONTEXT);
+
+    if (contextObject != null) {
+      eventTrigger.context = objectMapper.valueToTree(contextObject);
+    }
 
     return eventTrigger;
   }
@@ -96,6 +113,22 @@ public class EventTrigger extends Event {
     this.topic = topic;
   }
 
+  public String getInitiatorId() {
+    return this.initiatorId;
+  }
+
+  public void setInitiatorId(String initiatorId) {
+    this.initiatorId = initiatorId;
+  }
+
+  public JsonNode getContext() {
+    return this.context;
+  }
+
+  public void setContext(JsonNode context) {
+    this.context = context;
+  }
+
   public Map<String, String> getProperties() {
     return this.properties;
   }
@@ -110,6 +143,8 @@ public class EventTrigger extends Event {
     return "{" +
       " workflowId='" + getWorkflowId() + "'" +
       ", topic='" + getTopic() + "'" +
+      ", initiatorId='" + getInitiatorId() + "'" +
+      ", context='" + getContext() + "'" +
       ", properties='" + getProperties() + "'" +
       "}";
   }

@@ -51,7 +51,7 @@ public class EventWFE extends Event {
     eventWFE.setDate(new Date(cloudEvent.getTime().toInstant().toEpochMilli()));
     eventWFE.setType(eventType);
 
-    // Extract workflow ID, activity ID and topic from the subject
+    // Map workflow ID, activity ID and topic from the subject
     String[] subjectTokens = eventWFE.getSubject().trim().replaceFirst("^/", "").split("/");
 
     if (subjectTokens.length != 3) {

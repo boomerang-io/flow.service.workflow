@@ -8,6 +8,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import io.boomerang.model.eventing.Event;
 import io.boomerang.model.eventing.EventCancel;
+import io.boomerang.model.eventing.EventFactory;
 import io.boomerang.model.eventing.EventTrigger;
 import io.boomerang.model.eventing.EventWFE;
 import io.boomerang.mongo.model.TaskStatus;
@@ -18,8 +19,8 @@ import io.cloudevents.jackson.JsonFormat;
 @ExtendWith(SpringExtension.class)
 public class CloudEventTest {
 
-  @Test
-  public void testTriggerCloudEventWithoutProperties() {
+    @Test
+    public void testTriggerCloudEventWithoutProperties() {
 
     // @formatter:off
     String cloudEventData = String.join("", "{",
@@ -34,23 +35,23 @@ public class CloudEventTest {
         "}");
     // @formatter:on
 
-    CloudEvent cloudEvent = EventFormatProvider.getInstance().resolveFormat(JsonFormat.CONTENT_TYPE)
-        .deserialize(cloudEventData.getBytes());
+        CloudEvent cloudEvent = EventFormatProvider.getInstance()
+                .resolveFormat(JsonFormat.CONTENT_TYPE).deserialize(cloudEventData.getBytes());
 
-    EventTrigger eventTrigger =
-        Assertions.assertDoesNotThrow(() -> EventTrigger.fromCloudEvent(cloudEvent));
+        EventTrigger eventTrigger =
+                Assertions.assertDoesNotThrow(() -> EventTrigger.fromCloudEvent(cloudEvent));
 
-    Assertions.assertEquals(eventTrigger.getId(), cloudEvent.getId());
-    Assertions.assertEquals(eventTrigger.getSource(), cloudEvent.getSource());
-    Assertions.assertEquals(eventTrigger.getSubject(), cloudEvent.getSubject());
-    Assertions.assertEquals(eventTrigger.getToken(), cloudEvent.getExtension("token"));
-    Assertions.assertEquals(eventTrigger.getDate(),
-        new Date(cloudEvent.getTime().toInstant().toEpochMilli()));
-    Assertions.assertEquals(eventTrigger.getProperties().size(), 0);
-  }
+        Assertions.assertEquals(eventTrigger.getId(), cloudEvent.getId());
+        Assertions.assertEquals(eventTrigger.getSource(), cloudEvent.getSource());
+        Assertions.assertEquals(eventTrigger.getSubject(), cloudEvent.getSubject());
+        Assertions.assertEquals(eventTrigger.getToken(), cloudEvent.getExtension("token"));
+        Assertions.assertEquals(eventTrigger.getDate(),
+                new Date(cloudEvent.getTime().toInstant().toEpochMilli()));
+        Assertions.assertEquals(eventTrigger.getProperties().size(), 0);
+    }
 
-  @Test
-  public void testTriggerCloudEventWithProperties() {
+    @Test
+    public void testTriggerCloudEventWithProperties() {
 
     // @formatter:off
     String cloudEventData = String.join("", "{",
@@ -69,23 +70,23 @@ public class CloudEventTest {
         "}");
     // @formatter:on
 
-    CloudEvent cloudEvent = EventFormatProvider.getInstance().resolveFormat(JsonFormat.CONTENT_TYPE)
-        .deserialize(cloudEventData.getBytes());
+        CloudEvent cloudEvent = EventFormatProvider.getInstance()
+                .resolveFormat(JsonFormat.CONTENT_TYPE).deserialize(cloudEventData.getBytes());
 
-    EventTrigger eventTrigger =
-        Assertions.assertDoesNotThrow(() -> EventTrigger.fromCloudEvent(cloudEvent));
+        EventTrigger eventTrigger =
+                Assertions.assertDoesNotThrow(() -> EventTrigger.fromCloudEvent(cloudEvent));
 
-    Assertions.assertEquals(eventTrigger.getId(), cloudEvent.getId());
-    Assertions.assertEquals(eventTrigger.getSource(), cloudEvent.getSource());
-    Assertions.assertEquals(eventTrigger.getSubject(), cloudEvent.getSubject());
-    Assertions.assertEquals(eventTrigger.getToken(), cloudEvent.getExtension("token"));
-    Assertions.assertEquals(eventTrigger.getDate(),
-        new Date(cloudEvent.getTime().toInstant().toEpochMilli()));
-    Assertions.assertEquals(eventTrigger.getProperties().size(), 2);
-  }
+        Assertions.assertEquals(eventTrigger.getId(), cloudEvent.getId());
+        Assertions.assertEquals(eventTrigger.getSource(), cloudEvent.getSource());
+        Assertions.assertEquals(eventTrigger.getSubject(), cloudEvent.getSubject());
+        Assertions.assertEquals(eventTrigger.getToken(), cloudEvent.getExtension("token"));
+        Assertions.assertEquals(eventTrigger.getDate(),
+                new Date(cloudEvent.getTime().toInstant().toEpochMilli()));
+        Assertions.assertEquals(eventTrigger.getProperties().size(), 2);
+    }
 
-  @Test
-  public void testTriggerCloudEventError1() {
+    @Test
+    public void testTriggerCloudEventError1() {
 
     // @formatter:off
     String cloudEventData = String.join("", "{",
@@ -99,15 +100,15 @@ public class CloudEventTest {
         "}");
     // @formatter:on
 
-    CloudEvent cloudEvent = EventFormatProvider.getInstance().resolveFormat(JsonFormat.CONTENT_TYPE)
-        .deserialize(cloudEventData.getBytes());
+        CloudEvent cloudEvent = EventFormatProvider.getInstance()
+                .resolveFormat(JsonFormat.CONTENT_TYPE).deserialize(cloudEventData.getBytes());
 
-    Assertions.assertThrows(InvalidPropertiesFormatException.class,
-        () -> EventTrigger.fromCloudEvent(cloudEvent));
-  }
+        Assertions.assertThrows(InvalidPropertiesFormatException.class,
+                () -> EventTrigger.fromCloudEvent(cloudEvent));
+    }
 
-  @Test
-  public void testTriggerCloudEventError2() {
+    @Test
+    public void testTriggerCloudEventError2() {
 
     // @formatter:off
     String cloudEventData = String.join("", "{",
@@ -121,15 +122,15 @@ public class CloudEventTest {
         "}");
     // @formatter:on
 
-    CloudEvent cloudEvent = EventFormatProvider.getInstance().resolveFormat(JsonFormat.CONTENT_TYPE)
-        .deserialize(cloudEventData.getBytes());
+        CloudEvent cloudEvent = EventFormatProvider.getInstance()
+                .resolveFormat(JsonFormat.CONTENT_TYPE).deserialize(cloudEventData.getBytes());
 
-    Assertions.assertThrows(InvalidPropertiesFormatException.class,
-        () -> EventTrigger.fromCloudEvent(cloudEvent));
-  }
+        Assertions.assertThrows(InvalidPropertiesFormatException.class,
+                () -> EventTrigger.fromCloudEvent(cloudEvent));
+    }
 
-  @Test
-  public void testWfeCloudEvent() {
+    @Test
+    public void testWfeCloudEvent() {
 
     // @formatter:off
     String cloudEventData = String.join("", "{",
@@ -144,21 +145,22 @@ public class CloudEventTest {
         "}");
     // @formatter:on
 
-    CloudEvent cloudEvent = EventFormatProvider.getInstance().resolveFormat(JsonFormat.CONTENT_TYPE)
-        .deserialize(cloudEventData.getBytes());
+        CloudEvent cloudEvent = EventFormatProvider.getInstance()
+                .resolveFormat(JsonFormat.CONTENT_TYPE).deserialize(cloudEventData.getBytes());
 
-    EventWFE eventWFE = Assertions.assertDoesNotThrow(() -> EventWFE.fromCloudEvent(cloudEvent));
+        EventWFE eventWFE =
+                Assertions.assertDoesNotThrow(() -> EventWFE.fromCloudEvent(cloudEvent));
 
-    Assertions.assertEquals(eventWFE.getId(), cloudEvent.getId());
-    Assertions.assertEquals(eventWFE.getSource(), cloudEvent.getSource());
-    Assertions.assertEquals(eventWFE.getSubject(), cloudEvent.getSubject());
-    Assertions.assertEquals(eventWFE.getDate(),
-        new Date(cloudEvent.getTime().toInstant().toEpochMilli()));
-    Assertions.assertEquals(eventWFE.getStatus(), TaskStatus.failure);
-  }
+        Assertions.assertEquals(eventWFE.getId(), cloudEvent.getId());
+        Assertions.assertEquals(eventWFE.getSource(), cloudEvent.getSource());
+        Assertions.assertEquals(eventWFE.getSubject(), cloudEvent.getSubject());
+        Assertions.assertEquals(eventWFE.getDate(),
+                new Date(cloudEvent.getTime().toInstant().toEpochMilli()));
+        Assertions.assertEquals(eventWFE.getStatus(), TaskStatus.failure);
+    }
 
-  @Test
-  public void testWfeCloudEventError1() {
+    @Test
+    public void testWfeCloudEventError1() {
 
     // @formatter:off
     String cloudEventData = String.join("", "{",
@@ -173,15 +175,15 @@ public class CloudEventTest {
         "}");
     // @formatter:on
 
-    CloudEvent cloudEvent = EventFormatProvider.getInstance().resolveFormat(JsonFormat.CONTENT_TYPE)
-        .deserialize(cloudEventData.getBytes());
+        CloudEvent cloudEvent = EventFormatProvider.getInstance()
+                .resolveFormat(JsonFormat.CONTENT_TYPE).deserialize(cloudEventData.getBytes());
 
-    Assertions.assertThrows(InvalidPropertiesFormatException.class,
-        () -> EventWFE.fromCloudEvent(cloudEvent));
-  }
+        Assertions.assertThrows(InvalidPropertiesFormatException.class,
+                () -> EventWFE.fromCloudEvent(cloudEvent));
+    }
 
-  @Test
-  public void testWfeCloudEventError2() {
+    @Test
+    public void testWfeCloudEventError2() {
 
     // @formatter:off
     String cloudEventData = String.join("", "{",
@@ -196,15 +198,15 @@ public class CloudEventTest {
         "}");
     // @formatter:on
 
-    CloudEvent cloudEvent = EventFormatProvider.getInstance().resolveFormat(JsonFormat.CONTENT_TYPE)
-        .deserialize(cloudEventData.getBytes());
+        CloudEvent cloudEvent = EventFormatProvider.getInstance()
+                .resolveFormat(JsonFormat.CONTENT_TYPE).deserialize(cloudEventData.getBytes());
 
-    Assertions.assertThrows(InvalidPropertiesFormatException.class,
-        () -> EventWFE.fromCloudEvent(cloudEvent));
-  }
+        Assertions.assertThrows(InvalidPropertiesFormatException.class,
+                () -> EventWFE.fromCloudEvent(cloudEvent));
+    }
 
-  @Test
-  public void testCancelCloudEvent() {
+    @Test
+    public void testCancelCloudEvent() {
 
     // @formatter:off
     String cloudEventData = String.join("", "{",
@@ -219,22 +221,22 @@ public class CloudEventTest {
         "}");
     // @formatter:on
 
-    CloudEvent cloudEvent = EventFormatProvider.getInstance().resolveFormat(JsonFormat.CONTENT_TYPE)
-        .deserialize(cloudEventData.getBytes());
+        CloudEvent cloudEvent = EventFormatProvider.getInstance()
+                .resolveFormat(JsonFormat.CONTENT_TYPE).deserialize(cloudEventData.getBytes());
 
-    EventCancel eventCancel =
-        Assertions.assertDoesNotThrow(() -> EventCancel.fromCloudEvent(cloudEvent));
+        EventCancel eventCancel =
+                Assertions.assertDoesNotThrow(() -> EventCancel.fromCloudEvent(cloudEvent));
 
-    Assertions.assertEquals(eventCancel.getId(), cloudEvent.getId());
-    Assertions.assertEquals(eventCancel.getSource(), cloudEvent.getSource());
-    Assertions.assertEquals(eventCancel.getSubject(), cloudEvent.getSubject());
-    Assertions.assertEquals(eventCancel.getToken(), cloudEvent.getExtension("token"));
-    Assertions.assertEquals(eventCancel.getDate(),
-        new Date(cloudEvent.getTime().toInstant().toEpochMilli()));
-  }
+        Assertions.assertEquals(eventCancel.getId(), cloudEvent.getId());
+        Assertions.assertEquals(eventCancel.getSource(), cloudEvent.getSource());
+        Assertions.assertEquals(eventCancel.getSubject(), cloudEvent.getSubject());
+        Assertions.assertEquals(eventCancel.getToken(), cloudEvent.getExtension("token"));
+        Assertions.assertEquals(eventCancel.getDate(),
+                new Date(cloudEvent.getTime().toInstant().toEpochMilli()));
+    }
 
-  @Test
-  public void testCancelCloudEventError1() {
+    @Test
+    public void testCancelCloudEventError1() {
 
     // @formatter:off
     String cloudEventData = String.join("", "{",
@@ -249,15 +251,15 @@ public class CloudEventTest {
         "}");
     // @formatter:on
 
-    CloudEvent cloudEvent = EventFormatProvider.getInstance().resolveFormat(JsonFormat.CONTENT_TYPE)
-        .deserialize(cloudEventData.getBytes());
+        CloudEvent cloudEvent = EventFormatProvider.getInstance()
+                .resolveFormat(JsonFormat.CONTENT_TYPE).deserialize(cloudEventData.getBytes());
 
-    Assertions.assertThrows(InvalidPropertiesFormatException.class,
-        () -> EventCancel.fromCloudEvent(cloudEvent));
-  }
+        Assertions.assertThrows(InvalidPropertiesFormatException.class,
+                () -> EventCancel.fromCloudEvent(cloudEvent));
+    }
 
-  @Test
-  public void testCancelCloudEventError2() {
+    @Test
+    public void testCancelCloudEventError2() {
 
     // @formatter:off
     String cloudEventData = String.join("", "{",
@@ -272,15 +274,15 @@ public class CloudEventTest {
         "}");
     // @formatter:on
 
-    CloudEvent cloudEvent = EventFormatProvider.getInstance().resolveFormat(JsonFormat.CONTENT_TYPE)
-        .deserialize(cloudEventData.getBytes());
+        CloudEvent cloudEvent = EventFormatProvider.getInstance()
+                .resolveFormat(JsonFormat.CONTENT_TYPE).deserialize(cloudEventData.getBytes());
 
-    Assertions.assertThrows(InvalidPropertiesFormatException.class,
-        () -> EventCancel.fromCloudEvent(cloudEvent));
-  }
+        Assertions.assertThrows(InvalidPropertiesFormatException.class,
+                () -> EventCancel.fromCloudEvent(cloudEvent));
+    }
 
-  @Test
-  public void testGenericEventForTriggerEvent() {
+    @Test
+    public void testGenericEventForTriggerEvent() {
 
     // @formatter:off
     String cloudEventData = String.join("", "{",
@@ -294,15 +296,16 @@ public class CloudEventTest {
         "}");
     // @formatter:on
 
-    CloudEvent cloudEvent = EventFormatProvider.getInstance().resolveFormat(JsonFormat.CONTENT_TYPE)
-        .deserialize(cloudEventData.getBytes());
+        CloudEvent cloudEvent = EventFormatProvider.getInstance()
+                .resolveFormat(JsonFormat.CONTENT_TYPE).deserialize(cloudEventData.getBytes());
 
-    Event event = Assertions.assertDoesNotThrow(() -> Event.fromCloudEvent(cloudEvent));
-    Assertions.assertInstanceOf(EventTrigger.class, event);
-  }
+        Event event =
+                Assertions.assertDoesNotThrow(() -> EventFactory.buildFromCloudEvent(cloudEvent));
+        Assertions.assertInstanceOf(EventTrigger.class, event);
+    }
 
-  @Test
-  public void testGenericEventForWfeEvent() {
+    @Test
+    public void testGenericEventForWfeEvent() {
 
     // @formatter:off
     String cloudEventData = String.join("", "{",
@@ -317,15 +320,16 @@ public class CloudEventTest {
         "}");
     // @formatter:on
 
-    CloudEvent cloudEvent = EventFormatProvider.getInstance().resolveFormat(JsonFormat.CONTENT_TYPE)
-        .deserialize(cloudEventData.getBytes());
+        CloudEvent cloudEvent = EventFormatProvider.getInstance()
+                .resolveFormat(JsonFormat.CONTENT_TYPE).deserialize(cloudEventData.getBytes());
 
-    Event event = Assertions.assertDoesNotThrow(() -> Event.fromCloudEvent(cloudEvent));
-    Assertions.assertInstanceOf(EventWFE.class, event);
-  }
+        Event event =
+                Assertions.assertDoesNotThrow(() -> EventFactory.buildFromCloudEvent(cloudEvent));
+        Assertions.assertInstanceOf(EventWFE.class, event);
+    }
 
-  @Test
-  public void testGenericEventForCancelEvent() {
+    @Test
+    public void testGenericEventForCancelEvent() {
 
     // @formatter:off
     String cloudEventData = String.join("", "{",
@@ -339,10 +343,11 @@ public class CloudEventTest {
         "}");
     // @formatter:on
 
-    CloudEvent cloudEvent = EventFormatProvider.getInstance().resolveFormat(JsonFormat.CONTENT_TYPE)
-        .deserialize(cloudEventData.getBytes());
+        CloudEvent cloudEvent = EventFormatProvider.getInstance()
+                .resolveFormat(JsonFormat.CONTENT_TYPE).deserialize(cloudEventData.getBytes());
 
-    Event event = Assertions.assertDoesNotThrow(() -> Event.fromCloudEvent(cloudEvent));
-    Assertions.assertInstanceOf(EventCancel.class, event);
-  }
+        Event event =
+                Assertions.assertDoesNotThrow(() -> EventFactory.buildFromCloudEvent(cloudEvent));
+        Assertions.assertInstanceOf(EventCancel.class, event);
+    }
 }

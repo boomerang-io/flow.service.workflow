@@ -44,7 +44,7 @@ public class EventCancel extends Event {
     eventCancel.setDate(new Date(cloudEvent.getTime().toInstant().toEpochMilli()));
     eventCancel.setType(eventType);
 
-    // Extract workflow ID and activity ID from the subject
+    // Map workflow ID and activity ID from the subject
     String[] subjectTokens = eventCancel.getSubject().trim().replaceFirst("^/", "").split("/");
 
     if (subjectTokens.length != 2) {
