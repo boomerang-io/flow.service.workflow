@@ -44,15 +44,13 @@ public class RevisionServiceImpl implements RevisionService {
 
   @Override
   @NoLogging
-  public RevisionEntity insertWorkflow(
-      RevisionEntity flowWorkflowVersionEntity) {
+  public RevisionEntity insertWorkflow(RevisionEntity flowWorkflowVersionEntity) {
     return workFlowVersionRepository.insert(flowWorkflowVersionEntity);
   }
 
   @Override
   @NoLogging
-  public RevisionEntity updateWorkflow(
-      RevisionEntity flowWorkflowVersionEntity) {
+  public RevisionEntity updateWorkflow(RevisionEntity flowWorkflowVersionEntity) {
     return workFlowVersionRepository.save(flowWorkflowVersionEntity);
   }
 
@@ -70,5 +68,13 @@ public class RevisionServiceImpl implements RevisionService {
   @Override
   public Optional<RevisionEntity> getRevision(String id) {
     return workFlowVersionRepository.findById(id);
+  }
+
+  @Override
+  public RevisionEntity findRevisionTaskProperty(String workflowId, long workflowVersion, String taskId,
+      String propertyKey) {
+    return workFlowVersionRepository
+        .findByworkFlowIdAndVersionAndDagTasksTaskIdAndDagTasksPropertiesKey(workflowId,
+            workflowVersion, taskId, propertyKey);
   }
 }
