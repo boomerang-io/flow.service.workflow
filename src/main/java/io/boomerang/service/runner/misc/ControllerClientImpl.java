@@ -458,7 +458,7 @@ public class ControllerClientImpl implements ControllerClient {
 
     Map<String, String> outputProperties = new HashMap<>();
 
-    logPayload(CREATETEMPLATETASKREQUEST, request);
+    logPayload("Create Template Task Request AMH***", request);
     try {
 
       Date startTime = new Date();
@@ -469,10 +469,10 @@ public class ControllerClientImpl implements ControllerClient {
 
       Date endTime = new Date();
 
-      logRequestTime(CREATETEMPLATETASKREQUEST, startTime, endTime);
+      logRequestTime("Create Template Task Response", startTime, endTime);
 
       if (response != null) {
-        this.logPayload(CREATETEMPLATETASKREQUEST, response);
+        this.logPayload("Create Template Task Response AMH***", response);
         if (response.getResults() != null && !response.getResults().isEmpty()) {
           response.getResults().get(0);
           if (response.getResults() != null) {
@@ -679,7 +679,7 @@ public class ControllerClientImpl implements ControllerClient {
     try {
       ObjectMapper objectMapper = new ObjectMapper();
       String payload = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(request);
-      LOGGER.info("Creating For Palyoad Type: {}", payloadName);
+      LOGGER.info("Creating For Payload Type: {}", payloadName);
       LOGGER.info(payload);
     } catch (JsonProcessingException e) {
       LOGGER.error(ExceptionUtils.getStackTrace(e));
