@@ -11,7 +11,7 @@
 				"description": "this is the description",
 				"key": "Key",
 				"label": "asdf",
-				"type": "password",
+				"type": "password"
 			}
 		]
 	},

@@ -51,6 +51,7 @@ import io.boomerang.mongo.model.WorkflowConfiguration;
 import io.boomerang.mongo.model.WorkflowProperty;
 import io.boomerang.mongo.model.WorkflowScope;
 import io.boomerang.mongo.model.WorkflowStatus;
+import io.boomerang.util.DataAdapterUtil.FieldType;
 
 
 @ExtendWith(SpringExtension.class)
@@ -94,7 +95,7 @@ public class WorkflowControllerTests extends FlowTests {
     WorkflowSummary summary = controller.getWorkflowWithId("5d1a188af6ca2c00014c4314");
      assertEquals("5d1a188af6ca2c00014c4314", summary.getId());
 		Optional<WorkflowProperty> passProp = summary.getProperties().stream()
-				.filter(f -> "password".equals(f.getType())).findAny();
+				.filter(f -> FieldType.PASSWORD.value().equals(f.getType())).findAny();
 		if (passProp.isPresent()) {
 			assertNull(passProp.get().getDefaultValue());
 		}
@@ -176,7 +177,7 @@ public class WorkflowControllerTests extends FlowTests {
 
     WorkflowEntity entity =
         controller.updateWorkflowProperties("5d1a188af6ca2c00014c4314", properties);
-    Optional<WorkflowProperty> passProp = entity.getProperties().stream().filter(f->"password".equals(f.getType())).findAny();
+    Optional<WorkflowProperty> passProp = entity.getProperties().stream().filter(f->FieldType.PASSWORD.value().equals(f.getType())).findAny();
      assertTrue(passProp.isPresent());
      assertNull(passProp.get().getDefaultValue());
   }

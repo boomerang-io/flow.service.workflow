@@ -38,7 +38,6 @@ import io.boomerang.mongo.entity.FlowTeamConfiguration;
 import io.boomerang.mongo.entity.FlowUserEntity;
 import io.boomerang.mongo.entity.TeamEntity;
 import io.boomerang.mongo.entity.WorkflowEntity;
-import io.boomerang.mongo.model.AbstractConfigurationProperty;
 import io.boomerang.mongo.model.ActivityStorage;
 import io.boomerang.mongo.model.ApproverGroup;
 import io.boomerang.mongo.model.KeyValuePair;
@@ -53,6 +52,7 @@ import io.boomerang.mongo.service.FlowUserService;
 import io.boomerang.mongo.service.FlowWorkflowActivityService;
 import io.boomerang.mongo.service.FlowWorkflowService;
 import io.boomerang.service.UserIdentityService;
+import static io.boomerang.util.DataAdapterUtil.*;
 
 @Service
 public class TeamServiceImpl implements TeamService {
@@ -151,8 +151,7 @@ public class TeamServiceImpl implements TeamService {
   public FlowTeamConfiguration createNewTeamProperty(String teamId,
       FlowTeamConfiguration property) {
     TeamEntity flowTeamEntity = flowTeamService.findById(teamId);
-    final String passKeyStr="password";
-    
+
     if (flowTeamEntity.getSettings() == null) {
       flowTeamEntity.setSettings(new Settings());
       flowTeamEntity = flowTeamService.save(flowTeamEntity);
@@ -168,9 +167,7 @@ public class TeamServiceImpl implements TeamService {
     configItems.add(property);
     flowTeamService.save(flowTeamEntity);
     //If the property is a password, do not return its value, for security reasons.
-    if (passKeyStr.equals(property.getType()) && property.getDefaultValue() != null) {
-    	property.setDefaultValue(null);
-    }
+    filterValueByFieldType( List.of(property), false, FieldType.PASSWORD.value());
 
     return property;
   }
@@ -279,34 +276,13 @@ public class TeamServiceImpl implements TeamService {
 
     if (flowTeamEntity.getSettings() != null
         && flowTeamEntity.getSettings().getProperties() != null) {
-    	filterPasswordValue(flowTeamEntity.getSettings() == null ? null:flowTeamEntity.getSettings().getProperties(), true);
+    	filterValueByFieldType(flowTeamEntity.getSettings() == null ? null:flowTeamEntity.getSettings().getProperties(), false, FieldType.PASSWORD.value());
       return flowTeamEntity.getSettings().getProperties();
     } else {
       return Collections.emptyList();
     }
   }
 
-	private List<? extends AbstractConfigurationProperty> filterPasswordValue(
-			List<? extends AbstractConfigurationProperty> properties, boolean isDefaultValue) {
-		final String passTypeStr = "password";
-		// If the property is a password, do not return its value, for security reasons.
-		if (properties == null)
-			return null;
-		Optional<? extends AbstractConfigurationProperty> passProp = properties.stream()
-				.filter(f -> passTypeStr.equals(f.getType())
-						&& (isDefaultValue ? f.getDefaultValue() != null : f.getValue() != null))
-				.findAny();
-		if (passProp.isPresent()) {
-			if (isDefaultValue) {
-				passProp.get().setDefaultValue(null);
-			} else {
-				passProp.get().setValue(null);
-			}
-		}
-		return properties;
-	}
-  
-  
   @Override
   public List<TeamWorkflowSummary> getAllTeams() {
 
@@ -315,8 +291,8 @@ public class TeamServiceImpl implements TeamService {
     final List<TeamWorkflowSummary> teamWorkFlowSummary =
         populateWorkflowSummaryInformation(flowTeams);
     //remove sensitive password in Team->Settings->properties and also in Team->Workflows->properties
-    teamWorkFlowSummary.stream().forEach(f->filterPasswordValue(f.getSettings() == null ? null:f.getSettings().getProperties(), false));
-    teamWorkFlowSummary.stream().forEach(t->t.getWorkflows().stream().forEach(w->filterPasswordValue(w.getProperties(), true)));   
+    teamWorkFlowSummary.stream().forEach(f->filterValueByFieldType(f.getSettings() == null ? null:f.getSettings().getProperties(), false, FieldType.PASSWORD.value()));
+    teamWorkFlowSummary.stream().forEach(t->t.getWorkflows().stream().forEach(w->filterValueByFieldType(w.getProperties(), true, FieldType.PASSWORD.value())));   
     
     return teamWorkFlowSummary;
   }

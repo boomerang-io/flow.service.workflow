@@ -10,6 +10,7 @@ import io.boomerang.model.FlowWorkflowRevision;
 import io.boomerang.model.GenerateTokenResponse;
 import io.boomerang.model.TemplateWorkflowSummary;
 import io.boomerang.model.UserWorkflowSummary;
+import io.boomerang.model.WFETriggerResponse;
 import io.boomerang.model.WorkflowExport;
 import io.boomerang.model.WorkflowShortSummary;
 import io.boomerang.model.WorkflowSummary;
@@ -66,4 +67,7 @@ public interface WorkflowService {
   UserWorkflowSummary getUserWorkflows(String userId);
 
   boolean canExecuteTeamWorkflow(String teamId);
+
+  ResponseEntity<WFETriggerResponse> getRevisionProperties(String workflowId, long workflowVersion, String taskId,
+      String propertyKey);
 }

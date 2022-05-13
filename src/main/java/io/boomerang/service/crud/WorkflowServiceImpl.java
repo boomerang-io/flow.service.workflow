@@ -37,6 +37,7 @@ import io.boomerang.model.FlowWorkflowRevision;
 import io.boomerang.model.GenerateTokenResponse;
 import io.boomerang.model.TemplateWorkflowSummary;
 import io.boomerang.model.UserWorkflowSummary;
+import io.boomerang.model.WFETriggerResponse;
 import io.boomerang.model.WorkflowExport;
 import io.boomerang.model.WorkflowQuotas;
 import io.boomerang.model.WorkflowShortSummary;
@@ -73,6 +74,7 @@ import io.boomerang.service.PropertyManager;
 import io.boomerang.service.UserIdentityService;
 import io.boomerang.service.runner.misc.ControllerClient;
 import io.boomerang.util.ModelConverterV5;
+import static io.boomerang.util.DataAdapterUtil.*;
 
 @Service
 public class WorkflowServiceImpl implements WorkflowService {
@@ -107,9 +109,12 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   @Autowired
   private FlowSettingsService flowSettingsService;
-  
+
   @Autowired
   private UserValidationService userValidationService;
+
+  @Autowired
+  private RevisionService revisionService;
 
   @Value("${max.workflow.count}")
   private Integer maxWorkflowCount;
@@ -160,7 +165,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
     final WorkflowSummary summary = new WorkflowSummary(entity);
     updateSummaryInformation(summary);
-    filterPasswordValue(summary.getProperties());
+    filterValueByFieldType(summary.getProperties(), true, FieldType.PASSWORD.value());
     return summary;
   }
 
@@ -337,25 +342,16 @@ public class WorkflowServiceImpl implements WorkflowService {
       userValidationService.validateUserForWorkflow(workflowId);
       entity.setProperties(properties);
       workflowRepository.saveWorkflow(entity);
-      filterPasswordValue(properties);
+      filterValueByFieldType(properties, true, FieldType.PASSWORD.value());
       return new WorkflowSummary(entity);
     } else {
       entity.setProperties(properties);
       workflowRepository.saveWorkflow(entity);
-      filterPasswordValue(properties);
+      filterValueByFieldType(properties, true, FieldType.PASSWORD.value());
       return new WorkflowSummary(entity);
     }
   }
 
-  private List<WorkflowProperty> filterPasswordValue (List<WorkflowProperty> properties) {
-	  final String passTypeStr = "password";
-	  if (properties == null) return null;
-	  //If the property is a password, do not return its value, for security reasons.
-		Optional<WorkflowProperty> passProp = properties.stream().filter(f -> passTypeStr.equals(f.getType()) && f.getDefaultValue() != null).findAny();
-		if (passProp.isPresent()) passProp.get().setDefaultValue(null);
-		return properties;
-  }
-  
   @Override
   public GenerateTokenResponse generateTriggerToken(String id, String label) {
     GenerateTokenResponse tokenResponse = new GenerateTokenResponse();
@@ -1137,5 +1133,31 @@ public class WorkflowServiceImpl implements WorkflowService {
       }
     }
     return summaryList;
+  }
+
+  @Override
+  public ResponseEntity<WFETriggerResponse> getRevisionProperties(String workflowId,
+      long workflowVersion, String taskId, String propertyKey) {
+
+    WFETriggerResponse response = new WFETriggerResponse();
+
+    RevisionEntity revision =
+        revisionService.findRevisionTaskProperty(workflowId, workflowVersion, taskId, propertyKey);
+
+    String prop = null;
+    String token = null;
+
+    try {
+      prop = revision.getDag().getTasks().stream().filter(r -> r.getTaskId().equals(taskId))
+          .findFirst().get().getProperties().stream().filter(p -> p.getKey().equals(propertyKey))
+          .findFirst().get().getValue();
+      response.setTopic(prop);
+      token = workflowRepository.getWorkflow(workflowId).getTokens().get(0).getToken();
+      response.setWorkflowToken(token);
+    } catch (Exception e) {
+      return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+    return new ResponseEntity<>(response, HttpStatus.OK);
+
   }
 }

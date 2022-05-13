@@ -152,7 +152,7 @@ public class TeamControllerTests extends FlowTests {
     FlowTeamConfiguration newConfig =
         controller.createNewTeamProperty("5d1a1841f6ca2c00014c4309", property);
     
-    Assertions.assertNull(newConfig.getDefaultValue());
+    Assertions.assertNull(newConfig.getValue());
    }
 
   @Test
