@@ -5,12 +5,9 @@ import java.util.InvalidPropertiesFormatException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import io.boomerang.model.eventing.Event;
 import io.boomerang.model.eventing.EventCancel;
-import io.boomerang.model.eventing.EventFactory;
 import io.boomerang.model.eventing.EventTrigger;
 import io.boomerang.model.eventing.EventWFE;
 import io.boomerang.mongo.model.TaskStatus;
@@ -85,44 +82,6 @@ public class CloudEventTest {
     Assertions.assertEquals(eventTrigger.getDate(),
         new Date(cloudEvent.getTime().toInstant().toEpochMilli()));
     Assertions.assertEquals(eventTrigger.getProperties().size(), 2);
-  }
-
-  @ParameterizedTest
-  @ValueSource(
-      strings = {"\"context\":{\"just_a_string\":\"It did go through!\",\"just_a_num\":69420}",
-          "\"context\":[0,1,2,3,4,5,6]", "\"context\":42069", "\"context\":\"A string!!!\""})
-  public void testTriggerCloudEventInitiatorAndContext(String jsonContextField) {
-
-    // @formatter:off
-    String cloudEventData = String.join("", "{",
-        "\"id\":\"36965047-1191-4aff-8e17-fe4e8c8e528a\"",
-        ",\"type\":\"io.boomerang.eventing.trigger\"",
-        ",\"source\":\"http://wdc2.cloud.boomerangplatform.net/listener/event\"",
-        ",\"specversion\":\"1.0\"",
-        ",\"datacontenttype\":\"application/json\"",
-        ",\"subject\":\"/5f7f8cf69a7d401d9e584c90/foobar\"",
-        ",\"token\":\"RXggaXBzdW0gZG9sb3Ih\"",
-        ",\"initiatorid\":\"iulian\"",
-        "," + jsonContextField,
-        ",\"time\":\"2022-04-30T11:33:22Z\"",
-        "}");
-    // @formatter:on
-
-    CloudEvent cloudEvent = EventFormatProvider.getInstance().resolveFormat(JsonFormat.CONTENT_TYPE)
-        .deserialize(cloudEventData.getBytes());
-
-    EventTrigger eventTrigger =
-        Assertions.assertDoesNotThrow(() -> EventTrigger.fromCloudEvent(cloudEvent));
-
-    Assertions.assertEquals(eventTrigger.getId(), cloudEvent.getId());
-    Assertions.assertEquals(eventTrigger.getSource(), cloudEvent.getSource());
-    Assertions.assertEquals(eventTrigger.getSubject(), cloudEvent.getSubject());
-    Assertions.assertEquals(eventTrigger.getToken(), cloudEvent.getExtension("token"));
-    Assertions.assertEquals(eventTrigger.getDate(),
-        new Date(cloudEvent.getTime().toInstant().toEpochMilli()));
-    Assertions.assertEquals(eventTrigger.getInitiatorId(), "iulian");
-    Assertions.assertEquals(eventTrigger.getProperties().size(), 0);
-    Assertions.assertNotNull(eventTrigger.getContext());
   }
 
   @Test

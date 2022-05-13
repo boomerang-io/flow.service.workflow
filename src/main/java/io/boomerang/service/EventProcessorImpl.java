@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -27,6 +28,7 @@ import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import io.boomerang.model.FlowActivity;
 import io.boomerang.model.FlowExecutionRequest;
@@ -58,6 +60,9 @@ public class EventProcessorImpl implements EventProcessor {
   @Autowired
   private TaskService taskService;
 
+  @Value("${eventing.shared.labels.prefix}")
+  private String getSharedEventLabelsPrefix;
+  
   @Override
   public CloudEventImpl<EventResponse> processHTTPEvent(Map<String, Object> headers,
       JsonNode payload) {
@@ -232,23 +237,24 @@ public class EventProcessorImpl implements EventProcessor {
     return null;
   }
 
-	private List<KeyValuePair> processEventLabels(CloudEvent<AttributesImpl, JsonNode> event) {
-		// TODO Where is this prefix coming from?
-		String prefix = "io.boomerang.event";
+	private List<KeyValuePair> processEventLabels(CloudEvent event) {
+		String prefix = getSharedEventLabelsPrefix;
 		String separator = "/";
 		// Attributes
 		String eventId = "id";
+		String eventIdValue = event.getAttribute(eventId)==null ? null:event.getAttribute(eventId).toString();
 		List<String> extensionAttributesNames = List.of("initiatorid", "initiatorcontext");
-
 		List<KeyValuePair> cloudEventLabels = new LinkedList<>();
-		KeyValuePair property = new KeyValuePair();
-		property.setKey(prefix + separator + eventId);
-		property.setValue(event.getAttributes().getId());
-		cloudEventLabels.add(property);
-		Map<String, Object> extensionAttributes = event.getExtensions();
+		if (eventIdValue != null) {
+			KeyValuePair property = new KeyValuePair();
+			property.setKey(prefix + separator + eventId);
+			property.setValue(eventIdValue);
+			cloudEventLabels.add(property);
+		}
+		Set<String> extensionAttributes = event.getExtensionNames();
 		if (!extensionAttributes.isEmpty()) {
-			extensionAttributesNames.stream().filter(extensionAttributes::containsKey)
-					.map(e -> new KeyValuePair(prefix + separator + e, String.valueOf(extensionAttributes.get(e))))
+			extensionAttributesNames.stream().filter(extensionAttributes::contains)
+					.map(e -> new KeyValuePair(prefix + separator + e, String.valueOf(event.getExtension(e))))
 					.collect(Collectors.toCollection(() -> cloudEventLabels));
 		}
 		return cloudEventLabels;
