@@ -51,7 +51,7 @@ public class EventWFE extends Event {
     eventWFE.setDate(new Date(cloudEvent.getTime().toInstant().toEpochMilli()));
     eventWFE.setType(eventType);
 
-    // Extract workflow ID, activity ID and topic from the subject
+    // Map workflow ID, activity ID and topic from the subject
     String[] subjectTokens = eventWFE.getSubject().trim().replaceFirst("^/", "").split("/");
 
     if (subjectTokens.length != 3) {
@@ -59,9 +59,9 @@ public class EventWFE extends Event {
           "For WFE cloud event types, the subject must have the format: \"/<workflow_id>/<workflow_activity_id>/<wfe_tasks_topic>\"");
     }
 
-    eventWFE.workflowId = subjectTokens[0];
-    eventWFE.workflowActivityId = subjectTokens[1];
-    eventWFE.topic = subjectTokens[2];
+    eventWFE.setWorkflowId(subjectTokens[0]);
+    eventWFE.setWorkflowActivityId(subjectTokens[1]);
+    eventWFE.setTopic(subjectTokens[2]);
 
     // Get status
     TaskStatus status = TaskStatus.completed;
@@ -85,7 +85,7 @@ public class EventWFE extends Event {
     } catch (Exception e) {
     }
 
-    eventWFE.status = status;
+    eventWFE.setStatus(status);
 
     return eventWFE;
   }
