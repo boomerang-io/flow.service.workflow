@@ -8,7 +8,6 @@ import java.util.Map;
 import java.util.Optional;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.TextNode;
 import com.fasterxml.jackson.databind.node.ValueNode;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.CloudEventUtils;
@@ -19,7 +18,7 @@ public class EventTrigger extends Event {
 
   protected static final String EXTENSION_ATTRIBUTE_INITIATOR_ID = "initiatorid";
 
-  protected static final String EXTENSION_ATTRIBUTE_CONTEXT = "context";
+  protected static final String EXTENSION_ATTRIBUTE_CONTEXT = "initiatorcontext";
 
   private String workflowId;
 
@@ -27,7 +26,7 @@ public class EventTrigger extends Event {
 
   private String initiatorId;
 
-  private JsonNode context;
+  private JsonNode initiatorContext;
 
   private Map<String, String> properties;
 
@@ -92,7 +91,7 @@ public class EventTrigger extends Event {
         .ifPresent((initiatorId) -> eventTrigger.setInitiatorId(initiatorId.toString()));
     Optional.ofNullable(cloudEvent.getExtension(EXTENSION_ATTRIBUTE_CONTEXT))
         .ifPresent((contextObject) -> eventTrigger
-            .setContext(objectMapper.convertValue(contextObject, ValueNode.class)));
+            .setInitiatorContext(objectMapper.convertValue(contextObject, ValueNode.class)));
 
     return eventTrigger;
   }
@@ -121,12 +120,12 @@ public class EventTrigger extends Event {
     this.initiatorId = initiatorId;
   }
 
-  public JsonNode getContext() {
-    return this.context;
+  public JsonNode getInitiatorContext() {
+    return this.initiatorContext;
   }
 
-  public void setContext(JsonNode context) {
-    this.context = context;
+  public void setInitiatorContext(JsonNode initiatorContext) {
+    this.initiatorContext = initiatorContext;
   }
 
   public Map<String, String> getProperties() {
@@ -144,7 +143,7 @@ public class EventTrigger extends Event {
       " workflowId='" + getWorkflowId() + "'" +
       ", topic='" + getTopic() + "'" +
       ", initiatorId='" + getInitiatorId() + "'" +
-      ", context='" + getContext() + "'" +
+      ", initiatorContext='" + getInitiatorContext() + "'" +
       ", properties='" + getProperties() + "'" +
       "}";
   }

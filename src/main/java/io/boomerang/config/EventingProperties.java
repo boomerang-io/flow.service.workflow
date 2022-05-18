@@ -8,16 +8,6 @@ import io.nats.client.api.StorageType;
 @ConfigurationProperties(prefix = "eventing")
 public class EventingProperties {
 
-  // Properties related to the subject
-  public static class SubjectProperties {
-
-    private String prefix;
-
-    public String getPrefix() {
-      return this.prefix;
-    }
-  }
-
   // Shared properties
   public static class SharedProperties {
 
@@ -122,8 +112,6 @@ public class EventingProperties {
 
   private Boolean enabled;
 
-  private SubjectProperties subject;
-
   private SharedProperties shared;
 
   private NatsProperties nats;
@@ -137,10 +125,6 @@ public class EventingProperties {
 
   public Boolean isEnabled() {
     return this.enabled;
-  }
-
-  public SubjectProperties getSubject() {
-    return this.subject;
   }
 
   public SharedProperties getShared() {

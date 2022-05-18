@@ -122,7 +122,7 @@ public class CloudEventTest {
         new Date(cloudEvent.getTime().toInstant().toEpochMilli()));
     Assertions.assertEquals(eventTrigger.getInitiatorId(), "iulian");
     Assertions.assertEquals(eventTrigger.getProperties().size(), 0);
-    Assertions.assertNotNull(eventTrigger.getContext());
+    Assertions.assertNotNull(eventTrigger.getInitiatorContext());
   }
 
   @Test
