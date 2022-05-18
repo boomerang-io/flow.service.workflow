@@ -942,6 +942,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     final List<WorkflowEntity> workflows = workflowRepository.getWorkflowsForUser(user.getId());
     final List<WorkflowSummary> newList = new LinkedList<>();
     for (final WorkflowEntity entity : workflows) {
+      filterValueByFieldType(entity.getProperties(), true, FieldType.PASSWORD.value());
       setupTriggerDefaults(entity);
       final WorkflowSummary summary = new WorkflowSummary(entity);
       updateSummaryInformation(summary);
