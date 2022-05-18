@@ -44,6 +44,7 @@ public class DataAdapterUtil {
 			} else {
 				passProp.get().setValue(null);
 			}
+			passProp.get().setHiddenValue(Boolean.TRUE);
 		}
 		return properties;
 	}

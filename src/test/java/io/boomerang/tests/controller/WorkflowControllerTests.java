@@ -180,6 +180,7 @@ public class WorkflowControllerTests extends FlowTests {
     Optional<WorkflowProperty> passProp = entity.getProperties().stream().filter(f->FieldType.PASSWORD.value().equals(f.getType())).findAny();
      assertTrue(passProp.isPresent());
      assertNull(passProp.get().getDefaultValue());
+     assertTrue(passProp.get().isHiddenValue());
   }
   
   @Test

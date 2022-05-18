@@ -35,7 +35,17 @@ public abstract class AbstractConfigurationProperty {
   @JsonProperty("helperText")
   private String helpertext;
 
-  private String language;
+	private Boolean hiddenValue;
+
+	public Boolean isHiddenValue() {
+		return hiddenValue;
+	}
+
+	public void setHiddenValue(Boolean hiddenValue) {
+		this.hiddenValue = hiddenValue;
+	}
+
+private String language;
   private Boolean disabled;
   private String defaultValue;
 
