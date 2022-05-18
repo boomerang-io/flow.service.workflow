@@ -45,8 +45,8 @@ public abstract class AbstractConfigurationProperty {
 		this.hiddenValue = hiddenValue;
 	}
 
-private String language;
-  private Boolean disabled;
+	private String language;
+	private Boolean disabled;
   private String defaultValue;
 
   private String value;
