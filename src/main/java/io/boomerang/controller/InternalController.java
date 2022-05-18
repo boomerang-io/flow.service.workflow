@@ -22,6 +22,7 @@ import io.boomerang.model.GenerateTokenResponse;
 import io.boomerang.model.RequestFlowExecution;
 import io.boomerang.model.WFETriggerResponse;
 import io.boomerang.model.WorkflowShortSummary;
+import io.boomerang.model.eventing.EventResponse;
 import io.boomerang.mongo.model.internal.InternalTaskRequest;
 import io.boomerang.mongo.model.internal.InternalTaskResponse;
 import io.boomerang.service.EventProcessor;
@@ -69,16 +70,23 @@ public class InternalController {
 
   @GetMapping(value = "/system-workflows")
   @Deprecated
-  public List<WorkflowShortSummary> getAllSystemworkflows() {
+  public List<WorkflowShortSummary> getAllSystemWorkflows() {
     return workflowService.getSystemWorkflowShortSummaryList();
   }
 
   @PutMapping(value = "/workflow/event", consumes = "application/cloudevents+json; charset=utf-8")
-  public ResponseEntity<CloudEvent> acceptEvent(@RequestHeader HttpHeaders headers,
+  public ResponseEntity<EventResponse> acceptEvent(@RequestHeader HttpHeaders headers,
       @RequestBody String payload) {
     CloudEvent cloudEvent =
         CloudEventHttpUtils.toReader(headers, () -> payload.getBytes()).toEvent();
-    return ResponseEntity.ok(eventProcessor.processCloudEventRequest(cloudEvent));
+    try {
+      eventProcessor.processCloudEventRequest(cloudEvent);
+      return ResponseEntity
+          .ok(new EventResponse(cloudEvent.getId(), HttpStatus.OK.value(), "Event processed!"));
+    } catch (Exception e) {
+      return ResponseEntity.badRequest().body(
+          new EventResponse(cloudEvent.getId(), HttpStatus.BAD_REQUEST.value(), e.getMessage()));
+    }
   }
 
   @PostMapping(value = "/workflow/{id}/validateToken", consumes = "application/json; charset=utf-8")
