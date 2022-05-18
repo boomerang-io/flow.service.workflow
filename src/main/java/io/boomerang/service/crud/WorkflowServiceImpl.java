@@ -74,6 +74,7 @@ import io.boomerang.service.PropertyManager;
 import io.boomerang.service.UserIdentityService;
 import io.boomerang.service.runner.misc.ControllerClient;
 import io.boomerang.util.ModelConverterV5;
+import static io.boomerang.util.DataAdapterUtil.*;
 
 @Service
 public class WorkflowServiceImpl implements WorkflowService {
@@ -164,6 +165,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
     final WorkflowSummary summary = new WorkflowSummary(entity);
     updateSummaryInformation(summary);
+    filterValueByFieldType(summary.getProperties(), true, FieldType.PASSWORD.value());
     return summary;
   }
 
@@ -340,10 +342,12 @@ public class WorkflowServiceImpl implements WorkflowService {
       userValidationService.validateUserForWorkflow(workflowId);
       entity.setProperties(properties);
       workflowRepository.saveWorkflow(entity);
+      filterValueByFieldType(properties, true, FieldType.PASSWORD.value());
       return new WorkflowSummary(entity);
     } else {
       entity.setProperties(properties);
       workflowRepository.saveWorkflow(entity);
+      filterValueByFieldType(properties, true, FieldType.PASSWORD.value());
       return new WorkflowSummary(entity);
     }
   }

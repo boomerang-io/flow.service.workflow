@@ -141,6 +141,19 @@ public class TeamControllerTests extends FlowTests {
     Assertions.assertEquals("dylan.new.key", newConfig2.getKey());
     Assertions.assertEquals("Dylan's New Value", newConfig2.getValue());
   }
+  
+  @Test
+  public void testCreateNewTeamPropertyPassword() {
+    FlowTeamConfiguration property = new FlowTeamConfiguration();
+    property.setKey("dylan.new.key");
+    property.setValue("Sensitive data");
+    property.setType("password");
+
+    FlowTeamConfiguration newConfig =
+        controller.createNewTeamProperty("5d1a1841f6ca2c00014c4309", property);
+    
+    Assertions.assertNull(newConfig.getValue());
+   }
 
   @Test
   public void testGetTeamQuotas() {
