@@ -88,9 +88,8 @@ public class CloudEventTest {
   }
 
   @ParameterizedTest
-  @ValueSource(
-      strings = {"\"context\":{\"just_a_string\":\"It did go through!\",\"just_a_num\":69420}",
-          "\"context\":[0,1,2,3,4,5,6]", "\"context\":42069", "\"context\":\"A string!!!\""})
+  @ValueSource(strings = {" {\"just_a_string\":\"It did go through!\",\"just_a_num\":69420} ",
+      " [0,1,2,3,4,5,6] ", " 42069 ", "\"A string!!!\"", " false ", " [\"this\",false,202] "})
   public void testTriggerCloudEventInitiatorAndContext(String jsonContextField) {
 
     // @formatter:off
@@ -103,7 +102,7 @@ public class CloudEventTest {
         ",\"subject\":\"/5f7f8cf69a7d401d9e584c90/foobar\"",
         ",\"token\":\"RXggaXBzdW0gZG9sb3Ih\"",
         ",\"initiatorid\":\"iulian\"",
-        "," + jsonContextField,
+        ",\"initiatorcontext\":" + jsonContextField,
         ",\"time\":\"2022-04-30T11:33:22Z\"",
         "}");
     // @formatter:on
@@ -123,6 +122,8 @@ public class CloudEventTest {
     Assertions.assertEquals(eventTrigger.getInitiatorId(), "iulian");
     Assertions.assertEquals(eventTrigger.getProperties().size(), 0);
     Assertions.assertNotNull(eventTrigger.getInitiatorContext());
+    Assertions.assertEquals(eventTrigger.getInitiatorContext().asText(),
+        jsonContextField.substring(1, jsonContextField.length() - 1));
   }
 
   @Test
