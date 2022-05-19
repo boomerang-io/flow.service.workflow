@@ -5,7 +5,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.Callable;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -15,13 +15,11 @@ import org.springframework.stereotype.Service;
 import io.boomerang.config.EventingProperties;
 import io.boomerang.error.BoomerangError;
 import io.boomerang.error.BoomerangException;
-import io.boomerang.model.FlowActivity;
 import io.boomerang.model.FlowExecutionRequest;
 import io.boomerang.model.eventing.Event;
 import io.boomerang.model.eventing.EventCancel;
 import io.boomerang.model.eventing.EventFactory;
 import io.boomerang.model.eventing.EventTrigger;
-import io.boomerang.model.eventing.EventType;
 import io.boomerang.model.eventing.EventWFE;
 import io.boomerang.mongo.model.KeyValuePair;
 import io.boomerang.mongo.model.Triggers;
@@ -98,9 +96,9 @@ public class EventProcessorImpl implements EventProcessor {
               new KeyValuePair(sharedLabelPrefix + "initiatorid", eventTrigger.getInitiatorId()));
         }
 
-        if (eventTrigger.getInitiatorContext().isEmpty() == false) {
+        if (eventTrigger.getInitiatorContext() != null) {
           cloudEventLabels.add(new KeyValuePair(sharedLabelPrefix + "initiatorcontext",
-              eventTrigger.getInitiatorContext().toString()));
+              eventTrigger.getInitiatorContext().asText()));
         }
 
         // Create flow execution request
@@ -109,7 +107,7 @@ public class EventProcessorImpl implements EventProcessor {
         executionRequest.setProperties(eventTrigger.getProperties());
 
         // Execute the workflow
-        FlowActivity activity = executionService.executeWorkflow(eventTrigger.getWorkflowId(),
+        executionService.executeWorkflow(eventTrigger.getWorkflowId(),
             Optional.of(event.getType().toString()), Optional.of(executionRequest),
             Optional.empty());
         break;
@@ -154,16 +152,21 @@ public class EventProcessorImpl implements EventProcessor {
 
   private Boolean isCustomEventEnabled(Event event) {
 
-    // @formatter:off
-    Map<EventType, Callable<String>> getWorkflowIdByClass = Map.of(
-      EventType.TRIGGER, ((EventTrigger) event)::getWorkflowId,
-      EventType.WFE, ((EventWFE) event)::getWorkflowId,
-      EventType.CANCEL, ((EventCancel) event)::getWorkflowId
-    );
-    // @formatter:on
+    Function<Event, String> getWorkflowIdByEvent = (cloudEvent) -> {
+      switch (cloudEvent.getType()) {
+        case TRIGGER:
+          return ((EventTrigger) cloudEvent).getWorkflowId();
+        case WFE:
+          return ((EventWFE) cloudEvent).getWorkflowId();
+        case CANCEL:
+          return ((EventCancel) cloudEvent).getWorkflowId();
+        default:
+          return null;
+      }
+    };
 
     try {
-      String workflowId = getWorkflowIdByClass.get(event.getType()).call();
+      String workflowId = getWorkflowIdByEvent.apply(event);
       Triggers triggers = workflowService.getWorkflow(workflowId).getTriggers();
 
       switch (event.getType()) {

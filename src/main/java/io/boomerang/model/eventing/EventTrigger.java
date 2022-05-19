@@ -87,11 +87,20 @@ public class EventTrigger extends Event {
     eventTrigger.setProperties(properties);
 
     // Map initiator ID and the context
-    Optional.ofNullable(cloudEvent.getExtension(EXTENSION_ATTRIBUTE_INITIATOR_ID))
-        .ifPresent((initiatorId) -> eventTrigger.setInitiatorId(initiatorId.toString()));
-    Optional.ofNullable(cloudEvent.getExtension(EXTENSION_ATTRIBUTE_CONTEXT))
-        .ifPresent((contextObject) -> eventTrigger
-            .setInitiatorContext(objectMapper.convertValue(contextObject, ValueNode.class)));
+    Object initiatorId = cloudEvent.getExtension(EXTENSION_ATTRIBUTE_INITIATOR_ID);
+    Object contextObject = cloudEvent.getExtension(EXTENSION_ATTRIBUTE_CONTEXT);
+
+    if (initiatorId != null) {
+      if (initiatorId.toString().matches("^[a-zA-Z0-9]+$")) {
+        eventTrigger.setInitiatorId(initiatorId.toString());
+      } else {
+        throw new InvalidPropertiesFormatException("Initiator ID must be alphanumeric!");
+      }
+    }
+
+    if (contextObject != null) {
+      eventTrigger.setInitiatorContext(objectMapper.convertValue(contextObject, ValueNode.class));
+    }
 
     return eventTrigger;
   }
