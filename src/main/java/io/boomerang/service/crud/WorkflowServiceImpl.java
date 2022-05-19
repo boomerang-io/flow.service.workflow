@@ -74,6 +74,7 @@ import io.boomerang.service.PropertyManager;
 import io.boomerang.service.UserIdentityService;
 import io.boomerang.service.runner.misc.ControllerClient;
 import io.boomerang.util.ModelConverterV5;
+import static io.boomerang.util.DataAdapterUtil.*;
 
 @Service
 public class WorkflowServiceImpl implements WorkflowService {
@@ -164,6 +165,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
     final WorkflowSummary summary = new WorkflowSummary(entity);
     updateSummaryInformation(summary);
+    filterValueByFieldType(summary.getProperties(), true, FieldType.PASSWORD.value());
     return summary;
   }
 
@@ -340,10 +342,12 @@ public class WorkflowServiceImpl implements WorkflowService {
       userValidationService.validateUserForWorkflow(workflowId);
       entity.setProperties(properties);
       workflowRepository.saveWorkflow(entity);
+      filterValueByFieldType(properties, true, FieldType.PASSWORD.value());
       return new WorkflowSummary(entity);
     } else {
       entity.setProperties(properties);
       workflowRepository.saveWorkflow(entity);
+      filterValueByFieldType(properties, true, FieldType.PASSWORD.value());
       return new WorkflowSummary(entity);
     }
   }
@@ -511,14 +515,7 @@ public class WorkflowServiceImpl implements WorkflowService {
           entity.setFlowTeamId(null);
         }
 
-        if (WorkflowScope.user.equals(scope)) {
-          FlowUserEntity user = userIdentityService.getCurrentUser();
-          if (user != null) {
-            entity.setOwnerUserId(user.getId());
-          }
-        } else {
-          entity.setOwnerUserId(null);
-        }
+        setOwnerUser(entity, scope);
 
         WorkflowEntity workflow = workflowRepository.saveWorkflow(entity);
 
@@ -542,6 +539,7 @@ public class WorkflowServiceImpl implements WorkflowService {
           }
         } else {
           newEntity.setFlowTeamId(null);
+          setOwnerUser(newEntity, scope);
         }
 
         newEntity.setName(export.getName());
@@ -564,6 +562,17 @@ public class WorkflowServiceImpl implements WorkflowService {
       String message = "Workflow not imported - template(s) not found";
       logger.info(message);
       throw new BoomerangException(BoomerangError.IMPORT_WORKFLOW_FAILED);
+    }
+  }
+
+  private void setOwnerUser(WorkflowEntity entity, WorkflowScope scope) {
+    if (WorkflowScope.user.equals(scope)) {
+      FlowUserEntity user = userIdentityService.getCurrentUser();
+      if (user != null) {
+        entity.setOwnerUserId(user.getId());
+      }
+    } else {
+      entity.setOwnerUserId(null);
     }
   }
 
@@ -938,6 +947,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     final List<WorkflowEntity> workflows = workflowRepository.getWorkflowsForUser(user.getId());
     final List<WorkflowSummary> newList = new LinkedList<>();
     for (final WorkflowEntity entity : workflows) {
+      filterValueByFieldType(entity.getProperties(), true, FieldType.PASSWORD.value());
       setupTriggerDefaults(entity);
       final WorkflowSummary summary = new WorkflowSummary(entity);
       updateSummaryInformation(summary);

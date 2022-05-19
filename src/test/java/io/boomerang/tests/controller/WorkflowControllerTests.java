@@ -51,6 +51,7 @@ import io.boomerang.mongo.model.WorkflowConfiguration;
 import io.boomerang.mongo.model.WorkflowProperty;
 import io.boomerang.mongo.model.WorkflowScope;
 import io.boomerang.mongo.model.WorkflowStatus;
+import io.boomerang.util.DataAdapterUtil.FieldType;
 
 
 @ExtendWith(SpringExtension.class)
@@ -93,6 +94,11 @@ public class WorkflowControllerTests extends FlowTests {
   public void testGetWorkflowWithId() {
     WorkflowSummary summary = controller.getWorkflowWithId("5d1a188af6ca2c00014c4314");
      assertEquals("5d1a188af6ca2c00014c4314", summary.getId());
+		Optional<WorkflowProperty> passProp = summary.getProperties().stream()
+				.filter(f -> FieldType.PASSWORD.value().equals(f.getType())).findAny();
+		if (passProp.isPresent()) {
+			assertNull(passProp.get().getDefaultValue());
+		}
   }
 
   @Test
@@ -155,6 +161,28 @@ public class WorkflowControllerTests extends FlowTests {
 
   }
 
+  @Test
+  public void testUpdateWorkflowPasswordProperty() {
+   
+    WorkflowProperty passProperty = new WorkflowProperty();
+    passProperty.setKey("myPassword");
+    passProperty.setDescription("testDescriptionPass");
+    passProperty.setLabel("testLabelPass");
+    passProperty.setRequired(false);
+    passProperty.setType("password");
+    passProperty.setDefaultValue("sensitiveData");
+
+    List<WorkflowProperty> properties = new ArrayList<>();
+    properties.add(passProperty);
+
+    WorkflowEntity entity =
+        controller.updateWorkflowProperties("5d1a188af6ca2c00014c4314", properties);
+    Optional<WorkflowProperty> passProp = entity.getProperties().stream().filter(f->FieldType.PASSWORD.value().equals(f.getType())).findAny();
+     assertTrue(passProp.isPresent());
+     assertNull(passProp.get().getDefaultValue());
+     assertTrue(passProp.get().isHiddenValue());
+  }
+  
   @Test
   public void testExportWorkflow() {
     ResponseEntity<InputStreamResource> export =
@@ -310,11 +338,13 @@ public class WorkflowControllerTests extends FlowTests {
   @Test
   public void testAvaliableParameters() {
     List<String> parameters = controller.getWorkflowParameters("5d1a188af6ca2c00014c4314");
-     assertEquals(14, parameters.size());
-     assertEquals("workflow.params.hello", parameters.get(0));
-     assertEquals("params.hello", parameters.get(1));
-     assertEquals("system.params.workflow-id", parameters.get(2));
-     assertEquals("params.workflow-id", parameters.get(3));
+     assertEquals(16, parameters.size());
+     assertEquals("workflow.params.password", parameters.get(0));
+     assertEquals("params.password", parameters.get(1));
+     assertEquals("workflow.params.hello", parameters.get(2));
+     assertEquals("params.hello", parameters.get(3));
+     assertEquals("system.params.workflow-id", parameters.get(4));
+     assertEquals("params.workflow-id", parameters.get(5));
 
   }
 
