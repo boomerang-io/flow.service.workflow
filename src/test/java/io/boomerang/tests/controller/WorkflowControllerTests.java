@@ -338,11 +338,13 @@ public class WorkflowControllerTests extends FlowTests {
   @Test
   public void testAvaliableParameters() {
     List<String> parameters = controller.getWorkflowParameters("5d1a188af6ca2c00014c4314");
-     assertEquals(14, parameters.size());
-     assertEquals("workflow.params.hello", parameters.get(0));
-     assertEquals("params.hello", parameters.get(1));
-     assertEquals("system.params.workflow-id", parameters.get(2));
-     assertEquals("params.workflow-id", parameters.get(3));
+     assertEquals(16, parameters.size());
+     assertEquals("workflow.params.password", parameters.get(0));
+     assertEquals("params.password", parameters.get(1));
+     assertEquals("workflow.params.hello", parameters.get(2));
+     assertEquals("params.hello", parameters.get(3));
+     assertEquals("system.params.workflow-id", parameters.get(4));
+     assertEquals("params.workflow-id", parameters.get(5));
 
   }
 

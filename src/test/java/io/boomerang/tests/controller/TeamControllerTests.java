@@ -112,7 +112,7 @@ public class TeamControllerTests extends FlowTests {
 
   @Test
   public void testUpdateTeamProperty() {
-    Assertions.assertEquals("Value",
+    Assertions.assertEquals(null,
         controller.getAllTeamProperties("5d1a1841f6ca2c00014c4302").get(0).getValue());
 
     FlowTeamConfiguration property = new FlowTeamConfiguration();
