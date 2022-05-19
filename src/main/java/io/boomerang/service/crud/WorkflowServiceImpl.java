@@ -546,6 +546,14 @@ public class WorkflowServiceImpl implements WorkflowService {
           }
         } else {
           newEntity.setFlowTeamId(null);
+          if (WorkflowScope.user.equals(scope)) {
+            FlowUserEntity user = userIdentityService.getCurrentUser();
+            if (user != null) {
+              newEntity.setOwnerUserId(user.getId());
+            }
+          } else {
+            newEntity.setOwnerUserId(null);
+          }
         }
 
         newEntity.setName(export.getName());
