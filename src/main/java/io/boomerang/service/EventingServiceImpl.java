@@ -4,10 +4,10 @@ import java.io.IOException;
 import java.net.URI;
 import java.text.MessageFormat;
 import java.time.Duration;
-import java.time.ZonedDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
+import com.google.gson.JsonObject;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -30,10 +30,10 @@ import io.boomerang.eventing.nats.jetstream.SubOnlyTunnel;
 import io.boomerang.eventing.nats.jetstream.exception.StreamNotFoundException;
 import io.boomerang.eventing.nats.jetstream.exception.SubjectMismatchException;
 import io.boomerang.mongo.entity.ActivityEntity;
-import io.boomerang.mongo.model.TaskStatus;
-import io.cloudevents.json.Json;
-import io.cloudevents.v03.CloudEventBuilder;
-import io.cloudevents.v03.CloudEventImpl;
+import io.cloudevents.CloudEvent;
+import io.cloudevents.core.builder.CloudEventBuilder;
+import io.cloudevents.core.provider.EventFormatProvider;
+import io.cloudevents.jackson.JsonFormat;
 import io.nats.client.JetStreamApiException;
 import io.nats.client.Options;
 import io.nats.client.api.ConsumerConfiguration;
@@ -128,7 +128,10 @@ public class EventingServiceImpl implements EventingService, SubHandler {
 
   @Override
   public void newMessageReceived(SubOnlyTunnel tunnel, String subject, String message) {
-    eventProcessor.processNATSMessage(message);
+    try {
+      eventProcessor.processNATSMessage(message);
+    } catch (Exception e) {
+    }
   }
 
   /**
@@ -150,16 +153,18 @@ public class EventingServiceImpl implements EventingService, SubHandler {
     String subject = MessageFormat.format("/{0}/status/{1}", activityEntity.getWorkflowId(),
         activityEntity.getStatus());
     URI source = URI.create("io.boomerang.service.EventingServiceImpl");
-    Map<String, TaskStatus> data = Map.of("status", activityEntity.getStatus());
+
+    JsonObject jsonData = new JsonObject();
+    jsonData.addProperty("status", activityEntity.getStatus().toString());
 
     // @formatter:off
-    CloudEventImpl<Map<String, TaskStatus>> cloudEvent = CloudEventBuilder.<Map<String, TaskStatus>>builder()
+    CloudEvent cloudEvent = CloudEventBuilder.v03()
         .withType(type)
         .withId(id)
         .withSubject(subject)
         .withSource(source)
-        .withData(data)
-        .withTime(ZonedDateTime.now())
+        .withData("application/json", jsonData.toString().getBytes())
+        .withTime(OffsetDateTime.now())
         .build();
     // @formatter:on
 
@@ -168,7 +173,10 @@ public class EventingServiceImpl implements EventingService, SubHandler {
         StringUtils.lowerCase(activityEntity.getStatus().toString()));
 
     try {
-      getPubOnlyTunnel().publish(natsMessageSubject, Json.encode(cloudEvent));
+      String serializedCloudEvent = new String(EventFormatProvider.getInstance()
+          .resolveFormat(JsonFormat.CONTENT_TYPE).serialize(cloudEvent));
+
+      getPubOnlyTunnel().publish(natsMessageSubject, serializedCloudEvent);
     } catch (StreamNotFoundException | SubjectMismatchException e) {
       logger.error("Stream is not configured properly!", e);
     } catch (IllegalStateException | IOException | JetStreamApiException e) {
