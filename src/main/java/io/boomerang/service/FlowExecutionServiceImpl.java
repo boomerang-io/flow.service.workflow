@@ -172,7 +172,7 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
       activityEntity.setStatus(TaskStatus.invalid);
       activityEntity.setStatusMessage("Failed to run workflow: Incomplete workflow");
       activityService.saveWorkflowActivity(activityEntity);
-      eventingService.publishWorkflowActivityStatusUpdateCE(activityEntity);
+      eventingService.publishActivityStatusEvent(activityEntity);
 
       throw new InvalidWorkflowRuntimeException();
     }
@@ -247,7 +247,7 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
       activityEntity.setStatus(TaskStatus.completed);
       activityEntity.setCreationDate(new Date());
       activityService.saveWorkflowActivity(activityEntity);
-      eventingService.publishWorkflowActivityStatusUpdateCE(activityEntity);
+      eventingService.publishActivityStatusEvent(activityEntity);
 
       return;
     }
@@ -258,7 +258,7 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
     activityService.saveWorkflowActivity(activityEntity);
 
     if (oldStatus != activityEntity.getStatus()) {
-      eventingService.publishWorkflowActivityStatusUpdateCE(activityEntity);
+      eventingService.publishActivityStatusEvent(activityEntity);
     }
 
     WorkflowEntity workflow = workflowService.getWorkflow(activityEntity.getWorkflowId());

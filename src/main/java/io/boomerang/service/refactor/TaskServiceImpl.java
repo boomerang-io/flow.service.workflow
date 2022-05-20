@@ -147,7 +147,7 @@ public class TaskServiceImpl implements TaskService {
       if (activity.getStatus() != TaskStatus.inProgress) {
         activity.setStatus(TaskStatus.inProgress);
         activityService.saveWorkflowActivity(activity);
-        eventingService.publishWorkflowActivityStatusUpdateCE(activity);
+        eventingService.publishActivityStatusEvent(activity);
       }
     }
 
@@ -396,7 +396,7 @@ public class TaskServiceImpl implements TaskService {
 
     activity.setStatus(TaskStatus.waiting);
     activityService.saveWorkflowActivity(activity);
-    eventingService.publishWorkflowActivityStatusUpdateCE(activity);
+    eventingService.publishActivityStatusEvent(activity);
 
     if (taskExecution.isPreApproved()) {
       InternalTaskResponse response = new InternalTaskResponse();
@@ -414,7 +414,7 @@ public class TaskServiceImpl implements TaskService {
 
     activity.setStatus(TaskStatus.waiting);
     activityService.saveWorkflowActivity(activity);
-    eventingService.publishWorkflowActivityStatusUpdateCE(activity);
+    eventingService.publishActivityStatusEvent(activity);
 
     ApprovalEntity approval = new ApprovalEntity();
     approval.setTaskActivityId(taskExecution.getId());
@@ -590,7 +590,7 @@ public class TaskServiceImpl implements TaskService {
     activityService.saveWorkflowActivity(activity);
 
     if (oldStatus != activity.getStatus()) {
-      eventingService.publishWorkflowActivityStatusUpdateCE(activity);
+      eventingService.publishActivityStatusEvent(activity);
     }
   }
 

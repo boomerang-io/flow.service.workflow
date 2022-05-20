@@ -719,7 +719,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
     Optional.ofNullable(error).ifPresent(activity::setError);
 
     flowActivityService.saveWorkflowActivity(activity);
-    eventingService.publishWorkflowActivityStatusUpdateCE(activity);
+    eventingService.publishActivityStatusEvent(activity);
 
     String workflowId = activity.getWorkflowId();
     final WorkflowEntity workflow = workflowService.getWorkflow(workflowId);

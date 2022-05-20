@@ -1,17 +1,23 @@
 package io.boomerang.service;
 
 import io.boomerang.mongo.entity.ActivityEntity;
+import io.cloudevents.CloudEvent;
 
 public interface EventingService {
 
-  /*
-   * Loop through a Workflow's parameters and if a JsonPath is set read the event payload and
-   * attempt to find a payload.
+  void processCloudEventRequest(CloudEvent cloudEvent) throws Exception;
+
+  void processNATSMessage(String payload) throws Exception;
+
+  /**
+   * This method will publish a Cloud Event encoded as a string to the NATS server. Please make sure
+   * the status of the {@link ActivityEntity} is updated when invoking this method.
    * 
-   * Notes: - We drop exceptions to ensure Workflow continues executing - We return null if path not
-   * found using DEFAULT_PATH_LEAF_TO_NULL.
+   * @param activityEntity Activity entity.
    * 
-   * Reference: - https://github.com/json-path/JsonPath#tweaking-configuration
+   * @note Do not invoke this method with if the status of the {@link ActivityEntity} has not been
+   *       changed, as this would result in publishing a Cloud Event with the same status multiple
+   *       times.
    */
-  void publishWorkflowActivityStatusUpdateCE(ActivityEntity activityEntity);
+  void publishActivityStatusEvent(ActivityEntity activityEntity);
 }
