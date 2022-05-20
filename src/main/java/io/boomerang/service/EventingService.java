@@ -15,7 +15,7 @@ public interface EventingService {
    * 
    * @param activityEntity Activity entity.
    * 
-   * @note Do not invoke this method with if the status of the {@link ActivityEntity} has not been
+   * @Note Do not invoke this method with if the status of the {@link ActivityEntity} has not been
    *       changed, as this would result in publishing a Cloud Event with the same status multiple
    *       times.
    */

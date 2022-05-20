@@ -18,6 +18,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 import io.boomerang.config.EventingProperties;
@@ -69,15 +70,19 @@ public class EventingServiceImpl implements EventingService, SubHandler {
   @Autowired
   EventingProperties properties;
 
+  @Lazy
   @Autowired
   private FlowActivityService flowActivityService;
 
+  @Lazy
   @Autowired
   private WorkflowService workflowService;
 
+  @Lazy
   @Autowired
   private ExecutionService executionService;
 
+  @Lazy
   @Autowired
   private TaskService taskService;
 
@@ -86,6 +91,8 @@ public class EventingServiceImpl implements EventingService, SubHandler {
   private PubOnlyTunnel statusEventsTunnel;
 
   private SubOnlyTunnel actionEventsTunnel;
+
+  private EventFormatProvider eventFormatProvider = EventFormatProvider.getInstance();
 
   @PostConstruct
   private void init() throws InterruptedException {
@@ -98,7 +105,6 @@ public class EventingServiceImpl implements EventingService, SubHandler {
         .maxReconnects(properties.getNats().getServer().getReconnectMaxAttempts());
     // @formatter:on
     connectionPrimer = new ConnectionPrimer(optionsBuilder);
-
 
     // Create the tunnel for action CloudEvents (trigger, wait for event, cancel, etc.)
     // @formatter:off
@@ -266,66 +272,71 @@ public class EventingServiceImpl implements EventingService, SubHandler {
 
   @Override
   public void processNATSMessage(String message) throws InvalidPropertiesFormatException {
-    CloudEvent cloudEvent = EventFormatProvider.getInstance().resolveFormat(JsonFormat.CONTENT_TYPE)
-        .deserialize(message.getBytes());
+    CloudEvent cloudEvent =
+        eventFormatProvider.resolveFormat(JsonFormat.CONTENT_TYPE).deserialize(message.getBytes());
     processCloudEventRequest(cloudEvent);
   }
 
   @Override
   public void publishActivityStatusEvent(ActivityEntity activityEntity) {
-    String nonWildcardSubject = getNonWildcardSubject(
-        properties.getJetstream().getStatusEvents().getStream().getSubjects()[0]);
-    String workflowId = activityEntity.getWorkflowId();
-    String workflowActivityId = activityEntity.getId();
-    String newStatus = activityEntity.getStatus().toString().toLowerCase();
-    String initiatorId = "";
-    TextNode initiatorContext = null;
-
-    // Extract initiator ID and initiator context
-    if (activityEntity.getLabels() != null && activityEntity.getLabels().isEmpty() == false) {
-
-      initiatorId = activityEntity.getLabels().stream()
-          .filter(kv -> kv.getKey().equals(LABEL_KEY_INITIATOR_ID)).findFirst()
-          .map(kv -> kv.getValue()).orElse("");
-
-      String initiatorContextData = activityEntity.getLabels().stream()
-          .filter(kv -> kv.getKey().equals(LABEL_KEY_INITIATOR_CONTEXT)).findFirst()
-          .map(kv -> kv.getValue()).orElse("");
-      initiatorContext = new TextNode(initiatorContextData);
-    }
-
-    // Event subject and NATS message subject
-    String eventSubject =
-        MessageFormat.format("/{0}/{1}/{2}", workflowId, workflowActivityId, newStatus);
-    String natSubject = MessageFormat.format("{0}.{1}.{2}.{3}{4}", nonWildcardSubject, newStatus,
-        workflowId, workflowActivityId, initiatorId);
-
-    // Create status update event
-    EventStatusUpdate eventStatusUpdate = new EventStatusUpdate();
-    eventStatusUpdate.setId(UUID.randomUUID().toString());
-    eventStatusUpdate.setSource(URI.create("io.boomerang.service.EventingService"));
-    eventStatusUpdate.setSubject(eventSubject);
-    eventStatusUpdate.setDate(new Date());
-    eventStatusUpdate.setType(EventType.STATUS_UPDATE);
-    eventStatusUpdate.setWorkflowId(activityEntity.getWorkflowId());
-    eventStatusUpdate.setWorkflowActivityId(activityEntity.getId());
-    eventStatusUpdate.setStatus(activityEntity.getStatus());
-    eventStatusUpdate.setInitiatorContext(initiatorContext);
-
-    // Publish cloud event
     try {
-      String serializedCloudEvent = new String(EventFormatProvider.getInstance()
-          .resolveFormat(JsonFormat.CONTENT_TYPE).serialize(eventStatusUpdate.toCloudEvent()));
 
-      statusEventsTunnel.publish(natSubject, serializedCloudEvent);
-    } catch (StreamNotFoundException | SubjectMismatchException e) {
-      logger.error("Stream is not configured properly!", e);
-    } catch (IllegalStateException | IOException | JetStreamApiException e) {
-      logger.error("An exception occurred while publishing the message to NATS server!", e);
+      String nonWildcardSubject = getNonWildcardSubject(
+          properties.getJetstream().getStatusEvents().getStream().getSubjects()[0]);
+      String workflowId = activityEntity.getWorkflowId();
+      String workflowActivityId = activityEntity.getId();
+      String newStatus = activityEntity.getStatus().toString().toLowerCase();
+      String initiatorId = "";
+      TextNode initiatorContext = null;
+
+      // Extract initiator ID and initiator context
+      if (activityEntity.getLabels() != null && activityEntity.getLabels().isEmpty() == false) {
+
+        initiatorId = activityEntity.getLabels().stream()
+            .filter(kv -> kv.getKey().equals(LABEL_KEY_INITIATOR_ID)).findFirst()
+            .map(kv -> kv.getValue()).orElse("");
+
+        String initiatorContextData = activityEntity.getLabels().stream()
+            .filter(kv -> kv.getKey().equals(LABEL_KEY_INITIATOR_CONTEXT)).findFirst()
+            .map(kv -> kv.getValue()).orElse("");
+        initiatorContext = new TextNode(initiatorContextData);
+      }
+
+      // Event subject and NATS message subject
+      String eventSubject =
+          MessageFormat.format("/{0}/{1}/{2}", workflowId, workflowActivityId, newStatus);
+      String natSubject = MessageFormat.format("{0}.{1}.{2}.{3}{4}", nonWildcardSubject, newStatus,
+          workflowId, workflowActivityId, initiatorId);
+
+      // Create status update event
+      EventStatusUpdate eventStatusUpdate = new EventStatusUpdate();
+      eventStatusUpdate.setId(UUID.randomUUID().toString());
+      eventStatusUpdate.setSource(URI.create("io.boomerang.service.EventingService"));
+      eventStatusUpdate.setSubject(eventSubject);
+      eventStatusUpdate.setDate(new Date());
+      eventStatusUpdate.setType(EventType.STATUS_UPDATE);
+      eventStatusUpdate.setWorkflowId(activityEntity.getWorkflowId());
+      eventStatusUpdate.setWorkflowActivityId(activityEntity.getId());
+      eventStatusUpdate.setStatus(activityEntity.getStatus());
+      eventStatusUpdate.setInitiatorContext(initiatorContext);
+
+      // Publish cloud event
+      try {
+        String serializedCloudEvent = new String(eventFormatProvider
+            .resolveFormat(JsonFormat.CONTENT_TYPE).serialize(eventStatusUpdate.toCloudEvent()));
+        statusEventsTunnel.publish(natSubject, serializedCloudEvent);
+      } catch (StreamNotFoundException | SubjectMismatchException e) {
+        logger.error("Stream is not configured properly!", e);
+      } catch (IllegalStateException | IOException | JetStreamApiException e) {
+        logger.error("An exception occurred while publishing the message to NATS server!", e);
+      }
+
+      logger.debug("Workflow with ID " + workflowId + " has changed its status to "
+          + activityEntity.getStatus());
+    } catch (Exception e) {
+      logger.fatal("A fatal error has occurred while publishing the message to the NATS server!",
+          e);
     }
-
-    logger.debug("Workflow with ID " + workflowId + " has changed its status to "
-        + activityEntity.getStatus());
   }
 
   private String getWorkflowIdFromEvent(Event event) {
