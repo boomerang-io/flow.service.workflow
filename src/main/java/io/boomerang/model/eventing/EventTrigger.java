@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.Optional;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ValueNode;
+import io.boomerang.util.LabelValueCodec;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.CloudEventUtils;
 import io.cloudevents.core.data.PojoCloudEventData;
@@ -26,7 +26,7 @@ public class EventTrigger extends Event {
 
   private String initiatorId;
 
-  private JsonNode initiatorContext;
+  private String initiatorContext;
 
   private Map<String, String> properties;
 
@@ -99,7 +99,7 @@ public class EventTrigger extends Event {
     }
 
     if (contextObject != null) {
-      eventTrigger.setInitiatorContext(objectMapper.convertValue(contextObject, ValueNode.class));
+      eventTrigger.setInitiatorContext(LabelValueCodec.encode(contextObject.toString()));
     }
 
     return eventTrigger;
@@ -129,11 +129,11 @@ public class EventTrigger extends Event {
     this.initiatorId = initiatorId;
   }
 
-  public JsonNode getInitiatorContext() {
+  public String getInitiatorContext() {
     return this.initiatorContext;
   }
 
-  public void setInitiatorContext(JsonNode initiatorContext) {
+  public void setInitiatorContext(String initiatorContext) {
     this.initiatorContext = initiatorContext;
   }
 

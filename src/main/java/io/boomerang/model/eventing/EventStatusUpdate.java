@@ -2,10 +2,10 @@ package io.boomerang.model.eventing;
 
 import java.io.IOException;
 import java.time.ZoneOffset;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.google.gson.JsonObject;
 import org.apache.http.entity.ContentType;
 import io.boomerang.mongo.model.TaskStatus;
+import io.boomerang.util.LabelValueCodec;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.builder.CloudEventBuilder;
 
@@ -19,7 +19,7 @@ public class EventStatusUpdate extends Event {
 
   private TaskStatus status;
 
-  private JsonNode initiatorContext;
+  private String initiatorContext;
 
   public EventStatusUpdate() {}
 
@@ -42,7 +42,7 @@ public class EventStatusUpdate extends Event {
 
     if (initiatorContext != null) {
       cloudEventBuilder = cloudEventBuilder.withExtension(EXTENSION_ATTRIBUTE_CONTEXT,
-          initiatorContext.binaryValue());
+          LabelValueCodec.decode(initiatorContext));
     }
 
     return cloudEventBuilder.build();
@@ -72,11 +72,11 @@ public class EventStatusUpdate extends Event {
     this.status = status;
   }
 
-  public JsonNode getInitiatorContext() {
+  public String getInitiatorContext() {
     return this.initiatorContext;
   }
 
-  public void setInitiatorContext(JsonNode initiatorContext) {
+  public void setInitiatorContext(String initiatorContext) {
     this.initiatorContext = initiatorContext;
   }
 

@@ -14,6 +14,7 @@ import io.boomerang.model.eventing.EventFactory;
 import io.boomerang.model.eventing.EventTrigger;
 import io.boomerang.model.eventing.EventWFE;
 import io.boomerang.mongo.model.TaskStatus;
+import io.boomerang.util.LabelValueCodec;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.provider.EventFormatProvider;
 import io.cloudevents.jackson.JsonFormat;
@@ -88,8 +89,8 @@ public class CloudEventTest {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {" {\"just_a_string\":\"It did go through!\",\"just_a_num\":69420} ",
-      " [0,1,2,3,4,5,6] ", " 42069 ", "\"A string!!!\"", " false ", " [\"this\",false,202] "})
+  @ValueSource(strings = {"{\"just_a_string\":\"It did go through!\",\"just_a_num\":69420}",
+      "[0,1,2,3,4,5,6]", "42069", "false", "[\"this\",false,202]"})
   public void testTriggerCloudEventInitiatorAndContext(String jsonContextField) {
 
     // @formatter:off
@@ -122,8 +123,8 @@ public class CloudEventTest {
     Assertions.assertEquals(eventTrigger.getInitiatorId(), "iulian");
     Assertions.assertEquals(eventTrigger.getProperties().size(), 0);
     Assertions.assertNotNull(eventTrigger.getInitiatorContext());
-    Assertions.assertEquals(eventTrigger.getInitiatorContext().asText(),
-        jsonContextField.substring(1, jsonContextField.length() - 1));
+    Assertions.assertEquals(jsonContextField,
+        LabelValueCodec.decode(eventTrigger.getInitiatorContext()));
   }
 
   @Test
