@@ -31,18 +31,21 @@ public class EventStatusUpdate extends Event {
     jsonData.addProperty("status", status.toString());
 
     // @formatter:off
-    CloudEvent cloudEvent = CloudEventBuilder.v03()
+    CloudEventBuilder cloudEventBuilder = CloudEventBuilder.v03()
         .withId(getId())
         .withSource(getSource())
         .withSubject(getSubject())
         .withType(EVENT_TYPE_PREFIX + getType().toString().toLowerCase())
         .withTime(getDate().toInstant().atOffset(ZoneOffset.UTC))
-        .withData(ContentType.APPLICATION_JSON.toString(), jsonData.toString().getBytes())
-        .withExtension(EXTENSION_ATTRIBUTE_CONTEXT, initiatorContext.binaryValue())
-        .build();
+        .withData(ContentType.APPLICATION_JSON.toString(), jsonData.toString().getBytes());
     // @formatter:on
 
-    return cloudEvent;
+    if (initiatorContext != null) {
+      cloudEventBuilder = cloudEventBuilder.withExtension(EXTENSION_ATTRIBUTE_CONTEXT,
+          initiatorContext.binaryValue());
+    }
+
+    return cloudEventBuilder.build();
   }
 
   public String getWorkflowId() {
