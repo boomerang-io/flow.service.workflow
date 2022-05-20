@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.text.MessageFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.InvalidPropertiesFormatException;
 import java.util.LinkedList;
 import java.util.List;
@@ -12,7 +13,6 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
-import com.fasterxml.jackson.databind.node.TextNode;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
@@ -45,6 +45,7 @@ import io.boomerang.model.eventing.EventWFE;
 import io.boomerang.mongo.entity.ActivityEntity;
 import io.boomerang.mongo.model.KeyValuePair;
 import io.boomerang.mongo.model.Triggers;
+import io.boomerang.mongo.model.WorkflowProperty;
 import io.boomerang.service.crud.FlowActivityService;
 import io.boomerang.service.crud.WorkflowService;
 import io.boomerang.service.refactor.TaskService;
@@ -223,18 +224,23 @@ public class EventingServiceImpl implements EventingService, SubHandler {
 
         if (eventTrigger.getInitiatorContext() != null) {
           cloudEventLabels.add(new KeyValuePair(sharedLabelPrefix + LABEL_KEY_INITIATOR_CONTEXT,
-              eventTrigger.getInitiatorContext().asText()));
+              eventTrigger.getInitiatorContext()));
         }
 
         // Create flow execution request
         FlowExecutionRequest executionRequest = new FlowExecutionRequest();
         executionRequest.setLabels(cloudEventLabels);
-        executionRequest.setProperties(eventTrigger.getProperties());
+        executionRequest.setProperties(
+            processProperties(eventTrigger.getProperties(), eventTrigger.getWorkflowId()));
 
         // Execute the workflow
-        executionService.executeWorkflow(eventTrigger.getWorkflowId(),
-            Optional.of(event.getType().toString()), Optional.of(executionRequest),
+        // @formatter:off
+        executionService.executeWorkflow(
+            eventTrigger.getWorkflowId(),
+            Optional.of("Custom Event"),
+            Optional.of(executionRequest),
             Optional.empty());
+        // @formatter:on
         break;
 
       case WFE:
@@ -287,26 +293,26 @@ public class EventingServiceImpl implements EventingService, SubHandler {
       String workflowActivityId = activityEntity.getId();
       String newStatus = activityEntity.getStatus().toString().toLowerCase();
       String initiatorId = "";
-      TextNode initiatorContext = null;
+      String initiatorContext = null;
 
       // Extract initiator ID and initiator context
       if (activityEntity.getLabels() != null && activityEntity.getLabels().isEmpty() == false) {
+        String sharedLabelPrefix = properties.getShared().getLabel().getPrefix() + "/";
 
         initiatorId = activityEntity.getLabels().stream()
-            .filter(kv -> kv.getKey().equals(LABEL_KEY_INITIATOR_ID)).findFirst()
-            .map(kv -> kv.getValue()).orElse("");
+            .filter(kv -> kv.getKey().equals(sharedLabelPrefix + LABEL_KEY_INITIATOR_ID))
+            .findFirst().map(kv -> kv.getValue()).orElse("");
 
-        String initiatorContextData = activityEntity.getLabels().stream()
-            .filter(kv -> kv.getKey().equals(LABEL_KEY_INITIATOR_CONTEXT)).findFirst()
-            .map(kv -> kv.getValue()).orElse("");
-        initiatorContext = new TextNode(initiatorContextData);
+        initiatorContext = activityEntity.getLabels().stream()
+            .filter(kv -> kv.getKey().equals(sharedLabelPrefix + LABEL_KEY_INITIATOR_CONTEXT))
+            .findFirst().map(kv -> kv.getValue()).orElse("");
       }
 
       // Event subject and NATS message subject
       String eventSubject =
           MessageFormat.format("/{0}/{1}/{2}", workflowId, workflowActivityId, newStatus);
       String natSubject = MessageFormat.format("{0}.{1}.{2}.{3}{4}", nonWildcardSubject, newStatus,
-          workflowId, workflowActivityId, initiatorId);
+          workflowId, workflowActivityId, Strings.isNotEmpty(initiatorId) ? "." + initiatorId : "");
 
       // Create status update event
       EventStatusUpdate eventStatusUpdate = new EventStatusUpdate();
@@ -337,6 +343,50 @@ public class EventingServiceImpl implements EventingService, SubHandler {
       logger.fatal("A fatal error has occurred while publishing the message to the NATS server!",
           e);
     }
+  }
+
+  /**
+   * Loop through a Workflow's parameters and if a JsonPath is set, read the event payload attempt
+   * to find parameters.
+   */
+  private Map<String, String> processProperties(Map<String, String> eventProperties,
+      String workflowId) {
+    List<WorkflowProperty> inputProperties =
+        workflowService.getWorkflow(workflowId).getProperties();
+    Map<String, String> properties = new HashMap<>();
+
+    if (inputProperties != null) {
+
+      for (WorkflowProperty inputProperty : inputProperties) {
+        try {
+          if (eventProperties != null && Strings.isNotEmpty(inputProperty.getJsonPath())) {
+
+            String propertyValue = eventProperties
+                .getOrDefault(inputProperty.getJsonPath(), inputProperty.getDefaultValue())
+                .replaceAll("^\"+|\"+$", "");
+
+            logger.info("processProperties() - Property: " + inputProperty.getKey()
+                + ", Json Path: " + inputProperty.getJsonPath() + ", Value: " + propertyValue);
+
+            properties.put(inputProperty.getKey(), propertyValue);
+          }
+        } catch (Exception e) {
+
+          // Log and drop exception. We want the workflow to continue execution.
+          logger.error(e);
+        }
+      }
+    }
+    String serializedEventProperties =
+        eventProperties.keySet().stream().map(key -> "\"" + key + "\":" + eventProperties.get(key))
+            .collect(Collectors.joining(",", "{", "}"));
+    properties.put("eventPayload", serializedEventProperties);
+
+    properties.forEach((k, v) -> {
+      logger.info("processProperties() - " + k + "=" + v);
+    });
+
+    return properties;
   }
 
   private String getWorkflowIdFromEvent(Event event) {
