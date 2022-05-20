@@ -1,7 +1,6 @@
 package io.boomerang.config;
 
 import java.time.Duration;
-import java.util.List;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Pattern;
@@ -13,6 +12,69 @@ import io.nats.client.api.StorageType;
 @Configuration
 @ConfigurationProperties(prefix = "eventing")
 public class EventingProperties {
+
+  // Generic Jetstream stream properties
+  public static class GenericStreamProperties {
+
+    @NotBlank
+    private String name;
+
+    @NotBlank
+    @Pattern(regexp = "^((file)|(memory))$")
+    private StorageType storageType;
+
+    @Size(min = 1)
+    private String[] subjects;
+
+    public String getName() {
+      return this.name;
+    }
+
+    public StorageType getStorageType() {
+      return this.storageType;
+    }
+
+    public String[] getSubjects() {
+      return this.subjects;
+    }
+
+    public void setName(String name) {
+      this.name = name;
+    }
+
+    public void setStorageType(StorageType storageType) {
+      this.storageType = storageType;
+    }
+
+    public void setSubjects(String[] subjects) {
+      this.subjects = subjects;
+    }
+  }
+
+  // Generic Jetstream consumer properties
+  public static class GenericConsumerProperties {
+
+    @NotBlank
+    private String name;
+
+    private Duration resubWaitTime;
+
+    public String getName() {
+      return this.name;
+    }
+
+    public Duration getResubWaitTime() {
+      return this.resubWaitTime;
+    }
+
+    public void setName(String name) {
+      this.name = name;
+    }
+
+    public void setResubWaitTime(Duration resubWaitTime) {
+      this.resubWaitTime = resubWaitTime;
+    }
+  }
 
   // Shared properties
   public static class SharedProperties {
@@ -48,14 +110,14 @@ public class EventingProperties {
     public static class ServerProperties {
 
       @Size(min = 1)
-      private List<String> urls;
+      private String[] urls;
 
       private Duration reconnectWaitTime;
 
       @Min(-1)
       private Integer reconnectMaxAttempts;
 
-      public List<String> getUrls() {
+      public String[] getUrls() {
         return this.urls;
       }
 
@@ -67,7 +129,7 @@ public class EventingProperties {
         return this.reconnectMaxAttempts;
       }
 
-      public void setUrls(List<String> urls) {
+      public void setUrls(String[] urls) {
         this.urls = urls;
       }
 
@@ -94,87 +156,63 @@ public class EventingProperties {
   // NATS Jetstream related properties
   public static class JetstreamProperties {
 
-    public static class StreamProperties {
+    // NATS Jetstream action events properties
+    public static class ActionEventsProperties {
 
-      @NotBlank
-      private String name;
+      private GenericStreamProperties stream;
 
-      @NotBlank
-      @Pattern(regexp = "^((file)|(memory))$")
-      private StorageType storageType;
+      private GenericConsumerProperties consumer;
 
-      @NotBlank
-      private String subject;
-
-      public String getName() {
-        return this.name;
+      public GenericStreamProperties getStream() {
+        return this.stream;
       }
 
-      public StorageType getStorageType() {
-        return this.storageType;
+      public GenericConsumerProperties getConsumer() {
+        return this.consumer;
       }
 
-      public String getSubject() {
-        return this.subject;
+      public void setStream(GenericStreamProperties stream) {
+        this.stream = stream;
       }
 
-      public void setName(String name) {
-        this.name = name;
-      }
-
-      public void setStorageType(StorageType storageType) {
-        this.storageType = storageType;
-      }
-
-      public void setSubject(String subject) {
-        this.subject = subject;
+      public void setConsumer(GenericConsumerProperties consumer) {
+        this.consumer = consumer;
       }
     }
 
-    public static class ConsumerProperties {
+    // NATS Jetstream status update events properties
+    public static class StatusEventsProperties {
 
-      @NotBlank
-      private String name;
+      private GenericStreamProperties stream;
 
-      private Duration resubWaitTime;
-
-      public String getName() {
-        return this.name;
+      public GenericStreamProperties getStream() {
+        return this.stream;
       }
 
-      public Duration getResubWaitTime() {
-        return this.resubWaitTime;
-      }
-
-      public void setName(String name) {
-        this.name = name;
-      }
-
-      public void setResubWaitTime(Duration resubWaitTime) {
-        this.resubWaitTime = resubWaitTime;
+      public void setStream(GenericStreamProperties stream) {
+        this.stream = stream;
       }
     }
 
-    private StreamProperties stream;
+    private ActionEventsProperties actionEvents;
 
-    private ConsumerProperties consumer;
+    private StatusEventsProperties statusEvents;
 
-    public StreamProperties getStream() {
-      return this.stream;
+    public ActionEventsProperties getActionEvents() {
+      return this.actionEvents;
     }
 
-    public ConsumerProperties getConsumer() {
-      return this.consumer;
+    public void setActionEvents(ActionEventsProperties actionEvents) {
+      this.actionEvents = actionEvents;
     }
 
-    public void setStream(StreamProperties stream) {
-      this.stream = stream;
+    public StatusEventsProperties getStatusEvents() {
+      return this.statusEvents;
     }
 
-    public void setConsumer(ConsumerProperties consumer) {
-      this.consumer = consumer;
+    public void setStatusEvents(StatusEventsProperties statusEvents) {
+      this.statusEvents = statusEvents;
     }
-
   }
 
   private Boolean enabled;
