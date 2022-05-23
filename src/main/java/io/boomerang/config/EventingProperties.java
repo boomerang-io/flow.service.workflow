@@ -215,21 +215,11 @@ public class EventingProperties {
     }
   }
 
-  private Boolean enabled;
-
   private SharedProperties shared;
 
   private NatsProperties nats;
 
   private JetstreamProperties jetstream;
-
-  public Boolean getEnabled() {
-    return this.enabled;
-  }
-
-  public Boolean isEnabled() {
-    return this.enabled;
-  }
 
   public SharedProperties getShared() {
     return this.shared;
@@ -241,10 +231,6 @@ public class EventingProperties {
 
   public JetstreamProperties getJetstream() {
     return this.jetstream;
-  }
-
-  public void setEnabled(Boolean enabled) {
-    this.enabled = enabled;
   }
 
   public void setShared(SharedProperties shared) {

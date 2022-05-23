@@ -317,7 +317,7 @@ public class EventingServiceImpl implements EventingService, SubHandler {
       // Create status update event
       EventStatusUpdate eventStatusUpdate = new EventStatusUpdate();
       eventStatusUpdate.setId(UUID.randomUUID().toString());
-      eventStatusUpdate.setSource(URI.create("io.boomerang.service.EventingService"));
+      eventStatusUpdate.setSource(URI.create(this.getClass().getCanonicalName()));
       eventStatusUpdate.setSubject(eventSubject);
       eventStatusUpdate.setDate(new Date());
       eventStatusUpdate.setType(EventType.STATUS_UPDATE);
