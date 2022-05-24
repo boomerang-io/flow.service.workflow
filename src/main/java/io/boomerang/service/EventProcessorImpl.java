@@ -61,9 +61,8 @@ public class EventProcessorImpl implements EventProcessor {
       JsonNode payload) {
 
     ZonedDateTime now = ZonedDateTime.now();
-    String formattedDate = DateTimeFormatter.
-        ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSSSSS").
-        format(now) + 'Z';
+    String formattedDate =
+        DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSSSSS").format(now) + 'Z';
     JsonNode timeNode = new TextNode(formattedDate);
     ((ObjectNode) payload).set("time", timeNode);
 
@@ -143,8 +142,11 @@ public class EventProcessorImpl implements EventProcessor {
   private EventResponse processEvent(CloudEvent<AttributesImpl, JsonNode> event, String status) {
     logger.info("processCloudEvent() - Extensions: {}", event.toString());
     logger.info("processCloudEvent() - Attributes: {}", event.getAttributes().toString());
-    JsonNode eventData = event.getData().get();
-    logger.info("processCloudEvent() - Data: {}", eventData.toPrettyString());
+    JsonNode eventData = null;
+    if (event.getData().isPresent()) {
+      eventData = event.getData().get();
+      logger.info("processCloudEvent() - Data: {}", eventData.toPrettyString());
+    }
 
     EventResponse response = new EventResponse();
 
@@ -232,38 +234,35 @@ public class EventProcessorImpl implements EventProcessor {
   }
 
   /*
-   * Loop through a Workflow's parameters and if a JsonPath is set
-   * read the event payload and attempt to find a payload.
+   * Loop through a Workflow's parameters and if a JsonPath is set read the event payload and
+   * attempt to find a payload.
    * 
-   * Notes:
-   * - We drop exceptions to ensure Workflow continues executing
-   * - We return null if path not found using DEFAULT_PATH_LEAF_TO_NULL. 
+   * Notes: - We drop exceptions to ensure Workflow continues executing - We return null if path not
+   * found using DEFAULT_PATH_LEAF_TO_NULL.
    * 
-   * Reference: 
-   * - https://github.com/json-path/JsonPath#tweaking-configuration
+   * Reference: - https://github.com/json-path/JsonPath#tweaking-configuration
    */
   private Map<String, String> processProperties(JsonNode eventData, String workflowId) {
-    Configuration jsonConfig =
-        Configuration.builder().mappingProvider(new JacksonMappingProvider())
-            .jsonProvider(new JacksonJsonNodeJsonProvider())
-            .options(Option.DEFAULT_PATH_LEAF_TO_NULL).build();
-    List<WorkflowProperty> inputProperties = workflowService.getWorkflow(workflowId).getProperties();
+    Configuration jsonConfig = Configuration.builder().mappingProvider(new JacksonMappingProvider())
+        .jsonProvider(new JacksonJsonNodeJsonProvider()).options(Option.DEFAULT_PATH_LEAF_TO_NULL)
+        .build();
+    List<WorkflowProperty> inputProperties =
+        workflowService.getWorkflow(workflowId).getProperties();
     Map<String, String> properties = new HashMap<>();
     DocumentContext jsonContext = JsonPath.using(jsonConfig).parse(eventData);
     if (inputProperties != null) {
       try {
         inputProperties.forEach(inputProperty -> {
           if (inputProperty.getJsonPath() != null && !inputProperty.getJsonPath().isBlank()) {
-            
+
             JsonNode propertyValue = jsonContext.read(inputProperty.getJsonPath());
-         
+
             if (!propertyValue.isNull()) {
               String value = propertyValue.toString();
               value = value.replaceAll("^\"+|\"+$", "");
-              logger.info(
-                  "processProperties() - Property: " + inputProperty.getKey() + ", Json Path: "
-                      + inputProperty.getJsonPath() + ", Value: " + value);
-              properties.put(inputProperty.getKey(),value);
+              logger.info("processProperties() - Property: " + inputProperty.getKey()
+                  + ", Json Path: " + inputProperty.getJsonPath() + ", Value: " + value);
+              properties.put(inputProperty.getKey(), value);
             } else {
               logger.info("processProperties() - Skipping property: " + inputProperty.getKey());
             }
