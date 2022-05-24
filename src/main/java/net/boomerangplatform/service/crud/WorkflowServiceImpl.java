@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.quartz.SchedulerException;
@@ -37,6 +39,7 @@ import net.boomerangplatform.model.WorkflowToken;
 import net.boomerangplatform.model.controller.TaskResult;
 import net.boomerangplatform.mongo.entity.FlowTaskTemplateEntity;
 import net.boomerangplatform.mongo.entity.RevisionEntity;
+import net.boomerangplatform.mongo.entity.WorkFlowRevisionAggr;
 import net.boomerangplatform.mongo.entity.WorkflowEntity;
 import net.boomerangplatform.mongo.model.Dag;
 import net.boomerangplatform.mongo.model.FlowProperty;
@@ -148,6 +151,38 @@ public class WorkflowServiceImpl implements WorkflowService {
 
     }
     return newList;
+  }
+  
+  @Override
+  public Map<String, List<WorkflowSummary>> getWorkflowsForTeams(List<String> flowTeamIds) {
+	// Batch query work flows for a list of team ids.
+	final List<WorkflowEntity> workflowList = workFlowRepository.getWorkflowsForTeams(flowTeamIds);  
+	// Collect flow ids.
+	List<String> flowIds = workflowList.stream().map(flow -> flow.getId())
+    		.collect(Collectors.toList());
+	// Batch query revision counts for a list of work flows
+	List<WorkFlowRevisionAggr> workflowRevisionCounts = workflowVersionService.getWorkflowRevisionCount(flowIds);
+	Map<String, WorkFlowRevisionAggr> workflowRevisionCountMap = new HashMap<String, WorkFlowRevisionAggr>();
+	workflowRevisionCounts.stream().forEach(workFlowRevisionAggr -> {
+		workflowRevisionCountMap.put(workFlowRevisionAggr.getId(), workFlowRevisionAggr);
+	});
+	
+	// Construct workflow summary map(key= flowTeamId, value = List<WorkflowSummary>).
+	Map<String, List<WorkflowSummary>> workflowSummaryMap = new HashMap<String, List<WorkflowSummary>>();
+    for (final WorkflowEntity entity : workflowList) {
+      if(workflowSummaryMap.get(entity.getFlowTeamId()) == null) {
+	    workflowSummaryMap.put(entity.getFlowTeamId(), new ArrayList<WorkflowSummary>());
+	  }
+     
+      if (WorkflowStatus.active == entity.getStatus()) {
+        setupTriggerDefaults(entity);
+        final WorkflowSummary summary = new WorkflowSummary(entity);
+        WorkFlowRevisionAggr workflowRevisionAggr = workflowRevisionCountMap.get(summary.getId());
+        summary.setRevisionCount(workflowRevisionAggr == null? 0 : workflowRevisionAggr.getCount());
+        workflowSummaryMap.get(entity.getFlowTeamId()).add(summary);
+      }
+    }
+    return workflowSummaryMap;
   }
 
   @Override

@@ -1,11 +1,13 @@
 package net.boomerangplatform.mongo.service;
 
+import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import net.boomerangplatform.mongo.entity.RevisionEntity;
+import net.boomerangplatform.mongo.entity.WorkFlowRevisionAggr;
 import net.boomerangplatform.mongo.repository.FlowWorkflowVersionRepository;
 
 @Service
@@ -70,5 +72,15 @@ public class RevisionServiceImpl implements RevisionService {
   @Override
   public Optional<RevisionEntity> getRevision(String id) {
     return workFlowVersionRepository.findById(id);
+  }
+
+  @Override
+  public List<WorkFlowRevisionAggr> getWorkflowRevisionCount(List<String> workFlowIds) {
+	return workFlowVersionRepository.findWorkFlowVersionCount(workFlowIds);
+  }
+
+  @Override
+  public List<WorkFlowRevisionAggr> getWorkflowRevisionCountAndLatestVersion(List<String> workFlowIds) {
+	return workFlowVersionRepository.findWorkFlowVersionCountAndLatestVersion(workFlowIds);
   }
 }

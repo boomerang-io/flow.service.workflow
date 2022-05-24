@@ -31,8 +31,13 @@ public interface FlowWorkflowActivityService {
       Optional<List<String>> triggers);
   
   List<ActivityEntity> findbyWorkflowIdsAndStatus(List<String> workflowIds, TaskStatus status);
+  
+  List<ActivityEntity> findByTeamIdsAndStatus(List<String> teamIds, TaskStatus status);
 
   Page<ActivityEntity> findAllActivitiesForTeam(Optional<Date> fromDate, Optional<Date> toDate,
       String teamId, Pageable page);
+  
+  Page<ActivityEntity> findAllActivitiesForTeams(Date fromDate, Date toDate,
+	      List<String> teamIds, Pageable page);
 
 }

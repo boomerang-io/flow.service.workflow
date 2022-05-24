@@ -3,7 +3,9 @@ package net.boomerangplatform.service.crud;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -17,6 +19,7 @@ import net.boomerangplatform.model.projectstormv5.TaskNode;
 import net.boomerangplatform.mongo.entity.FlowTaskTemplateEntity;
 import net.boomerangplatform.mongo.entity.FlowUserEntity;
 import net.boomerangplatform.mongo.entity.RevisionEntity;
+import net.boomerangplatform.mongo.entity.WorkFlowRevisionAggr;
 import net.boomerangplatform.mongo.model.ChangeLog;
 import net.boomerangplatform.mongo.model.Dag;
 import net.boomerangplatform.mongo.model.Revision;
@@ -57,7 +60,20 @@ public class WorkflowVersionServiceImpl implements WorkflowVersionService {
 
     return flowRevision;
   }
-
+  
+  @Override
+  public List<FlowWorkflowRevision> getLatestWorkflowVersionWithUpgradeFlags(List<String> workflowIds) {
+	List<WorkFlowRevisionAggr> workFlowLatestRevisions = flowWorkflowService.getWorkflowRevisionCountAndLatestVersion(workflowIds);
+	List<FlowWorkflowRevision> latestFlowRevisionList = new ArrayList<FlowWorkflowRevision>();
+	workFlowLatestRevisions.stream().forEach(workFlowLatestRevision->{
+		latestFlowRevisionList.add(new FlowWorkflowRevision(workFlowLatestRevision.getLatestVersion()));
+	});
+	
+	// Batch updating upgrade available flags
+	updateUpgradeFlags(latestFlowRevisionList);  
+  	return latestFlowRevisionList;
+  }
+  
   @Override
   public long getLatestWorkflowVersionCount(String workflowId) {
     return flowWorkflowService.getWorkflowCount(workflowId);
@@ -140,6 +156,54 @@ public class WorkflowVersionServiceImpl implements WorkflowVersionService {
     }
 
     revision.setTemplateUpgradesAvailable(newTemplatesAvailable);
+  }
+  
+  private void updateUpgradeFlags(List<FlowWorkflowRevision> latestFlowRevisionList) { 
+	// Collect Task IDs  
+	List<String> taskIds = new ArrayList<String>();
+	for(FlowWorkflowRevision latestFlowRevision: latestFlowRevisionList) {
+	  if (latestFlowRevision.getConfig() != null) {
+	    for (ConfigNodes config : latestFlowRevision.getConfig().getNodes()) {  
+		  if (isTask(config.getType())) {	  
+		    taskIds.add(config.getTaskId());
+		  }
+		}
+	  }
+	}
+	
+	// Batch Query FlowTaskTemplateEntity
+	List<FlowTaskTemplateEntity> flowTaskTemplateEntities = templateService.getTaskTemplateWithIds(taskIds);
+	Map<String, FlowTaskTemplateEntity> flowTaskTemplateEntitiesMap = new HashMap<String, FlowTaskTemplateEntity>();
+	flowTaskTemplateEntities.stream().forEach(flowTaskTemplateEntity->{
+	  flowTaskTemplateEntitiesMap.put(flowTaskTemplateEntity.getId(), flowTaskTemplateEntity);
+	});
+	
+	// Setting template upgrade flags
+	for(FlowWorkflowRevision latestFlowRevision: latestFlowRevisionList) {
+	  latestFlowRevision.setTemplateUpgradesAvailable(false);
+	  if (latestFlowRevision.getConfig() == null) {
+	    continue;
+	  }
+	  for (ConfigNodes config : latestFlowRevision.getConfig().getNodes()) {  
+	    if (isTask(config.getType()) && flowTaskTemplateEntitiesMap.get(config.getTaskId()) != null 
+	    		&& flowTaskTemplateEntitiesMap.get(config.getTaskId()).getRevisions() != null){
+	    	Optional<Revision> latestRevision = flowTaskTemplateEntitiesMap.get(config.getTaskId()).getRevisions().stream()
+                    .sorted(Comparator.comparingInt(Revision::getVersion).reversed()).findFirst();	
+	    	Integer taskVersion = config.getTaskVersion();
+	    	if(latestRevision.isPresent() && !latestRevision.get().getVersion().equals(taskVersion)) {
+	    		latestFlowRevision.setTemplateUpgradesAvailable(true);
+	    		if (latestFlowRevision.getDag().getNodes() != null) {
+                  for (TaskNode taskNode : latestFlowRevision.getDag().getNodes()) {
+                    if (taskNode.getNodeId() != null && config.getNodeId() != null
+                        && taskNode.getNodeId().equals(config.getNodeId())) {
+                      taskNode.setTemplateUpgradeAvailable(true);
+                    }
+                  }
+                }
+	    	}
+	    }
+	  }
+	}
   }
 
   @Override

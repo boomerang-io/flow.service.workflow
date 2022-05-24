@@ -24,6 +24,11 @@ public class FlowTaskTemplateServiceImpl implements FlowTaskTemplateService {
   public FlowTaskTemplateEntity getTaskTemplateWithId(String id) {
     return flowTaskTemplateRepository.findById(id).orElse(null);
   }
+  
+  @Override
+  public List<FlowTaskTemplateEntity> getTaskTemplateWithIds(List<String> ids){
+	return  flowTaskTemplateRepository.findByIdIn(ids);
+  }
 
   @Override
   @NoLogging

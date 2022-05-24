@@ -13,6 +13,11 @@ public interface FlowWorkflowService {
   
   List<WorkflowEntity> getWorkflowsForTeams(String flowId);
 
+  /**
+   * Batch query workflows for a list of teams
+   * @param flowTeamIds
+   * @return
+   */
   List<WorkflowEntity> getWorkflowsForTeams(List<String> flowTeamIds);
 
   List<WorkflowEntity> getScheduledWorkflows();

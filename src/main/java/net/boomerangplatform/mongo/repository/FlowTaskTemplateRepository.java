@@ -12,6 +12,8 @@ public interface FlowTaskTemplateRepository
 
   @Override
   Optional<FlowTaskTemplateEntity> findById(String id);
+  
+  List<FlowTaskTemplateEntity> findByIdIn(List<String> ids);
 
   @Override
   List<FlowTaskTemplateEntity> findAll();

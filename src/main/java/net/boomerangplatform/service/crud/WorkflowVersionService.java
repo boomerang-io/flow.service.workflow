@@ -11,7 +11,9 @@ public interface WorkflowVersionService {
   void deleteWorkflowVersionWithId(String id);
 
   FlowWorkflowRevision getLatestWorkflowVersion(String workflowId);
-
+  
+  List<FlowWorkflowRevision> getLatestWorkflowVersionWithUpgradeFlags(List<String> workflowIds);
+  
   long getLatestWorkflowVersionCount(String workflowId);
 
   FlowWorkflowRevision getWorkflowVersion(String workflowId, long verison);

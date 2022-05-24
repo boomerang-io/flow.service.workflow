@@ -50,6 +50,12 @@ public class FlowWorkflowActivityServiceImpl implements FlowWorkflowActivityServ
       return repository.findAll(page);
     }
   }
+  
+  @Override
+  public Page<ActivityEntity> findAllActivitiesForTeams(Date fromDate,
+    Date toDate, List<String> teamIds, Pageable page) {
+    return repository.findByTeamIds(fromDate, toDate, teamIds, page);
+  }
 
   @Override
   public Page<ActivityEntity> findAllActivitiesForWorkflows(Optional<Date> fromDate,
@@ -289,5 +295,10 @@ public class FlowWorkflowActivityServiceImpl implements FlowWorkflowActivityServ
   public List<ActivityEntity> findbyWorkflowIdsAndStatus(List<String> workflowIds,
       TaskStatus status) {
     return repository.findByWorkflowIdInAndStatus(workflowIds, status);
+  }
+  
+  @Override
+  public List<ActivityEntity> findByTeamIdsAndStatus(List<String> teamIds, TaskStatus status){
+	  return repository.findByTeamIdInAndStatus(teamIds, status);
   }
 }

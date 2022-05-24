@@ -6,6 +6,8 @@ import net.boomerangplatform.mongo.entity.FlowTaskTemplateEntity;
 public interface FlowTaskTemplateService {
 
   FlowTaskTemplateEntity getTaskTemplateWithId(String id);
+  
+  List<FlowTaskTemplateEntity> getTaskTemplateWithIds(List<String> ids);
 
   List<FlowTaskTemplateEntity> getAllTaskTemplates();
 

@@ -1,7 +1,9 @@
 package net.boomerangplatform.service.crud;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +23,13 @@ public interface WorkflowService {
   WorkflowSummary getWorkflow(String workflowId);
 
   List<WorkflowSummary> getWorkflowsForTeam(String flowTeamId);
+  
+  /**
+   * Retrieve workflow summaries for a list of flow teams.
+   * @param flowTeamIds
+   * @return
+   */
+  Map<String, List<WorkflowSummary>> getWorkflowsForTeams(List<String> flowTeamIds);
 
   WorkflowSummary saveWorkflow(WorkflowEntity flowWorkflowEntity);
 
