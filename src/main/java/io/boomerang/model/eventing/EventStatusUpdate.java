@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.time.ZoneOffset;
 import com.google.gson.JsonObject;
 import org.apache.http.entity.ContentType;
+import org.apache.logging.log4j.util.Strings;
 import io.boomerang.mongo.model.TaskStatus;
 import io.boomerang.util.LabelValueCodec;
 import io.cloudevents.CloudEvent;
@@ -40,7 +41,7 @@ public class EventStatusUpdate extends Event {
         .withData(ContentType.APPLICATION_JSON.toString(), jsonData.toString().getBytes());
     // @formatter:on
 
-    if (initiatorContext != null) {
+    if (Strings.isNotEmpty(initiatorContext)) {
       cloudEventBuilder = cloudEventBuilder.withExtension(EXTENSION_ATTRIBUTE_CONTEXT,
           LabelValueCodec.decode(initiatorContext));
     }

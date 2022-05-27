@@ -28,7 +28,7 @@ public class LabelValueCodecTest {
   @ParameterizedTest
   @ValueSource(strings = {"key", "a value", "some text, with comma", "yes!!!",
       "{\"just_a_string\":\"It did go through!\",\"just_a_num\":69420}", "[0,1,2,3,4,5,6]", "42069",
-      "\"A string!!!\"", "false", "[\"this\",false,202]"})
+      "\"A string!!!\"", "false", "[\"this\",false,202]", ""})
   public void testEncodeDecode(String testString) {
     String encodedString = LabelValueCodec.encode(testString);
     String decodedString = LabelValueCodec.decode(encodedString);
