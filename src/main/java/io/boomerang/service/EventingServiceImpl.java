@@ -183,7 +183,8 @@ public class EventingServiceImpl implements EventingService, SubHandler {
         String.join(", ", cloudEvent.getExtensionNames()));
     logger.debug("processCloudEvent() - Attributes: {}",
         String.join(", ", cloudEvent.getAttributeNames()));
-    logger.debug("processCloudEvent() - Data: {}", cloudEvent.getData().toString());
+    logger.debug("processCloudEvent() - Data: {}",
+        Optional.ofNullable(cloudEvent.getData()).toString());
 
     // Get the event
     Event event = EventFactory.buildFromCloudEvent(cloudEvent);

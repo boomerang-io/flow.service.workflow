@@ -21,7 +21,7 @@ public class LabelValueCodecTest {
 
   @Test
   public void testDecode() {
-    String testEncodedString = "VGhpcyBpcyBhIHRlc3Qgc3RyaW5nISAjMSAkJSA6KQ--";
+    String testEncodedString = "VGhpcyBpcyBhIHRlc3Qgc3RyaW5nISAjMSAkJSA6KQ--x";
     Assertions.assertTrue(Strings.isNotBlank(LabelValueCodec.decode(testEncodedString)));
   }
 
