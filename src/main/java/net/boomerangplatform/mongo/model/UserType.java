@@ -1,5 +1,5 @@
 package net.boomerangplatform.mongo.model;
 
 public enum UserType {
-  admin, sponsor, user, operator, auditor, author, partner, adviser // NOSONAR
+	user, admin, sponsor, operator, auditor, author, partner, advisor // NOSONAR
 }
