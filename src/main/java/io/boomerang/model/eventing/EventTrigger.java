@@ -85,22 +85,7 @@ public class EventTrigger extends Event {
     }
 
     eventTrigger.setProperties(properties);
-
-    // Map initiator ID and the context
-    Object initiatorId = cloudEvent.getExtension(EXTENSION_ATTRIBUTE_INITIATOR_ID);
-    Object contextObject = cloudEvent.getExtension(EXTENSION_ATTRIBUTE_CONTEXT);
-
-    if (initiatorId != null) {
-      if (initiatorId.toString().matches("^[a-zA-Z0-9]+$")) {
-        eventTrigger.setInitiatorId(initiatorId.toString());
-      } else {
-        throw new InvalidPropertiesFormatException("Initiator ID must be alphanumeric!");
-      }
-    }
-
-    if (contextObject != null) {
-      eventTrigger.setInitiatorContext(LabelValueCodec.encode(contextObject.toString()));
-    }
+    eventTrigger.processExtensions(cloudEvent, eventTrigger);
 
     return eventTrigger;
   }
@@ -143,6 +128,26 @@ public class EventTrigger extends Event {
 
   public void setProperties(Map<String, String> properties) {
     this.properties = properties;
+  }
+
+  private EventTrigger processExtensions(CloudEvent ce, EventTrigger et)
+      throws InvalidPropertiesFormatException {
+    // Map initiator ID and the context
+    Object initiatorIdObj = ce.getExtension(EXTENSION_ATTRIBUTE_INITIATOR_ID);
+    Object contextObject = ce.getExtension(EXTENSION_ATTRIBUTE_CONTEXT);
+
+    if (initiatorIdObj != null) {
+      if (initiatorIdObj.toString().matches("^[a-zA-Z0-9]+$")) {
+        et.setInitiatorId(initiatorIdObj.toString());
+      } else {
+        throw new InvalidPropertiesFormatException("Initiator ID must be alphanumeric!");
+      }
+    }
+
+    if (contextObject != null) {
+      et.setInitiatorContext(LabelValueCodec.encode(contextObject.toString()));
+    }
+    return et;
   }
 
   // @formatter:off

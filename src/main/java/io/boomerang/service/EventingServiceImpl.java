@@ -200,7 +200,7 @@ public class EventingServiceImpl implements EventingService, SubHandler {
 
     switch (event.getType()) {
       case TRIGGER:
-        String sharedLabelPrefix = properties.getShared().getLabel().getPrefix() + "/";
+
         EventTrigger eventTrigger = (EventTrigger) event;
         String eventProperties = eventTrigger.getProperties().keySet().stream()
             .map(key -> key + ": " + eventTrigger.getProperties().get(key))
@@ -213,24 +213,10 @@ public class EventingServiceImpl implements EventingService, SubHandler {
             eventTrigger.getInitiatorContext());
         logger.debug("processCloudEventRequest() - Properties: {}", eventProperties);
 
-        // Set cloud event labels
-        List<KeyValuePair> cloudEventLabels = new LinkedList<>();
-        cloudEventLabels
-            .add(new KeyValuePair(sharedLabelPrefix + LABEL_KEY_EVENT_ID, event.getId()));
-
-        if (Strings.isNotEmpty(eventTrigger.getInitiatorId())) {
-          cloudEventLabels.add(new KeyValuePair(sharedLabelPrefix + LABEL_KEY_INITIATOR_ID,
-              eventTrigger.getInitiatorId()));
-        }
-
-        if (eventTrigger.getInitiatorContext() != null) {
-          cloudEventLabels.add(new KeyValuePair(sharedLabelPrefix + LABEL_KEY_INITIATOR_CONTEXT,
-              eventTrigger.getInitiatorContext()));
-        }
 
         // Create flow execution request
         FlowExecutionRequest executionRequest = new FlowExecutionRequest();
-        executionRequest.setLabels(cloudEventLabels);
+        executionRequest.setLabels(processEventLabels(eventTrigger));
         executionRequest.setProperties(
             processProperties(eventTrigger.getProperties(), eventTrigger.getWorkflowId()));
 
@@ -388,6 +374,24 @@ public class EventingServiceImpl implements EventingService, SubHandler {
     });
 
     return properties;
+  }
+
+  private List<KeyValuePair> processEventLabels(EventTrigger et) {
+    // Set cloud event labels
+    String sharedLabelPrefix = properties.getShared().getLabel().getPrefix() + "/";
+    List<KeyValuePair> cloudEventLabels = new LinkedList<>();
+    cloudEventLabels.add(new KeyValuePair(sharedLabelPrefix + LABEL_KEY_EVENT_ID, et.getId()));
+
+    if (Strings.isNotEmpty(et.getInitiatorId())) {
+      cloudEventLabels
+          .add(new KeyValuePair(sharedLabelPrefix + LABEL_KEY_INITIATOR_ID, et.getInitiatorId()));
+    }
+
+    if (et.getInitiatorContext() != null) {
+      cloudEventLabels.add(new KeyValuePair(sharedLabelPrefix + LABEL_KEY_INITIATOR_CONTEXT,
+          et.getInitiatorContext()));
+    }
+    return cloudEventLabels;
   }
 
   private String getWorkflowIdFromEvent(Event event) {
