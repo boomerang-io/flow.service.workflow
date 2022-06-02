@@ -1,5 +1,6 @@
 package net.boomerangplatform.model;
 
+import java.util.ArrayList;
 import java.util.List;
 import org.springframework.beans.BeanUtils;
 import net.boomerangplatform.mongo.entity.FlowTeamEntity;
@@ -12,8 +13,8 @@ public class TeamWorkflowSummary extends FlowTeamEntity {
 
   public TeamWorkflowSummary(FlowTeamEntity teamEntity, List<WorkflowSummary> workflows) {
     BeanUtils.copyProperties(teamEntity, this);
-
-    this.workflows = workflows;
+    // give an empty list even when workflows doesn't exist.
+    this.workflows = workflows == null? new ArrayList<WorkflowSummary>() : workflows;
   }
 
   public List<WorkflowSummary> getWorkflows() {
