@@ -120,7 +120,6 @@ public class ControllerClientImpl implements ControllerClient {
     request.setWorkflowId(workflowId);
     request.setParameters(properties);
 
-
     if (enableStorage) {
       Workspace workspace = createWorkspaceRequest(activityId, "activity");
       List<Workspace> workspaces = new LinkedList<>();
@@ -221,13 +220,10 @@ public class ControllerClientImpl implements ControllerClient {
     return true;
   }
 
-
-
   @Override
   @Async("flowAsyncExecutor")
   public void submitCustomTask(TaskService t, TaskClient flowTaskClient, Task task,
       String activityId, String workflowName, List<KeyValuePair> labels) {
-
 
     TaskResult taskResult = new TaskResult();
     TaskExecutionEntity taskExecution =
@@ -288,11 +284,9 @@ public class ControllerClientImpl implements ControllerClient {
     taskExecution.setFlowTaskStatus(TaskStatus.inProgress);
     taskExecution = taskService.save(taskExecution);
 
-
     TaskConfiguration taskConfiguration = buildTaskConfiguration();
     request.setConfiguration(taskConfiguration);
     request.setWorkspaces(activity.getTaskWorkspaces());
-
 
     logPayload("Create Task Request", request);
 
@@ -368,7 +362,6 @@ public class ControllerClientImpl implements ControllerClient {
     flowTaskClient.endTask(t, response);
   }
 
-
   private List<String> prepareTemplateTaskArguments(List<String> lines, String activityId,
       ControllerRequestProperties applicationProperties, Map<String, String> map) {
     List<String> args = new LinkedList<>();
@@ -381,7 +374,6 @@ public class ControllerClientImpl implements ControllerClient {
 
     return args;
   }
-
 
   private List<String> prepareCustomTaskArguments(String activityId,
       ControllerRequestProperties applicationProperties, Map<String, String> map) {
@@ -400,8 +392,6 @@ public class ControllerClientImpl implements ControllerClient {
     }
     return args;
   }
-
-
 
   @Override
   @Async("flowAsyncExecutor")
@@ -432,7 +422,6 @@ public class ControllerClientImpl implements ControllerClient {
     request.setTaskActivityId(task.getTaskActivityId());
     request.setLabels(this.convertToMap(labels));
 
-
     WorkflowEntity workflow = this.workflowService.getWorkflow(activity.getWorkflowId());
     List<TaskWorkspace> taskWorkspaces = buildTaskWorkspaceList(workflow, activityId);
     request.setWorkspaces(taskWorkspaces);
@@ -443,7 +432,6 @@ public class ControllerClientImpl implements ControllerClient {
     Map<String, String> map = applicationProperties.getTaskInputProperties();
 
     request.setParameters(map);
-
 
     TaskConfiguration taskConfiguration = buildTaskConfiguration();
     request.setConfiguration(taskConfiguration);
@@ -465,7 +453,6 @@ public class ControllerClientImpl implements ControllerClient {
 
       TaskResponse response =
           restTemplate.postForObject(createTaskURL, request, TaskResponse.class);
-
 
       Date endTime = new Date();
 
@@ -531,7 +518,6 @@ public class ControllerClientImpl implements ControllerClient {
 
     }
 
-
     taskService.save(taskExecution);
 
     InternalTaskResponse response = new InternalTaskResponse();
@@ -557,7 +543,6 @@ public class ControllerClientImpl implements ControllerClient {
           if (activityStorage.getMountPath() != null && !activityStorage.getMountPath().isBlank()) {
             taskActivity.setMountPath(activityStorage.getMountPath());
           }
-
 
           workspaces.add(taskActivity);
         }
@@ -601,7 +586,6 @@ public class ControllerClientImpl implements ControllerClient {
       }
 
       List<String> command = revision.getCommand();
-
 
       if (command != null && !command.isEmpty() && !checkForBlankValues(command)) {
         request.setCommand(revision.getCommand());
