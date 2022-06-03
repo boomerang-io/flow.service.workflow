@@ -8,6 +8,25 @@
 			"label": "hello",
 			"type": "text",
 			"required": false
+		},
+		{
+			"required": false,
+			"placeholder": null,
+			"language": null,
+			"disabled": null,
+			"defaultValue": "12345678",
+			"value": null,
+			"values": null,
+			"readOnly": false,
+			"jsonPath": "myPass",
+			"description": "This is my unsecure password.",
+			"key": "password",
+			"label": "My password",
+			"type": "password",
+			"minValueLength": null,
+			"maxValueLength": null,
+			"options": null,
+			"helperText": null
 		}
 	],
 	"description": "test",

@@ -54,7 +54,6 @@ public class UserIdentityServiceImpl implements UserIdentityService {
   @Autowired
   private WorkflowService workflowService;
 
-
   @Autowired
   private TeamService flowTeamService;
 
@@ -224,7 +223,7 @@ public class UserIdentityServiceImpl implements UserIdentityService {
       FlowUserEntity flowUserEntity = flowUserService.getOrRegisterUser(email, name, type);
       flowUserEntity.setQuotas(flowUser.getQuotas());
       flowUserEntity.setHasConsented(true);
-      flowUserEntity = flowUserService.save(flowUser);
+      flowUserEntity = flowUserService.save(flowUserEntity);
 
       FlowUser newUser = new FlowUser();
       BeanUtils.copyProperties(flowUserEntity, newUser);

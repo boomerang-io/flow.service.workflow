@@ -1,8 +1,10 @@
 package io.boomerang.scenarios;
 
 import static org.hamcrest.CoreMatchers.containsString;
-import static org.springframework.test.web.client.ExpectedCount.manyTimes;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.test.web.client.ExpectedCount.times;
+import static org.springframework.test.web.client.ExpectedCount.manyTimes;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.jsonPath;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
@@ -12,7 +14,6 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -31,8 +32,8 @@ import io.boomerang.mongo.model.TaskStatus;
 import io.boomerang.tests.IntegrationTests;
 
 @ExtendWith(SpringExtension.class)
-@SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT)
-@ActiveProfiles("local")
+@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
+@ActiveProfiles("test")
 @WithMockUser(roles = {"admin"})
 @WithUserDetails("mdroy@us.ibm.com")
 public class FailureExecuteTests extends IntegrationTests {
@@ -46,15 +47,18 @@ public class FailureExecuteTests extends IntegrationTests {
     String id = activity.getId();
     Thread.sleep(10000);
     FlowActivity finalActivity = this.checkWorkflowActivity(id);
-    Assertions.assertEquals(TaskStatus.failure, finalActivity.getStatus());
-    Assertions.assertNotNull(finalActivity.getDuration());
-    
-    Assertions.assertEquals(TaskStatus.failure, finalActivity.getSteps().get(0).getFlowTaskStatus());
-    Assertions.assertEquals(TaskStatus.skipped, finalActivity.getSteps().get(1).getFlowTaskStatus());
+     assertEquals(TaskStatus.failure, finalActivity.getStatus());
+     assertNotNull(finalActivity.getDuration());
+
+     assertEquals(TaskStatus.failure,
+        finalActivity.getSteps().get(0).getFlowTaskStatus());
+     assertEquals(TaskStatus.skipped,
+        finalActivity.getSteps().get(1).getFlowTaskStatus());
     mockServer.verify();
-    Assertions.assertNotNull(finalActivity.getSteps().get(0).getError());
-    Assertions.assertNotNull(finalActivity.getSteps().get(0).getError());
-    Assertions.assertEquals("This is a special error",finalActivity.getSteps().get(0).getError().getMessage());
+     assertNotNull(finalActivity.getSteps().get(0).getError());
+     assertNotNull(finalActivity.getSteps().get(0).getError());
+     assertEquals("This is a special error",
+        finalActivity.getSteps().get(0).getError().getMessage());
   }
 
   @Override
@@ -64,17 +68,17 @@ public class FailureExecuteTests extends IntegrationTests {
     mockServer = MockRestServiceServer.bindTo(this.restTemplate).ignoreExpectOrder(true).build();
 
     mockServer.expect(manyTimes(), requestTo(containsString("internal/users/user")))
-        .andExpect(method(HttpMethod.GET)).andRespond(
-            withSuccess(getMockFile("mock/users/users.json"), MediaType.APPLICATION_JSON));
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withSuccess(getMockFile("mock/users/users.json"), MediaType.APPLICATION_JSON));
     mockServer.expect(times(1), requestTo(containsString("controller/workflow/execute")))
         .andExpect(method(HttpMethod.POST)).andRespond(withStatus(HttpStatus.OK));
-    
+
     mockServer.expect(times(1), requestTo(containsString("controller/task/execute")))
         .andExpect(method(HttpMethod.POST))
         .andExpect(jsonPath("$.workflowName").value("Unit Test Demo"))
         .andExpect(jsonPath("$.taskName").value("Echo Test"))
-        .andRespond(
-            withSuccess(getMockFile("tests/scenarios/failure/failure-response.json"), MediaType.APPLICATION_JSON));
+        .andRespond(withSuccess(getMockFile("tests/scenarios/failure/failure-response.json"),
+            MediaType.APPLICATION_JSON));
 
     mockServer.expect(times(1), requestTo(containsString("controller/workflow/terminate")))
         .andExpect(method(HttpMethod.POST)).andRespond(withStatus(HttpStatus.OK));

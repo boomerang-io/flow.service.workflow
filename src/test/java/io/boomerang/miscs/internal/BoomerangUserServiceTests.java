@@ -1,12 +1,12 @@
 package io.boomerang.miscs.internal;
 
 import static org.hamcrest.CoreMatchers.containsString;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.client.ExpectedCount.manyTimes;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 import java.io.IOException;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,8 +25,8 @@ import io.boomerang.client.model.UserProfile;
 import io.boomerang.misc.FlowTests;
 
 @ExtendWith(SpringExtension.class)
-@SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT)
-@ActiveProfiles("local")
+@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
+@ActiveProfiles("test")
 @WithMockUser(roles = {"admin"})
 @WithUserDetails("mdroy@us.ibm.com")
 class BoomerangUserServiceTests extends FlowTests {
@@ -37,7 +37,7 @@ class BoomerangUserServiceTests extends FlowTests {
   @Test
   void testGetUserProfile() {
     UserProfile userProfile = userService.getInternalUserProfile();
-    Assertions.assertEquals( "trbula@us.ibm.com", userProfile.getEmail());
+    assertEquals("trbula@us.ibm.com", userProfile.getEmail());
   }
 
   @Override
@@ -49,8 +49,8 @@ class BoomerangUserServiceTests extends FlowTests {
     mockServer = MockRestServiceServer.bindTo(restTemplate).ignoreExpectOrder(true).build();
     mockServer
         .expect(manyTimes(), requestTo(containsString("http://localhost:8084/internal/users/user")))
-        .andExpect(method(HttpMethod.GET)).andRespond(
-            withSuccess(getMockFile("mock/users/users.json"), MediaType.APPLICATION_JSON));
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withSuccess(getMockFile("mock/users/users.json"), MediaType.APPLICATION_JSON));
 
   }
 }

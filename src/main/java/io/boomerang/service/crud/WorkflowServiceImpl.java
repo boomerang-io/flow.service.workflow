@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.TimeZone;
 import java.util.UUID;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.quartz.SchedulerException;
@@ -28,9 +29,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.boomerang.client.model.Team;
 import io.boomerang.error.BoomerangError;
 import io.boomerang.error.BoomerangException;
 import io.boomerang.model.DuplicateRequest;
@@ -39,6 +37,7 @@ import io.boomerang.model.FlowWorkflowRevision;
 import io.boomerang.model.GenerateTokenResponse;
 import io.boomerang.model.TemplateWorkflowSummary;
 import io.boomerang.model.UserWorkflowSummary;
+import io.boomerang.model.WFETriggerResponse;
 import io.boomerang.model.WorkflowExport;
 import io.boomerang.model.WorkflowQuotas;
 import io.boomerang.model.WorkflowShortSummary;
@@ -61,7 +60,6 @@ import io.boomerang.mongo.model.Trigger;
 import io.boomerang.mongo.model.TriggerEvent;
 import io.boomerang.mongo.model.TriggerScheduler;
 import io.boomerang.mongo.model.Triggers;
-import io.boomerang.mongo.model.UserType;
 import io.boomerang.mongo.model.WorkflowProperty;
 import io.boomerang.mongo.model.WorkflowScope;
 import io.boomerang.mongo.model.WorkflowStatus;
@@ -71,10 +69,12 @@ import io.boomerang.mongo.service.FlowTaskTemplateService;
 import io.boomerang.mongo.service.FlowWorkflowActivityService;
 import io.boomerang.mongo.service.FlowWorkflowService;
 import io.boomerang.mongo.service.RevisionService;
+import io.boomerang.security.service.UserValidationService;
 import io.boomerang.service.PropertyManager;
 import io.boomerang.service.UserIdentityService;
 import io.boomerang.service.runner.misc.ControllerClient;
 import io.boomerang.util.ModelConverterV5;
+import static io.boomerang.util.DataAdapterUtil.*;
 
 @Service
 public class WorkflowServiceImpl implements WorkflowService {
@@ -109,6 +109,12 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   @Autowired
   private FlowSettingsService flowSettingsService;
+
+  @Autowired
+  private UserValidationService userValidationService;
+
+  @Autowired
+  private RevisionService revisionService;
 
   @Value("${max.workflow.count}")
   private Integer maxWorkflowCount;
@@ -159,6 +165,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
     final WorkflowSummary summary = new WorkflowSummary(entity);
     updateSummaryInformation(summary);
+    filterValueByFieldType(summary.getProperties(), true, FieldType.PASSWORD.value());
     return summary;
   }
 
@@ -222,6 +229,11 @@ public class WorkflowServiceImpl implements WorkflowService {
       flowWorkflowEntity.getTriggers().setManual(manual);
     }
 
+    if (flowWorkflowEntity.getTriggers().getScheduler() == null) {
+      TriggerScheduler schedule = new TriggerScheduler();
+      flowWorkflowEntity.getTriggers().setScheduler(schedule);
+    }
+
     if (flowWorkflowEntity.getTriggers().getCustom() == null) {
       TriggerEvent custom = new TriggerEvent();
       flowWorkflowEntity.getTriggers().setCustom(custom);
@@ -241,6 +253,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   @Override
   public WorkflowSummary updateWorkflow(WorkflowSummary summary) {
+    userValidationService.validateUserForWorkflow(summary.getId());
     final WorkflowEntity entity = workflowRepository.getWorkflow(summary.getId());
 
     entity.setFlowTeamId(summary.getFlowTeamId());
@@ -326,39 +339,15 @@ public class WorkflowServiceImpl implements WorkflowService {
     final WorkflowEntity entity = workflowRepository.getWorkflow(workflowId);
 
     if (entity.getScope() == WorkflowScope.team) {
-      FlowUserEntity user = userIdentityService.getCurrentUser();
-
-      FlowTeam team = teamService
-          .getTeamByIdDetailed(workflowRepository.getWorkflow(workflowId).getFlowTeamId());
-
-      List<String> userIds = new ArrayList<>();
-      if (team.getUsers() != null) {
-        for (FlowUserEntity teamUser : team.getUsers()) {
-          userIds.add(teamUser.getId());
-        }
-      }
-
-      List<String> userTeamIds = new ArrayList<>();
-      if (user.getTeams() != null) {
-        for (Team userTeam : user.getTeams()) {
-          userTeamIds.add(userTeam.getId());
-        }
-      }
-
-      if (user.getType() == UserType.admin || user.getType() == UserType.operator
-          || userIds.contains(user.getId()) || userTeamIds.contains(team.getHigherLevelGroupId())) {
-
-        entity.setProperties(properties);
-
-        workflowRepository.saveWorkflow(entity);
-
-        return new WorkflowSummary(entity);
-      } else {
-        throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-      }
+      userValidationService.validateUserForWorkflow(workflowId);
+      entity.setProperties(properties);
+      workflowRepository.saveWorkflow(entity);
+      filterValueByFieldType(properties, true, FieldType.PASSWORD.value());
+      return new WorkflowSummary(entity);
     } else {
       entity.setProperties(properties);
       workflowRepository.saveWorkflow(entity);
+      filterValueByFieldType(properties, true, FieldType.PASSWORD.value());
       return new WorkflowSummary(entity);
     }
   }
@@ -526,14 +515,7 @@ public class WorkflowServiceImpl implements WorkflowService {
           entity.setFlowTeamId(null);
         }
 
-        if (WorkflowScope.user.equals(scope)) {
-          FlowUserEntity user = userIdentityService.getCurrentUser();
-          if (user != null) {
-            entity.setOwnerUserId(user.getId());
-          }
-        } else {
-          entity.setOwnerUserId(null);
-        }
+        setOwnerUser(entity, scope);
 
         WorkflowEntity workflow = workflowRepository.saveWorkflow(entity);
 
@@ -557,6 +539,7 @@ public class WorkflowServiceImpl implements WorkflowService {
           }
         } else {
           newEntity.setFlowTeamId(null);
+          setOwnerUser(newEntity, scope);
         }
 
         newEntity.setName(export.getName());
@@ -579,6 +562,17 @@ public class WorkflowServiceImpl implements WorkflowService {
       String message = "Workflow not imported - template(s) not found";
       logger.info(message);
       throw new BoomerangException(BoomerangError.IMPORT_WORKFLOW_FAILED);
+    }
+  }
+
+  private void setOwnerUser(WorkflowEntity entity, WorkflowScope scope) {
+    if (WorkflowScope.user.equals(scope)) {
+      FlowUserEntity user = userIdentityService.getCurrentUser();
+      if (user != null) {
+        entity.setOwnerUserId(user.getId());
+      }
+    } else {
+      entity.setOwnerUserId(null);
     }
   }
 
@@ -953,6 +947,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     final List<WorkflowEntity> workflows = workflowRepository.getWorkflowsForUser(user.getId());
     final List<WorkflowSummary> newList = new LinkedList<>();
     for (final WorkflowEntity entity : workflows) {
+      filterValueByFieldType(entity.getProperties(), true, FieldType.PASSWORD.value());
       setupTriggerDefaults(entity);
       final WorkflowSummary summary = new WorkflowSummary(entity);
       updateSummaryInformation(summary);
@@ -1146,4 +1141,29 @@ public class WorkflowServiceImpl implements WorkflowService {
     return summaryList;
   }
 
+  @Override
+  public ResponseEntity<WFETriggerResponse> getRevisionProperties(String workflowId,
+      long workflowVersion, String taskId, String propertyKey) {
+
+    WFETriggerResponse response = new WFETriggerResponse();
+
+    RevisionEntity revision =
+        revisionService.findRevisionTaskProperty(workflowId, workflowVersion, taskId, propertyKey);
+
+    String prop = null;
+    String token = null;
+
+    try {
+      prop = revision.getDag().getTasks().stream().filter(r -> r.getTaskId().equals(taskId))
+          .findFirst().get().getProperties().stream().filter(p -> p.getKey().equals(propertyKey))
+          .findFirst().get().getValue();
+      response.setTopic(prop);
+      token = workflowRepository.getWorkflow(workflowId).getTokens().get(0).getToken();
+      response.setWorkflowToken(token);
+    } catch (Exception e) {
+      return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+    return new ResponseEntity<>(response, HttpStatus.OK);
+
+  }
 }

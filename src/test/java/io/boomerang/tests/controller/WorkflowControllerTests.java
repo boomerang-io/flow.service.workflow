@@ -1,14 +1,17 @@
-package io.boomerang.miscs.controller;
+package io.boomerang.tests.controller;
 
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,7 +32,6 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import io.boomerang.controller.InternalController;
 import io.boomerang.controller.WorkflowController;
 import io.boomerang.misc.FlowTests;
-import io.boomerang.model.CronValidationResponse;
 import io.boomerang.model.FlowWorkflowRevision;
 import io.boomerang.model.GenerateTokenResponse;
 import io.boomerang.model.RevisionResponse;
@@ -39,7 +41,6 @@ import io.boomerang.model.WorkflowSummary;
 import io.boomerang.model.projectstormv5.RestConfig;
 import io.boomerang.mongo.entity.RevisionEntity;
 import io.boomerang.mongo.entity.WorkflowEntity;
-import io.boomerang.mongo.entity.WorkflowScheduleEntity;
 import io.boomerang.mongo.model.ActivityStorage;
 import io.boomerang.mongo.model.Storage;
 import io.boomerang.mongo.model.TaskConfigurationNode;
@@ -48,15 +49,14 @@ import io.boomerang.mongo.model.TriggerScheduler;
 import io.boomerang.mongo.model.Triggers;
 import io.boomerang.mongo.model.WorkflowConfiguration;
 import io.boomerang.mongo.model.WorkflowProperty;
-import io.boomerang.mongo.model.WorkflowScheduleStatus;
 import io.boomerang.mongo.model.WorkflowScope;
 import io.boomerang.mongo.model.WorkflowStatus;
-import io.boomerang.service.crud.WorkflowScheduleService;
+import io.boomerang.util.DataAdapterUtil.FieldType;
 
 
 @ExtendWith(SpringExtension.class)
-@SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT)
-@ActiveProfiles("local")
+@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
+@ActiveProfiles("test")
 @WithMockUser(roles = {"admin"})
 @WithUserDetails("mdroy@us.ibm.com")
 public class WorkflowControllerTests extends FlowTests {
@@ -66,16 +66,13 @@ public class WorkflowControllerTests extends FlowTests {
 
   @Autowired
   private InternalController internalController;
-  
-  @Autowired
-  private WorkflowScheduleService workflowScheduleService;
 
   @Test
   public void testInternalWorkflowListing() {
     List<WorkflowShortSummary> summaryList = internalController.getAllWorkflows();
 
-    Assertions.assertNotNull(summaryList);
-    Assertions.assertEquals(18, summaryList.size());
+     assertNotNull(summaryList);
+     assertEquals(18, summaryList.size());
   }
 
   @Test
@@ -83,20 +80,25 @@ public class WorkflowControllerTests extends FlowTests {
 
     FlowWorkflowRevision entity = controller.getWorkflowLatestVersion("5d1a188af6ca2c00014c4314");
 
-    Assertions.assertEquals("5d1a188af6ca2c00014c4314", entity.getWorkFlowId());
+     assertEquals("5d1a188af6ca2c00014c4314", entity.getWorkFlowId());
   }
 
   @Test
   public void testGetWorkflowVersion() {
     FlowWorkflowRevision entity = controller.getWorkflowVersion("5d1a188af6ca2c00014c4314", 1L);
-    Assertions.assertEquals(1L, entity.getVersion());
-    Assertions.assertEquals("5d1a188af6ca2c00014c4314", entity.getWorkFlowId());
+     assertEquals(1L, entity.getVersion());
+     assertEquals("5d1a188af6ca2c00014c4314", entity.getWorkFlowId());
   }
 
   @Test
   public void testGetWorkflowWithId() {
     WorkflowSummary summary = controller.getWorkflowWithId("5d1a188af6ca2c00014c4314");
-    Assertions.assertEquals("5d1a188af6ca2c00014c4314", summary.getId());
+     assertEquals("5d1a188af6ca2c00014c4314", summary.getId());
+		Optional<WorkflowProperty> passProp = summary.getProperties().stream()
+				.filter(f -> FieldType.PASSWORD.value().equals(f.getType())).findAny();
+		if (passProp.isPresent()) {
+			assertNull(passProp.get().getDefaultValue());
+		}
   }
 
   @Test
@@ -105,8 +107,8 @@ public class WorkflowControllerTests extends FlowTests {
     entity.setName("TestWorkflow");
     entity.setStatus(WorkflowStatus.deleted);
     WorkflowSummary summary = controller.insertWorkflow(entity);
-    Assertions.assertEquals("TestWorkflow", summary.getName());
-    Assertions.assertEquals(WorkflowStatus.active, summary.getStatus());
+     assertEquals("TestWorkflow", summary.getName());
+     assertEquals(WorkflowStatus.active, summary.getStatus());
 
   }
 
@@ -121,8 +123,8 @@ public class WorkflowControllerTests extends FlowTests {
 
     FlowWorkflowRevision revisionEntity =
         controller.insertWorkflow("5d1a188af6ca2c00014c4314", revision);
-    Assertions.assertEquals(2L, revisionEntity.getVersion());
-    Assertions.assertEquals("test", revisionEntity.getMarkdown());
+     assertEquals(2L, revisionEntity.getVersion());
+     assertEquals("test", revisionEntity.getMarkdown());
   }
 
   @Test
@@ -133,8 +135,8 @@ public class WorkflowControllerTests extends FlowTests {
     entity.setStorage(new Storage());
     entity.getStorage().setActivity(new ActivityStorage());
     WorkflowSummary updatedEntity = controller.updateWorkflow(entity);
-    Assertions.assertEquals("5d1a188af6ca2c00014c4314", updatedEntity.getId());
-    Assertions.assertEquals("TestUpdateWorkflow", updatedEntity.getName());
+     assertEquals("5d1a188af6ca2c00014c4314", updatedEntity.getId());
+     assertEquals("TestUpdateWorkflow", updatedEntity.getName());
   }
 
   @Test
@@ -153,17 +155,39 @@ public class WorkflowControllerTests extends FlowTests {
     WorkflowEntity entity =
         controller.updateWorkflowProperties("5d1a188af6ca2c00014c4314", properties);
 
-    Assertions.assertNotNull(entity.getProperties());
-    Assertions.assertEquals(1, entity.getProperties().size());
-    Assertions.assertEquals("testDescription", entity.getProperties().get(0).getDescription());
+     assertNotNull(entity.getProperties());
+     assertEquals(1, entity.getProperties().size());
+     assertEquals("testDescription", entity.getProperties().get(0).getDescription());
 
   }
 
   @Test
+  public void testUpdateWorkflowPasswordProperty() {
+   
+    WorkflowProperty passProperty = new WorkflowProperty();
+    passProperty.setKey("myPassword");
+    passProperty.setDescription("testDescriptionPass");
+    passProperty.setLabel("testLabelPass");
+    passProperty.setRequired(false);
+    passProperty.setType("password");
+    passProperty.setDefaultValue("sensitiveData");
+
+    List<WorkflowProperty> properties = new ArrayList<>();
+    properties.add(passProperty);
+
+    WorkflowEntity entity =
+        controller.updateWorkflowProperties("5d1a188af6ca2c00014c4314", properties);
+    Optional<WorkflowProperty> passProp = entity.getProperties().stream().filter(f->FieldType.PASSWORD.value().equals(f.getType())).findAny();
+     assertTrue(passProp.isPresent());
+     assertNull(passProp.get().getDefaultValue());
+     assertTrue(passProp.get().isHiddenValue());
+  }
+  
+  @Test
   public void testExportWorkflow() {
     ResponseEntity<InputStreamResource> export =
         controller.exportWorkflow("5d1a188af6ca2c00014c4314");
-    Assertions.assertEquals(HttpStatus.OK, export.getStatusCode());
+     assertEquals(HttpStatus.OK, export.getStatusCode());
   }
 
   @Test
@@ -197,7 +221,7 @@ public class WorkflowControllerTests extends FlowTests {
     controller.importWorkflow(export, true, "", WorkflowScope.team);
 
     WorkflowSummary summary = controller.getWorkflowWithId("5d1a188af6ca2c00014c4314");
-    Assertions.assertEquals("test", summary.getDescription());
+     assertEquals("test", summary.getDescription());
   }
 
   @Test
@@ -208,20 +232,20 @@ public class WorkflowControllerTests extends FlowTests {
     ObjectMapper objectMapper = new ObjectMapper();
     WorkflowExport importedWorkflow = objectMapper.readValue(json, WorkflowExport.class);
     controller.importWorkflow(importedWorkflow, false, "", WorkflowScope.team);
-    Assertions.assertTrue(true);
+     assertTrue(true);
   }
 
   @Test
   public void testGenerateWebhookToken() {
 
     GenerateTokenResponse response = controller.createToken("5d1a188af6ca2c00014c4314", "Token");
-    Assertions.assertNotEquals("", response.getToken());
+     assertNotEquals("", response.getToken());
   }
 
   @Test
   public void testDeleteWorkflow() {
     controller.deleteWorkflowWithId("5d1a188af6ca2c00014c4314");
-    Assertions.assertEquals(WorkflowStatus.deleted,
+     assertEquals(WorkflowStatus.deleted,
         controller.getWorkflowWithId("5d1a188af6ca2c00014c4314").getStatus());
   }
 
@@ -230,26 +254,11 @@ public class WorkflowControllerTests extends FlowTests {
     List<RevisionResponse> response =
         controller.viewChangelog(getOptionalString("5d1a188af6ca2c00014c4314"),
             getOptionalOrder(Direction.ASC), getOptionalString("sort"), 0, 2147483647);
-    Assertions.assertEquals(1, response.size());
-    Assertions.assertEquals(1, response.get(0).getVersion());
-  }
-  
-  @Test
-  @Disabled
-  public void testCreateWorkflowSchedule() {
-
-    WorkflowScheduleEntity schedule = new WorkflowScheduleEntity();
-    schedule.setStatus(WorkflowScheduleStatus.active);
-    schedule.setSchedule("0 00 20 ? * TUE,WED,THU *");
-    schedule.setTimezone("timezone");
-
-    workflowScheduleService.createSchedule(schedule);
-    
-    //TODO: add logic to do one test with the scehdule trigger enabled and one without. and make sure things get updated.
+     assertEquals(1, response.size());
+     assertEquals(1, response.get(0).getVersion());
   }
 
   @Test
-  @Disabled
   public void testUpdateWorkflowTriggers() {
 
     TriggerScheduler scheduler = new TriggerScheduler();
@@ -260,11 +269,11 @@ public class WorkflowControllerTests extends FlowTests {
     webhook.setToken("token");
 
     WorkflowSummary entity = controller.getWorkflowWithId("5d1a188af6ca2c00014c4314");
-    Assertions.assertNotNull(entity.getTriggers());
-    Assertions.assertNotNull(entity.getTriggers().getWebhook());
-    Assertions.assertEquals(false, entity.getTriggers().getScheduler().getEnable());
-    Assertions.assertEquals(true, entity.getTriggers().getWebhook().getEnable());
-    Assertions.assertEquals("A5DF2F840C0DFF496D516B4F75BD947C9BC44756A8AE8571FC45FCB064323641",
+     assertNotNull(entity.getTriggers());
+     assertNotNull(entity.getTriggers().getWebhook());
+     assertEquals(false, entity.getTriggers().getScheduler().getEnable());
+     assertEquals(true, entity.getTriggers().getWebhook().getEnable());
+     assertEquals("A5DF2F840C0DFF496D516B4F75BD947C9BC44756A8AE8571FC45FCB064323641",
         entity.getTriggers().getWebhook().getToken());
 
 
@@ -273,12 +282,11 @@ public class WorkflowControllerTests extends FlowTests {
 
     WorkflowSummary updatedEntity = controller.updateWorkflow(entity);
 
-    Assertions.assertEquals("5d1a188af6ca2c00014c4314", updatedEntity.getId());
+     assertEquals("5d1a188af6ca2c00014c4314", updatedEntity.getId());
 
-    Assertions.assertEquals(true, updatedEntity.getTriggers().getScheduler().getEnable());
-    Assertions.assertEquals(false, updatedEntity.getTriggers().getWebhook().getEnable());
-    Assertions.assertEquals("A5DF2F840C0DFF496D516B4F75BD947C9BC44756A8AE8571FC45FCB064323641",
-        updatedEntity.getTriggers().getWebhook().getToken());
+     assertEquals(true, updatedEntity.getTriggers().getScheduler().getEnable());
+     assertEquals(false, updatedEntity.getTriggers().getWebhook().getEnable());
+     assertEquals("token", updatedEntity.getTriggers().getWebhook().getToken());
   }
 
   @Test
@@ -286,14 +294,14 @@ public class WorkflowControllerTests extends FlowTests {
   public void testUpdateWorkflowTriggerNull() {
 
     WorkflowSummary entity = controller.getWorkflowWithId("5d1a188af6ca2c00014c4314");
-    Assertions.assertEquals(false, entity.getTriggers().getScheduler().getEnable());
+     assertEquals(false, entity.getTriggers().getScheduler().getEnable());
     entity.setTriggers(null);
-    Assertions.assertNull(entity.getTriggers());
+     assertNull(entity.getTriggers());
 
     WorkflowSummary updatedEntity = controller.updateWorkflow(entity);
 
-    Assertions.assertEquals("5d1a188af6ca2c00014c4314", updatedEntity.getId());
-    Assertions.assertEquals(false, updatedEntity.getTriggers().getScheduler().getEnable());
+     assertEquals("5d1a188af6ca2c00014c4314", updatedEntity.getId());
+     assertEquals(false, updatedEntity.getTriggers().getScheduler().getEnable());
 
   }
 
@@ -315,7 +323,7 @@ public class WorkflowControllerTests extends FlowTests {
   public void testMissingTemplateVersionRevision() {
 
     FlowWorkflowRevision entity = controller.getWorkflowVersion("5d7177af2c57250007e3d7a1", 1l);
-    Assertions.assertNotNull(entity);
+     assertNotNull(entity);
     verifyTemplateVersions(entity);
   }
 
@@ -323,64 +331,20 @@ public class WorkflowControllerTests extends FlowTests {
   public void testMissingTemplateVersionLatestRevision() {
 
     FlowWorkflowRevision entity = controller.getWorkflowLatestVersion("5d7177af2c57250007e3d7a1");
-    Assertions.assertNotNull(entity);
+     assertNotNull(entity);
     verifyTemplateVersions(entity);
   }
 
   @Test
   public void testAvaliableParameters() {
     List<String> parameters = controller.getWorkflowParameters("5d1a188af6ca2c00014c4314");
-    Assertions.assertEquals(14, parameters.size());
-    Assertions.assertEquals("workflow.params.hello", parameters.get(0));
-    Assertions.assertEquals("params.hello", parameters.get(1));
-    Assertions.assertEquals("system.params.workflow-id", parameters.get(2));
-    Assertions.assertEquals("params.workflow-id", parameters.get(3));
-
-  }
-
-  @Test
-  public void testCronValidation() {
-    CronValidationResponse response = controller.validateCron("0 * * * * *");
-    assertEquals(false, response.isValid());
-    assertEquals(null, response.getCron());
-    assertEquals(
-        "Failed to parse '0 * * * * *'. Invalid cron expression: 0 * * * * *. Both, a day-of-week AND a day-of-month parameter, are not supported.",
-        response.getMessage());
-
-    response = controller.validateCron("0 * * ? * *");
-    assertEquals(true, response.isValid());
-    assertEquals("0 * * ? * *", response.getCron());
-    assertEquals(null, response.getMessage());
-
-    response = controller.validateCron("0 0 * ? * *");
-    assertEquals(true, response.isValid());
-    assertEquals("0 0 * ? * *", response.getCron());
-    assertEquals(null, response.getMessage());
-
-    response = controller.validateCron("0 0 * ? * MON,TUE,WED,THU,FRI,SAT,SUN");
-    assertEquals(true, response.isValid());
-    assertEquals("0 0 * ? * 2,3,4,5,6,7,1", response.getCron());
-    assertEquals(null, response.getMessage());
-
-    response = controller.validateCron("5 0 * 8 *");
-    assertEquals(true, response.isValid());
-    assertEquals("0 5 0 * 8 ? *", response.getCron());
-    assertEquals(null, response.getMessage());
-
-    response = controller.validateCron("0 * * * *");
-    assertEquals(true, response.isValid());
-    assertEquals("0 0 * * * ? *", response.getCron());
-    assertEquals(null, response.getMessage());
-
-    response = controller.validateCron("* * * * *");
-    assertEquals(true, response.isValid());
-    assertEquals("0 * * * * ? *", response.getCron());
-    assertEquals(null, response.getMessage());
-    
-    response = controller.validateCron("1 1 1 1 1");
-    assertEquals(false, response.isValid());
-    assertEquals(null, response.getCron());
-    assertEquals("Cron expression contains 5 parts but we expect one of [6, 7]", response.getMessage());
+     assertEquals(16, parameters.size());
+     assertEquals("workflow.params.password", parameters.get(0));
+     assertEquals("params.password", parameters.get(1));
+     assertEquals("workflow.params.hello", parameters.get(2));
+     assertEquals("params.hello", parameters.get(3));
+     assertEquals("system.params.workflow-id", parameters.get(4));
+     assertEquals("params.workflow-id", parameters.get(5));
 
   }
 
@@ -388,7 +352,7 @@ public class WorkflowControllerTests extends FlowTests {
     RestConfig config = entity.getConfig();
     for (io.boomerang.model.projectstormv5.ConfigNodes taskNode : config.getNodes()) {
       if (taskNode.getTaskId() != null) {
-        Assertions.assertNotNull(taskNode.getTaskVersion());
+         assertNotNull(taskNode.getTaskVersion());
       }
     }
   }

@@ -32,6 +32,7 @@ import io.boomerang.mongo.entity.FlowUserEntity;
 import io.boomerang.mongo.entity.TeamEntity;
 import io.boomerang.mongo.model.Quotas;
 import io.boomerang.mongo.model.UserType;
+import io.boomerang.security.service.UserValidationService;
 import io.boomerang.service.UserIdentityService;
 import io.boomerang.service.crud.TeamService;
 
@@ -44,6 +45,9 @@ public class TeamController {
 
   @Autowired
   private UserIdentityService userIdentityService;
+  
+  @Autowired
+  private UserValidationService userValidationService;
 
   @PostMapping(value = "/teams")
   public void createCiTeam(@RequestBody CreateFlowTeam createCiTeamRequest) {
@@ -64,6 +68,7 @@ public class TeamController {
 
   @GetMapping(value = "/teams/{teamId}/properties")
   public List<FlowTeamConfiguration> getAllTeamProperties(@PathVariable String teamId) {
+    userValidationService.validateUserForTeam(teamId);
     return flowTeamService.getAllTeamProperties(teamId);
   }
   
@@ -87,11 +92,13 @@ public class TeamController {
   @PostMapping(value = "/teams/{teamId}/properties")
   public FlowTeamConfiguration createNewTeamProperty(@PathVariable String teamId,
       @RequestBody FlowTeamConfiguration property) {
+    userValidationService.validateUserForTeam(teamId);
     return flowTeamService.createNewTeamProperty(teamId, property);
   }
 
   @GetMapping(value = "/teams/{teamId}/quotas")
   public WorkflowQuotas getTeamQuotas(@PathVariable String teamId) {
+    userValidationService.validateUserForTeam(teamId);
     return flowTeamService.getTeamQuotas(teamId);
   }
 
@@ -102,11 +109,13 @@ public class TeamController {
 
   @PatchMapping(value = "/teams/{teamId}/quotas")
   public Quotas updateTeamQuotas(@PathVariable String teamId, @RequestBody Quotas quotas) {
+    userValidationService.validateUserForTeam(teamId);
     return flowTeamService.updateTeamQuotas(teamId, quotas);
   }
 
   @PutMapping(value = "/teams/{teamId}/quotas")
   public Quotas updateQuotasForTeam(@PathVariable String teamId, @RequestBody Quotas quotas) {
+    userValidationService.validateUserForTeam(teamId);
     return flowTeamService.updateQuotasForTeam(teamId, quotas);
   }
 

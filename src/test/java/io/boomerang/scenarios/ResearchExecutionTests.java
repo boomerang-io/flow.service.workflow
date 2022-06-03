@@ -1,8 +1,10 @@
 package io.boomerang.scenarios;
 
 import static org.hamcrest.CoreMatchers.containsString;
-import static org.springframework.test.web.client.ExpectedCount.manyTimes;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.client.ExpectedCount.times;
+import static org.springframework.test.web.client.ExpectedCount.manyTimes;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withStatus;
@@ -11,7 +13,6 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,8 +31,8 @@ import io.boomerang.mongo.model.TaskStatus;
 import io.boomerang.tests.IntegrationTests;
 
 @ExtendWith(SpringExtension.class)
-@SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT)
-@ActiveProfiles("local")
+@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
+@ActiveProfiles("test")
 @WithMockUser(roles = {"admin"})
 @WithUserDetails("mdroy@us.ibm.com")
 public class ResearchExecutionTests extends IntegrationTests {
@@ -46,8 +47,8 @@ public class ResearchExecutionTests extends IntegrationTests {
     String id = activity.getId();
     Thread.sleep(15000);
     FlowActivity finalActivity = this.checkWorkflowActivity(id);
-    Assertions.assertEquals(TaskStatus.completed, finalActivity.getStatus());
-    Assertions.assertNotNull(finalActivity.getDuration());
+    assertEquals(TaskStatus.completed, finalActivity.getStatus());
+    assertNotNull(finalActivity.getDuration());
     mockServer.verify();
   }
 
@@ -58,21 +59,21 @@ public class ResearchExecutionTests extends IntegrationTests {
     mockServer = MockRestServiceServer.bindTo(this.restTemplate).ignoreExpectOrder(true).build();
 
     mockServer.expect(manyTimes(), requestTo(containsString("internal/users/user")))
-        .andExpect(method(HttpMethod.GET)).andRespond(
-            withSuccess(getMockFile("mock/users/users.json"), MediaType.APPLICATION_JSON));
-    
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withSuccess(getMockFile("mock/users/users.json"), MediaType.APPLICATION_JSON));
+
     mockServer.expect(times(1), requestTo(containsString("controller/workflow/execute")))
         .andExpect(method(HttpMethod.POST)).andRespond(withStatus(HttpStatus.OK));
 
     mockServer.expect(times(1), requestTo(containsString("controller/task/execute")))
-        .andExpect(method(HttpMethod.POST)).andRespond(withStatus(HttpStatus.OK));  
-    
+        .andExpect(method(HttpMethod.POST)).andRespond(withStatus(HttpStatus.OK));
+
     mockServer.expect(times(1), requestTo(containsString("controller/task/execute")))
-    .andExpect(method(HttpMethod.POST)).andRespond(withStatus(HttpStatus.OK));
-    
+        .andExpect(method(HttpMethod.POST)).andRespond(withStatus(HttpStatus.OK));
+
     mockServer.expect(times(1), requestTo(containsString("controller/task/execute")))
-    .andExpect(method(HttpMethod.POST)).andRespond(withStatus(HttpStatus.OK)); 
-    
+        .andExpect(method(HttpMethod.POST)).andRespond(withStatus(HttpStatus.OK));
+
     mockServer.expect(times(1), requestTo(containsString("controller/workflow/terminate")))
         .andExpect(method(HttpMethod.POST)).andRespond(withStatus(HttpStatus.OK));
   }

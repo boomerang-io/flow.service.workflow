@@ -52,6 +52,7 @@ import io.boomerang.mongo.service.FlowUserService;
 import io.boomerang.mongo.service.FlowWorkflowActivityService;
 import io.boomerang.mongo.service.FlowWorkflowService;
 import io.boomerang.service.UserIdentityService;
+import static io.boomerang.util.DataAdapterUtil.*;
 
 @Service
 public class TeamServiceImpl implements TeamService {
@@ -165,6 +166,8 @@ public class TeamServiceImpl implements TeamService {
     property.setId(newUuid);
     configItems.add(property);
     flowTeamService.save(flowTeamEntity);
+    //If the property is a password, do not return its value, for security reasons.
+    filterValueByFieldType( List.of(property), false, FieldType.PASSWORD.value());
 
     return property;
   }
@@ -273,6 +276,7 @@ public class TeamServiceImpl implements TeamService {
 
     if (flowTeamEntity.getSettings() != null
         && flowTeamEntity.getSettings().getProperties() != null) {
+    	filterValueByFieldType(flowTeamEntity.getSettings() == null ? null:flowTeamEntity.getSettings().getProperties(), false, FieldType.PASSWORD.value());
       return flowTeamEntity.getSettings().getProperties();
     } else {
       return Collections.emptyList();
@@ -286,6 +290,10 @@ public class TeamServiceImpl implements TeamService {
 
     final List<TeamWorkflowSummary> teamWorkFlowSummary =
         populateWorkflowSummaryInformation(flowTeams);
+    //remove sensitive password in Team->Settings->properties and also in Team->Workflows->properties
+    teamWorkFlowSummary.stream().forEach(f->filterValueByFieldType(f.getSettings() == null ? null:f.getSettings().getProperties(), false, FieldType.PASSWORD.value()));
+    teamWorkFlowSummary.stream().forEach(t->t.getWorkflows().stream().forEach(w->filterValueByFieldType(w.getProperties(), true, FieldType.PASSWORD.value())));   
+    
     return teamWorkFlowSummary;
   }
 
@@ -671,6 +679,7 @@ public class TeamServiceImpl implements TeamService {
 
   @Override
   public void updateTeam(String teamId, FlowTeam flow) {
+    validateUser();
     TeamEntity team = flowTeamService.findById(teamId);
     if (flow.getName() != null) {
       team.setName(flow.getName());

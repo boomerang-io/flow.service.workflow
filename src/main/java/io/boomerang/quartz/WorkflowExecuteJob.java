@@ -18,7 +18,6 @@ import io.boomerang.model.WorkflowSchedule;
 import io.boomerang.mongo.model.FlowTriggerEnum;
 import io.boomerang.mongo.model.WorkflowScheduleType;
 import io.boomerang.service.crud.WorkflowScheduleService;
-import io.boomerang.util.ParameterMapper;
 
 @PersistJobDataAfterExecution
 public class WorkflowExecuteJob extends QuartzJobBean {
@@ -60,8 +59,9 @@ public class WorkflowExecuteJob extends QuartzJobBean {
     
     WorkflowSchedule schedule = workflowScheduleService.getSchedule(jobDetail.getKey().getName());
     if (schedule != null) {
-      if (schedule.getParameters() != null) {
-        properties = ParameterMapper.keyValuePairListToMap(schedule.getParameters());
+      if (schedule.getParametersMap() != null) {
+        logger.debug("Schedule Parameters: ", schedule.getParametersMap().toString());
+        properties = schedule.getParametersMap();
       }
       if (schedule.getType().equals(WorkflowScheduleType.runOnce)) {
         logger.info("Executing runOnce schedule: {}, and marking as completed.", schedule.getId());

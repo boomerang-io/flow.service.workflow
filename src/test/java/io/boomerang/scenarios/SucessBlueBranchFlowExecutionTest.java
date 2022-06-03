@@ -1,6 +1,8 @@
 package io.boomerang.scenarios;
 
 import static org.hamcrest.CoreMatchers.containsString;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.test.web.client.ExpectedCount.manyTimes;
 import static org.springframework.test.web.client.ExpectedCount.times;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.jsonPath;
@@ -13,7 +15,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -34,8 +35,8 @@ import io.boomerang.mongo.model.TaskStatus;
 import io.boomerang.tests.IntegrationTests;
 
 @ExtendWith(SpringExtension.class)
-@SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT)
-@ActiveProfiles("local")
+@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
+@ActiveProfiles("test")
 @WithMockUser(roles = {"admin"})
 @WithUserDetails("mdroy@us.ibm.com")
 public class SucessBlueBranchFlowExecutionTest extends IntegrationTests {
@@ -54,23 +55,27 @@ public class SucessBlueBranchFlowExecutionTest extends IntegrationTests {
     String id = activity.getId();
     Thread.sleep(10000);
     FlowActivity finalActivity = this.checkWorkflowActivity(id);
-    Assertions.assertEquals(TaskStatus.completed, finalActivity.getStatus());
-    Assertions.assertNotNull(finalActivity.getDuration());
+     assertEquals(TaskStatus.completed, finalActivity.getStatus());
+     assertNotNull(finalActivity.getDuration());
     mockServer.verify();
-    
-     
+
+
     List<TaskExecutionResponse> steps = finalActivity.getSteps();
-    TaskExecutionResponse executeShell1 = steps.stream().filter(e -> e.getTaskName().equals("Execute Shell 1")).findFirst().orElse(null);
-    TaskExecutionResponse executeShell2 = steps.stream().filter(e -> e.getTaskName().equals("Execute Shell 2")).findFirst().orElse(null);
-    TaskExecutionResponse executeShell3 = steps.stream().filter(e -> e.getTaskName().equals("Execute Shell 3")).findFirst().orElse(null);
-    TaskExecutionResponse switchStep = steps.stream().filter(e -> e.getTaskName().equals("Switch 1")).findFirst().orElse(null);
-    
-    Assertions.assertEquals(TaskStatus.completed, executeShell1.getFlowTaskStatus());
-    Assertions.assertEquals(TaskStatus.skipped, executeShell2.getFlowTaskStatus());
-    Assertions.assertEquals(TaskStatus.completed, executeShell3.getFlowTaskStatus());
-    Assertions.assertEquals(TaskStatus.completed, switchStep.getFlowTaskStatus());
-    
-    Assertions.assertEquals("blue", switchStep.getSwitchValue());
+    TaskExecutionResponse executeShell1 = steps.stream()
+        .filter(e -> e.getTaskName().equals("Execute Shell 1")).findFirst().orElse(null);
+    TaskExecutionResponse executeShell2 = steps.stream()
+        .filter(e -> e.getTaskName().equals("Execute Shell 2")).findFirst().orElse(null);
+    TaskExecutionResponse executeShell3 = steps.stream()
+        .filter(e -> e.getTaskName().equals("Execute Shell 3")).findFirst().orElse(null);
+    TaskExecutionResponse switchStep =
+        steps.stream().filter(e -> e.getTaskName().equals("Switch 1")).findFirst().orElse(null);
+
+     assertEquals(TaskStatus.completed, executeShell1.getFlowTaskStatus());
+     assertEquals(TaskStatus.skipped, executeShell2.getFlowTaskStatus());
+     assertEquals(TaskStatus.completed, executeShell3.getFlowTaskStatus());
+     assertEquals(TaskStatus.completed, switchStep.getFlowTaskStatus());
+
+     assertEquals("blue", switchStep.getSwitchValue());
   }
 
   @Override
@@ -80,8 +85,8 @@ public class SucessBlueBranchFlowExecutionTest extends IntegrationTests {
     mockServer = MockRestServiceServer.bindTo(this.restTemplate).ignoreExpectOrder(true).build();
     mockServer
         .expect(manyTimes(), requestTo(containsString("http://localhost:8084/internal/users/user")))
-        .andExpect(method(HttpMethod.GET)).andRespond(
-            withSuccess(getMockFile("mock/users/users.json"), MediaType.APPLICATION_JSON));
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withSuccess(getMockFile("mock/users/users.json"), MediaType.APPLICATION_JSON));
     mockServer.expect(times(1), requestTo(containsString("controller/workflow/execute")))
         .andExpect(method(HttpMethod.POST)).andRespond(withStatus(HttpStatus.OK));
     mockServer.expect(times(1), requestTo(containsString("controller/task/execute")))
@@ -89,9 +94,10 @@ public class SucessBlueBranchFlowExecutionTest extends IntegrationTests {
         .andExpect(method(HttpMethod.POST)).andRespond(withStatus(HttpStatus.OK));
     mockServer.expect(times(1), requestTo(containsString("controller/task/execute")))
         .andExpect(jsonPath("$.taskName").value("Execute Shell 3"))
-        .andExpect(method(HttpMethod.POST)).andRespond(withSuccess(getMockFile("tests/scenarios/branch/branch-response1.json"),
+        .andExpect(method(HttpMethod.POST))
+        .andRespond(withSuccess(getMockFile("tests/scenarios/branch/branch-response1.json"),
             MediaType.APPLICATION_JSON));
-    
+
     mockServer.expect(times(1), requestTo(containsString("controller/workflow/terminate")))
         .andExpect(method(HttpMethod.POST)).andRespond(withStatus(HttpStatus.OK));
   }
