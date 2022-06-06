@@ -14,7 +14,7 @@ public class EventCancel extends Event {
 
   public EventCancel() {}
 
-  public static EventCancel fromCloudEvent(CloudEvent cloudEvent)
+  public static Event fromCloudEvent(CloudEvent cloudEvent)
       throws InvalidPropertiesFormatException {
 
     // Identify the type of event (it must be of type "cancel")

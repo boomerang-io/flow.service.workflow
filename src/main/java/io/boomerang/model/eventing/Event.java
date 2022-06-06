@@ -2,6 +2,7 @@ package io.boomerang.model.eventing;
 
 import java.net.URI;
 import java.util.Date;
+import io.cloudevents.CloudEvent;
 
 public abstract class Event {
 
@@ -30,6 +31,14 @@ public abstract class Event {
     this.token = token;
     this.date = date;
     this.type = type;
+  }
+
+  public static Event fromCloudEvent(CloudEvent cloudEvent) throws Exception {
+    throw new UnsupportedOperationException("Method not implemented!");
+  }
+
+  public CloudEvent toCloudEvent() throws Exception {
+    throw new UnsupportedOperationException("Method not implemented!");
   }
 
   public String getId() {

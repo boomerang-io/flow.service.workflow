@@ -32,7 +32,7 @@ public class EventTrigger extends Event {
 
   public EventTrigger() {}
 
-  public static EventTrigger fromCloudEvent(CloudEvent cloudEvent)
+  public static Event fromCloudEvent(CloudEvent cloudEvent)
       throws InvalidPropertiesFormatException {
 
     // Identify the type of event (it must be of type "trigger")

@@ -21,7 +21,7 @@ public class EventWFE extends Event {
 
   public EventWFE() {}
 
-  public static EventWFE fromCloudEvent(CloudEvent cloudEvent)
+  public static Event fromCloudEvent(CloudEvent cloudEvent)
       throws InvalidPropertiesFormatException {
 
     // Identify the type of event (it must be of type "wait for event")

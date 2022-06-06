@@ -1,16 +1,13 @@
 package io.boomerang.service;
 
 import java.io.IOException;
-import java.net.URI;
 import java.text.MessageFormat;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.InvalidPropertiesFormatException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 import org.apache.logging.log4j.LogManager;
@@ -40,7 +37,6 @@ import io.boomerang.model.eventing.EventCancel;
 import io.boomerang.model.eventing.EventFactory;
 import io.boomerang.model.eventing.EventStatusUpdate;
 import io.boomerang.model.eventing.EventTrigger;
-import io.boomerang.model.eventing.EventType;
 import io.boomerang.model.eventing.EventWFE;
 import io.boomerang.mongo.entity.ActivityEntity;
 import io.boomerang.mongo.model.KeyValuePair;
@@ -274,15 +270,16 @@ public class EventingServiceImpl implements EventingService, SubHandler {
   public void publishActivityStatusEvent(ActivityEntity activityEntity) {
     try {
 
-      String nonWildcardSubject = getNonWildcardSubject(
-          properties.getJetstream().getStatusEvents().getStream().getSubjects()[0]);
-      String workflowId = activityEntity.getWorkflowId();
-      String workflowActivityId = activityEntity.getId();
-      String newStatus = activityEntity.getStatus().toString().toLowerCase();
-      String initiatorId = "";
-      String initiatorContext = null;
+      // Create status update CloudEvent from activity (additionally, add the responses for executed
+      // tasks)
+      EventStatusUpdate eventStatusUpdate =
+          EventFactory.buildStatusUpdateFromActivity(activityEntity);
+      eventStatusUpdate
+          .setExecutedTasks(flowActivityService.getTaskExecutions(activityEntity.getId()));
 
       // Extract initiator ID and initiator context
+      String initiatorId = "";
+
       if (activityEntity.getLabels() != null && activityEntity.getLabels().isEmpty() == false) {
         String sharedLabelPrefix = properties.getShared().getLabel().getPrefix() + "/";
 
@@ -290,28 +287,18 @@ public class EventingServiceImpl implements EventingService, SubHandler {
             .filter(kv -> kv.getKey().equals(sharedLabelPrefix + LABEL_KEY_INITIATOR_ID))
             .findFirst().map(kv -> kv.getValue()).orElse("");
 
-        initiatorContext = activityEntity.getLabels().stream()
+        activityEntity.getLabels().stream()
             .filter(kv -> kv.getKey().equals(sharedLabelPrefix + LABEL_KEY_INITIATOR_CONTEXT))
-            .findFirst().map(kv -> kv.getValue()).orElse("");
+            .findFirst().map(kv -> kv.getValue()).ifPresent(eventStatusUpdate::setInitiatorContext);
       }
 
-      // Event subject and NATS message subject
-      String eventSubject =
-          MessageFormat.format("/{0}/{1}/{2}", workflowId, workflowActivityId, newStatus);
-      String natSubject = MessageFormat.format("{0}.{1}.{2}.{3}{4}", nonWildcardSubject, newStatus,
-          workflowId, workflowActivityId, Strings.isNotEmpty(initiatorId) ? "." + initiatorId : "");
-
-      // Create status update event
-      EventStatusUpdate eventStatusUpdate = new EventStatusUpdate();
-      eventStatusUpdate.setId(UUID.randomUUID().toString());
-      eventStatusUpdate.setSource(URI.create(this.getClass().getCanonicalName()));
-      eventStatusUpdate.setSubject(eventSubject);
-      eventStatusUpdate.setDate(new Date());
-      eventStatusUpdate.setType(EventType.STATUS_UPDATE);
-      eventStatusUpdate.setWorkflowId(activityEntity.getWorkflowId());
-      eventStatusUpdate.setWorkflowActivityId(activityEntity.getId());
-      eventStatusUpdate.setStatus(activityEntity.getStatus());
-      eventStatusUpdate.setInitiatorContext(initiatorContext);
+      // NATS message subject
+      String nonWildcardSubject = getNonWildcardSubject(
+          properties.getJetstream().getStatusEvents().getStream().getSubjects()[0]);
+      String natSubject = MessageFormat.format("{0}.{1}.{2}.{3}{4}", nonWildcardSubject,
+          eventStatusUpdate.getStatus().toString().toLowerCase(), eventStatusUpdate.getWorkflowId(),
+          eventStatusUpdate.getWorkflowActivityId(),
+          Strings.isNotEmpty(initiatorId) ? "." + initiatorId : "");
 
       // Publish cloud event
       try {
@@ -324,8 +311,8 @@ public class EventingServiceImpl implements EventingService, SubHandler {
         logger.error("An exception occurred while publishing the message to NATS server!", e);
       }
 
-      logger.debug("Workflow with ID " + workflowId + " has changed its status to "
-          + activityEntity.getStatus());
+      logger.debug("Workflow with ID " + eventStatusUpdate.getWorkflowId()
+          + " has changed its status to " + activityEntity.getStatus());
     } catch (Exception e) {
       logger.fatal("A fatal error has occurred while publishing the message to the NATS server!",
           e);
