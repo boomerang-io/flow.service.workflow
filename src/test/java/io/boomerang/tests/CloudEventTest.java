@@ -42,7 +42,7 @@ public class CloudEventTest {
         .deserialize(cloudEventData.getBytes());
 
     EventTrigger eventTrigger =
-        Assertions.assertDoesNotThrow(() -> EventTrigger.fromCloudEvent(cloudEvent));
+        (EventTrigger) Assertions.assertDoesNotThrow(() -> EventTrigger.fromCloudEvent(cloudEvent));
 
     Assertions.assertEquals(eventTrigger.getId(), cloudEvent.getId());
     Assertions.assertEquals(eventTrigger.getSource(), cloudEvent.getSource());
@@ -77,7 +77,7 @@ public class CloudEventTest {
         .deserialize(cloudEventData.getBytes());
 
     EventTrigger eventTrigger =
-        Assertions.assertDoesNotThrow(() -> EventTrigger.fromCloudEvent(cloudEvent));
+        (EventTrigger) Assertions.assertDoesNotThrow(() -> EventTrigger.fromCloudEvent(cloudEvent));
 
     Assertions.assertEquals(eventTrigger.getId(), cloudEvent.getId());
     Assertions.assertEquals(eventTrigger.getSource(), cloudEvent.getSource());
@@ -112,7 +112,7 @@ public class CloudEventTest {
         .deserialize(cloudEventData.getBytes());
 
     EventTrigger eventTrigger =
-        Assertions.assertDoesNotThrow(() -> EventTrigger.fromCloudEvent(cloudEvent));
+        (EventTrigger) Assertions.assertDoesNotThrow(() -> EventTrigger.fromCloudEvent(cloudEvent));
 
     Assertions.assertEquals(eventTrigger.getId(), cloudEvent.getId());
     Assertions.assertEquals(eventTrigger.getSource(), cloudEvent.getSource());
@@ -190,7 +190,8 @@ public class CloudEventTest {
     CloudEvent cloudEvent = EventFormatProvider.getInstance().resolveFormat(JsonFormat.CONTENT_TYPE)
         .deserialize(cloudEventData.getBytes());
 
-    EventWFE eventWFE = Assertions.assertDoesNotThrow(() -> EventWFE.fromCloudEvent(cloudEvent));
+    EventWFE eventWFE =
+        (EventWFE) Assertions.assertDoesNotThrow(() -> EventWFE.fromCloudEvent(cloudEvent));
 
     Assertions.assertEquals(eventWFE.getId(), cloudEvent.getId());
     Assertions.assertEquals(eventWFE.getSource(), cloudEvent.getSource());
@@ -266,7 +267,7 @@ public class CloudEventTest {
         .deserialize(cloudEventData.getBytes());
 
     EventCancel eventCancel =
-        Assertions.assertDoesNotThrow(() -> EventCancel.fromCloudEvent(cloudEvent));
+        (EventCancel) Assertions.assertDoesNotThrow(() -> EventCancel.fromCloudEvent(cloudEvent));
 
     Assertions.assertEquals(eventCancel.getId(), cloudEvent.getId());
     Assertions.assertEquals(eventCancel.getSource(), cloudEvent.getSource());
