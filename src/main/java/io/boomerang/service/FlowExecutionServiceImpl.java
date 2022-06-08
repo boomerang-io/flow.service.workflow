@@ -239,9 +239,8 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
   }
 
   private void executeWorkflowAsync(String activityId, final Task start, final Task end,
-      final Graph<String, DefaultEdge> graph, final List<Task> tasksToRun)
-      throws ExecutionException {
-        final ActivityEntity activityEntity = this.flowActivityService.findWorkflowActivity(activityId);
+      final Graph<String, DefaultEdge> graph, final List<Task> tasksToRun) {
+    final ActivityEntity activityEntity = this.flowActivityService.findWorkflowActivity(activityId);
 
     if (tasksToRun.size() == 2) {
       activityEntity.setStatus(TaskStatus.completed);
@@ -275,19 +274,6 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
     String workflowId = workflow.getId();
 
     Map<String, String> executionProperties = new HashMap<>();
-    Map<String, Object> inputs = new HashMap<>();
-    try {
-      for (Entry<String, Object> entry : inputs.entrySet()) {
-        if (entry.getValue() != null) {
-          executionProperties.put(entry.getKey(), entry.getValue().toString());
-        } else {
-          executionProperties.put(entry.getKey(), null);
-        }
-
-      }
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
 
     List<KeyValuePair> labels = workflow.getLabels();
 
@@ -296,11 +282,11 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
 
     final Task startTask = tasksToRun.stream()
         .filter(tsk -> TaskType.start.equals(tsk.getTaskType())).findAny().orElse(null);
-    executeNextStep(activityEntity, tasksToRun, startTask, start, end, graph);
+    executeNextStep(tasksToRun, startTask, start, end, graph);
   }
 
-  private void executeNextStep(ActivityEntity workflowActivity, List<Task> tasks, Task currentTask,
-      final Task start, final Task end, final Graph<String, DefaultEdge> graph) {
+  private void executeNextStep(List<Task> tasks, Task currentTask, final Task start, final Task end,
+      final Graph<String, DefaultEdge> graph) {
 
     try {
       List<Task> nextNodes = this.getTasksDependants(tasks, currentTask);
@@ -340,13 +326,8 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
       final Task start = getTaskByName(tasks, TaskType.start);
       final Task end = getTaskByName(tasks, TaskType.end);
       final Graph<String, DefaultEdge> graph = createGraph(tasks);
-      try {
+      executeWorkflowAsync(activityId, start, end, graph, tasks);
 
-        executeWorkflowAsync(activityId, start, end, graph, tasks);
-      } catch (ExecutionException e) {
-        LOGGER.error(ExceptionUtils.getStackTrace(e));
-        throw new RunWorkflowException();
-      }
       return true;
     };
   }
