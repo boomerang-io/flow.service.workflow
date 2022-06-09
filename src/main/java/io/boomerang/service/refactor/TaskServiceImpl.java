@@ -140,8 +140,12 @@ public class TaskServiceImpl implements TaskService {
     taskExecution = taskActivityService.save(taskExecution);
 
     // Synchronize status update since `createTask` can be invoked multiple times, depending on the
-    // number of tasks forking out of the previous task
-    synchronized (TaskServiceImpl.class) {
+    // number of tasks forking out of the previous task.
+    // TODO Until we find a better solution, I think it is better to sync this part only on the
+    // current instance of 'taskService', that processes all the dependent tasks of an Activity
+    // (Workflow?), and not on the class itself, because this will transform the processing into a
+    // Synchronized processing model and not Async, as we want it. 
+    synchronized (this) {
       activity = activityService.findWorkflowActivtyById(taskExecution.getActivityId());
 
       if (activity.getStatus() != TaskStatus.inProgress) {
