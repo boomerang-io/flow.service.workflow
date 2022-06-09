@@ -22,6 +22,7 @@ import io.boomerang.mongo.entity.FlowUserEntity;
 import io.boomerang.mongo.entity.TeamEntity;
 import io.boomerang.mongo.model.Quotas;
 import io.boomerang.security.service.ApiTokenService;
+import io.boomerang.service.UserIdentityService;
 
 @Service
 public class ExternalTeamServiceImpl implements ExternalTeamService {
@@ -56,13 +57,17 @@ public class ExternalTeamServiceImpl implements ExternalTeamService {
 
   private static final Logger LOGGER = LogManager.getLogger(ExternalTeamServiceImpl.class);
   
+  @Autowired
+  private UserIdentityService userDetailsService;
+  
   @Override
   public List<TeamEntity> getExternalTeams(String url) {
     
     List<TeamEntity> flowTeams = new LinkedList<>();
     
     try {
-      final HttpHeaders headers = buildHeaders();
+      String userEmail = userDetailsService.getUserDetails().getEmail();
+      final HttpHeaders headers = buildHeaders(userEmail);
       final HttpEntity<String> request = new HttpEntity<>(headers);
 
       ResponseEntity<List<ExternalTeam>> response = restTemplate.exchange(url, HttpMethod.GET,
@@ -97,12 +102,15 @@ public class ExternalTeamServiceImpl implements ExternalTeamService {
     return flowTeams;
   }
 
-  private HttpHeaders buildHeaders() {
+  private HttpHeaders buildHeaders(String email) {
 
     final HttpHeaders headers = new HttpHeaders();
     headers.add("Accept", "application/json");
-    headers.add(AUTHORIZATION_HEADER, TOKEN_PREFIX + apiTokenService.getUserToken());
-
+    if (email != null) {
+      headers.add(AUTHORIZATION_HEADER, TOKEN_PREFIX + apiTokenService.createJWTToken(email));
+    } else {
+      headers.add(AUTHORIZATION_HEADER, TOKEN_PREFIX + apiTokenService.createJWTToken());
+    }
     headers.setContentType(MediaType.APPLICATION_JSON);
     return headers;
   }
