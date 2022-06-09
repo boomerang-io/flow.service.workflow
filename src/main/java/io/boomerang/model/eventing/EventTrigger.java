@@ -30,8 +30,6 @@ public class EventTrigger extends Event {
 
   private Map<String, String> properties;
 
-  public EventTrigger() {}
-
   public static Event fromCloudEvent(CloudEvent cloudEvent)
       throws InvalidPropertiesFormatException {
 
@@ -48,7 +46,7 @@ public class EventTrigger extends Event {
 
     if (eventType != EventType.TRIGGER) {
       throw new InvalidPropertiesFormatException(MessageFormat.format(
-          "Cloud event type must be \"{0}\" but is \"{0}\"!",
+          "Cloud event type must be \"{0}\" but is \"{1}\"!",
           EVENT_TYPE_PREFIX + EventType.TRIGGER.toString().toLowerCase(), cloudEvent.getType()));
     }
 

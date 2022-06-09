@@ -12,6 +12,8 @@ public class EventFactory {
 
   private static final String EVENT_TYPE_PREFIX = "io.boomerang.eventing.";
 
+  private EventFactory() {}
+
   public static Event buildFromCloudEvent(CloudEvent cloudEvent)
       throws InvalidPropertiesFormatException {
 

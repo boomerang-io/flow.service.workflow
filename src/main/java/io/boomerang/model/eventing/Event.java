@@ -22,9 +22,9 @@ public abstract class Event {
 
   private EventType type;
 
-  public Event() {}
+  protected Event() {}
 
-  public Event(String id, URI source, String subject, String token, Date date, EventType type) {
+  protected Event(String id, URI source, String subject, String token, Date date, EventType type) {
     this.id = id;
     this.source = source;
     this.subject = subject;

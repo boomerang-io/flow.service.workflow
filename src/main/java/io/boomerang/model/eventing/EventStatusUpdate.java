@@ -35,8 +35,7 @@ public class EventStatusUpdate extends Event {
 
   private List<TaskExecutionResponse> executedTasks;
 
-  public EventStatusUpdate() {}
-
+  @Override
   public CloudEvent toCloudEvent() throws IOException {
 
     JsonObject jsonData = new JsonObject();
@@ -63,10 +62,10 @@ public class EventStatusUpdate extends Event {
 
       executedTasks.stream().forEach(task -> {
         JsonObject jsonTask = new JsonObject();
-        jsonTask.addProperty("id", task.getId());
-        jsonTask.addProperty("name", task.getTaskName());
-        jsonTask.addProperty("type", task.getTaskType().toString());
-        jsonTask.addProperty("status", task.getFlowTaskStatus().toString());
+        jsonTask.addProperty("taskId", task.getId());
+        jsonTask.addProperty("taskName", task.getTaskName());
+        jsonTask.addProperty("taskType", task.getTaskType().toString());
+        jsonTask.addProperty("flowTaskStatus", task.getFlowTaskStatus().toString());
 
         // Set the error (if any)
         if (task.getError() != null) {

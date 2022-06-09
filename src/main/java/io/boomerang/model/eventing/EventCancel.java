@@ -12,8 +12,6 @@ public class EventCancel extends Event {
 
   private String workflowActivityId;
 
-  public EventCancel() {}
-
   public static Event fromCloudEvent(CloudEvent cloudEvent)
       throws InvalidPropertiesFormatException {
 
@@ -30,7 +28,7 @@ public class EventCancel extends Event {
 
     if (eventType != EventType.CANCEL) {
       throw new InvalidPropertiesFormatException(
-          MessageFormat.format("Cloud event type must be \"{0}\" but is \"{0}\"!",
+          MessageFormat.format("Cloud event type must be \"{0}\" but is \"{1}\"!",
               EVENT_TYPE_PREFIX + EventType.CANCEL.toString().toLowerCase(), cloudEvent.getType()));
     }
 

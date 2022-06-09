@@ -19,8 +19,6 @@ public class EventWFE extends Event {
 
   private TaskStatus status;
 
-  public EventWFE() {}
-
   public static Event fromCloudEvent(CloudEvent cloudEvent)
       throws InvalidPropertiesFormatException {
 
@@ -37,7 +35,7 @@ public class EventWFE extends Event {
 
     if (eventType != EventType.WFE) {
       throw new InvalidPropertiesFormatException(
-          MessageFormat.format("Cloud event type must be \"{0}\" but is \"{0}\"!",
+          MessageFormat.format("Cloud event type must be \"{0}\" but is \"{1}\"!",
               EVENT_TYPE_PREFIX + EventType.WFE.toString().toLowerCase(), cloudEvent.getType()));
     }
 
@@ -64,7 +62,7 @@ public class EventWFE extends Event {
     eventWFE.setTopic(subjectTokens[2]);
 
     // Get status
-    TaskStatus status = TaskStatus.completed;
+    TaskStatus status = null;
 
     try {
       String statusString = cloudEvent.getExtension(EXTENSION_ATTRIBUTE_STATUS).toString();
@@ -83,6 +81,7 @@ public class EventWFE extends Event {
           break;
       }
     } catch (Exception e) {
+      // Nothing to do here
     }
 
     eventWFE.setStatus(status);
