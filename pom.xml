@@ -53,7 +53,7 @@
 		<dependency>
 			<groupId>org.webjars</groupId>
 			<artifactId>swagger-ui</artifactId>
-			<version>3.48.0</version>
+			<version>4.10.3</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.commons</groupId>
