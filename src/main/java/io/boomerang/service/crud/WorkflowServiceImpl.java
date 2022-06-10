@@ -803,8 +803,16 @@ public class WorkflowServiceImpl implements WorkflowService {
       propertyManager.buildGlobalProperties(globalProperties);
 
       for (Map.Entry<String, String> globalProperty : globalProperties.entrySet()) {
-        parameters.add("global.params." + globalProperty.getKey());
-        parameters.add("params." + globalProperty.getKey());
+        if (!globalProperty.getKey().contains(".")) {
+          parameters.add("global.params." + globalProperty.getKey());
+          parameters.add("params." + globalProperty.getKey());
+        }
+
+        parameters.add("global.params['" + globalProperty.getKey() + "']");
+        parameters.add("params['" + globalProperty.getKey() + "']");
+
+        parameters.add("global.params[\"" + globalProperty.getKey() + "\"]");
+        parameters.add("params[\"" + globalProperty.getKey() + "\"]");
       }
     }
 
@@ -814,23 +822,47 @@ public class WorkflowServiceImpl implements WorkflowService {
       propertyManager.buildTeamProperties(teamProperties, workflow.getId());
 
       for (Map.Entry<String, String> teamProperty : teamProperties.entrySet()) {
-        parameters.add("team.params." + teamProperty.getKey());
-        parameters.add("params." + teamProperty.getKey());
+        if (!teamProperty.getKey().contains(".")) {
+          parameters.add("team.params." + teamProperty.getKey());
+          parameters.add("params." + teamProperty.getKey());
+        }
+
+        parameters.add("team.params['" + teamProperty.getKey() + "']");
+        parameters.add("params['" + teamProperty.getKey() + "']");
+
+        parameters.add("team.params[\"" + teamProperty.getKey() + "\"]");
+        parameters.add("params[\"" + teamProperty.getKey() + "\"]");
       }
     }
 
     Map<String, String> workflowProperties = new HashMap<>();
     propertyManager.buildWorkflowProperties(workflowProperties, null, workflow.getId());
     for (Map.Entry<String, String> workflowProperty : workflowProperties.entrySet()) {
-      parameters.add("workflow.params." + workflowProperty.getKey());
-      parameters.add("params." + workflowProperty.getKey());
+      if (!workflowProperty.getKey().contains(".")) {
+        parameters.add("workflow.params." + workflowProperty.getKey());
+        parameters.add("params." + workflowProperty.getKey());
+      }
+
+      parameters.add("workflow.params['" + workflowProperty.getKey() + "']");
+      parameters.add("params['" + workflowProperty.getKey() + "']");
+
+      parameters.add("workflow.params[\"" + workflowProperty.getKey() + "\"]");
+      parameters.add("params[\"" + workflowProperty.getKey() + "\"]");
     }
 
     Map<String, String> systemProperties = new HashMap<>();
     propertyManager.buildSystemProperties(null, null, workflow.getId(), systemProperties);
     for (Map.Entry<String, String> systemProperty : systemProperties.entrySet()) {
-      parameters.add("system.params." + systemProperty.getKey());
-      parameters.add("params." + systemProperty.getKey());
+      if (!systemProperty.getKey().contains(".")) {
+        parameters.add("system.params." + systemProperty.getKey());
+        parameters.add("params." + systemProperty.getKey());
+      }
+
+      parameters.add("system.params['" + systemProperty.getKey() + "']");
+      parameters.add("params['" + systemProperty.getKey() + "']");
+
+      parameters.add("system.params[\"" + systemProperty.getKey() + "\"]");
+      parameters.add("params[\"" + systemProperty.getKey() + "\"]");
     }
 
 

@@ -10,6 +10,13 @@
 			"required": false
 		},
 		{
+			"description": "test param",
+			"key": "my.param",
+			"label": "test param",
+			"type": "text",
+			"required": false
+		},
+		{
 			"required": false,
 			"placeholder": null,
 			"language": null,
