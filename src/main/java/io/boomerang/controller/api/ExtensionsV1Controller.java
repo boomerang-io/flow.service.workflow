@@ -41,7 +41,7 @@ public class ExtensionsV1Controller {
   ResponseEntity<?> receiveSlackCommand(HttpServletRequest request, @RequestHeader("x-slack-request-timestamp") String timestamp,
       @RequestHeader("x-slack-signature") String signature,
       @RequestParam MultiValueMap<String, String> slackEvent) throws JsonMappingException, JsonProcessingException {
-    LOGGER.debug(slackEvent);
+    LOGGER.info(slackEvent);
     CompletableFuture.supplyAsync(() -> slackExtension.createModal(slackEvent.get("trigger_id").get(0)));
     return ResponseEntity.ok().build();
   }
