@@ -1,7 +1,9 @@
 package io.boomerang.extensions;
 
+import java.io.UnsupportedEncodingException;
 import java.util.function.Supplier;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.http.entity.StringEntity;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,14 +63,14 @@ public class SlackExtensionImpl implements SlackExtension {
       
       try {
         final HttpHeaders headers = buildHeaders();
-        final HttpEntity<String> request = new HttpEntity<>(headers);
+        final HttpEntity<String> request = new HttpEntity<String>(requestPayload.toString(), headers);
 
         ResponseEntity<JsonNode> response = restTemplate.exchange("https://slack.com/api/views.open", HttpMethod.POST,
             request, JsonNode.class);
         JsonNode responsePayload = response.getBody(); 
         LOGGER.info(responsePayload);
       } catch (RestClientException e) {
-        LOGGER.error("Error retrievign teams");
+        LOGGER.error("Error communicating with Slack");
         LOGGER.error(ExceptionUtils.getStackTrace(e));
         return false;
       }
