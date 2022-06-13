@@ -17,11 +17,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import com.fasterxml.jackson.databind.JsonNode;
+import io.boomerang.mongo.service.FlowSettingsService;
 
 @Service
 public class SlackExtensionImpl implements SlackExtension {
 
   private static final Logger LOGGER = LogManager.getLogger();
+
+  @Autowired
+  private FlowSettingsService flowSettingsService;
 
   @Autowired
   @Qualifier("internalRestTemplate")
@@ -80,10 +84,13 @@ public class SlackExtensionImpl implements SlackExtension {
   }
 
   private HttpHeaders buildHeaders() {
+    
+    final String authToken = flowSettingsService
+        .getConfiguration("extensions", "slack.token").getValue();
 
     final HttpHeaders headers = new HttpHeaders();
     headers.add("Accept", "application/json");
-    headers.add("Authorization", "Bearer " + "xoxb-1165425521975-3658671086515-LCMAzzNFbpIKxjyO04joBIwO");
+    headers.add("Authorization", "Bearer " + authToken);
 
     headers.setContentType(MediaType.APPLICATION_JSON);
     return headers;
