@@ -1,22 +1,20 @@
 package io.boomerang.extensions;
 
-import java.util.List;
 import java.util.function.Supplier;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import com.fasterxml.jackson.databind.JsonNode;
-import io.boomerang.client.model.ExternalTeam;
 
 @Service
 public class SlackExtensionImpl implements SlackExtension {
@@ -65,7 +63,7 @@ public class SlackExtensionImpl implements SlackExtension {
         final HttpHeaders headers = buildHeaders();
         final HttpEntity<String> request = new HttpEntity<>(headers);
 
-        ResponseEntity<JsonNode> response = restTemplate.exchange(https://slack.com/api/views.open, HttpMethod.GET,
+        ResponseEntity<JsonNode> response = restTemplate.exchange("https://slack.com/api/views.open", HttpMethod.POST,
             request, JsonNode.class);
         JsonNode responsePayload = response.getBody(); 
         LOGGER.info(responsePayload);
