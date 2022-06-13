@@ -68,7 +68,7 @@ public class FlowAuthorizationFilter extends BasicAuthenticationFilter {
       } else if (req.getHeader(X_FORWARDED_EMAIL) != null) { 
         authentication = getGithubUserAuthentication(req);
       }
-      else if (req.getHeader(X_ACCESS_TOKEN) != null || req.getAttribute(TOKEN_URL_PARAM_NAME) != null) {
+      else if (req.getHeader(X_ACCESS_TOKEN) != null || req.getParameter(TOKEN_URL_PARAM_NAME) != null) {
         authentication = getTokenBasedAuthentication(req);
       }
 
