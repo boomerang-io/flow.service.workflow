@@ -208,7 +208,7 @@ public class TaskServiceImpl implements TaskService {
           createApprovalNotification(taskExecution, task, activity, workflow, ManualType.task);
           break;
         case eventwait:
-          createWaitForEventTask(taskExecution, activity, workflow);
+          createWaitForEventTask(taskExecution, activity);
           break;
         default:
           break;
@@ -390,23 +390,21 @@ public class TaskServiceImpl implements TaskService {
     endTask(response);
   }
 
-  private void createWaitForEventTask(TaskExecutionEntity taskExecution, ActivityEntity activity,
-      WorkflowEntity workflow) {
+  private void createWaitForEventTask(TaskExecutionEntity taskExecution, ActivityEntity activity) {
 
     LOGGER.debug("[{}] Creating wait for event task", taskExecution.getActivityId());
-
-    taskExecution.setFlowTaskStatus(TaskStatus.waiting);
-    taskActivityService.save(taskExecution);
-
-    activity.setStatus(TaskStatus.waiting);
-    activityService.saveWorkflowActivity(activity);
-    eventingService.publishActivityStatusEvent(activity);
 
     if (taskExecution.isPreApproved()) {
       InternalTaskResponse response = new InternalTaskResponse();
       response.setActivityId(taskExecution.getId());
       response.setStatus(TaskStatus.completed);
       endTask(response);
+    } else {
+      taskExecution.setFlowTaskStatus(TaskStatus.waiting);
+      taskActivityService.save(taskExecution);
+      activity.setStatus(TaskStatus.waiting);
+      activityService.saveWorkflowActivity(activity);
+      eventingService.publishActivityStatusEvent(activity);
     }
   }
 
