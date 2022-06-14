@@ -247,6 +247,11 @@
 			<artifactId>cron-utils</artifactId>
 			<version>9.1.6</version>
 		</dependency>
+		<dependency>
+	      <groupId>com.slack.api</groupId>
+	      <artifactId>slack-api-client</artifactId>
+	      <version>1.22.2</version>
+		</dependency>
 	</dependencies>
 
 	<build>
