@@ -64,7 +64,7 @@ public class SlackExtensionImpl implements SlackExtension {
 
         detailBlock = SectionBlock.builder().blockId("workflow_fields").text(MarkdownTextObject.builder().text("*Workflow Details*")
             .build()).fields(workflowFields).build();
-        modalViewBuilder.submit(ViewSubmit.builder().type("plain_text").text("Submit").build());
+        modalViewBuilder.submit(ViewSubmit.builder().type("plain_text").text("Run").build());
       } else {
         LOGGER.info("Unable to find Workflow with ID: " + workflowId);
         detailBlock = SectionBlock.builder().blockId("workflow_fields").text(MarkdownTextObject.builder().text(":slightly_frowning_face: Unfortunately we are unable to find a Workflow with the specified ID (" + workflowId + ")")
