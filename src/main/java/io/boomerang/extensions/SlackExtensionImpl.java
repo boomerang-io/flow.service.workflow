@@ -20,9 +20,6 @@ import com.slack.api.model.view.View.ViewBuilder;
 import com.slack.api.model.view.ViewClose;
 import com.slack.api.model.view.ViewSubmit;
 import com.slack.api.model.view.ViewTitle;
-import com.slack.api.scim.SCIMApiException;
-import com.slack.api.scim.request.UsersReadRequest;
-import com.slack.api.scim.response.UsersReadResponse;
 import io.boomerang.mongo.entity.WorkflowEntity;
 import io.boomerang.mongo.service.FlowSettingsService;
 import io.boomerang.mongo.service.FlowWorkflowService;
@@ -50,29 +47,35 @@ public class SlackExtensionImpl implements SlackExtension {
       ViewBuilder modalViewBuilder = View.builder().type("modal")
           .title(ViewTitle.builder().type("plain_text").text("Run Workflow").emoji(true).build())
           .callbackId("Workflow Run Modal");
-          
-      List<TextObject> workflowFields = new LinkedList<>();
       final WorkflowEntity workflowSummary = workflowRepository.getWorkflow(workflowId);
 
+      SectionBlock detailBlock;
       if (workflowSummary != null) {
         final String workflowName = workflowSummary.getName();
         LOGGER.info("Workflow Name: " + workflowName);
+        
+        List<TextObject> workflowFields = new LinkedList<>();
         workflowFields.add(MarkdownTextObject.builder()
-            .text("Workflow to be triggered;\\n - ID: " + workflowId + "\n - Name: " + workflowName)
+            .text("*  ID: *" + workflowId)
+            .build());
+        workflowFields.add(MarkdownTextObject.builder()
+            .text("*  Name: *" + workflowName)
             .build());
 
+        detailBlock = SectionBlock.builder().blockId("workflow_fields").text(MarkdownTextObject.builder().text("*Workflow Details*")
+            .build()).fields(workflowFields).build();
         modalViewBuilder.submit(ViewSubmit.builder().type("plain_text").text("Submit").build());
       } else {
         LOGGER.info("Unable to find Workflow with ID: " + workflowId);
-        workflowFields.add(MarkdownTextObject.builder()
-            .text(":slightly_frowning_face: Unfortunately we are unable to find a Workflow with the specified ID (" + workflowId + ")").build());
+        detailBlock = SectionBlock.builder().blockId("workflow_fields").text(MarkdownTextObject.builder().text(":slightly_frowning_face: Unfortunately we are unable to find a Workflow with the specified ID (" + workflowId + ")")
+            .build()).build();
       }
       modalViewBuilder.blocks(Blocks.asBlocks(
           SectionBlock.builder().blockId("workflow_title")
-              .text(MarkdownTextObject.builder().text("*Welcome* to a better way to automate.")
+              .text(MarkdownTextObject.builder().text("_Welcome to a better way to automate._")
                   .build())
               .build(),
-          SectionBlock.builder().blockId("workflow_fields").fields(workflowFields).build()))
+              detailBlock)          )
           .privateMetadata(workflowId)
           .close(ViewClose.builder().type("plain_text").text("Close").build());
       View modalView = modalViewBuilder.build();
