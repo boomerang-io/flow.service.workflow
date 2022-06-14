@@ -63,7 +63,7 @@ public class ExtensionsV1Controller {
       return ResponseEntity.ok().body(slackEvent.get("challenge"));
     }
     LOGGER.info(slackEvent);
-    CompletableFuture.supplyAsync(slackExtension.createInitialModal(slackEvent.get("trigger_id").get(0)));
+//    CompletableFuture.supplyAsync(slackExtension.createInitialModal(slackEvent.get("trigger_id").get(0)));
     return ResponseEntity.ok().build();
   }
 }
