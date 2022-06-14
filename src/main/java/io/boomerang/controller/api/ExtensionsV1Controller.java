@@ -54,10 +54,8 @@ public class ExtensionsV1Controller {
   @Operation(summary = "Receive Slack Interactivity")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
-  ResponseEntity<?> receiveSlackInteractivity(HttpServletRequest request, 
-      @RequestHeader("x-slack-request-timestamp") String timestamp,
-      @RequestHeader("x-slack-signature") String signature,
-      @RequestBody JsonNode slackEvent) throws JsonMappingException, JsonProcessingException {
+  ResponseEntity<?> receiveSlackInteractivity(HttpServletRequest request,
+      @RequestBody JsonNode slackEvent) {
     if (slackEvent.has("type")) {
       LOGGER.info("Interactive Payload Type: " + slackEvent.get("type"));
     }

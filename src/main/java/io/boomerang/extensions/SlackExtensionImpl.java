@@ -56,10 +56,10 @@ public class SlackExtensionImpl implements SlackExtension {
         
         List<TextObject> workflowFields = new LinkedList<>();
         workflowFields.add(MarkdownTextObject.builder()
-            .text("*  ID: *" + workflowId)
+            .text("- *ID:* " + workflowId)
             .build());
         workflowFields.add(MarkdownTextObject.builder()
-            .text("*  Name: *" + workflowName)
+            .text("- *Name:* " + workflowName)
             .build());
 
         detailBlock = SectionBlock.builder().blockId("workflow_fields").text(MarkdownTextObject.builder().text("*Workflow Details*")
@@ -72,7 +72,7 @@ public class SlackExtensionImpl implements SlackExtension {
       }
       modalViewBuilder.blocks(Blocks.asBlocks(
           SectionBlock.builder().blockId("workflow_title")
-              .text(MarkdownTextObject.builder().text("_Welcome to a better way to automate._")
+              .text(MarkdownTextObject.builder().text("_Welcome to the better way to automate with no-code workflow automation._")
                   .build())
               .build(),
               detailBlock)          )
