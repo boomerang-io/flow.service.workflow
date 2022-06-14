@@ -6,13 +6,10 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -21,7 +18,6 @@ import org.jgrapht.graph.DefaultEdge;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import io.boomerang.exceptions.InvalidWorkflowRuntimeException;
-import io.boomerang.exceptions.RunWorkflowException;
 import io.boomerang.model.Task;
 import io.boomerang.mongo.entity.ActivityEntity;
 import io.boomerang.mongo.entity.FlowTaskTemplateEntity;
@@ -183,14 +179,14 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
 
   private void createTaskPlan(List<Task> tasks, String activityId, final Task start, final Task end,
       final Graph<String, DefaultEdge> graph) {
-
+    //TODO what happens is start or end or both are null?
     final List<String> nodes =
         GraphProcessor.createOrderedTaskList(graph, start.getTaskId(), end.getTaskId());
     final List<Task> tasksToRun = new LinkedList<>();
     for (final String node : nodes) {
       final Task taskToAdd =
           tasks.stream().filter(tsk -> node.equals(tsk.getTaskId())).findAny().orElse(null);
-      tasksToRun.add(taskToAdd);
+      if (taskToAdd != null) tasksToRun.add(taskToAdd);
     }
 
     long order = 1;
