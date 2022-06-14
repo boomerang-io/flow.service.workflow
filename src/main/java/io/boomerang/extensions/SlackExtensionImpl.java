@@ -1,7 +1,7 @@
 package io.boomerang.extensions;
 
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Supplier;
 import org.apache.logging.log4j.LogManager;
@@ -19,9 +19,9 @@ import com.slack.api.model.view.View;
 import com.slack.api.model.view.ViewClose;
 import com.slack.api.model.view.ViewSubmit;
 import com.slack.api.model.view.ViewTitle;
-import io.boomerang.model.WorkflowSummary;
+import io.boomerang.mongo.entity.WorkflowEntity;
 import io.boomerang.mongo.service.FlowSettingsService;
-import io.boomerang.service.crud.WorkflowService;
+import io.boomerang.mongo.service.FlowWorkflowService;
 
 @Service
 public class SlackExtensionImpl implements SlackExtension {
@@ -32,7 +32,7 @@ public class SlackExtensionImpl implements SlackExtension {
   private FlowSettingsService flowSettingsService;
 
   @Autowired
-  private WorkflowService workflowService;
+  private FlowWorkflowService workflowRepository;
 
   public Supplier<Boolean> createInitialModal(String triggerId, String workflowId) {
     return () -> {
@@ -43,16 +43,18 @@ public class SlackExtensionImpl implements SlackExtension {
 
       Slack slack = Slack.getInstance();
 
-      List<TextObject> workflowFields = new ArrayList<>();
+      List<TextObject> workflowFields = new LinkedList<>();
 
-      final WorkflowSummary workflowSummary = workflowService.getWorkflow(workflowId);
+      final WorkflowEntity workflowSummary = workflowRepository.getWorkflow(workflowId);
 
       if (workflowSummary != null) {
-        final String workflowName = workflowService.getWorkflow(workflowId).getName();
+        final String workflowName = workflowSummary.getName();
+        LOGGER.info("Workflow Name: " + workflowName);
         workflowFields.add(MarkdownTextObject.builder()
             .text("Workflow to be triggered;\\n - ID: " + workflowId + "\n - Name: " + workflowName)
             .build());
       } else {
+        LOGGER.info("Unable to find Workflow with ID: " + workflowId);
         workflowFields.add(MarkdownTextObject.builder()
             .text("Unable to find Workflow with ID: " + workflowId).build());
       }
