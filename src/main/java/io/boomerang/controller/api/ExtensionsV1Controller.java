@@ -49,6 +49,23 @@ public class ExtensionsV1Controller {
     return ResponseEntity.ok().build();
   }
   
+  @PostMapping(value = "/slack/interactivity", consumes = {MediaType.APPLICATION_JSON_VALUE})
+  @AuthenticationScope(scopes = {TokenScope.global})
+  @Operation(summary = "Receive Slack Interactivity")
+  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
+      @ApiResponse(responseCode = "400", description = "Bad Request")})
+  ResponseEntity<?> receiveSlackInteractivity(HttpServletRequest request, 
+      @RequestHeader("x-slack-request-timestamp") String timestamp,
+      @RequestHeader("x-slack-signature") String signature,
+      @RequestBody JsonNode slackEvent) throws JsonMappingException, JsonProcessingException {
+    if (slackEvent.has("type")) {
+      LOGGER.info("Interactive Payload Type: " + slackEvent.get("type"));
+    }
+    LOGGER.info(slackEvent);
+//    CompletableFuture.supplyAsync(slackExtension.createInitialModal(slackEvent.get("trigger_id").get(0)));
+    return ResponseEntity.ok().build();
+  }
+  
   @PostMapping(value = "/slack/events", consumes = {MediaType.APPLICATION_JSON_VALUE})
   @AuthenticationScope(scopes = {TokenScope.global})
   @Operation(summary = "Receive Slack Events")
