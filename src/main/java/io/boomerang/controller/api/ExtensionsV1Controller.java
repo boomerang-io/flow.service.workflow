@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.boomerang.extensions.SlackExtension;
 import io.boomerang.mongo.model.TokenScope;
 import io.boomerang.security.interceptors.AuthenticationScope;
@@ -49,17 +50,21 @@ public class ExtensionsV1Controller {
     return ResponseEntity.ok().build();
   }
   
-  @PostMapping(value = "/slack/interactivity", consumes = {MediaType.APPLICATION_JSON_VALUE})
+  @PostMapping(value = "/slack/interactivity", consumes = {MediaType.APPLICATION_FORM_URLENCODED_VALUE})
   @AuthenticationScope(scopes = {TokenScope.global})
   @Operation(summary = "Receive Slack Interactivity")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
   ResponseEntity<?> receiveSlackInteractivity(HttpServletRequest request,
-      @RequestBody JsonNode slackEvent) {
-    if (slackEvent.has("type")) {
+      @RequestHeader("x-slack-request-timestamp") String timestamp,
+      @RequestHeader("x-slack-signature") String signature,
+      @RequestParam MultiValueMap<String, String> slackEvent) throws JsonMappingException, JsonProcessingException {
+    LOGGER.info(slackEvent);
+    ObjectMapper mapper = new ObjectMapper();
+    JsonNode payload = mapper.readTree(slackEvent.get("payload").get(0));
+    if (payload.has("type")) {
       LOGGER.info("Interactive Payload Type: " + slackEvent.get("type"));
     }
-    LOGGER.info(slackEvent);
 //    CompletableFuture.supplyAsync(slackExtension.createInitialModal(slackEvent.get("trigger_id").get(0)));
     return ResponseEntity.ok().build();
   }
