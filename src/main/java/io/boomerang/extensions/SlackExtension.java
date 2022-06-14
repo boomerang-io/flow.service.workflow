@@ -4,6 +4,6 @@ import java.util.function.Supplier;
 
 public interface SlackExtension {
 
-  Supplier<Boolean> createModal(String string);
+  Supplier<Boolean> createInitialModal(String triggerId, String workflowId);
   
 }
