@@ -23,14 +23,11 @@ public class SlackExtensionImpl implements SlackExtension {
 
   @Autowired
   private FlowSettingsService flowSettingsService;
-
-//  @Autowired
-//  @Qualifier("internalRestTemplate")
-//  private RestTemplate restTemplate;
   
   public Supplier<Boolean> createModal(String triggerId) {
     return () -> {
       LOGGER.info("Trigger ID:" + triggerId);
+      System.out.println("Trigger ID:" + triggerId);
       
       final String authToken = flowSettingsService
           .getConfiguration("extensions", "slack.token").getValue();
@@ -50,42 +47,11 @@ public class SlackExtensionImpl implements SlackExtension {
 
         LOGGER.info(viewResponse.toString());
       } catch (IOException | SlackApiException e) {
-        // TODO Auto-generated catch block
         e.printStackTrace();
         return false;
       }
-//      try {
-//        final HttpHeaders headers = buildHeaders();
-//        final HttpEntity<String> request = new HttpEntity<String>(requestPayload, headers);
-//        
-//        LOGGER.info(request.toString());
-//
-//        ResponseEntity<JsonNode> response = restTemplate.exchange("https://slack.com/api/views.open", HttpMethod.POST,
-//            request, JsonNode.class);
-//        JsonNode responsePayload = response.getBody(); 
-//        LOGGER.info(responsePayload);
-//      } catch (RestClientException e) {
-//        LOGGER.error("Error communicating with Slack");
-//        LOGGER.error(ExceptionUtils.getStackTrace(e));
-//        return false;
-//      }
       
       return true;
       };
   }
-
-//  private HttpHeaders buildHeaders() {
-//    
-//    final String authToken = flowSettingsService
-//        .getConfiguration("extensions", "slack.token").getValue();
-//    
-//    LOGGER.info("Slack Token:" + authToken);
-//
-//    final HttpHeaders headers = new HttpHeaders();
-//    headers.add("Accept", "application/json");
-//    headers.add("Authorization", "Bearer " + authToken);
-//
-//    headers.setContentType(MediaType.APPLICATION_JSON);
-//    return headers;
-//  }
 }
