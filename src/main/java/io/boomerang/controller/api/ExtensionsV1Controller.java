@@ -9,7 +9,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -46,7 +45,7 @@ public class ExtensionsV1Controller {
       @RequestHeader("x-slack-signature") String signature,
       @RequestParam MultiValueMap<String, String> slackEvent) throws JsonMappingException, JsonProcessingException {
     LOGGER.info(slackEvent);
-    CompletableFuture.supplyAsync(slackExtension.createInitialRunModal(slackEvent.get("trigger_id").get(0), slackEvent.get("user_id").get(0), slackEvent.get("text").get(0)));
+    CompletableFuture.supplyAsync(slackExtension.createRunModal(slackEvent.get("trigger_id").get(0), slackEvent.get("user_id").get(0), slackEvent.get("text").get(0)));
     return ResponseEntity.ok().build();
   }
   
@@ -63,27 +62,27 @@ public class ExtensionsV1Controller {
     ObjectMapper mapper = new ObjectMapper();
     JsonNode payload = mapper.readTree(slackEvent.get("payload").get(0));
     if (payload.has("type")) {
-      LOGGER.info("Interactive Payload Type: " + slackEvent.get("type"));
+      LOGGER.info("Interactive Payload Type: " + payload.get("type"));
+      CompletableFuture.supplyAsync(slackExtension.executeRunModal(payload));
     }
-//    CompletableFuture.supplyAsync(slackExtension.createInitialModal(slackEvent.get("trigger_id").get(0)));
     return ResponseEntity.ok().build();
   }
   
-  @PostMapping(value = "/slack/events", consumes = {MediaType.APPLICATION_JSON_VALUE})
-  @AuthenticationScope(scopes = {TokenScope.global})
-  @Operation(summary = "Receive Slack Events")
-  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
-      @ApiResponse(responseCode = "400", description = "Bad Request")})
-  ResponseEntity<?> receiveSlackEvent(HttpServletRequest request, 
-      @RequestHeader("x-slack-request-timestamp") String timestamp,
-      @RequestHeader("x-slack-signature") String signature,
-      @RequestBody JsonNode slackEvent) throws JsonMappingException, JsonProcessingException {
-    if (slackEvent.has("challenge")) {
-      LOGGER.info("Challenge: " + slackEvent.get("challenge"));
-      return ResponseEntity.ok().body(slackEvent.get("challenge"));
-    }
-    LOGGER.info(slackEvent);
-//    CompletableFuture.supplyAsync(slackExtension.createInitialModal(slackEvent.get("trigger_id").get(0)));
-    return ResponseEntity.ok().build();
-  }
+//  TODO: integrate with Slack events.
+//  @PostMapping(value = "/slack/events", consumes = {MediaType.APPLICATION_JSON_VALUE})
+//  @AuthenticationScope(scopes = {TokenScope.global})
+//  @Operation(summary = "Receive Slack Events")
+//  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
+//      @ApiResponse(responseCode = "400", description = "Bad Request")})
+//  ResponseEntity<?> receiveSlackEvent(HttpServletRequest request, 
+//      @RequestHeader("x-slack-request-timestamp") String timestamp,
+//      @RequestHeader("x-slack-signature") String signature,
+//      @RequestBody JsonNode slackEvent) throws JsonMappingException, JsonProcessingException {
+//    if (slackEvent.has("challenge")) {
+//      LOGGER.info("Challenge: " + slackEvent.get("challenge"));
+//      return ResponseEntity.ok().body(slackEvent.get("challenge"));
+//    }
+//    LOGGER.info(slackEvent);
+//    return ResponseEntity.ok().build();
+//  }
 }
