@@ -179,14 +179,17 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
 
   private void createTaskPlan(List<Task> tasks, String activityId, final Task start, final Task end,
       final Graph<String, DefaultEdge> graph) {
-    //TODO what happens is start or end or both are null?
+    if (start == null || end == null) {
+      throw new IllegalArgumentException("Either start or end task was null");
+    }
     final List<String> nodes =
         GraphProcessor.createOrderedTaskList(graph, start.getTaskId(), end.getTaskId());
     final List<Task> tasksToRun = new LinkedList<>();
     for (final String node : nodes) {
       final Task taskToAdd =
           tasks.stream().filter(tsk -> node.equals(tsk.getTaskId())).findAny().orElse(null);
-      if (taskToAdd != null) tasksToRun.add(taskToAdd);
+      if (taskToAdd != null)
+        tasksToRun.add(taskToAdd);
     }
 
     long order = 1;
