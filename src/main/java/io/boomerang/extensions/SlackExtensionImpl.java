@@ -1,6 +1,8 @@
 package io.boomerang.extensions;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -9,12 +11,15 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.slack.api.Slack;
 import com.slack.api.methods.SlackApiException;
 import com.slack.api.methods.request.users.UsersInfoRequest;
 import com.slack.api.methods.response.chat.ChatPostMessageResponse;
+import com.slack.api.methods.response.oauth.OAuthV2AccessResponse;
 import com.slack.api.methods.response.users.UsersInfoResponse;
 import com.slack.api.methods.response.views.ViewsOpenResponse;
 import com.slack.api.model.block.ActionsBlock;
@@ -257,5 +262,26 @@ public class SlackExtensionImpl implements SlackExtension {
         .build());
     blocks.add(ContextBlock.builder().elements(elementsList).build());
     return blocks;
+  }
+  
+  public ResponseEntity<?> handleAuth(String code) {
+    final String appId =
+        flowSettingsService.getConfiguration("extensions", "slack.appId").getValue();
+    final String clientId =
+        flowSettingsService.getConfiguration("extensions", "slack.clientId").getValue();
+    final String clientSecret =
+        flowSettingsService.getConfiguration("extensions", "slack.clientSecret").getValue();
+
+    Slack slack = Slack.getInstance();
+    try {
+      OAuthV2AccessResponse response = slack.methods().oauthV2Access(req -> req.clientId(clientId).clientSecret(clientSecret).code(code));
+      LOGGER.info("Team ID: " + response.getTeam().getId());
+      LOGGER.info("Access Token: " + response.getAccessToken());
+      return ResponseEntity.status(HttpStatus.FOUND).location(new URI("slack://app?team=" + response.getTeam().getId() + "&id=" + appId)).build();
+    } catch (IOException | SlackApiException | URISyntaxException e) {
+      LOGGER.error(e.toString());
+    }
+    
+    return ResponseEntity.ok().build();
   }
 }

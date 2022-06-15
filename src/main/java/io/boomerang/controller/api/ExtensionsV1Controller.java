@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -68,6 +69,18 @@ public class ExtensionsV1Controller {
       LOGGER.error("Unhandled Slack Interactivity Payload with no Type: " + payload.toPrettyString());
     }
     return ResponseEntity.ok().build();
+  }
+  
+  @GetMapping(value = "/slack/auth")
+  @AuthenticationScope(scopes = {TokenScope.global})
+  @Operation(summary = "Receive Slack Oauth2 request")
+  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
+      @ApiResponse(responseCode = "400", description = "Bad Request")})
+  ResponseEntity<?> receiveSlackAuth(HttpServletRequest request,
+      @RequestHeader("x-slack-request-timestamp") String timestamp,
+      @RequestHeader("x-slack-signature") String signature,
+      @RequestParam String code) throws JsonMappingException, JsonProcessingException {
+    return slackExtension.handleAuth(code);
   }
   
 //  TODO: integrate with Slack events.
