@@ -54,7 +54,7 @@ public class ExtensionsV1Controller {
   @Operation(summary = "Receive Slack Interactivity")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
-  ResponseEntity<?> receiveSlackInteractivity(HttpServletRequest request,
+  void receiveSlackInteractivity(HttpServletRequest request,
       @RequestHeader("x-slack-request-timestamp") String timestamp,
       @RequestHeader("x-slack-signature") String signature,
       @RequestParam MultiValueMap<String, String> slackEvent) throws JsonMappingException, JsonProcessingException {
@@ -66,7 +66,7 @@ public class ExtensionsV1Controller {
 //      CompletableFuture.supplyAsync(slackExtension.executeRunModal(payload));
       slackExtension.executeRunModal(payload);
     }
-    return ResponseEntity.ok().build();
+//    return ResponseEntity.ok().build();
   }
   
 //  TODO: integrate with Slack events.

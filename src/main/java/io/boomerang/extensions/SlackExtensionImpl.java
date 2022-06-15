@@ -52,6 +52,8 @@ public class SlackExtensionImpl implements SlackExtension {
 
   @Value("${flow.apps.flow.url}")
   private String flowAppsUrl;
+  
+  private static final String MODAL_TEXT_TAGLINE = "The better way to automate with no-code workflow automation.";
 
   public Supplier<Boolean> createRunModal(String triggerId, String userId, String workflowId) {
     return () -> {
@@ -68,7 +70,7 @@ public class SlackExtensionImpl implements SlackExtension {
       List<LayoutBlock> blocks = new LinkedList<>();
       SectionBlock titleBlock = SectionBlock.builder().blockId("workflow_title")
           .text(MarkdownTextObject.builder()
-              .text("_Welcome to the better way to automate with no-code workflow automation._")
+              .text("_" + MODAL_TEXT_TAGLINE + "_")
               .build())
           .build();
       blocks.add(titleBlock);
@@ -192,7 +194,7 @@ public class SlackExtensionImpl implements SlackExtension {
     List<LayoutBlock> topBlocks = new LinkedList<>();
     SectionBlock titleBlock = SectionBlock.builder().blockId("workflow_title")
         .text(MarkdownTextObject.builder()
-            .text("_Welcome to the better way to automate with no-code workflow automation._")
+            .text("_" + MODAL_TEXT_TAGLINE + "_")
             .build())
         .build();
     topBlocks.add(titleBlock);
