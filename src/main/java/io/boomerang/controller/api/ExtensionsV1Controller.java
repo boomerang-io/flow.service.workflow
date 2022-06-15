@@ -58,14 +58,14 @@ public class ExtensionsV1Controller {
       @RequestHeader("x-slack-request-timestamp") String timestamp,
       @RequestHeader("x-slack-signature") String signature,
       @RequestParam MultiValueMap<String, String> slackEvent) throws JsonMappingException, JsonProcessingException {
-    LOGGER.info(slackEvent);
     ObjectMapper mapper = new ObjectMapper();
     JsonNode payload = mapper.readTree(slackEvent.get("payload").get(0));
-    if (payload.has("type")) {
-      LOGGER.info("Interactive Payload Type: " + payload.get("type"));
+    if (payload.has("type") && "view_submission".equals(payload.get("type").asText())) {
       CompletableFuture.supplyAsync(slackExtension.executeRunModal(payload));
-//      slackExtension.executeRunModal(payload);
-//      return ResponseEntity.ok().body(slackExtension.executeRunModal(payload));
+    } else if (payload.has("type")) {
+      LOGGER.error("Unhandled Slack Interactivity Type: " + payload.get("type").asText());
+    } else {
+      LOGGER.error("Unhandled Slack Interactivity Payload with no Type: " + payload.toPrettyString());
     }
     return ResponseEntity.ok().build();
   }
