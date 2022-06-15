@@ -38,11 +38,13 @@ import com.slack.api.model.view.View.ViewBuilder;
 import com.slack.api.model.view.ViewClose;
 import com.slack.api.model.view.ViewSubmit;
 import com.slack.api.model.view.ViewTitle;
+import io.boomerang.controller.ExecutionController;
+import io.boomerang.exceptions.RunWorkflowException;
 import io.boomerang.model.FlowActivity;
 import io.boomerang.mongo.entity.WorkflowEntity;
 import io.boomerang.mongo.service.FlowSettingsService;
 import io.boomerang.mongo.service.FlowWorkflowService;
-import io.boomerang.service.ExecutionService;
+import io.boomerang.security.service.ApiTokenService;
 
 /*
  * Handles the Slack app slash command and interactivity interactions
@@ -65,7 +67,10 @@ public class SlackExtensionImpl implements SlackExtension {
   private FlowWorkflowService workflowRepository;
 
   @Autowired
-  private ExecutionService executionService;
+  private ExecutionController executionController;
+
+  @Autowired
+  private ApiTokenService apiTokenService;
 
   @Value("${flow.apps.flow.url}")
   private String flowAppsUrl;
@@ -176,53 +181,71 @@ public class SlackExtensionImpl implements SlackExtension {
   public Supplier<Boolean> executeRunModal(JsonNode jsonPayload) {
     return () -> {
       // public SlackResponseActionModel executeRunModal(JsonNode jsonPayload) {
+      Exception exception = null;
       final String userId = jsonPayload.get("user").get("id").asText();
       final String workflowId = jsonPayload.get("view").get("private_metadata").asText();
       final String authToken =
           flowSettingsService.getConfiguration("extensions", "slack.token").getValue();
-
+      
       Slack slack = Slack.getInstance();
-
       try {
-        UsersInfoResponse userInfo =
-            slack.methods(authToken).usersInfo(UsersInfoRequest.builder().user(userId).build());
+        UsersInfoResponse userInfo = slack.methods(authToken).usersInfo(UsersInfoRequest.builder().user(userId).build());
         LOGGER.debug("User Info: " + userInfo.toString());
-      } catch (IOException | SlackApiException e2) {
-        LOGGER.error(e2);
-        // TODO: return error modal/message
-      }
+        if (userInfo != null && userInfo.getUser() != null) {
+          // Trigger workflow Execution and impersonate Slack user
+          String userEmail = userInfo.getUser().getProfile().getEmail();
+          apiTokenService.storeUserToken(apiTokenService.createJWTToken(userEmail));
+          FlowActivity flowActivity = executionController.executeWorkflow(workflowId,
+              Optional.of("webhook"), Optional.empty());
 
-      // TODO check if user has rights to trigger workflow
-      FlowActivity flowActivity = executionService.executeWorkflow(workflowId,
-          Optional.of("webhook"), Optional.empty(), Optional.empty());
-
-      try {
-        ChatPostMessageResponse messageResponse = slack.methods(authToken)
-            .chatPostMessage(req -> req.channel(userId)
-                .blocks(activityBlocks(workflowId, flowActivity.getWorkflowName(),
-                    flowActivity.getShortDescription(), flowActivity.getId())));
-        LOGGER.debug(messageResponse.toString());
-      } catch (IOException | SlackApiException e) {
-        LOGGER.error(e.toString());
+            ChatPostMessageResponse messageResponse = slack.methods(authToken)
+                .chatPostMessage(req -> req.channel(userId)
+                    .blocks(activityBlocks(workflowId, flowActivity.getWorkflowName(),
+                        flowActivity.getShortDescription(), flowActivity.getId())));
+            LOGGER.debug(messageResponse.toString());
+          } else {
+            throw new RunWorkflowException("Unable to retrieve a matching User Profile to use when executing the Workflow.");
+          }
+      } catch (RunWorkflowException | IOException | SlackApiException e) {
+        LOGGER.error(e);
+        exception = e;
+      } 
+      
+      if (exception != null) {
+        try {
+          String message = exception.getMessage();
+          ChatPostMessageResponse messageResponse = slack.methods(authToken)
+              .chatPostMessage(req -> req.channel(userId)
+                  .blocks(activityErrorBlocks(message)));
+          LOGGER.debug(messageResponse.toString());
+        } catch (IOException | SlackApiException e2) {
+          LOGGER.error(e2);
+        }
         return false;
       }
-
-      // TODO: move into a future block interactivity method
-      // View updatedView = View.builder().type("modal")
-      // .title(ViewTitle.builder().type("plain_text").text("Run Workflow").emoji(true).build())
-      // .callbackId("workflow-run-modal").privateMetadata(workflowId).blocks(executeBlocks(workflowId,
-      // flowActivity.getWorkflowName(), flowActivity.getShortDescription(), flowActivity.getId()))
-      // .close(ViewClose.builder().type("plain_text").text("Close").build()).build();
-      // try {
-      // ViewsUpdateResponse viewResponse = slack.methods(authToken)
-      // .viewsUpdate(req -> req.viewId(rootViewId).view(updatedView));
-      // LOGGER.info(viewResponse.toString());
-      // } catch (IOException | SlackApiException e) {
-      // LOGGER.error(e.toString());
-      // return false;
-      // }
+      
       return true;
     };
+  }
+  
+  /*
+   * Creates the Blocks that are used with returning an error to the User
+   */
+  private List<LayoutBlock> activityErrorBlocks(String message) {
+    List<LayoutBlock> blocks = new LinkedList<>();
+    blocks.add(HeaderBlock.builder()
+        .text(PlainTextObject.builder().text("Workflow Activity").build()).build());
+    blocks.add(SectionBlock.builder().blockId("workflow_title")
+        .text(PlainTextObject.builder()
+            .text(":slightly_frowning_face: " + message).build())
+        .build());
+    blocks.add(DividerBlock.builder().build());
+    List<ContextBlockElement> elementsList = new LinkedList<>();
+    elementsList.add(MarkdownTextObject.builder().text(
+        ":bulb: This integration is in _alpha_ and currently only works with Workflows that do not require parameters to be entered.")
+        .build());
+    blocks.add(ContextBlock.builder().elements(elementsList).build());
+    return blocks;
   }
 
   /*
@@ -284,4 +307,37 @@ public class SlackExtensionImpl implements SlackExtension {
     
     return ResponseEntity.ok().build();
   }
+  
+  /*
+   * Scaffold for a future Interactivity Method
+   * 
+   * <h4>Specifications</h4>
+   * <ul>
+   * <li><a href=""></a></li>
+   * </ul>
+   * 
+   * @param jsonPayload     the mapped payload from the interactivity endpoint
+   * @return Supplier       To be used by the CompletableFuture
+   */
+//  public Supplier<Boolean> executeRunModal(JsonNode jsonPayload) {
+//    return () -> {
+      // public SlackResponseActionModel executeRunModal(JsonNode jsonPayload) {
+
+      // 
+      // View updatedView = View.builder().type("modal")
+      // .title(ViewTitle.builder().type("plain_text").text("Run Workflow").emoji(true).build())
+      // .callbackId("workflow-run-modal").privateMetadata(workflowId).blocks(executeBlocks(workflowId,
+      // flowActivity.getWorkflowName(), flowActivity.getShortDescription(), flowActivity.getId()))
+      // .close(ViewClose.builder().type("plain_text").text("Close").build()).build();
+      // try {
+      // ViewsUpdateResponse viewResponse = slack.methods(authToken)
+      // .viewsUpdate(req -> req.viewId(rootViewId).view(updatedView));
+      // LOGGER.info(viewResponse.toString());
+      // } catch (IOException | SlackApiException e) {
+      // LOGGER.error(e.toString());
+      // return false;
+      // }
+//      return true;
+//    };
+//  }
 }
