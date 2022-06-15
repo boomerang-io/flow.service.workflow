@@ -134,7 +134,7 @@ public class SlackExtensionImpl implements SlackExtension {
       LOGGER.info("Trigger ID: " + triggerId);
       final String workflowId = jsonPayload.get("view").get("private_metadata").asText();
       LOGGER.info("Workflow ID: " + workflowId);
-      final String rootViewId = jsonPayload.get("root_view_id").asText();
+      final String rootViewId = jsonPayload.get("view").get("root_view_id").asText();
       LOGGER.info("Root View ID: " + rootViewId);
       final String authToken =
           flowSettingsService.getConfiguration("extensions", "slack.token").getValue();
