@@ -30,8 +30,10 @@ import com.slack.api.model.view.View.ViewBuilder;
 import com.slack.api.model.view.ViewClose;
 import com.slack.api.model.view.ViewSubmit;
 import com.slack.api.model.view.ViewTitle;
+import io.boomerang.controller.ExecutionController;
 import io.boomerang.model.FlowActivity;
 import io.boomerang.mongo.entity.WorkflowEntity;
+import io.boomerang.mongo.model.FlowTriggerEnum;
 import io.boomerang.mongo.service.FlowSettingsService;
 import io.boomerang.mongo.service.FlowWorkflowService;
 import io.boomerang.service.ExecutionService;
@@ -46,9 +48,12 @@ public class SlackExtensionImpl implements SlackExtension {
 
   @Autowired
   private FlowWorkflowService workflowRepository;
-
+  
   @Autowired
-  private ExecutionService executionService;
+  private ExecutionController executionController;
+//
+//  @Autowired
+//  private ExecutionService executionService;
 
   @Value("${flow.apps.flow.url}")
   private String flowAppsUrl;
@@ -151,8 +156,10 @@ public class SlackExtensionImpl implements SlackExtension {
       }
 
       // TODO check if user has rights to trigger workflow
-      FlowActivity flowActivity = executionService.executeWorkflow(workflowId, Optional.empty(),
-          Optional.empty(), Optional.empty());
+//      FlowActivity flowActivity = executionService.executeWorkflow(workflowId, Optional.empty(),
+//          Optional.empty(), Optional.empty());
+
+      FlowActivity flowActivity = executionController.executeWorkflow(workflowId, Optional.empty(), Optional.empty());
       LOGGER.info(flowActivity.toString());
 
       List<LayoutBlock> blocks = new LinkedList<>();
