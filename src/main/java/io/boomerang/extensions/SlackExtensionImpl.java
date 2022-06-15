@@ -156,8 +156,6 @@ public class SlackExtensionImpl implements SlackExtension {
           Optional.empty(), Optional.empty());
 
       List<LayoutBlock> blocks = new LinkedList<>();
-
-      LOGGER.info("Workflow Name: " + flowActivity.getWorkflowName());
       HeaderBlock headerBlock = HeaderBlock.builder()
           .text(PlainTextObject.builder().text("Workflow Details").build()).build();
       blocks.add(headerBlock);
@@ -178,7 +176,7 @@ public class SlackExtensionImpl implements SlackExtension {
       blocks.add(activityDetailBlock);
       
       SlackResponseActionModel response = new SlackResponseActionModel("update", updateView(workflowId, blocks));
-      
+      LOGGER.info(response.toString());
       return response;
 
 //      try {
