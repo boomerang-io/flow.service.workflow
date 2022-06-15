@@ -64,7 +64,7 @@ public class ExtensionsV1Controller {
     if (payload.has("type")) {
       LOGGER.info("Interactive Payload Type: " + payload.get("type"));
 //      CompletableFuture.supplyAsync(slackExtension.executeRunModal(payload));
-      slackExtension.executeRunModal(payload);
+//      slackExtension.executeRunModal(payload);
       return ResponseEntity.ok().body(slackExtension.executeRunModal(payload));
     }
     return ResponseEntity.ok().build();
