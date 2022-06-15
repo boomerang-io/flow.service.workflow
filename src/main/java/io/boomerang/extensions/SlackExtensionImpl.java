@@ -16,7 +16,6 @@ import com.slack.api.methods.SlackApiException;
 import com.slack.api.methods.request.users.UsersInfoRequest;
 import com.slack.api.methods.response.users.UsersInfoResponse;
 import com.slack.api.methods.response.views.ViewsOpenResponse;
-import com.slack.api.methods.response.views.ViewsUpdateResponse;
 import com.slack.api.model.block.ContextBlock;
 import com.slack.api.model.block.ContextBlockElement;
 import com.slack.api.model.block.DividerBlock;
@@ -129,7 +128,7 @@ public class SlackExtensionImpl implements SlackExtension {
 
 //  public Supplier<Boolean> executeRunModal(JsonNode jsonPayload) {
 //    return () -> {
-  public Boolean executeRunModal(JsonNode jsonPayload) {
+  public SlackResponseActionModel executeRunModal(JsonNode jsonPayload) {
       final String userId = jsonPayload.get("user").get("id").asText();
       LOGGER.info("User ID: " + userId);
       final String triggerId = jsonPayload.get("trigger_id").asText();
@@ -177,16 +176,20 @@ public class SlackExtensionImpl implements SlackExtension {
               + "/execution/" + flowActivity.getId() + "|View your workflow activity>.").build())
           .build();
       blocks.add(activityDetailBlock);
+      
+      SlackResponseActionModel response = new SlackResponseActionModel("update", updateView(workflowId, blocks));
+      
+      return response;
 
-      try {
-        ViewsUpdateResponse viewResponse = slack.methods(authToken)
-            .viewsUpdate(req -> req.viewId(rootViewId).view(updateView(workflowId, blocks)));
-        LOGGER.info(viewResponse.toString());
-      } catch (IOException | SlackApiException e) {
-        LOGGER.error(e.toString());
-        return false;
-      }
-      return true;
+//      try {
+//        ViewsUpdateResponse viewResponse = slack.methods(authToken)
+//            .viewsUpdate(req -> req.viewId(rootViewId).view(updateView(workflowId, blocks)));
+//        LOGGER.info(viewResponse.toString());
+//      } catch (IOException | SlackApiException e) {
+//        LOGGER.error(e.toString());
+//        return false;
+//      }
+//      return true;
 //    };
   }
 

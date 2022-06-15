@@ -7,6 +7,6 @@ public interface SlackExtension {
 
   Supplier<Boolean> createRunModal(String triggerId, String userId, String workflowId);
 
-  Boolean executeRunModal(JsonNode payload);
+  SlackResponseActionModel executeRunModal(JsonNode payload);
   
 }
