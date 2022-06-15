@@ -125,8 +125,9 @@ public class SlackExtensionImpl implements SlackExtension {
     };
   }
 
-  public Supplier<Boolean> executeRunModal(JsonNode jsonPayload) {
-    return () -> {
+//  public Supplier<Boolean> executeRunModal(JsonNode jsonPayload) {
+//    return () -> {
+  public Boolean executeRunModal(JsonNode jsonPayload) {
       final String userId = jsonPayload.get("user").get("id").asText();
       LOGGER.info("User ID: " + userId);
       final String triggerId = jsonPayload.get("trigger_id").asText();
@@ -185,7 +186,7 @@ public class SlackExtensionImpl implements SlackExtension {
         return false;
       }
       return true;
-    };
+//    };
   }
 
   private View updateView(String workflowId, List<LayoutBlock> middleBlocks) {
