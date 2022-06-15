@@ -63,9 +63,9 @@ public class ExtensionsV1Controller {
     JsonNode payload = mapper.readTree(slackEvent.get("payload").get(0));
     if (payload.has("type")) {
       LOGGER.info("Interactive Payload Type: " + payload.get("type"));
-//      CompletableFuture.supplyAsync(slackExtension.executeRunModal(payload));
+      CompletableFuture.supplyAsync(slackExtension.executeRunModal(payload));
 //      slackExtension.executeRunModal(payload);
-      return ResponseEntity.ok().body(slackExtension.executeRunModal(payload));
+//      return ResponseEntity.ok().body(slackExtension.executeRunModal(payload));
     }
     return ResponseEntity.ok().build();
   }

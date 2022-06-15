@@ -14,8 +14,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.slack.api.Slack;
 import com.slack.api.methods.SlackApiException;
 import com.slack.api.methods.request.users.UsersInfoRequest;
+import com.slack.api.methods.response.chat.ChatPostMessageResponse;
 import com.slack.api.methods.response.users.UsersInfoResponse;
 import com.slack.api.methods.response.views.ViewsOpenResponse;
+import com.slack.api.model.block.ActionsBlock;
 import com.slack.api.model.block.ContextBlock;
 import com.slack.api.model.block.ContextBlockElement;
 import com.slack.api.model.block.DividerBlock;
@@ -24,6 +26,8 @@ import com.slack.api.model.block.LayoutBlock;
 import com.slack.api.model.block.SectionBlock;
 import com.slack.api.model.block.composition.MarkdownTextObject;
 import com.slack.api.model.block.composition.PlainTextObject;
+import com.slack.api.model.block.element.BlockElement;
+import com.slack.api.model.block.element.ButtonElement;
 import com.slack.api.model.view.View;
 import com.slack.api.model.view.View.ViewBuilder;
 import com.slack.api.model.view.ViewClose;
@@ -80,6 +84,14 @@ public class SlackExtensionImpl implements SlackExtension {
         HeaderBlock headerBlock = HeaderBlock.builder()
             .text(PlainTextObject.builder().text("Workflow Details").build()).build();
         blocks.add(headerBlock);
+        SectionBlock instructionsBlock =
+            SectionBlock.builder()
+                .text(
+                    MarkdownTextObject.builder()
+                        .text("Confirm the following details and click 'Run It' to trigger the workflow. A message will be sent to you with the activity details.")
+                        .build())
+                .build();
+        blocks.add(instructionsBlock);
         SectionBlock detailBlock =
             SectionBlock.builder()
                 .text(
@@ -126,9 +138,9 @@ public class SlackExtensionImpl implements SlackExtension {
     };
   }
 
-//  public Supplier<Boolean> executeRunModal(JsonNode jsonPayload) {
-//    return () -> {
-  public SlackResponseActionModel executeRunModal(JsonNode jsonPayload) {
+  public Supplier<Boolean> executeRunModal(JsonNode jsonPayload) {
+    return () -> {
+//  public SlackResponseActionModel executeRunModal(JsonNode jsonPayload) {
       final String userId = jsonPayload.get("user").get("id").asText();
       LOGGER.info("User ID: " + userId);
       final String triggerId = jsonPayload.get("trigger_id").asText();
@@ -148,37 +160,29 @@ public class SlackExtensionImpl implements SlackExtension {
         LOGGER.info("User Info: " + userInfo.toString());
       } catch (IOException | SlackApiException e2) {
         LOGGER.error(e2);
-        // TODO: return error modal
+        // TODO: return error modal/message
       }
 
       // TODO check if user has rights to trigger workflow
       FlowActivity flowActivity = executionService.executeWorkflow(workflowId, Optional.of("webhook"),
           Optional.empty(), Optional.empty());
-
-      List<LayoutBlock> blocks = new LinkedList<>();
-      HeaderBlock headerBlock = HeaderBlock.builder()
-          .text(PlainTextObject.builder().text("Workflow Details").build()).build();
-      blocks.add(headerBlock);
-      SectionBlock detailBlock = SectionBlock.builder()
-          .text(MarkdownTextObject.builder()
-              .text("*ID:* " + workflowId + "\n*Name:* " + flowActivity.getWorkflowName()
-                  + "\n*Summary:* " + flowActivity.getShortDescription())
-              .build())
-          .build();
-      blocks.add(detailBlock);
-      HeaderBlock activityHeaderBlock = HeaderBlock.builder()
-          .text(PlainTextObject.builder().text("Workflow Activity").build()).build();
-      blocks.add(activityHeaderBlock);
-      SectionBlock activityDetailBlock = SectionBlock.builder()
-          .text(MarkdownTextObject.builder().text("<" + flowAppsUrl + "/activity/" + workflowId
-              + "/execution/" + flowActivity.getId() + "|View your workflow activity>.").build())
-          .build();
-      blocks.add(activityDetailBlock);
+     
+      try {
+        ChatPostMessageResponse messageResponse = slack.methods(authToken).chatPostMessage(req -> req.channel(userId).blocks(executeBlocks(workflowId, flowActivity.getWorkflowName(), flowActivity.getShortDescription(), flowActivity.getId())));
+        LOGGER.info(messageResponse.toString());
+      } catch (IOException | SlackApiException e) {
+        LOGGER.error(e.toString());
+        return false;
+      }
       
-      SlackResponseActionModel response = new SlackResponseActionModel("update", updateView(workflowId, blocks));
-      LOGGER.info(response.toString());
-      return response;
-
+//      View.builder().type("modal")
+//      .title(ViewTitle.builder().type("plain_text").text("Run Workflow").emoji(true).build())
+//      .callbackId("workflow-run-modal").privateMetadata(workflowId).blocks(executeBlocks(workflowId, flowActivity.getWorkflowName(), flowActivity.getShortDescription(), flowActivity.getId()))
+//      .close(ViewClose.builder().type("plain_text").text("Close").build()).build();
+      
+//    SlackResponseActionModel responseAction = new SlackResponseActionModel("update", updateView(workflowId, blocks));
+//    LOGGER.info(responseAction.toString());
+//    return responseAction;
 //      try {
 //        ViewsUpdateResponse viewResponse = slack.methods(authToken)
 //            .viewsUpdate(req -> req.viewId(rootViewId).view(updateView(workflowId, blocks)));
@@ -187,33 +191,46 @@ public class SlackExtensionImpl implements SlackExtension {
 //        LOGGER.error(e.toString());
 //        return false;
 //      }
-//      return true;
-//    };
+      return true;
+    };
   }
-
-  private View updateView(String workflowId, List<LayoutBlock> middleBlocks) {
-    List<LayoutBlock> topBlocks = new LinkedList<>();
-    SectionBlock titleBlock = SectionBlock.builder().blockId("workflow_title")
-        .text(MarkdownTextObject.builder()
-            .text("_" + MODAL_TEXT_TAGLINE + "_")
+  
+  private List<LayoutBlock> executeBlocks(String workflowId, String workflowName, String workflowSummary, String activityId) {
+    List<LayoutBlock> blocks = new LinkedList<>();
+    blocks.add(HeaderBlock.builder()
+        .text(PlainTextObject.builder().text("Workflow Activity").build()).build());
+    blocks.add(SectionBlock.builder().blockId("workflow_title")
+        .text(PlainTextObject.builder()
+            .text("You requested a workflow to be run with the following details.")
             .build())
-        .build();
-    topBlocks.add(titleBlock);
-    List<LayoutBlock> bottomBlocks = new LinkedList<>();
-    DividerBlock dividerBlock = DividerBlock.builder().build();
-    bottomBlocks.add(dividerBlock);
+        .build());
+    blocks.add(SectionBlock.builder()
+          .text(MarkdownTextObject.builder()
+              .text("*ID:* " + workflowId + "\n*Name:* " + workflowName
+                  + "\n*Summary:* " + workflowSummary)
+              .build())
+          .build());
+// Link instead of buttons
+//    blocks.add(SectionBlock.builder()
+//        .text(MarkdownTextObject.builder().text("<" + flowAppsUrl + "/activity/" + workflowId
+//            + "/execution/" + activityId + "|View your workflow activity>.").build())
+//        .build());
+    List<BlockElement> buttonsList = new LinkedList<>();
+    buttonsList.add(ButtonElement.builder().text(PlainTextObject.builder()
+            .text(":dart: View Activity")
+            .emoji(true)
+            .build())
+        .url(flowAppsUrl + "/activity/" + workflowId
+              + "/execution/" + activityId)
+        .build());
+    //TODO: add additional actions such as documentation.
+    blocks.add(ActionsBlock.builder().elements(buttonsList).build());
+    blocks.add(DividerBlock.builder().build());
     List<ContextBlockElement> elementsList = new LinkedList<>();
     elementsList.add(MarkdownTextObject.builder().text(
         ":bulb: This integration is in _alpha_ and currently only works with Workflows that do not require parameters to be entered.")
         .build());
-    ContextBlock contextBlock = ContextBlock.builder().elements(elementsList).build();
-    bottomBlocks.add(contextBlock);
-    topBlocks.addAll(middleBlocks);
-    topBlocks.addAll(bottomBlocks);
-    return View.builder().type("modal")
-        .title(ViewTitle.builder().type("plain_text").text("Run Workflow").emoji(true).build())
-        .callbackId("workflow-run-modal").privateMetadata(workflowId).blocks(topBlocks)
-        .close(ViewClose.builder().type("plain_text").text("Close").build()).build();
-
+    blocks.add(ContextBlock.builder().elements(elementsList).build());
+    return blocks;
   }
 }
