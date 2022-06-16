@@ -348,7 +348,7 @@ public class SlackExtensionImpl implements SlackExtension {
         mapper.convertValue(authResponse, new TypeReference<Map<String, Object>>() {});
     KeyValuePair teamIdLabel = new KeyValuePair("teamId", authResponse.getTeam().getId());
     List<ExtensionEntity> authsList = extensionsRepository.findByType(EXTENSION_TYPE).stream()
-        .filter(e -> e.getLabels().contains(teamIdLabel)).collect(Collectors.toList());
+        .filter(e -> e.getLabels().indexOf(teamIdLabel) != -1).collect(Collectors.toList());
     if (!authsList.isEmpty()) {
       LOGGER.debug("Overriding existing Slack Team Auth");
       authExtension = authsList.get(0);
