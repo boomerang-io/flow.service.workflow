@@ -383,14 +383,12 @@ public class SlackExtensionImpl implements SlackExtension {
     }
 
     KeyValuePair teamIdLabel = new KeyValuePair("teamId", teamId);
-    List<ExtensionEntity> authsList = extensionsRepository.findByType(EXTENSION_TYPE);
-    if (!authsList.isEmpty()) {
-      List<ExtensionEntity> teamAuthsList = authsList.stream().filter(e -> e.getLabels().contains(teamIdLabel)).collect(Collectors.toList()); 
-      if (!teamAuthsList.isEmpty()) {
-        Map<String, Object> teamAuthToken = teamAuthsList.get(0).getData(); //.getData().get("access_token").asText();
+    Optional<ExtensionEntity> origAuthExtension = extensionsRepository.findByType(EXTENSION_TYPE).stream()
+        .filter(e -> e.getLabels().indexOf(teamIdLabel) != -1).findFirst();
+    if (origAuthExtension.isPresent()) {
+        String teamAuthToken = origAuthExtension.get().getData().get("accessToken").toString();
         LOGGER.debug(teamAuthToken);
-        return defaultAuthToken;
-      }
+        return teamAuthToken;
     }
     return defaultAuthToken;
   }
