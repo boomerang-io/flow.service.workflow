@@ -54,6 +54,7 @@ import io.boomerang.mongo.repository.ExtensionRepository;
 import io.boomerang.mongo.service.FlowSettingsService;
 import io.boomerang.mongo.service.FlowWorkflowService;
 import io.boomerang.security.service.ApiTokenService;
+import io.boomerang.service.FilterService;
 
 /*
  * Handles the Slack app slash command and interactivity interactions
@@ -83,6 +84,9 @@ public class SlackExtensionImpl implements SlackExtension {
 
   @Autowired
   private ExtensionRepository extensionsRepository;
+
+  @Autowired
+  private FilterService filterService;
 
   @Value("${flow.apps.flow.url}")
   private String flowAppsUrl;
@@ -119,6 +123,7 @@ public class SlackExtensionImpl implements SlackExtension {
           .callbackId("workflow-run-modal").privateMetadata(workflowId)
           .close(ViewClose.builder().type("plain_text").text("Close").build());
 
+      LOGGER.debug(filterService.getFilteredWorkflowIds(Optional.empty(), Optional.empty(), Optional.empty()).toString());
       final WorkflowEntity workflowSummary = workflowRepository.getWorkflow(workflowId);
       Boolean notFound = false;
       if (workflowSummary != null) {
@@ -170,7 +175,7 @@ public class SlackExtensionImpl implements SlackExtension {
       blocks.add(SectionBlock.builder().blockId("workflow_fields")
           .text(MarkdownTextObject.builder().text(
               ":slightly_frowning_face: Unfortunately we are unable to find a Workflow with the specified ID ("
-                  + workflowId + ")")
+                  + workflowId + "), or you do not have access.")
               .build())
           .build());
     }
