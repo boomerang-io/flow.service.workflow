@@ -311,19 +311,19 @@ public class SlackExtensionImpl implements SlackExtension {
 
     Slack slack = Slack.getInstance();
     try {
-      OAuthV2AccessResponse response = slack.methods().oauthV2Access(req -> req.clientId(clientId).clientSecret(clientSecret).code(code));
-      LOGGER.debug("Auth Response: " + response.toString());
-      if (response.isOk()) {
-        ExtensionEntity authResponse = new ExtensionEntity();
+      OAuthV2AccessResponse authResponse = slack.methods().oauthV2Access(req -> req.clientId(clientId).clientSecret(clientSecret).code(code));
+      LOGGER.debug("Auth Response: " + authResponse.toString());
+      if (authResponse.isOk()) {
+        ExtensionEntity authExtension = new ExtensionEntity();
         ObjectMapper mapper = new ObjectMapper();
         JsonNode payload = mapper.valueToTree(authResponse);
-        authResponse.setType(EXTENSION_TYPE);
-        authResponse.setData(payload);
-        extensionsRepository.save(authResponse);
-        LOGGER.debug(authResponse.toString());
+        authExtension.setType(EXTENSION_TYPE);
+        authExtension.setData(payload);
+        extensionsRepository.save(authExtension);
+        LOGGER.debug(authExtension.toString());
       }
       //TODO: return different response if not ok and redirect somewhere else.
-      return ResponseEntity.status(HttpStatus.FOUND).location(new URI("slack://app?team=" + response.getTeam().getId() + "&id=" + appId)).build();
+      return ResponseEntity.status(HttpStatus.FOUND).location(new URI("slack://app?team=" + authResponse.getTeam().getId() + "&id=" + appId)).build();
     } catch (IOException | SlackApiException | URISyntaxException e) {
       LOGGER.error(e.toString());
     }
