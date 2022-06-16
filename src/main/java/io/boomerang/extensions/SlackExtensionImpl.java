@@ -123,7 +123,6 @@ public class SlackExtensionImpl implements SlackExtension {
           .callbackId("workflow-run-modal").privateMetadata(workflowId)
           .close(ViewClose.builder().type("plain_text").text("Close").build());
 
-      LOGGER.debug(filterService.getFilteredWorkflowIds(Optional.empty(), Optional.empty(), Optional.empty()).toString());
       final WorkflowEntity workflowSummary = workflowRepository.getWorkflow(workflowId);
       Boolean notFound = false;
       if (workflowSummary != null) {
@@ -220,6 +219,7 @@ public class SlackExtensionImpl implements SlackExtension {
           LOGGER.debug("New Flow User Token: " + flowUserToken);
           apiTokenService.storeUserToken(flowUserToken);
           LOGGER.debug("Stored Token");
+          LOGGER.debug(filterService.getFilteredWorkflowIds(Optional.empty(), Optional.empty(), Optional.empty()).toString());
           FlowActivity flowActivity = executionController.executeWorkflow(workflowId,
               Optional.empty(), Optional.empty());
           LOGGER.debug(flowActivity.toString());
@@ -352,11 +352,12 @@ public class SlackExtensionImpl implements SlackExtension {
     Map<String, Object> payload =
         mapper.convertValue(authResponse, new TypeReference<Map<String, Object>>() {});
     KeyValuePair teamIdLabel = new KeyValuePair("teamId", authResponse.getTeam().getId());
-    List<ExtensionEntity> authsList = extensionsRepository.findByType(EXTENSION_TYPE).stream()
-        .filter(e -> e.getLabels().indexOf(teamIdLabel) != -1).collect(Collectors.toList());
-    if (!authsList.isEmpty()) {
+    
+    Optional<ExtensionEntity> origAuthExtension = extensionsRepository.findByType(EXTENSION_TYPE).stream()
+        .filter(e -> e.getLabels().indexOf(teamIdLabel) != -1).findFirst();
+    if (origAuthExtension.isPresent()) {
       LOGGER.debug("Overriding existing Slack Team Auth");
-      authExtension = authsList.get(0);
+      authExtension = origAuthExtension.get();
       authExtension.setData(payload);
     } else {
       LOGGER.debug("Saving new Slack Team Auth");
