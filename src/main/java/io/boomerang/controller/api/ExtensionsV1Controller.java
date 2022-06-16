@@ -45,7 +45,7 @@ public class ExtensionsV1Controller {
       @RequestHeader("x-slack-request-timestamp") String timestamp,
       @RequestHeader("x-slack-signature") String signature,
       @RequestParam MultiValueMap<String, String> slackEvent) throws JsonMappingException, JsonProcessingException {
-    LOGGER.info(slackEvent);
+    LOGGER.debug(slackEvent);
     CompletableFuture.supplyAsync(slackExtension.createRunModal(slackEvent.get("trigger_id").get(0), slackEvent.get("user_id").get(0), slackEvent.get("text").get(0)));
     return ResponseEntity.ok().build();
   }
@@ -59,6 +59,7 @@ public class ExtensionsV1Controller {
       @RequestHeader("x-slack-request-timestamp") String timestamp,
       @RequestHeader("x-slack-signature") String signature,
       @RequestParam MultiValueMap<String, String> slackEvent) throws JsonMappingException, JsonProcessingException {
+    LOGGER.debug(slackEvent);
     ObjectMapper mapper = new ObjectMapper();
     JsonNode payload = mapper.readTree(slackEvent.get("payload").get(0));
     if (payload.has("type") && "view_submission".equals(payload.get("type").asText())) {

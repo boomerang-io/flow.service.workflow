@@ -194,9 +194,12 @@ public class SlackExtensionImpl implements SlackExtension {
         if (userInfo != null && userInfo.getUser() != null) {
           // Trigger workflow Execution and impersonate Slack user
           String userEmail = userInfo.getUser().getProfile().getEmail();
-          apiTokenService.storeUserToken(apiTokenService.createJWTToken(userEmail));
+          final String flowUserToken = apiTokenService.createJWTToken(userEmail);
+          LOGGER.debug("New Flow User Token: " + flowUserToken);
+          apiTokenService.storeUserToken(flowUserToken);
           FlowActivity flowActivity = executionController.executeWorkflow(workflowId,
               Optional.empty(), Optional.empty());
+          LOGGER.debug(flowActivity.toString());
 
             ChatPostMessageResponse messageResponse = slack.methods(authToken)
                 .chatPostMessage(req -> req.channel(userId)
