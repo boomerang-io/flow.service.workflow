@@ -7,6 +7,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.slack.api.Slack;
 import com.slack.api.methods.SlackApiException;
 import com.slack.api.methods.request.users.UsersInfoRequest;
@@ -42,7 +44,9 @@ import com.slack.api.model.view.ViewTitle;
 import io.boomerang.controller.ExecutionController;
 import io.boomerang.exceptions.RunWorkflowException;
 import io.boomerang.model.FlowActivity;
+import io.boomerang.mongo.entity.ExtensionEntity;
 import io.boomerang.mongo.entity.WorkflowEntity;
+import io.boomerang.mongo.repository.ExtensionsRepository;
 import io.boomerang.mongo.service.FlowSettingsService;
 import io.boomerang.mongo.service.FlowWorkflowService;
 import io.boomerang.security.service.ApiTokenService;
@@ -73,11 +77,17 @@ public class SlackExtensionImpl implements SlackExtension {
   @Autowired
   private ApiTokenService apiTokenService;
 
+  @Autowired
+  private ExtensionsRepository extensionsRepository;
+
   @Value("${flow.apps.flow.url}")
   private String flowAppsUrl;
 
   private static final String MODAL_TEXT_TAGLINE =
       "The better way to automate with no-code workflow automation.";
+
+  private static final String EXTENSION_TYPE =
+      "slack_auth";
 
   /*
    * Processes a Slash command and generates a Modal for the end user to confirm Workflow Run details
@@ -93,10 +103,9 @@ public class SlackExtensionImpl implements SlackExtension {
    * @param workflowId    the user entered workflow ID
    * @return Supplier       To be used by the CompletableFuture
    */
-  public Supplier<Boolean> createRunModal(String triggerId, String userId, String workflowId) {
+  public Supplier<Boolean> createRunModal(String triggerId, String userId, String teamId, String workflowId) {
     return () -> {
-      final String authToken =
-          flowSettingsService.getConfiguration("extensions", "slack.token").getValue();
+      final String authToken = getSlackAuthToken(teamId);
 
       ViewBuilder modalViewBuilder = View.builder().type("modal")
           .title(ViewTitle.builder().type("plain_text").text("Run Workflow").emoji(true).build())
@@ -185,8 +194,8 @@ public class SlackExtensionImpl implements SlackExtension {
       Exception exception = null;
       final String userId = jsonPayload.get("user").get("id").asText();
       final String workflowId = jsonPayload.get("view").get("private_metadata").asText();
-      final String authToken =
-          flowSettingsService.getConfiguration("extensions", "slack.token").getValue();
+      final String teamId = jsonPayload.get("user").get("id").asText();
+      final String authToken = getSlackAuthToken(teamId);
       
       Slack slack = Slack.getInstance();
       try {
@@ -305,12 +314,39 @@ public class SlackExtensionImpl implements SlackExtension {
       OAuthV2AccessResponse response = slack.methods().oauthV2Access(req -> req.clientId(clientId).clientSecret(clientSecret).code(code));
       LOGGER.info("Team ID: " + response.getTeam().getId());
       LOGGER.info("Access Token: " + response.getAccessToken());
+      if (response.isOk()) {
+        ExtensionEntity authResponse = new ExtensionEntity();
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode payload = mapper.valueToTree(authResponse);
+        authResponse.setType(EXTENSION_TYPE);
+        authResponse.setData(payload);
+        extensionsRepository.save(authResponse);
+      }
+      //TODO: return different response if not ok and redirect somewhere else.
       return ResponseEntity.status(HttpStatus.FOUND).location(new URI("slack://app?team=" + response.getTeam().getId() + "&id=" + appId)).build();
     } catch (IOException | SlackApiException | URISyntaxException e) {
       LOGGER.error(e.toString());
     }
     
     return ResponseEntity.ok().build();
+  }
+  
+  private String getSlackAuthToken(String teamId) {
+    String defaultAuthToken = flowSettingsService.getConfiguration("extensions", "slack.token").getValue();
+    if (defaultAuthToken != null && !defaultAuthToken.isEmpty()) {
+      return defaultAuthToken;
+    }
+    
+    List<ExtensionEntity> authsList = extensionsRepository.findByType(EXTENSION_TYPE);
+    if (!authsList.isEmpty()) {
+      List<ExtensionEntity> teamAuthsList = authsList.stream().filter(e -> teamId.equals(e.getData().get("team").get("id").asText())).collect(Collectors.toList()); 
+      if (!teamAuthsList.isEmpty()) {
+        String teamAuthToken = teamAuthsList.get(0).getData().get("access_token").asText();
+        LOGGER.debug(teamAuthToken);
+        return teamAuthToken;
+      }
+    }
+    return defaultAuthToken;
   }
   
   /*

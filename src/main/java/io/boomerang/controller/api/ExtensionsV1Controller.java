@@ -46,7 +46,7 @@ public class ExtensionsV1Controller {
       @RequestHeader("x-slack-signature") String signature,
       @RequestParam MultiValueMap<String, String> slackEvent) throws JsonMappingException, JsonProcessingException {
     LOGGER.debug(slackEvent);
-    CompletableFuture.supplyAsync(slackExtension.createRunModal(slackEvent.get("trigger_id").get(0), slackEvent.get("user_id").get(0), slackEvent.get("text").get(0)));
+    CompletableFuture.supplyAsync(slackExtension.createRunModal(slackEvent.get("trigger_id").get(0), slackEvent.get("user_id").get(0), slackEvent.get("team_id").get(0), slackEvent.get("text").get(0)));
     return ResponseEntity.ok().build();
   }
   
