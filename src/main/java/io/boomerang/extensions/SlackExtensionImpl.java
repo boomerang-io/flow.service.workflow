@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.slack.api.Slack;
 import com.slack.api.methods.SlackApiException;
@@ -197,6 +198,7 @@ public class SlackExtensionImpl implements SlackExtension {
           final String flowUserToken = apiTokenService.createJWTToken(userEmail);
           LOGGER.debug("New Flow User Token: " + flowUserToken);
           apiTokenService.storeUserToken(flowUserToken);
+          LOGGER.debug("Stored Token");
           FlowActivity flowActivity = executionController.executeWorkflow(workflowId,
               Optional.empty(), Optional.empty());
           LOGGER.debug(flowActivity.toString());
@@ -209,7 +211,7 @@ public class SlackExtensionImpl implements SlackExtension {
           } else {
             throw new RunWorkflowException("Unable to retrieve a matching User Profile to use when executing the Workflow.");
           }
-      } catch (RunWorkflowException | IOException | SlackApiException e) {
+      } catch (RunWorkflowException | IOException | SlackApiException | HttpClientErrorException e) {
         LOGGER.error(e);
         exception = e;
       } 
