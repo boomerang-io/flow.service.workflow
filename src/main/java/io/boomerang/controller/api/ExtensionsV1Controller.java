@@ -78,9 +78,7 @@ public class ExtensionsV1Controller {
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
   ResponseEntity<?> receiveSlackAuth(HttpServletRequest request,
-      @RequestHeader("x-slack-request-timestamp") String timestamp,
-      @RequestHeader("x-slack-signature") String signature,
-      @RequestParam String code) throws JsonMappingException, JsonProcessingException {
+      @RequestParam String code) {
     return slackExtension.handleAuth(code);
   }
   
