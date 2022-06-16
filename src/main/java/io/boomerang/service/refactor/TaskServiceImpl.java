@@ -358,14 +358,14 @@ public class TaskServiceImpl implements TaskService {
 
     LOGGER.debug("[{}] Creating wait for event task", taskExecution.getActivityId());
 
-    taskExecution.setFlowTaskStatus(TaskStatus.waiting);
-    taskActivityService.save(taskExecution);
-
     if (taskExecution.isPreApproved()) {
       InternalTaskResponse response = new InternalTaskResponse();
       response.setActivityId(taskExecution.getId());
       response.setStatus(TaskStatus.completed);
       this.endTask(response);
+    } else {
+      taskExecution.setFlowTaskStatus(TaskStatus.waiting);
+      taskActivityService.save(taskExecution);
     }
   }
 
