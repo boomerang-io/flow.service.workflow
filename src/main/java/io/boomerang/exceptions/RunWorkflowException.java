@@ -7,4 +7,8 @@ public class RunWorkflowException extends RuntimeException {
     super(message);
   }
 
+  public RunWorkflowException() {
+    super();
+  }
+
 }
