@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,6 +54,7 @@ import io.boomerang.mongo.service.FlowSettingsService;
 import io.boomerang.mongo.service.FlowWorkflowService;
 import io.boomerang.security.service.ApiTokenService;
 import io.boomerang.service.FilterService;
+import io.boomerang.util.ParameterMapper;
 
 /*
  * Handles the Slack app slash command and interactivity interactions
@@ -353,11 +353,20 @@ public class SlackExtensionImpl implements SlackExtension {
         mapper.convertValue(authResponse, new TypeReference<Map<String, Object>>() {});
     KeyValuePair teamIdLabel = new KeyValuePair("teamId", authResponse.getTeam().getId());
     
-    Optional<ExtensionEntity> origAuthExtension = extensionsRepository.findByType(EXTENSION_TYPE).stream()
-        .filter(e -> e.getLabels().indexOf(teamIdLabel) != -1).findFirst();
-    if (origAuthExtension.isPresent()) {
+//    Optional<ExtensionEntity> origAuthExtension = extensionsRepository.findByType(EXTENSION_TYPE).stream()
+//        .filter(e -> e.getLabels().indexOf(teamIdLabel) != -1).findFirst();
+    List<ExtensionEntity> tempList = new LinkedList<>();
+    List<ExtensionEntity> origAuthExtensions = extensionsRepository.findByType(EXTENSION_TYPE);
+    origAuthExtensions.forEach(e -> {
+      Map<String, String> executionProperties = ParameterMapper.keyValuePairListToMap(e.getLabels());
+      if (executionProperties.containsKey("teamId") && authResponse.getTeam().getId().equals(executionProperties.get("teamId"))) {
+        tempList.add(e);
+        LOGGER.debug("Found matching Slack Team Auth");
+      }
+    });
+    if (!tempList.isEmpty()) {
       LOGGER.debug("Overriding existing Slack Team Auth");
-      authExtension = origAuthExtension.get();
+      authExtension = tempList.get(0);
       authExtension.setData(payload);
     } else {
       LOGGER.debug("Saving new Slack Team Auth");
