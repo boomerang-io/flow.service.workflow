@@ -344,23 +344,22 @@ public class SlackExtensionImpl implements SlackExtension {
   private void saveSlackAuthToken(OAuthV2AccessResponse authResponse) {
     ExtensionEntity authExtension = new ExtensionEntity();
     ObjectMapper mapper = new ObjectMapper();
-    Map<String, Object> payload = mapper.convertValue(authResponse, new TypeReference<Map<String, Object>>(){});
+    Map<String, Object> payload =
+        mapper.convertValue(authResponse, new TypeReference<Map<String, Object>>() {});
     KeyValuePair teamIdLabel = new KeyValuePair("teamId", authResponse.getTeam().getId());
-    List<ExtensionEntity> authsList = extensionsRepository.findByType(EXTENSION_TYPE);
+    List<ExtensionEntity> authsList = extensionsRepository.findByType(EXTENSION_TYPE).stream()
+        .filter(e -> e.getLabels().contains(teamIdLabel)).collect(Collectors.toList());
     if (!authsList.isEmpty()) {
-      List<ExtensionEntity> teamAuthsList = authsList.stream().filter(e -> e.getLabels().contains(teamIdLabel)).collect(Collectors.toList());
-      if (!teamAuthsList.isEmpty()) {
-        LOGGER.debug("Overriding existing Slack Team Auth");
-        authExtension = teamAuthsList.get(0);
-        authExtension.setData(payload);
-      } else {
-        LOGGER.debug("Saving new Slack Team Auth");
-        authExtension.setType(EXTENSION_TYPE);
-        authExtension.setData(payload);
-        List<KeyValuePair> labels = new LinkedList<>();
-        labels.add(teamIdLabel);
-        authExtension.setLabels(labels);
-      }
+      LOGGER.debug("Overriding existing Slack Team Auth");
+      authExtension = authsList.get(0);
+      authExtension.setData(payload);
+    } else {
+      LOGGER.debug("Saving new Slack Team Auth");
+      authExtension.setType(EXTENSION_TYPE);
+      authExtension.setData(payload);
+      List<KeyValuePair> labels = new LinkedList<>();
+      labels.add(teamIdLabel);
+      authExtension.setLabels(labels);
     }
     extensionsRepository.save(authExtension);
     LOGGER.debug(authExtension.toString());
