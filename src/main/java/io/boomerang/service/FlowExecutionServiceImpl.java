@@ -278,6 +278,9 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
   private void executeNextStep(List<Task> tasks, Task currentTask,
       final Task start, final Task end, final Graph<String, DefaultEdge> graph) {
 
+    if (tasks == null || start == null || end == null || currentTask == null || graph == null)
+      throw new IllegalArgumentException();
+
       List<Task> nextNodes = getTasksDependants(tasks, currentTask);
       List<String> nodes =
           GraphProcessor.createOrderedTaskList(graph, start.getTaskId(), end.getTaskId());
