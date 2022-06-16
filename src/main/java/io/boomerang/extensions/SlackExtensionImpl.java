@@ -196,7 +196,7 @@ public class SlackExtensionImpl implements SlackExtension {
           String userEmail = userInfo.getUser().getProfile().getEmail();
           apiTokenService.storeUserToken(apiTokenService.createJWTToken(userEmail));
           FlowActivity flowActivity = executionController.executeWorkflow(workflowId,
-              Optional.of("webhook"), Optional.empty());
+              Optional.empty(), Optional.empty());
 
             ChatPostMessageResponse messageResponse = slack.methods(authToken)
                 .chatPostMessage(req -> req.channel(userId)
