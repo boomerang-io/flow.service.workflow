@@ -11,4 +11,7 @@ public interface FilterService {
       Optional<List<String>> teamIds, Optional<List<String>> scopes);
 
   List<FlowActivity> convertActivityEntityToFlowActivity(List<ActivityEntity> records);
+
+  List<String> getFilteredWorkflowIdsForUserEmail(Optional<List<String>> workflowIds,
+      Optional<List<String>> teamIds, Optional<List<String>> scopes, String userEmail);
 }

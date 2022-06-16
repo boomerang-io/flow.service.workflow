@@ -123,19 +123,37 @@ public class SlackExtensionImpl implements SlackExtension {
           .callbackId("workflow-run-modal").privateMetadata(workflowId)
           .close(ViewClose.builder().type("plain_text").text("Close").build());
 
-      final WorkflowEntity workflowSummary = workflowRepository.getWorkflow(workflowId);
-      Boolean notFound = false;
-      if (workflowSummary != null) {
-        modalViewBuilder.submit(ViewSubmit.builder().type("plain_text").text(":point_right: Run it")
-            .emoji(true).build());
-      } else {
-        LOGGER.debug("Unable to find Workflow with specified ID (" + workflowId + ")");
-        notFound = true;
-      }
-      
-      View modalView = modalViewBuilder.blocks(modalRunBlocks(workflowId, workflowSummary.getName(), workflowSummary.getShortDescription(), notFound)).build();
-
       Slack slack = Slack.getInstance();
+      Boolean notFound = false;
+      WorkflowEntity workflowSummary = new WorkflowEntity();
+      try {
+        UsersInfoResponse userInfo =
+            slack.methods(authToken).usersInfo(UsersInfoRequest.builder().user(userId).build());
+        LOGGER.debug("User Info: " + userInfo.toString());
+        if (userInfo != null && userInfo.getUser() != null
+            && userInfo.getUser().getProfile() != null) {
+          // Trigger workflow Execution and impersonate Slack user
+          String userEmail = userInfo.getUser().getProfile().getEmail();
+          if (userEmail != null && canExecuteWorkflow(workflowId, userEmail)) {
+            workflowSummary = workflowRepository.getWorkflow(workflowId);
+            if (workflowSummary != null) {
+              modalViewBuilder.submit(ViewSubmit.builder().type("plain_text")
+                  .text(":point_right: Run it").emoji(true).build());
+            } else {
+              LOGGER.debug("Unable to find Workflow with specified ID (" + workflowId + ")");
+              notFound = true;
+            }
+          } else {
+            notFound = true;
+          }
+        }
+      } catch (IOException | SlackApiException e) {
+        LOGGER.error(e.toString());
+        return false;
+      }
+
+      View modalView = modalViewBuilder.blocks(modalRunBlocks(workflowId, workflowSummary.getName(),
+          workflowSummary.getShortDescription(), notFound)).build();
       try {
         ViewsOpenResponse viewResponse =
             slack.methods(authToken).viewsOpen(req -> req.triggerId(triggerId).view(modalView));
@@ -207,22 +225,19 @@ public class SlackExtensionImpl implements SlackExtension {
       final String workflowId = jsonPayload.get("view").get("private_metadata").asText();
       final String teamId = jsonPayload.get("user").get("id").asText();
       final String authToken = getSlackAuthToken(teamId);
-      
+
       Slack slack = Slack.getInstance();
       try {
-        UsersInfoResponse userInfo = slack.methods(authToken).usersInfo(UsersInfoRequest.builder().user(userId).build());
+        UsersInfoResponse userInfo =
+            slack.methods(authToken).usersInfo(UsersInfoRequest.builder().user(userId).build());
         LOGGER.debug("User Info: " + userInfo.toString());
-        if (userInfo != null && userInfo.getUser() != null) {
+        if (userInfo != null && userInfo.getUser() != null && userInfo.getUser().getProfile() != null) {
           // Trigger workflow Execution and impersonate Slack user
           String userEmail = userInfo.getUser().getProfile().getEmail();
-          final String flowUserToken = apiTokenService.createJWTToken(userEmail);
-          LOGGER.debug("New Flow User Token: " + flowUserToken);
-          apiTokenService.storeUserToken(flowUserToken);
-          LOGGER.debug("Stored Token");
-          LOGGER.debug(filterService.getFilteredWorkflowIds(Optional.empty(), Optional.empty(), Optional.empty()).toString());
-          FlowActivity flowActivity = executionController.executeWorkflow(workflowId,
-              Optional.empty(), Optional.empty());
-          LOGGER.debug(flowActivity.toString());
+          if (userEmail != null && canExecuteWorkflow(workflowId, userEmail)) {
+            FlowActivity flowActivity =
+                executionController.executeWorkflow(workflowId, Optional.empty(), Optional.empty());
+            LOGGER.debug(flowActivity.toString());
 
             ChatPostMessageResponse messageResponse = slack.methods(authToken)
                 .chatPostMessage(req -> req.channel(userId)
@@ -230,28 +245,43 @@ public class SlackExtensionImpl implements SlackExtension {
                         flowActivity.getShortDescription(), flowActivity.getId())));
             LOGGER.debug(messageResponse.toString());
           } else {
-            throw new RunWorkflowException("Unable to retrieve a matching User Profile to use when executing the Workflow.");
+            throw new RunWorkflowException(":slightly_frowning_face: Unfortunately we are unable to find a Workflow with the specified ID ("
+                + workflowId + "), or you do not have access.");
           }
-      } catch (RunWorkflowException | IOException | SlackApiException | HttpClientErrorException | BoomerangException e) {
+        } else {
+          throw new RunWorkflowException(
+              "Unable to retrieve a matching User Profile to use when executing the Workflow.");
+        }
+      } catch (RunWorkflowException | IOException | SlackApiException | HttpClientErrorException
+          | BoomerangException e) {
         LOGGER.error(e);
         exception = e;
-      } 
-      
+      }
+
       if (exception != null) {
         try {
           String message = exception.getMessage();
           ChatPostMessageResponse messageResponse = slack.methods(authToken)
-              .chatPostMessage(req -> req.channel(userId)
-                  .blocks(activityErrorBlocks(message)));
+              .chatPostMessage(req -> req.channel(userId).blocks(activityErrorBlocks(message)));
           LOGGER.debug(messageResponse.toString());
         } catch (IOException | SlackApiException e2) {
           LOGGER.error(e2);
         }
         return false;
       }
-      
+
       return true;
     };
+  }
+  
+  private Boolean canExecuteWorkflow(String workflowId, String email) {
+    if (filterService.getFilteredWorkflowIdsForUserEmail(Optional.empty(), Optional.empty(),
+        Optional.empty(), email).contains(workflowId)) {
+      LOGGER.debug("Can execute Workflow");
+      return true;
+    }
+    LOGGER.debug("No matching workflow found for User");
+    return false;
   }
   
   /*
@@ -293,11 +323,6 @@ public class SlackExtensionImpl implements SlackExtension {
                 .builder().text(MarkdownTextObject.builder().text("*ID:* " + workflowId
                     + "\n*Name:* " + workflowName + "\n*Summary:* " + workflowSummary).build())
                 .build());
-    // Link instead of buttons
-    // blocks.add(SectionBlock.builder()
-    // .text(MarkdownTextObject.builder().text("<" + flowAppsUrl + "/activity/" + workflowId
-    // + "/execution/" + activityId + "|View your workflow activity>.").build())
-    // .build());
     List<BlockElement> buttonsList = new LinkedList<>();
     buttonsList.add(ButtonElement.builder()
         .text(PlainTextObject.builder().text(":dart: View Activity").emoji(true).build())
@@ -355,18 +380,10 @@ public class SlackExtensionImpl implements SlackExtension {
     
 //    Optional<ExtensionEntity> origAuthExtension = extensionsRepository.findByType(EXTENSION_TYPE).stream()
 //        .filter(e -> e.getLabels().indexOf(teamIdLabel) != -1).findFirst();
-    List<ExtensionEntity> tempList = new LinkedList<>();
-    List<ExtensionEntity> origAuthExtensions = extensionsRepository.findByType(EXTENSION_TYPE);
-    origAuthExtensions.forEach(e -> {
-      Map<String, String> executionProperties = ParameterMapper.keyValuePairListToMap(e.getLabels());
-      if (executionProperties.containsKey("teamId") && authResponse.getTeam().getId().equals(executionProperties.get("teamId"))) {
-        tempList.add(e);
-        LOGGER.debug("Found matching Slack Team Auth");
-      }
-    });
-    if (!tempList.isEmpty()) {
+    List<ExtensionEntity> authsList = checkExistingAuthExtensions(authResponse.getTeam().getId());
+    if (!authsList.isEmpty()) {
       LOGGER.debug("Overriding existing Slack Team Auth");
-      authExtension = tempList.get(0);
+      authExtension = authsList.get(0);
       authExtension.setData(payload);
     } else {
       LOGGER.debug("Saving new Slack Team Auth");
@@ -379,6 +396,19 @@ public class SlackExtensionImpl implements SlackExtension {
     extensionsRepository.save(authExtension);
     LOGGER.debug(authExtension.toString());
   }
+
+  private List<ExtensionEntity> checkExistingAuthExtensions(String teamId) {
+    List<ExtensionEntity> authExtensions = new LinkedList<>();
+    List<ExtensionEntity> existingAuthExtensions = extensionsRepository.findByType(EXTENSION_TYPE);
+    existingAuthExtensions.forEach(e -> {
+      Map<String, String> executionProperties = ParameterMapper.keyValuePairListToMap(e.getLabels());
+      if (executionProperties.containsKey("teamId") && teamId.equals(executionProperties.get("teamId"))) {
+        authExtensions.add(e);
+        LOGGER.debug("Found matching Slack Team Auth");
+      }
+    });
+    return authExtensions;
+  }
   
   /*&
    * Helper method to retrieve the stored Slack Token using the extensions generic collection
@@ -386,19 +416,14 @@ public class SlackExtensionImpl implements SlackExtension {
    * @param teamId
    */
   private String getSlackAuthToken(String teamId) {
-    String defaultAuthToken = flowSettingsService.getConfiguration("extensions", "slack.token").getValue();
-    if (defaultAuthToken != null && !defaultAuthToken.isEmpty()) {
-      return defaultAuthToken;
-    }
-
-    KeyValuePair teamIdLabel = new KeyValuePair("teamId", teamId);
-    Optional<ExtensionEntity> origAuthExtension = extensionsRepository.findByType(EXTENSION_TYPE).stream()
-        .filter(e -> e.getLabels().indexOf(teamIdLabel) != -1).findFirst();
-    if (origAuthExtension.isPresent()) {
-        String teamAuthToken = origAuthExtension.get().getData().get("accessToken").toString();
-        LOGGER.debug(teamAuthToken);
+    List<ExtensionEntity> authsList = checkExistingAuthExtensions(teamId);
+    if (!authsList.isEmpty()) {
+        String teamAuthToken = authsList.get(0).getData().get("accessToken").toString();
+        LOGGER.debug("Using team Slack auth token: " + teamAuthToken);
         return teamAuthToken;
     }
+    String defaultAuthToken = flowSettingsService.getConfiguration("extensions", "slack.token").getValue();
+    LOGGER.debug("Using default Slack auth token: " + defaultAuthToken);
     return defaultAuthToken;
   }
   

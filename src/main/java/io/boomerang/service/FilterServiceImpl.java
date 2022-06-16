@@ -59,7 +59,6 @@ public class FilterServiceImpl implements FilterService {
   }
   
   /*
-  
    * Generates the workflowIds based on optional lists of workflowIds, scopes, and teamIds
    * 
    * @param list of WorkflowIds
@@ -90,6 +89,33 @@ public class FilterServiceImpl implements FilterService {
         break;
     }
 
+    return getFilteredWorkflowIdsList(workflowIds, teamIds, scopes, user, isAdmin);
+  }
+
+  /*
+   * Generates the workflowIds based on optional lists of workflowIds, scopes, and teamIds
+   * 
+   * @param list of WorkflowIds
+   * @param list of Scopes
+   * @param list of TeamIds
+   * @param FlowUserEntity user
+   * 
+   * @return list of filtered WorkflowIds
+   */
+  @Override
+  public List<String> getFilteredWorkflowIdsForUserEmail(Optional<List<String>> workflowIds,
+      Optional<List<String>> teamIds, Optional<List<String>> scopes, String userEmail) {
+    FlowUserEntity user = userIdentityService.getUserByEmail(userEmail);
+    Boolean isAdmin = false;
+    if (user!= null && user.getType() == UserType.admin) {
+      isAdmin = true;
+    }
+    return getFilteredWorkflowIdsList(workflowIds, teamIds, scopes, user, isAdmin);
+  }
+    
+    private List<String> getFilteredWorkflowIdsList(Optional<List<String>> workflowIds,
+        Optional<List<String>> teamIds, Optional<List<String>> scopes, FlowUserEntity user,
+        Boolean isAdmin) {
     List<String> workflowIdsList = new LinkedList<>();
     if (!workflowIds.isPresent()) {
       if (scopes.isPresent() && !scopes.get().isEmpty()) {

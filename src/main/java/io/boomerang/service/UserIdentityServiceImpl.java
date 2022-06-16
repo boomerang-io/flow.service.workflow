@@ -122,6 +122,17 @@ public class UserIdentityServiceImpl implements UserIdentityService {
     }
     return null;
   }
+  
+  @Override
+  public FlowUserEntity getUserByEmail(String userEmail) {
+    FlowUserEntity flowUser = flowUserService.getUserWithEmail(userEmail);
+    if (flowUser != null) {
+      FlowUserEntity profile = new FlowUserEntity();
+      BeanUtils.copyProperties(flowUser, profile);
+      return profile;
+    }
+    return null;
+  }
 
   @Override
   public UserQueryResult getUserViaSearchTerm(String searchTerm, Pageable pageable) {
