@@ -46,7 +46,7 @@ import io.boomerang.exceptions.RunWorkflowException;
 import io.boomerang.model.FlowActivity;
 import io.boomerang.mongo.entity.ExtensionEntity;
 import io.boomerang.mongo.entity.WorkflowEntity;
-import io.boomerang.mongo.repository.ExtensionsRepository;
+import io.boomerang.mongo.repository.ExtensionRepository;
 import io.boomerang.mongo.service.FlowSettingsService;
 import io.boomerang.mongo.service.FlowWorkflowService;
 import io.boomerang.security.service.ApiTokenService;
@@ -78,7 +78,7 @@ public class SlackExtensionImpl implements SlackExtension {
   private ApiTokenService apiTokenService;
 
   @Autowired
-  private ExtensionsRepository extensionsRepository;
+  private ExtensionRepository extensionsRepository;
 
   @Value("${flow.apps.flow.url}")
   private String flowAppsUrl;
@@ -312,8 +312,7 @@ public class SlackExtensionImpl implements SlackExtension {
     Slack slack = Slack.getInstance();
     try {
       OAuthV2AccessResponse response = slack.methods().oauthV2Access(req -> req.clientId(clientId).clientSecret(clientSecret).code(code));
-      LOGGER.info("Team ID: " + response.getTeam().getId());
-      LOGGER.info("Access Token: " + response.getAccessToken());
+      LOGGER.debug("Auth Response: " + response.toString());
       if (response.isOk()) {
         ExtensionEntity authResponse = new ExtensionEntity();
         ObjectMapper mapper = new ObjectMapper();
@@ -321,6 +320,7 @@ public class SlackExtensionImpl implements SlackExtension {
         authResponse.setType(EXTENSION_TYPE);
         authResponse.setData(payload);
         extensionsRepository.save(authResponse);
+        LOGGER.debug(authResponse.toString());
       }
       //TODO: return different response if not ok and redirect somewhere else.
       return ResponseEntity.status(HttpStatus.FOUND).location(new URI("slack://app?team=" + response.getTeam().getId() + "&id=" + appId)).build();
