@@ -5,6 +5,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -16,6 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.slack.api.Slack;
@@ -342,7 +344,7 @@ public class SlackExtensionImpl implements SlackExtension {
   private void saveSlackAuthToken(OAuthV2AccessResponse authResponse) {
     ExtensionEntity authExtension = new ExtensionEntity();
     ObjectMapper mapper = new ObjectMapper();
-    JsonNode payload = mapper.valueToTree(authResponse);
+    Map<String, Object> payload = mapper.convertValue(authResponse, new TypeReference<Map<String, Object>>(){});
     KeyValuePair teamIdLabel = new KeyValuePair("teamId", authResponse.getTeam().getId());
     List<ExtensionEntity> authsList = extensionsRepository.findByType(EXTENSION_TYPE);
     if (!authsList.isEmpty()) {
@@ -374,14 +376,15 @@ public class SlackExtensionImpl implements SlackExtension {
     if (defaultAuthToken != null && !defaultAuthToken.isEmpty()) {
       return defaultAuthToken;
     }
-    
+
+    KeyValuePair teamIdLabel = new KeyValuePair("teamId", teamId);
     List<ExtensionEntity> authsList = extensionsRepository.findByType(EXTENSION_TYPE);
     if (!authsList.isEmpty()) {
-      List<ExtensionEntity> teamAuthsList = authsList.stream().filter(e -> teamId.equals(e.getData().get("team").get("id").asText())).collect(Collectors.toList()); 
+      List<ExtensionEntity> teamAuthsList = authsList.stream().filter(e -> e.getLabels().contains(teamIdLabel)).collect(Collectors.toList()); 
       if (!teamAuthsList.isEmpty()) {
-        String teamAuthToken = teamAuthsList.get(0).getData().get("access_token").asText();
+        Map<String, Object> teamAuthToken = teamAuthsList.get(0).getData(); //.getData().get("access_token").asText();
         LOGGER.debug(teamAuthToken);
-        return teamAuthToken;
+        return defaultAuthToken;
       }
     }
     return defaultAuthToken;

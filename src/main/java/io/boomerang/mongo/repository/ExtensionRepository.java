@@ -6,6 +6,6 @@ import io.boomerang.mongo.entity.ExtensionEntity;
 
 public interface ExtensionRepository extends MongoRepository<ExtensionEntity, String> {
 
-  List<ExtensionEntity> findByType(String teamId);  
+  List<ExtensionEntity> findByType(String type);  
 }
 

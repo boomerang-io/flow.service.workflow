@@ -1,12 +1,12 @@
 package io.boomerang.mongo.entity;
 
 import java.util.List;
+import java.util.Map;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.databind.JsonNode;
 import io.boomerang.mongo.model.KeyValuePair;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -18,7 +18,7 @@ public class ExtensionEntity {
 
   private String type;
   
-  private JsonNode data;
+  private Map<String, Object> data;
 
   private List<KeyValuePair> labels;
 
@@ -38,11 +38,11 @@ public class ExtensionEntity {
     this.type = type;
   }
 
-  public JsonNode getData() {
+  public Map<String, Object> getData() {
     return data;
   }
 
-  public void setData(JsonNode data) {
+  public void setData(Map<String, Object> data) {
     this.data = data;
   }
 
