@@ -42,7 +42,6 @@ import com.slack.api.model.view.View.ViewBuilder;
 import com.slack.api.model.view.ViewClose;
 import com.slack.api.model.view.ViewSubmit;
 import com.slack.api.model.view.ViewTitle;
-import io.boomerang.controller.ExecutionController;
 import io.boomerang.error.BoomerangException;
 import io.boomerang.exceptions.RunWorkflowException;
 import io.boomerang.model.FlowActivity;
@@ -52,7 +51,7 @@ import io.boomerang.mongo.model.KeyValuePair;
 import io.boomerang.mongo.repository.ExtensionRepository;
 import io.boomerang.mongo.service.FlowSettingsService;
 import io.boomerang.mongo.service.FlowWorkflowService;
-import io.boomerang.security.service.ApiTokenService;
+import io.boomerang.service.ExecutionService;
 import io.boomerang.service.FilterService;
 import io.boomerang.util.ParameterMapper;
 
@@ -75,12 +74,9 @@ public class SlackExtensionImpl implements SlackExtension {
 
   @Autowired
   private FlowWorkflowService workflowRepository;
-
+  
   @Autowired
-  private ExecutionController executionController;
-
-  @Autowired
-  private ApiTokenService apiTokenService;
+  private ExecutionService executionService;
 
   @Autowired
   private ExtensionRepository extensionsRepository;
@@ -236,7 +232,7 @@ public class SlackExtensionImpl implements SlackExtension {
           String userEmail = userInfo.getUser().getProfile().getEmail();
           if (userEmail != null && canExecuteWorkflow(workflowId, userEmail)) {
             FlowActivity flowActivity =
-                executionController.executeWorkflow(workflowId, Optional.empty(), Optional.empty());
+                executionService.executeWorkflow(workflowId, Optional.empty(), Optional.empty(), Optional.empty());
             LOGGER.debug(flowActivity.toString());
 
             ChatPostMessageResponse messageResponse = slack.methods(authToken)
@@ -397,10 +393,12 @@ public class SlackExtensionImpl implements SlackExtension {
     LOGGER.debug(authExtension.toString());
   }
 
+  /*
+   * Helper method to retrieve a saved Auth for a Slack Team (org)
+   */
   private List<ExtensionEntity> checkExistingAuthExtensions(String teamId) {
     List<ExtensionEntity> authExtensions = new LinkedList<>();
-    List<ExtensionEntity> existingAuthExtensions = extensionsRepository.findByType(EXTENSION_TYPE);
-    existingAuthExtensions.forEach(e -> {
+    extensionsRepository.findByType(EXTENSION_TYPE).forEach(e -> {
       Map<String, String> executionProperties = ParameterMapper.keyValuePairListToMap(e.getLabels());
       if (executionProperties.containsKey("teamId") && teamId.equals(executionProperties.get("teamId"))) {
         authExtensions.add(e);
@@ -419,7 +417,7 @@ public class SlackExtensionImpl implements SlackExtension {
     List<ExtensionEntity> authsList = checkExistingAuthExtensions(teamId);
     if (!authsList.isEmpty()) {
         String teamAuthToken = authsList.get(0).getData().get("accessToken").toString();
-        LOGGER.debug("Using team Slack auth token: " + teamAuthToken);
+        LOGGER.debug("Using existing team Slack auth token: " + teamAuthToken);
         return teamAuthToken;
     }
     String defaultAuthToken = flowSettingsService.getConfiguration("extensions", "slack.token").getValue();
