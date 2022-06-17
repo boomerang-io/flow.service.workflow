@@ -218,8 +218,10 @@ public class SlackExtensionImpl implements SlackExtension {
       // public SlackResponseActionModel executeRunModal(JsonNode jsonPayload) {
       Exception exception = null;
       final String userId = jsonPayload.get("user").get("id").asText();
+      LOGGER.debug("User ID: " + userId);
       final String workflowId = jsonPayload.get("view").get("private_metadata").asText();
-      final String teamId = jsonPayload.get("user").get("id").asText();
+      LOGGER.debug("Workflow ID: " + workflowId);
+      final String teamId = jsonPayload.get("team").get("id").asText();
       final String authToken = getSlackAuthToken(teamId);
 
       Slack slack = Slack.getInstance();
