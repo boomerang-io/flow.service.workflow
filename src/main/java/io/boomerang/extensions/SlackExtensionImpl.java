@@ -535,7 +535,6 @@ public class SlackExtensionImpl implements SlackExtension {
    */
   public Supplier<Boolean> appHomeOpened(JsonNode jsonPayload) {
     return () -> {
-      Exception exception = null;
       LOGGER.info("Payload: " + jsonPayload.toPrettyString());
       final String userId = jsonPayload.get("event").get("user").asText();
       LOGGER.info("User ID: " + userId);
@@ -613,5 +612,11 @@ public class SlackExtensionImpl implements SlackExtension {
         .build());
     blocks.add(ContextBlock.builder().elements(elementsList).build());
     return blocks;
+  }
+  
+  public ResponseEntity<?> installRedirect() throws URISyntaxException {
+    final String installURL = 
+        flowSettingsService.getConfiguration("extensions", "slack.installURL").getValue();
+    return ResponseEntity.status(HttpStatus.FOUND).location(new URI(installURL)).build();
   }
 }

@@ -1,5 +1,6 @@
 package io.boomerang.controller.api;
 
+import java.net.URISyntaxException;
 import java.util.concurrent.CompletableFuture;
 import javax.servlet.http.HttpServletRequest;
 import org.apache.logging.log4j.LogManager;
@@ -106,5 +107,13 @@ public class ExtensionsV1Controller {
       LOGGER.error("Unhandled Slack Event Payload with no Type: " + payload.toPrettyString());
     }
     return ResponseEntity.ok().build();
+  }
+  
+  @GetMapping(value = "/slack/install")
+  @AuthenticationScope(scopes = {TokenScope.global})
+  @Operation(summary = "Install URL Redirect")
+  @ApiResponses(value = {@ApiResponse(responseCode = "302", description = "Found")})
+  ResponseEntity<?> installSlack() throws URISyntaxException {
+    return slackExtension.installRedirect();
   }
 }

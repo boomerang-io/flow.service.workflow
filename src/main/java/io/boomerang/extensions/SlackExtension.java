@@ -1,5 +1,6 @@
 package io.boomerang.extensions;
 
+import java.net.URISyntaxException;
 import java.util.function.Supplier;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.MultiValueMap;
@@ -14,5 +15,7 @@ public interface SlackExtension {
   Supplier<Boolean> createRunModal(MultiValueMap<String, String> slackEvent);
 
   Supplier<Boolean> appHomeOpened(JsonNode payload);
+
+  ResponseEntity<?> installRedirect() throws URISyntaxException;
   
 }
