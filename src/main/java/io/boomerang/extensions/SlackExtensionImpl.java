@@ -554,19 +554,17 @@ public class SlackExtensionImpl implements SlackExtension {
           String userEmail = userInfo.getUser().getProfile().getEmail();
           if (userEmail != null) {
             FlowUserEntity userEntity = userIdentityService.getUserByEmail(userEmail);
-            FlowUser flowUser;
+            FlowUser flowUser = new FlowUser();
             BeanUtils.copyProperties(userEntity, flowUser);
             List<KeyValuePair> labels = new LinkedList<>();
             labels.add(new KeyValuePair("slack_app_opened","true"));
             flowUser.setLabels(labels);
             userIdentityService.updateFlowUser(userEntity.getId(), flowUser);
-          } else {
-            
           }
           
           ChatPostMessageResponse messageResponse = slack.methods(authToken)
               .chatPostMessage(req -> req.channel(userId)
-                  .blocks()));
+                  .blocks(appHomeBlocks(false)));
           LOGGER.debug(messageResponse.toString());
         } else {
           throw new RunWorkflowException(
