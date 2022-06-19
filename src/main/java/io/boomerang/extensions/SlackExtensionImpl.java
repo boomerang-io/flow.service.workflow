@@ -117,8 +117,6 @@ public class SlackExtensionImpl implements SlackExtension {
       final String userId = slackEvent.get("user_id").get(0);
       final String teamId = slackEvent.get("team_id").get(0);
       final String workflowId = slackEvent.get("text").get(0);
-      final String command = slackEvent.get("command").get(0).substring(1);
-      LOGGER.debug("Slack command: " + command);
       final String authToken = getSlackAuthToken(teamId);
 
       ViewBuilder modalViewBuilder = View.builder().type("modal")
@@ -130,7 +128,7 @@ public class SlackExtensionImpl implements SlackExtension {
       View modalView;
       Boolean notFound = false;
       WorkflowEntity workflowSummary = new WorkflowEntity();
-      if ("help".equals(command)) {
+      if ("help".equals(workflowId)) {
         modalView = modalViewBuilder.blocks(modalHelpBlocks()).build();
       } else {
         UsersInfoResponse userInfo;
