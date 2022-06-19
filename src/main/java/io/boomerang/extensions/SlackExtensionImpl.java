@@ -10,6 +10,7 @@ import java.util.Optional;
 import java.util.function.Supplier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -37,6 +38,7 @@ import com.slack.api.model.block.SectionBlock;
 import com.slack.api.model.block.composition.MarkdownTextObject;
 import com.slack.api.model.block.composition.PlainTextObject;
 import com.slack.api.model.block.element.BlockElement;
+import com.slack.api.model.block.element.BlockElements;
 import com.slack.api.model.block.element.ButtonElement;
 import com.slack.api.model.view.View;
 import com.slack.api.model.view.View.ViewBuilder;
@@ -46,7 +48,9 @@ import com.slack.api.model.view.ViewTitle;
 import io.boomerang.error.BoomerangException;
 import io.boomerang.exceptions.RunWorkflowException;
 import io.boomerang.model.FlowActivity;
+import io.boomerang.model.FlowUser;
 import io.boomerang.mongo.entity.ExtensionEntity;
+import io.boomerang.mongo.entity.FlowUserEntity;
 import io.boomerang.mongo.entity.WorkflowEntity;
 import io.boomerang.mongo.model.KeyValuePair;
 import io.boomerang.mongo.repository.ExtensionRepository;
@@ -54,6 +58,7 @@ import io.boomerang.mongo.service.FlowSettingsService;
 import io.boomerang.mongo.service.FlowWorkflowService;
 import io.boomerang.service.ExecutionService;
 import io.boomerang.service.FilterService;
+import io.boomerang.service.UserIdentityService;
 import io.boomerang.util.ParameterMapper;
 
 /*
@@ -84,6 +89,9 @@ public class SlackExtensionImpl implements SlackExtension {
 
   @Autowired
   private FilterService filterService;
+
+  @Autowired
+  private UserIdentityService userIdentityService;
 
   @Value("${flow.apps.flow.url}")
   private String flowAppsUrl;
@@ -258,6 +266,7 @@ public class SlackExtensionImpl implements SlackExtension {
    * 
    * <h4>Specifications</h4>
    * <ul>
+   * <li><a href="https://api.slack.com/reference/interaction-payloads">Interactivity Payloads</a></li>
    * <li><a href="https://api.slack.com/methods/chat.postMessage#formatting">Slack chat.postMessage API</a></li>
    * </ul>
    * 
@@ -512,4 +521,100 @@ public class SlackExtensionImpl implements SlackExtension {
 //      return true;
 //    };
 //  }
+
+  /*
+   * Processes the Submitted Run Modal from Slack, executes the Workflow,
+   * and responds with a message to the user
+   * 
+   * <h4>Specifications</h4>
+   * <ul>
+   * <li><a href="https://api.slack.com/methods/chat.postMessage#formatting">Slack chat.postMessage API</a></li>
+   * </ul>
+   * 
+   * @param jsonPayload     the mapped payload from the interactivity endpoint
+   * @return Supplier       To be used by the CompletableFuture
+   */
+  public Supplier<Boolean> appHomeOpened(JsonNode jsonPayload) {
+    return () -> {
+      Exception exception = null;
+      LOGGER.info("Payload: " + jsonPayload.toPrettyString());
+      final String userId = jsonPayload.get("event").get("user").asText();
+      LOGGER.info("User ID: " + userId);
+      final String teamId = jsonPayload.get("team_id").asText();
+      LOGGER.info("Team ID: " + teamId);
+      final String authToken = getSlackAuthToken(teamId);
+
+      Slack slack = Slack.getInstance();
+      try {
+        UsersInfoResponse userInfo =
+            slack.methods(authToken).usersInfo(UsersInfoRequest.builder().user(userId).build());
+        LOGGER.debug("User Info: " + userInfo.toString());
+        if (userInfo != null && userInfo.getUser() != null && userInfo.getUser().getProfile() != null) {
+          // Trigger workflow Execution and impersonate Slack user
+          String userEmail = userInfo.getUser().getProfile().getEmail();
+          if (userEmail != null) {
+            FlowUserEntity userEntity = userIdentityService.getUserByEmail(userEmail);
+            FlowUser flowUser;
+            BeanUtils.copyProperties(userEntity, flowUser);
+            List<KeyValuePair> labels = new LinkedList<>();
+            labels.add(new KeyValuePair("slack_app_opened","true"));
+            flowUser.setLabels(labels);
+            userIdentityService.updateFlowUser(userEntity.getId(), flowUser);
+          } else {
+            
+          }
+          
+          ChatPostMessageResponse messageResponse = slack.methods(authToken)
+              .chatPostMessage(req -> req.channel(userId)
+                  .blocks()));
+          LOGGER.debug(messageResponse.toString());
+        } else {
+          throw new RunWorkflowException(
+              "Unable to retrieve a matching User Profile to use when executing the Workflow.");
+        }
+      } catch (RunWorkflowException | IOException | SlackApiException | HttpClientErrorException
+          | BoomerangException e) {
+        LOGGER.error(e);
+        return false;
+      }
+
+      return true;
+    };
+  }
+
+  /*
+   * Creates the Blocks that are part of the Workflow Activity Slack message after a Run Modal is
+   * submitted in slack
+   */
+  private List<LayoutBlock> appHomeBlocks(Boolean existingUser) {
+    List<LayoutBlock> blocks = new LinkedList<>();
+    blocks.add(HeaderBlock.builder()
+        .text(PlainTextObject.builder().text("Hello :wave:").emoji(true).build()).build());
+    blocks.add(SectionBlock.builder().text(MarkdownTextObject.builder().text("Welcome to a new modern and easy way to supercharge your automation.\nI'm here to help you trigger your Workflows from right within Slack, giving you complete control over what needs to be done.\nHere are a few things to get started with to make your experience a good one.").build())
+                .build());
+    if (!existingUser) {
+    blocks.add(SectionBlock.builder().text(MarkdownTextObject.builder().text("*Sign Up*\n"
+        + "I see that you are not yet a user. Sign up to be able to automate.")
+        .build())
+        .accessory(ButtonElement.builder().text(PlainTextObject.builder().text(":lower_left_ballpoint_pen: Sign Up").emoji(true).build())
+            .url(flowAppsUrl).build())
+        .build());
+    } else {
+      blocks.add(SectionBlock.builder().text(MarkdownTextObject.builder().text("*Create your first Automation*\n"
+          + "Creating your first workflow is simple. Start from scratch or a template and start dragging and dropping your way to automation.")
+          .build())
+          .accessory(ButtonElement.builder().text(PlainTextObject.builder().text(":rocket: Create Automation").emoji(true).build())
+              .url(flowAppsUrl).build())
+          .build());
+    }
+    blocks.add(SectionBlock.builder().text(MarkdownTextObject.builder().text("Please drop us a message at hello@flowabl.io - chat soon,\nTyson").build())
+        .build());
+    blocks.add(DividerBlock.builder().build());
+    List<ContextBlockElement> elementsList = new LinkedList<>();
+    elementsList.add(MarkdownTextObject.builder().text(
+        MODAL_TEXT_FOOTER)
+        .build());
+    blocks.add(ContextBlock.builder().elements(elementsList).build());
+    return blocks;
+  }
 }

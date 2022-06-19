@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -35,6 +36,16 @@ public class ExtensionsV1Controller {
   private static final Logger LOGGER = LogManager.getLogger();
   @Autowired
   private SlackExtension slackExtension;
+  
+  @GetMapping(value = "/slack/auth")
+  @AuthenticationScope(scopes = {TokenScope.global})
+  @Operation(summary = "Receive Slack Oauth2 request")
+  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
+      @ApiResponse(responseCode = "400", description = "Bad Request")})
+  ResponseEntity<?> receiveSlackAuth(HttpServletRequest request,
+      @RequestParam String code) {
+    return slackExtension.handleAuth(code);
+  }
 
   @PostMapping(value = "/slack/commands", consumes = {MediaType.APPLICATION_FORM_URLENCODED_VALUE})
   @AuthenticationScope(scopes = {TokenScope.global})
@@ -50,6 +61,7 @@ public class ExtensionsV1Controller {
     return ResponseEntity.ok().build();
   }
   
+  //https://api.slack.com/reference/interaction-payloads
   @PostMapping(value = "/slack/interactivity", consumes = {MediaType.APPLICATION_FORM_URLENCODED_VALUE})
   @AuthenticationScope(scopes = {TokenScope.global})
   @Operation(summary = "Receive Slack Interactivity")
@@ -72,31 +84,27 @@ public class ExtensionsV1Controller {
     return ResponseEntity.ok().build();
   }
   
-  @GetMapping(value = "/slack/auth")
+  //https://api.slack.com/apis/connections/events-api#receiving_events
+  @PostMapping(value = "/slack/events", consumes = {MediaType.APPLICATION_JSON_VALUE})
   @AuthenticationScope(scopes = {TokenScope.global})
-  @Operation(summary = "Receive Slack Oauth2 request")
+  @Operation(summary = "Receive Slack Events")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
-  ResponseEntity<?> receiveSlackAuth(HttpServletRequest request,
-      @RequestParam String code) {
-    return slackExtension.handleAuth(code);
+  ResponseEntity<?> receiveSlackEvent(HttpServletRequest request, 
+      @RequestHeader("x-slack-request-timestamp") String timestamp,
+      @RequestHeader("x-slack-signature") String signature,
+      @RequestBody JsonNode payload) throws JsonMappingException, JsonProcessingException {
+    LOGGER.info(payload);
+    if (payload.has("challenge")) {
+      LOGGER.info("Challenge: " + payload.get("challenge"));
+      return ResponseEntity.ok().body(payload.get("challenge"));
+    } else if (payload.has("type") && "app_home_opened".equals(payload.get("type").asText())) {
+      CompletableFuture.supplyAsync(slackExtension.appHomeOpened(payload));
+    } else if (payload.has("type")) {
+      LOGGER.error("Unhandled Slack Event Type: " + payload.get("type").asText());
+    } else {
+      LOGGER.error("Unhandled Slack Event Payload with no Type: " + payload.toPrettyString());
+    }
+    return ResponseEntity.ok().build();
   }
-  
-//  TODO: integrate with Slack events.
-//  @PostMapping(value = "/slack/events", consumes = {MediaType.APPLICATION_JSON_VALUE})
-//  @AuthenticationScope(scopes = {TokenScope.global})
-//  @Operation(summary = "Receive Slack Events")
-//  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
-//      @ApiResponse(responseCode = "400", description = "Bad Request")})
-//  ResponseEntity<?> receiveSlackEvent(HttpServletRequest request, 
-//      @RequestHeader("x-slack-request-timestamp") String timestamp,
-//      @RequestHeader("x-slack-signature") String signature,
-//      @RequestBody JsonNode slackEvent) throws JsonMappingException, JsonProcessingException {
-//    if (slackEvent.has("challenge")) {
-//      LOGGER.info("Challenge: " + slackEvent.get("challenge"));
-//      return ResponseEntity.ok().body(slackEvent.get("challenge"));
-//    }
-//    LOGGER.info(slackEvent);
-//    return ResponseEntity.ok().build();
-//  }
 }

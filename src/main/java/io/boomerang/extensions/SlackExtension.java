@@ -12,5 +12,7 @@ public interface SlackExtension {
   ResponseEntity<?> handleAuth(String code);
 
   Supplier<Boolean> createRunModal(MultiValueMap<String, String> slackEvent);
+
+  Supplier<Boolean> appHomeOpened(JsonNode payload);
   
 }
