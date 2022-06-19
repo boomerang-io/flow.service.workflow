@@ -98,7 +98,7 @@ public class ExtensionsV1Controller {
     if (payload.has("challenge")) {
       LOGGER.info("Challenge: " + payload.get("challenge"));
       return ResponseEntity.ok().body(payload.get("challenge"));
-    } else if (payload.has("type") && "app_home_opened".equals(payload.get("type").asText())) {
+    } else if (payload.has("type") && "app_home_opened".equals(payload.get("event").get("type").asText())) {
       CompletableFuture.supplyAsync(slackExtension.appHomeOpened(payload));
     } else if (payload.has("type")) {
       LOGGER.error("Unhandled Slack Event Type: " + payload.get("type").asText());

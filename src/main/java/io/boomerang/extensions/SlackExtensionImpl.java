@@ -38,7 +38,6 @@ import com.slack.api.model.block.SectionBlock;
 import com.slack.api.model.block.composition.MarkdownTextObject;
 import com.slack.api.model.block.composition.PlainTextObject;
 import com.slack.api.model.block.element.BlockElement;
-import com.slack.api.model.block.element.BlockElements;
 import com.slack.api.model.block.element.ButtonElement;
 import com.slack.api.model.view.View;
 import com.slack.api.model.view.View.ViewBuilder;
