@@ -6,8 +6,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.stream.Collectors;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -20,6 +19,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.boomerang.config.EventingProperties;
 import io.boomerang.errors.model.BoomerangError;
 import io.boomerang.errors.model.ErrorDetail;
 import io.boomerang.model.Task;
@@ -60,21 +62,25 @@ public class ControllerClientImpl implements ControllerClient {
 
   private static final Logger LOGGER = LogManager.getLogger();
 
-  @Value("${controller.createtask.url}")
-  public String createTaskURL;
+  private static final String CREATEWORKSPACEREQUEST = "Create Workflow Request";
+  private static final String DELETEWORKSPACEREQUEST = "Delete Workspace Request";
+  private static final String CREATEWORKFLOWREQUEST = "Create Workflow Request";
+  private static final String TERMINATEWORKFLOWREQUEST = "Terminate Workflow Request";
+  private static final String CREATETEMPLATETASKREQUEST = "Create Template Task Request";
+  private static final String CREATECUSTOMTASKREQUEST = "Create Custom Task Request";
+  private static final String TERMINATETASKREQUEST = "Terminate Task Request";
 
-  @Value("${controller.createworkflow.url}")
-  private String createWorkflowURL;
+  private static final String ERRORLOGPRFIX = "Error for: {}";
+
+  @Autowired
+  @Qualifier("internalRestTemplate")
+  public RestTemplate restTemplate;
 
   @Autowired
   private FlowSettingsService flowSettings;
 
   @Autowired
   private PropertyManager propertyManager;
-
-  @Autowired
-  @Qualifier("internalRestTemplate")
-  public RestTemplate restTemplate;
 
   @Autowired
   public ActivityTaskService taskService;
@@ -85,24 +91,23 @@ public class ControllerClientImpl implements ControllerClient {
   @Autowired
   private FlowWorkflowActivityService workflowActivityService;
 
+  @Autowired
+  private FlowWorkflowService workflowService;
+
+  @Autowired
+  EventingProperties properties;
+
+  @Value("${controller.createtask.url}")
+  public String createTaskURL;
+
+  @Value("${controller.createworkflow.url}")
+  private String createWorkflowURL;
+
   @Value("${controller.terminateworkflow.url}")
   private String terminateWorkflowURL;
 
   @Value("${controller.terminatetask.url}")
   private String terminateTaskURL;
-
-  @Autowired
-  private FlowWorkflowService workflowService;
-
-  private static final String CREATEWORKSPACEREQUEST = "Create Workflow Request";
-  private static final String DELETEWORKSPACEREQUEST = "Delete Workspace Request";
-
-  private static final String CREATEWORKFLOWREQUEST = "Create Workflow Request";
-  private static final String TERMINATEWORKFLOWREQUEST = "Terminate Workflow Request";
-  private static final String CREATETEMPLATETASKREQUEST = "Create Template Task Request";
-  private static final String CREATECUSTOMTASKREQUEST = "Create Custom Task Request";
-  private static final String TERMINATETASKREQUEST = "Terminate Task Request";
-  private static final String ERRORLOGPRFIX = "Error for: {}";
 
   @Value("${controller.createworkspace.url}")
   private String createWorkspaceUrl;
@@ -127,7 +132,7 @@ public class ControllerClientImpl implements ControllerClient {
       request.setWorkspaces(workspaces);
     }
 
-    request.setLabels(this.convertToMap(labels));
+    request.setLabels(this.prepareLabelsForRequest(labels));
 
     logPayload(CREATEWORKFLOWREQUEST, request);
     Date startTime = new Date();
@@ -243,7 +248,7 @@ public class ControllerClientImpl implements ControllerClient {
     request.setWorkflowActivityId(activityId);
     request.setTaskName(task.getTaskName());
     request.setTaskActivityId(task.getTaskActivityId());
-    request.setLabels(this.convertToMap(labels));
+    request.setLabels(this.prepareLabelsForRequest(labels));
 
     WorkflowEntity workflow = this.workflowService.getWorkflow(activity.getWorkflowId());
     List<TaskWorkspace> taskWorkspaces = buildTaskWorkspaceList(workflow, activityId);
@@ -420,7 +425,7 @@ public class ControllerClientImpl implements ControllerClient {
     request.setWorkflowActivityId(activityId);
     request.setTaskName(task.getTaskName());
     request.setTaskActivityId(task.getTaskActivityId());
-    request.setLabels(this.convertToMap(labels));
+    request.setLabels(this.prepareLabelsForRequest(labels));
 
     WorkflowEntity workflow = this.workflowService.getWorkflow(activity.getWorkflowId());
     List<TaskWorkspace> taskWorkspaces = buildTaskWorkspaceList(workflow, activityId);
@@ -675,16 +680,17 @@ public class ControllerClientImpl implements ControllerClient {
     LOGGER.debug("Benchmark [Request Type]: {} - {} ms", payloadName, diff);
   }
 
-  private Map<String, String> convertToMap(List<KeyValuePair> labelList) {
+  private Map<String, String> prepareLabelsForRequest(List<KeyValuePair> labelList) {
+
     if (labelList == null) {
       return null;
     }
 
-    Map<String, String> labels = new HashMap<>();
-    for (KeyValuePair property : labelList) {
-      labels.put(property.getKey(), property.getValue());
-    }
-    return labels;
+    // @formatter:off
+    return labelList.stream()
+        .filter(kv -> !kv.getKey().startsWith(properties.getShared().getLabel().getPrefix()))
+        .collect(Collectors.toMap(KeyValuePair::getKey, KeyValuePair::getValue));
+    // @formatter:on
   }
 
   @Override

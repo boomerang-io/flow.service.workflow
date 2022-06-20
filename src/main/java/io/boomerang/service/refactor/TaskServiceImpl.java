@@ -10,8 +10,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.TimeZone;
 import java.util.stream.Collectors;
-import com.github.alturkovic.lock.Lock;
-import com.github.alturkovic.lock.exception.LockNotAvailableException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -22,6 +20,8 @@ import org.springframework.retry.policy.SimpleRetryPolicy;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import com.github.alturkovic.lock.Lock;
+import com.github.alturkovic.lock.exception.LockNotAvailableException;
 import io.boomerang.model.ApprovalStatus;
 import io.boomerang.model.RequestFlowExecution;
 import io.boomerang.model.Task;
@@ -144,7 +144,7 @@ public class TaskServiceImpl implements TaskService {
     // TODO Until we find a better solution, I think it is better to sync this part only on the
     // current instance of 'taskService', that processes all the dependent tasks of an Activity
     // (Workflow?), and not on the class itself, because this will transform the processing into a
-    // Synchronized processing model and not Async, as we want it. 
+    // Synchronized processing model and not Async, as we want it.
     synchronized (this) {
       activity = activityService.findWorkflowActivtyById(taskExecution.getActivityId());
 
