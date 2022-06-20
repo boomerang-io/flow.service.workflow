@@ -534,16 +534,15 @@ public class SlackExtensionImpl implements SlackExtension {
    */
   public Supplier<Boolean> appHomeOpened(JsonNode jsonPayload) {
     return () -> {
-      LOGGER.info("Payload: " + jsonPayload.toPrettyString());
+      LOGGER.debug("Payload: " + jsonPayload.toPrettyString());
       final String userId = jsonPayload.get("event").get("user").asText();
-      LOGGER.info("User ID: " + userId);
       final String teamId = jsonPayload.get("team_id").asText();
-      LOGGER.info("Team ID: " + teamId);
       final String authToken = getSlackAuthToken(teamId);
 
       Slack slack = Slack.getInstance();
       try {
         Boolean existingUser = false;
+        Boolean alreadyOpened = false;
         UsersInfoResponse userInfo =
             slack.methods(authToken).usersInfo(UsersInfoRequest.builder().user(userId).build());
         LOGGER.debug("User Info: " + userInfo.toString());
@@ -552,30 +551,32 @@ public class SlackExtensionImpl implements SlackExtension {
           String userEmail = userInfo.getUser().getProfile().getEmail();
           if (userEmail != null) {
             FlowUserEntity userEntity = userIdentityService.getUserByEmail(userEmail);
-            if (userEntity.getLabels() != null && ParameterMapper.keyValuePairListToMap(userEntity.getLabels()).containsKey("slack_app_opened") && "true".equals(ParameterMapper.keyValuePairListToMap(userEntity.getLabels()).get("slack_app_opened"))) {
+            if (userEntity != null) {
               existingUser = true;
-            } else {
-              FlowUser flowUser = new FlowUser();
-              BeanUtils.copyProperties(userEntity, flowUser);
-              List<KeyValuePair> labels = new LinkedList<>();
-              labels.add(new KeyValuePair("slack_app_opened","true"));
-              flowUser.setLabels(labels);
-              userIdentityService.updateFlowUser(userEntity.getId(), flowUser);
+              if (userEntity.getLabels() != null && ParameterMapper.keyValuePairListToMap(userEntity.getLabels()).containsKey("slack_app_opened") && "true".equals(ParameterMapper.keyValuePairListToMap(userEntity.getLabels()).get("slack_app_opened"))) {
+                alreadyOpened = true;
+              } else {
+                FlowUser flowUser = new FlowUser();
+                BeanUtils.copyProperties(userEntity, flowUser);
+                List<KeyValuePair> labels = new LinkedList<>();
+                labels.add(new KeyValuePair("slack_app_opened","true"));
+                flowUser.setLabels(labels);
+                userIdentityService.updateFlowUser(userEntity.getId(), flowUser);
+              }
             }
           }
         }
-        
-        ChatPostMessageResponse messageResponse;
-        if (existingUser) {
-          messageResponse = slack.methods(authToken)
+        if (existingUser && !alreadyOpened) {
+          slack.methods(authToken)
               .chatPostMessage(req -> req.channel(userId)
                   .blocks(appHomeBlocks(true)));
-        } else {
-          messageResponse = slack.methods(authToken)
+        } else if (!alreadyOpened) {
+          slack.methods(authToken)
               .chatPostMessage(req -> req.channel(userId)
                   .blocks(appHomeBlocks(false)));
+        } else {
+          LOGGER.debug("User already exists, skipping Slack welcome");
         }
-        LOGGER.debug(messageResponse.toString());
       } catch (RunWorkflowException | IOException | SlackApiException | HttpClientErrorException
           | BoomerangException e) {
         LOGGER.error(e);
@@ -605,7 +606,7 @@ public class SlackExtensionImpl implements SlackExtension {
             .url(flowAppsUrl).build())
         .build());
     } 
-    blocks.add(SectionBlock.builder().text(MarkdownTextObject.builder().text("*Create your first Automation*\n"
+    blocks.add(SectionBlock.builder().text(MarkdownTextObject.builder().text("*Create Automation*\n"
         + "Creating your first workflow is simple. Start from scratch or a template and start dragging and dropping your way to automation.")
         .build())
         .accessory(ButtonElement.builder().text(PlainTextObject.builder().text(":rocket: Create Automation").emoji(true).build())

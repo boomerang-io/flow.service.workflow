@@ -47,6 +47,13 @@ public class ExtensionsV1Controller {
       @RequestParam String code) {
     return slackExtension.handleAuth(code);
   }
+  
+  @GetMapping(value = "/slack/install")
+  @Operation(summary = "Install URL Redirect")
+  @ApiResponses(value = {@ApiResponse(responseCode = "302", description = "Found")})
+  ResponseEntity<?> installSlack() throws URISyntaxException {
+    return slackExtension.installRedirect();
+  }
 
   @PostMapping(value = "/slack/commands", consumes = {MediaType.APPLICATION_FORM_URLENCODED_VALUE})
   @AuthenticationScope(scopes = {TokenScope.global})
@@ -107,13 +114,5 @@ public class ExtensionsV1Controller {
       LOGGER.error("Unhandled Slack Event Payload with no Type: " + payload.toPrettyString());
     }
     return ResponseEntity.ok().build();
-  }
-  
-  @GetMapping(value = "/slack/install")
-  @AuthenticationScope(scopes = {TokenScope.global})
-  @Operation(summary = "Install URL Redirect")
-  @ApiResponses(value = {@ApiResponse(responseCode = "302", description = "Found")})
-  ResponseEntity<?> installSlack() throws URISyntaxException {
-    return slackExtension.installRedirect();
   }
 }
