@@ -101,8 +101,7 @@ public class SlackExtensionImpl implements SlackExtension {
   private static final String MODAL_TEXT_FOOTER =
   ":bulb: This integration is in _alpha_ and currently only works with Workflows that do not require parameters to be entered. You also need to be a registered user with access to the Workflow.";
 
-  private static final String EXTENSION_TYPE =
-      "slack_auth";
+  private static final String EXTENSION_TYPE = "slack_auth";
 
   /*
    * Processes a Slash command and generates a Modal for the end user to confirm Workflow Run details
@@ -544,6 +543,7 @@ public class SlackExtensionImpl implements SlackExtension {
 
       Slack slack = Slack.getInstance();
       try {
+        Boolean existingUser = false;
         UsersInfoResponse userInfo =
             slack.methods(authToken).usersInfo(UsersInfoRequest.builder().user(userId).build());
         LOGGER.debug("User Info: " + userInfo.toString());
@@ -552,22 +552,30 @@ public class SlackExtensionImpl implements SlackExtension {
           String userEmail = userInfo.getUser().getProfile().getEmail();
           if (userEmail != null) {
             FlowUserEntity userEntity = userIdentityService.getUserByEmail(userEmail);
-            FlowUser flowUser = new FlowUser();
-            BeanUtils.copyProperties(userEntity, flowUser);
-            List<KeyValuePair> labels = new LinkedList<>();
-            labels.add(new KeyValuePair("slack_app_opened","true"));
-            flowUser.setLabels(labels);
-            userIdentityService.updateFlowUser(userEntity.getId(), flowUser);
+            if (userEntity.getLabels() != null && ParameterMapper.keyValuePairListToMap(userEntity.getLabels()).containsKey("slack_app_opened") && "true".equals(ParameterMapper.keyValuePairListToMap(userEntity.getLabels()).get("slack_app_opened"))) {
+              existingUser = true;
+            } else {
+              FlowUser flowUser = new FlowUser();
+              BeanUtils.copyProperties(userEntity, flowUser);
+              List<KeyValuePair> labels = new LinkedList<>();
+              labels.add(new KeyValuePair("slack_app_opened","true"));
+              flowUser.setLabels(labels);
+              userIdentityService.updateFlowUser(userEntity.getId(), flowUser);
+            }
           }
-          
-          ChatPostMessageResponse messageResponse = slack.methods(authToken)
+        }
+        
+        ChatPostMessageResponse messageResponse;
+        if (existingUser) {
+          messageResponse = slack.methods(authToken)
+              .chatPostMessage(req -> req.channel(userId)
+                  .blocks(appHomeBlocks(true)));
+        } else {
+          messageResponse = slack.methods(authToken)
               .chatPostMessage(req -> req.channel(userId)
                   .blocks(appHomeBlocks(false)));
-          LOGGER.debug(messageResponse.toString());
-        } else {
-          throw new RunWorkflowException(
-              "Unable to retrieve a matching User Profile to use when executing the Workflow.");
         }
+        LOGGER.debug(messageResponse.toString());
       } catch (RunWorkflowException | IOException | SlackApiException | HttpClientErrorException
           | BoomerangException e) {
         LOGGER.error(e);
@@ -583,32 +591,40 @@ public class SlackExtensionImpl implements SlackExtension {
    * submitted in slack
    */
   private List<LayoutBlock> appHomeBlocks(Boolean existingUser) {
+    String signUpURL = flowSettingsService.getConfiguration("customizations", "signUpURL").getValue();
     List<LayoutBlock> blocks = new LinkedList<>();
     blocks.add(HeaderBlock.builder()
         .text(PlainTextObject.builder().text("Hello :wave:").emoji(true).build()).build());
-    blocks.add(SectionBlock.builder().text(MarkdownTextObject.builder().text("Welcome to a new modern and easy way to supercharge your automation.\nI'm here to help you trigger your Workflows from right within Slack, giving you complete control over what needs to be done.\nHere are a few things to get started with to make your experience a good one.").build())
+    blocks.add(SectionBlock.builder().text(MarkdownTextObject.builder().text("Welcome to the new modern and easy way to supercharge your automation. I am here to help you trigger your Workflows from right within Slack, giving you complete control over what needs to be done.\n\nHere are a few things to get started with to make your experience a good one.").build())
                 .build());
-    if (!existingUser) {
+    if (!existingUser && signUpURL != null && !signUpURL.isEmpty()) {
     blocks.add(SectionBlock.builder().text(MarkdownTextObject.builder().text("*Sign Up*\n"
         + "I see that you are not yet a user. Sign up to be able to automate.")
         .build())
         .accessory(ButtonElement.builder().text(PlainTextObject.builder().text(":lower_left_ballpoint_pen: Sign Up").emoji(true).build())
             .url(flowAppsUrl).build())
         .build());
-    } else {
-      blocks.add(SectionBlock.builder().text(MarkdownTextObject.builder().text("*Create your first Automation*\n"
-          + "Creating your first workflow is simple. Start from scratch or a template and start dragging and dropping your way to automation.")
-          .build())
-          .accessory(ButtonElement.builder().text(PlainTextObject.builder().text(":rocket: Create Automation").emoji(true).build())
-              .url(flowAppsUrl).build())
-          .build());
-    }
+    } 
+    blocks.add(SectionBlock.builder().text(MarkdownTextObject.builder().text("*Create your first Automation*\n"
+        + "Creating your first workflow is simple. Start from scratch or a template and start dragging and dropping your way to automation.")
+        .build())
+        .accessory(ButtonElement.builder().text(PlainTextObject.builder().text(":rocket: Create Automation").emoji(true).build())
+            .url(flowAppsUrl).build())
+        .build());
+    blocks.add(SectionBlock.builder().text(MarkdownTextObject.builder().text("*Use Templates*\n"
+        + "We have a number of handy, pre-built workflow templates for common use cases to get you started quickly. This can be found in the top right Templates button.")
+        .build())
+        .accessory(ButtonElement.builder().text(PlainTextObject.builder().text(":jigsaw: Use a Template").emoji(true).build())
+            .url(flowAppsUrl).build())
+        .build());
     blocks.add(SectionBlock.builder().text(MarkdownTextObject.builder().text("Please drop us a message at hello@flowabl.io - chat soon,\nTyson").build())
         .build());
     blocks.add(DividerBlock.builder().build());
     List<ContextBlockElement> elementsList = new LinkedList<>();
     elementsList.add(MarkdownTextObject.builder().text(
         MODAL_TEXT_FOOTER)
+        .build());
+    elementsList.add(MarkdownTextObject.builder().text(":bulb: You may receive this message multiple times if you are not yet a user, as we check your profile to determine if you have already receive this welcome message.")
         .build());
     blocks.add(ContextBlock.builder().elements(elementsList).build());
     return blocks;
