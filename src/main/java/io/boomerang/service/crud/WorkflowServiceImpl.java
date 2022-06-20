@@ -459,7 +459,7 @@ public class WorkflowServiceImpl implements WorkflowService {
       for (FlowTaskTemplateEntity template : templates) {
         templateIds.add(template.getId());
       }
-    } else if (scope == WorkflowScope.system) {
+    } else if (scope == WorkflowScope.system || scope == WorkflowScope.template) {
       List<FlowTaskTemplateEntity> templates = templateService.getAllTaskTemplatesForSystem();
       for (FlowTaskTemplateEntity template : templates) {
         templateIds.add(template.getId());
@@ -639,14 +639,14 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   /*
    * Checks if the Workflow can be executed based on an active workflow and enabled triggers.
-   * 
+   *
    * If trigger is Manual or Schedule then a deeper check is used to check if those triggers are
    * enabled.
-   * 
+   *
    * @param workflowId the Workflows unique ID
-   * 
+   *
    * @param Trigger an optional Trigger object
-   * 
+   *
    * @return Boolean whether the workflow can execute or not
    */
   @Override
@@ -683,12 +683,12 @@ public class WorkflowServiceImpl implements WorkflowService {
   /*
    * Checks if the Workflow's Team is active and is of scope Team can be executed based on an active
    * workflow and enabled triggers.
-   * 
+   *
    * If trigger is Manual or Schedule then a deeper check is used to check if those triggers are
    * enabled.
-   * 
+   *
    * @param teamId the Workflows Team ID
-   * 
+   *
    * @return Boolean whether the workflow can execute or not
    */
   @Override
