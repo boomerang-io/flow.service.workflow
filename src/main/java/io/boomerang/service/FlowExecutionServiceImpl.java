@@ -143,13 +143,13 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
         newTask.setDecisionValue(dagTask.getDecisionValue());
       }
 
-      final List<String> taskDepedancies = new LinkedList<>();
+      final List<String> taskDependencies = new LinkedList<>();
       for (Dependency dependency : dagTask.getDependencies()) {
-        taskDepedancies.add(dependency.getTaskId());
+        taskDependencies.add(dependency.getTaskId());
       }
       newTask.setDetailedDepednacies(dagTask.getDependencies());
 
-      newTask.setDependencies(taskDepedancies);
+      newTask.setDependencies(taskDependencies);
       taskList.add(newTask);
     }
     return taskList;
