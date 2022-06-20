@@ -14,7 +14,6 @@ import io.boomerang.model.eventing.EventFactory;
 import io.boomerang.model.eventing.EventTrigger;
 import io.boomerang.model.eventing.EventWFE;
 import io.boomerang.mongo.model.TaskStatus;
-import io.boomerang.util.LabelValueCodec;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.provider.EventFormatProvider;
 import io.cloudevents.jackson.JsonFormat;
@@ -123,8 +122,7 @@ public class CloudEventTest {
     Assertions.assertEquals(eventTrigger.getInitiatorId(), "iulian");
     Assertions.assertEquals(eventTrigger.getProperties().size(), 0);
     Assertions.assertNotNull(eventTrigger.getInitiatorContext());
-    Assertions.assertEquals(jsonContextField,
-        LabelValueCodec.decode(eventTrigger.getInitiatorContext()));
+    Assertions.assertEquals(eventTrigger.getInitiatorContext(), jsonContextField);
   }
 
   @Test

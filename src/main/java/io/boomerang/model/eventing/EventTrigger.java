@@ -8,7 +8,6 @@ import java.util.Map;
 import java.util.Optional;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.boomerang.util.LabelValueCodec;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.CloudEventUtils;
 import io.cloudevents.core.data.PojoCloudEventData;
@@ -128,24 +127,25 @@ public class EventTrigger extends Event {
     this.properties = properties;
   }
 
-  private EventTrigger processExtensions(CloudEvent ce, EventTrigger et)
+  private EventTrigger processExtensions(CloudEvent cloudEvent, EventTrigger eventTrigger)
       throws InvalidPropertiesFormatException {
+
     // Map initiator ID and the context
-    Object initiatorIdObj = ce.getExtension(EXTENSION_ATTRIBUTE_INITIATOR_ID);
-    Object contextObject = ce.getExtension(EXTENSION_ATTRIBUTE_CONTEXT);
+    Object initiatorIdObj = cloudEvent.getExtension(EXTENSION_ATTRIBUTE_INITIATOR_ID);
+    Object contextObject = cloudEvent.getExtension(EXTENSION_ATTRIBUTE_CONTEXT);
 
     if (initiatorIdObj != null) {
       if (initiatorIdObj.toString().matches("^[a-zA-Z0-9]+$")) {
-        et.setInitiatorId(initiatorIdObj.toString());
+        eventTrigger.setInitiatorId(initiatorIdObj.toString());
       } else {
         throw new InvalidPropertiesFormatException("Initiator ID must be alphanumeric!");
       }
     }
 
     if (contextObject != null) {
-      et.setInitiatorContext(LabelValueCodec.encode(contextObject.toString()));
+      eventTrigger.setInitiatorContext(contextObject.toString());
     }
-    return et;
+    return eventTrigger;
   }
 
   // @formatter:off

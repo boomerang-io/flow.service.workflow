@@ -13,7 +13,6 @@ import io.boomerang.model.TaskExecutionResponse;
 import io.boomerang.mongo.model.ErrorResponse;
 import io.boomerang.mongo.model.KeyValuePair;
 import io.boomerang.mongo.model.TaskStatus;
-import io.boomerang.util.LabelValueCodec;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.builder.CloudEventBuilder;
 
@@ -91,8 +90,8 @@ public class EventStatusUpdate extends Event {
     // @formatter:on
 
     if (Strings.isNotEmpty(initiatorContext)) {
-      cloudEventBuilder = cloudEventBuilder.withExtension(EXTENSION_ATTRIBUTE_CONTEXT,
-          LabelValueCodec.decode(initiatorContext));
+      cloudEventBuilder =
+          cloudEventBuilder.withExtension(EXTENSION_ATTRIBUTE_CONTEXT, initiatorContext);
     }
 
     return cloudEventBuilder.build();
