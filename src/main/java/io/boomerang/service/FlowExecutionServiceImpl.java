@@ -284,16 +284,16 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
     executeNextStep(tasksToRun, startTask, start, end, graph);
   }
 
-  private void executeNextStep(List<Task> tasks, Task currentTask, final Task start, final Task end,
+  private void executeNextStep(List<Task> tasks, Task currentTask,
+      final Task start, final Task end,
       final Graph<String, DefaultEdge> graph) {
 
     try {
+      final List<String> nodes =
+          GraphProcessor.createOrderedTaskList(graph, start.getTaskId(), end.getTaskId());
       List<Task> nextNodes = this.getTasksDependants(tasks, currentTask);
+
       for (Task next : nextNodes) {
-
-        final List<String> nodes =
-            GraphProcessor.createOrderedTaskList(graph, start.getTaskId(), end.getTaskId());
-
         if (nodes.contains(next.getTaskId())) {
           InternalTaskRequest taskRequest = new InternalTaskRequest();
           taskRequest.setActivityId(next.getTaskActivityId());
@@ -301,7 +301,7 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
         }
       }
     } catch (Exception e) {
-      e.printStackTrace();
+      LOGGER.error(e.getStackTrace());
     }
 
   }

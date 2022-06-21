@@ -139,22 +139,6 @@ public class TaskServiceImpl implements TaskService {
     taskExecution.setFlowTaskStatus(TaskStatus.inProgress);
     taskExecution = taskActivityService.save(taskExecution);
 
-    // Synchronize status update since `createTask` can be invoked multiple times, depending on the
-    // number of tasks forking out of the previous task.
-    // TODO Until we find a better solution, I think it is better to sync this part only on the
-    // current instance of 'taskService', that processes all the dependent tasks of an Activity
-    // (Workflow?), and not on the class itself, because this will transform the processing into a
-    // Synchronized processing model and not Async, as we want it.
-    synchronized (this) {
-      activity = activityService.findWorkflowActivtyById(taskExecution.getActivityId());
-
-      if (activity.getStatus() != TaskStatus.inProgress) {
-        activity.setStatus(TaskStatus.inProgress);
-        activityService.saveWorkflowActivity(activity);
-        eventingService.publishActivityStatusEvent(activity);
-      }
-    }
-
     boolean canRunTask = dagUtility.canCompleteTask(activity, task.getTaskId());
 
     LOGGER.debug("[{}] Examining task type: {}", taskId, taskType);
@@ -415,8 +399,6 @@ public class TaskServiceImpl implements TaskService {
     taskExecution = taskActivityService.save(taskExecution);
 
     activity.setStatus(TaskStatus.waiting);
-    activityService.saveWorkflowActivity(activity);
-    eventingService.publishActivityStatusEvent(activity);
 
     ApprovalEntity approval = new ApprovalEntity();
     approval.setTaskActivityId(taskExecution.getId());
@@ -444,6 +426,7 @@ public class TaskServiceImpl implements TaskService {
     approvalService.save(approval);
     activity.setAwaitingApproval(true);
     activityService.saveWorkflowActivity(activity);
+    eventingService.publishActivityStatusEvent(activity);
   }
 
   private void saveWorkflowProperty(Task task, ActivityEntity activity) {
@@ -498,7 +481,6 @@ public class TaskServiceImpl implements TaskService {
     List<String> keys = new LinkedList<>();
     keys.add(storeId);
 
-    workflowActivity = activityService.findWorkflowActivtyById(activity.getActivityId());
     activity.setFlowTaskStatus(request.getStatus());
     long duration = new Date().getTime() - activity.getStartTime().getTime();
     activity.setDuration(duration);
@@ -507,7 +489,7 @@ public class TaskServiceImpl implements TaskService {
       activity.setOutputs(request.getOutputProperties());
     }
 
-    activity = taskActivityService.save(activity);
+    taskActivityService.save(activity);
 
     boolean finishedAll = finishedAll(workflowActivity, tasks, currentTask);
 
@@ -517,10 +499,7 @@ public class TaskServiceImpl implements TaskService {
     String tokenId = getLock(storeId, keys, 105000);
     LOGGER.debug("[{}] Obtained lock", activityId);
 
-    workflowActivity = activityService.findWorkflowActivtyById(activity.getActivityId());
     updatePendingApprovalStatus(workflowActivity);
-
-    activity.setFlowTaskStatus(request.getStatus());
 
     String workflowActivityId = workflowActivity.getId();
 
@@ -544,7 +523,7 @@ public class TaskServiceImpl implements TaskService {
         ApprovalStatus.submitted);
     boolean existingApprovals = (count > 0);
     workflowActivity.setAwaitingApproval(existingApprovals);
-    activityService.saveWorkflowActivity(workflowActivity);
+    workflowActivity = activityService.saveWorkflowActivity(workflowActivity);
   }
 
   private String getLock(String storeId, List<String> keys, long timeout) {
