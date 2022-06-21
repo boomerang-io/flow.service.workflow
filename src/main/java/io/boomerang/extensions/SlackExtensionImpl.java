@@ -592,18 +592,17 @@ public class SlackExtensionImpl implements SlackExtension {
    * submitted in slack
    */
   private List<LayoutBlock> appHomeBlocks(Boolean existingUser) {
-    String signUpURL = flowSettingsService.getConfiguration("customizations", "signUpURL").getValue();
+    String appName = flowSettingsService.getConfiguration("customizations", "appName").getValue();
+    String platformName = flowSettingsService.getConfiguration("customizations", "platformName").getValue();
     List<LayoutBlock> blocks = new LinkedList<>();
     blocks.add(HeaderBlock.builder()
         .text(PlainTextObject.builder().text("Hello :wave:").emoji(true).build()).build());
     blocks.add(SectionBlock.builder().text(MarkdownTextObject.builder().text("Welcome to the new modern and easy way to supercharge your automation. I am here to help you trigger your Workflows from right within Slack, giving you complete control over what needs to be done.\n\nHere are a few things to get started with to make your experience a good one.").build())
                 .build());
-    if (!existingUser && signUpURL != null && !signUpURL.isEmpty()) {
+    if (!existingUser) {
     blocks.add(SectionBlock.builder().text(MarkdownTextObject.builder().text("*Sign Up*\n"
-        + "I see that you are not yet a user. Sign up to be able to automate.")
+        + "I see that you are not yet a user of " + platformName + " " + appName + ". Sign up to be able to automate.")
         .build())
-        .accessory(ButtonElement.builder().text(PlainTextObject.builder().text(":lower_left_ballpoint_pen: Sign Up").emoji(true).build())
-            .url(flowAppsUrl).build())
         .build());
     } 
     blocks.add(SectionBlock.builder().text(MarkdownTextObject.builder().text("*Create Automation*\n"
