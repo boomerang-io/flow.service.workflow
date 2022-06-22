@@ -459,7 +459,7 @@ public class WorkflowServiceImpl implements WorkflowService {
       for (FlowTaskTemplateEntity template : templates) {
         templateIds.add(template.getId());
       }
-    } else if (scope == WorkflowScope.system) {
+    } else if (scope == WorkflowScope.system || scope == WorkflowScope.template) {
       List<FlowTaskTemplateEntity> templates = templateService.getAllTaskTemplatesForSystem();
       for (FlowTaskTemplateEntity template : templates) {
         templateIds.add(template.getId());
