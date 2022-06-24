@@ -31,6 +31,7 @@ import net.boomerangplatform.error.BoomerangException;
 import net.boomerangplatform.model.FlowTeam;
 import net.boomerangplatform.model.FlowWorkflowRevision;
 import net.boomerangplatform.model.GenerateTokenResponse;
+import net.boomerangplatform.model.WFETriggerResponse;
 import net.boomerangplatform.model.WorkflowExport;
 import net.boomerangplatform.model.WorkflowQuotas;
 import net.boomerangplatform.model.WorkflowShortSummary;
@@ -83,6 +84,9 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   @Autowired
   private TeamService teamService;
+  
+  @Autowired
+  private RevisionService revisionService;
 
   @Value("${max.workflow.count}")
   private Integer maxWorkflowCount;
@@ -875,21 +879,47 @@ public class WorkflowServiceImpl implements WorkflowService {
     existingWorkflow.setName(newName);
     existingWorkflow.setTriggers(null);
     existingWorkflow.setTokens(null);
-    
+
     WorkflowEntity newWorkflow = this.saveWorkflow(existingWorkflow);
- 
+
     String newWorkflowId = newWorkflow.getId();
-    
+
     RevisionEntity revisionEntity = this.workflowVersionService.getLatestWorkflowVersion(id);
     revisionEntity.setId(null);
     revisionEntity.setWorkFlowId(newWorkflowId);
     revisionEntity.setVersion(1l);
-    
+
     this.workflowVersionService.insertWorkflow(revisionEntity);
-    
+
     WorkflowSummary updatedSummary = new WorkflowSummary(newWorkflow);
     updateSummaryInformation(updatedSummary);
 
     return updatedSummary;
+  }
+
+  @Override
+  public ResponseEntity<WFETriggerResponse> getRevisionProperties(String workflowId,
+      long workflowVersion, String taskId, String propertyKey) {
+
+    WFETriggerResponse response = new WFETriggerResponse();
+
+    RevisionEntity revision =
+        revisionService.findRevisionTaskProperty(workflowId, workflowVersion, taskId, propertyKey);
+
+    String prop = null;
+    String token = null;
+
+    try {
+      prop = revision.getDag().getTasks().stream().filter(r -> r.getTaskId().equals(taskId))
+          .findFirst().get().getProperties().stream().filter(p -> p.getKey().equals(propertyKey))
+          .findFirst().get().getValue();
+      response.setTopic(prop);
+      token = workFlowRepository.getWorkflow(workflowId).getTokens().get(0).getToken();
+      response.setWorkflowToken(token);
+    } catch (Exception e) {
+      return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+    return new ResponseEntity<>(response, HttpStatus.OK);
+
   }
 }

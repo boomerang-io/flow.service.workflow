@@ -71,4 +71,12 @@ public class RevisionServiceImpl implements RevisionService {
   public Optional<RevisionEntity> getRevision(String id) {
     return workFlowVersionRepository.findById(id);
   }
+
+  @Override
+  public RevisionEntity findRevisionTaskProperty(String workflowId, long workflowVersion,
+      String taskId, String propertyKey) {
+    return workFlowVersionRepository
+        .findByworkFlowIdAndVersionAndDagTasksTaskIdAndDagTasksPropertiesKey(workflowId,
+            workflowVersion, taskId, propertyKey);
+  }
 }

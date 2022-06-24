@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import net.boomerangplatform.model.FlowWorkflowRevision;
 import net.boomerangplatform.model.GenerateTokenResponse;
+import net.boomerangplatform.model.WFETriggerResponse;
 import net.boomerangplatform.model.WorkflowExport;
 import net.boomerangplatform.model.WorkflowShortSummary;
 import net.boomerangplatform.model.WorkflowSummary;
@@ -53,4 +54,7 @@ public interface WorkflowService {
   List<String> getWorkflowParameters(String workflowId, FlowWorkflowRevision workflowSummaryEntity);
 
   WorkflowSummary duplicateWorkflow(String id);
+
+  ResponseEntity<WFETriggerResponse> getRevisionProperties(String workflowId, long workflowVersion,
+      String taskId, String propertyKey);
 }
