@@ -18,4 +18,7 @@ public interface FlowWorkflowVersionRepository
 
   Page<RevisionEntity> findByworkFlowId(String string, Pageable pageable);
 
+  RevisionEntity findByworkFlowIdAndVersionAndDagTasksTaskIdAndDagTasksPropertiesKey(
+      String workflowId, long workflowVersion, String taskId, String propertyKey);
+
 }
