@@ -40,15 +40,20 @@ public class ActivityStatusResolver {
     TaskStatus resultingTaskStatus = null;
     switch (decimalStatus) {
       case 3: // All Waiting Bit Array: 00000010
+      case 18: // Waiting, NotStarted
       case 66:// Waiting, Failure Bit Array: 01000010
+      case 82: // Waiting, NotStarted, Failure
       case 130:// Waiting, Complete
+      case 146: // Waiting, NotStarted, Complete
       case 194:// Waiting, Complete, Failure
+      case 210: // Waiting, Not Started, Complete, Failure
         resultingTaskStatus = TaskStatus.waiting;
         break;
       case 128: // All Complete
         resultingTaskStatus = TaskStatus.completed;
         break;
-      case 192: // All Complete OR Failure. At least one Complete
+      case 192: // All Complete OR Failure. At least one Complete and one Failure
+        // TODO Is this Complete or Failure?
         resultingTaskStatus = TaskStatus.completed;
         break;
       case 64:
