@@ -176,13 +176,11 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
 
   private void createTaskPlan(List<Task> tasks, String activityId, final Task start, final Task end,
       final Graph<String, DefaultEdge> graph) {
-    if (start == null || end == null) {
-      throw new IllegalArgumentException("Either start or end task was null");
-    }
+
     final List<String> nodes =
         GraphProcessor.createOrderedTaskList(graph, start.getTaskId(), end.getTaskId());
     final List<Task> tasksToRun = new LinkedList<>();
-    for (final String node : nodes) {
+    for (String node : nodes) {
       final Task taskToAdd =
           tasks.stream().filter(tsk -> node.equals(tsk.getTaskId())).findAny().orElse(null);
       if (taskToAdd != null)
@@ -231,7 +229,7 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
   }
 
   private Task getTaskByName(List<Task> tasks, TaskType type) {
-    return tasks.stream().filter(tsk -> type.equals(tsk.getTaskType())).findAny().orElse(null);
+    return tasks.stream().filter(tsk -> type.equals(tsk.getTaskType())).findAny().orElseThrow();
   }
 
   private void executeWorkflowAsync(String activityId, final Task start, final Task end,
@@ -278,7 +276,7 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
   private void executeNextStep(List<Task> tasks, Task currentTask,
       final Task start, final Task end, final Graph<String, DefaultEdge> graph) {
 
-    if (tasks == null || start == null || end == null || currentTask == null || graph == null)
+    if (currentTask == null || graph == null)
       throw new IllegalArgumentException();
 
       List<Task> nextNodes = getTasksDependants(tasks, currentTask);
