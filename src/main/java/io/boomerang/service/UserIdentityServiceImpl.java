@@ -72,7 +72,6 @@ public class UserIdentityServiceImpl implements UserIdentityService {
         return null;
       }
       BeanUtils.copyProperties(userProfile, flowUser);
-      flowUser.setTeams(null);
 
       String email = userProfile.getEmail();
       FlowUserEntity dbUser = flowUserService.getUserWithEmail(email);
