@@ -18,6 +18,7 @@ import io.boomerang.model.profile.Features;
 import io.boomerang.model.profile.Navigation;
 import io.boomerang.model.profile.NavigationResponse;
 import io.boomerang.model.profile.Platform;
+import io.boomerang.mongo.service.FlowSettingsService;
 import io.boomerang.security.model.UserToken;
 import io.boomerang.security.service.ApiTokenService;
 import io.boomerang.service.UserIdentityService;
@@ -37,14 +38,14 @@ public class LaunchpadNavigationServiceImpl implements LaunchpadNavigationServic
   @Value("${core.platform.name}")
   private String platformName;
 
-  @Value("${core.platform.version}")
-  private String platformVersion;
-
   @Value("${boomerang.signOutUrl}")
   private String platformSignOutUrl;
 
   @Value("${boomerang.baseUrl}")
   private String platformBaseUrl;
+
+  @Value("${boomerang.version}")
+  private String platformVersion;
   
   @Autowired
   @Qualifier("internalRestTemplate")
@@ -52,6 +53,9 @@ public class LaunchpadNavigationServiceImpl implements LaunchpadNavigationServic
   
   @Value("${flow.externalUrl.platformNavigation}")
   private String platformNavigationUrl;
+
+  @Autowired
+  private FlowSettingsService settingsService;
   
   private static final String AUTHORIZATION_HEADER = "Authorization";
   private static final String TOKEN_PREFIX = "Bearer ";
@@ -92,12 +96,19 @@ public class LaunchpadNavigationServiceImpl implements LaunchpadNavigationServic
     
     navigationResponse.setFeatures(features);
 
+    String appName = settingsService.getConfiguration("customizations", "appName").getValue();
+    String platformName = settingsService.getConfiguration("customizations", "platformName").getValue();
+    String displayLogo = settingsService.getConfiguration("customizations", "displayLogo").getValue();
+    String logoURL = settingsService.getConfiguration("customizations", "logoURL").getValue();
+    String name = platformName + " " + appName;
     Platform platform = new Platform();
-    platform.setName("Boomerang Flow");
-    platform.setVersion("1.0");
+    platform.setName(name.trim());
+    platform.setVersion(platformVersion);
     platform.setSignOutUrl(platformBaseUrl + platformSignOutUrl);
-
-    platform.setDisplayLogo(false);
+    platform.setAppName(appName);
+    platform.setPlatformName(platformName);
+    platform.setDisplayLogo(Boolean.valueOf(displayLogo));
+    platform.setLogoURL(logoURL);
     platform.setPrivateTeams(false);
     platform.setSendMail(false);
     navigationResponse.setPlatform(platform);
