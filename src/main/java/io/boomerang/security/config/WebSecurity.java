@@ -1,7 +1,5 @@
 package io.boomerang.security.config;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
@@ -21,8 +19,6 @@ import io.boomerang.security.filters.FlowAuthorizationFilter;
 @EnableGlobalMethodSecurity(prePostEnabled = true, securedEnabled = true, proxyTargetClass = true)
 public class WebSecurity extends WebSecurityConfigurerAdapter {
 
-  private static final Logger LOGGER = LogManager.getLogger();
-
   private static final String INFO = "/info";
 
   private static final String API_DOCS = "/apis/docs/**";
@@ -32,6 +28,8 @@ public class WebSecurity extends WebSecurityConfigurerAdapter {
   private static final String INTERNAL = "/internal/**";
 
   private static final String WEBJARS = "/webjars/**";
+
+  private static final String SLACK_INSTALL = "/apis/v1/extensions/slack/install";
 
   @Value("${jwt.secret:secret}")
   private String jwtSecret;
@@ -61,7 +59,7 @@ public class WebSecurity extends WebSecurityConfigurerAdapter {
       throws Exception {
     final FlowAuthorizationFilter jwtFilter = new FlowAuthorizationFilter(tokenService,
         authenticationManager(), flowUserService, basicPassword);
-    http.csrf().disable().authorizeRequests().antMatchers(HEALTH, API_DOCS, INFO, INTERNAL, WEBJARS)
+    http.csrf().disable().authorizeRequests().antMatchers(HEALTH, API_DOCS, INFO, INTERNAL, WEBJARS, SLACK_INSTALL)
         .permitAll().and().authorizeRequests().anyRequest().authenticated().and()
         .addFilterBefore(jwtFilter, BasicAuthenticationFilter.class).sessionManagement()
         .sessionCreationPolicy(SessionCreationPolicy.STATELESS);

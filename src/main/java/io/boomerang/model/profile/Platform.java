@@ -6,8 +6,10 @@ public class Platform {
   private String name;
   private String signOutUrl;
   private String communityUrl;
+  private String appName;
   private String platformName;
   private Boolean displayLogo;
+  private String logoURL;
   private Boolean privateTeams;
   private Boolean sendMail;
 
@@ -92,6 +94,22 @@ public class Platform {
 
   public void setBaseEnvUrl(String baseEnvUrl) {
     this.baseEnvUrl = baseEnvUrl;
+  }
+
+  public String getAppName() {
+    return appName;
+  }
+
+  public void setAppName(String appName) {
+    this.appName = appName;
+  }
+
+  public String getLogoURL() {
+    return logoURL;
+  }
+
+  public void setLogoURL(String logoURL) {
+    this.logoURL = logoURL;
   }
 
 }

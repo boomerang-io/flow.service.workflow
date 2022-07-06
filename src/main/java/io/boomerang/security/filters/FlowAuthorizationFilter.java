@@ -42,6 +42,7 @@ public class FlowAuthorizationFilter extends BasicAuthenticationFilter {
   private static final String X_FORWARDED_EMAIL = "x-forwarded-email";
   
   private static final String X_ACCESS_TOKEN = "x-access-token";
+  private static final String TOKEN_URL_PARAM_NAME = "access_token";
   private static final String AUTHORIZATION_HEADER = "Authorization";
   private String basicPassword;
 
@@ -67,7 +68,7 @@ public class FlowAuthorizationFilter extends BasicAuthenticationFilter {
       } else if (req.getHeader(X_FORWARDED_EMAIL) != null) { 
         authentication = getGithubUserAuthentication(req);
       }
-      else if (req.getHeader(X_ACCESS_TOKEN) != null) {
+      else if (req.getHeader(X_ACCESS_TOKEN) != null || req.getParameter(TOKEN_URL_PARAM_NAME) != null) {
         authentication = getTokenBasedAuthentication(req);
       }
 
@@ -93,7 +94,8 @@ public class FlowAuthorizationFilter extends BasicAuthenticationFilter {
   }
 
   private Authentication getTokenBasedAuthentication(HttpServletRequest request) {
-    String xAccessToken = request.getHeader(X_ACCESS_TOKEN);
+    String xAccessToken = request.getHeader(X_ACCESS_TOKEN) != null ? request.getHeader(X_ACCESS_TOKEN) : 
+      request.getParameter(TOKEN_URL_PARAM_NAME);
     TokenEntity token = tokenService.getAccessToken(xAccessToken);
     if (token != null) {
       final List<GrantedAuthority> authorities = new ArrayList<>();

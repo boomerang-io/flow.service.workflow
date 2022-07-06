@@ -72,7 +72,6 @@ public class UserIdentityServiceImpl implements UserIdentityService {
         return null;
       }
       BeanUtils.copyProperties(userProfile, flowUser);
-      flowUser.setTeams(null);
 
       String email = userProfile.getEmail();
       FlowUserEntity dbUser = flowUserService.getUserWithEmail(email);
@@ -119,6 +118,17 @@ public class UserIdentityServiceImpl implements UserIdentityService {
 
         return flowUser;
       }
+    }
+    return null;
+  }
+  
+  @Override
+  public FlowUserEntity getUserByEmail(String userEmail) {
+    FlowUserEntity flowUser = flowUserService.getUserWithEmail(userEmail);
+    if (flowUser != null) {
+      FlowUserEntity profile = new FlowUserEntity();
+      BeanUtils.copyProperties(flowUser, profile);
+      return profile;
     }
     return null;
   }

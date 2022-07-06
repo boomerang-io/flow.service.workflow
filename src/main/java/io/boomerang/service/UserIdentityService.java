@@ -42,4 +42,6 @@ public interface UserIdentityService {
   
   public Token getRequestIdentity();
 
+  FlowUserEntity getUserByEmail(String userEmail);
+
 }

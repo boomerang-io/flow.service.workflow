@@ -48,7 +48,7 @@
 		<dependency>
 			<groupId>org.springdoc</groupId>
 			<artifactId>springdoc-openapi-ui</artifactId>
-			<version>1.6.6</version>
+			<version>1.6.8</version>
 		</dependency>
 		<dependency>
 			<groupId>org.webjars</groupId>
@@ -226,7 +226,7 @@
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-text</artifactId>
-			<version>1.8</version>
+			<version>1.9</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.httpcomponents</groupId>
@@ -246,6 +246,11 @@
 			<groupId>com.cronutils</groupId>
 			<artifactId>cron-utils</artifactId>
 			<version>9.1.6</version>
+		</dependency>
+		<dependency>
+	      <groupId>com.slack.api</groupId>
+	      <artifactId>slack-api-client</artifactId>
+	      <version>1.22.2</version>
 		</dependency>
 	</dependencies>
 
