@@ -17,4 +17,6 @@ public interface FlowTeamService {
 
   TeamEntity findById(String id);
 
+  List<TeamEntity> findActiveTeamsByIds(List<String> ids);
+
 }
