@@ -30,11 +30,6 @@ public class FlowTeamServiceImpl implements FlowTeamService {
   }
 
   @Override
-  public List<TeamEntity> findActiveTeamsByIds(List<String> ids) {
-    return flowTeamRepository.findByIdInAndIsActive(ids, true);
-  }
-
-  @Override
   public TeamEntity save(TeamEntity entity) {
     return flowTeamRepository.save(entity);
   }
