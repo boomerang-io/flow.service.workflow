@@ -11,8 +11,6 @@ public interface FlowTeamService {
   
   Page<TeamEntity> findAllActiveTeams(Pageable pageable);
 
-  List<TeamEntity> findTeamsWithHighLevelGroups(List<String> highLevelGroups);
-
   TeamEntity save(TeamEntity entity);
 
   TeamEntity findById(String id);
