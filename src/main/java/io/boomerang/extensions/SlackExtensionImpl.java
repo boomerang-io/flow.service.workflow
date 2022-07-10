@@ -656,7 +656,7 @@ public class SlackExtensionImpl implements SlackExtension {
     String key = flowSettingsService.getConfiguration("extensions", "slack.signingSecret").getValue();
     Generator generator = new Generator(key);
     Verifier verifier = new Verifier(generator);
-    return verifier.isValid(timestamp, body, signature)
+    return verifier.isValid(timestamp, body, signature);
 //    LOGGER.debug("Slack Timestamp: " + timestamp);
 //    LOGGER.debug("Slack Body: " + body);
 //    String algorithm = "HmacSHA256";
