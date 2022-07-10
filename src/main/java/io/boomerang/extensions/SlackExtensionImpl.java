@@ -652,10 +652,10 @@ public class SlackExtensionImpl implements SlackExtension {
   @Override
   public Boolean verifySignature(String signature, String timestamp, String body) {
     String algorithm = "HmacSHA256";
-    String data = "v1:"+ timestamp + ":" + body;
+    String data = "v0:"+ timestamp + ":" + body;
     String key = flowSettingsService.getConfiguration("extensions", "slack.signingSecret").getValue();
     HmacUtils hml = new HmacUtils(algorithm, key);
-    String newSignature = hml.hmacHex(data);
+    String newSignature = "v0=" + hml.hmacHex(data);
     LOGGER.debug("Slack Signature: " + signature);
     LOGGER.debug("Computed Signature: " + newSignature);
     return signature.equals(newSignature);
