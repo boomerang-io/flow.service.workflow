@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
-import org.apache.commons.codec.digest.HmacUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.BeanUtils;
@@ -45,6 +44,9 @@ import com.slack.api.model.view.View.ViewBuilder;
 import com.slack.api.model.view.ViewClose;
 import com.slack.api.model.view.ViewSubmit;
 import com.slack.api.model.view.ViewTitle;
+import com.slack.api.app_backend.SlackSignature;
+import com.slack.api.app_backend.SlackSignature.Generator;
+import com.slack.api.app_backend.SlackSignature.Verifier;
 import io.boomerang.error.BoomerangException;
 import io.boomerang.exceptions.RunWorkflowException;
 import io.boomerang.model.FlowActivity;
@@ -651,14 +653,18 @@ public class SlackExtensionImpl implements SlackExtension {
    */
   @Override
   public Boolean verifySignature(String signature, String timestamp, String body) {
-    String algorithm = "HmacSHA256";
-    String data = "v0:"+ timestamp + ":" + body;
     String key = flowSettingsService.getConfiguration("extensions", "slack.signingSecret").getValue();
-    HmacUtils hml = new HmacUtils(algorithm, key);
-    String newSignature = "v0=" + hml.hmacHex(data);
-    LOGGER.debug("Slack Signature: " + signature);
-    LOGGER.debug("Computed Signature: " + newSignature);
-    return signature.equals(newSignature);
-    
+    Generator generator = new Generator(key);
+    Verifier verifier = new Verifier(generator);
+    return verifier.isValid(timestamp, body, signature)
+//    LOGGER.debug("Slack Timestamp: " + timestamp);
+//    LOGGER.debug("Slack Body: " + body);
+//    String algorithm = "HmacSHA256";
+//    String data = "v0:"+ timestamp + ":" + body;
+//    HmacUtils hml = new HmacUtils(algorithm, key);
+//    String newSignature = "v0=" + hml.hmacHex(data);
+//    LOGGER.debug("Slack Signature: " + signature);
+//    LOGGER.debug("Computed Signature: " + newSignature);
+//    return signature.equals(newSignature);
   }
 }
