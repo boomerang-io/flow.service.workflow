@@ -68,9 +68,9 @@ public class ExtensionsV1Controller {
       @RequestHeader("x-slack-signature") String signature,
       @RequestParam MultiValueMap<String, String> slackEvent) throws IOException {
     LOGGER.debug(slackEvent);
-    String body = request.getReader().lines().collect(Collectors.joining());
+//    String body = request.get.getReader().lines().collect(Collectors.joining());
 //    String body = new String(request.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
-    if (slackExtension.verifySignature(signature, timestamp, body)) {
+    if (slackExtension.verifySignature(signature, timestamp, slackEvent.toString())) {
       CompletableFuture.supplyAsync(slackExtension.createRunModal(slackEvent));
       return ResponseEntity.ok().build();
     } else {
