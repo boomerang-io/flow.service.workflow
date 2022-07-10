@@ -653,8 +653,12 @@ public class SlackExtensionImpl implements SlackExtension {
   @Override
   public Boolean verifySignature(String signature, String timestamp, String body) {
     String key = flowSettingsService.getConfiguration("extensions", "slack.signingSecret").getValue();
+    LOGGER.debug("Slack Timestamp: " + timestamp);
+    LOGGER.debug("Slack Body: " + body);
     Generator generator = new Generator(key);
     Verifier verifier = new Verifier(generator);
+    LOGGER.debug("Slack Signature: " + signature);
+    LOGGER.debug("Computed Signature: " + generator.generate(timestamp, body));
     return verifier.isValid(timestamp, body, signature);
 //    LOGGER.debug("Slack Timestamp: " + timestamp);
 //    LOGGER.debug("Slack Body: " + body);
