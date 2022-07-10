@@ -2,8 +2,8 @@ package io.boomerang.controller.api;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -68,8 +68,7 @@ public class ExtensionsV1Controller {
       @RequestHeader("x-slack-signature") String signature,
       @RequestParam MultiValueMap<String, String> slackEvent) throws IOException {
     LOGGER.debug(slackEvent);
-    String body = request.getReader().lines().collect(Collectors.joining());
-//    String body = new String(request.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+    String body = new String(request.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
     if (slackExtension.verifySignature(signature, timestamp, body)) {
       CompletableFuture.supplyAsync(slackExtension.createRunModal(slackEvent));
       return ResponseEntity.ok().build();
