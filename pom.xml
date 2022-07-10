@@ -253,9 +253,9 @@
 	      <version>1.22.2</version>
 		</dependency>
 		<dependency>
-		    <groupId>commons-codec</groupId>
-		    <artifactId>commons-codec</artifactId>
-		    <version>1.15</version>
+		    <groupId>com.slack.api</groupId>
+		    <artifactId>slack-app-backend</artifactId>
+		    <version>1.22.2</version>
 		</dependency>
 	</dependencies>
 
