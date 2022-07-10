@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
+import org.apache.commons.codec.digest.HmacUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.BeanUtils;
@@ -630,9 +631,34 @@ public class SlackExtensionImpl implements SlackExtension {
     return blocks;
   }
   
+  /*
+   * Utility method for responding to the install redirect query needed for a Slack App
+   */
+  @Override
   public ResponseEntity<?> installRedirect() throws URISyntaxException {
     final String installURL = 
         flowSettingsService.getConfiguration("extensions", "slack.installURL").getValue();
     return ResponseEntity.status(HttpStatus.FOUND).location(new URI(installURL)).build();
+  }
+  
+  /*
+   * Utlity method for verifying requests are signed by Slack
+   * 
+   * <h4>Specifications</h4>
+   * <ul>
+   * <li><a href="https://api.slack.com/authentication/verifying-requests-from-slack">Verifying Requests from Slack</a></li>
+   * </ul>
+   */
+  @Override
+  public Boolean verifySignature(String signature, String timestamp, String body) {
+    String algorithm = "HmacSHA256";
+    String data = "v1:"+ timestamp + ":" + body;
+    String key = flowSettingsService.getConfiguration("extensions", "slack.signingSecret").getValue();
+    HmacUtils hml = new HmacUtils(algorithm, key);
+    String newSignature = hml.hmacHex(data);
+    LOGGER.debug("Slack Signature: " + signature);
+    LOGGER.debug("Computed Signature: " + newSignature);
+    return signature.equals(newSignature);
+    
   }
 }
