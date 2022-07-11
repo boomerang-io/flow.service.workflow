@@ -1,6 +1,7 @@
 package io.boomerang.security.filters;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.stream.Collectors;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -32,7 +33,8 @@ public class SlackSignatureVerificationFilter extends OncePerRequestFilter {
   protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
       FilterChain filterChain) throws ServletException, IOException {
     LOGGER.debug("Begin SlackSignatureVerificationFilter()");
-    String body = request.getReader().lines().collect(Collectors.joining());
+//    String body = request.getReader().lines().collect(Collectors.joining());
+    String body = new String(request.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
     LOGGER.debug("Body: " + body);
     String signature = request.getHeader("X-Slack-Signature");
     LOGGER.debug("Signature: " + signature);
