@@ -2,7 +2,6 @@ package io.boomerang.security.filters;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.stream.Collectors;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -68,15 +67,6 @@ public class SlackSignatureVerificationFilter extends OncePerRequestFilter {
     LOGGER.debug("Slack Signature: " + signature);
     LOGGER.debug("Computed Signature: " + generator.generate(timestamp, body));
     return verifier.isValid(timestamp, body, signature);
-//    LOGGER.debug("Slack Timestamp: " + timestamp);
-//    LOGGER.debug("Slack Body: " + body);
-//    String algorithm = "HmacSHA256";
-//    String data = "v0:"+ timestamp + ":" + body;
-//    HmacUtils hml = new HmacUtils(algorithm, key);
-//    String newSignature = "v0=" + hml.hmacHex(data);
-//    LOGGER.debug("Slack Signature: " + signature);
-//    LOGGER.debug("Computed Signature: " + newSignature);
-//    return signature.equals(newSignature);
   }
 
 }
