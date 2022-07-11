@@ -44,8 +44,6 @@ import com.slack.api.model.view.View.ViewBuilder;
 import com.slack.api.model.view.ViewClose;
 import com.slack.api.model.view.ViewSubmit;
 import com.slack.api.model.view.ViewTitle;
-import com.slack.api.app_backend.SlackSignature.Generator;
-import com.slack.api.app_backend.SlackSignature.Verifier;
 import io.boomerang.error.BoomerangException;
 import io.boomerang.exceptions.RunWorkflowException;
 import io.boomerang.model.FlowActivity;
@@ -70,6 +68,8 @@ import io.boomerang.util.ParameterMapper;
  * - commands
  * - users:read
  * - users:read:email
+ * 
+ * This service depends on the SlackSecurityVerificationFilter
  */
 @Service
 public class SlackExtensionImpl implements SlackExtension {
@@ -650,16 +650,16 @@ public class SlackExtensionImpl implements SlackExtension {
    * <li><a href="https://api.slack.com/authentication/verifying-requests-from-slack">Verifying Requests from Slack</a></li>
    * </ul>
    */
-  @Override
-  public Boolean verifySignature(String signature, String timestamp, String body) {
-    String key = flowSettingsService.getConfiguration("extensions", "slack.signingSecret").getValue();
-    LOGGER.debug("Slack Timestamp: " + timestamp);
-    LOGGER.debug("Slack Body: " + body);
-    Generator generator = new Generator(key);
-    Verifier verifier = new Verifier(generator);
-    LOGGER.debug("Slack Signature: " + signature);
-    LOGGER.debug("Computed Signature: " + generator.generate(timestamp, body));
-    return verifier.isValid(timestamp, body, signature);
+//  @Override
+//  public Boolean verifySignature(String signature, String timestamp, String body) {
+//    String key = flowSettingsService.getConfiguration("extensions", "slack.signingSecret").getValue();
+//    LOGGER.debug("Slack Timestamp: " + timestamp);
+//    LOGGER.debug("Slack Body: " + body);
+//    Generator generator = new Generator(key);
+//    Verifier verifier = new Verifier(generator);
+//    LOGGER.debug("Slack Signature: " + signature);
+//    LOGGER.debug("Computed Signature: " + generator.generate(timestamp, body));
+//    return verifier.isValid(timestamp, body, signature);
 //    LOGGER.debug("Slack Timestamp: " + timestamp);
 //    LOGGER.debug("Slack Body: " + body);
 //    String algorithm = "HmacSHA256";
@@ -669,5 +669,5 @@ public class SlackExtensionImpl implements SlackExtension {
 //    LOGGER.debug("Slack Signature: " + signature);
 //    LOGGER.debug("Computed Signature: " + newSignature);
 //    return signature.equals(newSignature);
-  }
+//  }
 }
