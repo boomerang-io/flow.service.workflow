@@ -32,6 +32,7 @@ import io.boomerang.security.model.GlobalToken;
 import io.boomerang.security.model.TeamToken;
 import io.boomerang.security.model.Token;
 import io.boomerang.security.model.UserToken;
+import io.boomerang.security.util.MultiReadHttpServletRequest;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.impl.DefaultJwtParser;
@@ -73,7 +74,9 @@ public class FlowAuthorizationFilter extends BasicAuthenticationFilter {
       }
 
       SecurityContextHolder.getContext().setAuthentication(authentication);
-      chain.doFilter(req, res);
+
+      MultiReadHttpServletRequest multiReadRequest = new MultiReadHttpServletRequest(req);
+      chain.doFilter(multiReadRequest, res);
     } catch (final AuthorizationException e) {
       LOGGER.error(e);
     }
