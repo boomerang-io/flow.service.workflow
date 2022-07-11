@@ -74,9 +74,7 @@ public class FlowAuthorizationFilter extends BasicAuthenticationFilter {
       }
 
       SecurityContextHolder.getContext().setAuthentication(authentication);
-
-      MultiReadHttpServletRequest multiReadRequest = new MultiReadHttpServletRequest(req);
-      chain.doFilter(multiReadRequest, res);
+      chain.doFilter(req, res);
     } catch (final AuthorizationException e) {
       LOGGER.error(e);
     }
