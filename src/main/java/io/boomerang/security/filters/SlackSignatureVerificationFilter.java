@@ -15,7 +15,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import com.slack.api.app_backend.SlackSignature.Generator;
 import com.slack.api.app_backend.SlackSignature.Verifier;
 import io.boomerang.mongo.service.FlowSettingsService;
-import io.boomerang.security.util.MultiReadHttpServletRequest;
 
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
@@ -41,13 +40,12 @@ public class SlackSignatureVerificationFilter extends OncePerRequestFilter {
     LOGGER.debug("Timestamp: " + timestamp);
     
     if (!verifySignature(signature, timestamp, body)) {
-//      response.sendError(401);
-//      return;
-      LOGGER.debug("Fail SlackSignatureVerificationFilter()");
+      LOGGER.error("Fail SlackSignatureVerificationFilter()");
+      response.sendError(401);
+      return;
     }
 
-    MultiReadHttpServletRequest multiReadRequest = new MultiReadHttpServletRequest(request);
-    filterChain.doFilter(multiReadRequest, response);
+    filterChain.doFilter(request, response);
   }
   
   /*
