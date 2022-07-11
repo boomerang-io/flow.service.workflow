@@ -15,6 +15,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import com.slack.api.app_backend.SlackSignature.Generator;
 import com.slack.api.app_backend.SlackSignature.Verifier;
 import io.boomerang.mongo.service.FlowSettingsService;
+import io.boomerang.security.util.MultiReadHttpServletRequest;
 
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
@@ -34,17 +35,19 @@ public class SlackSignatureVerificationFilter extends OncePerRequestFilter {
     LOGGER.debug("Begin SlackSignatureVerificationFilter()");
     String body = request.getReader().lines().collect(Collectors.joining());
     LOGGER.debug("Body: " + body);
-    String timestamp = request.getHeader("X-Slack-Request-Timestamp");
-    LOGGER.debug("Timestamp: " + timestamp);
     String signature = request.getHeader("X-Slack-Signature");
     LOGGER.debug("Signature: " + signature);
+    String timestamp = request.getHeader("X-Slack-Request-Timestamp");
+    LOGGER.debug("Timestamp: " + timestamp);
     
     if (!verifySignature(signature, timestamp, body)) {
 //      response.sendError(401);
 //      return;
       LOGGER.debug("Fail SlackSignatureVerificationFilter()");
     }
-    filterChain.doFilter(request, response);
+
+    MultiReadHttpServletRequest multiReadRequest = new MultiReadHttpServletRequest(request);
+    filterChain.doFilter(multiReadRequest, response);
   }
   
   /*
@@ -56,7 +59,8 @@ public class SlackSignatureVerificationFilter extends OncePerRequestFilter {
    * </ul>
    */
   private Boolean verifySignature(String signature, String timestamp, String body) {
-    String key = flowSettingsService.getConfiguration("extensions", "slack.signingSecret").getValue();
+    String key = this.flowSettingsService.getConfiguration("extensions", "slack.signingSecret").getValue();
+    LOGGER.debug("Key: " + key);
     LOGGER.debug("Slack Timestamp: " + timestamp);
     LOGGER.debug("Slack Body: " + body);
     Generator generator = new Generator(key);
