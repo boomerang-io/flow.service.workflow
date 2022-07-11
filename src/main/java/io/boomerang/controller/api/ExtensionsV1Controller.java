@@ -3,12 +3,10 @@ package io.boomerang.controller.api;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.MultiValueMap;
@@ -31,6 +29,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+/*
+ * The extensions management controller
+ * 
+ * The Slack extension depends on the SlackSecurityVerificationFilter
+ */
 @RestController
 @RequestMapping("/apis/v1/extensions")
 @Tag(name = "Extensions Management",
@@ -66,16 +69,15 @@ public class ExtensionsV1Controller {
   ResponseEntity<?> receiveSlackCommand(HttpServletRequest request, 
       @RequestHeader("x-slack-request-timestamp") String timestamp,
       @RequestHeader("x-slack-signature") String signature,
-      @RequestBody String body,
       @RequestParam MultiValueMap<String, String> slackEvent
       ) throws IOException {
       LOGGER.debug("Payload: " + slackEvent);
-    if (slackExtension.verifySignature(signature, timestamp, body)) {
-      CompletableFuture.supplyAsync(slackExtension.createRunModal(slackEvent));
+//    if (slackExtension.verifySignature(signature, timestamp, body)) {
+//      CompletableFuture.supplyAsync(slackExtension.createRunModal(slackEvent));
       return ResponseEntity.ok().build();
-    } else {
-      return ResponseEntity.status(HttpStatus.CONFLICT).build();
-    }
+//    } else {
+//      return ResponseEntity.status(HttpStatus.CONFLICT).build();
+//    }
   }
   
   //https://api.slack.com/reference/interaction-payloads

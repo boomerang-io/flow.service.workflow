@@ -17,7 +17,5 @@ public interface SlackExtension {
   Supplier<Boolean> appHomeOpened(JsonNode payload);
 
   ResponseEntity<?> installRedirect() throws URISyntaxException;
-
-  Boolean verifySignature(String signature, String timestamp, String body);
   
 }
