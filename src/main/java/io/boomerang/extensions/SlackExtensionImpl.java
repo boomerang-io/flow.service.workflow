@@ -22,6 +22,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.slack.api.Slack;
+import com.slack.api.app_backend.SlackSignature.Generator;
+import com.slack.api.app_backend.SlackSignature.Verifier;
 import com.slack.api.methods.SlackApiException;
 import com.slack.api.methods.request.users.UsersInfoRequest;
 import com.slack.api.methods.response.chat.ChatPostMessageResponse;
@@ -650,24 +652,16 @@ public class SlackExtensionImpl implements SlackExtension {
    * <li><a href="https://api.slack.com/authentication/verifying-requests-from-slack">Verifying Requests from Slack</a></li>
    * </ul>
    */
-//  @Override
-//  public Boolean verifySignature(String signature, String timestamp, String body) {
-//    String key = flowSettingsService.getConfiguration("extensions", "slack.signingSecret").getValue();
-//    LOGGER.debug("Slack Timestamp: " + timestamp);
-//    LOGGER.debug("Slack Body: " + body);
-//    Generator generator = new Generator(key);
-//    Verifier verifier = new Verifier(generator);
-//    LOGGER.debug("Slack Signature: " + signature);
-//    LOGGER.debug("Computed Signature: " + generator.generate(timestamp, body));
-//    return verifier.isValid(timestamp, body, signature);
-//    LOGGER.debug("Slack Timestamp: " + timestamp);
-//    LOGGER.debug("Slack Body: " + body);
-//    String algorithm = "HmacSHA256";
-//    String data = "v0:"+ timestamp + ":" + body;
-//    HmacUtils hml = new HmacUtils(algorithm, key);
-//    String newSignature = "v0=" + hml.hmacHex(data);
-//    LOGGER.debug("Slack Signature: " + signature);
-//    LOGGER.debug("Computed Signature: " + newSignature);
-//    return signature.equals(newSignature);
-//  }
+  @Override
+  public Boolean verifySignature(String signature, String timestamp, String body) {
+    String key = this.flowSettingsService.getConfiguration("extensions", "slack.signingSecret").getValue();
+    LOGGER.debug("Key: " + key);
+    LOGGER.debug("Slack Timestamp: " + timestamp);
+    LOGGER.debug("Slack Body: " + body);
+    Generator generator = new Generator(key);
+    Verifier verifier = new Verifier(generator);
+    LOGGER.debug("Slack Signature: " + signature);
+    LOGGER.debug("Computed Signature: " + generator.generate(timestamp, body));
+    return verifier.isValid(timestamp, body, signature);
+  }
 }
