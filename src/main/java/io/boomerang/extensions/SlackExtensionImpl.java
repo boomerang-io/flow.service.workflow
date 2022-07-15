@@ -16,7 +16,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpClientErrorException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -121,12 +120,12 @@ public class SlackExtensionImpl implements SlackExtension {
    * @param workflowId    the user entered workflow ID
    * @return Supplier       To be used by the CompletableFuture
    */
-  public Supplier<Boolean> createRunModal(MultiValueMap<String, String> slackEvent) {
+  public Supplier<Boolean> createRunModal(Map<String, String> slackEvent) {
     return () -> {
-      final String triggerId = slackEvent.get("trigger_id").get(0);
-      final String userId = slackEvent.get("user_id").get(0);
-      final String teamId = slackEvent.get("team_id").get(0);
-      final String workflowId = slackEvent.get("text").get(0);
+      final String triggerId = slackEvent.get("trigger_id");
+      final String userId = slackEvent.get("user_id");
+      final String teamId = slackEvent.get("team_id");
+      final String workflowId = slackEvent.get("text");
       final String authToken = getSlackAuthToken(teamId);
 
       ViewBuilder modalViewBuilder = View.builder().type("modal")
