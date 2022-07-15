@@ -46,10 +46,11 @@ public class FlowAuthorizationFilter extends BasicAuthenticationFilter {
 
   private static final String X_FORWARDED_USER = "x-forwarded-user";
   private static final String X_FORWARDED_EMAIL = "x-forwarded-email";
-  
   private static final String X_ACCESS_TOKEN = "x-access-token";
   private static final String TOKEN_URL_PARAM_NAME = "access_token";
   private static final String AUTHORIZATION_HEADER = "Authorization";
+  private static final String X_SLACK_SIGNATURE = "X-Slack-Signature";
+  private static final String X_SLACK_TIMESTAMP = "X-Slack-Request-Timestamp";
   private String basicPassword;
 
   private static final Logger LOGGER = LogManager.getLogger();
@@ -81,19 +82,17 @@ public class FlowAuthorizationFilter extends BasicAuthenticationFilter {
         authentication = getTokenBasedAuthentication(req);
       }
 
-      InputStream inputStream = multiReadRequest.getInputStream();
-      byte[] body = StreamUtils.copyToByteArray(inputStream);
-//      System.out.println("In PrintRequestContentFilter. Request body is: " + new String(body));
-//      LOGGER.debug("Body: " + body);
-      String signature = multiReadRequest.getHeader("X-Slack-Signature");
-//      LOGGER.debug("Signature: " + signature);
-      String timestamp = multiReadRequest.getHeader("X-Slack-Request-Timestamp");
-//      LOGGER.debug("Timestamp: " + timestamp);
-      
-      if (!verifySignature(signature, timestamp, new String(body))) {
-        LOGGER.error("Fail SlackSignatureVerificationFilter()");
-        res.sendError(401);
-        return;
+      if (multiReadRequest.getHeader(X_SLACK_SIGNATURE) != null) {
+        InputStream inputStream = multiReadRequest.getInputStream();
+        byte[] body = StreamUtils.copyToByteArray(inputStream);
+        String signature = multiReadRequest.getHeader(X_SLACK_SIGNATURE);
+        String timestamp = multiReadRequest.getHeader(X_SLACK_TIMESTAMP);
+        
+        if (!verifySignature(signature, timestamp, new String(body))) {
+          LOGGER.error("Fail SlackSignatureVerificationFilter()");
+          res.sendError(401);
+          return;
+        }
       }
 
       SecurityContextHolder.getContext().setAuthentication(authentication);
