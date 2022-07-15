@@ -2,6 +2,7 @@ package io.boomerang.controller.api;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CompletableFuture;
 import javax.servlet.http.HttpServletRequest;
 import org.apache.logging.log4j.LogManager;
@@ -72,11 +73,11 @@ public class ExtensionsV1Controller {
       @RequestHeader("x-slack-signature") String signature,
       @RequestParam MultiValueMap<String, String> slackEvent
       ) throws IOException {
-//    String body = new String(request.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+    String body = new String(request.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
 //    LOGGER.debug("Original Payload: " + request.getBo);
 //    slackEvent.remove("access_token");
 //    String body = URLEncodedUtils.format(slackEvent);
-//    LOGGER.debug("Body: " + body);
+    LOGGER.debug("Body: " + body);
     LOGGER.debug("Signature: " + signature);
     LOGGER.debug("Timestamp: " + timestamp);
     LOGGER.debug("Payload: " + slackEvent);      
