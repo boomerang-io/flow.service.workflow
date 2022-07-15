@@ -2,6 +2,7 @@ package io.boomerang.controller.api;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Map;
@@ -81,11 +82,12 @@ public class ExtensionsV1Controller {
     LOGGER.debug("Timestamp: " + timestamp);
     LOGGER.debug("Payload: " + slackEvent);
     
+    //Workaround reference: https://www.baeldung.com/java-url-encoding-decoding
     Map<String, String> result = Arrays.stream(body.split("&"))
         .map(i -> i.split("="))
         .collect(Collectors.toMap(
             a -> a[0],
-            a -> a[1]));
+            a -> URLDecoder.decode(a[1], StandardCharsets.UTF_8)));
     
     LOGGER.debug("Map: " + result.toString());
 
