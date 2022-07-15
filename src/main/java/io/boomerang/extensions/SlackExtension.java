@@ -1,9 +1,9 @@
 package io.boomerang.extensions;
 
 import java.net.URISyntaxException;
+import java.util.Map;
 import java.util.function.Supplier;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.MultiValueMap;
 import com.fasterxml.jackson.databind.JsonNode;
 
 public interface SlackExtension {
@@ -12,7 +12,7 @@ public interface SlackExtension {
 
   ResponseEntity<?> handleAuth(String code);
 
-  Supplier<Boolean> createRunModal(MultiValueMap<String, String> slackEvent);
+  Supplier<Boolean> createRunModal(Map<String, String> result);
 
   Supplier<Boolean> appHomeOpened(JsonNode payload);
 
