@@ -71,27 +71,17 @@ public class ExtensionsV1Controller {
   @Operation(summary = "Receive Slack Slash Commands")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
-  ResponseEntity<?> receiveSlackCommand(HttpServletRequest request,
+  ResponseEntity<?> receiveSlackCommand(HttpServletRequest request
       // @RequestBody String body
-      @RequestHeader("x-slack-request-timestamp") String timestamp,
-      @RequestHeader("x-slack-signature") String signature,
-      @RequestParam MultiValueMap<String, String> slackEvent) throws IOException {
-    String body = new String(request.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
-    LOGGER.debug("Body: " + body);
-    LOGGER.debug("Signature: " + signature);
-    LOGGER.debug("Timestamp: " + timestamp);
-    LOGGER.debug("Payload: " + slackEvent);
-    
-    //Workaround reference: https://www.baeldung.com/java-url-encoding-decoding
-    Map<String, String> result = Arrays.stream(body.split("&"))
-        .map(i -> i.split("="))
-        .collect(Collectors.toMap(
-            a -> a[0],
-            a -> URLDecoder.decode(a[1], StandardCharsets.UTF_8)));
-    
-    LOGGER.debug("Map: " + result.toString());
+//      @RequestHeader("x-slack-request-timestamp") String timestamp,
+//      @RequestHeader("x-slack-signature") String signature,
+//      @RequestParam MultiValueMap<String, String> slackEvent
+      ) throws IOException {
+//    LOGGER.debug("Signature: " + signature);
+//    LOGGER.debug("Timestamp: " + timestamp);
+//    LOGGER.debug("Payload: " + slackEvent);
 
-    CompletableFuture.supplyAsync(slackExtension.createRunModal(result));
+    CompletableFuture.supplyAsync(slackExtension.createRunModal(requestValueMapper(request)));
     return ResponseEntity.ok().build();
   }
   
@@ -101,13 +91,16 @@ public class ExtensionsV1Controller {
   @Operation(summary = "Receive Slack Interactivity")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
-  ResponseEntity<?> receiveSlackInteractivity(HttpServletRequest request,
-      @RequestHeader("x-slack-request-timestamp") String timestamp,
-      @RequestHeader("x-slack-signature") String signature,
-      @RequestParam MultiValueMap<String, String> slackEvent) throws JsonMappingException, JsonProcessingException {
-    LOGGER.debug(slackEvent);
+  ResponseEntity<?> receiveSlackInteractivity(HttpServletRequest request
+//      @RequestHeader("x-slack-request-timestamp") String timestamp,
+//      @RequestHeader("x-slack-signature") String signature,
+//      @RequestParam MultiValueMap<String, String> slackEvent
+      ) throws JsonMappingException, JsonProcessingException {
+//    LOGGER.debug(slackEvent);
     ObjectMapper mapper = new ObjectMapper();
-    JsonNode payload = mapper.readTree(slackEvent.get("payload").get(0));
+//    JsonNode payload = mapper.readTree(slackEvent.get("payload").get(0));
+    Map<String, String> slackEvent = requestValueMapper(request);
+    JsonNode payload = mapper.readTree(slackEvent.get("payload"));
     if (payload.has("type") && "view_submission".equals(payload.get("type").asText())) {
       CompletableFuture.supplyAsync(slackExtension.executeRunModal(payload));
     } else if (payload.has("type")) {
@@ -140,5 +133,26 @@ public class ExtensionsV1Controller {
       LOGGER.error("Unhandled Slack Event Payload with no Type: " + payload.toPrettyString());
     }
     return ResponseEntity.ok().build();
+  }
+  
+  private Map<String, String> requestValueMapper(HttpServletRequest request) {
+    String body;
+    try {
+      body = new String(request.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+    } catch (IOException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+    LOGGER.debug("Body: " + body);
+    
+    //Workaround reference: https://www.baeldung.com/java-url-encoding-decoding
+    Map<String, String> result = Arrays.stream(body.split("&"))
+        .map(i -> i.split("="))
+        .collect(Collectors.toMap(
+            a -> a[0],
+            a -> URLDecoder.decode(a[1], StandardCharsets.UTF_8)));
+    
+    LOGGER.debug("Map: " + result.toString());
+    return result;
   }
 }
