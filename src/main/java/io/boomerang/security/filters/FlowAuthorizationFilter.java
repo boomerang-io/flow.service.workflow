@@ -1,6 +1,7 @@
 package io.boomerang.security.filters;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -21,9 +22,13 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
+import org.springframework.util.StreamUtils;
+import com.slack.api.app_backend.SlackSignature.Generator;
+import com.slack.api.app_backend.SlackSignature.Verifier;
 import io.boomerang.mongo.entity.FlowUserEntity;
 import io.boomerang.mongo.entity.TokenEntity;
 import io.boomerang.mongo.model.TokenScope;
+import io.boomerang.mongo.service.FlowSettingsService;
 import io.boomerang.mongo.service.FlowTokenService;
 import io.boomerang.mongo.service.FlowUserService;
 import io.boomerang.security.AuthorizationException;
@@ -50,31 +55,49 @@ public class FlowAuthorizationFilter extends BasicAuthenticationFilter {
   private static final Logger LOGGER = LogManager.getLogger();
   private FlowTokenService tokenService;
   private FlowUserService flowUserService;
+  private FlowSettingsService flowSettingsService;
   
   public FlowAuthorizationFilter(FlowTokenService tokenService, AuthenticationManager authManager,
-      FlowUserService flowUserService, String basicPassword) {
+      FlowUserService flowUserService, FlowSettingsService flowSettingsService, String basicPassword) {
     super(authManager);
     this.tokenService = tokenService;
     this.basicPassword = basicPassword;
     this.flowUserService = flowUserService;
+    this.flowSettingsService = flowSettingsService; 
   }
 
   @Override
   protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res,
       FilterChain chain) throws IOException, ServletException {
     try {
+      MultiReadHttpServletRequest multiReadRequest = new MultiReadHttpServletRequest(req);
       Authentication authentication = null;
-      if (req.getHeader(AUTHORIZATION_HEADER) != null) {
+      if (multiReadRequest.getHeader(AUTHORIZATION_HEADER) != null) {
         authentication = getUserAuthentication(req);
-      } else if (req.getHeader(X_FORWARDED_EMAIL) != null) { 
+      } else if (multiReadRequest.getHeader(X_FORWARDED_EMAIL) != null) { 
         authentication = getGithubUserAuthentication(req);
       }
-      else if (req.getHeader(X_ACCESS_TOKEN) != null || req.getParameter(TOKEN_URL_PARAM_NAME) != null) {
+      else if (multiReadRequest.getHeader(X_ACCESS_TOKEN) != null || req.getParameter(TOKEN_URL_PARAM_NAME) != null) {
         authentication = getTokenBasedAuthentication(req);
       }
 
+      InputStream inputStream = multiReadRequest.getInputStream();
+      byte[] body = StreamUtils.copyToByteArray(inputStream);
+//      System.out.println("In PrintRequestContentFilter. Request body is: " + new String(body));
+//      LOGGER.debug("Body: " + body);
+      String signature = multiReadRequest.getHeader("X-Slack-Signature");
+//      LOGGER.debug("Signature: " + signature);
+      String timestamp = multiReadRequest.getHeader("X-Slack-Request-Timestamp");
+//      LOGGER.debug("Timestamp: " + timestamp);
+      
+      if (!verifySignature(signature, timestamp, new String(body))) {
+        LOGGER.error("Fail SlackSignatureVerificationFilter()");
+        res.sendError(401);
+        return;
+      }
+
       SecurityContextHolder.getContext().setAuthentication(authentication);
-      chain.doFilter(req, res);
+      chain.doFilter(multiReadRequest, res);
     } catch (final AuthorizationException e) {
       LOGGER.error(e);
     }
@@ -232,5 +255,25 @@ public class FlowAuthorizationFilter extends BasicAuthenticationFilter {
     cleanString = WordUtils.capitalizeFully(cleanString);
     return cleanString;
   }
+  
+/*
+* Utlity method for verifying requests are signed by Slack
+* 
+* <h4>Specifications</h4>
+* <ul>
+* <li><a href="https://api.slack.com/authentication/verifying-requests-from-slack">Verifying Requests from Slack</a></li>
+* </ul>
+*/
+private Boolean verifySignature(String signature, String timestamp, String body) {
+ String key = this.flowSettingsService.getConfiguration("extensions", "slack.signingSecret").getValue();
+ LOGGER.debug("Key: " + key);
+ LOGGER.debug("Slack Timestamp: " + timestamp);
+ LOGGER.debug("Slack Body: " + body);
+ Generator generator = new Generator(key);
+ Verifier verifier = new Verifier(generator);
+ LOGGER.debug("Slack Signature: " + signature);
+ LOGGER.debug("Computed Signature: " + generator.generate(timestamp, body));
+ return verifier.isValid(timestamp, body, signature);
+}
 
 }

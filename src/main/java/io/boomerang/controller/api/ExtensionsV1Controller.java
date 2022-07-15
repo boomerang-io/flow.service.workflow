@@ -2,13 +2,11 @@ package io.boomerang.controller.api;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CompletableFuture;
 import javax.servlet.http.HttpServletRequest;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.MultiValueMap;
@@ -69,21 +67,26 @@ public class ExtensionsV1Controller {
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
   ResponseEntity<?> receiveSlackCommand(HttpServletRequest request,
+//      @RequestBody String body
       @RequestHeader("x-slack-request-timestamp") String timestamp,
       @RequestHeader("x-slack-signature") String signature,
-      @RequestParam MultiValueMap<String, String> slackEvent) throws IOException {
-    String body = new String(request.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
-    LOGGER.debug("Body: " + body);
+      @RequestParam MultiValueMap<String, String> slackEvent
+      ) throws IOException {
+//    String body = new String(request.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+//    LOGGER.debug("Original Payload: " + request.getBo);
+//    slackEvent.remove("access_token");
+//    String body = URLEncodedUtils.format(slackEvent);
+//    LOGGER.debug("Body: " + body);
     LOGGER.debug("Signature: " + signature);
     LOGGER.debug("Timestamp: " + timestamp);
-    LOGGER.debug("Payload: " + slackEvent);
+    LOGGER.debug("Payload: " + slackEvent);      
 
-    if (slackExtension.verifySignature(signature, timestamp, body)) {
-      // CompletableFuture.supplyAsync(slackExtension.createRunModal(slackEvent));
+//    if (slackExtension.verifySignature(signature, timestamp, body)) {
+       CompletableFuture.supplyAsync(slackExtension.createRunModal(slackEvent));
       return ResponseEntity.ok().build();
-    } else {
-      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-    }
+//    } else {
+//      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+//    }
   }
   
   //https://api.slack.com/reference/interaction-payloads
