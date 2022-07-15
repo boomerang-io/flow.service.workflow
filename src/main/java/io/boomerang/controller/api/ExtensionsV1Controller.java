@@ -14,7 +14,6 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -136,7 +135,7 @@ public class ExtensionsV1Controller {
   }
   
   private Map<String, String> requestValueMapper(HttpServletRequest request) {
-    String body;
+    String body = "";
     try {
       body = new String(request.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
     } catch (IOException e) {
