@@ -102,7 +102,7 @@ public class SlackExtensionImpl implements SlackExtension {
       "The better way to automate with no-code workflow automation.";
   
   private static final String MODAL_TEXT_FOOTER =
-  ":bulb: This integration is in _beta_. If your workflows require parameters, make sure they have a default value. You also need to be a registered user with access to the Workflow.";
+  ":bulb: If your workflows require parameters, make sure they have a default value. You also need to be a registered user with access to the Workflow.";
 
   private static final String EXTENSION_TYPE = "slack_auth";
 
