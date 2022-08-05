@@ -16,4 +16,6 @@ public interface FlowTeamRepository extends MongoRepository<TeamEntity, String> 
   Optional<TeamEntity> findById(String id);
 
   Page<TeamEntity> findByIsActive(Pageable pageable, boolean b);
+
+  List<TeamEntity> findByIdInAndIsActive(List<String> ids, Boolean isActive);
 }
