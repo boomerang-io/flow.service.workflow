@@ -250,7 +250,7 @@
 		<dependency>
 	      <groupId>com.slack.api</groupId>
 	      <artifactId>slack-api-client</artifactId>
-	      <version>1.23.1</version>
+	      <version>1.24.0</version>
 		</dependency>
 	</dependencies>
 
