@@ -236,7 +236,7 @@ public class SlackExtensionImpl implements SlackExtension {
         .text(PlainTextObject.builder().text("Next Steps").build()).build());
     blocks.add(SectionBlock.builder().blockId("workflow_fields")
         .text(MarkdownTextObject.builder().text(
-            "As this integration is in _alpha_, you need to know the Workflow's ID to be able to trigger any automation.\n\nYou can find this ID by exporting your Workflow and opening up the downloaded JSON file.\n\nYou also need to have default values set for any parameters the Workflow requires as you cannot provide them from Slack, yet.")
+            ":bulb: If your workflows require parameters, make sure they have a default value. You also need to be a registered user with access to the Workflow.\n\nYou can find this ID by exporting your Workflow and opening up the downloaded JSON file.\n")
             .build())
         .build());
     blocks.add(SectionBlock.builder().blockId("workflow_fields_2")
@@ -357,7 +357,7 @@ public class SlackExtensionImpl implements SlackExtension {
     blocks.add(DividerBlock.builder().build());
     List<ContextBlockElement> elementsList = new LinkedList<>();
     elementsList.add(MarkdownTextObject.builder().text(
-        ":bulb: This integration is in _alpha_ and currently only works with Workflows that do not require parameters to be entered.")
+        ":bulb: If your workflows require parameters, make sure they have a default value. You also need to be a registered user with access to the Workflow.")
         .build());
     blocks.add(ContextBlock.builder().elements(elementsList).build());
     return blocks;
