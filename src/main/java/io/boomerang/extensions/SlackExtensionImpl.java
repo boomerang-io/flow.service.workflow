@@ -48,7 +48,6 @@ import io.boomerang.error.BoomerangException;
 import io.boomerang.exceptions.RunWorkflowException;
 import io.boomerang.model.FlowActivity;
 import io.boomerang.mongo.entity.ExtensionEntity;
-import io.boomerang.mongo.entity.FlowUserEntity;
 import io.boomerang.mongo.entity.WorkflowEntity;
 import io.boomerang.mongo.model.KeyValuePair;
 import io.boomerang.mongo.repository.ExtensionRepository;
@@ -619,13 +618,14 @@ public class SlackExtensionImpl implements SlackExtension {
   private List<LayoutBlock> appHomeBlocks() {
     String appName = flowSettingsService.getConfiguration("customizations", "appName").getValue();
     String platformName = flowSettingsService.getConfiguration("customizations", "platformName").getValue();
+    String joinedName = platformName + " " + appName;
     List<LayoutBlock> blocks = new LinkedList<>();
     blocks.add(HeaderBlock.builder()
         .text(PlainTextObject.builder().text("Hello :wave:").emoji(true).build()).build());
     blocks.add(SectionBlock.builder().text(MarkdownTextObject.builder().text("Welcome to the new modern and easy way to supercharge your automation. I am here to help you trigger your Workflows from right within Slack, giving you complete control over what needs to be done.\n\nHere are a few things to get started with to make your experience a good one.").build())
                 .build());
     blocks.add(SectionBlock.builder().text(MarkdownTextObject.builder().text("*Sign Up*\n"
-        + "Ensure you a user of " + platformName + " " + appName + " to be able to automate.")
+        + "Ensure you a user of " + joinedName.trim() + " to be able to automate.")
         .build())
         .build());
     blocks.add(SectionBlock.builder().text(MarkdownTextObject.builder().text("*Create Automation*\n"
