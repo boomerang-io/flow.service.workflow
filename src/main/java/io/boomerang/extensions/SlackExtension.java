@@ -19,5 +19,7 @@ public interface SlackExtension {
   ResponseEntity<?> installRedirect() throws URISyntaxException;
 
   Boolean verifySignature(String signature, String timestamp, String body);
+
+  Supplier appUninstalled(JsonNode payload);
   
 }

@@ -441,7 +441,7 @@ public class SlackExtensionImpl implements SlackExtension {
     
 //    Optional<ExtensionEntity> origAuthExtension = extensionsRepository.findByType(EXTENSION_TYPE).stream()
 //        .filter(e -> e.getLabels().indexOf(teamIdLabel) != -1).findFirst();
-    List<ExtensionEntity> authsList = checkExistingAuthExtensions(authResponse.getTeam().getId());
+    List<ExtensionEntity> authsList = checkExistingAuthExtension(authResponse.getTeam().getId());
     if (!authsList.isEmpty()) {
       LOGGER.debug("Overriding existing Slack Team Auth");
       authExtension = authsList.get(0);
@@ -457,11 +457,34 @@ public class SlackExtensionImpl implements SlackExtension {
     extensionsRepository.save(authExtension);
     LOGGER.debug(authExtension.toString());
   }
+  
+  /*
+   * Helper method to save the user onto the Auth Extension. This means
+   * that the user has opened the App before.
+   * 
+   * @param OAuthV2AccessResponse
+   */
+  private void addUserToAuthExtension(String teamId, String userId) {
+    List<ExtensionEntity> authExtensions = new LinkedList<>();
+    extensionsRepository.findByType(EXTENSION_TYPE).forEach(e -> {
+      Map<String, String> executionProperties = ParameterMapper.keyValuePairListToMap(e.getLabels());
+      if (executionProperties.containsKey("teamId") && teamId.equals(executionProperties.get("teamId"))) {
+        authExtensions.add(e);
+        LOGGER.debug("Found matching Slack Team Extension");
+      }
+    });
+    if (!authExtensions.isEmpty()) {
+      ExtensionEntity authExtension = authExtensions.get(0);
+      authExtension.getUsers().add(userId);
+      extensionsRepository.save(authExtension);
+      LOGGER.debug("Added user to Slack Team Extension");
+    }
+  }
 
   /*
    * Helper method to retrieve a saved Auth for a Slack Team (org)
    */
-  private List<ExtensionEntity> checkExistingAuthExtensions(String teamId) {
+  private List<ExtensionEntity> checkExistingAuthExtension(String teamId) {
     List<ExtensionEntity> authExtensions = new LinkedList<>();
     extensionsRepository.findByType(EXTENSION_TYPE).forEach(e -> {
       Map<String, String> executionProperties = ParameterMapper.keyValuePairListToMap(e.getLabels());
@@ -473,13 +496,34 @@ public class SlackExtensionImpl implements SlackExtension {
     return authExtensions;
   }
   
+  /*
+   * Helper method to check if a User has opened the App as part of an Extension
+   */
+  private Boolean checkExistingAuthExtensionForUser(String teamId, String userId) {
+    List<ExtensionEntity> authExtensions = new LinkedList<>();
+    extensionsRepository.findByType(EXTENSION_TYPE).forEach(e -> {
+      Map<String, String> executionProperties = ParameterMapper.keyValuePairListToMap(e.getLabels());
+      if (executionProperties.containsKey("teamId") && teamId.equals(executionProperties.get("teamId"))) {
+        authExtensions.add(e);
+      }
+    });
+    if (!authExtensions.isEmpty()) {
+      ExtensionEntity authEntity = authExtensions.get(0);
+      if (authEntity.getUsers().contains(userId)) {
+        LOGGER.debug("Found matching UserId on Team Auth Extension");
+        return true;
+      }
+    }
+    return false;
+  }
+  
   /*&
    * Helper method to retrieve the stored Slack Token using the extensions generic collection
    * 
    * @param teamId
    */
   private String getSlackAuthToken(String teamId) {
-    List<ExtensionEntity> authsList = checkExistingAuthExtensions(teamId);
+    List<ExtensionEntity> authsList = checkExistingAuthExtension(teamId);
     if (!authsList.isEmpty()) {
         String teamAuthToken = authsList.get(0).getData().get("accessToken").toString();
         LOGGER.debug("Using existing team Slack auth token: " + teamAuthToken);
@@ -550,21 +594,15 @@ public class SlackExtensionImpl implements SlackExtension {
             slack.methods(authToken).usersInfo(UsersInfoRequest.builder().user(userId).build());
         LOGGER.debug("User Info: " + userInfo.toString());
         if (userInfo != null && userInfo.getUser() != null && userInfo.getUser().getProfile() != null) {
-          // Trigger workflow Execution and impersonate Slack user
           String userEmail = userInfo.getUser().getProfile().getEmail();
           if (userEmail != null) {
             FlowUserEntity userEntity = userIdentityService.getUserByEmail(userEmail);
             if (userEntity != null) {
               existingUser = true;
-              if (userEntity.getLabels() != null && ParameterMapper.keyValuePairListToMap(userEntity.getLabels()).containsKey("slack_app_opened") && "true".equals(ParameterMapper.keyValuePairListToMap(userEntity.getLabels()).get("slack_app_opened"))) {
+              if (checkExistingAuthExtensionForUser(teamId, userEntity.getId())) {
                 alreadyOpened = true;
               } else {
-                FlowUser flowUser = new FlowUser();
-                BeanUtils.copyProperties(userEntity, flowUser);
-                List<KeyValuePair> labels = new LinkedList<>();
-                labels.add(new KeyValuePair("slack_app_opened","true"));
-                flowUser.setLabels(labels);
-                userIdentityService.updateFlowUser(userEntity.getId(), flowUser);
+                addUserToAuthExtension(teamId, userEntity.getId());
               }
             }
           }
@@ -578,7 +616,7 @@ public class SlackExtensionImpl implements SlackExtension {
               .chatPostMessage(req -> req.channel(userId)
                   .blocks(appHomeBlocks(false)));
         } else {
-          LOGGER.debug("User already exists, skipping Slack welcome");
+          LOGGER.debug("User has already opened the app, skipping Slack welcome");
         }
       } catch (RunWorkflowException | IOException | SlackApiException | HttpClientErrorException
           | BoomerangException e) {
@@ -631,6 +669,34 @@ public class SlackExtensionImpl implements SlackExtension {
         .build());
     blocks.add(ContextBlock.builder().elements(elementsList).build());
     return blocks;
+  }
+  
+
+  /*
+   * Processes the App Uninstalled event from Slack and deletes the Slack Auth Extension
+   * 
+   * This also ensures that any previously recorded App_Home_Opened events are cleared for next installation.
+   * 
+   * <h4>Specifications</h4>
+   * <ul>
+   * <li><a href="https://api.slack.com/events/app_uninstalled</a></li>
+   * </ul>
+   * 
+   * @param jsonPayload     the mapped payload from the interactivity endpoint
+   * @return Supplier       To be used by the CompletableFuture
+   */
+  public Supplier<Boolean> appUninstalled(JsonNode jsonPayload) {
+    return () -> {
+      final String teamId = jsonPayload.get("team_id").asText();
+        extensionsRepository.findByType(EXTENSION_TYPE).forEach(e -> {
+          Map<String, String> executionProperties = ParameterMapper.keyValuePairListToMap(e.getLabels());
+          if (executionProperties.containsKey("teamId") && teamId.equals(executionProperties.get("teamId"))) {
+            extensionsRepository.delete(e);
+            LOGGER.debug("Deleted Slack Team: " + executionProperties.get("teamId"));
+          }
+        });
+      return true;
+    };
   }
   
   /*

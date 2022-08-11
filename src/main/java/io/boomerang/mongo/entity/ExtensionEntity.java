@@ -22,6 +22,8 @@ public class ExtensionEntity {
 
   private List<KeyValuePair> labels;
 
+  private List<String> users;
+
   public String getId() {
     return id;
   }
@@ -52,5 +54,13 @@ public class ExtensionEntity {
 
   public void setLabels(List<KeyValuePair> labels) {
     this.labels = labels;
+  }
+
+  public List<String> getUsers() {
+    return users;
+  }
+
+  public void setUsers(List<String> users) {
+    this.users = users;
   }
 }
