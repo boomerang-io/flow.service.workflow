@@ -665,8 +665,6 @@ public class SlackExtensionImpl implements SlackExtension {
     elementsList.add(MarkdownTextObject.builder().text(
         MODAL_TEXT_FOOTER)
         .build());
-    elementsList.add(MarkdownTextObject.builder().text(":bulb: You may receive this message multiple times if you are not yet a user, as we check your profile to determine if you have already receive this welcome message.")
-        .build());
     blocks.add(ContextBlock.builder().elements(elementsList).build());
     return blocks;
   }
