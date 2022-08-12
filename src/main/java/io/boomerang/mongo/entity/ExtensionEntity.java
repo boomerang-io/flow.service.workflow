@@ -1,5 +1,6 @@
 package io.boomerang.mongo.entity;
 
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import org.springframework.data.annotation.Id;
@@ -22,7 +23,7 @@ public class ExtensionEntity {
 
   private List<KeyValuePair> labels;
 
-  private List<String> users;
+  private List<String> users = new LinkedList<>();
 
   public String getId() {
     return id;

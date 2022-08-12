@@ -202,12 +202,21 @@ public class SlackExtensionImpl implements SlackExtension {
                     + "\n*Name:* " + workflowName + "\n*Summary:* " + workflowSummary).build())
                 .build());
     } else {
+      if (workflowId.isEmpty() || workflowId.isBlank()) {
+        blocks.add(SectionBlock.builder().blockId("workflow_fields")
+            .text(MarkdownTextObject.builder().text(
+                ":slightly_frowning_face: It looks like no Workflow ID was provided. Pass `help` into the Slack command for guidance.")
+                .build())
+            .build());
+        
+      } else {
       blocks.add(SectionBlock.builder().blockId("workflow_fields")
           .text(MarkdownTextObject.builder().text(
               ":slightly_frowning_face: Unfortunately we are unable to find a Workflow with the specified ID ("
                   + workflowId + "), or you do not have the necessary permissions.")
               .build())
           .build());
+      }
     }
     blocks.add(DividerBlock.builder().build());
     List<ContextBlockElement> elementsList = new LinkedList<>();
