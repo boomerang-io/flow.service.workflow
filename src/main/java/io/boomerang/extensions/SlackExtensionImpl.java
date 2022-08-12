@@ -205,7 +205,7 @@ public class SlackExtensionImpl implements SlackExtension {
       blocks.add(SectionBlock.builder().blockId("workflow_fields")
           .text(MarkdownTextObject.builder().text(
               ":slightly_frowning_face: Unfortunately we are unable to find a Workflow with the specified ID ("
-                  + workflowId + "), or you do not have the neceesary permissions.")
+                  + workflowId + "), or you do not have the necessary permissions.")
               .build())
           .build());
     }
@@ -228,6 +228,15 @@ public class SlackExtensionImpl implements SlackExtension {
     blocks.add(SectionBlock.builder()
         .text(PlainTextObject.builder()
             .text("Learn how to use this Slack app to execute your no-code automation.").build())
+        .build());
+    blocks.add(HeaderBlock.builder()
+        .text(PlainTextObject.builder().text("Available Commands").build()).build());
+    blocks.add(SectionBlock.builder().blockId("command_fields")
+        .text(MarkdownTextObject.builder().text(
+            "In Slack, you can pass the following into the command\n\n"
+            + " - `help` - show usage information\n"
+            + " - `{workflowId}` - run a particular workflow\n")
+            .build())
         .build());
     blocks.add(HeaderBlock.builder()
         .text(PlainTextObject.builder().text("Next Steps").build()).build());
