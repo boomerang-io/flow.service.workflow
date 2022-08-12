@@ -10,18 +10,18 @@ import java.util.Optional;
 import java.util.function.Supplier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpClientErrorException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.slack.api.Slack;
+import com.slack.api.app_backend.SlackSignature.Generator;
+import com.slack.api.app_backend.SlackSignature.Verifier;
 import com.slack.api.methods.SlackApiException;
 import com.slack.api.methods.request.users.UsersInfoRequest;
 import com.slack.api.methods.response.chat.ChatPostMessageResponse;
@@ -47,9 +47,7 @@ import com.slack.api.model.view.ViewTitle;
 import io.boomerang.error.BoomerangException;
 import io.boomerang.exceptions.RunWorkflowException;
 import io.boomerang.model.FlowActivity;
-import io.boomerang.model.FlowUser;
 import io.boomerang.mongo.entity.ExtensionEntity;
-import io.boomerang.mongo.entity.FlowUserEntity;
 import io.boomerang.mongo.entity.WorkflowEntity;
 import io.boomerang.mongo.model.KeyValuePair;
 import io.boomerang.mongo.repository.ExtensionRepository;
@@ -68,6 +66,8 @@ import io.boomerang.util.ParameterMapper;
  * - commands
  * - users:read
  * - users:read:email
+ * 
+ * This service depends on the SlackSecurityVerificationFilter
  */
 @Service
 public class SlackExtensionImpl implements SlackExtension {
@@ -99,7 +99,7 @@ public class SlackExtensionImpl implements SlackExtension {
       "The better way to automate with no-code workflow automation.";
   
   private static final String MODAL_TEXT_FOOTER =
-  ":bulb: This integration is in _alpha_ and currently only works with Workflows that do not require parameters to be entered. You also need to be a registered user with access to the Workflow.";
+  ":bulb: If your workflows require parameters, make sure they have a default value. You also need to be a registered user with access to the Workflow.";
 
   private static final String EXTENSION_TYPE = "slack_auth";
 
@@ -117,12 +117,12 @@ public class SlackExtensionImpl implements SlackExtension {
    * @param workflowId    the user entered workflow ID
    * @return Supplier       To be used by the CompletableFuture
    */
-  public Supplier<Boolean> createRunModal(MultiValueMap<String, String> slackEvent) {
+  public Supplier<Boolean> createRunModal(Map<String, String> slackEvent) {
     return () -> {
-      final String triggerId = slackEvent.get("trigger_id").get(0);
-      final String userId = slackEvent.get("user_id").get(0);
-      final String teamId = slackEvent.get("team_id").get(0);
-      final String workflowId = slackEvent.get("text").get(0);
+      final String triggerId = slackEvent.get("trigger_id");
+      final String userId = slackEvent.get("user_id");
+      final String teamId = slackEvent.get("team_id");
+      final String workflowId = slackEvent.get("text");
       final String authToken = getSlackAuthToken(teamId);
 
       ViewBuilder modalViewBuilder = View.builder().type("modal")
@@ -202,12 +202,21 @@ public class SlackExtensionImpl implements SlackExtension {
                     + "\n*Name:* " + workflowName + "\n*Summary:* " + workflowSummary).build())
                 .build());
     } else {
+      if (workflowId.isEmpty() || workflowId.isBlank()) {
+        blocks.add(SectionBlock.builder().blockId("workflow_fields")
+            .text(MarkdownTextObject.builder().text(
+                ":slightly_frowning_face: It looks like no Workflow ID was provided. Pass `help` into the Slack command for guidance.")
+                .build())
+            .build());
+        
+      } else {
       blocks.add(SectionBlock.builder().blockId("workflow_fields")
           .text(MarkdownTextObject.builder().text(
               ":slightly_frowning_face: Unfortunately we are unable to find a Workflow with the specified ID ("
-                  + workflowId + "), or you do not have the neceesary permissions.")
+                  + workflowId + "), or you do not have the necessary permissions.")
               .build())
           .build());
+      }
     }
     blocks.add(DividerBlock.builder().build());
     List<ContextBlockElement> elementsList = new LinkedList<>();
@@ -230,10 +239,19 @@ public class SlackExtensionImpl implements SlackExtension {
             .text("Learn how to use this Slack app to execute your no-code automation.").build())
         .build());
     blocks.add(HeaderBlock.builder()
+        .text(PlainTextObject.builder().text("Available Commands").build()).build());
+    blocks.add(SectionBlock.builder().blockId("command_fields")
+        .text(MarkdownTextObject.builder().text(
+            "In Slack, you can pass the following into the command\n\n"
+            + " - `help` - show usage information\n"
+            + " - `{workflowId}` - run a particular workflow\n")
+            .build())
+        .build());
+    blocks.add(HeaderBlock.builder()
         .text(PlainTextObject.builder().text("Next Steps").build()).build());
     blocks.add(SectionBlock.builder().blockId("workflow_fields")
         .text(MarkdownTextObject.builder().text(
-            "As this integration is in _alpha_, you need to know the Workflow's ID to be able to trigger any automation.\n\nYou can find this ID by exporting your Workflow and opening up the downloaded JSON file.\n\nYou also need to have default values set for any parameters the Workflow requires as you cannot provide them from Slack, yet.")
+            ":bulb: If your workflows require parameters, make sure they have a default value. You also need to be a registered user with access to the Workflow.\n\nYou can find this ID by exporting your Workflow and opening up the downloaded JSON file.\n")
             .build())
         .build());
     blocks.add(SectionBlock.builder().blockId("workflow_fields_2")
@@ -354,7 +372,7 @@ public class SlackExtensionImpl implements SlackExtension {
     blocks.add(DividerBlock.builder().build());
     List<ContextBlockElement> elementsList = new LinkedList<>();
     elementsList.add(MarkdownTextObject.builder().text(
-        ":bulb: This integration is in _alpha_ and currently only works with Workflows that do not require parameters to be entered.")
+        ":bulb: If your workflows require parameters, make sure they have a default value. You also need to be a registered user with access to the Workflow.")
         .build());
     blocks.add(ContextBlock.builder().elements(elementsList).build());
     return blocks;
@@ -438,7 +456,7 @@ public class SlackExtensionImpl implements SlackExtension {
     
 //    Optional<ExtensionEntity> origAuthExtension = extensionsRepository.findByType(EXTENSION_TYPE).stream()
 //        .filter(e -> e.getLabels().indexOf(teamIdLabel) != -1).findFirst();
-    List<ExtensionEntity> authsList = checkExistingAuthExtensions(authResponse.getTeam().getId());
+    List<ExtensionEntity> authsList = checkExistingAuthExtension(authResponse.getTeam().getId());
     if (!authsList.isEmpty()) {
       LOGGER.debug("Overriding existing Slack Team Auth");
       authExtension = authsList.get(0);
@@ -454,11 +472,35 @@ public class SlackExtensionImpl implements SlackExtension {
     extensionsRepository.save(authExtension);
     LOGGER.debug(authExtension.toString());
   }
+  
+  /*
+   * Helper method to save the user onto the Auth Extension. This means
+   * that the user has opened the App before.
+   * 
+   * @param OAuthV2AccessResponse
+   */
+  private void addUserToAuthExtension(String teamId, String userId) {
+    List<ExtensionEntity> authExtensions = new LinkedList<>();
+    extensionsRepository.findByType(EXTENSION_TYPE).forEach(e -> {
+      Map<String, String> executionProperties = ParameterMapper.keyValuePairListToMap(e.getLabels());
+      if (executionProperties.containsKey("teamId") && teamId.equals(executionProperties.get("teamId"))) {
+        authExtensions.add(e);
+        LOGGER.debug("Found matching Slack Team Extension");
+      }
+    });
+    if (!authExtensions.isEmpty()) {
+      ExtensionEntity authExtension = authExtensions.get(0);
+      authExtension.getUsers().add(userId);
+      extensionsRepository.save(authExtension);
+      LOGGER.debug("Added user to Slack Team Extension");
+      LOGGER.debug(authExtension.toString());
+    }
+  }
 
   /*
    * Helper method to retrieve a saved Auth for a Slack Team (org)
    */
-  private List<ExtensionEntity> checkExistingAuthExtensions(String teamId) {
+  private List<ExtensionEntity> checkExistingAuthExtension(String teamId) {
     List<ExtensionEntity> authExtensions = new LinkedList<>();
     extensionsRepository.findByType(EXTENSION_TYPE).forEach(e -> {
       Map<String, String> executionProperties = ParameterMapper.keyValuePairListToMap(e.getLabels());
@@ -470,13 +512,35 @@ public class SlackExtensionImpl implements SlackExtension {
     return authExtensions;
   }
   
+  /*
+   * Helper method to check if a User has opened the App as part of an Extension
+   */
+  private Boolean checkExistingAuthExtensionForUser(String teamId, String userId) {
+    List<ExtensionEntity> authExtensions = new LinkedList<>();
+    extensionsRepository.findByType(EXTENSION_TYPE).forEach(e -> {
+      Map<String, String> executionProperties = ParameterMapper.keyValuePairListToMap(e.getLabels());
+      if (executionProperties.containsKey("teamId") && teamId.equals(executionProperties.get("teamId"))) {
+        authExtensions.add(e);
+        LOGGER.debug("Found matching Slack Team Extension");
+      }
+    });
+    if (!authExtensions.isEmpty()) {
+      ExtensionEntity authEntity = authExtensions.get(0);
+      if (authEntity.getUsers().contains(userId)) {
+        LOGGER.debug("Found matching UserId on Team Auth Extension");
+        return true;
+      }
+    }
+    return false;
+  }
+  
   /*&
    * Helper method to retrieve the stored Slack Token using the extensions generic collection
    * 
    * @param teamId
    */
   private String getSlackAuthToken(String teamId) {
-    List<ExtensionEntity> authsList = checkExistingAuthExtensions(teamId);
+    List<ExtensionEntity> authsList = checkExistingAuthExtension(teamId);
     if (!authsList.isEmpty()) {
         String teamAuthToken = authsList.get(0).getData().get("accessToken").toString();
         LOGGER.debug("Using existing team Slack auth token: " + teamAuthToken);
@@ -541,41 +605,19 @@ public class SlackExtensionImpl implements SlackExtension {
 
       Slack slack = Slack.getInstance();
       try {
-        Boolean existingUser = false;
-        Boolean alreadyOpened = false;
         UsersInfoResponse userInfo =
             slack.methods(authToken).usersInfo(UsersInfoRequest.builder().user(userId).build());
         LOGGER.debug("User Info: " + userInfo.toString());
-        if (userInfo != null && userInfo.getUser() != null && userInfo.getUser().getProfile() != null) {
-          // Trigger workflow Execution and impersonate Slack user
-          String userEmail = userInfo.getUser().getProfile().getEmail();
-          if (userEmail != null) {
-            FlowUserEntity userEntity = userIdentityService.getUserByEmail(userEmail);
-            if (userEntity != null) {
-              existingUser = true;
-              if (userEntity.getLabels() != null && ParameterMapper.keyValuePairListToMap(userEntity.getLabels()).containsKey("slack_app_opened") && "true".equals(ParameterMapper.keyValuePairListToMap(userEntity.getLabels()).get("slack_app_opened"))) {
-                alreadyOpened = true;
-              } else {
-                FlowUser flowUser = new FlowUser();
-                BeanUtils.copyProperties(userEntity, flowUser);
-                List<KeyValuePair> labels = new LinkedList<>();
-                labels.add(new KeyValuePair("slack_app_opened","true"));
-                flowUser.setLabels(labels);
-                userIdentityService.updateFlowUser(userEntity.getId(), flowUser);
-              }
-            }
+        if (userInfo != null && userInfo.getUser() != null && userInfo.getUser().getId() != null) {
+          String slackUserId = userInfo.getUser().getId();
+          if (checkExistingAuthExtensionForUser(teamId, userInfo.getUser().getId())) {
+            LOGGER.debug("User has already opened the app, skipping Slack welcome");
+          } else {
+            addUserToAuthExtension(teamId, slackUserId);
+            slack.methods(authToken)
+            .chatPostMessage(req -> req.channel(userId)
+                .blocks(appHomeBlocks()));
           }
-        }
-        if (existingUser && !alreadyOpened) {
-          slack.methods(authToken)
-              .chatPostMessage(req -> req.channel(userId)
-                  .blocks(appHomeBlocks(true)));
-        } else if (!alreadyOpened) {
-          slack.methods(authToken)
-              .chatPostMessage(req -> req.channel(userId)
-                  .blocks(appHomeBlocks(false)));
-        } else {
-          LOGGER.debug("User already exists, skipping Slack welcome");
         }
       } catch (RunWorkflowException | IOException | SlackApiException | HttpClientErrorException
           | BoomerangException e) {
@@ -591,20 +633,19 @@ public class SlackExtensionImpl implements SlackExtension {
    * Creates the Blocks that are part of the Workflow Activity Slack message after a Run Modal is
    * submitted in slack
    */
-  private List<LayoutBlock> appHomeBlocks(Boolean existingUser) {
+  private List<LayoutBlock> appHomeBlocks() {
     String appName = flowSettingsService.getConfiguration("customizations", "appName").getValue();
     String platformName = flowSettingsService.getConfiguration("customizations", "platformName").getValue();
+    String joinedName = platformName + " " + appName;
     List<LayoutBlock> blocks = new LinkedList<>();
     blocks.add(HeaderBlock.builder()
         .text(PlainTextObject.builder().text("Hello :wave:").emoji(true).build()).build());
     blocks.add(SectionBlock.builder().text(MarkdownTextObject.builder().text("Welcome to the new modern and easy way to supercharge your automation. I am here to help you trigger your Workflows from right within Slack, giving you complete control over what needs to be done.\n\nHere are a few things to get started with to make your experience a good one.").build())
                 .build());
-    if (!existingUser) {
     blocks.add(SectionBlock.builder().text(MarkdownTextObject.builder().text("*Sign Up*\n"
-        + "I see that you are not yet a user of " + platformName + " " + appName + ". Sign up to be able to automate.")
+        + "Ensure you a user of " + joinedName.trim() + " to be able to automate.")
         .build())
         .build());
-    } 
     blocks.add(SectionBlock.builder().text(MarkdownTextObject.builder().text("*Create Automation*\n"
         + "Creating your first workflow is simple. Start from scratch or a template and start dragging and dropping your way to automation.")
         .build())
@@ -624,15 +665,66 @@ public class SlackExtensionImpl implements SlackExtension {
     elementsList.add(MarkdownTextObject.builder().text(
         MODAL_TEXT_FOOTER)
         .build());
-    elementsList.add(MarkdownTextObject.builder().text(":bulb: You may receive this message multiple times if you are not yet a user, as we check your profile to determine if you have already receive this welcome message.")
-        .build());
     blocks.add(ContextBlock.builder().elements(elementsList).build());
     return blocks;
   }
   
+
+  /*
+   * Processes the App Uninstalled event from Slack and deletes the Slack Auth Extension
+   * 
+   * This also ensures that any previously recorded App_Home_Opened events are cleared for next installation.
+   * 
+   * <h4>Specifications</h4>
+   * <ul>
+   * <li><a href="https://api.slack.com/events/app_uninstalled</a></li>
+   * </ul>
+   * 
+   * @param jsonPayload     the mapped payload from the interactivity endpoint
+   * @return Supplier       To be used by the CompletableFuture
+   */
+  public Supplier<Boolean> appUninstalled(JsonNode jsonPayload) {
+    return () -> {
+      final String teamId = jsonPayload.get("team_id").asText();
+        extensionsRepository.findByType(EXTENSION_TYPE).forEach(e -> {
+          Map<String, String> executionProperties = ParameterMapper.keyValuePairListToMap(e.getLabels());
+          if (executionProperties.containsKey("teamId") && teamId.equals(executionProperties.get("teamId"))) {
+            extensionsRepository.delete(e);
+            LOGGER.debug("Deleted Slack Team: " + executionProperties.get("teamId"));
+          }
+        });
+      return true;
+    };
+  }
+  
+  /*
+   * Utility method for responding to the install redirect query needed for a Slack App
+   */
+  @Override
   public ResponseEntity<?> installRedirect() throws URISyntaxException {
     final String installURL = 
         flowSettingsService.getConfiguration("extensions", "slack.installURL").getValue();
     return ResponseEntity.status(HttpStatus.FOUND).location(new URI(installURL)).build();
+  }
+  
+  /*
+   * Utlity method for verifying requests are signed by Slack
+   * 
+   * <h4>Specifications</h4>
+   * <ul>
+   * <li><a href="https://api.slack.com/authentication/verifying-requests-from-slack">Verifying Requests from Slack</a></li>
+   * </ul>
+   */
+  @Override
+  public Boolean verifySignature(String signature, String timestamp, String body) {
+    String key = this.flowSettingsService.getConfiguration("extensions", "slack.signingSecret").getValue();
+    LOGGER.debug("Key: " + key);
+    LOGGER.debug("Slack Timestamp: " + timestamp);
+    LOGGER.debug("Slack Body: " + body);
+    Generator generator = new Generator(key);
+    Verifier verifier = new Verifier(generator);
+    LOGGER.debug("Slack Signature: " + signature);
+    LOGGER.debug("Computed Signature: " + generator.generate(timestamp, body));
+    return verifier.isValid(timestamp, body, signature);
   }
 }

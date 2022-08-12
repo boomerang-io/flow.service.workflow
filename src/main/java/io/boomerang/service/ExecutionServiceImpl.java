@@ -79,6 +79,8 @@ public class ExecutionServiceImpl implements ExecutionService {
               activityService.getTaskExecutions(activity.getId());
           final FlowActivity response = new FlowActivity(activity);
           response.setSteps(steps);
+          response.setWorkflowName(workflow.getName());
+          response.setShortDescription(workflow.getShortDescription());
           return response;
         } else {
           LOGGER.error("No revision to execute");
