@@ -255,7 +255,7 @@
 		<dependency>
 		    <groupId>com.slack.api</groupId>
 		    <artifactId>slack-app-backend</artifactId>
-		    <version>1.22.2</version>
+		    <version>1.24.0</version>
 		</dependency>
 	</dependencies>
 
