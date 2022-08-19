@@ -92,7 +92,7 @@ public class EventingServiceImpl implements EventingService, SubHandler {
   private EventFormatProvider eventFormatProvider = EventFormatProvider.getInstance();
 
   @PostConstruct
-  private void init() throws InterruptedException {
+  private void init() {
 
     // Build connection primer
     // @formatter:off
@@ -155,7 +155,7 @@ public class EventingServiceImpl implements EventingService, SubHandler {
     try {
       Thread.sleep(
           properties.getJetstream().getActionEvents().getConsumer().getResubWaitTime().toMillis());
-    } catch (Exception e) {
+    } catch (InterruptedException e) {
       logger.warn("Sleep failed: resubscribing without a waiting time...", e);
     } finally {
       tunnel.subscribe(this);
@@ -175,24 +175,22 @@ public class EventingServiceImpl implements EventingService, SubHandler {
   public void processCloudEventRequest(CloudEvent cloudEvent)
       throws InvalidPropertiesFormatException {
 
-    logger.debug("processCloudEventRequest() - Extensions: {}",
-        String.join(", ", cloudEvent.getExtensionNames()));
-    logger.debug("processCloudEvent() - Attributes: {}",
-        String.join(", ", cloudEvent.getAttributeNames()));
-    logger.debug("processCloudEvent() - Data: {}",
-        Optional.ofNullable(cloudEvent.getData()).toString());
+    if (logger.isDebugEnabled()) {
+      logger.debug("Extensions: {}", String.join(", ", cloudEvent.getExtensionNames()));
+      logger.debug("Attributes: {}", String.join(", ", cloudEvent.getAttributeNames()));
+      logger.debug("Data: {}", Optional.ofNullable(cloudEvent.getData()));
+    }
 
     // Get the event
     Event event = EventFactory.buildFromCloudEvent(cloudEvent);
 
     // Check the custom events are activated
-    if (isCustomEventEnabled(event) == false) {
-      // throw new NotAllowedException("");
+    if (Boolean.FALSE.equals(isCustomEventEnabled(event))) {
       throw new BoomerangException(BoomerangError.WORKFLOW_TRIGGER_DISABLED);
     }
 
     // Process the event
-    logger.info("processCloudEventRequest() - Type: {}", event.getType());
+    logger.info("Type: {}", event.getType());
 
     switch (event.getType()) {
       case TRIGGER:
@@ -202,12 +200,13 @@ public class EventingServiceImpl implements EventingService, SubHandler {
             .map(key -> key + ": " + eventTrigger.getProperties().get(key))
             .collect(Collectors.joining(", "));
 
-        logger.debug("processCloudEventRequest() - WorkflowId: {}", eventTrigger.getWorkflowId());
-        logger.debug("processCloudEventRequest() - Topic: {}", eventTrigger.getTopic());
-        logger.debug("processCloudEventRequest() - InitiatorId: {}", eventTrigger.getInitiatorId());
-        logger.debug("processCloudEventRequest() - InitiatorContext: {}",
-            eventTrigger.getInitiatorContext());
-        logger.debug("processCloudEventRequest() - Properties: {}", eventProperties);
+        if (logger.isDebugEnabled()) {
+          logger.debug("WorkflowId: {}", eventTrigger.getWorkflowId());
+          logger.debug("Topic: {}", eventTrigger.getTopic());
+          logger.debug("InitiatorId: {}", eventTrigger.getInitiatorId());
+          logger.debug("InitiatorContext: {}", eventTrigger.getInitiatorContext());
+          logger.debug("Properties: {}", eventProperties);
+        }
 
 
         // Create flow execution request
@@ -280,16 +279,17 @@ public class EventingServiceImpl implements EventingService, SubHandler {
       // Extract initiator ID and initiator context
       String initiatorId = "";
 
-      if (activityEntity.getLabels() != null && activityEntity.getLabels().isEmpty() == false) {
+      if (activityEntity.getLabels() != null && !activityEntity.getLabels().isEmpty()) {
         String sharedLabelPrefix = properties.getShared().getLabel().getPrefix() + "/";
 
         initiatorId = activityEntity.getLabels().stream()
             .filter(kv -> kv.getKey().equals(sharedLabelPrefix + LABEL_KEY_INITIATOR_ID))
-            .findFirst().map(kv -> kv.getValue()).orElse("");
+            .findFirst().map(KeyValuePair::getValue).orElse("");
 
         activityEntity.getLabels().stream()
             .filter(kv -> kv.getKey().equals(sharedLabelPrefix + LABEL_KEY_INITIATOR_CONTEXT))
-            .findFirst().map(kv -> kv.getValue()).ifPresent(eventStatusUpdate::setInitiatorContext);
+            .findFirst().map(KeyValuePair::getValue)
+            .ifPresent(eventStatusUpdate::setInitiatorContext);
       }
 
       // NATS message subject
@@ -311,8 +311,8 @@ public class EventingServiceImpl implements EventingService, SubHandler {
         logger.error("An exception occurred while publishing the message to NATS server!", e);
       }
 
-      logger.debug("Workflow with ID " + eventStatusUpdate.getWorkflowId()
-          + " has changed its status to " + activityEntity.getStatus());
+      logger.debug("Workflow with ID {} has changed its status to {}",
+          eventStatusUpdate.getWorkflowId(), activityEntity.getStatus());
     } catch (Exception e) {
       logger.fatal("A fatal error has occurred while publishing the message to the NATS server!",
           e);
@@ -327,7 +327,7 @@ public class EventingServiceImpl implements EventingService, SubHandler {
       String workflowId) {
     List<WorkflowProperty> inputProperties =
         workflowService.getWorkflow(workflowId).getProperties();
-    Map<String, String> properties = new HashMap<>();
+    Map<String, String> processedProperties = new HashMap<>();
 
     if (inputProperties != null) {
 
@@ -339,10 +339,10 @@ public class EventingServiceImpl implements EventingService, SubHandler {
                 .getOrDefault(inputProperty.getJsonPath(), inputProperty.getDefaultValue())
                 .replaceAll("^\"+|\"+$", "");
 
-            logger.info("processProperties() - Property: " + inputProperty.getKey()
-                + ", Json Path: " + inputProperty.getJsonPath() + ", Value: " + propertyValue);
+            logger.info("processProperties() - Property: {}, Json Path: {}, Value: {}",
+                inputProperty.getKey(), inputProperty.getJsonPath(), propertyValue);
 
-            properties.put(inputProperty.getKey(), propertyValue);
+            processedProperties.put(inputProperty.getKey(), propertyValue);
           }
         } catch (Exception e) {
 
@@ -351,16 +351,22 @@ public class EventingServiceImpl implements EventingService, SubHandler {
         }
       }
     }
-    String serializedEventProperties =
-        eventProperties.keySet().stream().map(key -> "\"" + key + "\":" + eventProperties.get(key))
-            .collect(Collectors.joining(",", "{", "}"));
-    properties.put("eventPayload", serializedEventProperties);
 
-    properties.forEach((k, v) -> {
-      logger.info("processProperties() - " + k + "=" + v);
+    String serializedEventProperties = "{}";
+
+    if (eventProperties != null) {
+      serializedEventProperties = eventProperties.keySet().stream()
+          .map(key -> "\"" + key + "\":" + eventProperties.get(key))
+          .collect(Collectors.joining(",", "{", "}"));
+    }
+
+    processedProperties.put("eventPayload", serializedEventProperties);
+
+    processedProperties.forEach((k, v) -> {
+      logger.info("processProperties() - {}={}", k, v);
     });
 
-    return properties;
+    return processedProperties;
   }
 
   private List<KeyValuePair> processEventLabels(EventTrigger et) {
