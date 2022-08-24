@@ -21,5 +21,7 @@ public interface WorkflowVersionService {
   FlowWorkflowRevision insertWorkflowVersion(FlowWorkflowRevision flowWorkflowEntity);
 
   List<RevisionResponse> viewChangelog(Optional<String> workFlowId, Pageable pageable);
+  
+  List<FlowWorkflowRevision> getLatestWorkflowVersionWithUpgradeFlags(List<String> workflowIds);
 
 }

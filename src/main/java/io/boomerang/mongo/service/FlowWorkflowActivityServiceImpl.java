@@ -300,4 +300,15 @@ public class FlowWorkflowActivityServiceImpl implements FlowWorkflowActivityServ
       return repository.findAll(page);
     }
   }
+
+	@Override
+	public List<ActivityEntity> findByTeamIdsAndStatus(List<String> teamIds, TaskStatus status) {
+		return repository.findByTeamIdInAndStatus(teamIds, status);
+	}
+
+	@Override
+	public Page<ActivityEntity> findAllActivitiesForTeams(Date fromDate, Date toDate, List<String> teamIds,
+			Pageable page) {
+		return repository.findByTeamIds(fromDate, toDate, teamIds, page);
+	}
 }
