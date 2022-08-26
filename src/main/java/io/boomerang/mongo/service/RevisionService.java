@@ -5,7 +5,7 @@ import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import io.boomerang.mongo.entity.RevisionEntity;
-import io.boomerang.mongo.entity.WorkFlowRevisionCount;
+import io.boomerang.mongo.model.WorkFlowRevisionCount;
 
 public interface RevisionService {
 

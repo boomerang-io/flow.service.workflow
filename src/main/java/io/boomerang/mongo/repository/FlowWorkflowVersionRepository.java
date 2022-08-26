@@ -7,7 +7,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.Aggregation;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import io.boomerang.mongo.entity.RevisionEntity;
-import io.boomerang.mongo.entity.WorkFlowRevisionCount;
+import io.boomerang.mongo.model.WorkFlowRevisionCount;
 
 public interface FlowWorkflowVersionRepository
     extends MongoRepository<RevisionEntity, String> {

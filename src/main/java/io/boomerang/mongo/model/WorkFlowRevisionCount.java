@@ -1,15 +1,9 @@
-package io.boomerang.mongo.entity;
+package io.boomerang.mongo.model;
 
-import org.springframework.data.mongodb.core.mapping.Document;
-
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-@JsonInclude(Include.NON_NULL)
-@Document(collection = "#{@mongoConfiguration.fullCollectionName('workflows_revisions')}")
+import io.boomerang.mongo.entity.RevisionEntity;
+
 public class WorkFlowRevisionCount {
 	
 	@JsonProperty("_id")

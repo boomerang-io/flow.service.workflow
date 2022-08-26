@@ -7,7 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import io.boomerang.mongo.entity.RevisionEntity;
-import io.boomerang.mongo.entity.WorkFlowRevisionCount;
+import io.boomerang.mongo.model.WorkFlowRevisionCount;
 import io.boomerang.mongo.repository.FlowWorkflowVersionRepository;
 
 @Service
