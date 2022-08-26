@@ -680,27 +680,27 @@ public class TeamServiceImpl implements TeamService {
   			.getConfiguration(TEAMS, MAX_TEAM_CONCURRENT_WORKFLOW).getValue());
     for(TeamWorkflowSummary team: teamWorkflowSummaryList) {
     	Quotas quotas = new Quotas();
-	    if (team.getQuotas().getMaxWorkflowCount() != null) {
+	    if (team.getQuotas() != null && team.getQuotas().getMaxWorkflowCount() != null) {
 	      quotas.setMaxWorkflowCount(team.getQuotas().getMaxWorkflowCount());
 	    } else {
 	      quotas.setMaxWorkflowCount(maxWorkflowCount);
 	    }
-	    if (team.getQuotas().getMaxWorkflowExecutionMonthly() != null) {
+	    if (team.getQuotas() != null && team.getQuotas().getMaxWorkflowExecutionMonthly() != null) {
 	      quotas.setMaxWorkflowExecutionMonthly(team.getQuotas().getMaxWorkflowExecutionMonthly());
 	    } else {
 	      quotas.setMaxWorkflowExecutionMonthly(maxTeamFlowExecutionMonthly);
 	    }
-	    if (team.getQuotas().getMaxWorkflowStorage() != null) {
+	    if (team.getQuotas() != null && team.getQuotas().getMaxWorkflowStorage() != null) {
 	      quotas.setMaxWorkflowStorage(team.getQuotas().getMaxWorkflowStorage());
 	    } else {
 	      quotas.setMaxWorkflowStorage(maxTeamWorkflowStorageInGB);
 	    }
-	    if (team.getQuotas().getMaxWorkflowExecutionTime() != null) {
+	    if (team.getQuotas() != null && team.getQuotas().getMaxWorkflowExecutionTime() != null) {
 	      quotas.setMaxWorkflowExecutionTime(team.getQuotas().getMaxWorkflowExecutionTime());
 	    } else {
 	      quotas.setMaxWorkflowExecutionTime(maxTeamWorkflowDuration);
 	    }
-	    if (team.getQuotas().getMaxConcurrentWorkflows() != null) {
+	    if (team.getQuotas() != null && team.getQuotas().getMaxConcurrentWorkflows() != null) {
 	      quotas.setMaxConcurrentWorkflows(team.getQuotas().getMaxConcurrentWorkflows());
 	    } else {
 	      quotas.setMaxConcurrentWorkflows(maxTeamWorkflowConcurrent);
