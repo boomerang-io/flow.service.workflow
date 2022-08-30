@@ -10,6 +10,7 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
+import io.boomerang.mongo.service.FlowSettingsService;
 import io.boomerang.mongo.service.FlowTokenService;
 import io.boomerang.mongo.service.FlowUserService;
 import io.boomerang.security.filters.FlowAuthorizationFilter;
@@ -39,6 +40,9 @@ public class WebSecurity extends WebSecurityConfigurerAdapter {
   
   @Autowired
   private FlowUserService flowUserService;
+  
+  @Autowired
+  private FlowSettingsService flowSettingsService;
 
   @Value("${boomerang.authorization.enabled:false}")
   private boolean boomerangAuthorization;
@@ -58,7 +62,7 @@ public class WebSecurity extends WebSecurityConfigurerAdapter {
   private void setupJWT(HttpSecurity http)
       throws Exception {
     final FlowAuthorizationFilter jwtFilter = new FlowAuthorizationFilter(tokenService,
-        authenticationManager(), flowUserService, basicPassword);
+        authenticationManager(), flowUserService, flowSettingsService, basicPassword);
     http.csrf().disable().authorizeRequests().antMatchers(HEALTH, API_DOCS, INFO, INTERNAL, WEBJARS, SLACK_INSTALL)
         .permitAll().and().authorizeRequests().anyRequest().authenticated().and()
         .addFilterBefore(jwtFilter, BasicAuthenticationFilter.class).sessionManagement()

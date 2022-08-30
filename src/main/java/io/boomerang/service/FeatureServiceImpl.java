@@ -46,6 +46,8 @@ public class FeatureServiceImpl implements FeatureService {
         settingsService.getConfiguration("features", "activity").getBooleanValue());
     features.put("insights",
         settingsService.getConfiguration("features", "insights").getBooleanValue());
+    features.put("team.tasks",
+        settingsService.getConfiguration("features", "teamTasks").getBooleanValue());
 
     quotas.put("maxActivityStorageSize", settingsService
         .getConfiguration("activity", "max.storage.size").getValue().replace("Gi", ""));

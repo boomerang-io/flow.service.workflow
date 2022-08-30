@@ -25,8 +25,8 @@ public class FlowTeamServiceImpl implements FlowTeamService {
   }
 
   @Override
-  public List<TeamEntity> findTeamsWithHighLevelGroups(List<String> highLevelGroups) {
-    return flowTeamRepository.findByhigherLevelGroupIdIn(highLevelGroups);
+  public List<TeamEntity> findActiveTeamsByIds(List<String> ids) {
+    return flowTeamRepository.findByIdInAndIsActive(ids, true);
   }
 
   @Override

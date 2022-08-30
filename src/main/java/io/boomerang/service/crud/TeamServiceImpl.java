@@ -468,14 +468,14 @@ public class TeamServiceImpl implements TeamService {
 
   @Override
   public List<TeamEntity> getUsersTeamListing(FlowUserEntity userEntity) {
-    List<String> highLevelGroupIds = new LinkedList<>();
+    List<String> teamIds = new LinkedList<>();
     if (flowExternalUrlUser.isBlank()) {
-      highLevelGroupIds = userEntity.getFlowTeams();
+      teamIds = userEntity.getFlowTeams();
     } else {
       UserProfile profile = boomerangUserService.getInternalUserProfile();
       List<Team> teams = profile.getTeams();
       if (teams != null) {
-        highLevelGroupIds = teams.stream().map(Team::getId).collect(Collectors.toList());
+        teamIds = teams.stream().map(Team::getId).collect(Collectors.toList());
       }
     }
 
@@ -483,7 +483,7 @@ public class TeamServiceImpl implements TeamService {
     if (!flowExternalUrlTeam.isBlank()) {
       flowTeam = this.externalTeamService.getExternalTeams(flowExternalUrlTeam);
     } else {
-      flowTeam = flowTeamService.findTeamsWithHighLevelGroups(highLevelGroupIds);
+      flowTeam = flowTeamService.findActiveTeamsByIds(teamIds);
     }
     return flowTeam;
   }
