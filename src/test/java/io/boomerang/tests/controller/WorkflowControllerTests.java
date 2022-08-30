@@ -76,6 +76,14 @@ public class WorkflowControllerTests extends FlowTests {
   }
 
   @Test
+  public void testInternalTeamWorkflows() {
+    List<WorkflowShortSummary> summaryList = internalController.getTeamWorkflows("5d1a1841f6ca2c00014c4309");
+
+     assertNotNull(summaryList);
+     assertEquals(9, summaryList.size());
+  }
+  
+  @Test
   public void testGetWorkflowLatestVersion() {
 
     FlowWorkflowRevision entity = controller.getWorkflowLatestVersion("5d1a188af6ca2c00014c4314");

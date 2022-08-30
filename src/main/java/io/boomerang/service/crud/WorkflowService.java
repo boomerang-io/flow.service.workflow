@@ -25,6 +25,8 @@ public interface WorkflowService {
   WorkflowSummary getWorkflow(String workflowId);
 
   List<WorkflowSummary> getWorkflowsForTeam(String flowTeamId);
+  
+  List<WorkflowShortSummary> getWorkflowsShortSummaryForTeam(String flowTeamId);
 
   WorkflowSummary saveWorkflow(WorkflowEntity flowWorkflowEntity);
 

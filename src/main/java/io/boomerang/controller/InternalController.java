@@ -122,4 +122,10 @@ public class InternalController {
       @RequestParam String propertyKey) {
     return workflowService.getRevisionProperties(workflowId, workflowVersion, taskId, propertyKey);
   }
+  
+  @GetMapping(value = "/workflows/{teamId}")
+  public List<WorkflowShortSummary> getTeamWorkflows(@PathVariable String teamId) {
+    return workflowService.getWorkflowsShortSummaryForTeam(teamId);
+  }
+
 }
