@@ -111,6 +111,8 @@ public interface FlowWorkflowActivityRepository
   Page<ActivityEntity> findByCreationDateBefore(Date to, Pageable page);
   
   List<ActivityEntity> findByWorkflowIdInAndStatus(List<String> workflowIds, TaskStatus status);
+  
+  List<ActivityEntity> findByTeamIdInAndStatus(List<String> teamIds, TaskStatus status);
 
   @Query("{'workflowId' : ?0, 'properties.key' : ?1, 'properties.value' : ?2}")
   ActivityEntity findByWorkflowAndProperty(String workflowId, String key, String value);
@@ -120,5 +122,8 @@ public interface FlowWorkflowActivityRepository
 
   @Query(value = "{'creationDate':{ $lt: ?1, $gte: ?0}, 'userId' : ?2}")
   Page<ActivityEntity> findByUserId(Date date, Date date2, String userId, Pageable page);
+  
+  @Query(value = "{'creationDate':{ $lt: ?1, $gte: ?0}, 'teamId' : { $in: ?2 }}")
+  Page<ActivityEntity> findByTeamIds(Date fromDate, Date toDate, List<String> teamIds, Pageable page);
 
 }

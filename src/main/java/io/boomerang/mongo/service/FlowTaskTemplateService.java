@@ -27,4 +27,6 @@ public interface FlowTaskTemplateService {
   
   List<FlowTaskTemplateEntity> getAllGlobalTasks();
   
+  List<FlowTaskTemplateEntity> getTaskTemplateWithIds(List<String> ids);
+  
 }
