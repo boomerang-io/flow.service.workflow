@@ -122,5 +122,4 @@ public class InternalController {
       @RequestParam String propertyKey) {
     return workflowService.getRevisionProperties(workflowId, workflowVersion, taskId, propertyKey);
   }
-
 }
