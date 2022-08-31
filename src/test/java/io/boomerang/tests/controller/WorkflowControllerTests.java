@@ -31,6 +31,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import io.boomerang.controller.InternalController;
 import io.boomerang.controller.WorkflowController;
+import io.boomerang.controller.WorkflowsController;
 import io.boomerang.misc.FlowTests;
 import io.boomerang.model.FlowWorkflowRevision;
 import io.boomerang.model.GenerateTokenResponse;
@@ -63,6 +64,9 @@ public class WorkflowControllerTests extends FlowTests {
 
   @Autowired
   private WorkflowController controller;
+  
+  @Autowired
+  private WorkflowsController workflowsController;
 
   @Autowired
   private InternalController internalController;
@@ -77,7 +81,7 @@ public class WorkflowControllerTests extends FlowTests {
 
   @Test
   public void testInternalTeamWorkflows() {
-    List<WorkflowShortSummary> summaryList = internalController.getTeamWorkflows("5d1a1841f6ca2c00014c4309");
+    List<WorkflowShortSummary> summaryList = workflowsController.getTeamWorkflows("5d1a1841f6ca2c00014c4309");
 
      assertNotNull(summaryList);
      assertEquals(9, summaryList.size());
