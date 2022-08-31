@@ -188,42 +188,6 @@ public class WorkflowServiceImpl implements WorkflowService {
     }
     return newList;
   }
-  
-  @Override
-  public List<WorkflowShortSummary> getWorkflowsShortSummaryForTeam(String flowTeamId) {
-    final List<WorkflowEntity> workfows = workflowRepository.getWorkflowsForTeam(flowTeamId);
-    final List<WorkflowShortSummary> results = new LinkedList<>();
-    for (WorkflowEntity workflow : workfows) {
-      if (WorkflowStatus.active.equals(workflow.getStatus())) {
-
-        String workflowName = workflow.getName();
-        boolean webhookEnabled = false;
-
-        if (workflow.getTriggers() != null) {
-          Triggers triggers = workflow.getTriggers();
-          TriggerEvent webhook = triggers.getWebhook();
-
-          if (webhook != null) {
-            webhookEnabled = webhook.getEnable();
-          }
-        }
-        WorkflowShortSummary summary = new WorkflowShortSummary();
-        summary.setWebhookEnabled(webhookEnabled);
-        summary.setWorkflowName(workflowName);
-        summary.setWorkflowId(workflow.getId());
-
-        if (workflow.getScope() != null) {
-          summary.setScope(workflow.getScope());
-        } else {
-          summary.setScope(WorkflowScope.team);
-        }
-
-        summary.setTeamId(flowTeamId);
-        results.add(summary);
-      }
-    }
-    return results;
-  }
 
   @Override
   public WorkflowSummary saveWorkflow(final WorkflowEntity flowWorkflowEntity) {

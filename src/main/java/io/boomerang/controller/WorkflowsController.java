@@ -1,14 +1,15 @@
 package io.boomerang.controller;
 
 import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
 import io.boomerang.model.TemplateWorkflowSummary;
 import io.boomerang.model.UserWorkflowSummary;
-import io.boomerang.model.WorkflowShortSummary;
 import io.boomerang.model.WorkflowSummary;
 import io.boomerang.service.crud.WorkflowService;
 
@@ -35,8 +36,8 @@ public class WorkflowsController {
   }
   
   @GetMapping(value = "/{teamId}")
-  public List<WorkflowShortSummary> getTeamWorkflows(@PathVariable String teamId) {
-    return workflowService.getWorkflowsShortSummaryForTeam(teamId);
+  public List<WorkflowSummary> getTeamWorkflows(@PathVariable String teamId) {
+    return workflowService.getWorkflowsForTeam(teamId);
   }
 
 }

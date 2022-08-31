@@ -81,7 +81,7 @@ public class WorkflowControllerTests extends FlowTests {
 
   @Test
   public void testInternalTeamWorkflows() {
-    List<WorkflowShortSummary> summaryList = workflowsController.getTeamWorkflows("5d1a1841f6ca2c00014c4309");
+    List<WorkflowSummary> summaryList = workflowsController.getTeamWorkflows("5d1a1841f6ca2c00014c4309");
 
      assertNotNull(summaryList);
      assertEquals(9, summaryList.size());
