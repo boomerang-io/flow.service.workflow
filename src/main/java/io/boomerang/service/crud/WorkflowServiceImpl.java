@@ -15,6 +15,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.TimeZone;
 import java.util.UUID;
+import java.util.stream.Collectors;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.quartz.SchedulerException;
@@ -29,6 +31,9 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.inject.internal.util.Lists;
+import com.google.inject.internal.util.Maps;
+
 import io.boomerang.error.BoomerangError;
 import io.boomerang.error.BoomerangException;
 import io.boomerang.model.DuplicateRequest;
@@ -60,6 +65,7 @@ import io.boomerang.mongo.model.Trigger;
 import io.boomerang.mongo.model.TriggerEvent;
 import io.boomerang.mongo.model.TriggerScheduler;
 import io.boomerang.mongo.model.Triggers;
+import io.boomerang.mongo.model.WorkFlowRevisionCount;
 import io.boomerang.mongo.model.WorkflowProperty;
 import io.boomerang.mongo.model.WorkflowScope;
 import io.boomerang.mongo.model.WorkflowStatus;
@@ -187,6 +193,41 @@ public class WorkflowServiceImpl implements WorkflowService {
 
     }
     return newList;
+  }
+  
+  @Override
+  public Map<String, List<WorkflowSummary>> getWorkflowsForTeams(List<String> flowTeamIds) {
+		// Batch query work flows for a list of teams.
+		List<WorkflowEntity> workflowList = workflowRepository.getWorkflowsForTeams(flowTeamIds);  
+		if(workflowList == null || workflowList.isEmpty()) {
+			return Maps.newHashMap();
+		}
+		
+		// Collect flow Id.
+		List<String> flowIds = workflowList.stream().map(flow -> flow.getId()).collect(Collectors.toList());
+		// Batch query revision counts for a list of work flows
+		List<WorkFlowRevisionCount> workflowRevisionCounts = workflowVersionService.getWorkflowRevisionCounts(flowIds);
+		Map<String, WorkFlowRevisionCount> workflowRevisionCountMap = Maps.newHashMap();
+		workflowRevisionCounts.stream().forEach(workFlowRevisionCount -> {
+			workflowRevisionCountMap.put(workFlowRevisionCount.getId(), workFlowRevisionCount);
+		});
+	
+		// Construct workflow summary map(key= flowTeamId, value = List<WorkflowSummary>).
+		Map<String, List<WorkflowSummary>> result = new HashMap<String, List<WorkflowSummary>>();
+    for (final WorkflowEntity entity : workflowList) {
+      if(result.get(entity.getFlowTeamId()) == null) {
+      	result.put(entity.getFlowTeamId(), Lists.newArrayList());
+      }
+
+      if (WorkflowStatus.active == entity.getStatus()) {
+        setupTriggerDefaults(entity);
+        final WorkflowSummary summary = new WorkflowSummary(entity);
+        WorkFlowRevisionCount workflowRevisionCount = workflowRevisionCountMap.get(summary.getId());
+        summary.setRevisionCount(workflowRevisionCount == null? 0 : workflowRevisionCount.getCount());
+        result.get(entity.getFlowTeamId()).add(summary);
+      }
+    }
+    return result;
   }
 
   @Override

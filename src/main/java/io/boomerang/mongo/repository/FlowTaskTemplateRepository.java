@@ -12,6 +12,8 @@ public interface FlowTaskTemplateRepository
 
   @Override
   Optional<FlowTaskTemplateEntity> findById(String id);
+  
+  List<FlowTaskTemplateEntity> findByIdIn(List<String> ids);
 
   @Override
   List<FlowTaskTemplateEntity> findAll();
@@ -19,7 +21,7 @@ public interface FlowTaskTemplateRepository
   List<FlowTaskTemplateEntity> findByStatus(FlowTaskTemplateStatus active);
 
   FlowTaskTemplateEntity findByIdAndStatus(String id, FlowTaskTemplateStatus active);
-
+  
   @Query(value = "{  \n"
       + "    $and : [{\n"
       + "       $or: [\n"

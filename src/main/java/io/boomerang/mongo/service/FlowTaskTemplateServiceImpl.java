@@ -77,4 +77,9 @@ public class FlowTaskTemplateServiceImpl implements FlowTaskTemplateService {
   public List<FlowTaskTemplateEntity> getAllGlobalTasks() {
     return flowTaskTemplateRepository.findAllGlobalTasks();
   }
+  
+  @Override
+  public List<FlowTaskTemplateEntity> getTaskTemplateWithIds(List<String> ids){
+  	return  flowTaskTemplateRepository.findByIdIn(ids);
+  }
 }
