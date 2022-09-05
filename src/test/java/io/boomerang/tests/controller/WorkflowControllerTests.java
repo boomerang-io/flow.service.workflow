@@ -64,9 +64,6 @@ public class WorkflowControllerTests extends FlowTests {
 
   @Autowired
   private WorkflowController controller;
-  
-  @Autowired
-  private WorkflowsController workflowsController;
 
   @Autowired
   private InternalController internalController;
@@ -77,14 +74,6 @@ public class WorkflowControllerTests extends FlowTests {
 
      assertNotNull(summaryList);
      assertEquals(18, summaryList.size());
-  }
-
-  @Test
-  public void testInternalTeamWorkflows() {
-    List<WorkflowSummary> summaryList = workflowsController.getTeamWorkflows("5d1a1841f6ca2c00014c4309");
-
-     assertNotNull(summaryList);
-     assertEquals(9, summaryList.size());
   }
   
   @Test
