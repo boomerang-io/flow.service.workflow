@@ -1,5 +1,8 @@
 package io.boomerang.tests.controller;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -18,6 +21,7 @@ import io.boomerang.controller.TeamController;
 import io.boomerang.misc.FlowTests;
 import io.boomerang.model.CreateFlowTeam;
 import io.boomerang.model.WorkflowQuotas;
+import io.boomerang.model.WorkflowSummary;
 import io.boomerang.mongo.entity.FlowTeamConfiguration;
 import io.boomerang.mongo.entity.TeamEntity;
 import io.boomerang.mongo.model.Quotas;
@@ -289,6 +293,16 @@ public class TeamControllerTests extends FlowTests {
     TeamEntity entity = controller.deactivateTeam("5d1a1841f6ca2c00014c4309");
     Assertions.assertEquals(false, entity.getIsActive());
     Assertions.assertEquals(2, controller.getTeams().size());
+  }
+  
+
+  @Test
+  public void testInternalTeamWorkflows() {
+    List<WorkflowSummary> summaryList = controller.getTeamWorkflows("5d1a1841f6ca2c00014c4309");
+
+     assertNotNull(summaryList);
+     assertEquals(9, summaryList.size());
+
   }
 
   private Date firstOfNextMonth() {
