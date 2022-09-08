@@ -8,6 +8,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 import org.apache.logging.log4j.LogManager;
@@ -39,6 +42,7 @@ import io.boomerang.model.eventing.EventStatusUpdate;
 import io.boomerang.model.eventing.EventTrigger;
 import io.boomerang.model.eventing.EventWFE;
 import io.boomerang.mongo.entity.ActivityEntity;
+import io.boomerang.mongo.entity.TaskExecutionEntity;
 import io.boomerang.mongo.model.KeyValuePair;
 import io.boomerang.mongo.model.Triggers;
 import io.boomerang.mongo.model.WorkflowProperty;
@@ -149,6 +153,7 @@ public class EventingServiceImpl implements EventingService, SubHandler {
   }
 
   @Override
+  @SuppressWarnings("squid:S2142")
   public void subscriptionFailed(SubOnlyTunnel tunnel, Exception exception) {
     logger.debug("Failed to subscribe for consuming messages from NATS Jetstream. Resubscribing...",
         exception);
@@ -266,57 +271,72 @@ public class EventingServiceImpl implements EventingService, SubHandler {
   }
 
   @Override
-  public void publishActivityStatusEvent(ActivityEntity activityEntity) {
-    try {
+  public Future<Boolean> publishStatusCloudEvent(ActivityEntity activityEntity) {
 
-      // Create status update CloudEvent from activity (additionally, add the responses for executed
-      // tasks)
-      EventStatusUpdate eventStatusUpdate =
-          EventFactory.buildStatusUpdateFromActivity(activityEntity);
-      eventStatusUpdate
-          .setExecutedTasks(flowActivityService.getTaskExecutions(activityEntity.getId()));
+    Supplier<Boolean> supplier = () -> {
+      Boolean success = Boolean.FALSE;
 
-      // Extract initiator ID and initiator context
-      String initiatorId = "";
-
-      if (activityEntity.getLabels() != null && !activityEntity.getLabels().isEmpty()) {
-        String sharedLabelPrefix = properties.getShared().getLabel().getPrefix() + "/";
-
-        initiatorId = activityEntity.getLabels().stream()
-            .filter(kv -> kv.getKey().equals(sharedLabelPrefix + LABEL_KEY_INITIATOR_ID))
-            .findFirst().map(KeyValuePair::getValue).orElse("");
-
-        activityEntity.getLabels().stream()
-            .filter(kv -> kv.getKey().equals(sharedLabelPrefix + LABEL_KEY_INITIATOR_CONTEXT))
-            .findFirst().map(KeyValuePair::getValue)
-            .ifPresent(eventStatusUpdate::setInitiatorContext);
-      }
-
-      // NATS message subject
-      String nonWildcardSubject = getNonWildcardSubject(
-          properties.getJetstream().getStatusEvents().getStream().getSubjects()[0]);
-      String natSubject = MessageFormat.format("{0}.{1}.{2}.{3}{4}", nonWildcardSubject,
-          eventStatusUpdate.getStatus().toString().toLowerCase(), eventStatusUpdate.getWorkflowId(),
-          eventStatusUpdate.getWorkflowActivityId(),
-          Strings.isNotEmpty(initiatorId) ? "." + initiatorId : "");
-
-      // Publish cloud event
       try {
+
+        // Create status update CloudEvent from activity (additionally, add the responses for
+        // executed tasks)
+        EventStatusUpdate eventStatusUpdate =
+            EventFactory.buildStatusUpdateFromActivity(activityEntity);
+        eventStatusUpdate
+            .setExecutedTasks(flowActivityService.getTaskExecutions(activityEntity.getId()));
+
+        // Extract initiator ID and initiator context
+        String initiatorId = "";
+
+        if (activityEntity.getLabels() != null && !activityEntity.getLabels().isEmpty()) {
+          String sharedLabelPrefix = properties.getShared().getLabel().getPrefix() + "/";
+
+          initiatorId = activityEntity.getLabels().stream()
+              .filter(kv -> kv.getKey().equals(sharedLabelPrefix + LABEL_KEY_INITIATOR_ID))
+              .findFirst().map(KeyValuePair::getValue).orElse("");
+
+          activityEntity.getLabels().stream()
+              .filter(kv -> kv.getKey().equals(sharedLabelPrefix + LABEL_KEY_INITIATOR_CONTEXT))
+              .findFirst().map(KeyValuePair::getValue)
+              .ifPresent(eventStatusUpdate::setInitiatorContext);
+        }
+
+        // NATS message subject
+        String nonWildcardSubject = getNonWildcardSubject(
+            properties.getJetstream().getStatusEvents().getStream().getSubjects()[0]);
+        String natSubject = MessageFormat.format("{0}.{1}.{2}.{3}{4}", nonWildcardSubject,
+            eventStatusUpdate.getStatus().toString().toLowerCase(),
+            eventStatusUpdate.getWorkflowId(), eventStatusUpdate.getWorkflowActivityId(),
+            Strings.isNotEmpty(initiatorId) ? "." + initiatorId : "");
+
+        // Publish cloud event
         String serializedCloudEvent = new String(eventFormatProvider
             .resolveFormat(JsonFormat.CONTENT_TYPE).serialize(eventStatusUpdate.toCloudEvent()));
         statusEventsTunnel.publish(natSubject, serializedCloudEvent);
-      } catch (StreamNotFoundException | SubjectMismatchException e) {
-        logger.error("Stream is not configured properly!", e);
+        success = Boolean.TRUE;
+
+        logger.debug("Workflow with ID {} has changed its status to {}",
+            eventStatusUpdate.getWorkflowId(), activityEntity.getStatus());
+
       } catch (IllegalStateException | IOException | JetStreamApiException e) {
         logger.error("An exception occurred while publishing the message to NATS server!", e);
+      } catch (StreamNotFoundException | SubjectMismatchException e) {
+        logger.error("Stream is not configured properly!", e);
+      } catch (Exception e) {
+        logger.fatal("A fatal error has occurred while publishing the message to the NATS server!",
+            e);
       }
 
-      logger.debug("Workflow with ID {} has changed its status to {}",
-          eventStatusUpdate.getWorkflowId(), activityEntity.getStatus());
-    } catch (Exception e) {
-      logger.fatal("A fatal error has occurred while publishing the message to the NATS server!",
-          e);
-    }
+      return success;
+    };
+
+    return CompletableFuture.supplyAsync(supplier);
+  }
+
+  @Override
+  public Future<Boolean> publishStatusCloudEvent(TaskExecutionEntity taskExecutionEntity) {
+    // TODO To be implemented!
+    return CompletableFuture.supplyAsync(() -> Boolean.FALSE);
   }
 
   /**
@@ -337,7 +357,7 @@ public class EventingServiceImpl implements EventingService, SubHandler {
 
             String propertyValue = eventProperties
                 .getOrDefault(inputProperty.getJsonPath(), inputProperty.getDefaultValue())
-                .replaceAll("^\"+|\"+$", "");
+                .replaceAll("(^\\s*\"+)|(\"+\\s*$)", "");
 
             logger.info("processProperties() - Property: {}, Json Path: {}, Value: {}",
                 inputProperty.getKey(), inputProperty.getJsonPath(), propertyValue);
