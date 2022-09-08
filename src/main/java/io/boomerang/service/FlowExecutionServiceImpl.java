@@ -168,14 +168,13 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
       activityEntity.setStatus(TaskStatus.invalid);
       activityEntity.setStatusMessage("Failed to run workflow: Incomplete workflow");
       activityService.saveWorkflowActivity(activityEntity);
-      eventingService.publishActivityStatusEvent(activityEntity);
+      eventingService.publishStatusCloudEvent(activityEntity);
 
       throw new InvalidWorkflowRuntimeException();
     }
 
     createTaskPlan(tasks, activityId, start, end, graph);
   }
-
 
   private void createTaskPlan(List<Task> tasks, String activityId, final Task start, final Task end,
       final Graph<String, DefaultEdge> graph) {
@@ -194,7 +193,6 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
 
     long order = 1;
     for (final Task task : tasksToRun) {
-
 
       TaskExecutionEntity taskExecution = new TaskExecutionEntity();
       taskExecution.setActivityId(activityId);
@@ -245,7 +243,7 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
       activityEntity.setStatus(TaskStatus.completed);
       activityEntity.setCreationDate(new Date());
       activityService.saveWorkflowActivity(activityEntity);
-      eventingService.publishActivityStatusEvent(activityEntity);
+      eventingService.publishStatusCloudEvent(activityEntity);
 
       return;
     }
@@ -256,7 +254,7 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
     activityService.saveWorkflowActivity(activityEntity);
 
     if (oldStatus != activityEntity.getStatus()) {
-      eventingService.publishActivityStatusEvent(activityEntity);
+      eventingService.publishStatusCloudEvent(activityEntity);
     }
 
     WorkflowEntity workflow = workflowService.getWorkflow(activityEntity.getWorkflowId());
@@ -288,7 +286,7 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
       final Graph<String, DefaultEdge> graph) {
 
     try {
-      List<Task> nextNodes = this.getTasksDependants(tasks, currentTask);
+      List<Task> nextNodes = this.getTasksDependents(tasks, currentTask);
       for (Task next : nextNodes) {
 
         final List<String> nodes =
@@ -306,11 +304,10 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
 
   }
 
-  private List<Task> getTasksDependants(List<Task> tasks, Task currentTask) {
+  private List<Task> getTasksDependents(List<Task> tasks, Task currentTask) {
     return tasks.stream().filter(c -> c.getDependencies().contains(currentTask.getTaskId()))
         .collect(Collectors.toList());
   }
-
 
   @Override
   public CompletableFuture<Boolean> executeWorkflowVersion(String workFlowId, String activityId) {
