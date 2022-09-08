@@ -151,7 +151,7 @@ public class TaskServiceImpl implements TaskService {
       if (activity.getStatus() != TaskStatus.inProgress) {
         activity.setStatus(TaskStatus.inProgress);
         activityService.saveWorkflowActivity(activity);
-        eventingService.publishActivityStatusEvent(activity);
+        eventingService.publishStatusCloudEvent(activity);
       }
     }
 
@@ -294,13 +294,15 @@ public class TaskServiceImpl implements TaskService {
       Date executionDate = activity.getCreationDate();
       String timezone = task.getInputs().get("timezone");
       LOGGER.debug("*******Run Scheduled Workflow System Task******");
-      LOGGER.debug("Scheduling new task in " + futureIn + " " + futurePeriod);
+      LOGGER.debug("Scheduling new task in {} {}", futureIn, futurePeriod);
 
-      if (futureIn != null && futureIn != 0 && StringUtils.indexOfAny(futurePeriod,
-          new String[] {"minutes", "hours", "days", "weeks", "months"}) >= 0) {
+      if (futureIn != null && futureIn != 0 && StringUtils.indexOfAny(futurePeriod, "minutes",
+          "hours", "days", "weeks", "months") >= 0) {
         Calendar executionCal = Calendar.getInstance();
         executionCal.setTime(executionDate);
-        Integer calField = Calendar.MINUTE;
+
+        Integer calField;
+
         switch (futurePeriod) {
           case "hours":
             calField = Calendar.HOUR;
@@ -315,22 +317,25 @@ public class TaskServiceImpl implements TaskService {
           case "months":
             calField = Calendar.MONTH;
             break;
+          default:
+            calField = Calendar.MINUTE;
+            break;
         }
         executionCal.add(calField, futureIn);
+
         if (!futurePeriod.equals("minutes") && !futurePeriod.equals("hours")) {
           String[] hoursTime = task.getInputs().get("time").split(":");
           Integer hours = Integer.valueOf(hoursTime[0]);
           Integer minutes = Integer.valueOf(hoursTime[1]);
-          LOGGER
-              .debug("With time to be set to: " + task.getInputs().get("time") + " in " + timezone);
+          LOGGER.debug("With time to be set to: {} in {}", task.getInputs().get("time"), timezone);
           executionCal.setTimeZone(TimeZone.getTimeZone(timezone));
           executionCal.set(Calendar.HOUR, hours);
           executionCal.set(Calendar.MINUTE, minutes);
-          LOGGER.debug(
-              "With execution set to: " + executionCal.getTime().toString() + " in " + timezone);
+          LOGGER.debug("With execution set to: {} in {}", executionCal.getTime(), timezone);
           executionCal.setTimeZone(TimeZone.getTimeZone("UTC"));
         }
-        LOGGER.debug("With execution set to: " + executionCal.getTime().toString() + " in UTC");
+
+        LOGGER.debug("With execution set to: {} in UTC", executionCal.getTime());
 
         // Define new properties removing the System Task specific properties
         ControllerRequestProperties requestProperties = propertyManager
@@ -365,8 +370,10 @@ public class TaskServiceImpl implements TaskService {
         labels.add(new KeyValuePair("workflowName", task.getWorkflowName()));
         schedule.setLabels(labels);
         WorkflowSchedule workflowSchedule = scheduleService.createSchedule(schedule);
+
         if (workflowSchedule != null && workflowSchedule.getId() != null) {
-          LOGGER.debug("Workflow Scheudle (" + workflowSchedule.getId() + ") created.");
+          LOGGER.debug("Workflow Schedule ({}) created.", workflowSchedule.getId());
+
           // TODO: Add a taskExecution with the ScheduleId so it can be deep linked.
           response.setStatus(TaskStatus.completed);
         }
@@ -404,7 +411,7 @@ public class TaskServiceImpl implements TaskService {
       taskActivityService.save(taskExecution);
       activity.setStatus(TaskStatus.waiting);
       activityService.saveWorkflowActivity(activity);
-      eventingService.publishActivityStatusEvent(activity);
+      eventingService.publishStatusCloudEvent(activity);
     }
   }
 
@@ -416,7 +423,7 @@ public class TaskServiceImpl implements TaskService {
 
     activity.setStatus(TaskStatus.waiting);
     activityService.saveWorkflowActivity(activity);
-    eventingService.publishActivityStatusEvent(activity);
+    eventingService.publishStatusCloudEvent(activity);
 
     ApprovalEntity approval = new ApprovalEntity();
     approval.setTaskActivityId(taskExecution.getId());
@@ -428,19 +435,18 @@ public class TaskServiceImpl implements TaskService {
     approval.setCreationDate(new Date());
     approval.setNumberOfApprovers(1);
 
-    if (ManualType.approval == type) {
-      if (task.getInputs() != null) {
-        String approverGroupId = task.getInputs().get("approverGroupId");
-        String numberOfApprovers = task.getInputs().get("numberOfApprovers");
+    if (ManualType.approval == type && task.getInputs() != null) {
+      String approverGroupId = task.getInputs().get("approverGroupId");
+      String numberOfApprovers = task.getInputs().get("numberOfApprovers");
 
-        if (approverGroupId != null && !approverGroupId.isBlank()) {
-          approval.setApproverGroupId(approverGroupId);
-        }
-        if (numberOfApprovers != null && !numberOfApprovers.isBlank()) {
-          approval.setNumberOfApprovers(Integer.valueOf(numberOfApprovers));
-        }
+      if (approverGroupId != null && !approverGroupId.isBlank()) {
+        approval.setApproverGroupId(approverGroupId);
+      }
+      if (numberOfApprovers != null && !numberOfApprovers.isBlank()) {
+        approval.setNumberOfApprovers(Integer.valueOf(numberOfApprovers));
       }
     }
+
     approvalService.save(approval);
     activity.setAwaitingApproval(true);
     activityService.saveWorkflowActivity(activity);
@@ -592,7 +598,7 @@ public class TaskServiceImpl implements TaskService {
     activityService.saveWorkflowActivity(activity);
 
     if (oldStatus != activity.getStatus()) {
-      eventingService.publishActivityStatusEvent(activity);
+      eventingService.publishStatusCloudEvent(activity);
     }
   }
 
@@ -836,13 +842,12 @@ public class TaskServiceImpl implements TaskService {
     LOGGER.info("submitActivity: {}", taskStatus);
 
     TaskStatus status = TaskStatus.completed;
-    if ("success".equals(taskStatus)) {
-      status = TaskStatus.completed;
-    } else if ("failure".equals(taskStatus)) {
+
+    if ("failure".equals(taskStatus)) {
       status = TaskStatus.failure;
     }
 
-    LOGGER.info("Submit Activity (Task Status): {}", status.toString());
+    LOGGER.info("Submit Activity (Task Status): {}", status);
 
     TaskExecutionEntity taskExecution = taskActivityService.findById(taskActivityId);
     if (taskExecution != null && !taskExecution.getFlowTaskStatus().equals(TaskStatus.notstarted)) {
