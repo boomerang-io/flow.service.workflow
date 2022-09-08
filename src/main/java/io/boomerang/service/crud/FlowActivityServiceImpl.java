@@ -215,8 +215,8 @@ public class FlowActivityServiceImpl implements FlowActivityService {
   }
 
   @Override
-  public ListActivityResponse getAllActivites(Optional<Date> from, Optional<Date> to, Pageable page,
-      Optional<List<String>> workflowIds, Optional<List<String>> teamIds,
+  public ListActivityResponse getAllActivities(Optional<Date> from, Optional<Date> to,
+      Pageable page, Optional<List<String>> workflowIds, Optional<List<String>> teamIds,
       Optional<List<String>> statuses, Optional<List<String>> triggers,
       Optional<List<String>> scopes, String property, Direction direction) {
     List<String> workflowIdsList =
@@ -234,9 +234,9 @@ public class FlowActivityServiceImpl implements FlowActivityService {
       addTeamInformation(teamIds, activitiesFiltered, activity, workFlowId);
     }
 
-    io.boomerang.model.Pageable pageablefinal =
+    io.boomerang.model.Pageable pageableFinal =
         createPageable(records, property, direction, activitiesFiltered, activitiesFiltered.size());
-    response.setPageable(pageablefinal);
+    response.setPageable(pageableFinal);
     response.setRecords(activities);
 
     return response;
@@ -264,7 +264,6 @@ public class FlowActivityServiceImpl implements FlowActivityService {
 
     return pageable;
   }
-
 
   protected io.boomerang.model.Pageable createPageable(final Page<ActivityEntity> records,
       String property, Direction direction) {
@@ -310,7 +309,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
         .collect(groupingBy(v -> getStatusValue(v), Collectors.counting())); // NOSONAR
     result.put("all", Long.valueOf(flowWorkflowActivityEntities.size()));
 
-    Arrays.stream(TaskStatus.values()).forEach(v -> initializeValue(v.getStatus(), result));
+    Arrays.stream(TaskStatus.values()).forEach(v -> result.putIfAbsent(v.getStatus(), 0L));
     return result;
   }
 
@@ -329,12 +328,6 @@ public class FlowActivityServiceImpl implements FlowActivityService {
 
   private String getStatusValue(ActivityEntity v) {
     return v.getStatus() == null ? "no_status" : v.getStatus().getStatus();
-  }
-
-  private void initializeValue(String key, Map<String, Long> result) {
-    if (!result.containsKey(key)) {
-      result.put(key, Long.valueOf(0));
-    }
   }
 
   private void addTeamInformation(Optional<List<String>> teamIds,
@@ -372,7 +365,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
   }
 
   @Override
-  public ListActivityResponse getAllActivitesForUser(FlowUserEntity user, Optional<Date> from,
+  public ListActivityResponse getAllActivitiesForUser(FlowUserEntity user, Optional<Date> from,
       Optional<Date> to, Pageable page, String property, Direction direction) {
 
     final Page<ActivityEntity> records = flowActivityService.findAllActivities(from, to, page);
@@ -418,10 +411,10 @@ public class FlowActivityServiceImpl implements FlowActivityService {
   public List<TaskExecutionResponse> getTaskExecutions(String activityId) {
 
 
-    List<TaskExecutionEntity> activites = taskService.findTaskActiivtyForActivity(activityId);
+    List<TaskExecutionEntity> activities = taskService.findTaskActiivtyForActivity(activityId);
     List<TaskExecutionResponse> taskExecutionResponses = new LinkedList<>();
 
-    for (TaskExecutionEntity task : activites) {
+    for (TaskExecutionEntity task : activities) {
       TaskExecutionResponse response = new TaskExecutionResponse();
       BeanUtils.copyProperties(task, response);
 
@@ -590,7 +583,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
 
       ResponseExtractor<Void> responseExtractor =
           getResponseExtractorForRemovalList(removeList, outputStream, printWriter);
-      LOGGER.info("Startingg log download: {}", encodedURL);
+      LOGGER.info("Starting log download: {}", encodedURL);
       try {
         restTemplate.execute(encodedURL, HttpMethod.GET, requestCallback, responseExtractor);
       } catch (Exception ex) {
@@ -618,14 +611,14 @@ public class FlowActivityServiceImpl implements FlowActivityService {
     } else {
       LOGGER.info("Streaming response from controller and processing");
       return restTemplateResponse -> {
-        try {
-          InputStream is = restTemplateResponse.getBody();
-          Reader reader = new InputStreamReader(is);
-          BufferedReader bufferedReader = new BufferedReader(reader);
+
+        try (Reader reader = new InputStreamReader(restTemplateResponse.getBody());
+            BufferedReader bufferedReader = new BufferedReader(reader);) {
+
           String input = null;
           while ((input = bufferedReader.readLine()) != null) {
 
-            printWriter.println(satanzieInput(input, maskWordList));
+            printWriter.println(sanitizeInput(input, maskWordList));
             if (!input.isBlank()) {
               printWriter.flush();
             }
@@ -705,7 +698,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
     return removalList;
   }
 
-  private String satanzieInput(String input, List<String> removeList) {
+  private String sanitizeInput(String input, List<String> removeList) {
     for (String value : removeList) {
       input = input.replaceAll(Pattern.quote(value), "******");
     }
@@ -719,13 +712,13 @@ public class FlowActivityServiceImpl implements FlowActivityService {
     Optional.ofNullable(error).ifPresent(activity::setError);
 
     flowActivityService.saveWorkflowActivity(activity);
-    eventingService.publishActivityStatusEvent(activity);
+    eventingService.publishStatusCloudEvent(activity);
 
     String workflowId = activity.getWorkflowId();
     final WorkflowEntity workflow = workflowService.getWorkflow(workflowId);
 
-    List<TaskExecutionEntity> activites = taskService.findTaskActiivtyForActivity(activityId);
-    for (TaskExecutionEntity taskExecution : activites) {
+    List<TaskExecutionEntity> activities = taskService.findTaskActiivtyForActivity(activityId);
+    for (TaskExecutionEntity taskExecution : activities) {
       if ((taskExecution.getTaskType() == TaskType.customtask
           || taskExecution.getTaskType() == TaskType.script
           || taskExecution.getTaskType() == TaskType.template)
@@ -750,7 +743,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
   }
 
   @Override
-  public List<FlowActivity> findActivty(Pageable pageable, Optional<String> labels) {
+  public List<FlowActivity> findActivity(Pageable pageable, Optional<String> labels) {
 
     List<Criteria> criteriaList = new ArrayList<>();
 
@@ -798,10 +791,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
         mongoTemplate.find(activityQuery.with(pageable), ActivityEntity.class), pageable,
         () -> mongoTemplate.count(activityQuery, ActivityEntity.class));
 
-    List<FlowActivity> activityRecords =
-        filterService.convertActivityEntityToFlowActivity(activityPages.getContent());
-
-    return activityRecords;
+    return filterService.convertActivityEntityToFlowActivity(activityPages.getContent());
   }
 
   @Override
@@ -825,11 +815,11 @@ public class FlowActivityServiceImpl implements FlowActivityService {
           .getQuotas().getMaxWorkflowExecutionTime());
     }
 
-    List<TaskExecutionEntity> activites = taskService.findTaskActiivtyForActivity(activityId);
+    List<TaskExecutionEntity> activities = taskService.findTaskActiivtyForActivity(activityId);
 
     long totalDuration = 0;
 
-    for (TaskExecutionEntity task : activites) {
+    for (TaskExecutionEntity task : activities) {
       if (task.getTaskType() == TaskType.template || task.getTaskType() == TaskType.customtask) {
 
         if (task.getFlowTaskStatus() == TaskStatus.completed
@@ -842,11 +832,6 @@ public class FlowActivityServiceImpl implements FlowActivityService {
         }
       }
     }
-
-    if (maxDuration < totalDuration) {
-      return true;
-    }
-    return false;
+    return maxDuration < totalDuration;
   }
-
 }
