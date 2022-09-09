@@ -16,20 +16,12 @@ public class EventCancel extends Event {
       throws InvalidPropertiesFormatException {
 
     // Identify the type of event (it must be of type "cancel")
-    EventType eventType;
-
-    try {
-      String eventTypeString = cloudEvent.getType().replace(EVENT_TYPE_PREFIX, "").toUpperCase();
-      eventType = EventType.valueOf(eventTypeString);
-    } catch (Exception e) {
-      throw new InvalidPropertiesFormatException(
-          MessageFormat.format("Invalid cloud event type : \"{0}\"!", cloudEvent.getType()));
-    }
+    EventType eventType = EventType.valueOfCloudEventType(cloudEvent.getType());
 
     if (eventType != EventType.CANCEL) {
       throw new InvalidPropertiesFormatException(
           MessageFormat.format("Cloud event type must be \"{0}\" but is \"{1}\"!",
-              EVENT_TYPE_PREFIX + EventType.CANCEL.toString().toLowerCase(), cloudEvent.getType()));
+              EventType.CANCEL.getCloudEventType(), cloudEvent.getType()));
     }
 
     // Create cancel event object and set base properties

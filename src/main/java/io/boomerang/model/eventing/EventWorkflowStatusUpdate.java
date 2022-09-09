@@ -16,7 +16,7 @@ import io.boomerang.mongo.model.TaskStatus;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.builder.CloudEventBuilder;
 
-public class EventStatusUpdate extends Event {
+public class EventWorkflowStatusUpdate extends Event {
 
   protected static final String EXTENSION_ATTRIBUTE_CONTEXT = "initiatorcontext";
 
@@ -46,7 +46,7 @@ public class EventStatusUpdate extends Event {
     Gson gson = new GsonBuilder().create();
 
     // Add output properties to JSON data
-    if (outputProperties != null && outputProperties.isEmpty() == false) {
+    if (outputProperties != null && !outputProperties.isEmpty()) {
       jsonData.add("outputProperties", gson.toJsonTree(outputProperties));
     }
 
@@ -56,7 +56,7 @@ public class EventStatusUpdate extends Event {
     }
 
     // Add task execution responses to JSON data
-    if (executedTasks != null && executedTasks.isEmpty() == false) {
+    if (executedTasks != null && !executedTasks.isEmpty()) {
       JsonArray jsonTasks = new JsonArray();
 
       executedTasks.stream().forEach(task -> {
@@ -84,7 +84,7 @@ public class EventStatusUpdate extends Event {
         .withId(getId())
         .withSource(getSource())
         .withSubject(getSubject())
-        .withType(EVENT_TYPE_PREFIX + getType().toString().toLowerCase())
+        .withType(getType().getCloudEventType())
         .withTime(getDate().toInstant().atOffset(ZoneOffset.UTC))
         .withData(ContentType.APPLICATION_JSON.toString(), jsonData.toString().getBytes());
     // @formatter:on

@@ -1,12 +1,11 @@
 package io.boomerang.model.eventing;
 
+import java.io.IOException;
 import java.net.URI;
 import java.util.Date;
 import io.cloudevents.CloudEvent;
 
 public abstract class Event {
-
-  protected static final String EVENT_TYPE_PREFIX = "io.boomerang.eventing.";
 
   protected static final String EXTENSION_ATTRIBUTE_TOKEN = "token";
 
@@ -33,11 +32,13 @@ public abstract class Event {
     this.type = type;
   }
 
-  public static Event fromCloudEvent(CloudEvent cloudEvent) throws Exception {
+  public static Event fromCloudEvent(CloudEvent cloudEvent)
+      throws UnsupportedOperationException, IOException {
     throw new UnsupportedOperationException("Method not implemented!");
   }
 
-  public CloudEvent toCloudEvent() throws Exception {
+  public CloudEvent toCloudEvent()
+      throws UnsupportedOperationException, IOException {
     throw new UnsupportedOperationException("Method not implemented!");
   }
 

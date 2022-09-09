@@ -10,23 +10,11 @@ import io.cloudevents.CloudEvent;
 
 public class EventFactory {
 
-  private static final String EVENT_TYPE_PREFIX = "io.boomerang.eventing.";
-
   private EventFactory() {}
 
   public static Event buildFromCloudEvent(CloudEvent cloudEvent)
       throws InvalidPropertiesFormatException {
-
-    // Identify the type of event
-    EventType eventType;
-
-    try {
-      String eventTypeString = cloudEvent.getType().replace(EVENT_TYPE_PREFIX, "").toUpperCase();
-      eventType = EventType.valueOf(eventTypeString);
-    } catch (Exception e) {
-      throw new InvalidPropertiesFormatException(
-          MessageFormat.format("Invalid cloud event type : \"{0}\"!", cloudEvent.getType()));
-    }
+    EventType eventType = EventType.valueOfCloudEventType(cloudEvent.getType());
 
     switch (eventType) {
       case TRIGGER:
@@ -36,11 +24,13 @@ public class EventFactory {
       case CANCEL:
         return EventCancel.fromCloudEvent(cloudEvent);
       default:
-        return null;
+        throw new InvalidPropertiesFormatException(
+            MessageFormat.format("Invalid cloud event type : \"{0}\"!", cloudEvent.getType()));
     }
   }
 
-  public static EventStatusUpdate buildStatusUpdateFromActivity(ActivityEntity activityEntity) {
+  public static EventWorkflowStatusUpdate buildWorkflowStatusUpdateFromActivity(
+      ActivityEntity activityEntity) {
     String workflowId = activityEntity.getWorkflowId();
     String workflowActivityId = activityEntity.getId();
     String newStatus = activityEntity.getStatus().toString().toLowerCase();
@@ -50,12 +40,12 @@ public class EventFactory {
         MessageFormat.format("/{0}/{1}/{2}", workflowId, workflowActivityId, newStatus);
 
     // Create status update event
-    EventStatusUpdate eventStatusUpdate = new EventStatusUpdate();
+    EventWorkflowStatusUpdate eventStatusUpdate = new EventWorkflowStatusUpdate();
     eventStatusUpdate.setId(UUID.randomUUID().toString());
     eventStatusUpdate.setSource(URI.create(EventFactory.class.getCanonicalName()));
     eventStatusUpdate.setSubject(eventSubject);
     eventStatusUpdate.setDate(new Date());
-    eventStatusUpdate.setType(EventType.STATUS_UPDATE);
+    eventStatusUpdate.setType(EventType.WORKFLOW_STATUS_UPDATE);
     eventStatusUpdate.setWorkflowId(activityEntity.getWorkflowId());
     eventStatusUpdate.setWorkflowActivityId(activityEntity.getId());
     eventStatusUpdate.setStatus(activityEntity.getStatus());

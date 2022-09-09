@@ -38,9 +38,9 @@ import io.boomerang.model.FlowExecutionRequest;
 import io.boomerang.model.eventing.Event;
 import io.boomerang.model.eventing.EventCancel;
 import io.boomerang.model.eventing.EventFactory;
-import io.boomerang.model.eventing.EventStatusUpdate;
 import io.boomerang.model.eventing.EventTrigger;
 import io.boomerang.model.eventing.EventWFE;
+import io.boomerang.model.eventing.EventWorkflowStatusUpdate;
 import io.boomerang.mongo.entity.ActivityEntity;
 import io.boomerang.mongo.entity.TaskExecutionEntity;
 import io.boomerang.mongo.model.KeyValuePair;
@@ -280,8 +280,8 @@ public class EventingServiceImpl implements EventingService, SubHandler {
 
         // Create status update CloudEvent from activity (additionally, add the responses for
         // executed tasks)
-        EventStatusUpdate eventStatusUpdate =
-            EventFactory.buildStatusUpdateFromActivity(activityEntity);
+        EventWorkflowStatusUpdate eventStatusUpdate =
+            EventFactory.buildWorkflowStatusUpdateFromActivity(activityEntity);
         eventStatusUpdate
             .setExecutedTasks(flowActivityService.getTaskExecutions(activityEntity.getId()));
 
