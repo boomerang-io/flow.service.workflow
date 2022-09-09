@@ -1,6 +1,7 @@
 package io.boomerang.security.filters;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -21,9 +22,13 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
+import org.springframework.util.StreamUtils;
+import com.slack.api.app_backend.SlackSignature.Generator;
+import com.slack.api.app_backend.SlackSignature.Verifier;
 import io.boomerang.mongo.entity.FlowUserEntity;
 import io.boomerang.mongo.entity.TokenEntity;
 import io.boomerang.mongo.model.TokenScope;
+import io.boomerang.mongo.service.FlowSettingsService;
 import io.boomerang.mongo.service.FlowTokenService;
 import io.boomerang.mongo.service.FlowUserService;
 import io.boomerang.security.AuthorizationException;
@@ -32,6 +37,7 @@ import io.boomerang.security.model.GlobalToken;
 import io.boomerang.security.model.TeamToken;
 import io.boomerang.security.model.Token;
 import io.boomerang.security.model.UserToken;
+import io.boomerang.security.util.MultiReadHttpServletRequest;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.impl.DefaultJwtParser;
@@ -40,40 +46,57 @@ public class FlowAuthorizationFilter extends BasicAuthenticationFilter {
 
   private static final String X_FORWARDED_USER = "x-forwarded-user";
   private static final String X_FORWARDED_EMAIL = "x-forwarded-email";
-  
   private static final String X_ACCESS_TOKEN = "x-access-token";
   private static final String TOKEN_URL_PARAM_NAME = "access_token";
   private static final String AUTHORIZATION_HEADER = "Authorization";
+  private static final String X_SLACK_SIGNATURE = "X-Slack-Signature";
+  private static final String X_SLACK_TIMESTAMP = "X-Slack-Request-Timestamp";
   private String basicPassword;
 
   private static final Logger LOGGER = LogManager.getLogger();
   private FlowTokenService tokenService;
   private FlowUserService flowUserService;
+  private FlowSettingsService flowSettingsService;
   
   public FlowAuthorizationFilter(FlowTokenService tokenService, AuthenticationManager authManager,
-      FlowUserService flowUserService, String basicPassword) {
+      FlowUserService flowUserService, FlowSettingsService flowSettingsService, String basicPassword) {
     super(authManager);
     this.tokenService = tokenService;
     this.basicPassword = basicPassword;
     this.flowUserService = flowUserService;
+    this.flowSettingsService = flowSettingsService; 
   }
 
   @Override
   protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res,
       FilterChain chain) throws IOException, ServletException {
     try {
+      MultiReadHttpServletRequest multiReadRequest = new MultiReadHttpServletRequest(req);
       Authentication authentication = null;
-      if (req.getHeader(AUTHORIZATION_HEADER) != null) {
+      if (multiReadRequest.getHeader(AUTHORIZATION_HEADER) != null) {
         authentication = getUserAuthentication(req);
-      } else if (req.getHeader(X_FORWARDED_EMAIL) != null) { 
+      } else if (multiReadRequest.getHeader(X_FORWARDED_EMAIL) != null) { 
         authentication = getGithubUserAuthentication(req);
       }
-      else if (req.getHeader(X_ACCESS_TOKEN) != null || req.getParameter(TOKEN_URL_PARAM_NAME) != null) {
+      else if (multiReadRequest.getHeader(X_ACCESS_TOKEN) != null || req.getParameter(TOKEN_URL_PARAM_NAME) != null) {
         authentication = getTokenBasedAuthentication(req);
       }
 
+      if (multiReadRequest.getHeader(X_SLACK_SIGNATURE) != null) {
+        InputStream inputStream = multiReadRequest.getInputStream();
+        byte[] body = StreamUtils.copyToByteArray(inputStream);
+        String signature = multiReadRequest.getHeader(X_SLACK_SIGNATURE);
+        String timestamp = multiReadRequest.getHeader(X_SLACK_TIMESTAMP);
+        
+        if (!verifySignature(signature, timestamp, new String(body))) {
+          LOGGER.error("Fail SlackSignatureVerificationFilter()");
+          res.sendError(401);
+          return;
+        }
+      }
+
       SecurityContextHolder.getContext().setAuthentication(authentication);
-      chain.doFilter(req, res);
+      chain.doFilter(multiReadRequest, res);
     } catch (final AuthorizationException e) {
       LOGGER.error(e);
     }
@@ -231,5 +254,25 @@ public class FlowAuthorizationFilter extends BasicAuthenticationFilter {
     cleanString = WordUtils.capitalizeFully(cleanString);
     return cleanString;
   }
+  
+/*
+* Utlity method for verifying requests are signed by Slack
+* 
+* <h4>Specifications</h4>
+* <ul>
+* <li><a href="https://api.slack.com/authentication/verifying-requests-from-slack">Verifying Requests from Slack</a></li>
+* </ul>
+*/
+private Boolean verifySignature(String signature, String timestamp, String body) {
+ String key = this.flowSettingsService.getConfiguration("extensions", "slack.signingSecret").getValue();
+ LOGGER.debug("Key: " + key);
+ LOGGER.debug("Slack Timestamp: " + timestamp);
+ LOGGER.debug("Slack Body: " + body);
+ Generator generator = new Generator(key);
+ Verifier verifier = new Verifier(generator);
+ LOGGER.debug("Slack Signature: " + signature);
+ LOGGER.debug("Computed Signature: " + generator.generate(timestamp, body));
+ return verifier.isValid(timestamp, body, signature);
+}
 
 }

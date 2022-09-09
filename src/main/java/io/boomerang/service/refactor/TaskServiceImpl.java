@@ -164,7 +164,7 @@ public class TaskServiceImpl implements TaskService {
       } else if (taskType == TaskType.runworkflow) {
         this.runWorkflow(task, activity);
       } else if (taskType == TaskType.runscheduledworkflow) {
-        this.runScheduledWorkflow(task, activity);
+        this.runScheduledWorkflow(task, activity, workflowName);
       } else if (taskType == TaskType.setwfstatus) {
         saveWorkflowStatus(task, activity);
         InternalTaskResponse response = new InternalTaskResponse();
@@ -253,7 +253,7 @@ public class TaskServiceImpl implements TaskService {
     this.endTask(response);
   }
 
-  private void runScheduledWorkflow(Task task, ActivityEntity activity) {
+  private void runScheduledWorkflow(Task task, ActivityEntity activity, String workflowName) {
     InternalTaskResponse response = new InternalTaskResponse();
     response.setActivityId(task.getTaskActivityId());
     response.setStatus(TaskStatus.failure);
@@ -326,7 +326,7 @@ public class TaskServiceImpl implements TaskService {
         schedule.setTimezone(timezone);
         schedule.setType(WorkflowScheduleType.runOnce);
         List<KeyValuePair> labels = new LinkedList<>();
-        labels.add(new KeyValuePair("workflowName",task.getWorkflowName()));
+        labels.add(new KeyValuePair("workflowName",workflowName));
         schedule.setLabels(labels);
         WorkflowSchedule workflowSchedule = scheduleService.createSchedule(schedule);
         if (workflowSchedule!= null && workflowSchedule.getId() != null) {

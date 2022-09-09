@@ -245,12 +245,17 @@
 		<dependency>
 			<groupId>com.cronutils</groupId>
 			<artifactId>cron-utils</artifactId>
-			<version>9.1.6</version>
+			<version>9.2.0</version>
 		</dependency>
 		<dependency>
 	      <groupId>com.slack.api</groupId>
 	      <artifactId>slack-api-client</artifactId>
-	      <version>1.23.1</version>
+	      <version>1.24.0</version>
+		</dependency>
+		<dependency>
+		    <groupId>com.slack.api</groupId>
+		    <artifactId>slack-app-backend</artifactId>
+		    <version>1.24.0</version>
 		</dependency>
 	</dependencies>
 

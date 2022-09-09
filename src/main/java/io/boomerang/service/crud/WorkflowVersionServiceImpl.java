@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -11,6 +12,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
+
+import com.google.inject.internal.util.Lists;
+import com.google.inject.internal.util.Maps;
+
 import io.boomerang.model.FlowWorkflowRevision;
 import io.boomerang.model.RevisionResponse;
 import io.boomerang.model.projectstormv5.ConfigNodes;
@@ -23,6 +28,7 @@ import io.boomerang.mongo.entity.WorkflowEntity;
 import io.boomerang.mongo.model.ChangeLog;
 import io.boomerang.mongo.model.Dag;
 import io.boomerang.mongo.model.Revision;
+import io.boomerang.mongo.model.WorkFlowRevisionCount;
 import io.boomerang.mongo.model.WorkflowScope;
 import io.boomerang.mongo.model.next.DAGTask;
 import io.boomerang.mongo.service.FlowTaskTemplateService;
@@ -238,4 +244,80 @@ public class WorkflowVersionServiceImpl implements WorkflowVersionService {
     }
     return revisionResponse;
   }
+  
+  @Override
+  public List<FlowWorkflowRevision> getLatestWorkflowVersionWithUpgradeFlags(List<String> workflowIds) {
+		List<WorkFlowRevisionCount> workFlowLatestRevisions = flowWorkflowService.getWorkflowRevisionCountsAndLatestVersion(workflowIds);
+		List<FlowWorkflowRevision> latestFlowRevisionList = Lists.newArrayList();
+		workFlowLatestRevisions.stream().forEach(workFlowLatestRevision->{
+			latestFlowRevisionList.add(new FlowWorkflowRevision(workFlowLatestRevision.getLatestVersion()));
+		});
+	
+		// Batch updating upgrade available flags
+		setTemplateUpgradeFlags(latestFlowRevisionList);  
+	  return latestFlowRevisionList;
+	}
+
+	private void setTemplateUpgradeFlags(List<FlowWorkflowRevision> latestFlowRevisionList) {
+		// Collect Task IDs
+		List<String> taskIds = new ArrayList<String>();
+		for (FlowWorkflowRevision latestFlowRevision : latestFlowRevisionList) {
+			if (latestFlowRevision.getConfig() == null) {
+				continue;
+			}
+			for (ConfigNodes config : latestFlowRevision.getConfig().getNodes()) {
+				if (isTask(config.getType())) {
+					taskIds.add(config.getTaskId());
+				}
+			}
+		}
+
+		// Batch Query FlowTaskTemplateEntity
+		List<FlowTaskTemplateEntity> flowTaskTemplateEntities = templateService.getTaskTemplateWithIds(taskIds);
+		Map<String, FlowTaskTemplateEntity> flowTaskTemplateEntitiesMap = Maps.newHashMap();
+		flowTaskTemplateEntities.stream().forEach(flowTaskTemplateEntity -> {
+			flowTaskTemplateEntitiesMap.put(flowTaskTemplateEntity.getId(), flowTaskTemplateEntity);
+		});
+
+		// Setting template upgrade flags
+		for (FlowWorkflowRevision latestFlowRevision : latestFlowRevisionList) {
+			this.setTemplateUpgradeFlags(latestFlowRevision, flowTaskTemplateEntitiesMap);
+		}
+	}
+	
+	private void setTemplateUpgradeFlags(FlowWorkflowRevision latestFlowRevision, Map<String, FlowTaskTemplateEntity> flowTaskTemplateEntitiesMap) {
+		latestFlowRevision.setTemplateUpgradesAvailable(false);
+		if (latestFlowRevision.getConfig() == null) {
+			return;
+		}
+		
+		for (ConfigNodes config : latestFlowRevision.getConfig().getNodes()) {
+			this.setTemplateUpgradeFlags(latestFlowRevision, config, flowTaskTemplateEntitiesMap);
+		}
+	}
+	
+	private void setTemplateUpgradeFlags(FlowWorkflowRevision latestFlowRevision, ConfigNodes configNodes, Map<String, FlowTaskTemplateEntity> flowTaskTemplateEntitiesMap) {
+		if(!isTask(configNodes.getType()) || flowTaskTemplateEntitiesMap.get(configNodes.getTaskId()) == null
+				|| flowTaskTemplateEntitiesMap.get(configNodes.getTaskId()).getRevisions() == null) {
+			return;
+		}
+		
+		Optional<Revision> latestRevision = flowTaskTemplateEntitiesMap.get(configNodes.getTaskId()).getRevisions()
+				.stream().sorted(Comparator.comparingInt(Revision::getVersion).reversed()).findFirst();
+		Integer taskVersion = configNodes.getTaskVersion();
+		if(!latestRevision.isPresent() || latestRevision.get().getVersion().equals(taskVersion)) {
+				return;
+		}
+		latestFlowRevision.setTemplateUpgradesAvailable(true);
+		if (latestFlowRevision.getDag().getNodes() == null) {
+			return;
+		}
+		for (TaskNode taskNode : latestFlowRevision.getDag().getNodes()) {
+			if (taskNode.getNodeId() != null && configNodes.getNodeId() != null
+					&& taskNode.getNodeId().equals(configNodes.getNodeId())) {
+				taskNode.setTemplateUpgradeAvailable(true);
+			}
+		}
+	}
+
 }

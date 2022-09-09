@@ -2,6 +2,9 @@ package io.boomerang.model;
 
 import java.util.List;
 import org.springframework.beans.BeanUtils;
+
+import com.google.inject.internal.util.Lists;
+
 import io.boomerang.mongo.entity.TeamEntity;
 
 public class TeamWorkflowSummary extends TeamEntity {
@@ -13,7 +16,7 @@ public class TeamWorkflowSummary extends TeamEntity {
   public TeamWorkflowSummary(TeamEntity teamEntity, List<WorkflowSummary> workflows) {
     BeanUtils.copyProperties(teamEntity, this);
 
-    this.workflows = workflows;
+    this.workflows = workflows == null ? Lists.newArrayList() : workflows;
   }
 
   public List<WorkflowSummary> getWorkflows() {
