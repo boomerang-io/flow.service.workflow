@@ -27,12 +27,12 @@ public class CloudEventTest {
     // @formatter:off
     String cloudEventData = String.join("", "{",
         "\"id\":\"36965047-1191-4aff-8e17-fe4e8c8e528a\"",
-        ",\"type\":\"io.boomerang.eventing.trigger\"",
+        ",\"type\":\"io.boomerang.event.workflow.trigger\"",
         ",\"source\":\"http://wdc2.cloud.boomerangplatform.net/listener/event\"",
         ",\"specversion\":\"1.0\"",
         ",\"datacontenttype\":\"application/json\"",
         ",\"subject\":\"/5f7f8cf69a7d401d9e584c90/foobar\"",
-        ",\"token\":\"RXggaXBzdW0gZG9sb3Ih\"",
+        ",\"token\":\"RXgGaXBzdW0gZG9sb3Ih\"",
         ",\"time\":\"2022-04-30T11:33:22Z\"",
         "}");
     // @formatter:on
@@ -49,7 +49,7 @@ public class CloudEventTest {
     Assertions.assertEquals(eventTrigger.getToken(), cloudEvent.getExtension("token"));
     Assertions.assertEquals(eventTrigger.getDate(),
         new Date(cloudEvent.getTime().toInstant().toEpochMilli()));
-    Assertions.assertEquals(eventTrigger.getProperties().size(), 0);
+    Assertions.assertEquals(0, eventTrigger.getProperties().size());
   }
 
   @Test
@@ -58,12 +58,12 @@ public class CloudEventTest {
     // @formatter:off
     String cloudEventData = String.join("", "{",
         "\"id\":\"36965047-1191-4aff-8e17-fe4e8c8e528a\"",
-        ",\"type\":\"io.boomerang.eventing.trigger\"",
+        ",\"type\":\"io.boomerang.event.workflow.trigger\"",
         ",\"source\":\"http://wdc2.cloud.boomerangplatform.net/listener/event\"",
         ",\"specversion\":\"1.0\"",
         ",\"datacontenttype\":\"application/json\"",
         ",\"subject\":\"/5f7f8cf69a7d401d9e584c90/foobar\"",
-        ",\"token\":\"RXggaXBzdW0gZG9sb3Ih\"",
+        ",\"token\":\"RXgGaXBzdW0gZG9sb3Ih\"",
         ",\"time\":\"2022-04-30T11:33:22Z\"",
         ",\"data\":{",
           "\"textMessage\":\"It did go through!\"",
@@ -84,7 +84,7 @@ public class CloudEventTest {
     Assertions.assertEquals(eventTrigger.getToken(), cloudEvent.getExtension("token"));
     Assertions.assertEquals(eventTrigger.getDate(),
         new Date(cloudEvent.getTime().toInstant().toEpochMilli()));
-    Assertions.assertEquals(eventTrigger.getProperties().size(), 2);
+    Assertions.assertEquals(2, eventTrigger.getProperties().size());
   }
 
   @ParameterizedTest
@@ -95,12 +95,12 @@ public class CloudEventTest {
     // @formatter:off
     String cloudEventData = String.join("", "{",
         "\"id\":\"36965047-1191-4aff-8e17-fe4e8c8e528a\"",
-        ",\"type\":\"io.boomerang.eventing.trigger\"",
+        ",\"type\":\"io.boomerang.event.workflow.trigger\"",
         ",\"source\":\"http://wdc2.cloud.boomerangplatform.net/listener/event\"",
         ",\"specversion\":\"1.0\"",
         ",\"datacontenttype\":\"application/json\"",
         ",\"subject\":\"/5f7f8cf69a7d401d9e584c90/foobar\"",
-        ",\"token\":\"RXggaXBzdW0gZG9sb3Ih\"",
+        ",\"token\":\"RXgGaXBzdW0gZG9sb3Ih\"",
         ",\"initiatorid\":\"iulian\"",
         ",\"initiatorcontext\":" + jsonContextField,
         ",\"time\":\"2022-04-30T11:33:22Z\"",
@@ -119,8 +119,8 @@ public class CloudEventTest {
     Assertions.assertEquals(eventTrigger.getToken(), cloudEvent.getExtension("token"));
     Assertions.assertEquals(eventTrigger.getDate(),
         new Date(cloudEvent.getTime().toInstant().toEpochMilli()));
-    Assertions.assertEquals(eventTrigger.getInitiatorId(), "iulian");
-    Assertions.assertEquals(eventTrigger.getProperties().size(), 0);
+    Assertions.assertEquals("iulian", eventTrigger.getInitiatorId());
+    Assertions.assertEquals(0, eventTrigger.getProperties().size());
     Assertions.assertNotNull(eventTrigger.getInitiatorContext());
     Assertions.assertEquals(eventTrigger.getInitiatorContext(), jsonContextField);
   }
@@ -131,7 +131,7 @@ public class CloudEventTest {
     // @formatter:off
     String cloudEventData = String.join("", "{",
         "\"id\":\"36965047-1191-4aff-8e17-fe4e8c8e528a\"",
-        ",\"type\":\"io.boomerang.eventing.trigger\"",
+        ",\"type\":\"io.boomerang.event.workflow.trigger\"",
         ",\"source\":\"http://wdc2.cloud.boomerangplatform.net/listener/event\"",
         ",\"specversion\":\"1.0\"",
         ",\"datacontenttype\":\"application/json\"",
@@ -153,7 +153,7 @@ public class CloudEventTest {
     // @formatter:off
     String cloudEventData = String.join("", "{",
         "\"id\":\"36965047-1191-4aff-8e17-fe4e8c8e528a\"",
-        ",\"type\":\"io.boomerang.eventing.wfe\"",
+        ",\"type\":\"io.boomerang.event.workflow.wfe\"",
         ",\"source\":\"http://wdc2.cloud.boomerangplatform.net/listener/event\"",
         ",\"specversion\":\"1.0\"",
         ",\"datacontenttype\":\"application/json\"",
@@ -175,7 +175,7 @@ public class CloudEventTest {
     // @formatter:off
     String cloudEventData = String.join("", "{",
         "\"id\":\"36965047-1191-4aff-8e17-fe4e8c8e528a\"",
-        ",\"type\":\"io.boomerang.eventing.wfe\"",
+        ",\"type\":\"io.boomerang.event.workflow.wfe\"",
         ",\"source\":\"http://wdc2.cloud.boomerangplatform.net/listener/event\"",
         ",\"specversion\":\"1.0\"",
         ",\"status\":\"failure\"",
@@ -196,7 +196,7 @@ public class CloudEventTest {
     Assertions.assertEquals(eventWFE.getSubject(), cloudEvent.getSubject());
     Assertions.assertEquals(eventWFE.getDate(),
         new Date(cloudEvent.getTime().toInstant().toEpochMilli()));
-    Assertions.assertEquals(eventWFE.getStatus(), TaskStatus.failure);
+    Assertions.assertEquals(TaskStatus.failure, eventWFE.getStatus());
   }
 
   @Test
@@ -205,7 +205,7 @@ public class CloudEventTest {
     // @formatter:off
     String cloudEventData = String.join("", "{",
         "\"id\":\"36965047-1191-4aff-8e17-fe4e8c8e528a\"",
-        ",\"type\":\"io.boomerang.eventing.wfe\"",
+        ",\"type\":\"io.boomerang.event.workflow.wfe\"",
         ",\"source\":\"http://wdc2.cloud.boomerangplatform.net/listener/event\"",
         ",\"specversion\":\"1.0\"",
         ",\"status\":\"failure\"",
@@ -228,7 +228,7 @@ public class CloudEventTest {
     // @formatter:off
     String cloudEventData = String.join("", "{",
         "\"id\":\"36965047-1191-4aff-8e17-fe4e8c8e528a\"",
-        ",\"type\":\"io.boomerang.eventing.cancel\"",
+        ",\"type\":\"io.boomerang.event.workflow.cancel\"",
         ",\"source\":\"http://wdc2.cloud.boomerangplatform.net/listener/event\"",
         ",\"specversion\":\"1.0\"",
         ",\"status\":\"failure\"",
@@ -251,12 +251,12 @@ public class CloudEventTest {
     // @formatter:off
     String cloudEventData = String.join("", "{",
         "\"id\":\"36965047-1191-4aff-8e17-fe4e8c8e528a\"",
-        ",\"type\":\"io.boomerang.eventing.cancel\"",
+        ",\"type\":\"io.boomerang.event.workflow.cancel\"",
         ",\"source\":\"http://wdc2.cloud.boomerangplatform.net/listener/event\"",
         ",\"specversion\":\"1.0\"",
         ",\"datacontenttype\":\"application/json\"",
         ",\"subject\":\"/5f7f8cf69a7d401d9e584c90/cb4007aaf8b79b41ad598e25\"",
-        ",\"token\":\"RXggaXBzdW0gZG9sb3Ih\"",
+        ",\"token\":\"RXgGaXBzdW0gZG9sb3Ih\"",
         ",\"time\":\"2022-04-30T11:33:22Z\"",
         "}");
     // @formatter:on
@@ -281,12 +281,12 @@ public class CloudEventTest {
     // @formatter:off
     String cloudEventData = String.join("", "{",
         "\"id\":\"36965047-1191-4aff-8e17-fe4e8c8e528a\"",
-        ",\"type\":\"io.boomerang.eventing.cancel\"",
+        ",\"type\":\"io.boomerang.event.workflow.cancel\"",
         ",\"source\":\"http://wdc2.cloud.boomerangplatform.net/listener/event\"",
         ",\"specversion\":\"1.0\"",
         ",\"datacontenttype\":\"application/json\"",
         ",\"subject\":\"/5f7f8cf69a7d401d9e584c90/\"",
-        ",\"token\":\"RXggaXBzdW0gZG9sb3Ih\"",
+        ",\"token\":\"RXgGaXBzdW0gZG9sb3Ih\"",
         ",\"time\":\"2022-04-30T11:33:22Z\"",
         "}");
     // @formatter:on
@@ -304,12 +304,12 @@ public class CloudEventTest {
     // @formatter:off
     String cloudEventData = String.join("", "{",
         "\"id\":\"36965047-1191-4aff-8e17-fe4e8c8e528a\"",
-        ",\"type\":\"io.boomerang.eventing.trigger\"",
+        ",\"type\":\"io.boomerang.event.workflow.trigger\"",
         ",\"source\":\"http://wdc2.cloud.boomerangplatform.net/listener/event\"",
         ",\"specversion\":\"1.0\"",
         ",\"datacontenttype\":\"application/json\"",
         ",\"subject\":\"/5f7f8cf69a7d401d9e584c90/cb4007aaf8b79b41ad598e25\"",
-        ",\"token\":\"RXggaXBzdW0gZG9sb3Ih\"",
+        ",\"token\":\"RXgGaXBzdW0gZG9sb3Ih\"",
         ",\"time\":\"2022-04-30T11:33:22Z\"",
         "}");
     // @formatter:on
@@ -327,7 +327,7 @@ public class CloudEventTest {
     // @formatter:off
     String cloudEventData = String.join("", "{",
         "\"id\":\"36965047-1191-4aff-8e17-fe4e8c8e528a\"",
-        ",\"type\":\"io.boomerang.eventing.trigger\"",
+        ",\"type\":\"io.boomerang.event.workflow.trigger\"",
         ",\"source\":\"http://wdc2.cloud.boomerangplatform.net/listener/event\"",
         ",\"specversion\":\"1.0\"",
         ",\"datacontenttype\":\"application/json\"",
@@ -349,7 +349,7 @@ public class CloudEventTest {
     // @formatter:off
     String cloudEventData = String.join("", "{",
         "\"id\":\"36965047-1191-4aff-8e17-fe4e8c8e528a\"",
-        ",\"type\":\"io.boomerang.eventing.wfe\"",
+        ",\"type\":\"io.boomerang.event.workflow.wfe\"",
         ",\"source\":\"http://wdc2.cloud.boomerangplatform.net/listener/event\"",
         ",\"specversion\":\"1.0\"",
         ",\"status\":\"success\"",
@@ -372,7 +372,7 @@ public class CloudEventTest {
     // @formatter:off
     String cloudEventData = String.join("", "{",
         "\"id\":\"36965047-1191-4aff-8e17-fe4e8c8e528a\"",
-        ",\"type\":\"io.boomerang.eventing.cancel\"",
+        ",\"type\":\"io.boomerang.event.workflow.cancel\"",
         ",\"source\":\"http://wdc2.cloud.boomerangplatform.net/listener/event\"",
         ",\"specversion\":\"1.0\"",
         ",\"datacontenttype\":\"application/json\"",
