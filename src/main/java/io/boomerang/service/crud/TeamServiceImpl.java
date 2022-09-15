@@ -496,8 +496,8 @@ public class TeamServiceImpl implements TeamService {
     return workflowQuotas;
   }
 
-	@Override
-	public List<TeamEntity> getUsersTeamListing(FlowUserEntity userEntity) {
+  @Override
+  public List<TeamEntity> getUsersTeamListing(FlowUserEntity userEntity) {
 		/*
 		 * For the case that flowExternalUrlTeam is configured, always get team list
 		 * from flowExternalUrlTeam instead of querying flow_team collection.
@@ -526,14 +526,14 @@ public class TeamServiceImpl implements TeamService {
 		 * For the case that both flowExternalUrlUser and flowExternalUrlTeam are not
 		 * configured 
 		 * 1. Get team id list from flow user entity 
-		 * 2. query flow_team collection against "_id"
+		 * 2. query flow_teamcollection against "_id"
 		 */
 		List<String> teamIds = userEntity.getFlowTeams();
 		if (teamIds == null || teamIds.isEmpty()) {
 			return Lists.newArrayList();
 		}
 		return flowTeamService.findActiveTeamsByIds(teamIds);
-	}
+  }
 
   @Override
   public List<TeamWorkflowSummary> getUserTeams(FlowUserEntity userEntity) {
