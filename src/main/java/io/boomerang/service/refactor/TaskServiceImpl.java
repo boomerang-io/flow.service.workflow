@@ -416,16 +416,10 @@ public class TaskServiceImpl implements TaskService {
       activity.setOutputProperties(new LinkedList<>());
     }
 
-    ObjectMapper objectMapper = new ObjectMapper();
 
-    try {
-      System.out
-          .println("***saveWorkflowProperty*******" + objectMapper.writeValueAsString(activity.getOutputProperties()));
-    } catch (JsonProcessingException e) {
-
-    }
 
     List<KeyValuePair> outputProperties = activity.getOutputProperties();
+
     String input = task.getInputs().get("value");
     String output = task.getInputs().get("output");
     KeyValuePair outputProperty = new KeyValuePair();
@@ -438,6 +432,18 @@ public class TaskServiceImpl implements TaskService {
 
     outputProperty.setValue(outputValue);
     outputProperties.add(outputProperty);
+
+    ObjectMapper objectMapper = new ObjectMapper();
+
+    try {
+      System.out.println("1***activity output properties *******"
+          + objectMapper.writeValueAsString(activity.getOutputProperties()));
+      System.out.println(
+          "1***request properties*******" + objectMapper.writeValueAsString(requestProperties));
+
+    } catch (JsonProcessingException e) {
+
+    }
     this.activityService.saveWorkflowActivity(activity);
   }
 
