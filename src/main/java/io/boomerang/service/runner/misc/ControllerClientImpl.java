@@ -476,6 +476,14 @@ public class ControllerClientImpl implements ControllerClient {
         if (response.getResults() != null && !response.getResults().isEmpty()) {
           response.getResults().get(0);
           if (response.getResults() != null) {
+            ObjectMapper objectMapper = new ObjectMapper();
+            try {
+              System.out
+                  .println("(*****response*******" + objectMapper.writeValueAsString(response));
+
+            } catch (JsonProcessingException e) {
+
+            }
             for (TaskResponseResult result : response.getResults()) {
               String key = result.getName();
               String value = result.getValue();
