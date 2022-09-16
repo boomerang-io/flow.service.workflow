@@ -436,6 +436,10 @@ public class TaskServiceImpl implements TaskService {
     ObjectMapper objectMapper = new ObjectMapper();
 
     try {
+      System.out.println("***input *******"
+          + objectMapper.writeValueAsString(input));
+      System.out.println("***output *******"
+          + objectMapper.writeValueAsString(output));
       System.out.println("***activity output properties *******"
           + objectMapper.writeValueAsString(activity.getOutputProperties()));
       
@@ -443,7 +447,7 @@ public class TaskServiceImpl implements TaskService {
       System.out.println("***task******" + objectMapper.writeValueAsString(task));
       
       System.out.println("***output properties *******"
-          + objectMapper.writeValueAsString(activity.getOutputProperties()));
+          + objectMapper.writeValueAsString(outputProperties));
 
     } catch (JsonProcessingException e) {
 
