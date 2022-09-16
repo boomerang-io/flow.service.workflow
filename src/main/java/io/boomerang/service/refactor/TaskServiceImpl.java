@@ -436,10 +436,9 @@ public class TaskServiceImpl implements TaskService {
     ObjectMapper objectMapper = new ObjectMapper();
 
     try {
-      System.out.println("1***activity output properties *******"
+      System.out.println("***activity output properties *******"
           + objectMapper.writeValueAsString(activity.getOutputProperties()));
-      System.out.println(
-          "1***request properties*******" + objectMapper.writeValueAsString(requestProperties));
+      System.out.println("***task******" + objectMapper.writeValueAsString(task));
 
     } catch (JsonProcessingException e) {
 
