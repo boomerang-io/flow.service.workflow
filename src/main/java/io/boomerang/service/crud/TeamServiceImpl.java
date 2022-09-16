@@ -498,24 +498,41 @@ public class TeamServiceImpl implements TeamService {
 
   @Override
   public List<TeamEntity> getUsersTeamListing(FlowUserEntity userEntity) {
-    List<String> teamIds = new LinkedList<>();
-    if (flowExternalUrlUser.isBlank()) {
-      teamIds = userEntity.getFlowTeams();
-    } else {
-      UserProfile profile = boomerangUserService.getInternalUserProfile();
-      List<Team> teams = profile.getTeams();
-      if (teams != null) {
-        teamIds = teams.stream().map(Team::getId).collect(Collectors.toList());
-      }
-    }
+		/*
+		 * For the case that flowExternalUrlTeam is configured, always get team list
+		 * from flowExternalUrlTeam instead of querying flow_team collection.
+		 */
+		if (!flowExternalUrlTeam.isBlank()) {
+			return this.externalTeamService.getExternalTeams(flowExternalUrlTeam);
+		}
 
-    List<TeamEntity> flowTeam = null;
-    if (!flowExternalUrlTeam.isBlank()) {
-      flowTeam = this.externalTeamService.getExternalTeams(flowExternalUrlTeam);
-    } else {
-      flowTeam = flowTeamService.findActiveTeamsByIds(teamIds);
-    }
-    return flowTeam;
+		/*
+		 * For the case that flowExternalUrlUser is configured, but flowExternalUrlTeam
+		 * is not configured 
+		 * 1. Get team id list from flowExternalUrlUser 
+		 * 2. query flow_team collection against "higherLevelGroupId"
+		 */
+		if (!flowExternalUrlUser.isBlank()) {
+			UserProfile profile = boomerangUserService.getInternalUserProfile();
+			List<Team> teams = profile.getTeams();
+			if (teams == null || teams.isEmpty()) {
+				return Lists.newArrayList();
+			}
+			List<String> higherLevelGroupIds = teams.stream().map(Team::getId).collect(Collectors.toList());
+			return flowTeamService.findTeamsByHigherLevelGroupIds(higherLevelGroupIds);
+		}
+
+		/*
+		 * For the case that both flowExternalUrlUser and flowExternalUrlTeam are not
+		 * configured 
+		 * 1. Get team id list from flow user entity 
+		 * 2. query flow_teamcollection against "_id"
+		 */
+		List<String> teamIds = userEntity.getFlowTeams();
+		if (teamIds == null || teamIds.isEmpty()) {
+			return Lists.newArrayList();
+		}
+		return flowTeamService.findActiveTeamsByIds(teamIds);
   }
 
   @Override
