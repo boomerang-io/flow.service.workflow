@@ -79,12 +79,10 @@ public class WorkflowController {
   @GetMapping(value = "/{workFlowId}/revision")
   public FlowWorkflowRevision getWorkflowLatestVersion(@PathVariable String workFlowId) {
     final WorkflowEntity entity = workFlowRepository.getWorkflow(workFlowId);
-
-    if (!UserType.admin.equals(userIdentityService.getCurrentUser().getType())) {
-      if (entity.getScope() == WorkflowScope.user
-          && !entity.getOwnerUserId().equals(userIdentityService.getCurrentUser().getId())) {
-        throw new HttpClientErrorException(HttpStatus.FORBIDDEN);
-      }
+    if (!UserType.admin.equals(userIdentityService.getCurrentUser().getType())
+        && entity.getScope() == WorkflowScope.user
+        && !entity.getOwnerUserId().equals(userIdentityService.getCurrentUser().getId())) {
+      throw new HttpClientErrorException(HttpStatus.FORBIDDEN);
     }
     return workflowVersionService.getLatestWorkflowVersion(workFlowId);
   }
@@ -98,14 +96,11 @@ public class WorkflowController {
   @GetMapping(value = "{id}/summary")
   public WorkflowSummary getWorkflowWithId(@PathVariable String id) {
     final WorkflowEntity entity = workFlowRepository.getWorkflow(id);
-
-    if (!UserType.admin.equals(userIdentityService.getCurrentUser().getType())) {
-      if (entity.getScope() == WorkflowScope.user
-          && !entity.getOwnerUserId().equals(userIdentityService.getCurrentUser().getId())) {
-        throw new HttpClientErrorException(HttpStatus.FORBIDDEN);
-      }
+    if (!UserType.admin.equals(userIdentityService.getCurrentUser().getType())
+        && entity.getScope() == WorkflowScope.user
+        && !entity.getOwnerUserId().equals(userIdentityService.getCurrentUser().getId())) {
+      throw new HttpClientErrorException(HttpStatus.FORBIDDEN);
     }
-
     return workflowService.getWorkflow(id);
   }
 
