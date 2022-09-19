@@ -32,6 +32,7 @@ import io.boomerang.model.WorkflowSchedule;
 import io.boomerang.model.WorkflowScheduleCalendar;
 import io.boomerang.model.WorkflowSummary;
 import io.boomerang.mongo.entity.WorkflowEntity;
+import io.boomerang.mongo.model.UserType;
 import io.boomerang.mongo.model.WorkflowProperty;
 import io.boomerang.mongo.model.WorkflowScope;
 import io.boomerang.mongo.model.WorkflowStatus;
@@ -78,8 +79,8 @@ public class WorkflowController {
   @GetMapping(value = "/{workFlowId}/revision")
   public FlowWorkflowRevision getWorkflowLatestVersion(@PathVariable String workFlowId) {
     final WorkflowEntity entity = workFlowRepository.getWorkflow(workFlowId);
-
-    if (entity.getScope() == WorkflowScope.user
+    if (!UserType.admin.equals(userIdentityService.getCurrentUser().getType())
+        && entity.getScope() == WorkflowScope.user
         && !entity.getOwnerUserId().equals(userIdentityService.getCurrentUser().getId())) {
       throw new HttpClientErrorException(HttpStatus.FORBIDDEN);
     }
@@ -95,12 +96,11 @@ public class WorkflowController {
   @GetMapping(value = "{id}/summary")
   public WorkflowSummary getWorkflowWithId(@PathVariable String id) {
     final WorkflowEntity entity = workFlowRepository.getWorkflow(id);
-
-    if (entity.getScope() == WorkflowScope.user
+    if (!UserType.admin.equals(userIdentityService.getCurrentUser().getType())
+        && entity.getScope() == WorkflowScope.user
         && !entity.getOwnerUserId().equals(userIdentityService.getCurrentUser().getId())) {
       throw new HttpClientErrorException(HttpStatus.FORBIDDEN);
     }
-
     return workflowService.getWorkflow(id);
   }
 
@@ -181,15 +181,15 @@ public class WorkflowController {
       @RequestBody FlowWorkflowRevision workflowSummaryEntity) {
     return workflowService.getWorkflowParameters(workFlowId, workflowSummaryEntity);
   }
-  
+
   @GetMapping(value = "/{workflowId}/schedules")
-  public List<WorkflowSchedule> getSchedulesForWorkflow(
-      @PathVariable String workflowId) {
+  public List<WorkflowSchedule> getSchedulesForWorkflow(@PathVariable String workflowId) {
     return workflowScheduleService.getSchedulesForWorkflow(workflowId);
   }
-  
+
   @GetMapping(value = "/{workflowId}/schedules/calendar")
-  public List<WorkflowScheduleCalendar> getCalendarsForWorkflow(@PathVariable String workflowId, @RequestParam Long fromDate, @RequestParam Long toDate) {
+  public List<WorkflowScheduleCalendar> getCalendarsForWorkflow(@PathVariable String workflowId,
+      @RequestParam Long fromDate, @RequestParam Long toDate) {
     if (workflowId != null && fromDate != null && toDate != null) {
       Date from = new Date(fromDate * 1000);
       Date to = new Date(toDate * 1000);
