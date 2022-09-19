@@ -450,8 +450,26 @@ public class TaskServiceImpl implements TaskService {
     } catch (JsonProcessingException e) {
 
     }
-    //activity.setOutputProperties(outputProperties);
-    this.activityService.saveWorkflowActivity(activity);
+
+    ActivityEntity act = this.activityService.saveWorkflowActivity(activity);
+    try {
+      System.out.println("***input *******" + objectMapper.writeValueAsString(input));
+      System.out.println("***output *******" + objectMapper.writeValueAsString(output));
+      System.out.println("***activity output properties *******"
+          + objectMapper.writeValueAsString(activity.getOutputProperties()));
+
+
+      System.out.println("***task******" + objectMapper.writeValueAsString(task));
+
+      System.out.println(
+          "***output properties *******" + objectMapper.writeValueAsString(outputProperties));
+      
+      System.out.println("***act******" + objectMapper.writeValueAsString(act));
+
+    } catch (JsonProcessingException e) {
+
+    }
+
   }
 
   @Override
