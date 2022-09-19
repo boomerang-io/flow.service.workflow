@@ -1,6 +1,5 @@
 package io.boomerang.service;
 
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
@@ -21,6 +20,8 @@ import org.jgrapht.Graph;
 import org.jgrapht.graph.DefaultEdge;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.boomerang.exceptions.InvalidWorkflowRuntimeException;
 import io.boomerang.exceptions.RunWorkflowException;
 import io.boomerang.model.Task;
@@ -300,8 +301,20 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
       List<Task> nextNodes = this.getTasksDependants(tasks, currentTask);
       for (Task next : nextNodes) {
 
+
+
         final List<String> nodes =
             GraphProcessor.createOrderedTaskList(graph, start.getTaskId(), end.getTaskId());
+
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        try {
+          System.out.println("***nextNodes *******" + objectMapper.writeValueAsString(nextNodes));
+          System.out.println("***nodes*******" + objectMapper.writeValueAsString(nodes));
+
+        } catch (JsonProcessingException e) {
+
+        }
 
         if (nodes.contains(next.getTaskId())) {
           InternalTaskRequest taskRequest = new InternalTaskRequest();
