@@ -450,7 +450,7 @@ public class TaskServiceImpl implements TaskService {
     } catch (JsonProcessingException e) {
 
     }
-    activity.setOutputProperties(outputProperties);
+    //activity.setOutputProperties(outputProperties);
     this.activityService.saveWorkflowActivity(activity);
   }
 
