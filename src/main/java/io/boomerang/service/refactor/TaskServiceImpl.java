@@ -426,8 +426,6 @@ public class TaskServiceImpl implements TaskService {
 
     try {
       System.out.println("***output *******" + objectMapper.writeValueAsString(output));
-      System.out.println("***activity output properties *******"
-          + objectMapper.writeValueAsString(activity.getOutputProperties()));
 
       System.out.println(
           "***output properties *******" + objectMapper.writeValueAsString(outputProperties));
