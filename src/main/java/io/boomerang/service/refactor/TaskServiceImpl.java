@@ -175,8 +175,7 @@ public class TaskServiceImpl implements TaskService {
         response.setStatus(TaskStatus.completed);
         this.endTask(response);
       } else if (taskType == TaskType.setwfproperty) {
-        System.out.println("***entering saveWorkflowProperty() *******");
-        saveWorkflowProperty(task, activity);
+        saveWorkflowProperty(task, activity, taskExecution);
         InternalTaskResponse response = new InternalTaskResponse();
         response.setActivityId(taskExecution.getId());
         response.setStatus(TaskStatus.completed);
@@ -412,10 +411,11 @@ public class TaskServiceImpl implements TaskService {
     this.activityService.saveWorkflowActivity(activity);
   }
 
-  private void saveWorkflowProperty(Task task, ActivityEntity activity) {
+  private void saveWorkflowProperty(Task task, ActivityEntity activity,
+      TaskExecutionEntity taskEntity) {
     System.out.println("***entered saveWorkflowProperty() *******");
-    if (activity.getOutputProperties() == null) {
-      activity.setOutputProperties(new LinkedList<>());
+    if (taskEntity.getOutputProperties() == null) {
+      taskEntity.setOutputProperties(new LinkedList<>());
     }
 
     String input = task.getInputs().get("value");
@@ -424,13 +424,13 @@ public class TaskServiceImpl implements TaskService {
     ObjectMapper objectMapper = new ObjectMapper();
 
 
-    List<KeyValuePair> outputProperties = activity.getOutputProperties();
+    List<KeyValuePair> outputProperties = taskEntity.getOutputProperties();
 
     try {
       System.out.println("***output *******" + objectMapper.writeValueAsString(output));
 
-      System.out.println(
-          "***output properties start *******" + objectMapper.writeValueAsString(outputProperties));
+      System.out.println("*** task output properties start *******"
+          + objectMapper.writeValueAsString(outputProperties));
 
     } catch (JsonProcessingException e) {
 
@@ -446,10 +446,11 @@ public class TaskServiceImpl implements TaskService {
     outputProperty.setValue(outputValue);
     outputProperties.add(outputProperty);
 
-    ActivityEntity act = this.activityService.saveWorkflowActivity(activity);
+    TaskExecutionEntity te = taskActivityService.save(taskEntity);
     try {
 
-      System.out.println("***output properties end******" + objectMapper.writeValueAsString(act.getOutputProperties()));
+      System.out.println("***output properties end******"
+          + objectMapper.writeValueAsString(te.getOutputProperties()));
 
     } catch (JsonProcessingException e) {
 
