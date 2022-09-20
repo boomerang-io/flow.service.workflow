@@ -465,23 +465,23 @@ public class TaskServiceImpl implements TaskService {
 
     String activityId = request.getActivityId();
     LOGGER.info("[{}] Recieved end task request", activityId);
-    TaskExecutionEntity activity = taskActivityService.findById(activityId);
+    TaskExecutionEntity taskExecutionEntity = taskActivityService.findById(activityId);
 
     ActivityEntity workflowActivity =
-        this.activityService.findWorkflowActivtyById(activity.getActivityId());
+        this.activityService.findWorkflowActivtyById(taskExecutionEntity.getActivityId());
 
     if (workflowActivity.getStatus() == TaskStatus.cancelled) {
       LOGGER.error("[{}] Workflow has been marked as cancelled, not ending task", activityId);
-      activity.setFlowTaskStatus(TaskStatus.cancelled);
-      long duration = new Date().getTime() - activity.getStartTime().getTime();
-      activity.setDuration(duration);
-      taskActivityService.save(activity);
+      taskExecutionEntity.setFlowTaskStatus(TaskStatus.cancelled);
+      long duration = new Date().getTime() - taskExecutionEntity.getStartTime().getTime();
+      taskExecutionEntity.setDuration(duration);
+      taskActivityService.save(taskExecutionEntity);
       return;
     }
 
     RevisionEntity revision =
         workflowVersionService.getWorkflowlWithId(workflowActivity.getWorkflowRevisionid());
-    Task currentTask = getTask(activity);
+    Task currentTask = getTask(taskExecutionEntity);
     List<Task> tasks = this.createTaskList(revision, workflowActivity);
 
     String storeId = workflowActivity.getId();
@@ -489,19 +489,28 @@ public class TaskServiceImpl implements TaskService {
     List<String> keys = new LinkedList<>();
     keys.add(storeId);
 
-    workflowActivity = this.activityService.findWorkflowActivtyById(activity.getActivityId());
+    workflowActivity =
+        this.activityService.findWorkflowActivtyById(taskExecutionEntity.getActivityId());
 
 
-    activity.setFlowTaskStatus(request.getStatus());
-    long duration = new Date().getTime() - activity.getStartTime().getTime();
-    activity.setDuration(duration);
+    if (workflowActivity.getOutputProperties() == null) {
+      workflowActivity.setOutputProperties(new LinkedList<>());
+    }
+
+    workflowActivity.getOutputProperties().addAll(taskExecutionEntity.getOutputProperties());
+
+    workflowActivity = activityService.saveWorkflowActivity(workflowActivity);
+
+    taskExecutionEntity.setFlowTaskStatus(request.getStatus());
+    long duration = new Date().getTime() - taskExecutionEntity.getStartTime().getTime();
+    taskExecutionEntity.setDuration(duration);
 
 
     if (request.getOutputProperties() != null && !request.getOutputProperties().isEmpty()) {
-      activity.setOutputs(request.getOutputProperties());
+      taskExecutionEntity.setOutputs(request.getOutputProperties());
     }
 
-    activity = taskActivityService.save(activity);
+    taskExecutionEntity = taskActivityService.save(taskExecutionEntity);
 
     boolean finishedAll = this.finishedAll(workflowActivity, tasks, currentTask);
 
@@ -512,10 +521,11 @@ public class TaskServiceImpl implements TaskService {
     String tokenId = getLock(storeId, keys, 105000);
     LOGGER.debug("[{}] Obtained lock", activityId);
 
-    workflowActivity = this.activityService.findWorkflowActivtyById(activity.getActivityId());
+    workflowActivity =
+        this.activityService.findWorkflowActivtyById(taskExecutionEntity.getActivityId());
     updatePendingAprovalStatus(workflowActivity);
 
-    activity.setFlowTaskStatus(request.getStatus());
+    taskExecutionEntity.setFlowTaskStatus(request.getStatus());
 
     String workflowActivityId = workflowActivity.getId();
 
