@@ -444,14 +444,12 @@ public class TaskServiceImpl implements TaskService {
         propertyManager.replaceValueWithProperty(input, activity.getId(), requestProperties);
 
     outputProperty.setValue(outputValue);
-    activity = activityService.findWorkflowActivtyById(activity.getId());
-    activity.getOutputProperties().add(outputProperty);
+    outputProperties.add(outputProperty);
 
     ActivityEntity act = this.activityService.saveWorkflowActivity(activity);
     try {
 
-      System.out.println("***output properties end******"
-          + objectMapper.writeValueAsString(act.getOutputProperties()));
+      System.out.println("***output properties end******" + objectMapper.writeValueAsString(act.getOutputProperties()));
 
     } catch (JsonProcessingException e) {
 
