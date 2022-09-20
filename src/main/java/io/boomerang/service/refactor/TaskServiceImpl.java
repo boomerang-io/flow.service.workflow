@@ -445,6 +445,7 @@ public class TaskServiceImpl implements TaskService {
 
     outputProperty.setValue(outputValue);
     outputProperties.add(outputProperty);
+    taskEntity.setOutputProperties(outputProperties);
 
     TaskExecutionEntity te = taskActivityService.save(taskEntity);
     try {
