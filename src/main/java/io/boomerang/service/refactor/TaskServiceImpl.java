@@ -416,12 +416,25 @@ public class TaskServiceImpl implements TaskService {
       activity.setOutputProperties(new LinkedList<>());
     }
 
+    String input = task.getInputs().get("value");
+    String output = task.getInputs().get("output");
+
+    ObjectMapper objectMapper = new ObjectMapper();
 
 
     List<KeyValuePair> outputProperties = activity.getOutputProperties();
 
-    String input = task.getInputs().get("value");
-    String output = task.getInputs().get("output");
+    try {
+      System.out.println("***output *******" + objectMapper.writeValueAsString(output));
+      System.out.println("***activity output properties *******"
+          + objectMapper.writeValueAsString(activity.getOutputProperties()));
+
+      System.out.println(
+          "***output properties *******" + objectMapper.writeValueAsString(outputProperties));
+
+    } catch (JsonProcessingException e) {
+
+    }
     KeyValuePair outputProperty = new KeyValuePair();
     outputProperty.setKey(output);
 
@@ -433,37 +446,9 @@ public class TaskServiceImpl implements TaskService {
     outputProperty.setValue(outputValue);
     outputProperties.add(outputProperty);
 
-    ObjectMapper objectMapper = new ObjectMapper();
-
-    try {
-      System.out.println("***input *******" + objectMapper.writeValueAsString(input));
-      System.out.println("***output *******" + objectMapper.writeValueAsString(output));
-      System.out.println("***activity output properties *******"
-          + objectMapper.writeValueAsString(activity.getOutputProperties()));
-
-
-      System.out.println("***task******" + objectMapper.writeValueAsString(task));
-
-      System.out.println(
-          "***output properties *******" + objectMapper.writeValueAsString(outputProperties));
-
-    } catch (JsonProcessingException e) {
-
-    }
-
     ActivityEntity act = this.activityService.saveWorkflowActivity(activity);
     try {
-      System.out.println("***input *******" + objectMapper.writeValueAsString(input));
-      System.out.println("***output *******" + objectMapper.writeValueAsString(output));
-      System.out.println("***activity output properties *******"
-          + objectMapper.writeValueAsString(activity.getOutputProperties()));
 
-
-      System.out.println("***task******" + objectMapper.writeValueAsString(task));
-
-      System.out.println(
-          "***output properties *******" + objectMapper.writeValueAsString(outputProperties));
-      
       System.out.println("***act******" + objectMapper.writeValueAsString(act));
 
     } catch (JsonProcessingException e) {
