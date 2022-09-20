@@ -175,6 +175,7 @@ public class TaskServiceImpl implements TaskService {
         response.setStatus(TaskStatus.completed);
         this.endTask(response);
       } else if (taskType == TaskType.setwfproperty) {
+        System.out.println("***entering saveWorkflowProperty() *******");
         saveWorkflowProperty(task, activity);
         InternalTaskResponse response = new InternalTaskResponse();
         response.setActivityId(taskExecution.getId());
@@ -412,6 +413,7 @@ public class TaskServiceImpl implements TaskService {
   }
 
   private void saveWorkflowProperty(Task task, ActivityEntity activity) {
+    System.out.println("***entered saveWorkflowProperty() *******");
     if (activity.getOutputProperties() == null) {
       activity.setOutputProperties(new LinkedList<>());
     }
