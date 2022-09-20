@@ -428,7 +428,7 @@ public class TaskServiceImpl implements TaskService {
       System.out.println("***output *******" + objectMapper.writeValueAsString(output));
 
       System.out.println(
-          "***output properties *******" + objectMapper.writeValueAsString(outputProperties));
+          "***output properties start *******" + objectMapper.writeValueAsString(outputProperties));
 
     } catch (JsonProcessingException e) {
 
@@ -447,7 +447,7 @@ public class TaskServiceImpl implements TaskService {
     ActivityEntity act = this.activityService.saveWorkflowActivity(activity);
     try {
 
-      System.out.println("***act******" + objectMapper.writeValueAsString(act));
+      System.out.println("***act******" + objectMapper.writeValueAsString(act.getOutputProperties()));
 
     } catch (JsonProcessingException e) {
 
