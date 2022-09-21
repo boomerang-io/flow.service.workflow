@@ -49,6 +49,9 @@ public class TaskExecutionEntity {
   private TaskStatus runWorkflowActivityStatus;
   
   private ErrorResponse error;
+  private Map<String, String> outputs;
+  
+  private List<KeyValuePair> outputProperties;
   
   public TaskType getTaskType() {
     return taskType;
@@ -57,11 +60,6 @@ public class TaskExecutionEntity {
   public void setTaskType(TaskType taskType) {
     this.taskType = taskType;
   }
-
-  private Map<String, String> outputs;
-  
-  private List<KeyValuePair> outputProperties;
-  
 
   public String getActivityId() {
     return activityId;

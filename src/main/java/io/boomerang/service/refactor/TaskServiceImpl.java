@@ -20,8 +20,6 @@ import org.springframework.retry.policy.SimpleRetryPolicy;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.alturkovic.lock.Lock;
 import com.github.alturkovic.lock.exception.LockNotAvailableException;
 import io.boomerang.model.ApprovalStatus;
@@ -413,7 +411,6 @@ public class TaskServiceImpl implements TaskService {
 
   private void saveWorkflowProperty(Task task, ActivityEntity activity,
       TaskExecutionEntity taskEntity) {
-    System.out.println("***entered saveWorkflowProperty() *******");
     if (taskEntity.getOutputProperties() == null) {
       taskEntity.setOutputProperties(new LinkedList<>());
     }
@@ -421,20 +418,8 @@ public class TaskServiceImpl implements TaskService {
     String input = task.getInputs().get("value");
     String output = task.getInputs().get("output");
 
-    ObjectMapper objectMapper = new ObjectMapper();
-
-
     List<KeyValuePair> outputProperties = taskEntity.getOutputProperties();
 
-    try {
-      System.out.println("***output *******" + objectMapper.writeValueAsString(output));
-
-      System.out.println("*** task output properties start *******"
-          + objectMapper.writeValueAsString(outputProperties));
-
-    } catch (JsonProcessingException e) {
-
-    }
     KeyValuePair outputProperty = new KeyValuePair();
     outputProperty.setKey(output);
 
@@ -446,16 +431,7 @@ public class TaskServiceImpl implements TaskService {
     outputProperty.setValue(outputValue);
     outputProperties.add(outputProperty);
     taskEntity.setOutputProperties(outputProperties);
-
-    TaskExecutionEntity te = taskActivityService.save(taskEntity);
-    try {
-
-      System.out.println("***output properties end******"
-          + objectMapper.writeValueAsString(te.getOutputProperties()));
-
-    } catch (JsonProcessingException e) {
-
-    }
+    taskActivityService.save(taskEntity);
 
   }
 
