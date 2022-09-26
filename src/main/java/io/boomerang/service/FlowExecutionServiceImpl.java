@@ -1,6 +1,5 @@
 package io.boomerang.service;
 
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
@@ -299,7 +298,6 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
     try {
       List<Task> nextNodes = this.getTasksDependants(tasks, currentTask);
       for (Task next : nextNodes) {
-
         final List<String> nodes =
             GraphProcessor.createOrderedTaskList(graph, start.getTaskId(), end.getTaskId());
 
