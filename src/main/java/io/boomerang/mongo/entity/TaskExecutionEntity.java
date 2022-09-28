@@ -1,6 +1,7 @@
 package io.boomerang.mongo.entity;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -8,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import io.boomerang.mongo.model.ErrorResponse;
+import io.boomerang.mongo.model.KeyValuePair;
 import io.boomerang.mongo.model.TaskStatus;
 import io.boomerang.mongo.model.TaskType;
 
@@ -47,6 +49,9 @@ public class TaskExecutionEntity {
   private TaskStatus runWorkflowActivityStatus;
   
   private ErrorResponse error;
+  private Map<String, String> outputs;
+  
+  private List<KeyValuePair> outputProperties;
   
   public TaskType getTaskType() {
     return taskType;
@@ -55,8 +60,6 @@ public class TaskExecutionEntity {
   public void setTaskType(TaskType taskType) {
     this.taskType = taskType;
   }
-
-  private Map<String, String> outputs;
 
   public String getActivityId() {
     return activityId;
@@ -217,4 +220,13 @@ public class TaskExecutionEntity {
   public void setTemplateRevision(Integer templateRevision) {
     this.templateRevision = templateRevision;
   }
+
+  public List<KeyValuePair> getOutputProperties() {
+    return outputProperties;
+  }
+
+  public void setOutputProperties(List<KeyValuePair> outputProperties) {
+    this.outputProperties = outputProperties;
+  }
+  
 }

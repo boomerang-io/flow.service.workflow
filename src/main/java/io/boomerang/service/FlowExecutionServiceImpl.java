@@ -1,6 +1,5 @@
 package io.boomerang.service;
 
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;

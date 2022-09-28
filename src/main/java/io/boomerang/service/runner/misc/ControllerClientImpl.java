@@ -679,7 +679,7 @@ public class ControllerClientImpl implements ControllerClient {
     try {
       ObjectMapper objectMapper = new ObjectMapper();
       String payload = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(request);
-      LOGGER.info("Creating For Palyoad Type: {}", payloadName);
+      LOGGER.info("Creating For Payload Type: {}", payloadName);
       LOGGER.info(payload);
     } catch (JsonProcessingException e) {
       LOGGER.error(ExceptionUtils.getStackTrace(e));
