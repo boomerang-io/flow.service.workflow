@@ -1,7 +1,6 @@
 package io.boomerang.service;
 
 import java.io.IOException;
-import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.InvalidPropertiesFormatException;
 import java.util.LinkedList;
@@ -11,7 +10,9 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.annotation.PostConstruct;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -64,9 +65,17 @@ public class EventingServiceImpl implements EventingService, SubHandler {
 
   protected static final String LABEL_KEY_EVENT_ID = "eventId";
 
+  protected static final String LABEL_KEY_WORKFLOW_ID = "workflowId";
+
+  protected static final String LABEL_KEY_ACTIVITY_ID = "activityId";
+
+  protected static final String LABEL_KEY_TASK_ID = "taskId";
+
   protected static final String LABEL_KEY_INITIATOR_ID = "initiatorId";
 
   protected static final String LABEL_KEY_INITIATOR_CONTEXT = "initiatorContext";
+
+  protected static final String LABEL_KEY_STATUS = "status";
 
   @Autowired
   EventingProperties properties;
@@ -89,9 +98,9 @@ public class EventingServiceImpl implements EventingService, SubHandler {
 
   private ConnectionPrimer connectionPrimer;
 
-  private PubOnlyTunnel statusEventsTunnel;
+  private PubOnlyTunnel outputEventsTunnel;
 
-  private SubOnlyTunnel actionEventsTunnel;
+  private SubOnlyTunnel inputEventsTunnel;
 
   private EventFormatProvider eventFormatProvider = EventFormatProvider.getInstance();
 
@@ -107,44 +116,44 @@ public class EventingServiceImpl implements EventingService, SubHandler {
     // @formatter:on
     connectionPrimer = new ConnectionPrimer(optionsBuilder);
 
-    // Create the tunnel for action CloudEvents (trigger, wait for event, cancel, etc.)
+    // Create the tunnel for input CloudEvents (trigger, wait for event, cancel, etc.)
     // @formatter:off
-    StreamConfiguration streamConfiguration = new StreamConfiguration.Builder()
-        .name(properties.getJetstream().getActionEvents().getStream().getName())
-        .storageType(properties.getJetstream().getActionEvents().getStream().getStorageType())
-        .subjects(properties.getJetstream().getActionEvents().getStream().getSubjects())
+    StreamConfiguration inputStreamConfiguration = new StreamConfiguration.Builder()
+        .name(properties.getJetstream().getInputEvents().getStream().getName())
+        .storageType(properties.getJetstream().getInputEvents().getStream().getStorageType())
+        .subjects(properties.getJetstream().getInputEvents().getStream().getSubjects())
         .build();
     ConsumerConfiguration consumerConfiguration = new ConsumerConfiguration.Builder()
-        .durable(properties.getJetstream().getActionEvents().getConsumer().getName())
+        .durable(properties.getJetstream().getInputEvents().getConsumer().getName())
         .build();
     PubSubConfiguration pubSubConfiguration = new PubSubConfiguration.Builder()
         .automaticallyCreateStream(true)
         .automaticallyCreateConsumer(true)
         .build();
     // @formatter:on
-    actionEventsTunnel = new PubSubTransceiver(connectionPrimer, streamConfiguration,
+    inputEventsTunnel = new PubSubTransceiver(connectionPrimer, inputStreamConfiguration,
         consumerConfiguration, pubSubConfiguration);
 
-    // Create the tunnel for status update CloudEvents
+    // Create the tunnel for output CloudEvents (workflow status update, task status update)
     // @formatter:off
-    StreamConfiguration statusStreamConfiguration = new StreamConfiguration.Builder()
-        .name(properties.getJetstream().getStatusEvents().getStream().getName())
-        .storageType(properties.getJetstream().getStatusEvents().getStream().getStorageType())
-        .subjects(properties.getJetstream().getStatusEvents().getStream().getSubjects())
+    StreamConfiguration outputStreamConfiguration = new StreamConfiguration.Builder()
+        .name(properties.getJetstream().getOutputEvents().getStream().getName())
+        .storageType(properties.getJetstream().getOutputEvents().getStream().getStorageType())
+        .subjects(properties.getJetstream().getOutputEvents().getStream().getSubjects())
         .build();
     PubOnlyConfiguration pubOnlyConfiguration = new PubOnlyConfiguration.Builder()
         .automaticallyCreateStream(true)
         .build();
     // @formatter:on
-    statusEventsTunnel =
-        new PubTransmitter(connectionPrimer, statusStreamConfiguration, pubOnlyConfiguration);
+    outputEventsTunnel =
+        new PubTransmitter(connectionPrimer, outputStreamConfiguration, pubOnlyConfiguration);
   }
 
   @EventListener(ApplicationReadyEvent.class)
   void onApplicationReadyEvent() {
 
     // Start subscription
-    actionEventsTunnel.subscribe(this);
+    inputEventsTunnel.subscribe(this);
   }
 
   @Override
@@ -159,7 +168,7 @@ public class EventingServiceImpl implements EventingService, SubHandler {
         exception);
     try {
       Thread.sleep(
-          properties.getJetstream().getActionEvents().getConsumer().getResubWaitTime().toMillis());
+          properties.getJetstream().getInputEvents().getConsumer().getResubWaitTime().toMillis());
     } catch (InterruptedException e) {
       logger.warn("Sleep failed: resubscribing without a waiting time...", e);
     } finally {
@@ -277,7 +286,6 @@ public class EventingServiceImpl implements EventingService, SubHandler {
       Boolean success = Boolean.FALSE;
 
       try {
-
         // Create status update CloudEvent from activity (additionally, add the responses for
         // executed tasks)
         EventWorkflowStatusUpdate eventStatusUpdate =
@@ -285,15 +293,23 @@ public class EventingServiceImpl implements EventingService, SubHandler {
         eventStatusUpdate
             .setExecutedTasks(flowActivityService.getTaskExecutions(activityEntity.getId()));
 
-        // Extract initiator ID and initiator context
-        String initiatorId = "";
+        // Create tokens for NATS subject pattern
+        // @formatter:off
+        Map<String, String> natsSubjectTokens = new HashMap<>(Map.of(
+          LABEL_KEY_INITIATOR_ID, "",
+          LABEL_KEY_WORKFLOW_ID, eventStatusUpdate.getWorkflowId(),
+          LABEL_KEY_ACTIVITY_ID, eventStatusUpdate.getWorkflowActivityId(),
+          LABEL_KEY_STATUS, eventStatusUpdate.getStatus().toString().toLowerCase()));
+        // @formatter:on
 
+        // Extract initiator ID and initiator context
         if (activityEntity.getLabels() != null && !activityEntity.getLabels().isEmpty()) {
           String sharedLabelPrefix = properties.getShared().getLabel().getPrefix() + "/";
 
-          initiatorId = activityEntity.getLabels().stream()
+          activityEntity.getLabels().stream()
               .filter(kv -> kv.getKey().equals(sharedLabelPrefix + LABEL_KEY_INITIATOR_ID))
-              .findFirst().map(KeyValuePair::getValue).orElse("");
+              .findFirst().map(KeyValuePair::getValue)
+              .ifPresent(value -> natsSubjectTokens.put(LABEL_KEY_INITIATOR_ID, value));
 
           activityEntity.getLabels().stream()
               .filter(kv -> kv.getKey().equals(sharedLabelPrefix + LABEL_KEY_INITIATOR_CONTEXT))
@@ -301,18 +317,14 @@ public class EventingServiceImpl implements EventingService, SubHandler {
               .ifPresent(eventStatusUpdate::setInitiatorContext);
         }
 
-        // NATS message subject
-        String nonWildcardSubject = getNonWildcardSubject(
-            properties.getJetstream().getStatusEvents().getStream().getSubjects()[0]);
-        String natSubject = MessageFormat.format("{0}.{1}.{2}.{3}{4}", nonWildcardSubject,
-            eventStatusUpdate.getStatus().toString().toLowerCase(),
-            eventStatusUpdate.getWorkflowId(), eventStatusUpdate.getWorkflowActivityId(),
-            Strings.isNotEmpty(initiatorId) ? "." + initiatorId : "");
-
-        // Publish cloud event
+        // Generate NATS message subject and publish cloud event
+        String natsSubject = normalizePatternTokens(
+            properties.getJetstream().getOutputEvents().getSubjectPattern().getWorkflowStatus(),
+            natsSubjectTokens, ".");
         String serializedCloudEvent = new String(eventFormatProvider
             .resolveFormat(JsonFormat.CONTENT_TYPE).serialize(eventStatusUpdate.toCloudEvent()));
-        statusEventsTunnel.publish(natSubject, serializedCloudEvent);
+
+        outputEventsTunnel.publish(natsSubject, serializedCloudEvent);
         success = Boolean.TRUE;
 
         logger.debug("Workflow with ID {} has changed its status to {}",
@@ -381,10 +393,7 @@ public class EventingServiceImpl implements EventingService, SubHandler {
     }
 
     processedProperties.put("eventPayload", serializedEventProperties);
-
-    processedProperties.forEach((k, v) -> {
-      logger.info("processProperties() - {}={}", k, v);
-    });
+    processedProperties.forEach((k, v) -> logger.info("processProperties() - {}={}", k, v));
 
     return processedProperties;
   }
@@ -443,24 +452,20 @@ public class EventingServiceImpl implements EventingService, SubHandler {
     return false;
   }
 
-  private String getNonWildcardSubject(String subject) {
-    int singleTokenCharIdx = subject.indexOf('*');
-    int multipleTokensCharIdx = subject.indexOf('>');
-    int charIdx = Integer.MAX_VALUE;
+  private String normalizePatternTokens(List<String> patternTokens, Map<String, String> tokens,
+      String joinDelimiter) {
 
-    if (singleTokenCharIdx >= 0) {
-      charIdx = Math.min(charIdx, singleTokenCharIdx);
-    }
+    // @formatter:off
+    UnaryOperator<String> patternMatcher = component -> Stream.of(component)
+        .filter(str -> str.matches("^%.*%$"))
+        .map(str -> str.replaceAll("(^%)|(%$)", ""))
+        .filter(tokens::containsKey)
+        .map(tokens::get)
+        .findAny()
+        .orElse(component);
+    // @formatter:on
 
-    if (multipleTokensCharIdx >= 0) {
-      charIdx = Math.min(charIdx, multipleTokensCharIdx);
-    }
-
-    if (charIdx >= 0 && charIdx < subject.length()) {
-      int cutIdx = Math.max(0, charIdx - 1);
-      return subject.substring(0, cutIdx);
-    }
-
-    return subject;
+    return patternTokens.stream().map(patternMatcher).filter(Strings::isNotBlank)
+        .collect(Collectors.joining(joinDelimiter));
   }
 }

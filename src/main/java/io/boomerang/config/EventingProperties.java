@@ -1,6 +1,8 @@
 package io.boomerang.config;
 
 import java.time.Duration;
+import java.util.Arrays;
+import java.util.List;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Pattern;
@@ -156,8 +158,8 @@ public class EventingProperties {
   // NATS Jetstream related properties
   public static class JetstreamProperties {
 
-    // NATS Jetstream action events properties
-    public static class ActionEventsProperties {
+    // NATS Jetstream input events properties
+    public static class InputEventsProperties {
 
       private GenericStreamProperties stream;
 
@@ -180,10 +182,36 @@ public class EventingProperties {
       }
     }
 
-    // NATS Jetstream status update events properties
-    public static class StatusEventsProperties {
+    // NATS Jetstream output events properties
+    public static class OutputEventsProperties {
+
+      // Output events subject pattern properties
+      public static class SubjectPatternProperties {
+
+        private List<String> workflowStatus;
+
+        private List<String> taskStatus;
+
+        public List<String> getWorkflowStatus() {
+          return this.workflowStatus;
+        }
+
+        public void setWorkflowStatus(String workflowStatus) {
+          this.workflowStatus = Arrays.asList(workflowStatus.split("\\."));
+        }
+
+        public List<String> getTaskStatus() {
+          return this.taskStatus;
+        }
+
+        public void setTaskStatus(String taskStatus) {
+          this.taskStatus = Arrays.asList(taskStatus.split("\\."));
+        }
+      }
 
       private GenericStreamProperties stream;
+
+      private SubjectPatternProperties subjectPattern;
 
       public GenericStreamProperties getStream() {
         return this.stream;
@@ -192,26 +220,34 @@ public class EventingProperties {
       public void setStream(GenericStreamProperties stream) {
         this.stream = stream;
       }
+
+      public SubjectPatternProperties getSubjectPattern() {
+        return this.subjectPattern;
+      }
+
+      public void setSubjectPattern(SubjectPatternProperties subjectPattern) {
+        this.subjectPattern = subjectPattern;
+      }
     }
 
-    private ActionEventsProperties actionEvents;
+    private InputEventsProperties inputEvents;
 
-    private StatusEventsProperties statusEvents;
+    private OutputEventsProperties outputEvents;
 
-    public ActionEventsProperties getActionEvents() {
-      return this.actionEvents;
+    public InputEventsProperties getInputEvents() {
+      return this.inputEvents;
     }
 
-    public void setActionEvents(ActionEventsProperties actionEvents) {
-      this.actionEvents = actionEvents;
+    public void setInputEvents(InputEventsProperties inputEvents) {
+      this.inputEvents = inputEvents;
     }
 
-    public StatusEventsProperties getStatusEvents() {
-      return this.statusEvents;
+    public OutputEventsProperties getOutputEvents() {
+      return this.outputEvents;
     }
 
-    public void setStatusEvents(StatusEventsProperties statusEvents) {
-      this.statusEvents = statusEvents;
+    public void setOutputEvents(OutputEventsProperties outputEvents) {
+      this.outputEvents = outputEvents;
     }
   }
 
