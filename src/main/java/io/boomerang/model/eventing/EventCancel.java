@@ -4,9 +4,13 @@ import java.text.MessageFormat;
 import java.util.Date;
 import java.util.InvalidPropertiesFormatException;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import io.cloudevents.CloudEvent;
 
 public class EventCancel extends Event {
+
+  private static final String SUBJECT_PATTERN = "\\/workflow\\/(\\w+)\\/activity\\/(\\w+)";
 
   private String workflowId;
 
@@ -34,16 +38,16 @@ public class EventCancel extends Event {
     eventCancel.setDate(new Date(cloudEvent.getTime().toInstant().toEpochMilli()));
     eventCancel.setType(eventType);
 
-    // Map workflow ID and activity ID from the subject
-    String[] subjectTokens = eventCancel.getSubject().trim().replaceFirst("^/", "").split("/");
+    // Map workflow ID and activity ID from the subject by using regex pattern
+    Matcher matcher = Pattern.compile(SUBJECT_PATTERN).matcher(eventCancel.getSubject());
 
-    if (subjectTokens.length != 2) {
+    if (!matcher.find() || matcher.groupCount() != 2) {
       throw new InvalidPropertiesFormatException(
-          "For cancel cloud event types, the subject must have the format: \"/<workflow_id>/<workflow_activity_id>\"");
+          "For cancel cloud event types, the subject must have the format: \"/workflow/<workflow_id>/activity/<activity_id>\"");
     }
 
-    eventCancel.setWorkflowId(subjectTokens[0]);
-    eventCancel.setWorkflowActivityId(subjectTokens[1]);
+    eventCancel.setWorkflowId(matcher.group(1));
+    eventCancel.setWorkflowActivityId(matcher.group(2));
 
     return eventCancel;
   }

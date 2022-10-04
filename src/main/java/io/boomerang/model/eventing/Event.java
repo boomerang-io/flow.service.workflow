@@ -9,6 +9,12 @@ public abstract class Event {
 
   protected static final String EXTENSION_ATTRIBUTE_TOKEN = "token";
 
+  protected static final String EXTENSION_ATTRIBUTE_STATUS = "status";
+
+  protected static final String EXTENSION_ATTRIBUTE_INITIATOR_ID = "initiatorid";
+
+  protected static final String EXTENSION_ATTRIBUTE_CONTEXT = "initiatorcontext";
+
   private String id;
 
   private URI source;

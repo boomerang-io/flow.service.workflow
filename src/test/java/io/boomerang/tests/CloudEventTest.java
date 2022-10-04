@@ -31,7 +31,7 @@ public class CloudEventTest {
         ",\"source\":\"http://wdc2.cloud.boomerangplatform.net/listener/event\"",
         ",\"specversion\":\"1.0\"",
         ",\"datacontenttype\":\"application/json\"",
-        ",\"subject\":\"/5f7f8cf69a7d401d9e584c90/foobar\"",
+        ",\"subject\":\"/workflow/5f7f8cf69a7d401d9e584c90/topic/foobar\"",
         ",\"token\":\"RXgGaXBzdW0gZG9sb3Ih\"",
         ",\"time\":\"2022-04-30T11:33:22Z\"",
         "}");
@@ -42,10 +42,13 @@ public class CloudEventTest {
 
     EventTrigger eventTrigger =
         (EventTrigger) Assertions.assertDoesNotThrow(() -> EventTrigger.fromCloudEvent(cloudEvent));
+    String[] subjectComponents = cloudEvent.getSubject().substring(1).split("\\/");
 
     Assertions.assertEquals(eventTrigger.getId(), cloudEvent.getId());
     Assertions.assertEquals(eventTrigger.getSource(), cloudEvent.getSource());
     Assertions.assertEquals(eventTrigger.getSubject(), cloudEvent.getSubject());
+    Assertions.assertEquals(eventTrigger.getWorkflowId(), subjectComponents[1]);
+    Assertions.assertEquals(eventTrigger.getTopic(), subjectComponents[3]);
     Assertions.assertEquals(eventTrigger.getToken(), cloudEvent.getExtension("token"));
     Assertions.assertEquals(eventTrigger.getDate(),
         new Date(cloudEvent.getTime().toInstant().toEpochMilli()));
@@ -62,7 +65,7 @@ public class CloudEventTest {
         ",\"source\":\"http://wdc2.cloud.boomerangplatform.net/listener/event\"",
         ",\"specversion\":\"1.0\"",
         ",\"datacontenttype\":\"application/json\"",
-        ",\"subject\":\"/5f7f8cf69a7d401d9e584c90/foobar\"",
+        ",\"subject\":\"/workflow/5f7f8cf69a7d401d9e584c90/topic/foobar\"",
         ",\"token\":\"RXgGaXBzdW0gZG9sb3Ih\"",
         ",\"time\":\"2022-04-30T11:33:22Z\"",
         ",\"data\":{",
@@ -77,10 +80,13 @@ public class CloudEventTest {
 
     EventTrigger eventTrigger =
         (EventTrigger) Assertions.assertDoesNotThrow(() -> EventTrigger.fromCloudEvent(cloudEvent));
+    String[] subjectComponents = cloudEvent.getSubject().substring(1).split("\\/");
 
     Assertions.assertEquals(eventTrigger.getId(), cloudEvent.getId());
     Assertions.assertEquals(eventTrigger.getSource(), cloudEvent.getSource());
     Assertions.assertEquals(eventTrigger.getSubject(), cloudEvent.getSubject());
+    Assertions.assertEquals(eventTrigger.getWorkflowId(), subjectComponents[1]);
+    Assertions.assertEquals(eventTrigger.getTopic(), subjectComponents[3]);
     Assertions.assertEquals(eventTrigger.getToken(), cloudEvent.getExtension("token"));
     Assertions.assertEquals(eventTrigger.getDate(),
         new Date(cloudEvent.getTime().toInstant().toEpochMilli()));
@@ -99,7 +105,7 @@ public class CloudEventTest {
         ",\"source\":\"http://wdc2.cloud.boomerangplatform.net/listener/event\"",
         ",\"specversion\":\"1.0\"",
         ",\"datacontenttype\":\"application/json\"",
-        ",\"subject\":\"/5f7f8cf69a7d401d9e584c90/foobar\"",
+        ",\"subject\":\"/workflow/5f7f8cf69a7d401d9e584c90/topic/foobar\"",
         ",\"token\":\"RXgGaXBzdW0gZG9sb3Ih\"",
         ",\"initiatorid\":\"iulian\"",
         ",\"initiatorcontext\":" + jsonContextField,
@@ -112,10 +118,13 @@ public class CloudEventTest {
 
     EventTrigger eventTrigger =
         (EventTrigger) Assertions.assertDoesNotThrow(() -> EventTrigger.fromCloudEvent(cloudEvent));
+    String[] subjectComponents = cloudEvent.getSubject().substring(1).split("\\/");
 
     Assertions.assertEquals(eventTrigger.getId(), cloudEvent.getId());
     Assertions.assertEquals(eventTrigger.getSource(), cloudEvent.getSource());
     Assertions.assertEquals(eventTrigger.getSubject(), cloudEvent.getSubject());
+    Assertions.assertEquals(eventTrigger.getWorkflowId(), subjectComponents[1]);
+    Assertions.assertEquals(eventTrigger.getTopic(), subjectComponents[3]);
     Assertions.assertEquals(eventTrigger.getToken(), cloudEvent.getExtension("token"));
     Assertions.assertEquals(eventTrigger.getDate(),
         new Date(cloudEvent.getTime().toInstant().toEpochMilli()));
@@ -135,7 +144,7 @@ public class CloudEventTest {
         ",\"source\":\"http://wdc2.cloud.boomerangplatform.net/listener/event\"",
         ",\"specversion\":\"1.0\"",
         ",\"datacontenttype\":\"application/json\"",
-        ",\"subject\":\"/foobar\"",
+        ",\"subject\":\"/workflow/topic/foobar\"",
         ",\"time\":\"2022-04-30T11:33:22Z\"",
         "}");
     // @formatter:on
@@ -157,7 +166,7 @@ public class CloudEventTest {
         ",\"source\":\"http://wdc2.cloud.boomerangplatform.net/listener/event\"",
         ",\"specversion\":\"1.0\"",
         ",\"datacontenttype\":\"application/json\"",
-        ",\"subject\":\"/5f7f8cf69a7d401d9e584c90/foobar\"",
+        ",\"subject\":\"/workflow/5f7f8cf69a7d401d9e584c90/topic/foobar\"",
         ",\"time\":\"2022-04-30T11:33:22Z\"",
         "}");
     // @formatter:on
@@ -180,7 +189,7 @@ public class CloudEventTest {
         ",\"specversion\":\"1.0\"",
         ",\"status\":\"failure\"",
         ",\"datacontenttype\":\"application/json\"",
-        ",\"subject\":\"/5f7f8cf69a7d401d9e584c90/cb4007aaf8b79b41ad598e25/foobar\"",
+        ",\"subject\":\"/workflow/5f7f8cf69a7d401d9e584c90/activity/cb4007aaf8b79b41ad598e25/topic/foobar\"",
         ",\"time\":\"2022-05-06T12:45:15Z\"",
         "}");
     // @formatter:on
@@ -190,10 +199,14 @@ public class CloudEventTest {
 
     EventWFE eventWFE =
         (EventWFE) Assertions.assertDoesNotThrow(() -> EventWFE.fromCloudEvent(cloudEvent));
+    String[] subjectComponents = cloudEvent.getSubject().substring(1).split("\\/");
 
     Assertions.assertEquals(eventWFE.getId(), cloudEvent.getId());
     Assertions.assertEquals(eventWFE.getSource(), cloudEvent.getSource());
     Assertions.assertEquals(eventWFE.getSubject(), cloudEvent.getSubject());
+    Assertions.assertEquals(eventWFE.getWorkflowId(), subjectComponents[1]);
+    Assertions.assertEquals(eventWFE.getWorkflowActivityId(), subjectComponents[3]);
+    Assertions.assertEquals(eventWFE.getTopic(), subjectComponents[5]);
     Assertions.assertEquals(eventWFE.getDate(),
         new Date(cloudEvent.getTime().toInstant().toEpochMilli()));
     Assertions.assertEquals(TaskStatus.failure, eventWFE.getStatus());
@@ -210,7 +223,7 @@ public class CloudEventTest {
         ",\"specversion\":\"1.0\"",
         ",\"status\":\"failure\"",
         ",\"datacontenttype\":\"application/json\"",
-        ",\"subject\":\"/5f7f8cf69a7d401d9e584c90/foobar\"",
+        ",\"subject\":\"/workflow/5f7f8cf69a7d401d9e584c90/WHAT/cb4007aaf8b79b41ad598e25/topic/foobar\"",
         ",\"time\":\"2022-05-06T12:45:15Z\"",
         "}");
     // @formatter:on
@@ -233,7 +246,7 @@ public class CloudEventTest {
         ",\"specversion\":\"1.0\"",
         ",\"status\":\"failure\"",
         ",\"datacontenttype\":\"application/json\"",
-        ",\"subject\":\"/5f7f8cf69a7d401d9e584c90/cb4007aaf8b79b41ad598e25/foobar\"",
+        ",\"subject\":\"/workflow/5f7f8cf69a7d401d9e584c90/activity/cb4007aaf8b79b41ad598e25/topic/foobar\"",
         ",\"time\":\"2022-05-06T12:45:15Z\"",
         "}");
     // @formatter:on
@@ -255,7 +268,7 @@ public class CloudEventTest {
         ",\"source\":\"http://wdc2.cloud.boomerangplatform.net/listener/event\"",
         ",\"specversion\":\"1.0\"",
         ",\"datacontenttype\":\"application/json\"",
-        ",\"subject\":\"/5f7f8cf69a7d401d9e584c90/cb4007aaf8b79b41ad598e25\"",
+        ",\"subject\":\"/workflow/5f7f8cf69a7d401d9e584c90/activity/cb4007aaf8b79b41ad598e25\"",
         ",\"token\":\"RXgGaXBzdW0gZG9sb3Ih\"",
         ",\"time\":\"2022-04-30T11:33:22Z\"",
         "}");
@@ -266,10 +279,13 @@ public class CloudEventTest {
 
     EventCancel eventCancel =
         (EventCancel) Assertions.assertDoesNotThrow(() -> EventCancel.fromCloudEvent(cloudEvent));
+    String[] subjectComponents = cloudEvent.getSubject().substring(1).split("\\/");
 
     Assertions.assertEquals(eventCancel.getId(), cloudEvent.getId());
     Assertions.assertEquals(eventCancel.getSource(), cloudEvent.getSource());
     Assertions.assertEquals(eventCancel.getSubject(), cloudEvent.getSubject());
+    Assertions.assertEquals(eventCancel.getWorkflowId(), subjectComponents[1]);
+    Assertions.assertEquals(eventCancel.getWorkflowActivityId(), subjectComponents[3]);
     Assertions.assertEquals(eventCancel.getToken(), cloudEvent.getExtension("token"));
     Assertions.assertEquals(eventCancel.getDate(),
         new Date(cloudEvent.getTime().toInstant().toEpochMilli()));
@@ -285,7 +301,7 @@ public class CloudEventTest {
         ",\"source\":\"http://wdc2.cloud.boomerangplatform.net/listener/event\"",
         ",\"specversion\":\"1.0\"",
         ",\"datacontenttype\":\"application/json\"",
-        ",\"subject\":\"/5f7f8cf69a7d401d9e584c90/\"",
+        ",\"subject\":\"/workflow/5f7f8cf69a7d401d9e584c90/activity\"",
         ",\"token\":\"RXgGaXBzdW0gZG9sb3Ih\"",
         ",\"time\":\"2022-04-30T11:33:22Z\"",
         "}");
@@ -308,7 +324,7 @@ public class CloudEventTest {
         ",\"source\":\"http://wdc2.cloud.boomerangplatform.net/listener/event\"",
         ",\"specversion\":\"1.0\"",
         ",\"datacontenttype\":\"application/json\"",
-        ",\"subject\":\"/5f7f8cf69a7d401d9e584c90/cb4007aaf8b79b41ad598e25\"",
+        ",\"subject\":\"/workflow/5f7f8cf69a7d401d9e584c90/activity/cb4007aaf8b79b41ad598e25\"",
         ",\"token\":\"RXgGaXBzdW0gZG9sb3Ih\"",
         ",\"time\":\"2022-04-30T11:33:22Z\"",
         "}");
@@ -331,7 +347,7 @@ public class CloudEventTest {
         ",\"source\":\"http://wdc2.cloud.boomerangplatform.net/listener/event\"",
         ",\"specversion\":\"1.0\"",
         ",\"datacontenttype\":\"application/json\"",
-        ",\"subject\":\"/5f7f8cf69a7d401d9e584c90/foobar\"",
+        ",\"subject\":\"/workflow/5f7f8cf69a7d401d9e584c90/topic/foobar\"",
         ",\"time\":\"2022-04-30T11:33:22Z\"",
         "}");
     // @formatter:on
@@ -354,7 +370,7 @@ public class CloudEventTest {
         ",\"specversion\":\"1.0\"",
         ",\"status\":\"success\"",
         ",\"datacontenttype\":\"application/json\"",
-        ",\"subject\":\"/5f7f8cf69a7d401d9e584c90/cb4007aaf8b79b41ad598e25/foobar\"",
+        ",\"subject\":\"/workflow/5f7f8cf69a7d401d9e584c90/activity/cb4007aaf8b79b41ad598e25/topic/foobar\"",
         ",\"time\":\"2022-05-06T12:45:15Z\"",
         "}");
     // @formatter:on
@@ -376,7 +392,7 @@ public class CloudEventTest {
         ",\"source\":\"http://wdc2.cloud.boomerangplatform.net/listener/event\"",
         ",\"specversion\":\"1.0\"",
         ",\"datacontenttype\":\"application/json\"",
-        ",\"subject\":\"/5f7f8cf69a7d401d9e584c90/cb4007aaf8b79b41ad598e25\"",
+        ",\"subject\":\"/workflow/5f7f8cf69a7d401d9e584c90/activity/cb4007aaf8b79b41ad598e25\"",
         ",\"time\":\"2022-04-30T11:33:22Z\"",
         "}");
     // @formatter:on

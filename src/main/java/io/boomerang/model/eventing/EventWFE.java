@@ -4,12 +4,15 @@ import java.text.MessageFormat;
 import java.util.Date;
 import java.util.InvalidPropertiesFormatException;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import io.boomerang.mongo.model.TaskStatus;
 import io.cloudevents.CloudEvent;
 
 public class EventWFE extends Event {
 
-  protected static final String EXTENSION_ATTRIBUTE_STATUS = "status";
+  private static final String SUBJECT_PATTERN =
+      "\\/workflow\\/(\\w+)\\/activity/(\\w+)/topic\\/(.+)";
 
   private String workflowId;
 
@@ -41,17 +44,17 @@ public class EventWFE extends Event {
     eventWFE.setDate(new Date(cloudEvent.getTime().toInstant().toEpochMilli()));
     eventWFE.setType(eventType);
 
-    // Map workflow ID, activity ID and topic from the subject
-    String[] subjectTokens = eventWFE.getSubject().trim().replaceFirst("^/", "").split("/");
+    // Map workflow ID, activity ID and topic from the subject by using regex pattern
+    Matcher matcher = Pattern.compile(SUBJECT_PATTERN).matcher(eventWFE.getSubject());
 
-    if (subjectTokens.length != 3) {
+    if (!matcher.find() || matcher.groupCount() != 3) {
       throw new InvalidPropertiesFormatException(
-          "For WFE cloud event types, the subject must have the format: \"/<workflow_id>/<workflow_activity_id>/<wfe_tasks_topic>\"");
+          "For WFE cloud event types, the subject must have the format: \"/workflow/<workflow_id>/activity/<activity_id>/topic/<ce_topic>\"");
     }
 
-    eventWFE.setWorkflowId(subjectTokens[0]);
-    eventWFE.setWorkflowActivityId(subjectTokens[1]);
-    eventWFE.setTopic(subjectTokens[2]);
+    eventWFE.setWorkflowId(matcher.group(1));
+    eventWFE.setWorkflowActivityId(matcher.group(2));
+    eventWFE.setTopic(matcher.group(3));
 
     // Get status
     TaskStatus status = null;

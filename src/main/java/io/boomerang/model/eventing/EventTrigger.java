@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.InvalidPropertiesFormatException;
 import java.util.Map;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.cloudevents.CloudEvent;
@@ -15,9 +17,7 @@ import io.cloudevents.jackson.PojoCloudEventDataMapper;
 
 public class EventTrigger extends Event {
 
-  protected static final String EXTENSION_ATTRIBUTE_INITIATOR_ID = "initiatorid";
-
-  protected static final String EXTENSION_ATTRIBUTE_CONTEXT = "initiatorcontext";
+  private static final String SUBJECT_PATTERN = "\\/workflow\\/(\\w+)\\/topic\\/(.+)";
 
   private String workflowId;
 
@@ -51,16 +51,16 @@ public class EventTrigger extends Event {
     eventTrigger.setDate(new Date(cloudEvent.getTime().toInstant().toEpochMilli()));
     eventTrigger.setType(eventType);
 
-    // Map workflow ID and topic from the subject
-    String[] subjectTokens = eventTrigger.getSubject().trim().replaceFirst("^/", "").split("/");
+    // Map workflow ID and topic from the subject by using regex pattern
+    Matcher matcher = Pattern.compile(SUBJECT_PATTERN).matcher(eventTrigger.getSubject());
 
-    if (subjectTokens.length != 2) {
+    if (!matcher.find() || matcher.groupCount() != 2) {
       throw new InvalidPropertiesFormatException(
-          "For trigger cloud event types, the subject must have the format: \"/<workflow_id>/<workflow_custom_topic>\"");
+          "For trigger cloud event types, the subject must have the format: \"/workflow/<workflow_id>/topic/<ce_topic>\"");
     }
 
-    eventTrigger.setWorkflowId(subjectTokens[0]);
-    eventTrigger.setTopic(subjectTokens[1]);
+    eventTrigger.setWorkflowId(matcher.group(1));
+    eventTrigger.setTopic(matcher.group(2));
 
     // Map the properties
     ObjectMapper objectMapper = new ObjectMapper();
