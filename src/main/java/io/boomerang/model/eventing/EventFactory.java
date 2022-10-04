@@ -5,7 +5,10 @@ import java.text.MessageFormat;
 import java.util.Date;
 import java.util.InvalidPropertiesFormatException;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import io.boomerang.mongo.entity.ActivityEntity;
+import io.boomerang.mongo.entity.TaskExecutionEntity;
+import io.boomerang.mongo.model.KeyValuePair;
 import io.cloudevents.CloudEvent;
 
 public class EventFactory {
@@ -29,17 +32,17 @@ public class EventFactory {
     }
   }
 
-  public static EventWorkflowStatusUpdate buildWorkflowStatusUpdateFromActivity(
-      ActivityEntity activityEntity) {
-    String workflowId = activityEntity.getWorkflowId();
-    String workflowActivityId = activityEntity.getId();
-    String newStatus = activityEntity.getStatus().toString().toLowerCase();
+  public static EventWorkflowStatusUpdate buildStatusUpdateEvent(ActivityEntity activityEntity) {
 
     // Event subject
-    String eventSubject =
-        MessageFormat.format("/{0}/{1}/{2}", workflowId, workflowActivityId, newStatus);
+    // @formatter:off
+    String eventSubject = MessageFormat.format("/workflow/{0}/activity/{1}/status/{2}",
+        activityEntity.getWorkflowId(),
+        activityEntity.getId(),
+        activityEntity.getStatus().toString().toLowerCase());
+    // @formatter:off
 
-    // Create status update event
+    // Create workflow status update event
     EventWorkflowStatusUpdate eventStatusUpdate = new EventWorkflowStatusUpdate();
     eventStatusUpdate.setId(UUID.randomUUID().toString());
     eventStatusUpdate.setSource(URI.create(EventFactory.class.getCanonicalName()));
@@ -51,6 +54,37 @@ public class EventFactory {
     eventStatusUpdate.setStatus(activityEntity.getStatus());
     eventStatusUpdate.setOutputProperties(activityEntity.getOutputProperties());
     eventStatusUpdate.setErrorResponse(activityEntity.getError());
+
+    return eventStatusUpdate;
+  }
+
+  public static EventTaskStatusUpdate buildStatusUpdateEvent(
+      TaskExecutionEntity taskExecutionEntity) {
+
+    // Event subject
+    // @formatter:off
+    String eventSubject = MessageFormat.format("/workflow/{0}/activity/{1}/task/{2}/status/{3}",
+        taskExecutionEntity.getWorkflowId(),
+        taskExecutionEntity.getActivityId(),
+        taskExecutionEntity.getId(),
+        taskExecutionEntity.getFlowTaskStatus().toString().toLowerCase());
+    // @formatter:on
+
+    // Create task status update event
+    EventTaskStatusUpdate eventStatusUpdate = new EventTaskStatusUpdate();
+    eventStatusUpdate.setId(UUID.randomUUID().toString());
+    eventStatusUpdate.setSource(URI.create(EventFactory.class.getCanonicalName()));
+    eventStatusUpdate.setSubject(eventSubject);
+    eventStatusUpdate.setDate(new Date());
+    eventStatusUpdate.setType(EventType.WORKFLOW_STATUS_UPDATE);
+
+    eventStatusUpdate.setTaskId(taskExecutionEntity.getId());
+    eventStatusUpdate.setWorkflowId(taskExecutionEntity.getWorkflowId());
+    eventStatusUpdate.setWorkflowActivityId(taskExecutionEntity.getActivityId());
+    eventStatusUpdate.setErrorResponse(taskExecutionEntity.getError());
+    eventStatusUpdate.setOutputProperties(taskExecutionEntity.getOutputs().entrySet().stream()
+        .map(entry -> new KeyValuePair(entry.getKey(), entry.getValue()))
+        .collect(Collectors.toList()));
 
     return eventStatusUpdate;
   }

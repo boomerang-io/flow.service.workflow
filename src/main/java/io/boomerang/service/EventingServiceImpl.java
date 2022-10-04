@@ -39,6 +39,7 @@ import io.boomerang.model.FlowExecutionRequest;
 import io.boomerang.model.eventing.Event;
 import io.boomerang.model.eventing.EventCancel;
 import io.boomerang.model.eventing.EventFactory;
+import io.boomerang.model.eventing.EventTaskStatusUpdate;
 import io.boomerang.model.eventing.EventTrigger;
 import io.boomerang.model.eventing.EventWFE;
 import io.boomerang.model.eventing.EventWorkflowStatusUpdate;
@@ -283,33 +284,24 @@ public class EventingServiceImpl implements EventingService, SubHandler {
   public Future<Boolean> publishStatusCloudEvent(ActivityEntity activityEntity) {
 
     Supplier<Boolean> supplier = () -> {
-      Boolean success = Boolean.FALSE;
+      Boolean isSuccess = Boolean.FALSE;
 
       try {
         // Create status update CloudEvent from activity (additionally, add the responses for
         // executed tasks)
         EventWorkflowStatusUpdate eventStatusUpdate =
-            EventFactory.buildWorkflowStatusUpdateFromActivity(activityEntity);
+            EventFactory.buildStatusUpdateEvent(activityEntity);
         eventStatusUpdate
             .setExecutedTasks(flowActivityService.getTaskExecutions(activityEntity.getId()));
-
-        // Create tokens for NATS subject pattern
-        // @formatter:off
-        Map<String, String> natsSubjectTokens = new HashMap<>(Map.of(
-          LABEL_KEY_INITIATOR_ID, "",
-          LABEL_KEY_WORKFLOW_ID, eventStatusUpdate.getWorkflowId(),
-          LABEL_KEY_ACTIVITY_ID, eventStatusUpdate.getWorkflowActivityId(),
-          LABEL_KEY_STATUS, eventStatusUpdate.getStatus().toString().toLowerCase()));
-        // @formatter:on
+        String initiatorId = "";
 
         // Extract initiator ID and initiator context
         if (activityEntity.getLabels() != null && !activityEntity.getLabels().isEmpty()) {
           String sharedLabelPrefix = properties.getShared().getLabel().getPrefix() + "/";
 
-          activityEntity.getLabels().stream()
+          initiatorId = activityEntity.getLabels().stream()
               .filter(kv -> kv.getKey().equals(sharedLabelPrefix + LABEL_KEY_INITIATOR_ID))
-              .findFirst().map(KeyValuePair::getValue)
-              .ifPresent(value -> natsSubjectTokens.put(LABEL_KEY_INITIATOR_ID, value));
+              .findFirst().map(KeyValuePair::getValue).orElse("");
 
           activityEntity.getLabels().stream()
               .filter(kv -> kv.getKey().equals(sharedLabelPrefix + LABEL_KEY_INITIATOR_CONTEXT))
@@ -318,17 +310,15 @@ public class EventingServiceImpl implements EventingService, SubHandler {
         }
 
         // Generate NATS message subject and publish cloud event
-        String natsSubject = normalizePatternTokens(
-            properties.getJetstream().getOutputEvents().getSubjectPattern().getWorkflowStatus(),
-            natsSubjectTokens, ".");
+        String natsSubject = generateNATSSubject(activityEntity, initiatorId);
         String serializedCloudEvent = new String(eventFormatProvider
             .resolveFormat(JsonFormat.CONTENT_TYPE).serialize(eventStatusUpdate.toCloudEvent()));
 
         outputEventsTunnel.publish(natsSubject, serializedCloudEvent);
-        success = Boolean.TRUE;
+        isSuccess = Boolean.TRUE;
 
         logger.debug("Workflow with ID {} has changed its status to {}",
-            eventStatusUpdate.getWorkflowId(), activityEntity.getStatus());
+            eventStatusUpdate.getWorkflowId(), eventStatusUpdate.getStatus());
 
       } catch (IllegalStateException | IOException | JetStreamApiException e) {
         logger.error("An exception occurred while publishing the message to NATS server!", e);
@@ -338,22 +328,68 @@ public class EventingServiceImpl implements EventingService, SubHandler {
         logger.fatal("A fatal error has occurred while publishing the message to the NATS server!",
             e);
       }
-
-      return success;
+      return isSuccess;
     };
 
     return CompletableFuture.supplyAsync(supplier);
   }
 
   @Override
-  public Future<Boolean> publishStatusCloudEvent(TaskExecutionEntity taskExecutionEntity) {
-    // TODO To be implemented!
-    return CompletableFuture.supplyAsync(() -> Boolean.FALSE);
+  public Future<Boolean> publishStatusCloudEvent(TaskExecutionEntity taskExecutionEntity,
+      ActivityEntity parentActivityEntity) {
+
+    Supplier<Boolean> supplier = () -> {
+      Boolean isSuccess = Boolean.FALSE;
+
+      try {
+        // Create status update CloudEvent from task execution
+        EventTaskStatusUpdate eventStatusUpdate =
+            EventFactory.buildStatusUpdateEvent(taskExecutionEntity);
+        String initiatorId = "";
+
+        // Extract initiator ID and initiator context
+        if (parentActivityEntity.getLabels() != null
+            && !parentActivityEntity.getLabels().isEmpty()) {
+          String sharedLabelPrefix = properties.getShared().getLabel().getPrefix() + "/";
+
+          initiatorId = parentActivityEntity.getLabels().stream()
+              .filter(kv -> kv.getKey().equals(sharedLabelPrefix + LABEL_KEY_INITIATOR_ID))
+              .findFirst().map(KeyValuePair::getValue).orElse("");
+
+          parentActivityEntity.getLabels().stream()
+              .filter(kv -> kv.getKey().equals(sharedLabelPrefix + LABEL_KEY_INITIATOR_CONTEXT))
+              .findFirst().map(KeyValuePair::getValue)
+              .ifPresent(eventStatusUpdate::setInitiatorContext);
+        }
+
+        // Generate NATS message subject and publish cloud event
+        String natsSubject = generateNATSSubject(taskExecutionEntity, initiatorId);
+        String serializedCloudEvent = new String(eventFormatProvider
+            .resolveFormat(JsonFormat.CONTENT_TYPE).serialize(eventStatusUpdate.toCloudEvent()));
+
+        outputEventsTunnel.publish(natsSubject, serializedCloudEvent);
+        isSuccess = Boolean.TRUE;
+
+        logger.debug("Task with ID {} has changed its status to {}", eventStatusUpdate.getTaskId(),
+            eventStatusUpdate.getStatus());
+
+      } catch (IllegalStateException | IOException | JetStreamApiException e) {
+        logger.error("An exception occurred while publishing the message to NATS server!", e);
+      } catch (StreamNotFoundException | SubjectMismatchException e) {
+        logger.error("Stream is not configured properly!", e);
+      } catch (Exception e) {
+        logger.fatal("A fatal error has occurred while publishing the message to the NATS server!",
+            e);
+      }
+      return isSuccess;
+    };
+
+    return CompletableFuture.supplyAsync(supplier);
   }
 
   /**
-   * Loop through a Workflow's parameters and if a JsonPath is set, read the event payload attempt
-   * to find parameters.
+   * Loop through a Workflow's parameters and if a JsonPath is set, read the event payload and
+   * attempt to find parameters.
    */
   private Map<String, String> processProperties(Map<String, String> eventProperties,
       String workflowId) {
@@ -450,6 +486,39 @@ public class EventingServiceImpl implements EventingService, SubHandler {
     }
 
     return false;
+  }
+
+  private String generateNATSSubject(ActivityEntity activityEntity, String initiatorId) {
+
+    // Create the token map for NATS subject pattern components
+    // @formatter:off
+    Map<String, String> natsSubjectTokens = new HashMap<>(Map.of(
+        LABEL_KEY_INITIATOR_ID, initiatorId,
+        LABEL_KEY_WORKFLOW_ID, activityEntity.getWorkflowId(),
+        LABEL_KEY_ACTIVITY_ID, activityEntity.getId(),
+        LABEL_KEY_STATUS, activityEntity.getStatus().toString().toLowerCase()));
+    // @formatter:on
+
+    return normalizePatternTokens(
+        properties.getJetstream().getOutputEvents().getSubjectPattern().getWorkflowStatus(),
+        natsSubjectTokens, ".");
+  }
+
+  private String generateNATSSubject(TaskExecutionEntity taskExecutionEntity, String initiatorId) {
+
+    // Create the token map for NATS subject pattern components
+    // @formatter:off
+    Map<String, String> natsSubjectTokens = new HashMap<>(Map.of(
+        LABEL_KEY_TASK_ID, taskExecutionEntity.getId(),
+        LABEL_KEY_INITIATOR_ID, initiatorId,
+        LABEL_KEY_WORKFLOW_ID, taskExecutionEntity.getWorkflowId(),
+        LABEL_KEY_ACTIVITY_ID, taskExecutionEntity.getActivityId(),
+        LABEL_KEY_STATUS, taskExecutionEntity.getFlowTaskStatus().toString().toLowerCase()));
+    // @formatter:on
+
+    return normalizePatternTokens(
+        properties.getJetstream().getOutputEvents().getSubjectPattern().getTaskStatus(),
+        natsSubjectTokens, ".");
   }
 
   private String normalizePatternTokens(List<String> patternTokens, Map<String, String> tokens,

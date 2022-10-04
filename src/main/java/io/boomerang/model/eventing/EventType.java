@@ -6,7 +6,8 @@ public enum EventType {
   TRIGGER("io.boomerang.event.workflow.trigger"),
   WFE("io.boomerang.event.workflow.wfe"),
   CANCEL("io.boomerang.event.workflow.cancel"),
-  WORKFLOW_STATUS_UPDATE("io.boomerang.event.workflow.status");
+  WORKFLOW_STATUS_UPDATE("io.boomerang.event.workflow.status"),
+  TASK_STATUS_UPDATE("io.boomerang.event.task.status");
   // @formatter:off
 
   private final String cloudEventType;

@@ -30,11 +30,13 @@ public interface EventingService {
    * method.
    * 
    * @param taskExecutionEntity Task execution entity.
+   * @param activityEntity Parent activity entity.
    * @return A future object for publishing the new status of the {@link TaskExecutionEntity}.
    * 
    * @Note Do not invoke this method with if the status of the {@link TaskExecutionEntity} has not
    *       been changed, as this would result in publishing a Cloud Event with the same status
    *       multiple times.
    */
-  Future<Boolean> publishStatusCloudEvent(TaskExecutionEntity taskExecutionEntity);
+  Future<Boolean> publishStatusCloudEvent(TaskExecutionEntity taskExecutionEntity,
+      ActivityEntity parentActivityEntity);
 }
