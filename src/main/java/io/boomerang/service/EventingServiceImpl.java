@@ -14,6 +14,7 @@ import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.PostConstruct;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
@@ -342,6 +343,11 @@ public class EventingServiceImpl implements EventingService, SubHandler {
       Boolean isSuccess = Boolean.FALSE;
 
       try {
+        // If task execution entity is missing workflow ID, add it
+        if (StringUtils.isBlank(taskExecutionEntity.getWorkflowId())) {
+          taskExecutionEntity.setWorkflowId(parentActivityEntity.getWorkflowId());
+        }
+
         // Create status update CloudEvent from task execution
         EventTaskStatusUpdate eventStatusUpdate =
             EventFactory.buildStatusUpdateEvent(taskExecutionEntity);

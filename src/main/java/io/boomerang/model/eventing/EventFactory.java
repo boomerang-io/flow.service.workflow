@@ -2,8 +2,10 @@ package io.boomerang.model.eventing;
 
 import java.net.URI;
 import java.text.MessageFormat;
+import java.util.Collections;
 import java.util.Date;
 import java.util.InvalidPropertiesFormatException;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import io.boomerang.mongo.entity.ActivityEntity;
@@ -75,18 +77,19 @@ public class EventFactory {
     // Create task status update event
     EventTaskStatusUpdate eventStatusUpdate = new EventTaskStatusUpdate();
     eventStatusUpdate.setId(UUID.randomUUID().toString());
-    eventStatusUpdate.setSource(URI.create(EventFactory.class.getCanonicalName()));
+    eventStatusUpdate.setSource(URI.create(EVENT_SOURCE_URI));
     eventStatusUpdate.setSubject(eventSubject);
     eventStatusUpdate.setDate(new Date());
-    eventStatusUpdate.setType(EventType.WORKFLOW_STATUS_UPDATE);
-
+    eventStatusUpdate.setType(EventType.TASK_STATUS_UPDATE);
     eventStatusUpdate.setTaskId(taskExecutionEntity.getId());
     eventStatusUpdate.setWorkflowId(taskExecutionEntity.getWorkflowId());
     eventStatusUpdate.setWorkflowActivityId(taskExecutionEntity.getActivityId());
+    eventStatusUpdate.setStatus(taskExecutionEntity.getFlowTaskStatus());
     eventStatusUpdate.setErrorResponse(taskExecutionEntity.getError());
-    eventStatusUpdate.setOutputProperties(taskExecutionEntity.getOutputs().entrySet().stream()
-        .map(entry -> new KeyValuePair(entry.getKey(), entry.getValue()))
-        .collect(Collectors.toList()));
+    eventStatusUpdate.setOutputProperties(
+        Optional.ofNullable(taskExecutionEntity.getOutputs()).orElse(Collections.emptyMap())
+            .entrySet().stream().map(entry -> new KeyValuePair(entry.getKey(), entry.getValue()))
+            .collect(Collectors.toList()));
 
     return eventStatusUpdate;
   }
