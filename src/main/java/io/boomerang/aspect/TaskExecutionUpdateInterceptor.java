@@ -43,22 +43,12 @@ public class TaskExecutionUpdateInterceptor {
 
   private void taskExecutionToBeUpdated(TaskExecutionEntity newTaskExecution) {
 
-    logger.info("-------------------------------- {}, {}, {}, {}", newTaskExecution.getId(),
-        newTaskExecution.getActivityId(), newTaskExecution.getRunWorkflowId(),
-        newTaskExecution.getRunWorkflowId());
-
     // Check if task and activity IDs are not empty
     if (StringUtils.isNotBlank(newTaskExecution.getActivityId())
         && StringUtils.isNotBlank(newTaskExecution.getId())) {
 
-      logger.info("-------------------------------- search");
-
       // Retrieve old entity and compare the statuses
-      taskRepository.findById(newTaskExecution.getId()).ifPresentOrElse(oldTaskExecution -> {
-
-        logger.info("-------------------------------- found! {}, {} -> {}",
-            newTaskExecution.getId(), oldTaskExecution.getFlowTaskStatus(),
-            newTaskExecution.getFlowTaskStatus());
+      taskRepository.findById(newTaskExecution.getId()).ifPresent(oldTaskExecution -> {
 
         if (oldTaskExecution.getFlowTaskStatus() != newTaskExecution.getFlowTaskStatus()) {
 
@@ -67,8 +57,6 @@ public class TaskExecutionUpdateInterceptor {
               activityService.findWorkflowActivtyById(newTaskExecution.getActivityId());
           eventingService.publishStatusCloudEvent(newTaskExecution, activityEntity);
         }
-      }, () -> {
-        logger.info("-------------------------------- NOT found! {}", newTaskExecution.getId());
       });
     }
   }
