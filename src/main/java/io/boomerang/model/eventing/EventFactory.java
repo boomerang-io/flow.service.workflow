@@ -13,6 +13,8 @@ import io.cloudevents.CloudEvent;
 
 public class EventFactory {
 
+  private static final String EVENT_SOURCE_URI = "/apis/v1/events";
+
   private EventFactory() {}
 
   public static Event buildFromCloudEvent(CloudEvent cloudEvent)
@@ -45,7 +47,7 @@ public class EventFactory {
     // Create workflow status update event
     EventWorkflowStatusUpdate eventStatusUpdate = new EventWorkflowStatusUpdate();
     eventStatusUpdate.setId(UUID.randomUUID().toString());
-    eventStatusUpdate.setSource(URI.create(EventFactory.class.getCanonicalName()));
+    eventStatusUpdate.setSource(URI.create(EVENT_SOURCE_URI));
     eventStatusUpdate.setSubject(eventSubject);
     eventStatusUpdate.setDate(new Date());
     eventStatusUpdate.setType(EventType.WORKFLOW_STATUS_UPDATE);

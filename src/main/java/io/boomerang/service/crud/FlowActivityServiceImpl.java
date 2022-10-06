@@ -80,7 +80,6 @@ import io.boomerang.mongo.service.FlowWorkflowActivityService;
 import io.boomerang.mongo.service.FlowWorkflowService;
 import io.boomerang.mongo.service.RevisionService;
 import io.boomerang.service.ActionService;
-import io.boomerang.service.EventingService;
 import io.boomerang.service.FilterService;
 import io.boomerang.service.PropertyManager;
 import io.boomerang.service.UserIdentityService;
@@ -150,9 +149,6 @@ public class FlowActivityServiceImpl implements FlowActivityService {
 
   @Autowired
   private RevisionService revisionService;
-
-  @Autowired
-  private EventingService eventingService;
 
   private static final Logger LOGGER = LogManager.getLogger();
 
@@ -658,32 +654,30 @@ public class FlowActivityServiceImpl implements FlowActivityService {
     Dag dag = revision.getDag();
     List<DAGTask> dagTasks = dag.getTasks();
     DAGTask dagTask =
-        dagTasks.stream().filter((t) -> taskId.equals(t.getTaskId())).findFirst().orElse(null);
-    if (dagTask != null) {
-      if (dagTask.getTemplateId() != null) {
-        FlowTaskTemplateEntity flowTaskTemplateEntity =
-            templateService.getTaskTemplateWithId(dagTask.getTemplateId());
-        if (flowTaskTemplateEntity != null && flowTaskTemplateEntity.getRevisions() != null) {
-          Optional<Revision> latestRevision = flowTaskTemplateEntity.getRevisions().stream()
-              .sorted(Comparator.comparingInt(Revision::getVersion).reversed()).findFirst();
-          if (latestRevision.isPresent()) {
-            Revision rev = latestRevision.get();
-            for (TaskTemplateConfig taskConfig : rev.getConfig()) {
-              if ("password".equals(taskConfig.getType())) {
-                LOGGER.debug("Found a secured property being used: {}", taskConfig.getKey());
-                String key = taskConfig.getKey();
-                String inputValue = map.get(key);
-                if (inputValue == null || inputValue.isBlank()) {
-                  inputValue = taskConfig.getDefaultValue();
-                }
-                String value = propertyManager.replaceValueWithProperty(inputValue, activityId,
-                    applicationProperties);
-                value = propertyManager.replaceValueWithProperty(value, activityId,
-                    applicationProperties);
-                LOGGER.debug("New Value: {}", value);
-                if (!value.isBlank()) {
-                  removalList.add(value);
-                }
+        dagTasks.stream().filter(t -> taskId.equals(t.getTaskId())).findFirst().orElse(null);
+    if (dagTask != null && dagTask.getTemplateId() != null) {
+      FlowTaskTemplateEntity flowTaskTemplateEntity =
+          templateService.getTaskTemplateWithId(dagTask.getTemplateId());
+      if (flowTaskTemplateEntity != null && flowTaskTemplateEntity.getRevisions() != null) {
+        Optional<Revision> latestRevision = flowTaskTemplateEntity.getRevisions().stream()
+            .sorted(Comparator.comparingInt(Revision::getVersion).reversed()).findFirst();
+        if (latestRevision.isPresent()) {
+          Revision rev = latestRevision.get();
+          for (TaskTemplateConfig taskConfig : rev.getConfig()) {
+            if ("password".equals(taskConfig.getType())) {
+              LOGGER.debug("Found a secured property being used: {}", taskConfig.getKey());
+              String key = taskConfig.getKey();
+              String inputValue = map.get(key);
+              if (inputValue == null || inputValue.isBlank()) {
+                inputValue = taskConfig.getDefaultValue();
+              }
+              String value = propertyManager.replaceValueWithProperty(inputValue, activityId,
+                  applicationProperties);
+              value = propertyManager.replaceValueWithProperty(value, activityId,
+                  applicationProperties);
+              LOGGER.debug("New Value: {}", value);
+              if (!value.isBlank()) {
+                removalList.add(value);
               }
             }
           }
@@ -712,7 +706,6 @@ public class FlowActivityServiceImpl implements FlowActivityService {
     Optional.ofNullable(error).ifPresent(activity::setError);
 
     flowActivityService.saveWorkflowActivity(activity);
-    eventingService.publishStatusCloudEvent(activity);
 
     String workflowId = activity.getWorkflowId();
     final WorkflowEntity workflow = workflowService.getWorkflow(workflowId);

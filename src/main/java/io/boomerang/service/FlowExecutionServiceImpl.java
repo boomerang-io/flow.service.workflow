@@ -79,9 +79,6 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
   @Autowired
   private ControllerClient controllerClient;
 
-  @Autowired
-  private EventingService eventingService;
-
   private List<Task> createTaskList(RevisionEntity revisionEntity) { // NOSONAR
 
     final Dag dag = revisionEntity.getDag();
@@ -168,7 +165,6 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
       activityEntity.setStatus(TaskStatus.invalid);
       activityEntity.setStatusMessage("Failed to run workflow: Incomplete workflow");
       activityService.saveWorkflowActivity(activityEntity);
-      eventingService.publishStatusCloudEvent(activityEntity);
 
       throw new InvalidWorkflowRuntimeException();
     }
@@ -243,19 +239,13 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
       activityEntity.setStatus(TaskStatus.completed);
       activityEntity.setCreationDate(new Date());
       activityService.saveWorkflowActivity(activityEntity);
-      eventingService.publishStatusCloudEvent(activityEntity);
 
       return;
     }
 
-    TaskStatus oldStatus = activityEntity.getStatus();
     activityEntity.setStatus(TaskStatus.inProgress);
     activityEntity.setCreationDate(new Date());
     activityService.saveWorkflowActivity(activityEntity);
-
-    if (oldStatus != activityEntity.getStatus()) {
-      eventingService.publishStatusCloudEvent(activityEntity);
-    }
 
     WorkflowEntity workflow = workflowService.getWorkflow(activityEntity.getWorkflowId());
     if (workflow.getStorage() == null) {

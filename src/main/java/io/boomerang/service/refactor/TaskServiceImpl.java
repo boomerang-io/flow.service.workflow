@@ -50,7 +50,6 @@ import io.boomerang.mongo.service.FlowTaskTemplateService;
 import io.boomerang.mongo.service.FlowWorkflowActivityService;
 import io.boomerang.mongo.service.FlowWorkflowService;
 import io.boomerang.mongo.service.RevisionService;
-import io.boomerang.service.EventingService;
 import io.boomerang.service.PropertyManager;
 import io.boomerang.service.crud.FlowActivityService;
 import io.boomerang.service.crud.WorkflowScheduleService;
@@ -104,9 +103,6 @@ public class TaskServiceImpl implements TaskService {
   @Autowired
   private WorkflowScheduleService scheduleService;
 
-  @Autowired
-  private EventingService eventingService;
-
   @Override
   @Async("flowAsyncExecutor")
   public void createTask(InternalTaskRequest request) {
@@ -134,26 +130,13 @@ public class TaskServiceImpl implements TaskService {
       return;
     }
 
+    // Set workflow and and task statuses as in progress
     TaskType taskType = task.getTaskType();
     taskExecution.setStartTime(new Date());
     taskExecution.setFlowTaskStatus(TaskStatus.inProgress);
     taskExecution = taskActivityService.save(taskExecution);
-
-    // Synchronize status update since `createTask` can be invoked multiple times, depending on the
-    // number of tasks forking out of the previous task.
-    // TODO Until we find a better solution, I think it is better to sync this part only on the
-    // current instance of 'taskService', that processes all the dependent tasks of an Activity
-    // (Workflow?), and not on the class itself, because this will transform the processing into a
-    // Synchronized processing model and not Async, as we want it.
-    synchronized (this) {
-      activity = activityService.findWorkflowActivtyById(taskExecution.getActivityId());
-
-      if (activity.getStatus() != TaskStatus.inProgress) {
-        activity.setStatus(TaskStatus.inProgress);
-        activityService.saveWorkflowActivity(activity);
-        eventingService.publishStatusCloudEvent(activity);
-      }
-    }
+    activity.setStatus(TaskStatus.inProgress);
+    activity = activityService.saveWorkflowActivity(activity);
 
     boolean canRunTask = dagUtility.canCompleteTask(activity, task.getTaskId());
 
@@ -409,9 +392,6 @@ public class TaskServiceImpl implements TaskService {
     } else {
       taskExecution.setFlowTaskStatus(TaskStatus.waiting);
       taskActivityService.save(taskExecution);
-      activity.setStatus(TaskStatus.waiting);
-      activityService.saveWorkflowActivity(activity);
-      eventingService.publishStatusCloudEvent(activity);
     }
   }
 
@@ -420,10 +400,6 @@ public class TaskServiceImpl implements TaskService {
 
     taskExecution.setFlowTaskStatus(TaskStatus.waiting);
     taskExecution = taskActivityService.save(taskExecution);
-
-    activity.setStatus(TaskStatus.waiting);
-    activityService.saveWorkflowActivity(activity);
-    eventingService.publishStatusCloudEvent(activity);
 
     ApprovalEntity approval = new ApprovalEntity();
     approval.setTaskActivityId(taskExecution.getId());
@@ -582,7 +558,6 @@ public class TaskServiceImpl implements TaskService {
 
     controllerClient.terminateFlow(workflow.getId(), workflow.getName(), activity.getId());
     boolean workflowCompleted = dagUtility.validateWorkflow(activity);
-    TaskStatus oldStatus = activity.getStatus();
 
     if (activity.getStatusOverride() != null) {
       activity.setStatus(activity.getStatusOverride());
@@ -594,12 +569,7 @@ public class TaskServiceImpl implements TaskService {
 
     final long duration = new Date().getTime() - activity.getCreationDate().getTime();
     activity.setDuration(duration);
-
     activityService.saveWorkflowActivity(activity);
-
-    if (oldStatus != activity.getStatus()) {
-      eventingService.publishStatusCloudEvent(activity);
-    }
   }
 
   private void executeNextStep(ActivityEntity workflowActivity, List<Task> tasks, Task currentTask,
