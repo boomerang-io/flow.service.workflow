@@ -3,6 +3,7 @@ package io.boomerang.model.eventing;
 import java.io.IOException;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Map;
 import org.apache.http.entity.ContentType;
 import org.apache.logging.log4j.util.Strings;
 import com.google.gson.Gson;
@@ -30,6 +31,8 @@ public class EventTaskStatusUpdate extends Event {
 
   private ErrorResponse errorResponse;
 
+  private Map<String, String> additionalData;
+
   @Override
   public CloudEvent toCloudEvent() throws IOException {
 
@@ -50,6 +53,12 @@ public class EventTaskStatusUpdate extends Event {
     // Add error data to JSON data
     if (errorResponse != null) {
       jsonData.add("error", gson.toJsonTree(errorResponse));
+    }
+
+    // Add additional data to JSON data
+    if (additionalData != null && !additionalData.isEmpty()) {
+      additionalData.entrySet()
+          .forEach(entry -> jsonData.addProperty(entry.getKey(), entry.getValue()));
     }
 
     // @formatter:off
@@ -126,6 +135,14 @@ public class EventTaskStatusUpdate extends Event {
     this.errorResponse = errorResponse;
   }
 
+  public Map<String, String> getAdditionalData() {
+    return this.additionalData;
+  }
+
+  public void setAdditionalData(Map<String, String> additionalData) {
+    this.additionalData = additionalData;
+  }
+
   // @formatter:off
   @Override
   public String toString() {
@@ -137,6 +154,7 @@ public class EventTaskStatusUpdate extends Event {
       ", initiatorContext='" + getInitiatorContext() + "'" +
       ", outputProperties='" + getOutputProperties() + "'" +
       ", errorResponse='" + getErrorResponse() + "'" +
+      ", additionalData='" + getAdditionalData() + "'" +
       "}";
   }
   // @formatter:on

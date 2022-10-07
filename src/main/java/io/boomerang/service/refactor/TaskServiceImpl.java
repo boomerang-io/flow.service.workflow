@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.TimeZone;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -831,5 +832,41 @@ public class TaskServiceImpl implements TaskService {
 
       endTask(request);
     }
+  }
+
+  @Override
+  public String retrieveWaitForEventTaskTopic(TaskExecutionEntity taskExecution) {
+
+    // Sanity check
+    if (taskExecution.getTaskType() != TaskType.eventwait) {
+      return null;
+    }
+
+    LOGGER.info("[{}] Finding task activity id based on task execution.",
+        taskExecution.getActivityId());
+
+    // Get the tasks of the DAG that this task execution is part of
+    ActivityEntity activity =
+        activityService.findWorkflowActivtyById(taskExecution.getActivityId());
+    RevisionEntity revision =
+        workflowVersionService.getWorkflowlWithId(activity.getWorkflowRevisionid());
+    List<DAGTask> tasks = revision.getDag().getTasks();
+
+    // @formatter:off
+    Function<DAGTask, String> getTopicPropertyValue = task -> task.getProperties().stream()
+        .filter(property -> property.getKey().equalsIgnoreCase("topic"))
+        .map(KeyValuePair::getValue)
+        .findFirst()
+        .orElse(null);
+    // @formatter:on
+
+    // Find the task based on task ID and extract the topic
+    // @formatter:off
+    return tasks.stream()
+        .filter(task -> task.getTaskId().equals(taskExecution.getTaskId()))
+        .map(getTopicPropertyValue)
+        .findFirst()
+        .orElse(null);
+    // @formatter:on
   }
 }

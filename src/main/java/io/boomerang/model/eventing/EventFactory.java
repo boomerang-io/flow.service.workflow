@@ -5,6 +5,7 @@ import java.text.MessageFormat;
 import java.util.Collections;
 import java.util.Date;
 import java.util.InvalidPropertiesFormatException;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -63,7 +64,7 @@ public class EventFactory {
   }
 
   public static EventTaskStatusUpdate buildStatusUpdateEvent(
-      TaskExecutionEntity taskExecutionEntity) {
+      TaskExecutionEntity taskExecutionEntity, Map<String, String> additionalData) {
 
     // Event subject
     // @formatter:off
@@ -86,6 +87,7 @@ public class EventFactory {
     eventStatusUpdate.setWorkflowActivityId(taskExecutionEntity.getActivityId());
     eventStatusUpdate.setStatus(taskExecutionEntity.getFlowTaskStatus());
     eventStatusUpdate.setErrorResponse(taskExecutionEntity.getError());
+    eventStatusUpdate.setAdditionalData(additionalData);
     eventStatusUpdate.setOutputProperties(
         Optional.ofNullable(taskExecutionEntity.getOutputs()).orElse(Collections.emptyMap())
             .entrySet().stream().map(entry -> new KeyValuePair(entry.getKey(), entry.getValue()))

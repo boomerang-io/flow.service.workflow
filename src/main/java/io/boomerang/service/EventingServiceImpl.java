@@ -348,9 +348,17 @@ public class EventingServiceImpl implements EventingService, SubHandler {
           taskExecutionEntity.setWorkflowId(parentActivityEntity.getWorkflowId());
         }
 
+        // Retrieve WFE task topic if task is of type WFE
+        String taskWfeTopic = taskService.retrieveWaitForEventTaskTopic(taskExecutionEntity);
+        Map<String, String> additionalData = new HashMap<>();
+
+        if (StringUtils.isNotBlank(taskWfeTopic)) {
+          additionalData.put("wfetopic", taskWfeTopic);
+        }
+
         // Create status update CloudEvent from task execution
         EventTaskStatusUpdate eventStatusUpdate =
-            EventFactory.buildStatusUpdateEvent(taskExecutionEntity);
+            EventFactory.buildStatusUpdateEvent(taskExecutionEntity, additionalData);
         String initiatorId = "";
 
         // Extract initiator ID and initiator context
