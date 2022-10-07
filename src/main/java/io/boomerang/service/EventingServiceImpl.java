@@ -1,6 +1,7 @@
 package io.boomerang.service;
 
 import java.io.IOException;
+import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.InvalidPropertiesFormatException;
 import java.util.LinkedList;
@@ -23,6 +24,7 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
+import org.webjars.NotFoundException;
 import io.boomerang.config.EventingProperties;
 import io.boomerang.error.BoomerangError;
 import io.boomerang.error.BoomerangException;
@@ -46,6 +48,7 @@ import io.boomerang.model.eventing.EventWFE;
 import io.boomerang.model.eventing.EventWorkflowStatusUpdate;
 import io.boomerang.mongo.entity.ActivityEntity;
 import io.boomerang.mongo.entity.TaskExecutionEntity;
+import io.boomerang.mongo.entity.WorkflowEntity;
 import io.boomerang.mongo.model.KeyValuePair;
 import io.boomerang.mongo.model.Triggers;
 import io.boomerang.mongo.model.WorkflowProperty;
@@ -199,10 +202,23 @@ public class EventingServiceImpl implements EventingService, SubHandler {
 
     // Get the event
     Event event = EventFactory.buildFromCloudEvent(cloudEvent);
+    String workflowId = getWorkflowIdFromEvent(event);
+    WorkflowEntity workflowEntity = workflowService.getWorkflow(workflowId);
+
+    // Check the workflow exists
+    if (workflowEntity == null) {
+      throw new NotFoundException(
+          MessageFormat.format("Workflow with ID {0} not found!", workflowId));
+    }
 
     // Check the custom events are activated
-    if (Boolean.FALSE.equals(isCustomEventEnabled(event))) {
+    if (!isCustomEventEnabled(event, workflowEntity)) {
       throw new BoomerangException(BoomerangError.WORKFLOW_TRIGGER_DISABLED);
+    }
+
+    // Check token is valid
+    if (!isTokenValid(event, workflowEntity)) {
+      throw new BoomerangException(BoomerangError.WORKFLOW_TOKEN_INVALID);
     }
 
     // Process the event
@@ -224,12 +240,11 @@ public class EventingServiceImpl implements EventingService, SubHandler {
           logger.debug("Properties: {}", eventProperties);
         }
 
-
         // Create flow execution request
         FlowExecutionRequest executionRequest = new FlowExecutionRequest();
         executionRequest.setLabels(processEventLabels(eventTrigger));
-        executionRequest.setProperties(
-            processProperties(eventTrigger.getProperties(), eventTrigger.getWorkflowId()));
+        executionRequest
+            .setProperties(processProperties(eventTrigger.getProperties(), workflowEntity));
 
         // Execute the workflow
         // @formatter:off
@@ -406,9 +421,8 @@ public class EventingServiceImpl implements EventingService, SubHandler {
    * attempt to find parameters.
    */
   private Map<String, String> processProperties(Map<String, String> eventProperties,
-      String workflowId) {
-    List<WorkflowProperty> inputProperties =
-        workflowService.getWorkflow(workflowId).getProperties();
+      WorkflowEntity workflowEntity) {
+    List<WorkflowProperty> inputProperties = workflowEntity.getProperties();
     Map<String, String> processedProperties = new HashMap<>();
 
     if (inputProperties != null) {
@@ -479,11 +493,10 @@ public class EventingServiceImpl implements EventingService, SubHandler {
     }
   }
 
-  private Boolean isCustomEventEnabled(Event event) {
+  private boolean isCustomEventEnabled(Event event, WorkflowEntity workflowEntity) {
 
     try {
-      String workflowId = getWorkflowIdFromEvent(event);
-      Triggers triggers = workflowService.getWorkflow(workflowId).getTriggers();
+      Triggers triggers = workflowEntity.getTriggers();
 
       switch (event.getType()) {
         case TRIGGER:
@@ -500,6 +513,17 @@ public class EventingServiceImpl implements EventingService, SubHandler {
     }
 
     return false;
+  }
+
+  private boolean isTokenValid(Event event, WorkflowEntity workflowEntity) {
+
+    // Sanity check
+    if (StringUtils.isBlank(event.getToken())) {
+      return false;
+    }
+
+    return workflowEntity.getTokens().stream()
+        .anyMatch(token -> token.getToken().equals(event.getToken()));
   }
 
   private String generateNATSSubject(ActivityEntity activityEntity, String initiatorId) {
