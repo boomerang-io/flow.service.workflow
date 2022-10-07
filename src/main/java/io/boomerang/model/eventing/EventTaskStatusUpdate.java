@@ -12,6 +12,7 @@ import com.google.gson.JsonObject;
 import io.boomerang.mongo.model.ErrorResponse;
 import io.boomerang.mongo.model.KeyValuePair;
 import io.boomerang.mongo.model.TaskStatus;
+import io.boomerang.mongo.model.TaskType;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.builder.CloudEventBuilder;
 
@@ -26,6 +27,8 @@ public class EventTaskStatusUpdate extends Event {
   private String workflowActivityId;
 
   private TaskStatus status;
+
+  private TaskType taskType;
 
   private String initiatorContext;
 
@@ -44,6 +47,7 @@ public class EventTaskStatusUpdate extends Event {
     jsonData.addProperty("workflowid", workflowId);
     jsonData.addProperty("workflowactivityid", workflowActivityId);
     jsonData.addProperty("status", status.toString());
+    jsonData.addProperty("tasktype", taskType.toString());
 
     // Configure and create Gson object
     Gson gson = new GsonBuilder().create();
@@ -122,6 +126,14 @@ public class EventTaskStatusUpdate extends Event {
     this.status = status;
   }
 
+  public TaskType getTaskType() {
+    return this.taskType;
+  }
+
+  public void setTaskType(TaskType taskType) {
+    this.taskType = taskType;
+  }
+
   public String getInitiatorContext() {
     return this.initiatorContext;
   }
@@ -163,6 +175,7 @@ public class EventTaskStatusUpdate extends Event {
       ", workflowId='" + getWorkflowId() + "'" +
       ", workflowActivityId='" + getWorkflowActivityId() + "'" +
       ", status='" + getStatus() + "'" +
+      ", taskType='" + getTaskType() + "'" +
       ", initiatorContext='" + getInitiatorContext() + "'" +
       ", outputProperties='" + getOutputProperties() + "'" +
       ", errorResponse='" + getErrorResponse() + "'" +
