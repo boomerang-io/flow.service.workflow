@@ -82,6 +82,7 @@ public class EventFactory {
     eventStatusUpdate.setSubject(eventSubject);
     eventStatusUpdate.setDate(new Date());
     eventStatusUpdate.setType(EventType.TASK_STATUS_UPDATE);
+    eventStatusUpdate.setTaskName(taskExecutionEntity.getTaskName());
     eventStatusUpdate.setTaskId(taskExecutionEntity.getId());
     eventStatusUpdate.setWorkflowId(taskExecutionEntity.getWorkflowId());
     eventStatusUpdate.setWorkflowActivityId(taskExecutionEntity.getActivityId());

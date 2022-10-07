@@ -17,6 +17,8 @@ import io.cloudevents.core.builder.CloudEventBuilder;
 
 public class EventTaskStatusUpdate extends Event {
 
+  private String taskName;
+
   private String taskId;
 
   private String workflowId;
@@ -37,6 +39,7 @@ public class EventTaskStatusUpdate extends Event {
   public CloudEvent toCloudEvent() throws IOException {
 
     JsonObject jsonData = new JsonObject();
+    jsonData.addProperty("taskname", taskName);
     jsonData.addProperty("taskid", taskId);
     jsonData.addProperty("workflowid", workflowId);
     jsonData.addProperty("workflowactivityid", workflowActivityId);
@@ -77,6 +80,14 @@ public class EventTaskStatusUpdate extends Event {
     }
 
     return cloudEventBuilder.build();
+  }
+
+  public String getTaskName() {
+    return this.taskName;
+  }
+
+  public void setTaskName(String taskName) {
+    this.taskName = taskName;
   }
 
   public String getTaskId() {
@@ -147,7 +158,8 @@ public class EventTaskStatusUpdate extends Event {
   @Override
   public String toString() {
     return "{" +
-      " taskId='" + getTaskId() + "'" +
+      " taskName='" + getTaskName() + "'" +
+      ", taskId='" + getTaskId() + "'" +
       ", workflowId='" + getWorkflowId() + "'" +
       ", workflowActivityId='" + getWorkflowActivityId() + "'" +
       ", status='" + getStatus() + "'" +
