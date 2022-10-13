@@ -58,7 +58,7 @@ class ApproveExecuteTests extends IntegrationTests {
     String id = activity.getId();
     Thread.sleep(5000);
     FlowActivity waitingAprpoval = this.checkWorkflowActivity(id);
-    assertEquals(TaskStatus.waiting, waitingAprpoval.getStatus());
+    assertEquals(TaskStatus.inProgress, waitingAprpoval.getStatus());
     List<Action> approvals = this.getApprovals();
     this.approveWorkflow(true, approvals.get(0).getId());
 
