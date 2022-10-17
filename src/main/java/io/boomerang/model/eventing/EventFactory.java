@@ -8,6 +8,7 @@ import java.util.InvalidPropertiesFormatException;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import io.boomerang.mongo.entity.ActivityEntity;
 import io.boomerang.mongo.entity.TaskExecutionEntity;
@@ -23,6 +24,12 @@ public class EventFactory {
   public static Event buildFromCloudEvent(CloudEvent cloudEvent)
       throws InvalidPropertiesFormatException {
     EventType eventType = EventType.valueOfCloudEventType(cloudEvent.getType());
+    InvalidPropertiesFormatException invalidCloudEventType = new InvalidPropertiesFormatException(
+        MessageFormat.format("Invalid cloud event type : \"{0}\"!", cloudEvent.getType()));
+
+    if (eventType == null) {
+      throw invalidCloudEventType;
+    }
 
     switch (eventType) {
       case TRIGGER:
@@ -32,8 +39,7 @@ public class EventFactory {
       case CANCEL:
         return EventCancel.fromCloudEvent(cloudEvent);
       default:
-        throw new InvalidPropertiesFormatException(
-            MessageFormat.format("Invalid cloud event type : \"{0}\"!", cloudEvent.getType()));
+        throw invalidCloudEventType;
     }
   }
 

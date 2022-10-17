@@ -8,7 +8,7 @@ public enum EventType {
   CANCEL("io.boomerang.event.workflow.cancel"),
   WORKFLOW_STATUS_UPDATE("io.boomerang.event.workflow.status"),
   TASK_STATUS_UPDATE("io.boomerang.event.task.status");
-  // @formatter:off
+  // @formatter:on
 
   private final String cloudEventType;
 
@@ -27,5 +27,5 @@ public enum EventType {
       }
     }
     return null;
-}
+  }
 }
