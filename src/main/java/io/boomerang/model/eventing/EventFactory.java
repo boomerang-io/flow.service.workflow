@@ -8,7 +8,6 @@ import java.util.InvalidPropertiesFormatException;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import io.boomerang.mongo.entity.ActivityEntity;
 import io.boomerang.mongo.entity.TaskExecutionEntity;
