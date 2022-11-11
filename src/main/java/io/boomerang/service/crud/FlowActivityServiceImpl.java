@@ -71,6 +71,7 @@ import io.boomerang.mongo.model.Revision;
 import io.boomerang.mongo.model.TaskStatus;
 import io.boomerang.mongo.model.TaskTemplateConfig;
 import io.boomerang.mongo.model.TaskType;
+import io.boomerang.mongo.model.WorkflowProperty;
 import io.boomerang.mongo.model.WorkflowScope;
 import io.boomerang.mongo.model.next.DAGTask;
 import io.boomerang.mongo.service.ActivityTaskService;
@@ -87,6 +88,7 @@ import io.boomerang.service.refactor.ControllerRequestProperties;
 import io.boomerang.service.runner.misc.ControllerClient;
 import io.boomerang.util.DateUtil;
 import io.boomerang.util.ParameterMapper;
+import io.boomerang.util.DataAdapterUtil.FieldType;
 
 @Service
 public class FlowActivityServiceImpl implements FlowActivityService {
@@ -201,6 +203,16 @@ public class FlowActivityServiceImpl implements FlowActivityService {
 
     if (request.getProperties() != null) {
       List<KeyValuePair> propertyList = ParameterMapper.mapToKeyValuePairList(request.getProperties());
+      Map<String, WorkflowProperty> workflowPropMap = workflow.getProperties().stream()
+          .collect(Collectors.toMap(WorkflowProperty::getKey, WorkflowProperty -> WorkflowProperty));
+      // Use default value for password-type parameter when user input value is null when executing workflow.
+      propertyList.stream().forEach(p -> {
+        if(workflowPropMap.get(p.getKey()) != null
+            && FieldType.PASSWORD.value().equals(workflowPropMap.get(p.getKey()).getType())
+            && p.getValue() == null){
+          p.setValue(workflowPropMap.get(p.getKey()).getDefaultValue());
+        }
+      });
       activity.setProperties(propertyList);
     }
     return flowActivityService.saveWorkflowActivity(activity);
