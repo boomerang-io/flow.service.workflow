@@ -15,6 +15,7 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -273,8 +274,12 @@ public class EventProcessorImpl implements EventProcessor {
         logger.error(e.toString());
       }
     }
+    ObjectMapper mapper = new ObjectMapper();
+    Map<String, String> payloadProperties =
+        mapper.convertValue(eventData, new TypeReference<Map<String, String>>() {});
+    properties.putAll(payloadProperties);
 
-    properties.put("eventPayload", eventData.toString());
+    // properties.put("eventPayload", eventData.toString());
 
     properties.forEach((k, v) -> {
       logger.info("processProperties() - " + k + "=" + v);
