@@ -2,6 +2,8 @@ package io.boomerang.service.profile;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -122,6 +124,12 @@ public class LaunchpadNavigationServiceImpl implements LaunchpadNavigationServic
     HttpEntity<String> requestUpdate = new HttpEntity<>("", headers);
     ResponseEntity<NavigationResponse> response =
         restTemplate.exchange(uriComponents.toUriString(), HttpMethod.GET, requestUpdate, NavigationResponse.class);
+    NavigationResponse result = response.getBody();
+    if (result != null && result.getPlatform() != null && Strings.isBlank(result.getPlatform().getAppName())) {
+      // set default appName if the external Navigation API does NOT return appName.
+      String appName = settingsService.getConfiguration("customizations", "appName").getValue();
+      result.getPlatform().setAppName(appName);
+    }
     return response.getBody();
   }
   
