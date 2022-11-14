@@ -24,6 +24,7 @@ import io.boomerang.model.TeamMember;
 import io.boomerang.model.TeamQueryResult;
 import io.boomerang.model.TeamWorkflowSummary;
 import io.boomerang.model.WorkflowQuotas;
+import io.boomerang.model.WorkflowSummary;
 import io.boomerang.model.profile.SortSummary;
 import io.boomerang.model.teams.ApproverGroupResponse;
 import io.boomerang.model.teams.CreateApproverGroupRequest;
@@ -35,6 +36,7 @@ import io.boomerang.mongo.model.UserType;
 import io.boomerang.security.service.UserValidationService;
 import io.boomerang.service.UserIdentityService;
 import io.boomerang.service.crud.TeamService;
+import io.boomerang.service.crud.WorkflowService;
 
 @RestController
 @RequestMapping("/workflow")
@@ -48,6 +50,9 @@ public class TeamController {
   
   @Autowired
   private UserValidationService userValidationService;
+  
+  @Autowired
+  private WorkflowService workflowService;
 
   @PostMapping(value = "/teams")
   public void createCiTeam(@RequestBody CreateFlowTeam createCiTeamRequest) {
@@ -185,5 +190,10 @@ public class TeamController {
   @DeleteMapping(value = "/teams/{teamId}/approvers/{groupId}")
   public void deleteApproverGroup(@PathVariable String teamId,@PathVariable String groupId) {
     flowTeamService.deleteApproverGroup(teamId, groupId);
+  }
+  
+  @GetMapping(value = "/teams/{teamId}/workflows")
+  public List<WorkflowSummary> getTeamWorkflows(@PathVariable String teamId) {
+    return workflowService.getWorkflowsForTeam(teamId);
   }
 }

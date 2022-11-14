@@ -1,7 +1,6 @@
 package io.boomerang.util;
 
 import java.util.List;
-import java.util.Optional;
 
 import io.boomerang.mongo.model.AbstractConfigurationProperty;
 
@@ -32,20 +31,21 @@ public class DataAdapterUtil {
 	 */
 	public static List<? extends AbstractConfigurationProperty> filterValueByFieldType(
 			List<? extends AbstractConfigurationProperty> properties, boolean isDefaultValue, String fieldType) {
-		if (properties == null || fieldType == null)
-			return null;
-		Optional<? extends AbstractConfigurationProperty> passProp = properties.stream()
-				.filter(f -> fieldType.equals(f.getType())
-						&& (isDefaultValue ? f.getDefaultValue() != null : f.getValue() != null))
-				.findAny();
-		if (passProp.isPresent()) {
-			if (isDefaultValue) {
-				passProp.get().setDefaultValue(null);
-			} else {
-				passProp.get().setValue(null);
-			}
-			passProp.get().setHiddenValue(Boolean.TRUE);
-		}
-		return properties;
+	  if (properties == null || fieldType == null) {
+	    return null;
+	  }
+	  
+	  for(AbstractConfigurationProperty property: properties) {
+	    if(!fieldType.equals(property.getType())){
+	      continue;
+	    }
+	    if(isDefaultValue) {
+	      property.setDefaultValue(null);
+	    }else {
+	      property.setValue(null);
+	    }
+	    property.setHiddenValue(Boolean.TRUE);
+	  }
+	  return properties;
 	}
 }

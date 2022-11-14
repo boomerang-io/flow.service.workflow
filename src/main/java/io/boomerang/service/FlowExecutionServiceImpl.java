@@ -1,19 +1,15 @@
 package io.boomerang.service;
 
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -22,7 +18,6 @@ import org.jgrapht.graph.DefaultEdge;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import io.boomerang.exceptions.InvalidWorkflowRuntimeException;
-import io.boomerang.exceptions.RunWorkflowException;
 import io.boomerang.model.Task;
 import io.boomerang.mongo.entity.ActivityEntity;
 import io.boomerang.mongo.entity.FlowTaskTemplateEntity;
@@ -185,10 +180,11 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
     final List<String> nodes =
         GraphProcessor.createOrderedTaskList(graph, start.getTaskId(), end.getTaskId());
     final List<Task> tasksToRun = new LinkedList<>();
-    for (final String node : nodes) {
+    for (String node : nodes) {
       final Task taskToAdd =
           tasks.stream().filter(tsk -> node.equals(tsk.getTaskId())).findAny().orElse(null);
-      tasksToRun.add(taskToAdd);
+      if (taskToAdd != null)
+        tasksToRun.add(taskToAdd);
     }
 
     long order = 1;
@@ -233,20 +229,17 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
   }
 
   private Task getTaskByName(List<Task> tasks, TaskType type) {
-    return tasks.stream().filter(tsk -> type.equals(tsk.getTaskType())).findAny().orElse(null);
+    return tasks.stream().filter(tsk -> type.equals(tsk.getTaskType())).findAny().orElseThrow();
   }
 
   private void executeWorkflowAsync(String activityId, final Task start, final Task end,
-      final Graph<String, DefaultEdge> graph, final List<Task> tasksToRun)
-      throws ExecutionException {
+      final Graph<String, DefaultEdge> graph, final List<Task> tasksToRun) {
 
     if (tasksToRun.size() == 2) {
-      final ActivityEntity activityEntity =
-          this.flowActivityService.findWorkflowActivity(activityId);
+      ActivityEntity activityEntity = flowActivityService.findWorkflowActivity(activityId);
       activityEntity.setStatus(TaskStatus.completed);
       activityEntity.setCreationDate(new Date());
       activityService.saveWorkflowActivity(activityEntity);
-
       return;
     }
 
@@ -269,19 +262,6 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
     String workflowId = workflow.getId();
 
     Map<String, String> executionProperties = new HashMap<>();
-    Map<String, Object> inputs = new HashMap<>();
-    try {
-      for (Entry<String, Object> entry : inputs.entrySet()) {
-        if (entry.getValue() != null) {
-          executionProperties.put(entry.getKey(), entry.getValue().toString());
-        } else {
-          executionProperties.put(entry.getKey(), null);
-        }
-
-      }
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
 
     List<KeyValuePair> labels = workflow.getLabels();
 
@@ -290,29 +270,26 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
 
     final Task startTask = tasksToRun.stream()
         .filter(tsk -> TaskType.start.equals(tsk.getTaskType())).findAny().orElse(null);
-    executeNextStep(activityEntity, tasksToRun, startTask, start, end, graph);
+    executeNextStep(tasksToRun, startTask, start, end, graph);
   }
 
-  private void executeNextStep(ActivityEntity workflowActivity, List<Task> tasks, Task currentTask,
+  private void executeNextStep(List<Task> tasks, Task currentTask,
       final Task start, final Task end, final Graph<String, DefaultEdge> graph) {
 
-    try {
-      List<Task> nextNodes = this.getTasksDependants(tasks, currentTask);
+    if (currentTask == null || graph == null)
+      throw new IllegalArgumentException();
+
+      List<Task> nextNodes = getTasksDependants(tasks, currentTask);
+      List<String> nodes =
+          GraphProcessor.createOrderedTaskList(graph, start.getTaskId(), end.getTaskId());
+
       for (Task next : nextNodes) {
-
-        final List<String> nodes =
-            GraphProcessor.createOrderedTaskList(graph, start.getTaskId(), end.getTaskId());
-
         if (nodes.contains(next.getTaskId())) {
           InternalTaskRequest taskRequest = new InternalTaskRequest();
           taskRequest.setActivityId(next.getTaskActivityId());
           taskClient.startTask(taskService, taskRequest);
         }
       }
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
-
   }
 
   private List<Task> getTasksDependants(List<Task> tasks, Task currentTask) {
@@ -334,13 +311,7 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
       final Task start = getTaskByName(tasks, TaskType.start);
       final Task end = getTaskByName(tasks, TaskType.end);
       final Graph<String, DefaultEdge> graph = createGraph(tasks);
-      try {
-
         executeWorkflowAsync(activityId, start, end, graph, tasks);
-      } catch (ExecutionException e) {
-        LOGGER.error(ExceptionUtils.getStackTrace(e));
-        throw new RunWorkflowException();
-      }
       return true;
     };
   }

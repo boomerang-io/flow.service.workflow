@@ -378,19 +378,40 @@ public class WorkflowServiceImpl implements WorkflowService {
   public WorkflowSummary updateWorkflowProperties(String workflowId,
       List<WorkflowProperty> properties) {
     final WorkflowEntity entity = workflowRepository.getWorkflow(workflowId);
-
     if (entity.getScope() == WorkflowScope.team) {
       userValidationService.validateUserForWorkflow(workflowId);
-      entity.setProperties(properties);
-      workflowRepository.saveWorkflow(entity);
-      filterValueByFieldType(properties, true, FieldType.PASSWORD.value());
-      return new WorkflowSummary(entity);
-    } else {
-      entity.setProperties(properties);
-      workflowRepository.saveWorkflow(entity);
-      filterValueByFieldType(properties, true, FieldType.PASSWORD.value());
-      return new WorkflowSummary(entity);
     }
+    
+    List<WorkflowProperty> populatedWorkflowProperties = this.populateWorkflowProperties(properties, entity.getProperties());
+    entity.setProperties(populatedWorkflowProperties);
+    workflowRepository.saveWorkflow(entity);
+    filterValueByFieldType(populatedWorkflowProperties, true, FieldType.PASSWORD.value());
+    return new WorkflowSummary(entity);
+  }
+  
+  private List<WorkflowProperty> populateWorkflowProperties(
+      List<WorkflowProperty> updatedProperties, List<WorkflowProperty> existingPropertiesInDb){
+    if(updatedProperties == null || updatedProperties.isEmpty()) {
+      return Lists.newArrayList();
+    }
+    if(existingPropertiesInDb == null || existingPropertiesInDb.isEmpty()) {
+      return updatedProperties;
+    }
+    
+    Map<String, WorkflowProperty> existingPropertyMap = existingPropertiesInDb.stream()
+        .collect(Collectors.toMap(WorkflowProperty::getKey, WorkflowProperty -> WorkflowProperty));
+    
+    List<WorkflowProperty> populatedProperties = Lists.newArrayList();
+    for(WorkflowProperty updatedProperty: updatedProperties) {
+      WorkflowProperty existingProperty = existingPropertyMap.get(updatedProperty.getKey());
+      if( existingProperty != null
+          && FieldType.PASSWORD.value().equals(updatedProperty.getType())
+          && updatedProperty.getDefaultValue() == null ){
+        updatedProperty.setDefaultValue(existingProperty.getDefaultValue());
+      }
+      populatedProperties.add(updatedProperty);
+    }
+    return populatedProperties; 
   }
 
   @Override
