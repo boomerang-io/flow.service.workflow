@@ -200,7 +200,7 @@ public class EventProcessorImpl implements EventProcessor {
       property.setKey("eventId");
       property.setValue(event.getAttributes().getId());
       cloudEventLabels.add(property);
-      executionRequest.setLabels(cloudEventLabels);
+      //executionRequest.setLabels(cloudEventLabels);
       executionRequest.setProperties(processProperties(eventData, workflowId));
 
       FlowActivity activity = executionService.executeWorkflow(workflowId, Optional.of(trigger),
