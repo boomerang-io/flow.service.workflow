@@ -122,7 +122,13 @@ public class LaunchpadNavigationServiceImpl implements LaunchpadNavigationServic
     HttpEntity<String> requestUpdate = new HttpEntity<>("", headers);
     ResponseEntity<NavigationResponse> response =
         restTemplate.exchange(uriComponents.toUriString(), HttpMethod.GET, requestUpdate, NavigationResponse.class);
-    return response.getBody();
+    // set appName if the external API does NOT return appName
+    String appName = settingsService.getConfiguration("customizations", "appName").getValue();
+    NavigationResponse result = response.getBody();
+    if (result != null && result.getPlatform() != null && result.getPlatform().getAppName() == null && appName != null) {
+      result.getPlatform().setAppName(appName);
+    }
+    return result;
   }
   
   private HttpHeaders buildHeaders(String email) {
