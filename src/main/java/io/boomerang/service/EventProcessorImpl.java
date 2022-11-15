@@ -279,8 +279,8 @@ public class EventProcessorImpl implements EventProcessor {
       }
     }
     ObjectMapper mapper = new ObjectMapper();
-    Map<String, String> payloadProperties =
-        mapper.convertValue(eventData.get("properties"), new TypeReference<Map<String, String>>() {});
+    Map<String, String> payloadProperties = mapper.convertValue(eventData.get("properties"),
+        new TypeReference<Map<String, String>>() {});
 
     List<KeyValuePair> propertyList = ParameterMapper.mapToKeyValuePairList(payloadProperties);
     if (payloadProperties != null) {
@@ -304,8 +304,11 @@ public class EventProcessorImpl implements EventProcessor {
       logger.info("processProperties() - " + k + "=" + v);
     });
 
-
-    return mapper.convertValue(propertyList, new TypeReference<Map<String, String>>() {});
+    properties = new HashMap<>();
+    for (KeyValuePair prop : propertyList) {
+      properties.put(prop.getKey(), prop.getValue());
+    }
+    return properties;
   }
 
   private Boolean isTriggerEnabled(String trigger, String workflowId, String topic) {
