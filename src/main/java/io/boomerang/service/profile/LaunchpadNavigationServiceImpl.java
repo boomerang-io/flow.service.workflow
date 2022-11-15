@@ -61,6 +61,8 @@ public class LaunchpadNavigationServiceImpl implements LaunchpadNavigationServic
   
   private static final String AUTHORIZATION_HEADER = "Authorization";
   private static final String TOKEN_PREFIX = "Bearer ";
+  
+  private static final String APP_DEFAULT_NAME = "Boomerang Flow";
 
   @Autowired
   private ApiTokenService apiTokenService;
@@ -125,10 +127,17 @@ public class LaunchpadNavigationServiceImpl implements LaunchpadNavigationServic
     ResponseEntity<NavigationResponse> response =
         restTemplate.exchange(uriComponents.toUriString(), HttpMethod.GET, requestUpdate, NavigationResponse.class);
     NavigationResponse result = response.getBody();
-    if (result != null && result.getPlatform() != null && Strings.isBlank(result.getPlatform().getAppName())) {
-      // set default appName if the external Navigation API does NOT return appName.
-      String appName = settingsService.getConfiguration("customizations", "appName").getValue();
-      result.getPlatform().setAppName(appName);
+    if (result != null && result.getPlatform() != null) {
+      if(Strings.isBlank(result.getPlatform().getAppName())) {
+        // set default appName if the external Navigation API does NOT return appName.
+        String appName = settingsService.getConfiguration("customizations", "appName").getValue();
+        appName = Strings.isBlank(appName)? APP_DEFAULT_NAME: appName;
+        result.getPlatform().setAppName(appName);
+      }
+      if(!Strings.isBlank(result.getPlatform().getPlatformName())) {
+        // add | to the end of the platformName
+        result.getPlatform().setPlatformName(result.getPlatform().getPlatformName() + " |");
+      }
     }
     return response.getBody();
   }
