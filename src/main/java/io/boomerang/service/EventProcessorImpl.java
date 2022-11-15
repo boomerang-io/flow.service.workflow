@@ -279,36 +279,33 @@ public class EventProcessorImpl implements EventProcessor {
       }
     }
     ObjectMapper mapper = new ObjectMapper();
-    Map<String, String> payloadProperties = mapper.convertValue(eventData.get("properties"),
-        new TypeReference<Map<String, String>>() {});
-
-    List<KeyValuePair> propertyList = ParameterMapper.mapToKeyValuePairList(payloadProperties);
-    if (payloadProperties != null) {
-      WorkflowEntity workflow = workflowService.getWorkflow(workflowId);
-      Map<String, WorkflowProperty> workflowPropMap = workflow.getProperties().stream().collect(
-          Collectors.toMap(WorkflowProperty::getKey, WorkflowProperty -> WorkflowProperty));
-      // Use default value for password-type parameter when user input value is null when executing
-      // workflow.
-      propertyList.stream().forEach(p -> {
-        if (workflowPropMap.get(p.getKey()) != null
-            && FieldType.PASSWORD.value().equals(workflowPropMap.get(p.getKey()).getType())
-            && p.getValue() == null) {
-          p.setValue(workflowPropMap.get(p.getKey()).getDefaultValue());
-        }
-      });
-    }
+    Map<String, String> payloadProperties =
+        mapper.convertValue(eventData, new TypeReference<Map<String, String>>() {});
+    properties.putAll(payloadProperties);
 
     // properties.put("eventPayload", eventData.toString());
 
-    properties.forEach((k, v) -> {
-      logger.info("processProperties() - " + k + "=" + v);
+    WorkflowEntity workflow = workflowService.getWorkflow(workflowId);
+
+    List<KeyValuePair> propertyList = ParameterMapper.mapToKeyValuePairList(properties);
+    Map<String, WorkflowProperty> workflowPropMap = workflow.getProperties().stream()
+        .collect(Collectors.toMap(WorkflowProperty::getKey, WorkflowProperty -> WorkflowProperty));
+    // Use default value for password-type parameter when user input value is null when executing
+    // workflow.
+    propertyList.stream().forEach(p -> {
+      if (workflowPropMap.get(p.getKey()) != null
+          && FieldType.PASSWORD.value().equals(workflowPropMap.get(p.getKey()).getType())
+          && p.getValue() == null) {
+        p.setValue(workflowPropMap.get(p.getKey()).getDefaultValue());
+      }
     });
 
     Map<String, String> finalProperties = new HashMap<>();
     for (KeyValuePair prop : propertyList) {
+      logger.info("processProperties() - " + prop.getKey() + "=" + prop.getValue());
       finalProperties.put(prop.getKey(), prop.getValue());
     }
-    return properties;
+    return finalProperties;
   }
 
   private Boolean isTriggerEnabled(String trigger, String workflowId, String topic) {
