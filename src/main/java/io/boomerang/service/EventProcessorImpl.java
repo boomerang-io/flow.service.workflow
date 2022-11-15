@@ -304,9 +304,9 @@ public class EventProcessorImpl implements EventProcessor {
       logger.info("processProperties() - " + k + "=" + v);
     });
 
-    properties = new HashMap<>();
+    Map<String, String> finalProperties = new HashMap<>();
     for (KeyValuePair prop : propertyList) {
-      properties.put(prop.getKey(), prop.getValue());
+      finalProperties.put(prop.getKey(), prop.getValue());
     }
     return properties;
   }
