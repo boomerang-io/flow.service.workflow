@@ -279,9 +279,11 @@ public class EventProcessorImpl implements EventProcessor {
       }
     }
     ObjectMapper mapper = new ObjectMapper();
-    Map<String, String> payloadProperties =
-        mapper.convertValue(eventData.get("properties"), new TypeReference<Map<String, String>>() {});
-    properties.putAll(payloadProperties);
+    Map<String, String> payloadProperties = mapper.convertValue(eventData.get("properties"),
+        new TypeReference<Map<String, String>>() {});
+    if (payloadProperties != null) {
+      properties.putAll(payloadProperties);
+    }
 
     // properties.put("eventPayload", eventData.toString());
 
