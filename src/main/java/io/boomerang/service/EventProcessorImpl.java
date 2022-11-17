@@ -288,24 +288,31 @@ public class EventProcessorImpl implements EventProcessor {
     // properties.put("eventPayload", eventData.toString());
 
     WorkflowEntity workflow = workflowService.getWorkflow(workflowId);
-
-    List<KeyValuePair> propertyList = ParameterMapper.mapToKeyValuePairList(properties);
-    Map<String, WorkflowProperty> workflowPropMap = workflow.getProperties().stream()
-        .collect(Collectors.toMap(WorkflowProperty::getKey, WorkflowProperty -> WorkflowProperty));
-    // Use default value for password-type parameter when user input value is null when executing
-    // workflow.
-    propertyList.stream().forEach(p -> {
-      if (workflowPropMap.get(p.getKey()) != null
-          && FieldType.PASSWORD.value().equals(workflowPropMap.get(p.getKey()).getType())
-          && p.getValue() == null) {
-        p.setValue(workflowPropMap.get(p.getKey()).getDefaultValue());
-      }
-    });
-
     Map<String, String> finalProperties = new HashMap<>();
-    for (KeyValuePair prop : propertyList) {
-      logger.info("processProperties() - " + prop.getKey() + "=" + prop.getValue());
-      finalProperties.put(prop.getKey(), prop.getValue());
+
+    if (!properties.isEmpty()) {
+      List<KeyValuePair> propertyList = ParameterMapper.mapToKeyValuePairList(properties);
+      Map<String, WorkflowProperty> workflowPropMap = workflow.getProperties().stream().collect(
+          Collectors.toMap(WorkflowProperty::getKey, WorkflowProperty -> WorkflowProperty));
+      // Use default value for password-type parameter when user input value is null when executing
+      // workflow.
+      propertyList.stream().forEach(p -> {
+        if (workflowPropMap.get(p.getKey()) != null
+            && FieldType.PASSWORD.value().equals(workflowPropMap.get(p.getKey()).getType())
+            && p.getValue() == null) {
+          p.setValue(workflowPropMap.get(p.getKey()).getDefaultValue());
+        }
+      });
+
+      for (KeyValuePair prop : propertyList) {
+        logger.info("processProperties() - " + prop.getKey() + "=" + prop.getValue());
+        finalProperties.put(prop.getKey(), prop.getValue());
+      }
+    } else {
+
+      for (WorkflowProperty property : workflow.getProperties()) {
+        finalProperties.put(property.getKey(), property.getDefaultValue());
+      }
     }
     return finalProperties;
   }
