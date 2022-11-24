@@ -49,7 +49,7 @@ public class ActivityV1Controller {
       @Parameter(name = "page", description = "Page Number", example = "0",
           required = true) @RequestParam(defaultValue = "0") int page) {
     final Pageable pageable = PageRequest.of(page, limit);
-    return activityService.findActivty(pageable, labels);
+    return activityService.findActivity(pageable, labels);
   }
 
   @GetMapping(value = "/activity/{activityId}")

@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -20,6 +21,7 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.boomerang.config.EventingProperties;
 import io.boomerang.errors.model.BoomerangError;
 import io.boomerang.errors.model.ErrorDetail;
 import io.boomerang.model.Task;
@@ -60,21 +62,25 @@ public class ControllerClientImpl implements ControllerClient {
 
   private static final Logger LOGGER = LogManager.getLogger();
 
-  @Value("${controller.createtask.url}")
-  public String createTaskURL;
+  private static final String CREATEWORKSPACEREQUEST = "Create Workflow Request";
+  private static final String DELETEWORKSPACEREQUEST = "Delete Workspace Request";
+  private static final String CREATEWORKFLOWREQUEST = "Create Workflow Request";
+  private static final String TERMINATEWORKFLOWREQUEST = "Terminate Workflow Request";
+  private static final String CREATETEMPLATETASKREQUEST = "Create Template Task Request";
+  private static final String CREATECUSTOMTASKREQUEST = "Create Custom Task Request";
+  private static final String TERMINATETASKREQUEST = "Terminate Task Request";
 
-  @Value("${controller.createworkflow.url}")
-  private String createWorkflowURL;
+  private static final String ERRORLOGPRFIX = "Error for: {}";
+
+  @Autowired
+  @Qualifier("internalRestTemplate")
+  public RestTemplate restTemplate;
 
   @Autowired
   private FlowSettingsService flowSettings;
 
   @Autowired
   private PropertyManager propertyManager;
-
-  @Autowired
-  @Qualifier("internalRestTemplate")
-  public RestTemplate restTemplate;
 
   @Autowired
   public ActivityTaskService taskService;
@@ -85,24 +91,23 @@ public class ControllerClientImpl implements ControllerClient {
   @Autowired
   private FlowWorkflowActivityService workflowActivityService;
 
+  @Autowired
+  private FlowWorkflowService workflowService;
+
+  @Autowired
+  EventingProperties properties;
+
+  @Value("${controller.createtask.url}")
+  public String createTaskURL;
+
+  @Value("${controller.createworkflow.url}")
+  private String createWorkflowURL;
+
   @Value("${controller.terminateworkflow.url}")
   private String terminateWorkflowURL;
 
   @Value("${controller.terminatetask.url}")
   private String terminateTaskURL;
-
-  @Autowired
-  private FlowWorkflowService workflowService;
-
-  private static final String CREATEWORKSPACEREQUEST = "Create Workflow Request";
-  private static final String DELETEWORKSPACEREQUEST = "Delete Workspace Request";
-
-  private static final String CREATEWORKFLOWREQUEST = "Create Workflow Request";
-  private static final String TERMINATEWORKFLOWREQUEST = "Terminate Workflow Request";
-  private static final String CREATETEMPLATETASKREQUEST = "Create Template Task Request";
-  private static final String CREATECUSTOMTASKREQUEST = "Create Custom Task Request";
-  private static final String TERMINATETASKREQUEST = "Terminate Task Request";
-  private static final String ERRORLOGPRFIX = "Error for: {}";
 
   @Value("${controller.createworkspace.url}")
   private String createWorkspaceUrl;
@@ -120,7 +125,6 @@ public class ControllerClientImpl implements ControllerClient {
     request.setWorkflowId(workflowId);
     request.setParameters(properties);
 
-
     if (enableStorage) {
       Workspace workspace = createWorkspaceRequest(activityId, "activity");
       List<Workspace> workspaces = new LinkedList<>();
@@ -128,7 +132,7 @@ public class ControllerClientImpl implements ControllerClient {
       request.setWorkspaces(workspaces);
     }
 
-    request.setLabels(this.convertToMap(labels));
+    request.setLabels(this.prepareLabelsForRequest(labels));
 
     logPayload(CREATEWORKFLOWREQUEST, request);
     Date startTime = new Date();
@@ -221,13 +225,10 @@ public class ControllerClientImpl implements ControllerClient {
     return true;
   }
 
-
-
   @Override
   @Async("flowAsyncExecutor")
   public void submitCustomTask(TaskService t, TaskClient flowTaskClient, Task task,
       String activityId, String workflowName, List<KeyValuePair> labels) {
-
 
     TaskResult taskResult = new TaskResult();
     TaskExecutionEntity taskExecution =
@@ -247,7 +248,7 @@ public class ControllerClientImpl implements ControllerClient {
     request.setWorkflowActivityId(activityId);
     request.setTaskName(task.getTaskName());
     request.setTaskActivityId(task.getTaskActivityId());
-    request.setLabels(this.convertToMap(labels));
+    request.setLabels(this.prepareLabelsForRequest(labels));
 
     WorkflowEntity workflow = this.workflowService.getWorkflow(activity.getWorkflowId());
     List<TaskWorkspace> taskWorkspaces = buildTaskWorkspaceList(workflow, activityId);
@@ -288,11 +289,9 @@ public class ControllerClientImpl implements ControllerClient {
     taskExecution.setFlowTaskStatus(TaskStatus.inProgress);
     taskExecution = taskService.save(taskExecution);
 
-
     TaskConfiguration taskConfiguration = buildTaskConfiguration();
     request.setConfiguration(taskConfiguration);
     request.setWorkspaces(activity.getTaskWorkspaces());
-
 
     logPayload("Create Task Request", request);
 
@@ -368,7 +367,6 @@ public class ControllerClientImpl implements ControllerClient {
     flowTaskClient.endTask(t, response);
   }
 
-
   private List<String> prepareTemplateTaskArguments(List<String> lines, String activityId,
       ControllerRequestProperties applicationProperties, Map<String, String> map) {
     List<String> args = new LinkedList<>();
@@ -381,7 +379,6 @@ public class ControllerClientImpl implements ControllerClient {
 
     return args;
   }
-
 
   private List<String> prepareCustomTaskArguments(String activityId,
       ControllerRequestProperties applicationProperties, Map<String, String> map) {
@@ -400,8 +397,6 @@ public class ControllerClientImpl implements ControllerClient {
     }
     return args;
   }
-
-
 
   @Override
   @Async("flowAsyncExecutor")
@@ -430,8 +425,7 @@ public class ControllerClientImpl implements ControllerClient {
     request.setWorkflowActivityId(activityId);
     request.setTaskName(task.getTaskName());
     request.setTaskActivityId(task.getTaskActivityId());
-    request.setLabels(this.convertToMap(labels));
-
+    request.setLabels(this.prepareLabelsForRequest(labels));
 
     WorkflowEntity workflow = this.workflowService.getWorkflow(activity.getWorkflowId());
     List<TaskWorkspace> taskWorkspaces = buildTaskWorkspaceList(workflow, activityId);
@@ -443,7 +437,6 @@ public class ControllerClientImpl implements ControllerClient {
     Map<String, String> map = applicationProperties.getTaskInputProperties();
 
     request.setParameters(map);
-
 
     TaskConfiguration taskConfiguration = buildTaskConfiguration();
     request.setConfiguration(taskConfiguration);
@@ -465,7 +458,6 @@ public class ControllerClientImpl implements ControllerClient {
 
       TaskResponse response =
           restTemplate.postForObject(createTaskURL, request, TaskResponse.class);
-
 
       Date endTime = new Date();
 
@@ -531,7 +523,6 @@ public class ControllerClientImpl implements ControllerClient {
 
     }
 
-
     taskService.save(taskExecution);
 
     InternalTaskResponse response = new InternalTaskResponse();
@@ -557,7 +548,6 @@ public class ControllerClientImpl implements ControllerClient {
           if (activityStorage.getMountPath() != null && !activityStorage.getMountPath().isBlank()) {
             taskActivity.setMountPath(activityStorage.getMountPath());
           }
-
 
           workspaces.add(taskActivity);
         }
@@ -601,7 +591,6 @@ public class ControllerClientImpl implements ControllerClient {
       }
 
       List<String> command = revision.getCommand();
-
 
       if (command != null && !command.isEmpty() && !checkForBlankValues(command)) {
         request.setCommand(revision.getCommand());
@@ -691,16 +680,17 @@ public class ControllerClientImpl implements ControllerClient {
     LOGGER.debug("Benchmark [Request Type]: {} - {} ms", payloadName, diff);
   }
 
-  private Map<String, String> convertToMap(List<KeyValuePair> labelList) {
+  private Map<String, String> prepareLabelsForRequest(List<KeyValuePair> labelList) {
+
     if (labelList == null) {
       return null;
     }
 
-    Map<String, String> labels = new HashMap<>();
-    for (KeyValuePair property : labelList) {
-      labels.put(property.getKey(), property.getValue());
-    }
-    return labels;
+    // @formatter:off
+    return labelList.stream()
+        .filter(kv -> !kv.getKey().startsWith(properties.getShared().getLabel().getPrefix()))
+        .collect(Collectors.toMap(KeyValuePair::getKey, KeyValuePair::getValue));
+    // @formatter:on
   }
 
   @Override

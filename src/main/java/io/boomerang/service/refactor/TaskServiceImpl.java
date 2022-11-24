@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.TimeZone;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -58,6 +59,8 @@ import io.boomerang.service.runner.misc.ControllerClient;
 @Service
 public class TaskServiceImpl implements TaskService {
 
+  private static final Logger LOGGER = LogManager.getLogger();
+
   @Autowired
   @Lazy
   private ControllerClient controllerClient;
@@ -92,10 +95,8 @@ public class TaskServiceImpl implements TaskService {
   @Autowired
   private LockManager lockManager;
 
-  private static final Logger LOGGER = LogManager.getLogger();
-
   @Autowired
-  private TaskClient flowClient;
+  private TaskClient taskClient;
 
   @Autowired
   private FlowActivityService flowActivityService;
@@ -103,13 +104,12 @@ public class TaskServiceImpl implements TaskService {
   @Autowired
   private WorkflowScheduleService scheduleService;
 
-
   @Override
   @Async("flowAsyncExecutor")
   public void createTask(InternalTaskRequest request) {
 
     String taskId = request.getActivityId();
-    LOGGER.debug("[{}] Recieved creating task request", taskId);
+    LOGGER.debug("[{}] Received creating task request", taskId);
 
     TaskExecutionEntity taskExecution = taskActivityService.findById(taskId);
     ActivityEntity activity =
@@ -131,59 +131,71 @@ public class TaskServiceImpl implements TaskService {
       return;
     }
 
+    // Set workflow and and task statuses as in progress
     TaskType taskType = task.getTaskType();
     taskExecution.setStartTime(new Date());
     taskExecution.setFlowTaskStatus(TaskStatus.inProgress);
     taskExecution = taskActivityService.save(taskExecution);
+    activity.setStatus(TaskStatus.inProgress);
+    activity = activityService.saveWorkflowActivity(activity);
 
     boolean canRunTask = dagUtility.canCompleteTask(activity, task.getTaskId());
-
-    String activityId = activity.getId();
 
     LOGGER.debug("[{}] Examining task type: {}", taskId, taskType);
 
     if (canRunTask) {
       LOGGER.debug("[{}] Can run task? {}", taskId, canRunTask);
 
-      if (taskType == TaskType.decision) {
-        InternalTaskResponse response = new InternalTaskResponse();
-        response.setActivityId(taskExecution.getId());
-        response.setStatus(TaskStatus.completed);
-        processDecision(task, activity.getId());
-        this.endTask(response);
-      } else if (taskType == TaskType.template || taskType == TaskType.script) {
-        List<KeyValuePair> labels = workflow.getLabels();
-        controllerClient.submitTemplateTask(this, flowClient, task, activityId, workflowName,
-            labels);
-      } else if (taskType == TaskType.customtask) {
-        List<KeyValuePair> labels = workflow.getLabels();
-        controllerClient.submitCustomTask(this, flowClient, task, activityId, workflowName, labels);
-      } else if (taskType == TaskType.acquirelock) {
-        createLock(task, activity);
-      } else if (taskType == TaskType.releaselock) {
-        releaseLock(task, activity);
-      } else if (taskType == TaskType.runworkflow) {
-        this.runWorkflow(task, activity);
-      } else if (taskType == TaskType.runscheduledworkflow) {
-        this.runScheduledWorkflow(task, activity, workflowName);
-      } else if (taskType == TaskType.setwfstatus) {
-        saveWorkflowStatus(task, activity);
-        InternalTaskResponse response = new InternalTaskResponse();
-        response.setActivityId(taskExecution.getId());
-        response.setStatus(TaskStatus.completed);
-        this.endTask(response);
-      } else if (taskType == TaskType.setwfproperty) {
-        saveWorkflowProperty(task, activity, taskExecution);
-        InternalTaskResponse response = new InternalTaskResponse();
-        response.setActivityId(taskExecution.getId());
-        response.setStatus(TaskStatus.completed);
-        this.endTask(response);
-      } else if (taskType == TaskType.approval) {
-        createApprovalNotification(taskExecution, task, activity, workflow, ManualType.approval);
-      } else if (taskType == TaskType.manual) {
-        createApprovalNotification(taskExecution, task, activity, workflow, ManualType.task);
-      } else if (taskType == TaskType.eventwait) {
-        createWaitForEventTask(taskExecution);
+      List<KeyValuePair> labels = workflow.getLabels();
+      InternalTaskResponse endTaskResponse = new InternalTaskResponse();
+      endTaskResponse.setActivityId(taskExecution.getId());
+      endTaskResponse.setStatus(TaskStatus.completed);
+
+      switch (task.getTaskType()) {
+        case decision:
+          processDecision(task, activity.getId());
+          endTask(endTaskResponse);
+          break;
+        case template:
+        case script:
+          controllerClient.submitTemplateTask(this, taskClient, task, activity.getId(),
+              workflowName, labels);
+          break;
+        case customtask:
+          controllerClient.submitCustomTask(this, taskClient, task, activity.getId(), workflowName,
+              labels);
+          break;
+        case acquirelock:
+          createLock(task, activity);
+          break;
+        case releaselock:
+          releaseLock(task, activity);
+          break;
+        case runworkflow:
+          runWorkflow(task, activity);
+          break;
+        case runscheduledworkflow:
+          runScheduledWorkflow(task, activity);
+          break;
+        case setwfstatus:
+          saveWorkflowStatus(task, activity);
+          endTask(endTaskResponse);
+          break;
+        case setwfproperty:
+          saveWorkflowProperty(task, activity);
+          endTask(endTaskResponse);
+          break;
+        case approval:
+          createApprovalNotification(taskExecution, task, activity, workflow, ManualType.approval);
+          break;
+        case manual:
+          createApprovalNotification(taskExecution, task, activity, workflow, ManualType.task);
+          break;
+        case eventwait:
+          createWaitForEventTask(taskExecution, activity);
+          break;
+        default:
+          break;
       }
     } else {
       LOGGER.debug("[{}] Skipping task", taskId);
@@ -200,7 +212,7 @@ public class TaskServiceImpl implements TaskService {
     if (!status.isBlank()) {
       TaskStatus taskStatus = TaskStatus.valueOf(status);
       activity.setStatusOverride(taskStatus);
-      this.activityService.saveWorkflowActivity(activity);
+      activityService.saveWorkflowActivity(activity);
     }
   }
 
@@ -223,7 +235,7 @@ public class TaskServiceImpl implements TaskService {
     InternalTaskResponse response = new InternalTaskResponse();
     response.setActivityId(task.getTaskActivityId());
     response.setStatus(TaskStatus.completed);
-    this.endTask(response);
+    endTask(response);
   }
 
   private void runWorkflow(Task task, ActivityEntity activity) {
@@ -239,7 +251,7 @@ public class TaskServiceImpl implements TaskService {
       }
 
       request.setProperties(properties);
-      String workflowActivityId = flowClient.submitWebhookEvent(request);
+      String workflowActivityId = taskClient.submitWebhookEvent(request);
       if (workflowActivityId != null) {
         TaskExecutionEntity taskExecution = taskActivityService.findById(task.getTaskActivityId());
         taskExecution.setRunWorkflowActivityId(workflowActivityId);
@@ -251,10 +263,10 @@ public class TaskServiceImpl implements TaskService {
     InternalTaskResponse response = new InternalTaskResponse();
     response.setActivityId(task.getTaskActivityId());
     response.setStatus(TaskStatus.completed);
-    this.endTask(response);
+    endTask(response);
   }
 
-  private void runScheduledWorkflow(Task task, ActivityEntity activity, String workflowName) {
+  private void runScheduledWorkflow(Task task, ActivityEntity activity) {
     InternalTaskResponse response = new InternalTaskResponse();
     response.setActivityId(task.getTaskActivityId());
     response.setStatus(TaskStatus.failure);
@@ -266,13 +278,15 @@ public class TaskServiceImpl implements TaskService {
       Date executionDate = activity.getCreationDate();
       String timezone = task.getInputs().get("timezone");
       LOGGER.debug("*******Run Scheduled Workflow System Task******");
-      LOGGER.debug("Scheduling new task in " + futureIn + " " + futurePeriod);
+      LOGGER.debug("Scheduling new task in {} {}", futureIn, futurePeriod);
 
-      if (futureIn != null && futureIn != 0 && StringUtils.indexOfAny(futurePeriod,
-          new String[] {"minutes", "hours", "days", "weeks", "months"}) >= 0) {
+      if (futureIn != null && futureIn != 0 && StringUtils.indexOfAny(futurePeriod, "minutes",
+          "hours", "days", "weeks", "months") >= 0) {
         Calendar executionCal = Calendar.getInstance();
         executionCal.setTime(executionDate);
-        Integer calField = Calendar.MINUTE;
+
+        Integer calField;
+
         switch (futurePeriod) {
           case "hours":
             calField = Calendar.HOUR;
@@ -287,22 +301,25 @@ public class TaskServiceImpl implements TaskService {
           case "months":
             calField = Calendar.MONTH;
             break;
+          default:
+            calField = Calendar.MINUTE;
+            break;
         }
         executionCal.add(calField, futureIn);
+
         if (!futurePeriod.equals("minutes") && !futurePeriod.equals("hours")) {
           String[] hoursTime = task.getInputs().get("time").split(":");
           Integer hours = Integer.valueOf(hoursTime[0]);
           Integer minutes = Integer.valueOf(hoursTime[1]);
-          LOGGER
-              .debug("With time to be set to: " + task.getInputs().get("time") + " in " + timezone);
+          LOGGER.debug("With time to be set to: {} in {}", task.getInputs().get("time"), timezone);
           executionCal.setTimeZone(TimeZone.getTimeZone(timezone));
           executionCal.set(Calendar.HOUR, hours);
           executionCal.set(Calendar.MINUTE, minutes);
-          LOGGER.debug(
-              "With execution set to: " + executionCal.getTime().toString() + " in " + timezone);
+          LOGGER.debug("With execution set to: {} in {}", executionCal.getTime(), timezone);
           executionCal.setTimeZone(TimeZone.getTimeZone("UTC"));
         }
-        LOGGER.debug("With execution set to: " + executionCal.getTime().toString() + " in UTC");
+
+        LOGGER.debug("With execution set to: {} in UTC", executionCal.getTime());
 
         // Define new properties removing the System Task specific properties
         ControllerRequestProperties requestProperties = propertyManager
@@ -334,18 +351,20 @@ public class TaskServiceImpl implements TaskService {
         schedule.setTimezone(timezone);
         schedule.setType(WorkflowScheduleType.runOnce);
         List<KeyValuePair> labels = new LinkedList<>();
-        labels.add(new KeyValuePair("workflowName", workflowName));
+        labels.add(new KeyValuePair("workflowName", task.getWorkflowName()));
         schedule.setLabels(labels);
         WorkflowSchedule workflowSchedule = scheduleService.createSchedule(schedule);
+
         if (workflowSchedule != null && workflowSchedule.getId() != null) {
-          LOGGER.debug("Workflow Scheudle (" + workflowSchedule.getId() + ") created.");
+          LOGGER.debug("Workflow Schedule ({}) created.", workflowSchedule.getId());
+
           // TODO: Add a taskExecution with the ScheduleId so it can be deep linked.
           response.setStatus(TaskStatus.completed);
         }
       }
     }
 
-    this.endTask(response);
+    endTask(response);
   }
 
   private void createLock(Task task, ActivityEntity activity) {
@@ -359,10 +378,10 @@ public class TaskServiceImpl implements TaskService {
     InternalTaskResponse response = new InternalTaskResponse();
     response.setActivityId(task.getTaskActivityId());
     response.setStatus(TaskStatus.completed);
-    this.endTask(response);
+    endTask(response);
   }
 
-  private void createWaitForEventTask(TaskExecutionEntity taskExecution) {
+  private void createWaitForEventTask(TaskExecutionEntity taskExecution, ActivityEntity activity) {
 
     LOGGER.debug("[{}] Creating wait for event task", taskExecution.getActivityId());
 
@@ -370,7 +389,7 @@ public class TaskServiceImpl implements TaskService {
       InternalTaskResponse response = new InternalTaskResponse();
       response.setActivityId(taskExecution.getId());
       response.setStatus(TaskStatus.completed);
-      this.endTask(response);
+      endTask(response);
     } else {
       taskExecution.setFlowTaskStatus(TaskStatus.waiting);
       taskActivityService.save(taskExecution);
@@ -379,8 +398,10 @@ public class TaskServiceImpl implements TaskService {
 
   private void createApprovalNotification(TaskExecutionEntity taskExecution, Task task,
       ActivityEntity activity, WorkflowEntity workflow, ManualType type) {
+
     taskExecution.setFlowTaskStatus(TaskStatus.waiting);
     taskExecution = taskActivityService.save(taskExecution);
+
     ApprovalEntity approval = new ApprovalEntity();
     approval.setTaskActivityId(taskExecution.getId());
     approval.setActivityId(activity.getId());
@@ -391,35 +412,31 @@ public class TaskServiceImpl implements TaskService {
     approval.setCreationDate(new Date());
     approval.setNumberOfApprovers(1);
 
-    if (ManualType.approval == type) {
-      if (task.getInputs() != null) {
-        String approverGroupId = task.getInputs().get("approverGroupId");
-        String numberOfApprovers = task.getInputs().get("numberOfApprovers");
+    if (ManualType.approval == type && task.getInputs() != null) {
+      String approverGroupId = task.getInputs().get("approverGroupId");
+      String numberOfApprovers = task.getInputs().get("numberOfApprovers");
 
-        if (approverGroupId != null && !approverGroupId.isBlank()) {
-          approval.setApproverGroupId(approverGroupId);
-        }
-        if (numberOfApprovers != null && !numberOfApprovers.isBlank()) {
-          approval.setNumberOfApprovers(Integer.valueOf(numberOfApprovers));
-        }
+      if (approverGroupId != null && !approverGroupId.isBlank()) {
+        approval.setApproverGroupId(approverGroupId);
+      }
+      if (numberOfApprovers != null && !numberOfApprovers.isBlank()) {
+        approval.setNumberOfApprovers(Integer.valueOf(numberOfApprovers));
       }
     }
+
     approvalService.save(approval);
     activity.setAwaitingApproval(true);
-    this.activityService.saveWorkflowActivity(activity);
+    activityService.saveWorkflowActivity(activity);
   }
 
-  private void saveWorkflowProperty(Task task, ActivityEntity activity,
-      TaskExecutionEntity taskEntity) {
-    if (taskEntity.getOutputProperties() == null) {
-      taskEntity.setOutputProperties(new LinkedList<>());
+  private void saveWorkflowProperty(Task task, ActivityEntity activity) {
+    if (activity.getOutputProperties() == null) {
+      activity.setOutputProperties(new LinkedList<>());
     }
 
+    List<KeyValuePair> outputProperties = activity.getOutputProperties();
     String input = task.getInputs().get("value");
     String output = task.getInputs().get("output");
-
-    List<KeyValuePair> outputProperties = taskEntity.getOutputProperties();
-
     KeyValuePair outputProperty = new KeyValuePair();
     outputProperty.setKey(output);
 
@@ -430,9 +447,7 @@ public class TaskServiceImpl implements TaskService {
 
     outputProperty.setValue(outputValue);
     outputProperties.add(outputProperty);
-    taskEntity.setOutputProperties(outputProperties);
-    taskActivityService.save(taskEntity);
-
+    activityService.saveWorkflowActivity(activity);
   }
 
   @Override
@@ -440,16 +455,17 @@ public class TaskServiceImpl implements TaskService {
   public void endTask(InternalTaskResponse request) {
 
     String activityId = request.getActivityId();
-    LOGGER.info("[{}] Recieved end task request", activityId);
+    LOGGER.info("[{}] Received end task request", activityId);
     TaskExecutionEntity activity = taskActivityService.findById(activityId);
 
     ActivityEntity workflowActivity =
-        this.activityService.findWorkflowActivtyById(activity.getActivityId());
+        activityService.findWorkflowActivtyById(activity.getActivityId());
 
     if (workflowActivity.getStatus() == TaskStatus.cancelled) {
       LOGGER.error("[{}] Workflow has been marked as cancelled, not ending task", activityId);
-      activity.setFlowTaskStatus(TaskStatus.cancelled);
       long duration = new Date().getTime() - activity.getStartTime().getTime();
+
+      activity.setFlowTaskStatus(TaskStatus.cancelled);
       activity.setDuration(duration);
       taskActivityService.save(activity);
       return;
@@ -458,20 +474,17 @@ public class TaskServiceImpl implements TaskService {
     RevisionEntity revision =
         workflowVersionService.getWorkflowlWithId(workflowActivity.getWorkflowRevisionid());
     Task currentTask = getTask(activity);
-    List<Task> tasks = this.createTaskList(revision, workflowActivity);
+    List<Task> tasks = createTaskList(revision, workflowActivity);
 
     String storeId = workflowActivity.getId();
 
     List<String> keys = new LinkedList<>();
     keys.add(storeId);
 
-    workflowActivity = this.activityService.findWorkflowActivtyById(activity.getActivityId());
-
-
+    workflowActivity = activityService.findWorkflowActivtyById(activity.getActivityId());
     activity.setFlowTaskStatus(request.getStatus());
     long duration = new Date().getTime() - activity.getStartTime().getTime();
     activity.setDuration(duration);
-
 
     if (request.getOutputProperties() != null && !request.getOutputProperties().isEmpty()) {
       activity.setOutputs(request.getOutputProperties());
@@ -479,30 +492,29 @@ public class TaskServiceImpl implements TaskService {
 
     activity = taskActivityService.save(activity);
 
-    boolean finishedAll = this.finishedAll(workflowActivity, tasks, currentTask);
+    boolean finishedAll = finishedAll(workflowActivity, tasks, currentTask);
 
     LOGGER.debug("[{}] Finished all previous tasks? {}", activityId, finishedAll);
-
 
     LOGGER.debug("[{}] Attempting to get lock", activityId);
     String tokenId = getLock(storeId, keys, 105000);
     LOGGER.debug("[{}] Obtained lock", activityId);
 
-    workflowActivity = this.activityService.findWorkflowActivtyById(activity.getActivityId());
-    updatePendingAprovalStatus(workflowActivity);
+    workflowActivity = activityService.findWorkflowActivtyById(activity.getActivityId());
+    updatePendingApprovalStatus(workflowActivity);
 
     activity.setFlowTaskStatus(request.getStatus());
 
     String workflowActivityId = workflowActivity.getId();
 
-    if (this.flowActivityService.hasExceededExecutionQuotas(workflowActivityId)) {
+    if (flowActivityService.hasExceededExecutionQuotas(workflowActivityId)) {
       LOGGER.error("Workflow has been cancelled due to its max workflow duration has exceeded.");
       ErrorResponse response = new ErrorResponse();
       response
-          .setMessage("Workflow execution terminated due to exceeding maxinum workflow duration.");
+          .setMessage("Workflow execution terminated due to exceeding maximum workflow duration.");
       response.setCode("001");
 
-      this.flowActivityService.cancelWorkflowActivity(workflowActivityId, response);
+      flowActivityService.cancelWorkflowActivity(workflowActivityId, response);
     } else {
       executeNextStep(workflowActivity, tasks, currentTask, finishedAll);
     }
@@ -510,12 +522,12 @@ public class TaskServiceImpl implements TaskService {
     LOGGER.debug("[{}] Released lock", activityId);
   }
 
-  private void updatePendingAprovalStatus(ActivityEntity workflowActivity) {
+  private void updatePendingApprovalStatus(ActivityEntity workflowActivity) {
     long count = approvalService.getApprovalCountForActivity(workflowActivity.getId(),
         ApprovalStatus.submitted);
     boolean existingApprovals = (count > 0);
     workflowActivity.setAwaitingApproval(existingApprovals);
-    this.activityService.saveWorkflowActivity(workflowActivity);
+    activityService.saveWorkflowActivity(workflowActivity);
   }
 
   private String getLock(String storeId, List<String> keys, long timeout) {
@@ -543,47 +555,29 @@ public class TaskServiceImpl implements TaskService {
   }
 
   private void finishWorkflow(ActivityEntity activity) {
-
     WorkflowEntity workflow = workflowService.getWorkflow(activity.getWorkflowId());
 
-    this.controllerClient.terminateFlow(workflow.getId(), workflow.getName(), activity.getId());
+    controllerClient.terminateFlow(workflow.getId(), workflow.getName(), activity.getId());
     boolean workflowCompleted = dagUtility.validateWorkflow(activity);
 
     if (activity.getStatusOverride() != null) {
       activity.setStatus(activity.getStatusOverride());
+    } else if (workflowCompleted) {
+      activity.setStatus(TaskStatus.completed);
     } else {
-      if (workflowCompleted) {
-        activity.setStatus(TaskStatus.completed);
-      } else {
-        activity.setStatus(TaskStatus.failure);
-      }
+      activity.setStatus(TaskStatus.failure);
     }
 
-    final Date finishDate = new Date();
-    final long duration = finishDate.getTime() - activity.getCreationDate().getTime();
+    final long duration = new Date().getTime() - activity.getCreationDate().getTime();
     activity.setDuration(duration);
-
-    List<TaskExecutionEntity> taskExecutions =
-        taskActivityService.findTaskActiivtyForActivity(activity.getId());
-    if (activity.getOutputProperties() == null) {
-      activity.setOutputProperties(new LinkedList<>());
-    }
-
-    for (TaskExecutionEntity taskExecution : taskExecutions) {
-      if (taskExecution.getOutputProperties() != null) {
-        activity.getOutputProperties().addAll(taskExecution.getOutputProperties());
-      }
-    }
-
-    this.activityService.saveWorkflowActivity(activity);
-
+    activityService.saveWorkflowActivity(activity);
   }
 
   private void executeNextStep(ActivityEntity workflowActivity, List<Task> tasks, Task currentTask,
       boolean finishedAll) {
     LOGGER.debug("[{}] Looking at next tasks", workflowActivity.getId());
     LOGGER.debug("Testing at next tasks");
-    List<Task> nextNodes = this.getTasksDependants(tasks, currentTask);
+    List<Task> nextNodes = getTasksDependencies(tasks, currentTask);
     LOGGER.debug("Testing at next tasks: {}", nextNodes.size());
 
     for (Task next : nextNodes) {
@@ -591,7 +585,7 @@ public class TaskServiceImpl implements TaskService {
       if (next.getTaskType() == TaskType.end) {
         if (finishedAll) {
           LOGGER.debug("FINISHED ALL");
-          this.finishWorkflow(workflowActivity);
+          finishWorkflow(workflowActivity);
           return;
         }
         continue;
@@ -600,16 +594,15 @@ public class TaskServiceImpl implements TaskService {
       boolean executeTask = canExecuteTask(workflowActivity, next);
       LOGGER.debug("[{}] Task: {}", workflowActivity.getId(), next.getTaskName());
 
-
       if (executeTask) {
-        TaskExecutionEntity task = this.taskActivityService
-            .findByTaskIdAndActivityId(next.getTaskId(), workflowActivity.getId());
+        TaskExecutionEntity task = taskActivityService.findByTaskIdAndActivityId(next.getTaskId(),
+            workflowActivity.getId());
         if (task == null) {
           LOGGER.debug("Reached node which should not be executed.");
         } else {
           InternalTaskRequest taskRequest = new InternalTaskRequest();
           taskRequest.setActivityId(task.getId());
-          flowClient.startTask(this, taskRequest);
+          taskClient.startTask(this, taskRequest);
         }
       }
     }
@@ -618,13 +611,13 @@ public class TaskServiceImpl implements TaskService {
   private boolean finishedAll(ActivityEntity workflowActivity, List<Task> tasks, Task currentTask) {
     boolean finishedAll = true;
 
-    List<Task> nextNodes = this.getTasksDependants(tasks, currentTask);
+    List<Task> nextNodes = getTasksDependencies(tasks, currentTask);
     for (Task next : nextNodes) {
       if (next.getTaskType() == TaskType.end) {
-        List<String> deps = next.getDependencies();
-        for (String dep : deps) {
+        List<String> dependencies = next.getDependencies();
+        for (String dependency : dependencies) {
           TaskExecutionEntity task =
-              this.taskActivityService.findByTaskIdAndActivityId(dep, workflowActivity.getId());
+              taskActivityService.findByTaskIdAndActivityId(dependency, workflowActivity.getId());
           if (task == null) {
             continue;
           }
@@ -642,10 +635,10 @@ public class TaskServiceImpl implements TaskService {
   }
 
   private boolean canExecuteTask(ActivityEntity workflowActivity, Task next) {
-    List<String> deps = next.getDependencies();
-    for (String dep : deps) {
+    List<String> dependencies = next.getDependencies();
+    for (String dependency : dependencies) {
       TaskExecutionEntity task =
-          taskActivityService.findByTaskIdAndActivityId(dep, workflowActivity.getId());
+          taskActivityService.findByTaskIdAndActivityId(dependency, workflowActivity.getId());
       if (task != null) {
         TaskStatus status = task.getFlowTaskStatus();
         if (status == TaskStatus.inProgress || status == TaskStatus.notstarted
@@ -657,7 +650,7 @@ public class TaskServiceImpl implements TaskService {
     return true;
   }
 
-  private List<Task> getTasksDependants(List<Task> tasks, Task currentTask) {
+  private List<Task> getTasksDependencies(List<Task> tasks, Task currentTask) {
     return tasks.stream().filter(c -> c.getDependencies().contains(currentTask.getTaskId()))
         .collect(Collectors.toList());
   }
@@ -698,7 +691,6 @@ public class TaskServiceImpl implements TaskService {
             templateService.getTaskTemplateWithId(templateId);
         newTask.setTemplateId(flowTaskTemplate.getId());
 
-
         Integer templateVersion = dagTask.getTemplateVersion();
         List<Revision> revisions = flowTaskTemplate.getRevisions();
         if (revisions != null) {
@@ -737,7 +729,6 @@ public class TaskServiceImpl implements TaskService {
           newTask.setTaskActivityId(task.getId());
         }
 
-
         newTask.setDecisionValue(dagTask.getDecisionValue());
       } else if (dagTask.getType() == TaskType.manual || dagTask.getType() == TaskType.runworkflow
           || dagTask.getType() == TaskType.runscheduledworkflow
@@ -760,12 +751,12 @@ public class TaskServiceImpl implements TaskService {
         newTask.setInputs(properties);
       }
 
-      final List<String> taskDepedancies = new LinkedList<>();
+      final List<String> taskDependencies = new LinkedList<>();
       for (Dependency dependency : dagTask.getDependencies()) {
-        taskDepedancies.add(dependency.getTaskId());
+        taskDependencies.add(dependency.getTaskId());
       }
       newTask.setDetailedDepednacies(dagTask.getDependencies());
-      newTask.setDependencies(taskDepedancies);
+      newTask.setDependencies(taskDependencies);
       taskList.add(newTask);
     }
     return taskList;
@@ -776,11 +767,10 @@ public class TaskServiceImpl implements TaskService {
 
     List<String> ids = new LinkedList<>();
 
-    LOGGER.info("[{}] Fidning task actiivty id based on topic.", activityId);
+    LOGGER.info("[{}] Finding task activity id based on topic.", activityId);
     ActivityEntity activity = activityService.findWorkflowActivtyById(activityId);
     RevisionEntity revision =
         workflowVersionService.getWorkflowlWithId(activity.getWorkflowRevisionid());
-
 
     List<DAGTask> tasks = revision.getDag().getTasks();
     for (DAGTask task : tasks) {
@@ -799,11 +789,12 @@ public class TaskServiceImpl implements TaskService {
 
             String taskId = task.getTaskId();
             TaskExecutionEntity taskExecution =
-                this.taskActivityService.findByTaskIdAndActivityId(taskId, activityId);
+                taskActivityService.findByTaskIdAndActivityId(taskId, activityId);
             if (taskExecution != null) {
-              LOGGER.info("[{}] Found task id: {} ", activityId, taskExecution.getId());
+              LOGGER.info("[{}] Found task id: {} for topic {}", activityId, taskExecution.getId(),
+                  topic);
               taskExecution.setPreApproved(true);
-              this.taskActivityService.save(taskExecution);
+              taskActivityService.save(taskExecution);
 
               ids.add(taskExecution.getId());
             }
@@ -811,7 +802,6 @@ public class TaskServiceImpl implements TaskService {
         }
       }
     }
-    LOGGER.info("[{}] No task activity ids found for topic: {}", activityId, topic);
     return ids;
   }
 
@@ -823,16 +813,14 @@ public class TaskServiceImpl implements TaskService {
     LOGGER.info("submitActivity: {}", taskStatus);
 
     TaskStatus status = TaskStatus.completed;
-    if ("success".equals(taskStatus)) {
-      status = TaskStatus.completed;
-    } else if ("failure".equals(taskStatus)) {
+
+    if ("failure".equals(taskStatus)) {
       status = TaskStatus.failure;
     }
 
-    LOGGER.info("Submit Activity (Task Status): {}", status.toString());
+    LOGGER.info("Submit Activity (Task Status): {}", status);
 
-
-    TaskExecutionEntity taskExecution = this.taskActivityService.findById(taskActivityId);
+    TaskExecutionEntity taskExecution = taskActivityService.findById(taskActivityId);
     if (taskExecution != null && !taskExecution.getFlowTaskStatus().equals(TaskStatus.notstarted)) {
       InternalTaskResponse request = new InternalTaskResponse();
       request.setActivityId(taskActivityId);
@@ -844,5 +832,41 @@ public class TaskServiceImpl implements TaskService {
 
       endTask(request);
     }
+  }
+
+  @Override
+  public String retrieveWaitForEventTaskTopic(TaskExecutionEntity taskExecution) {
+
+    // Sanity check
+    if (taskExecution.getTaskType() != TaskType.eventwait) {
+      return null;
+    }
+
+    LOGGER.info("[{}] Finding task activity id based on task execution.",
+        taskExecution.getActivityId());
+
+    // Get the tasks of the DAG that this task execution is part of
+    ActivityEntity activity =
+        activityService.findWorkflowActivtyById(taskExecution.getActivityId());
+    RevisionEntity revision =
+        workflowVersionService.getWorkflowlWithId(activity.getWorkflowRevisionid());
+    List<DAGTask> tasks = revision.getDag().getTasks();
+
+    // @formatter:off
+    Function<DAGTask, String> getTopicPropertyValue = task -> task.getProperties().stream()
+        .filter(property -> property.getKey().equalsIgnoreCase("topic"))
+        .map(KeyValuePair::getValue)
+        .findFirst()
+        .orElse(null);
+    // @formatter:on
+
+    // Find the task based on task ID and extract the topic
+    // @formatter:off
+    return tasks.stream()
+        .filter(task -> task.getTaskId().equals(taskExecution.getTaskId()))
+        .map(getTopicPropertyValue)
+        .findFirst()
+        .orElse(null);
+    // @formatter:on
   }
 }
