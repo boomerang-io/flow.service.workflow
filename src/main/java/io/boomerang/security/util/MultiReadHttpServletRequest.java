@@ -2,9 +2,8 @@ package io.boomerang.security.util;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.security.Principal;
 import java.util.Collection;
@@ -28,9 +27,6 @@ import javax.servlet.http.HttpUpgradeHandler;
 import javax.servlet.http.Part;
 import org.springframework.util.StreamUtils;
 
-/*
- * Reference: https://www.baeldung.com/spring-reading-httpservletrequest-multiple-times
- */
 public class MultiReadHttpServletRequest implements HttpServletRequest {
 
   private final byte[] buffer;
@@ -38,8 +34,9 @@ public class MultiReadHttpServletRequest implements HttpServletRequest {
 
   public MultiReadHttpServletRequest(HttpServletRequest request) throws IOException {
     this.request = request;
-    InputStream requestInputStream = request.getInputStream();
-    this.buffer = StreamUtils.copyToByteArray(requestInputStream);
+    ByteArrayOutputStream bufferStream = new ByteArrayOutputStream();
+    StreamUtils.copy(request.getInputStream(), bufferStream);
+    this.buffer = bufferStream.toByteArray();
   }
 
   @Override
@@ -81,12 +78,6 @@ public class MultiReadHttpServletRequest implements HttpServletRequest {
         }
       }
     };
-  }
-
-  @Override
-  public BufferedReader getReader() throws IOException {
-    ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(this.buffer);
-    return new BufferedReader(new InputStreamReader(byteArrayInputStream));
   }
 
   @Override
@@ -323,6 +314,11 @@ public class MultiReadHttpServletRequest implements HttpServletRequest {
   @Override
   public int getServerPort() {
     return request.getServerPort();
+  }
+
+  @Override
+  public BufferedReader getReader() throws IOException {
+    return request.getReader();
   }
 
   @Override

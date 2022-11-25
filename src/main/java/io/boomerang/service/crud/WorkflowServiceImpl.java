@@ -1,5 +1,6 @@
 package io.boomerang.service.crud;
 
+import static io.boomerang.util.DataAdapterUtil.filterValueByFieldType;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -37,7 +38,6 @@ import com.google.inject.internal.util.Maps;
 import io.boomerang.error.BoomerangError;
 import io.boomerang.error.BoomerangException;
 import io.boomerang.model.DuplicateRequest;
-import io.boomerang.model.FlowTeam;
 import io.boomerang.model.FlowWorkflowRevision;
 import io.boomerang.model.GenerateTokenResponse;
 import io.boomerang.model.TemplateWorkflowSummary;
@@ -79,8 +79,8 @@ import io.boomerang.security.service.UserValidationService;
 import io.boomerang.service.PropertyManager;
 import io.boomerang.service.UserIdentityService;
 import io.boomerang.service.runner.misc.ControllerClient;
+import io.boomerang.util.DataAdapterUtil.FieldType;
 import io.boomerang.util.ModelConverterV5;
-import static io.boomerang.util.DataAdapterUtil.*;
 
 @Service
 public class WorkflowServiceImpl implements WorkflowService {
@@ -248,9 +248,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
     entity = workflowRepository.getWorkflow(entity.getId());
 
-    final WorkflowSummary summary = new WorkflowSummary(entity);
-
-    return summary;
+    return new WorkflowSummary(entity);
   }
 
   private void setupTriggerDefaults(final WorkflowEntity flowWorkflowEntity) {
@@ -360,9 +358,9 @@ public class WorkflowServiceImpl implements WorkflowService {
         currentSchedulerEnabled = currentTriggers.getScheduler().getEnable();
       }
       boolean updatedSchedulerEnabled = updatedTriggers.getScheduler().getEnable();
-      if (updatedTriggers.getScheduler().getEnable() == false) {
+      if (!updatedTriggers.getScheduler().getEnable()) {
         workflowScheduleService.disableAllTriggerSchedules(entity.getId());
-      } else if (currentSchedulerEnabled == false && updatedSchedulerEnabled == true) {
+      } else if (currentSchedulerEnabled && updatedSchedulerEnabled) {
         workflowScheduleService.enableAllTriggerSchedules(entity.getId());
       }
 
@@ -651,50 +649,90 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   @Override
   public List<WorkflowShortSummary> getWorkflowShortSummaryList() {
-    List<WorkflowShortSummary> summaryList = new LinkedList<>();
-    List<WorkflowEntity> workfows = workflowRepository.getAllWorkflows();
-    for (WorkflowEntity workflow : workfows) {
+    List<WorkflowShortSummary> summaryList = new ArrayList<>();
 
-      if (WorkflowStatus.active.equals(workflow.getStatus())) {
+    for (WorkflowEntity workflow : workflowRepository.getAllWorkflows()) {
 
+      // Skip this workflow if it is disabled
+      if (!WorkflowStatus.active.equals(workflow.getStatus())) {
+        continue;
+      }
 
-        String workflowName = workflow.getName();
-        boolean webhookEnabled = false;
-        String flowTeamId = workflow.getFlowTeamId();
+      WorkflowShortSummary summary = new WorkflowShortSummary();
+      summary.setWebhookEnabled(false);
+      summary.setCustomEventEnabled(false);
+      summary.setWorkflowName(workflow.getName());
+      summary.setWorkflowId(workflow.getId());
+      summary.setTeamId(workflow.getFlowTeamId());
 
-        if (workflow.getTriggers() != null) {
-          Triggers triggers = workflow.getTriggers();
-          TriggerEvent webhook = triggers.getWebhook();
+      if (workflow.getTriggers() != null) {
+        Triggers triggers = workflow.getTriggers();
+        TriggerEvent webhook = triggers.getWebhook();
 
-          if (webhook != null) {
-            webhookEnabled = webhook.getEnable();
-          }
-        }
-        WorkflowShortSummary summary = new WorkflowShortSummary();
-        summary.setWebhookEnabled(webhookEnabled);
-        summary.setWorkflowName(workflowName);
-        summary.setWorkflowId(workflow.getId());
-
-        if (workflow.getScope() != null) {
-          summary.setScope(workflow.getScope());
-        } else {
-          summary.setScope(WorkflowScope.team);
+        if (webhook != null) {
+          summary.setWebhookEnabled(webhook.getEnable());
         }
 
-        summary.setTeamId(flowTeamId);
-
-        if (WorkflowScope.system == summary.getScope()) {
-          summaryList.add(summary);
-        } else if (WorkflowScope.team == summary.getScope()) {
-          if (flowTeamId != null) {
-            FlowTeam flowTeam = teamService.getTeamById(flowTeamId);
-            if (flowTeam != null) {
-              summary.setTeamName(flowTeam.getName());
-              summaryList.add(summary);
-            }
-          }
+        if (triggers.getCustom() != null) {
+          summary.setCustomEventEnabled(triggers.getCustom().getEnable());
+          summary.setCustomEvent(triggers.getCustom().getTopic());
         }
       }
+
+      if (workflow.getScope() != null) {
+        summary.setScope(workflow.getScope());
+      } else {
+        summary.setScope(WorkflowScope.team);
+      }
+
+      if (WorkflowScope.system == summary.getScope()) {
+        summaryList.add(summary);
+      } else if (WorkflowScope.team == summary.getScope() && workflow.getFlowTeamId() != null) {
+
+        Optional.ofNullable(teamService.getTeamById(workflow.getFlowTeamId()))
+            .ifPresent(flowTeam -> {
+              summary.setTeamName(flowTeam.getName());
+              summaryList.add(summary);
+            });
+      }
+    }
+
+    return summaryList;
+  }
+
+  @Override
+  public List<WorkflowShortSummary> getSystemWorkflowShortSummaryList() {
+    List<WorkflowShortSummary> summaryList = new ArrayList<>();
+
+    for (WorkflowEntity workflow : workflowRepository.getSystemWorkflows()) {
+
+      // Skip this workflow if it is disabled
+      if (!WorkflowStatus.active.equals(workflow.getStatus())) {
+        continue;
+      }
+
+      WorkflowShortSummary summary = new WorkflowShortSummary();
+      summary.setWebhookEnabled(false);
+      summary.setCustomEventEnabled(false);
+      summary.setWorkflowName(workflow.getName());
+      summary.setWorkflowId(workflow.getId());
+      summary.setScope(WorkflowScope.system);
+
+      if (workflow.getTriggers() != null) {
+        Triggers triggers = workflow.getTriggers();
+        TriggerEvent webhook = triggers.getWebhook();
+
+        if (webhook != null) {
+          summary.setWebhookEnabled(webhook.getEnable());
+        }
+
+        if (triggers.getCustom() != null) {
+          summary.setCustomEventEnabled(triggers.getCustom().getEnable());
+          summary.setCustomEvent(triggers.getCustom().getTopic());
+        }
+      }
+
+      summaryList.add(summary);
     }
     return summaryList;
   }
@@ -721,21 +759,19 @@ public class WorkflowServiceImpl implements WorkflowService {
 
     // Check if Workflow exists and is active. Then check triggers are enabled.
     WorkflowEntity workflow = workflowRepository.getWorkflow(workflowId);
-    if (workflow != null && WorkflowStatus.active.equals(workflow.getStatus())) {
-      if (workflow.getTriggers() != null) {
-        Triggers triggers = workflow.getTriggers();
-        if (FlowTriggerEnum.manual.toString().equals(trigger.get())
-            && triggers.getManual() != null) {
-          Trigger manualTrigger = triggers.getManual();
-          if (manualTrigger != null) {
-            return manualTrigger.getEnable();
-          }
-        } else if (FlowTriggerEnum.scheduler.toString().equals(trigger.get())
-            && triggers.getScheduler() != null) {
-          Trigger scheduleTrigger = triggers.getScheduler();
-          if (scheduleTrigger != null) {
-            return scheduleTrigger.getEnable();
-          }
+    if (workflow != null && WorkflowStatus.active.equals(workflow.getStatus())
+        && workflow.getTriggers() != null) {
+      Triggers triggers = workflow.getTriggers();
+      if (FlowTriggerEnum.manual.toString().equals(trigger.get()) && triggers.getManual() != null) {
+        Trigger manualTrigger = triggers.getManual();
+        if (manualTrigger != null) {
+          return manualTrigger.getEnable();
+        }
+      } else if (FlowTriggerEnum.scheduler.toString().equals(trigger.get())
+          && triggers.getScheduler() != null) {
+        Trigger scheduleTrigger = triggers.getScheduler();
+        if (scheduleTrigger != null) {
+          return scheduleTrigger.getEnable();
         }
       }
     }
@@ -765,13 +801,12 @@ public class WorkflowServiceImpl implements WorkflowService {
     }
 
     WorkflowQuotas workflowQuotas = teamService.getTeamQuotas(teamId);
-    if (workflowQuotas.getCurrentConcurrentWorkflows() >= workflowQuotas.getMaxConcurrentWorkflows()
-        || workflowQuotas.getCurrentWorkflowExecutionMonthly() >= workflowQuotas
-            .getMaxWorkflowExecutionMonthly()) {
-      return false;
-    } else {
-      return true;
-    }
+    boolean concurrentWorkflowsUnderLimit =
+        workflowQuotas.getCurrentConcurrentWorkflows() < workflowQuotas.getMaxConcurrentWorkflows();
+    boolean workflowMonthlyExecutionsUnderLimit = workflowQuotas
+        .getCurrentWorkflowExecutionMonthly() < workflowQuotas.getMaxWorkflowExecutionMonthly();
+
+    return concurrentWorkflowsUnderLimit && workflowMonthlyExecutionsUnderLimit;
   }
 
   @Override
@@ -814,38 +849,6 @@ public class WorkflowServiceImpl implements WorkflowService {
     teamService.updateSummaryWithUpgradeFlags(newList);
 
     return newList;
-  }
-
-  @Override
-  public List<WorkflowShortSummary> getSystemWorkflowShortSummaryList() {
-    List<WorkflowShortSummary> summaryList = new LinkedList<>();
-
-    List<WorkflowEntity> workfows = workflowRepository.getSystemWorkflows();
-    for (WorkflowEntity workflow : workfows) {
-
-      if (WorkflowStatus.active.equals(workflow.getStatus())) {
-
-
-        String workflowName = workflow.getName();
-        boolean webhookEnabled = false;
-
-        if (workflow.getTriggers() != null) {
-          Triggers triggers = workflow.getTriggers();
-          TriggerEvent webhook = triggers.getWebhook();
-
-          if (webhook != null) {
-            webhookEnabled = webhook.getEnable();
-          }
-        }
-        WorkflowShortSummary summary = new WorkflowShortSummary();
-        summary.setWebhookEnabled(webhookEnabled);
-        summary.setWorkflowName(workflowName);
-        summary.setWorkflowId(workflow.getId());
-        summary.setScope(WorkflowScope.system);
-        summaryList.add(summary);
-      }
-    }
-    return summaryList;
   }
 
   @Override
@@ -1166,16 +1169,13 @@ public class WorkflowServiceImpl implements WorkflowService {
 
     UserWorkflowSummary summary =
         getUserWorkflows(workflowRepository.getWorkflow(workflowId).getOwnerUserId());
-
     WorkflowQuotas workflowQuotas = summary.getUserQuotas();
-    if (workflowQuotas.getCurrentConcurrentWorkflows() >= workflowQuotas.getMaxConcurrentWorkflows()
-        || workflowQuotas.getCurrentWorkflowExecutionMonthly() >= workflowQuotas
-            .getMaxWorkflowExecutionMonthly()) {
+    boolean concurrentWorkflowsUnderLimit =
+        workflowQuotas.getCurrentConcurrentWorkflows() < workflowQuotas.getMaxConcurrentWorkflows();
+    boolean workflowMonthlyExecutionsUnderLimit = workflowQuotas
+        .getCurrentWorkflowExecutionMonthly() < workflowQuotas.getMaxWorkflowExecutionMonthly();
 
-      return false;
-    } else {
-      return true;
-    }
+    return concurrentWorkflowsUnderLimit && workflowMonthlyExecutionsUnderLimit;
   }
 
   @Override
@@ -1226,6 +1226,5 @@ public class WorkflowServiceImpl implements WorkflowService {
       return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
     return new ResponseEntity<>(response, HttpStatus.OK);
-
   }
 }

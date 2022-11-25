@@ -1,8 +1,5 @@
 package io.boomerang.security.interceptors;
 
-import java.io.UnsupportedEncodingException;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.text.WordUtils;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 
 public class UserAuthenticationFactory {
@@ -159,6 +156,7 @@ public class UserAuthenticationFactory {
     return null;
   }
   
+  /*
   private String santaize(String value) {
     if (StringUtils.isBlank(value)) {
       return value;
@@ -173,5 +171,5 @@ public class UserAuthenticationFactory {
     cleanString = WordUtils.capitalizeFully(cleanString);
     return cleanString;
   }
-
+  */
 }

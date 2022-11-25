@@ -96,7 +96,7 @@ public class ActivityController {
       pagingSort = Sort.by(new Order(direction, sortByKey));
     }
     final Pageable pageable = PageRequest.of(page, size, pagingSort);
-    return flowActivityService.getAllActivites(from, to, pageable, workflowIds, teamIds, statuses,
+    return flowActivityService.getAllActivities(from, to, pageable, workflowIds, teamIds, statuses,
         triggers, scopes, sort.get(), order.get());
   }
 
