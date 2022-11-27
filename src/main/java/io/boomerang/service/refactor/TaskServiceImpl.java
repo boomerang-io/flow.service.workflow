@@ -175,14 +175,14 @@ public class TaskServiceImpl implements TaskService {
           runWorkflow(task, activity);
           break;
         case runscheduledworkflow:
-          runScheduledWorkflow(task, activity);
+          runScheduledWorkflow(task, activity, workflowName);
           break;
         case setwfstatus:
           saveWorkflowStatus(task, activity);
           endTask(endTaskResponse);
           break;
         case setwfproperty:
-          saveWorkflowProperty(task, activity);
+          saveWorkflowProperty(task, activity, taskExecution);
           endTask(endTaskResponse);
           break;
         case approval:
@@ -192,7 +192,7 @@ public class TaskServiceImpl implements TaskService {
           createApprovalNotification(taskExecution, task, activity, workflow, ManualType.task);
           break;
         case eventwait:
-          createWaitForEventTask(taskExecution, activity);
+          createWaitForEventTask(taskExecution);
           break;
         default:
           break;
@@ -266,7 +266,7 @@ public class TaskServiceImpl implements TaskService {
     endTask(response);
   }
 
-  private void runScheduledWorkflow(Task task, ActivityEntity activity) {
+  private void runScheduledWorkflow(Task task, ActivityEntity activity, String workflowName) {
     InternalTaskResponse response = new InternalTaskResponse();
     response.setActivityId(task.getTaskActivityId());
     response.setStatus(TaskStatus.failure);
@@ -351,7 +351,7 @@ public class TaskServiceImpl implements TaskService {
         schedule.setTimezone(timezone);
         schedule.setType(WorkflowScheduleType.runOnce);
         List<KeyValuePair> labels = new LinkedList<>();
-        labels.add(new KeyValuePair("workflowName", task.getWorkflowName()));
+        labels.add(new KeyValuePair("workflowName", workflowName));
         schedule.setLabels(labels);
         WorkflowSchedule workflowSchedule = scheduleService.createSchedule(schedule);
 
@@ -381,7 +381,7 @@ public class TaskServiceImpl implements TaskService {
     endTask(response);
   }
 
-  private void createWaitForEventTask(TaskExecutionEntity taskExecution, ActivityEntity activity) {
+  private void createWaitForEventTask(TaskExecutionEntity taskExecution) {
 
     LOGGER.debug("[{}] Creating wait for event task", taskExecution.getActivityId());
 
@@ -429,14 +429,17 @@ public class TaskServiceImpl implements TaskService {
     activityService.saveWorkflowActivity(activity);
   }
 
-  private void saveWorkflowProperty(Task task, ActivityEntity activity) {
-    if (activity.getOutputProperties() == null) {
-      activity.setOutputProperties(new LinkedList<>());
+  private void saveWorkflowProperty(Task task, ActivityEntity activity,
+      TaskExecutionEntity taskEntity) {
+    if (taskEntity.getOutputProperties() == null) {
+      taskEntity.setOutputProperties(new LinkedList<>());
     }
 
-    List<KeyValuePair> outputProperties = activity.getOutputProperties();
     String input = task.getInputs().get("value");
     String output = task.getInputs().get("output");
+
+    List<KeyValuePair> outputProperties = taskEntity.getOutputProperties();
+
     KeyValuePair outputProperty = new KeyValuePair();
     outputProperty.setKey(output);
 
@@ -447,7 +450,9 @@ public class TaskServiceImpl implements TaskService {
 
     outputProperty.setValue(outputValue);
     outputProperties.add(outputProperty);
-    activityService.saveWorkflowActivity(activity);
+    taskEntity.setOutputProperties(outputProperties);
+    taskActivityService.save(taskEntity);
+
   }
 
   @Override
@@ -570,7 +575,21 @@ public class TaskServiceImpl implements TaskService {
 
     final long duration = new Date().getTime() - activity.getCreationDate().getTime();
     activity.setDuration(duration);
+
+    List<TaskExecutionEntity> taskExecutions =
+        taskActivityService.findTaskActiivtyForActivity(activity.getId());
+    if (activity.getOutputProperties() == null) {
+      activity.setOutputProperties(new LinkedList<>());
+    }
+
+    for (TaskExecutionEntity taskExecution : taskExecutions) {
+      if (taskExecution.getOutputProperties() != null) {
+        activity.getOutputProperties().addAll(taskExecution.getOutputProperties());
+      }
+    }
+
     activityService.saveWorkflowActivity(activity);
+
   }
 
   private void executeNextStep(ActivityEntity workflowActivity, List<Task> tasks, Task currentTask,
