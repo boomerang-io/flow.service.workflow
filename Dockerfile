@@ -1,4 +1,4 @@
-FROM adoptopenjdk/openjdk11:latest
+FROM eclipse-temurin:11.0.17_8-jdk-alpine
 ARG BMRG_TAG
 ENV JAVA_OPTS=""
 ENV BMRG_HOME=/opt/boomerang
