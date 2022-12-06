@@ -8,6 +8,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 import java.util.Optional;
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
@@ -15,6 +16,7 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -29,11 +31,14 @@ import com.jayway.jsonpath.spi.mapper.JacksonMappingProvider;
 import io.boomerang.model.FlowActivity;
 import io.boomerang.model.FlowExecutionRequest;
 import io.boomerang.model.eventing.EventResponse;
+import io.boomerang.mongo.entity.WorkflowEntity;
 import io.boomerang.mongo.model.KeyValuePair;
 import io.boomerang.mongo.model.Triggers;
 import io.boomerang.mongo.model.WorkflowProperty;
 import io.boomerang.service.crud.WorkflowService;
 import io.boomerang.service.refactor.TaskService;
+import io.boomerang.util.ParameterMapper;
+import io.boomerang.util.DataAdapterUtil.FieldType;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.v1.AttributesImpl;
 import io.cloudevents.v1.CloudEventBuilder;
@@ -199,7 +204,7 @@ public class EventProcessorImpl implements EventProcessor {
       property.setKey("eventId");
       property.setValue(event.getAttributes().getId());
       cloudEventLabels.add(property);
-      executionRequest.setLabels(cloudEventLabels);
+      // executionRequest.setLabels(cloudEventLabels);
       executionRequest.setProperties(processProperties(eventData, workflowId));
 
       FlowActivity activity = executionService.executeWorkflow(workflowId, Optional.of(trigger),
@@ -273,14 +278,43 @@ public class EventProcessorImpl implements EventProcessor {
         logger.error(e.toString());
       }
     }
+    ObjectMapper mapper = new ObjectMapper();
+    Map<String, String> payloadProperties = mapper.convertValue(eventData.get("properties"),
+        new TypeReference<Map<String, String>>() {});
+    if (payloadProperties != null) {
+      properties.putAll(payloadProperties);
+    }
 
-    properties.put("eventPayload", eventData.toString());
+    // properties.put("eventPayload", eventData.toString());
 
-    properties.forEach((k, v) -> {
-      logger.info("processProperties() - " + k + "=" + v);
-    });
+    WorkflowEntity workflow = workflowService.getWorkflow(workflowId);
+    Map<String, String> finalProperties = new HashMap<>();
 
-    return properties;
+    if (!properties.isEmpty()) {
+      List<KeyValuePair> propertyList = ParameterMapper.mapToKeyValuePairList(properties);
+      Map<String, WorkflowProperty> workflowPropMap = workflow.getProperties().stream().collect(
+          Collectors.toMap(WorkflowProperty::getKey, WorkflowProperty -> WorkflowProperty));
+      // Use default value for password-type parameter when user input value is null when executing
+      // workflow.
+      propertyList.stream().forEach(p -> {
+        if (workflowPropMap.get(p.getKey()) != null
+            && FieldType.PASSWORD.value().equals(workflowPropMap.get(p.getKey()).getType())
+            && p.getValue() == null) {
+          p.setValue(workflowPropMap.get(p.getKey()).getDefaultValue());
+        }
+      });
+
+      for (KeyValuePair prop : propertyList) {
+        logger.info("processProperties() - " + prop.getKey() + "=" + prop.getValue());
+        finalProperties.put(prop.getKey(), prop.getValue());
+      }
+    } else {
+
+      for (WorkflowProperty property : workflow.getProperties()) {
+        finalProperties.put(property.getKey(), property.getDefaultValue());
+      }
+    }
+    return finalProperties;
   }
 
   private Boolean isTriggerEnabled(String trigger, String workflowId, String topic) {
