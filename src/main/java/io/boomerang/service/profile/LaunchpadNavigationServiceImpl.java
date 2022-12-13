@@ -2,6 +2,8 @@ package io.boomerang.service.profile;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -59,7 +61,7 @@ public class LaunchpadNavigationServiceImpl implements LaunchpadNavigationServic
   
   private static final String AUTHORIZATION_HEADER = "Authorization";
   private static final String TOKEN_PREFIX = "Bearer ";
-
+  
   @Autowired
   private ApiTokenService apiTokenService;
   
@@ -122,6 +124,18 @@ public class LaunchpadNavigationServiceImpl implements LaunchpadNavigationServic
     HttpEntity<String> requestUpdate = new HttpEntity<>("", headers);
     ResponseEntity<NavigationResponse> response =
         restTemplate.exchange(uriComponents.toUriString(), HttpMethod.GET, requestUpdate, NavigationResponse.class);
+    NavigationResponse result = response.getBody();
+    if (result != null && result.getPlatform() != null) {
+      if(Strings.isBlank(result.getPlatform().getAppName())) {
+        // set default appName if the external Navigation API does NOT return appName.
+        String defaultAppName = settingsService.getConfiguration("customizations", "appName").getValue();
+        result.getPlatform().setAppName(defaultAppName);
+      }
+      if(!Strings.isBlank(result.getPlatform().getPlatformName())) {
+        // add | to the end of the platformName
+        result.getPlatform().setPlatformName(result.getPlatform().getPlatformName() + " |");
+      }
+    }
     return response.getBody();
   }
   
