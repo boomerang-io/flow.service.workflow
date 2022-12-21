@@ -27,6 +27,9 @@ import javax.servlet.http.HttpUpgradeHandler;
 import javax.servlet.http.Part;
 import org.springframework.util.StreamUtils;
 
+/*
+ * Reference: https://www.baeldung.com/spring-reading-httpservletrequest-multiple-times
+ */
 public class MultiReadHttpServletRequest implements HttpServletRequest {
 
   private final byte[] buffer;
