@@ -2,8 +2,9 @@ package io.boomerang.security.util;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.security.Principal;
 import java.util.Collection;
@@ -37,9 +38,8 @@ public class MultiReadHttpServletRequest implements HttpServletRequest {
 
   public MultiReadHttpServletRequest(HttpServletRequest request) throws IOException {
     this.request = request;
-    ByteArrayOutputStream bufferStream = new ByteArrayOutputStream();
-    StreamUtils.copy(request.getInputStream(), bufferStream);
-    this.buffer = bufferStream.toByteArray();
+    InputStream requestInputStream = request.getInputStream();
+    this.buffer = StreamUtils.copyToByteArray(requestInputStream);
   }
 
   @Override
@@ -81,6 +81,11 @@ public class MultiReadHttpServletRequest implements HttpServletRequest {
         }
       }
     };
+  }
+
+  public BufferedReader getReader() throws IOException {
+    ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(this.buffer);
+    return new BufferedReader(new InputStreamReader(byteArrayInputStream));
   }
 
   @Override
@@ -317,11 +322,6 @@ public class MultiReadHttpServletRequest implements HttpServletRequest {
   @Override
   public int getServerPort() {
     return request.getServerPort();
-  }
-
-  @Override
-  public BufferedReader getReader() throws IOException {
-    return request.getReader();
   }
 
   @Override
