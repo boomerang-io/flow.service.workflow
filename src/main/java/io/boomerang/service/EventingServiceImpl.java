@@ -20,6 +20,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.EventListener;
@@ -64,6 +65,7 @@ import io.nats.client.api.ConsumerConfiguration;
 import io.nats.client.api.StreamConfiguration;
 
 @Service
+@ConditionalOnProperty(value = "eventing.enabled", havingValue = "true", matchIfMissing = false)
 public class EventingServiceImpl implements EventingService, SubHandler {
 
   private static final Logger logger = LogManager.getLogger(EventingServiceImpl.class);
