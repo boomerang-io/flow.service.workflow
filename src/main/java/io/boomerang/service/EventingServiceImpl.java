@@ -103,8 +103,6 @@ public class EventingServiceImpl implements EventingService, SubHandler {
   @Autowired
   private TaskService taskService;
 
-  private ConnectionPrimer connectionPrimer;
-
   private PubOnlyTunnel outputEventsTunnel;
 
   private SubOnlyTunnel inputEventsTunnel;
@@ -113,6 +111,8 @@ public class EventingServiceImpl implements EventingService, SubHandler {
 
   @PostConstruct
   private void init() {
+
+    ConnectionPrimer connectionPrimer;
 
     // Build connection primer
     // @formatter:off

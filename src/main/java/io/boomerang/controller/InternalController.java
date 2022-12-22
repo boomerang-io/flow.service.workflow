@@ -43,7 +43,7 @@ public class InternalController {
   @Autowired
   private WorkflowService workflowService;
 
-  @Autowired
+  @Autowired(required = false)
   private EventingService eventingService;
 
   @Autowired
@@ -80,7 +80,9 @@ public class InternalController {
     CloudEvent cloudEvent =
         CloudEventHttpUtils.toReader(headers, () -> payload.getBytes()).toEvent();
     try {
-      eventingService.processCloudEventRequest(cloudEvent);
+      if (eventingService != null) {
+        eventingService.processCloudEventRequest(cloudEvent);
+      }
       return ResponseEntity
           .ok(new EventResponse(cloudEvent.getId(), HttpStatus.OK.value(), "Event processed!"));
     } catch (Exception e) {
