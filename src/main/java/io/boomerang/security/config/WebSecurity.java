@@ -1,5 +1,7 @@
 package io.boomerang.security.config;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
@@ -19,6 +21,8 @@ import io.boomerang.security.filters.FlowAuthorizationFilter;
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true, securedEnabled = true, proxyTargetClass = true)
 public class WebSecurity extends WebSecurityConfigurerAdapter {
+
+  private static final Logger LOGGER = LogManager.getLogger();
 
   private static final String INFO = "/info";
 

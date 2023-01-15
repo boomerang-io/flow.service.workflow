@@ -86,9 +86,9 @@ import io.boomerang.service.PropertyManager;
 import io.boomerang.service.UserIdentityService;
 import io.boomerang.service.refactor.ControllerRequestProperties;
 import io.boomerang.service.runner.misc.ControllerClient;
+import io.boomerang.util.DataAdapterUtil.FieldType;
 import io.boomerang.util.DateUtil;
 import io.boomerang.util.ParameterMapper;
-import io.boomerang.util.DataAdapterUtil.FieldType;
 
 @Service
 public class FlowActivityServiceImpl implements FlowActivityService {
@@ -224,7 +224,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
   }
 
   @Override
-  public ListActivityResponse getAllActivites(Optional<Date> from, Optional<Date> to, Pageable page,
+  public ListActivityResponse getAllActivities(Optional<Date> from, Optional<Date> to, Pageable page,
       Optional<List<String>> workflowIds, Optional<List<String>> teamIds,
       Optional<List<String>> statuses, Optional<List<String>> triggers,
       Optional<List<String>> scopes, String property, Direction direction) {
@@ -378,7 +378,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
   }
 
   @Override
-  public ListActivityResponse getAllActivitesForUser(FlowUserEntity user, Optional<Date> from,
+  public ListActivityResponse getAllActivitiesForUser(FlowUserEntity user, Optional<Date> from,
       Optional<Date> to, Pageable page, String property, Direction direction) {
 
     final Page<ActivityEntity> records = flowActivityService.findAllActivities(from, to, page);
@@ -757,7 +757,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
   }
 
   @Override
-  public List<FlowActivity> findActivty(Pageable pageable, Optional<String> labels) {
+  public List<FlowActivity> findActivity(Pageable pageable, Optional<String> labels) {
 
     List<Criteria> criteriaList = new ArrayList<>();
 

@@ -48,6 +48,8 @@ import io.boomerang.util.GraphProcessor;
 @Service
 public class FlowExecutionServiceImpl implements FlowExecutionService {
 
+  private static final Logger LOGGER = LogManager.getLogger(FlowExecutionServiceImpl.class);
+
   @Autowired
   private FlowActivityService flowActivityService;
 
@@ -55,8 +57,6 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
   private RevisionService flowRevisionService;
   @Autowired
   private TaskService taskService;
-
-
 
   @Autowired
   private FlowTaskTemplateService taskTemplateService;
@@ -78,8 +78,6 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
 
   @Autowired
   private ControllerClient controllerClient;
-
-  private static final Logger LOGGER = LogManager.getLogger(FlowExecutionServiceImpl.class);
 
   private List<Task> createTaskList(RevisionEntity revisionEntity) { // NOSONAR
 
@@ -142,13 +140,13 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
         newTask.setDecisionValue(dagTask.getDecisionValue());
       }
 
-      final List<String> taskDepedancies = new LinkedList<>();
+      final List<String> taskDependencies = new LinkedList<>();
       for (Dependency dependency : dagTask.getDependencies()) {
-        taskDepedancies.add(dependency.getTaskId());
+        taskDependencies.add(dependency.getTaskId());
       }
       newTask.setDetailedDepednacies(dagTask.getDependencies());
 
-      newTask.setDependencies(taskDepedancies);
+      newTask.setDependencies(taskDependencies);
       taskList.add(newTask);
     }
     return taskList;
@@ -167,12 +165,12 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
       activityEntity.setStatus(TaskStatus.invalid);
       activityEntity.setStatusMessage("Failed to run workflow: Incomplete workflow");
       activityService.saveWorkflowActivity(activityEntity);
+
       throw new InvalidWorkflowRuntimeException();
     }
 
     createTaskPlan(tasks, activityId, start, end, graph);
   }
-
 
   private void createTaskPlan(List<Task> tasks, String activityId, final Task start, final Task end,
       final Graph<String, DefaultEdge> graph) {
@@ -189,7 +187,6 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
 
     long order = 1;
     for (final Task task : tasksToRun) {
-
 
       TaskExecutionEntity taskExecution = new TaskExecutionEntity();
       taskExecution.setActivityId(activityId);
@@ -279,7 +276,7 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
     if (currentTask == null || graph == null)
       throw new IllegalArgumentException();
 
-      List<Task> nextNodes = getTasksDependants(tasks, currentTask);
+    List<Task> nextNodes = getTasksDependents(tasks, currentTask);
       List<String> nodes =
           GraphProcessor.createOrderedTaskList(graph, start.getTaskId(), end.getTaskId());
 
@@ -292,11 +289,10 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
       }
   }
 
-  private List<Task> getTasksDependants(List<Task> tasks, Task currentTask) {
+  private List<Task> getTasksDependents(List<Task> tasks, Task currentTask) {
     return tasks.stream().filter(c -> c.getDependencies().contains(currentTask.getTaskId()))
         .collect(Collectors.toList());
   }
-
 
   @Override
   public CompletableFuture<Boolean> executeWorkflowVersion(String workFlowId, String activityId) {

@@ -4,8 +4,17 @@ import java.util.Arrays;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum TaskStatus {
-  completed("completed"), failure("failure"), inProgress("inProgress"), notstarted( // NOSONAR
-      "notstarted"), invalid("invalid"), skipped("skipped"), waiting("waiting"), cancelled("cancelled"); // NOSONAR
+
+  // @formatter:off
+  completed("completed"),
+  failure("failure"),
+  inProgress("inProgress"),
+  notstarted("notstarted"),
+  invalid("invalid"),
+  skipped("skipped"),
+  waiting("waiting"),
+  cancelled("cancelled");
+  // @formatter:on
 
   private String status;
 
