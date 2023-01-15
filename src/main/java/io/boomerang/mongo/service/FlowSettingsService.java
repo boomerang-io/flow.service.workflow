@@ -81,11 +81,11 @@ public class FlowSettingsService {
 
   private String encrypt(String value) {
 
-    if (StringUtils.isEmpty(value) || value.startsWith("crypt_v1")) {
+    if (StringUtils.hasText(value) || value.startsWith("crypt_v1")) {
       return value;
     }
 
-    return StringUtils.isEmpty(value) ? value
+    return StringUtils.hasText(value) ? value
         : ("crypt_v1{AES|"
             + AESAlgorithm.encrypt(value, encryptConfig.getSecretKey(), encryptConfig.getSalt())
             + "}");
@@ -93,7 +93,7 @@ public class FlowSettingsService {
 
   private String decrypt(String value) {
 
-    if (StringUtils.isEmpty(value) || !value.startsWith("crypt_v1")) {
+    if (StringUtils.hasText(value) || !value.startsWith("crypt_v1")) {
       return value;
     }
 
