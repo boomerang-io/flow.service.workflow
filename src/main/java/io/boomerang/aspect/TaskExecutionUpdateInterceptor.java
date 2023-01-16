@@ -17,7 +17,8 @@ import io.boomerang.service.NATSEventingService;
 
 @Aspect
 @Component
-@ConditionalOnProperty(value = "eventing.enabled", havingValue = "true", matchIfMissing = false)
+@ConditionalOnProperty(value = "nats.eventing.enabled", havingValue = "true",
+    matchIfMissing = false)
 public class TaskExecutionUpdateInterceptor {
 
   private static final Logger logger = LogManager.getLogger(TaskExecutionUpdateInterceptor.class);
