@@ -13,7 +13,7 @@ import io.boomerang.mongo.entity.ActivityEntity;
 import io.boomerang.mongo.entity.TaskExecutionEntity;
 import io.boomerang.mongo.repository.FlowWorkflowActivityTaskRepository;
 import io.boomerang.mongo.service.FlowWorkflowActivityService;
-import io.boomerang.service.EventingService;
+import io.boomerang.service.NATSEventingService;
 
 @Aspect
 @Component
@@ -29,7 +29,7 @@ public class TaskExecutionUpdateInterceptor {
   private FlowWorkflowActivityService activityService;
 
   @Autowired
-  private EventingService eventingService;
+  private NATSEventingService eventingService;
 
   @Before("execution(* io.boomerang.mongo.repository.FlowWorkflowActivityTaskRepository.save(..))"
       + " && args(entityToBeSaved)")

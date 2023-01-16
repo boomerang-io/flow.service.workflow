@@ -11,7 +11,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import io.boomerang.mongo.entity.ActivityEntity;
 import io.boomerang.mongo.repository.FlowWorkflowActivityRepository;
-import io.boomerang.service.EventingService;
+import io.boomerang.service.NATSEventingService;
 
 @Aspect
 @Component
@@ -24,7 +24,7 @@ public class ActivityEntityUpdateInterceptor {
   FlowWorkflowActivityRepository activityRepository;
 
   @Autowired
-  private EventingService eventingService;
+  private NATSEventingService eventingService;
 
   @Before("execution(* io.boomerang.mongo.repository.FlowWorkflowActivityRepository.save(..))"
       + " && args(entityToBeSaved)")

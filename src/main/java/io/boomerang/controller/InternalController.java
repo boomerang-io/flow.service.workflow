@@ -25,7 +25,7 @@ import io.boomerang.model.WorkflowShortSummary;
 import io.boomerang.model.eventing.EventResponse;
 import io.boomerang.mongo.model.internal.InternalTaskRequest;
 import io.boomerang.mongo.model.internal.InternalTaskResponse;
-import io.boomerang.service.EventingService;
+import io.boomerang.service.CloudEventsService;
 import io.boomerang.service.WebhookService;
 import io.boomerang.service.crud.ConfigurationService;
 import io.boomerang.service.crud.WorkflowService;
@@ -43,8 +43,8 @@ public class InternalController {
   @Autowired
   private WorkflowService workflowService;
 
-  @Autowired(required = false)
-  private EventingService eventingService;
+  @Autowired
+  private CloudEventsService eventingService;
 
   @Autowired
   private WebhookService webhookService;
@@ -80,9 +80,7 @@ public class InternalController {
     CloudEvent cloudEvent =
         CloudEventHttpUtils.toReader(headers, () -> payload.getBytes()).toEvent();
     try {
-      if (eventingService != null) {
-        eventingService.processCloudEventRequest(cloudEvent);
-      }
+      eventingService.processCloudEventRequest(cloudEvent);
       return ResponseEntity
           .ok(new EventResponse(cloudEvent.getId(), HttpStatus.OK.value(), "Event processed!"));
     } catch (Exception e) {

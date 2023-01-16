@@ -3,11 +3,10 @@ package io.boomerang.service;
 import java.util.concurrent.Future;
 import io.boomerang.mongo.entity.ActivityEntity;
 import io.boomerang.mongo.entity.TaskExecutionEntity;
-import io.cloudevents.CloudEvent;
 
-public interface EventingService {
+public interface NATSEventingService {
 
-  void processCloudEventRequest(CloudEvent cloudEvent) throws Exception;
+
 
   void processNATSMessage(String payload) throws Exception;
 
