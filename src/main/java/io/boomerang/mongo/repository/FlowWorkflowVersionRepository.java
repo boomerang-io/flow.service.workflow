@@ -5,6 +5,7 @@ import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.Aggregation;
+import org.springframework.data.mongodb.repository.Meta;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import io.boomerang.mongo.entity.RevisionEntity;
 import io.boomerang.mongo.model.WorkFlowRevisionCount;
@@ -29,6 +30,7 @@ public interface FlowWorkflowVersionRepository
 	      "{'$sort':{'workFlowId': -1, version: -1}}",
 	      "{'$group': { _id: '$workFlowId', 'count': { $sum: 1 }}}"
 	})
+  @Meta(allowDiskUse = true)
   List<WorkFlowRevisionCount> findWorkFlowVersionCounts(List<String> workflowIds);
 
   @Aggregation(pipeline = {
@@ -36,6 +38,7 @@ public interface FlowWorkflowVersionRepository
 	      "{'$sort':{'workFlowId': -1, version: -1}}",
 	      "{'$group': { _id: '$workFlowId', 'count': { $sum: 1 }, 'latestVersion': {$first: '$$ROOT'}}}"
 	})
+  @Meta(allowDiskUse = true)
   List<WorkFlowRevisionCount> findWorkFlowVersionCountsAndLatestVersion(List<String> workflowIds);
 
 }
