@@ -25,7 +25,7 @@ import io.boomerang.model.WorkflowShortSummary;
 import io.boomerang.model.eventing.EventResponse;
 import io.boomerang.mongo.model.internal.InternalTaskRequest;
 import io.boomerang.mongo.model.internal.InternalTaskResponse;
-import io.boomerang.service.EventingService;
+import io.boomerang.service.CloudEventsService;
 import io.boomerang.service.WebhookService;
 import io.boomerang.service.crud.ConfigurationService;
 import io.boomerang.service.crud.WorkflowService;
@@ -44,7 +44,7 @@ public class InternalController {
   private WorkflowService workflowService;
 
   @Autowired
-  private EventingService eventingService;
+  private CloudEventsService eventingService;
 
   @Autowired
   private WebhookService webhookService;

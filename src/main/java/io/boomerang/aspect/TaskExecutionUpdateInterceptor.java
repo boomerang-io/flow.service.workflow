@@ -7,15 +7,18 @@ import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import io.boomerang.mongo.entity.ActivityEntity;
 import io.boomerang.mongo.entity.TaskExecutionEntity;
 import io.boomerang.mongo.repository.FlowWorkflowActivityTaskRepository;
 import io.boomerang.mongo.service.FlowWorkflowActivityService;
-import io.boomerang.service.EventingService;
+import io.boomerang.service.NATSEventingService;
 
 @Aspect
 @Component
+@ConditionalOnProperty(value = "nats.eventing.enabled", havingValue = "true",
+    matchIfMissing = false)
 public class TaskExecutionUpdateInterceptor {
 
   private static final Logger logger = LogManager.getLogger(TaskExecutionUpdateInterceptor.class);
@@ -27,7 +30,7 @@ public class TaskExecutionUpdateInterceptor {
   private FlowWorkflowActivityService activityService;
 
   @Autowired
-  private EventingService eventingService;
+  private NATSEventingService eventingService;
 
   @Before("execution(* io.boomerang.mongo.repository.FlowWorkflowActivityTaskRepository.save(..))"
       + " && args(entityToBeSaved)")
