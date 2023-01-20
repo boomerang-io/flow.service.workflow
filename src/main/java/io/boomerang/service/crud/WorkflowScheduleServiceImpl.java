@@ -204,10 +204,7 @@ public class WorkflowScheduleServiceImpl implements WorkflowScheduleService {
           }
           Boolean enableJob = false;
           if (WorkflowScheduleStatus.active.equals(schedule.getStatus()) && wfEntity.getTriggers().getScheduler().getEnable()) {
-            scheduleEntity.setStatus(WorkflowScheduleStatus.trigger_disabled);
-            if (WorkflowScheduleType.runOnce.equals(scheduleEntity.getType()){
-              scheduleEntity.setStatus(WorkflowScheduleStatus.active);
-            }
+            scheduleEntity.setStatus(WorkflowScheduleStatus.active);
             enableJob = true;
           }
           workflowScheduleRepository.saveSchedule(scheduleEntity);
