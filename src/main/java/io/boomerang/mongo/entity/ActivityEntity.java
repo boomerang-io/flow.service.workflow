@@ -16,12 +16,7 @@ import io.boomerang.mongo.model.TaskStatus;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(Include.NON_NULL)
 @Document(collection = "#{@mongoConfiguration.fullCollectionName('workflows_activity')}")
-public class ActivityEntity   {
-
-  private List<KeyValuePair> labels;
-  private Date creationDate;
-
-  private Long duration;
+public class ActivityEntity {
 
   @Id
   private String id;
@@ -31,17 +26,8 @@ public class ActivityEntity   {
   private String initiatedByUserName;
 
   private TaskStatus status;
-  
+
   private TaskStatus statusOverride;
-
-
-  public List<TaskWorkspace> getTaskWorkspaces() {
-    return taskWorkspaces;
-  }
-
-  public void setTaskWorkspaces(List<TaskWorkspace> taskWorkspaces) {
-    this.taskWorkspaces = taskWorkspaces;
-  }
 
   private String statusMessage;
 
@@ -51,23 +37,29 @@ public class ActivityEntity   {
 
   private String trigger;
 
+  private List<KeyValuePair> labels;
+
+  private Date creationDate;
+
+  private Long duration;
+
   private List<KeyValuePair> properties;
 
   private List<KeyValuePair> outputProperties;
-  
+
   private boolean isAwaitingApproval;
-  
+
   private String teamId;
-  
+
   private String userId;
-  
+
   private String switchValue;
-  
+
   private ErrorResponse error;
-  
+
   @JsonProperty("workspaces")
   private List<TaskWorkspace> taskWorkspaces;
-  
+
   public Date getCreationDate() {
     return creationDate;
   }
@@ -219,5 +211,12 @@ public class ActivityEntity   {
   public void setUserId(String userId) {
     this.userId = userId;
   }
-  
+
+  public List<TaskWorkspace> getTaskWorkspaces() {
+    return taskWorkspaces;
+  }
+
+  public void setTaskWorkspaces(List<TaskWorkspace> taskWorkspaces) {
+    this.taskWorkspaces = taskWorkspaces;
+  }
 }

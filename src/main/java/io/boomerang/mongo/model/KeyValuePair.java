@@ -9,7 +9,6 @@ public class KeyValuePair {
 
   }
 
-
   public KeyValuePair(String key, String value) {
     super();
     this.key = key;
@@ -31,5 +30,4 @@ public class KeyValuePair {
   public void setValue(String value) {
     this.value = value;
   }
-
 }

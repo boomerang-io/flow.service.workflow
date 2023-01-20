@@ -71,6 +71,7 @@ import io.boomerang.mongo.model.Revision;
 import io.boomerang.mongo.model.TaskStatus;
 import io.boomerang.mongo.model.TaskTemplateConfig;
 import io.boomerang.mongo.model.TaskType;
+import io.boomerang.mongo.model.WorkflowProperty;
 import io.boomerang.mongo.model.WorkflowScope;
 import io.boomerang.mongo.model.next.DAGTask;
 import io.boomerang.mongo.service.ActivityTaskService;
@@ -85,6 +86,7 @@ import io.boomerang.service.PropertyManager;
 import io.boomerang.service.UserIdentityService;
 import io.boomerang.service.refactor.ControllerRequestProperties;
 import io.boomerang.service.runner.misc.ControllerClient;
+import io.boomerang.util.DataAdapterUtil.FieldType;
 import io.boomerang.util.DateUtil;
 import io.boomerang.util.ParameterMapper;
 
@@ -198,8 +200,17 @@ public class FlowActivityServiceImpl implements FlowActivityService {
     }
 
     if (request.getProperties() != null) {
-      List<KeyValuePair> propertyList =
-          ParameterMapper.mapToKeyValuePairList(request.getProperties());
+      List<KeyValuePair> propertyList = ParameterMapper.mapToKeyValuePairList(request.getProperties());
+      Map<String, WorkflowProperty> workflowPropMap = workflow.getProperties().stream()
+          .collect(Collectors.toMap(WorkflowProperty::getKey, WorkflowProperty -> WorkflowProperty));
+      // Use default value for password-type parameter when user input value is null when executing workflow.
+      propertyList.stream().forEach(p -> {
+        if(workflowPropMap.get(p.getKey()) != null
+            && FieldType.PASSWORD.value().equals(workflowPropMap.get(p.getKey()).getType())
+            && p.getValue() == null){
+          p.setValue(workflowPropMap.get(p.getKey()).getDefaultValue());
+        }
+      });
       activity.setProperties(propertyList);
     }
     return flowActivityService.saveWorkflowActivity(activity);
@@ -217,7 +228,6 @@ public class FlowActivityServiceImpl implements FlowActivityService {
       Optional<List<String>> scopes, String property, Direction direction) {
     List<String> workflowIdsList =
         filterService.getFilteredWorkflowIds(workflowIds, teamIds, scopes);
-
 
     ListActivityResponse response = new ListActivityResponse();
     Page<ActivityEntity> records = flowActivityService.getAllActivities(from, to, page,

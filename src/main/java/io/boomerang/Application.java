@@ -55,7 +55,7 @@ public class Application {
     executor.initialize();
     return executor;
   }
-  
+
   @Bean
   public OpenAPI api() {
     return new OpenAPI();
