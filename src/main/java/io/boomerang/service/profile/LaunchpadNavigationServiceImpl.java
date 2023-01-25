@@ -2,8 +2,6 @@ package io.boomerang.service.profile;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -48,38 +46,39 @@ public class LaunchpadNavigationServiceImpl implements LaunchpadNavigationServic
 
   @Value("${boomerang.version}")
   private String platformVersion;
-
+  
   @Autowired
   @Qualifier("internalRestTemplate")
   private RestTemplate restTemplate;
-
+  
   @Value("${flow.externalUrl.platformNavigation}")
   private String platformNavigationUrl;
 
   @Autowired
   private FlowSettingsService settingsService;
-
+  
   private static final String AUTHORIZATION_HEADER = "Authorization";
   private static final String TOKEN_PREFIX = "Bearer ";
 
   @Autowired
   private ApiTokenService apiTokenService;
-
+  
   @Autowired
   private UserIdentityService identityService;
-
+  
   @Override
   public NavigationResponse getLaunchpadNavigation(boolean isUserAdmin) {
-
+    
     UserToken userToken = identityService.getUserDetails();
     if (userToken == null) {
       return null;
     }
     String email = userToken.getEmail();
-
+    
     if (platformNavigationUrl.isBlank()) {
       return getFlowNavigationResponse();
-    } else {
+    }
+    else {
       return getExternalNavigationResponse(email);
     }
   }
@@ -94,14 +93,12 @@ public class LaunchpadNavigationServiceImpl implements LaunchpadNavigationServic
     features.setDocsEnabled(false);
     features.setSupportEnabled(false);
     features.setConsentEnabled(false);
-
+    
     navigationResponse.setFeatures(features);
 
     String appName = settingsService.getConfiguration("customizations", "appName").getValue();
-    String platformName =
-        settingsService.getConfiguration("customizations", "platformName").getValue();
-    String displayLogo =
-        settingsService.getConfiguration("customizations", "displayLogo").getValue();
+    String platformName = settingsService.getConfiguration("customizations", "platformName").getValue();
+    String displayLogo = settingsService.getConfiguration("customizations", "displayLogo").getValue();
     String logoURL = settingsService.getConfiguration("customizations", "logoURL").getValue();
     String name = platformName + " " + appName;
     Platform platform = new Platform();
@@ -118,29 +115,16 @@ public class LaunchpadNavigationServiceImpl implements LaunchpadNavigationServic
 
     return navigationResponse;
   }
-
+  
   private NavigationResponse getExternalNavigationResponse(String email) {
     UriComponents uriComponents = UriComponentsBuilder.fromHttpUrl(platformNavigationUrl).build();
     HttpHeaders headers = buildHeaders(email);
     HttpEntity<String> requestUpdate = new HttpEntity<>("", headers);
-    ResponseEntity<NavigationResponse> response = restTemplate.exchange(uriComponents.toUriString(),
-        HttpMethod.GET, requestUpdate, NavigationResponse.class);
-    NavigationResponse result = response.getBody();
-    if (result != null && result.getPlatform() != null) {
-      if (Strings.isBlank(result.getPlatform().getAppName())) {
-        // set default appName if the external Navigation API does NOT return appName.
-        String defaultAppName =
-            settingsService.getConfiguration("customizations", "appName").getValue();
-        result.getPlatform().setAppName(defaultAppName);
-      }
-      if (!Strings.isBlank(result.getPlatform().getPlatformName())) {
-        // add | to the end of the platformName
-        result.getPlatform().setPlatformName(result.getPlatform().getPlatformName() + " |");
-      }
-    }
+    ResponseEntity<NavigationResponse> response =
+        restTemplate.exchange(uriComponents.toUriString(), HttpMethod.GET, requestUpdate, NavigationResponse.class);
     return response.getBody();
   }
-
+  
   private HttpHeaders buildHeaders(String email) {
     final HttpHeaders headers = new HttpHeaders();
     headers.add("Accept", "application/json");
