@@ -32,7 +32,7 @@ import io.boomerang.service.FilterService;
 import io.boomerang.util.ParameterMapper;
 
 /*
- * Workflow Schedule Serivce provides all the methods for both the Schedules page and the individual Workflow Schedule
+ * Workflow Schedule Service provides all the methods for both the Schedules page and the individual Workflow Schedule
  * and abstracts the quartz implementation.
  * 
  * @since Flow 3.6.0
@@ -203,9 +203,10 @@ public class WorkflowScheduleServiceImpl implements WorkflowScheduleService {
             scheduleEntity.setParameters(propertyList);
           }
           Boolean enableJob = false;
-          if (WorkflowScheduleStatus.active.equals(schedule.getStatus()) && wfEntity.getTriggers().getScheduler().getEnable()) {
-            scheduleEntity.setStatus(WorkflowScheduleStatus.trigger_disabled);
+          if (WorkflowScheduleStatus.active.equals(scheduleEntity.getStatus()) && wfEntity.getTriggers().getScheduler().getEnable()) {
             enableJob = true;
+          } else if (WorkflowScheduleStatus.active.equals(scheduleEntity.getStatus()) && !wfEntity.getTriggers().getScheduler().getEnable()) {
+            scheduleEntity.setStatus(WorkflowScheduleStatus.trigger_disabled);
           }
           workflowScheduleRepository.saveSchedule(scheduleEntity);
           createOrUpdateSchedule(scheduleEntity, enableJob);
