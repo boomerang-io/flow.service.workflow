@@ -14,7 +14,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.retry.backoff.FixedBackOffPolicy;
 import org.springframework.retry.policy.SimpleRetryPolicy;
 import org.springframework.retry.support.RetryTemplate;
@@ -53,14 +52,13 @@ import io.boomerang.mongo.service.RevisionService;
 import io.boomerang.service.PropertyManager;
 import io.boomerang.service.crud.FlowActivityService;
 import io.boomerang.service.crud.WorkflowScheduleService;
-import io.boomerang.service.runner.misc.ControllerClient;
 
 @Service
 public class TaskServiceImpl implements TaskService {
 
-  @Autowired
-  @Lazy
-  private ControllerClient controllerClient;
+//  @Autowired
+//  @Lazy
+//  private ControllerClient controllerClient;
 
   @Autowired
   private FlowWorkflowActivityService activityService;
@@ -153,11 +151,11 @@ public class TaskServiceImpl implements TaskService {
         this.endTask(response);
       } else if (taskType == TaskType.template || taskType == TaskType.script) {
         List<KeyValuePair> labels = workflow.getLabels();
-        controllerClient.submitTemplateTask(this, flowClient, task, activityId, workflowName,
-            labels);
+//        controllerClient.submitTemplateTask(this, flowClient, task, activityId, workflowName,
+//            labels);
       } else if (taskType == TaskType.customtask) {
         List<KeyValuePair> labels = workflow.getLabels();
-        controllerClient.submitCustomTask(this, flowClient, task, activityId, workflowName, labels);
+//        controllerClient.submitCustomTask(this, flowClient, task, activityId, workflowName, labels);
       } else if (taskType == TaskType.acquirelock) {
         createLock(task, activity);
       } else if (taskType == TaskType.releaselock) {
@@ -546,7 +544,7 @@ public class TaskServiceImpl implements TaskService {
 
     WorkflowEntity workflow = workflowService.getWorkflow(activity.getWorkflowId());
 
-    this.controllerClient.terminateFlow(workflow.getId(), workflow.getName(), activity.getId());
+//    this.controllerClient.terminateFlow(workflow.getId(), workflow.getName(), activity.getId());
     boolean workflowCompleted = dagUtility.validateWorkflow(activity);
 
     if (activity.getStatusOverride() != null) {

@@ -42,7 +42,6 @@ import io.boomerang.service.crud.WorkflowService;
 import io.boomerang.service.refactor.DAGUtility;
 import io.boomerang.service.refactor.TaskClient;
 import io.boomerang.service.refactor.TaskService;
-import io.boomerang.service.runner.misc.ControllerClient;
 import io.boomerang.util.GraphProcessor;
 
 @Service
@@ -75,9 +74,9 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
 
   @Autowired
   private WorkflowService workflowService;
-
-  @Autowired
-  private ControllerClient controllerClient;
+//
+//  @Autowired
+//  private ControllerClient controllerClient;
 
   private List<Task> createTaskList(RevisionEntity revisionEntity) { // NOSONAR
 
@@ -262,8 +261,8 @@ public class FlowExecutionServiceImpl implements FlowExecutionService {
 
     List<KeyValuePair> labels = workflow.getLabels();
 
-    controllerClient.createFlow(workflowId, workflowName, activityId, enablePVC, labels,
-        executionProperties);
+//    controllerClient.createFlow(workflowId, workflowName, activityId, enablePVC, labels,
+//        executionProperties);
 
     final Task startTask = tasksToRun.stream()
         .filter(tsk -> TaskType.start.equals(tsk.getTaskType())).findAny().orElse(null);

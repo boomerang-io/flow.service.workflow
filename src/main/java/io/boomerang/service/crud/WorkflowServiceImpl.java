@@ -1,5 +1,6 @@
 package io.boomerang.service.crud;
 
+import static io.boomerang.util.DataAdapterUtil.filterValueByFieldType;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -16,13 +17,11 @@ import java.util.Optional;
 import java.util.TimeZone;
 import java.util.UUID;
 import java.util.stream.Collectors;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.quartz.SchedulerException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
@@ -33,7 +32,6 @@ import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.internal.util.Lists;
 import com.google.inject.internal.util.Maps;
-
 import io.boomerang.error.BoomerangError;
 import io.boomerang.error.BoomerangException;
 import io.boomerang.model.DuplicateRequest;
@@ -78,9 +76,8 @@ import io.boomerang.mongo.service.RevisionService;
 import io.boomerang.security.service.UserValidationService;
 import io.boomerang.service.PropertyManager;
 import io.boomerang.service.UserIdentityService;
-import io.boomerang.service.runner.misc.ControllerClient;
+import io.boomerang.util.DataAdapterUtil.FieldType;
 import io.boomerang.util.ModelConverterV5;
-import static io.boomerang.util.DataAdapterUtil.*;
 
 @Service
 public class WorkflowServiceImpl implements WorkflowService {
@@ -109,9 +106,9 @@ public class WorkflowServiceImpl implements WorkflowService {
   @Autowired
   private TeamService teamService;
 
-  @Autowired
-  @Lazy
-  private ControllerClient controllerClient;
+//  @Autowired
+//  @Lazy
+//  private ControllerClient controllerClient;
 
   @Autowired
   private FlowSettingsService flowSettingsService;
@@ -339,12 +336,12 @@ public class WorkflowServiceImpl implements WorkflowService {
 
     if (!previousStorageState && newStorageState) {
       logger.info("Creating workspace for: {}", summary.getId());
-      this.controllerClient.createWorkspace(summary.getId());
+//      this.controllerClient.createWorkspace(summary.getId());
     }
 
     if (previousStorageState && !newStorageState) {
       logger.info("Deleting workspace for: {}", summary.getId());
-      this.controllerClient.deleteWorkspace(summary.getId());
+//      this.controllerClient.deleteWorkspace(summary.getId());
     }
   }
 

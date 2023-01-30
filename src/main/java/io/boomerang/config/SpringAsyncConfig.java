@@ -1,4 +1,4 @@
-package io.boomerang;
+package io.boomerang.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableAsync;

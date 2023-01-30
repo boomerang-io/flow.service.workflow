@@ -31,7 +31,6 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort.Direction;
@@ -85,7 +84,6 @@ import io.boomerang.service.FilterService;
 import io.boomerang.service.PropertyManager;
 import io.boomerang.service.UserIdentityService;
 import io.boomerang.service.refactor.ControllerRequestProperties;
-import io.boomerang.service.runner.misc.ControllerClient;
 import io.boomerang.util.DataAdapterUtil.FieldType;
 import io.boomerang.util.DateUtil;
 import io.boomerang.util.ParameterMapper;
@@ -114,9 +112,6 @@ public class FlowActivityServiceImpl implements FlowActivityService {
   @Autowired
   private FilterService filterService;
 
-  @Value("${controller.rest.url.base}")
-  private String controllerBaseUrl;
-
   @Value("${controller.rest.url.streamlogs}")
   private String getStreamDownloadPath;
 
@@ -143,10 +138,9 @@ public class FlowActivityServiceImpl implements FlowActivityService {
   @Autowired
   private PropertyManager propertyManager;
 
-  @Autowired
-  @Lazy
-  private ControllerClient controllerClient;
-
+//  @Autowired
+//  @Lazy
+//  private ControllerClient controllerClient;
 
   @Autowired
   private MongoTemplate mongoTemplate;
@@ -582,11 +576,11 @@ public class FlowActivityServiceImpl implements FlowActivityService {
       requestParams.put("workflowId", activity.getWorkflowId());
       requestParams.put("workflowActivityId", activityId);
       requestParams.put("taskActivityId", taskExecution.getId());
-      requestParams.put("taskId", taskId);
+      requestParams.put("labels", taskId);
 
       String encodedURL =
           requestParams.keySet().stream().map(key -> key + "=" + requestParams.get(key)).collect(
-              Collectors.joining("&", controllerBaseUrl + getStreamDownloadPath + "?", ""));
+              Collectors.joining("&", getStreamDownloadPath + "?", ""));
 
       RequestCallback requestCallback = request -> request.getHeaders()
           .setAccept(Arrays.asList(MediaType.APPLICATION_OCTET_STREAM, MediaType.ALL));
@@ -744,7 +738,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
         task.setWorkflowName(workflow.getName());
         task.setTaskActivityId(taskExecution.getId());
 
-        controllerClient.terminateTask(task);
+//        controllerClient.terminateTask(task);
       }
 
       if (taskExecution.getFlowTaskStatus() == TaskStatus.notstarted
