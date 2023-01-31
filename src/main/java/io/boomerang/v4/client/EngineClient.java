@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Sort;
 import io.boomerang.v4.model.ref.WorkflowRun;
+import io.boomerang.v4.model.ref.WorkflowRunRequest;
 
 public interface EngineClient {
 
@@ -12,4 +13,10 @@ public interface EngineClient {
       Optional<List<String>> queryIds);
 
   WorkflowRun getWorkflowRun(String workflowRunId, boolean withTasks);
+
+  WorkflowRun submitWorkflowRun(String workflowId, Optional<Integer> version, boolean start,
+      Optional<WorkflowRunRequest> request);
+
+  WorkflowRun startWorkflowRun(String workflowRunId,
+      Optional<WorkflowRunRequest> optRunRequest);
 }

@@ -6,6 +6,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import io.boomerang.v4.model.ref.WorkflowRun;
+import io.boomerang.v4.model.ref.WorkflowRunRequest;
 
 public interface WorkflowRunService {
 
@@ -13,5 +14,13 @@ public interface WorkflowRunService {
       Optional<List<String>> status, Optional<List<String>> phase);
 
   ResponseEntity<WorkflowRun> get(String workflowRunId, boolean withTasks);
+
+  ResponseEntity<WorkflowRun> submit(String workflowId, Optional<Integer> version, boolean start,
+      Optional<WorkflowRunRequest> optRunRequest);
+
+  ResponseEntity<WorkflowRun> start(String workflowRunId,
+      Optional<WorkflowRunRequest> optRunRequest);
+
+  ResponseEntity<WorkflowRun> finalize(String workflowRunId);
   
 }

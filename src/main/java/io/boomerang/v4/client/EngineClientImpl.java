@@ -19,6 +19,7 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import io.boomerang.error.BoomerangException;
 import io.boomerang.v4.model.ref.WorkflowRun;
+import io.boomerang.v4.model.ref.WorkflowRunRequest;
 
 @Service
 @Primary
@@ -31,6 +32,12 @@ public class EngineClientImpl implements EngineClient {
 
   @Value("${flow.engine.workflowrun.get.url}")
   public String getWorkflowRunURL;
+
+  @Value("${flow.engine.workflowrun.submit.url}")
+  public String submitWorkflowRunURL;
+
+  @Value("${flow.engine.workflowrun.start.url}")
+  public String startWorkflowRunURL;
 
   @Autowired
   @Qualifier("internalRestTemplate")
@@ -98,6 +105,52 @@ public class EngineClientImpl implements EngineClient {
       logger.info("URL: " + encodedURL);
 
       ResponseEntity<WorkflowRun> response = restTemplate.getForEntity(encodedURL, WorkflowRun.class);
+      
+      logger.info("Status Response: " + response.getStatusCode());
+      logger.info("Content Response: " + response.getBody().toString());
+      
+      return response.getBody();
+    } catch (RestClientException ex) {
+      logger.error(ex.toString());
+      throw new BoomerangException(ex, HttpStatus.INTERNAL_SERVER_ERROR.value(), ex.getClass().getSimpleName(), "Exception in communicating with internal services.", HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @Override
+  public WorkflowRun submitWorkflowRun(String workflowId, Optional<Integer> version, boolean start, Optional<WorkflowRunRequest> request) {
+    try {
+      String url = submitWorkflowRunURL.replace("{workflowId}", workflowId);
+      Map<String, String> requestParams = new HashMap<>();
+      if (version.isPresent()) {
+        requestParams.put("version", Integer.toString(version.get()));
+      }
+      requestParams.put("start", Boolean.toString(start));
+      String encodedURL =
+          requestParams.keySet().stream().map(key -> key + "=" + requestParams.get(key)).collect(
+              Collectors.joining("&", url + "?", ""));
+      
+      logger.info("URL: " + encodedURL);
+
+      ResponseEntity<WorkflowRun> response = restTemplate.postForEntity(encodedURL, request, WorkflowRun.class);
+      
+      logger.info("Status Response: " + response.getStatusCode());
+      logger.info("Content Response: " + response.getBody().toString());
+      
+      return response.getBody();
+    } catch (RestClientException ex) {
+      logger.error(ex.toString());
+      throw new BoomerangException(ex, HttpStatus.INTERNAL_SERVER_ERROR.value(), ex.getClass().getSimpleName(), "Exception in communicating with internal services.", HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @Override
+  public WorkflowRun startWorkflowRun(String workflowRunId, Optional<WorkflowRunRequest> request) {
+    try {
+      String url = startWorkflowRunURL.replace("{workflowRunId}", workflowRunId);
+      
+      logger.info("URL: " + url);
+
+      ResponseEntity<WorkflowRun> response = restTemplate.postForEntity(url, request, WorkflowRun.class);
       
       logger.info("Status Response: " + response.getStatusCode());
       logger.info("Content Response: " + response.getBody().toString());

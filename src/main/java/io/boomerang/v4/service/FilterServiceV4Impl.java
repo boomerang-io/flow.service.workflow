@@ -10,12 +10,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import io.boomerang.mongo.entity.FlowUserEntity;
 import io.boomerang.mongo.entity.TeamEntity;
-import io.boomerang.mongo.entity.WorkflowEntity;
 import io.boomerang.mongo.model.UserType;
+import io.boomerang.security.model.TeamToken;
 import io.boomerang.service.UserIdentityService;
 import io.boomerang.service.crud.TeamService;
 import io.boomerang.v4.data.entity.RelationshipEntity;
 import io.boomerang.v4.data.repository.RelationshipRepository;
+import io.boomerang.v4.model.enums.RelationshipRefType;
 
 @Service
 public class FilterServiceV4Impl implements FilterServiceV4 {
@@ -24,60 +25,102 @@ public class FilterServiceV4Impl implements FilterServiceV4 {
 
   @Autowired
   private UserIdentityService userIdentityService;
-  
+
   @Autowired
   private RelationshipRepository relationshipRepository;
 
   @Autowired
   private TeamService teamService;
 
-//  @Autowired
-//  private FlowWorkflowService flowWorkflowService;
-//  
-//  /*
-//   * Converts from ActivityEntity DB model to consumable FlowActivity
-//   * 
-//   * @param list of ActivityEntity's
-//   * @return list of FlowActivity
-//   */
-//  @Override
-//  public List<FlowActivity> convertActivityEntityToFlowActivity(List<ActivityEntity> records) {
-//
-//    final List<FlowActivity> flowActivities = new LinkedList<>();
-//
-//    for (final ActivityEntity record : records) {
-//      final FlowActivity flow = new FlowActivity(record);
-//      final WorkflowEntity workflow = flowWorkflowService.getWorkflow(record.getWorkflowId());
-//
-//      if (workflow != null) {
-//        flow.setWorkflowName(workflow.getName());
-//        flow.setDescription(workflow.getDescription());
-//        flow.setIcon(workflow.getIcon());
-//        flow.setShortDescription(workflow.getShortDescription());
-//      }
-//
-//      flowActivities.add(flow);
-//    }
-//    return flowActivities;
-//  }
+  // @Autowired
+  // private FlowWorkflowService flowWorkflowService;
+  //
+  // /*
+  // * Converts from ActivityEntity DB model to consumable FlowActivity
+  // *
+  // * @param list of ActivityEntity's
+  // * @return list of FlowActivity
+  // */
+  // @Override
+  // public List<FlowActivity> convertActivityEntityToFlowActivity(List<ActivityEntity> records) {
+  //
+  // final List<FlowActivity> flowActivities = new LinkedList<>();
+  //
+  // for (final ActivityEntity record : records) {
+  // final FlowActivity flow = new FlowActivity(record);
+  // final WorkflowEntity workflow = flowWorkflowService.getWorkflow(record.getWorkflowId());
+  //
+  // if (workflow != null) {
+  // flow.setWorkflowName(workflow.getName());
+  // flow.setDescription(workflow.getDescription());
+  // flow.setIcon(workflow.getIcon());
+  // flow.setShortDescription(workflow.getShortDescription());
+  // }
+  //
+  // flowActivities.add(flow);
+  // }
+  // return flowActivities;
+  // }
   
   /*
-   * Generates the workflowIds based on optional lists of workflowIds, scopes, and teamIds
+   * Creates a new Relationship Ref for the current Scope
+   *
    * 
-   * @param list of WorkflowIds
-   * @param list of Scopes
-   * @param list of TeamIds
-   * 
-   * @return list of filtered WorkflowIds
+   * @return RelationshipEntity
    */
   @Override
-  public List<String> getFilteredWorkflowIds(Optional<List<String>> workflowIds,
-      Optional<List<String>> teamIds, Optional<List<String>> scopes) {   
+  public void createRelationshipRef(String fromType, String fromRef) {
+    FlowUserEntity user = null;
+    String toType = null;
+    String toRef = null;
+
+    LOGGER.info("Current User Scope: " + userIdentityService.getCurrentScope());
+    switch (userIdentityService.getCurrentScope()) {
+      case user:
+        user = userIdentityService.getCurrentUser();
+        toType = RelationshipRefType.USER.getRef();
+        toRef = user.getId();
+        break;
+      case team:
+        toType = RelationshipRefType.TEAM.getRef();
+        TeamToken token = (TeamToken) userIdentityService.getRequestIdentity();
+        toRef = token.getTeamId();
+        break;
+      case global:
+        toType = RelationshipRefType.GLOBAL.getRef();
+        break;
+    }
+    RelationshipEntity relEntity = new RelationshipEntity();
+    relEntity.setFromType(fromType);
+    relEntity.setFromRef(fromRef);
+    relEntity.setRelationship("belongs-to");
+    relEntity.setToType(toType);
+    relEntity.setToRef(toRef);
+    LOGGER.info("Relationship: " + relEntity.toString());
+    relationshipRepository.save(relEntity);
+  }
+
+  /*
+   * Generates the Refs based on a specific type and optional lists of typeRefs, scopes, and teamIds
+   * 
+   * @param RelationshipRefType type
+   * 
+   * @param list of TypeRefs: WorkflowRef, WorkflowRunRef, TaskTemplateRef, TaskRunRef
+   * 
+   * @param list of Scopes
+   * 
+   * @param list of TeamIds
+   * 
+   * @return list of filtered Refs
+   */
+  @Override
+  public List<String> getFilteredRefs(RelationshipRefType type, Optional<List<String>> typeRefs,
+      Optional<List<String>> teamIds, Optional<List<String>> scopes) {
     FlowUserEntity user = null;
     Boolean isAdmin = false;
-    
+
     LOGGER.info("Current User Scope: " + userIdentityService.getCurrentScope());
-    switch(userIdentityService.getCurrentScope()) {
+    switch (userIdentityService.getCurrentScope()) {
       case user:
         user = userIdentityService.getCurrentUser();
         if (user.getType() == UserType.admin) {
@@ -85,105 +128,118 @@ public class FilterServiceV4Impl implements FilterServiceV4 {
         }
         break;
       case team:
-        
+
         break;
       case global:
         isAdmin = true;
         break;
     }
 
-    return getFilteredWorkflowIdsList(workflowIds, teamIds, scopes, user, isAdmin);
+    return getFilteredRefsList(type, typeRefs, teamIds, scopes, user, isAdmin);
   }
 
   /*
-   * Generates the workflowIds based on optional lists of workflowIds, scopes, and teamIds
+   * Generates the Refs based on a specific type and optional lists of typeRefs, scopes, and teamIds
    * 
-   * @param list of WorkflowIds
+   * @param RelationshipRefType type
+   * 
+   * @param list of TypeRefs: WorkflowRef, WorkflowRunRef, TaskTemplateRef, TaskRunRef
+   * 
    * @param list of Scopes
+   * 
    * @param list of TeamIds
+   * 
    * @param FlowUserEntity user
    * 
-   * @return list of filtered WorkflowIds
+   * @return list of filtered Refs
    */
   @Override
-  public List<String> getFilteredWorkflowIdsForUserEmail(Optional<List<String>> workflowIds,
-      Optional<List<String>> teamIds, Optional<List<String>> scopes, String userEmail) {
+  public List<String> getFilteredRefsForUserEmail(RelationshipRefType type,
+      Optional<List<String>> typeRefs, Optional<List<String>> teamIds,
+      Optional<List<String>> scopes, String userEmail) {
     FlowUserEntity user = userIdentityService.getUserByEmail(userEmail);
     Boolean isAdmin = false;
-    if (user!= null && user.getType() == UserType.admin) {
+    if (user != null && user.getType() == UserType.admin) {
       isAdmin = true;
     }
-    return getFilteredWorkflowIdsList(workflowIds, teamIds, scopes, user, isAdmin);
+    return getFilteredRefsList(type, typeRefs, teamIds, scopes, user, isAdmin);
   }
-    
-    private List<String> getFilteredWorkflowIdsList(Optional<List<String>> workflowIds,
-        Optional<List<String>> teamIds, Optional<List<String>> scopes, FlowUserEntity user,
-        Boolean isAdmin) {
-    List<String> workflowIdsList = new LinkedList<>();
-    if (!workflowIds.isPresent()) {
+
+  private List<String> getFilteredRefsList(RelationshipRefType type,
+      Optional<List<String>> typeRefs, Optional<List<String>> teamIds,
+      Optional<List<String>> scopes, FlowUserEntity user, Boolean isAdmin) {
+    List<String> refsList = new LinkedList<>();
+    if (!typeRefs.isPresent()) {
       if (scopes.isPresent() && !scopes.get().isEmpty()) {
         List<String> scopeList = scopes.get();
         if (scopeList.contains("user") && user != null) {
-          addUserWorkflows(user, workflowIdsList);
+          addUserWorkflows(type, user, refsList);
         }
         if (scopeList.contains("system") && isAdmin) {
-          addSystemWorkflows(workflowIdsList);
+          addSystemWorkflows(type, refsList);
         }
         if (scopeList.contains("team")) {
-          addTeamWorkflows(isAdmin, user, workflowIdsList, teamIds);
+          addTeamRefs(type, isAdmin, user, refsList, teamIds);
         }
       } else if (teamIds.isPresent() && !teamIds.get().isEmpty()) {
-        addTeamWorkflows(isAdmin, user, workflowIdsList, teamIds);
+        addTeamRefs(type, isAdmin, user, refsList, teamIds);
       } else {
         if (user != null) {
-          addUserWorkflows(user, workflowIdsList);
+          addUserWorkflows(type, user, refsList);
         }
-        addTeamWorkflows(isAdmin, user, workflowIdsList, teamIds);
+        addTeamRefs(type, isAdmin, user, refsList, teamIds);
         if (isAdmin) {
-          addSystemWorkflows(workflowIdsList);
+          addSystemWorkflows(type, refsList);
         }
       }
     } else {
-      List<String> requestWorkflowList = workflowIds.get();
-      workflowIdsList.addAll(requestWorkflowList);
+      // TODO: why is there no validation here?
+      // I think this should be returning a filtered list of validated IDs based on what was
+      // provided i.e. validatedList.contains(providedList)
+      List<String> requestWorkflowList = typeRefs.get();
+      refsList.addAll(requestWorkflowList);
     }
-    return workflowIdsList;
+    return refsList;
   }
 
-  private void addTeamWorkflows(Boolean isAdmin, final FlowUserEntity user, List<String> workflowIdsList,
-      Optional<List<String>> teamIds) {
+  private void addTeamRefs(RelationshipRefType type, Boolean isAdmin, final FlowUserEntity user,
+      List<String> refsList, Optional<List<String>> teamIds) {
     List<RelationshipEntity> relationships = null;
     if (teamIds.isPresent() && !teamIds.get().isEmpty()) {
-      relationships = this.relationshipRepository.findByFromTypeAndToTypeAndToRefIn("WorkflowRun","Team",teamIds.get());
+      relationships = this.relationshipRepository.findByFromTypeAndToTypeAndToRefIn(type.getRef(),
+          "Team", teamIds.get());
     } else {
       if (isAdmin) {
-        relationships = this.relationshipRepository.findByFromTypeAndToType("WorkflowRun","Team");
+        relationships = this.relationshipRepository.findByFromTypeAndToType(type.getRef(), "Team");
       } else if (user != null) {
         List<TeamEntity> flowTeam = teamService.getUsersTeamListing(user);
         List<String> flowTeamIds =
             flowTeam.stream().map(TeamEntity::getId).collect(Collectors.toList());
-        relationships = this.relationshipRepository.findByFromTypeAndToTypeAndToRefIn("WorkflowRun","Team",flowTeamIds);
+        relationships = this.relationshipRepository.findByFromTypeAndToTypeAndToRefIn(type.getRef(),
+            "Team", flowTeamIds);
       }
     }
     if (relationships != null) {
-    List<String> teamWorkflowsIds =
-        relationships.stream().map(RelationshipEntity::getFromRef).collect(Collectors.toList());
-    workflowIdsList.addAll(teamWorkflowsIds);
+      List<String> teamWorkflowsIds =
+          relationships.stream().map(RelationshipEntity::getFromRef).collect(Collectors.toList());
+      refsList.addAll(teamWorkflowsIds);
     }
   }
 
-  private void addSystemWorkflows(List<String> workflowIdsList) {
-    List<RelationshipEntity> relationships = this.relationshipRepository.findByFromTypeAndToType("WorkflowRun","System");
+  private void addSystemWorkflows(RelationshipRefType type, List<String> refsList) {
+    List<RelationshipEntity> relationships =
+        this.relationshipRepository.findByFromTypeAndToType(type.getRef(), "System");
     List<String> systemWorkflowsIds =
         relationships.stream().map(RelationshipEntity::getFromRef).collect(Collectors.toList());
-    workflowIdsList.addAll(systemWorkflowsIds);
+    refsList.addAll(systemWorkflowsIds);
   }
 
-  private void addUserWorkflows(final FlowUserEntity user, List<String> workflowIdsList) {
+  private void addUserWorkflows(RelationshipRefType type, final FlowUserEntity user, List<String> refsList) {
     String userId = user.getId();
-    List<RelationshipEntity> relationships = this.relationshipRepository.findByFromTypeAndToTypeAndToRef("WorkflowRun","User",userId);
+    List<RelationshipEntity> relationships =
+        this.relationshipRepository.findByFromTypeAndToTypeAndToRef(type.getRef(), "User", userId);
     List<String> userWorkflowIds =
         relationships.stream().map(RelationshipEntity::getFromRef).collect(Collectors.toList());
-    workflowIdsList.addAll(userWorkflowIds);
+    refsList.addAll(userWorkflowIds);
   }
 }

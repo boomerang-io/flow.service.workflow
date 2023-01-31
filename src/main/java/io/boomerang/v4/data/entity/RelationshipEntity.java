@@ -14,11 +14,17 @@ public class RelationshipEntity {
 
   @Id
   private String id;
-  private String relationship; //TODO convert to enum
+  private String relationship; //TODO convert to enum - belongs-to, initiated-by, 
   private String fromType; //TODO convert to enum
   private String fromRef;
   private String toType; //TODO convert to enum
   private String toRef;
+   
+  @Override
+  public String toString() {
+    return "RelationshipEntity [id=" + id + ", relationship=" + relationship + ", fromType="
+        + fromType + ", fromRef=" + fromRef + ", toType=" + toType + ", toRef=" + toRef + "]";
+  }
   public String getId() {
     return id;
   }
