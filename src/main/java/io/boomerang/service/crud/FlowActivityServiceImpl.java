@@ -93,6 +93,19 @@ import io.boomerang.util.ParameterMapper;
 @Service
 public class FlowActivityServiceImpl implements FlowActivityService {
 
+  @Value("${controller.rest.url.base}")
+  private String controllerBaseUrl;
+
+  @Value("${controller.rest.url.streamlogs}")
+  private String getStreamDownloadPath;
+
+  @Value("${max.workflow.duration}")
+  private long maxWorkflowDuration;
+
+  @Autowired
+  @Qualifier("internalRestTemplate")
+  private RestTemplate restTemplate;
+
   @Autowired
   private FlowSettingsService flowSettingsService;
 
@@ -114,20 +127,6 @@ public class FlowActivityServiceImpl implements FlowActivityService {
   @Autowired
   private FilterService filterService;
 
-  @Value("${controller.rest.url.base}")
-  private String controllerBaseUrl;
-
-  @Value("${controller.rest.url.streamlogs}")
-  private String getStreamDownloadPath;
-
-  @Autowired
-  @Qualifier("internalRestTemplate")
-  private RestTemplate restTemplate;
-
-
-  @Value("${max.workflow.duration}")
-  private long maxWorkflowDuration;
-
   @Autowired
   private ActionService approvalService;
 
@@ -146,7 +145,6 @@ public class FlowActivityServiceImpl implements FlowActivityService {
   @Autowired
   @Lazy
   private ControllerClient controllerClient;
-
 
   @Autowired
   private MongoTemplate mongoTemplate;
@@ -175,7 +173,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
 
     activity.setScope(workflow.getScope());
     activity.setCreationDate(new Date());
-    activity.setStatus(TaskStatus.inProgress);
+    activity.setStatus(TaskStatus.notstarted);
 
     List<KeyValuePair> corePropertyList = new LinkedList<>();
     if (labels != null) {
@@ -224,26 +222,27 @@ public class FlowActivityServiceImpl implements FlowActivityService {
   }
 
   @Override
-  public ListActivityResponse getAllActivities(Optional<Date> from, Optional<Date> to, Pageable page,
-      Optional<List<String>> workflowIds, Optional<List<String>> teamIds,
+  public ListActivityResponse getAllActivities(Optional<Date> from, Optional<Date> to,
+      Pageable page, Optional<List<String>> workflowIds, Optional<List<String>> teamIds,
       Optional<List<String>> statuses, Optional<List<String>> triggers,
       Optional<List<String>> scopes, String property, Direction direction) {
-    List<String> workflowIdsList = filterService.getFilteredWorkflowIds(workflowIds, teamIds, scopes);
-
+    List<String> workflowIdsList =
+        filterService.getFilteredWorkflowIds(workflowIds, teamIds, scopes);
 
     ListActivityResponse response = new ListActivityResponse();
     Page<ActivityEntity> records = flowActivityService.getAllActivities(from, to, page,
         Optional.of(workflowIdsList), statuses, triggers);
-    final List<FlowActivity> activities = filterService.convertActivityEntityToFlowActivity(records.getContent());
+    final List<FlowActivity> activities =
+        filterService.convertActivityEntityToFlowActivity(records.getContent());
     List<FlowActivity> activitiesFiltered = new ArrayList<>();
     for (FlowActivity activity : activities) {
       String workFlowId = activity.getWorkflowId();
       addTeamInformation(teamIds, activitiesFiltered, activity, workFlowId);
     }
 
-    io.boomerang.model.Pageable pageablefinal =
+    io.boomerang.model.Pageable pageableFinal =
         createPageable(records, property, direction, activitiesFiltered, activitiesFiltered.size());
-    response.setPageable(pageablefinal);
+    response.setPageable(pageableFinal);
     response.setRecords(activities);
 
     return response;
@@ -271,7 +270,6 @@ public class FlowActivityServiceImpl implements FlowActivityService {
 
     return pageable;
   }
-
 
   protected io.boomerang.model.Pageable createPageable(final Page<ActivityEntity> records,
       String property, Direction direction) {
@@ -301,7 +299,8 @@ public class FlowActivityServiceImpl implements FlowActivityService {
       List<String> triggers, Optional<List<String>> workflowIds, Optional<List<String>> scopes,
       Long fromDate, Long toDate) {
 
-    List<String> workflowIdsList = filterService.getFilteredWorkflowIds(workflowIds, teamIds, scopes);
+    List<String> workflowIdsList =
+        filterService.getFilteredWorkflowIds(workflowIds, teamIds, scopes);
     Optional<Date> to =
         toDate == null ? Optional.empty() : Optional.of(DateUtil.asDate(getDateTime(toDate)));
     Optional<Date> from =
@@ -316,7 +315,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
         .collect(groupingBy(v -> getStatusValue(v), Collectors.counting())); // NOSONAR
     result.put("all", Long.valueOf(flowWorkflowActivityEntities.size()));
 
-    Arrays.stream(TaskStatus.values()).forEach(v -> initializeValue(v.getStatus(), result));
+    Arrays.stream(TaskStatus.values()).forEach(v -> result.putIfAbsent(v.getStatus(), 0L));
     return result;
   }
 
@@ -335,12 +334,6 @@ public class FlowActivityServiceImpl implements FlowActivityService {
 
   private String getStatusValue(ActivityEntity v) {
     return v.getStatus() == null ? "no_status" : v.getStatus().getStatus();
-  }
-
-  private void initializeValue(String key, Map<String, Long> result) {
-    if (!result.containsKey(key)) {
-      result.put(key, Long.valueOf(0));
-    }
   }
 
   private void addTeamInformation(Optional<List<String>> teamIds,
@@ -384,7 +377,8 @@ public class FlowActivityServiceImpl implements FlowActivityService {
     final Page<ActivityEntity> records = flowActivityService.findAllActivities(from, to, page);
     final ListActivityResponse response = new ListActivityResponse();
 
-    final List<FlowActivity> activities = filterService.convertActivityEntityToFlowActivity(records.getContent());
+    final List<FlowActivity> activities =
+        filterService.convertActivityEntityToFlowActivity(records.getContent());
     io.boomerang.model.Pageable pageable = createPageable(records, property, direction);
     response.setPageable(pageable);
     response.setRecords(activities);
@@ -423,10 +417,10 @@ public class FlowActivityServiceImpl implements FlowActivityService {
   public List<TaskExecutionResponse> getTaskExecutions(String activityId) {
 
 
-    List<TaskExecutionEntity> activites = taskService.findTaskActiivtyForActivity(activityId);
+    List<TaskExecutionEntity> activities = taskService.findTaskActiivtyForActivity(activityId);
     List<TaskExecutionResponse> taskExecutionResponses = new LinkedList<>();
 
-    for (TaskExecutionEntity task : activites) {
+    for (TaskExecutionEntity task : activities) {
       TaskExecutionResponse response = new TaskExecutionResponse();
       BeanUtils.copyProperties(task, response);
 
@@ -595,7 +589,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
 
       ResponseExtractor<Void> responseExtractor =
           getResponseExtractorForRemovalList(removeList, outputStream, printWriter);
-      LOGGER.info("Startingg log download: {}", encodedURL);
+      LOGGER.info("Starting log download: {}", encodedURL);
       try {
         restTemplate.execute(encodedURL, HttpMethod.GET, requestCallback, responseExtractor);
       } catch (Exception ex) {
@@ -623,14 +617,14 @@ public class FlowActivityServiceImpl implements FlowActivityService {
     } else {
       LOGGER.info("Streaming response from controller and processing");
       return restTemplateResponse -> {
-        try {
-          InputStream is = restTemplateResponse.getBody();
-          Reader reader = new InputStreamReader(is);
-          BufferedReader bufferedReader = new BufferedReader(reader);
+
+        try (Reader reader = new InputStreamReader(restTemplateResponse.getBody());
+            BufferedReader bufferedReader = new BufferedReader(reader);) {
+
           String input = null;
           while ((input = bufferedReader.readLine()) != null) {
 
-            printWriter.println(satanzieInput(input, maskWordList));
+            printWriter.println(sanitizeInput(input, maskWordList));
             if (!input.isBlank()) {
               printWriter.flush();
             }
@@ -670,32 +664,30 @@ public class FlowActivityServiceImpl implements FlowActivityService {
     Dag dag = revision.getDag();
     List<DAGTask> dagTasks = dag.getTasks();
     DAGTask dagTask =
-        dagTasks.stream().filter((t) -> taskId.equals(t.getTaskId())).findFirst().orElse(null);
-    if (dagTask != null) {
-      if (dagTask.getTemplateId() != null) {
-        FlowTaskTemplateEntity flowTaskTemplateEntity =
-            templateService.getTaskTemplateWithId(dagTask.getTemplateId());
-        if (flowTaskTemplateEntity != null && flowTaskTemplateEntity.getRevisions() != null) {
-          Optional<Revision> latestRevision = flowTaskTemplateEntity.getRevisions().stream()
-              .sorted(Comparator.comparingInt(Revision::getVersion).reversed()).findFirst();
-          if (latestRevision.isPresent()) {
-            Revision rev = latestRevision.get();
-            for (TaskTemplateConfig taskConfig : rev.getConfig()) {
-              if ("password".equals(taskConfig.getType())) {
-                LOGGER.debug("Found a secured property being used: {}", taskConfig.getKey());
-                String key = taskConfig.getKey();
-                String inputValue = map.get(key);
-                if (inputValue == null || inputValue.isBlank()) {
-                  inputValue = taskConfig.getDefaultValue();
-                }
-                String value = propertyManager.replaceValueWithProperty(inputValue, activityId,
-                    applicationProperties);
-                value = propertyManager.replaceValueWithProperty(value, activityId,
-                    applicationProperties);
-                LOGGER.debug("New Value: {}", value);
-                if (!value.isBlank()) {
-                  removalList.add(value);
-                }
+        dagTasks.stream().filter(t -> taskId.equals(t.getTaskId())).findFirst().orElse(null);
+    if (dagTask != null && dagTask.getTemplateId() != null) {
+      FlowTaskTemplateEntity flowTaskTemplateEntity =
+          templateService.getTaskTemplateWithId(dagTask.getTemplateId());
+      if (flowTaskTemplateEntity != null && flowTaskTemplateEntity.getRevisions() != null) {
+        Optional<Revision> latestRevision = flowTaskTemplateEntity.getRevisions().stream()
+            .sorted(Comparator.comparingInt(Revision::getVersion).reversed()).findFirst();
+        if (latestRevision.isPresent()) {
+          Revision rev = latestRevision.get();
+          for (TaskTemplateConfig taskConfig : rev.getConfig()) {
+            if ("password".equals(taskConfig.getType())) {
+              LOGGER.debug("Found a secured property being used: {}", taskConfig.getKey());
+              String key = taskConfig.getKey();
+              String inputValue = map.get(key);
+              if (inputValue == null || inputValue.isBlank()) {
+                inputValue = taskConfig.getDefaultValue();
+              }
+              String value = propertyManager.replaceValueWithProperty(inputValue, activityId,
+                  applicationProperties);
+              value = propertyManager.replaceValueWithProperty(value, activityId,
+                  applicationProperties);
+              LOGGER.debug("New Value: {}", value);
+              if (!value.isBlank()) {
+                removalList.add(value);
               }
             }
           }
@@ -710,7 +702,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
     return removalList;
   }
 
-  private String satanzieInput(String input, List<String> removeList) {
+  private String sanitizeInput(String input, List<String> removeList) {
     for (String value : removeList) {
       input = input.replaceAll(Pattern.quote(value), "******");
     }
@@ -721,18 +713,15 @@ public class FlowActivityServiceImpl implements FlowActivityService {
   public void cancelWorkflowActivity(String activityId, ErrorResponse error) {
     ActivityEntity activity = flowActivityService.findWorkflowActivtyById(activityId);
     activity.setStatus(TaskStatus.cancelled);
-
-    if (error != null) {
-      activity.setError(error);
-    }
+    Optional.ofNullable(error).ifPresent(activity::setError);
 
     flowActivityService.saveWorkflowActivity(activity);
 
     String workflowId = activity.getWorkflowId();
     final WorkflowEntity workflow = workflowService.getWorkflow(workflowId);
 
-    List<TaskExecutionEntity> activites = taskService.findTaskActiivtyForActivity(activityId);
-    for (TaskExecutionEntity taskExecution : activites) {
+    List<TaskExecutionEntity> activities = taskService.findTaskActiivtyForActivity(activityId);
+    for (TaskExecutionEntity taskExecution : activities) {
       if ((taskExecution.getTaskType() == TaskType.customtask
           || taskExecution.getTaskType() == TaskType.script
           || taskExecution.getTaskType() == TaskType.template)
@@ -805,9 +794,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
         mongoTemplate.find(activityQuery.with(pageable), ActivityEntity.class), pageable,
         () -> mongoTemplate.count(activityQuery, ActivityEntity.class));
 
-    List<FlowActivity> activityRecords = filterService.convertActivityEntityToFlowActivity(activityPages.getContent());
-
-    return activityRecords;
+    return filterService.convertActivityEntityToFlowActivity(activityPages.getContent());
   }
 
   @Override
@@ -831,11 +818,11 @@ public class FlowActivityServiceImpl implements FlowActivityService {
           .getQuotas().getMaxWorkflowExecutionTime());
     }
 
-    List<TaskExecutionEntity> activites = taskService.findTaskActiivtyForActivity(activityId);
+    List<TaskExecutionEntity> activities = taskService.findTaskActiivtyForActivity(activityId);
 
     long totalDuration = 0;
 
-    for (TaskExecutionEntity task : activites) {
+    for (TaskExecutionEntity task : activities) {
       if (task.getTaskType() == TaskType.template || task.getTaskType() == TaskType.customtask) {
 
         if (task.getFlowTaskStatus() == TaskStatus.completed
@@ -848,11 +835,6 @@ public class FlowActivityServiceImpl implements FlowActivityService {
         }
       }
     }
-
-    if (maxDuration < totalDuration) {
-      return true;
-    }
-    return false;
+    return maxDuration < totalDuration;
   }
-
 }

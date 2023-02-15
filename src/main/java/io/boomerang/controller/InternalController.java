@@ -1,8 +1,8 @@
 package io.boomerang.controller;
 
 import java.util.List;
-import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import com.fasterxml.jackson.databind.JsonNode;
 import io.boomerang.model.FlowActivity;
 import io.boomerang.model.FlowSettings;
 import io.boomerang.model.FlowWebhookResponse;
@@ -26,12 +25,13 @@ import io.boomerang.model.WorkflowShortSummary;
 import io.boomerang.model.eventing.EventResponse;
 import io.boomerang.mongo.model.internal.InternalTaskRequest;
 import io.boomerang.mongo.model.internal.InternalTaskResponse;
-import io.boomerang.service.EventProcessor;
+import io.boomerang.service.CloudEventsService;
 import io.boomerang.service.WebhookService;
 import io.boomerang.service.crud.ConfigurationService;
 import io.boomerang.service.crud.WorkflowService;
 import io.boomerang.service.refactor.TaskService;
-import io.cloudevents.v1.CloudEventImpl;
+import io.cloudevents.CloudEvent;
+import io.cloudevents.spring.http.CloudEventHttpUtils;
 
 @RestController
 @RequestMapping("/internal")
@@ -44,7 +44,7 @@ public class InternalController {
   private WorkflowService workflowService;
 
   @Autowired
-  private EventProcessor eventProcessor;
+  private CloudEventsService eventingService;
 
   @Autowired
   private WebhookService webhookService;
@@ -70,14 +70,23 @@ public class InternalController {
 
   @GetMapping(value = "/system-workflows")
   @Deprecated
-  public List<WorkflowShortSummary> getAllSystemworkflows() {
+  public List<WorkflowShortSummary> getAllSystemWorkflows() {
     return workflowService.getSystemWorkflowShortSummaryList();
   }
 
   @PutMapping(value = "/workflow/event", consumes = "application/cloudevents+json; charset=utf-8")
-  public ResponseEntity<CloudEventImpl<EventResponse>> acceptEvent(
-      @RequestHeader Map<String, Object> headers, @RequestBody JsonNode payload) {
-    return ResponseEntity.ok(eventProcessor.processHTTPEvent(headers, payload));
+  public ResponseEntity<EventResponse> acceptEvent(@RequestHeader HttpHeaders headers,
+      @RequestBody String payload) {
+    CloudEvent cloudEvent =
+        CloudEventHttpUtils.toReader(headers, () -> payload.getBytes()).toEvent();
+    try {
+      eventingService.processCloudEventRequest(cloudEvent);
+      return ResponseEntity
+          .ok(new EventResponse(cloudEvent.getId(), HttpStatus.OK.value(), "Event processed!"));
+    } catch (Exception e) {
+      return ResponseEntity.badRequest().body(
+          new EventResponse(cloudEvent.getId(), HttpStatus.BAD_REQUEST.value(), e.getMessage()));
+    }
   }
 
   @PostMapping(value = "/workflow/{id}/validateToken", consumes = "application/json; charset=utf-8")

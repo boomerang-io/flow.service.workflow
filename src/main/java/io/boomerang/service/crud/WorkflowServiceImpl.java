@@ -1,5 +1,6 @@
 package io.boomerang.service.crud;
 
+import static io.boomerang.util.DataAdapterUtil.filterValueByFieldType;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -16,7 +17,6 @@ import java.util.Optional;
 import java.util.TimeZone;
 import java.util.UUID;
 import java.util.stream.Collectors;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.quartz.SchedulerException;
@@ -33,7 +33,6 @@ import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.internal.util.Lists;
 import com.google.inject.internal.util.Maps;
-
 import io.boomerang.error.BoomerangError;
 import io.boomerang.error.BoomerangException;
 import io.boomerang.model.DuplicateRequest;
@@ -79,8 +78,8 @@ import io.boomerang.security.service.UserValidationService;
 import io.boomerang.service.PropertyManager;
 import io.boomerang.service.UserIdentityService;
 import io.boomerang.service.runner.misc.ControllerClient;
+import io.boomerang.util.DataAdapterUtil.FieldType;
 import io.boomerang.util.ModelConverterV5;
-import static io.boomerang.util.DataAdapterUtil.*;
 
 @Service
 public class WorkflowServiceImpl implements WorkflowService {
@@ -197,26 +196,28 @@ public class WorkflowServiceImpl implements WorkflowService {
   
   @Override
   public Map<String, List<WorkflowSummary>> getWorkflowsForTeams(List<String> flowTeamIds) {
-		// Batch query work flows for a list of teams.
-		List<WorkflowEntity> workflowList = workflowRepository.getWorkflowsForTeams(flowTeamIds);  
-		if(workflowList == null || workflowList.isEmpty()) {
-			return Maps.newHashMap();
-		}
-		
-		// Collect flow Id.
-		List<String> flowIds = workflowList.stream().map(flow -> flow.getId()).collect(Collectors.toList());
-		// Batch query revision counts for a list of work flows
-		List<WorkFlowRevisionCount> workflowRevisionCounts = workflowVersionService.getWorkflowRevisionCounts(flowIds);
-		Map<String, WorkFlowRevisionCount> workflowRevisionCountMap = Maps.newHashMap();
-		workflowRevisionCounts.stream().forEach(workFlowRevisionCount -> {
-			workflowRevisionCountMap.put(workFlowRevisionCount.getId(), workFlowRevisionCount);
-		});
-	
-		// Construct workflow summary map(key= flowTeamId, value = List<WorkflowSummary>).
-		Map<String, List<WorkflowSummary>> result = new HashMap<String, List<WorkflowSummary>>();
+    // Batch query work flows for a list of teams.
+    List<WorkflowEntity> workflowList = workflowRepository.getWorkflowsForTeams(flowTeamIds);
+    if (workflowList == null || workflowList.isEmpty()) {
+      return Maps.newHashMap();
+    }
+
+    // Collect flow Id.
+    List<String> flowIds =
+        workflowList.stream().map(flow -> flow.getId()).collect(Collectors.toList());
+    // Batch query revision counts for a list of work flows
+    List<WorkFlowRevisionCount> workflowRevisionCounts =
+        workflowVersionService.getWorkflowRevisionCounts(flowIds);
+    Map<String, WorkFlowRevisionCount> workflowRevisionCountMap = Maps.newHashMap();
+    workflowRevisionCounts.stream().forEach(workFlowRevisionCount -> {
+      workflowRevisionCountMap.put(workFlowRevisionCount.getId(), workFlowRevisionCount);
+    });
+
+    // Construct workflow summary map(key= flowTeamId, value = List<WorkflowSummary>).
+    Map<String, List<WorkflowSummary>> result = new HashMap<String, List<WorkflowSummary>>();
     for (final WorkflowEntity entity : workflowList) {
       if(result.get(entity.getFlowTeamId()) == null) {
-      	result.put(entity.getFlowTeamId(), Lists.newArrayList());
+        result.put(entity.getFlowTeamId(), Lists.newArrayList());
       }
 
       if (WorkflowStatus.active == entity.getStatus()) {
@@ -248,9 +249,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
     entity = workflowRepository.getWorkflow(entity.getId());
 
-    final WorkflowSummary summary = new WorkflowSummary(entity);
-
-    return summary;
+    return new WorkflowSummary(entity);
   }
 
   private void setupTriggerDefaults(final WorkflowEntity flowWorkflowEntity) {
@@ -360,9 +359,9 @@ public class WorkflowServiceImpl implements WorkflowService {
         currentSchedulerEnabled = currentTriggers.getScheduler().getEnable();
       }
       boolean updatedSchedulerEnabled = updatedTriggers.getScheduler().getEnable();
-      if (updatedTriggers.getScheduler().getEnable() == false) {
+      if (!updatedTriggers.getScheduler().getEnable()) {
         workflowScheduleService.disableAllTriggerSchedules(entity.getId());
-      } else if (currentSchedulerEnabled == false && updatedSchedulerEnabled == true) {
+      } else if (!currentSchedulerEnabled && updatedSchedulerEnabled) {
         workflowScheduleService.enableAllTriggerSchedules(entity.getId());
       }
 
@@ -721,21 +720,19 @@ public class WorkflowServiceImpl implements WorkflowService {
 
     // Check if Workflow exists and is active. Then check triggers are enabled.
     WorkflowEntity workflow = workflowRepository.getWorkflow(workflowId);
-    if (workflow != null && WorkflowStatus.active.equals(workflow.getStatus())) {
-      if (workflow.getTriggers() != null) {
-        Triggers triggers = workflow.getTriggers();
-        if (FlowTriggerEnum.manual.toString().equals(trigger.get())
-            && triggers.getManual() != null) {
-          Trigger manualTrigger = triggers.getManual();
-          if (manualTrigger != null) {
-            return manualTrigger.getEnable();
-          }
-        } else if (FlowTriggerEnum.scheduler.toString().equals(trigger.get())
-            && triggers.getScheduler() != null) {
-          Trigger scheduleTrigger = triggers.getScheduler();
-          if (scheduleTrigger != null) {
-            return scheduleTrigger.getEnable();
-          }
+    if (workflow != null && WorkflowStatus.active.equals(workflow.getStatus())
+        && workflow.getTriggers() != null) {
+      Triggers triggers = workflow.getTriggers();
+      if (FlowTriggerEnum.manual.toString().equals(trigger.get()) && triggers.getManual() != null) {
+        Trigger manualTrigger = triggers.getManual();
+        if (manualTrigger != null) {
+          return manualTrigger.getEnable();
+        }
+      } else if (FlowTriggerEnum.scheduler.toString().equals(trigger.get())
+          && triggers.getScheduler() != null) {
+        Trigger scheduleTrigger = triggers.getScheduler();
+        if (scheduleTrigger != null) {
+          return scheduleTrigger.getEnable();
         }
       }
     }
@@ -1166,7 +1163,6 @@ public class WorkflowServiceImpl implements WorkflowService {
 
     UserWorkflowSummary summary =
         getUserWorkflows(workflowRepository.getWorkflow(workflowId).getOwnerUserId());
-
     WorkflowQuotas workflowQuotas = summary.getUserQuotas();
     if (workflowQuotas.getCurrentConcurrentWorkflows() >= workflowQuotas.getMaxConcurrentWorkflows()
         || workflowQuotas.getCurrentWorkflowExecutionMonthly() >= workflowQuotas
@@ -1226,6 +1222,5 @@ public class WorkflowServiceImpl implements WorkflowService {
       return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
     return new ResponseEntity<>(response, HttpStatus.OK);
-
   }
 }
