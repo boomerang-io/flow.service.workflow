@@ -2,6 +2,8 @@ package io.boomerang.service.profile;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,6 +20,7 @@ import io.boomerang.model.profile.Features;
 import io.boomerang.model.profile.Navigation;
 import io.boomerang.model.profile.NavigationResponse;
 import io.boomerang.model.profile.Platform;
+import io.boomerang.mongo.model.Config;
 import io.boomerang.mongo.service.FlowSettingsService;
 import io.boomerang.security.model.UserToken;
 import io.boomerang.security.service.ApiTokenService;
@@ -122,7 +125,32 @@ public class LaunchpadNavigationServiceImpl implements LaunchpadNavigationServic
     HttpEntity<String> requestUpdate = new HttpEntity<>("", headers);
     ResponseEntity<NavigationResponse> response =
         restTemplate.exchange(uriComponents.toUriString(), HttpMethod.GET, requestUpdate, NavigationResponse.class);
-    return response.getBody();
+    NavigationResponse result = response.getBody();
+    if (result != null && result.getPlatform() != null) {
+      if(Strings.isBlank(result.getPlatform().getAppName())) {
+        // set default appName from settings if the external Navigation API does NOT return appName.
+        result.getPlatform().setAppName(this.getAppNameInSettings());
+      }
+      if(!Strings.isBlank(result.getPlatform().getPlatformName()) 
+          && !Strings.isBlank(result.getPlatform().getAppName())) {
+        /*
+         *  add | to the end of the platformName when both platformName and appName exist. 
+         *  The UI header will display like "platformName | appName"
+         */
+        result.getPlatform().setPlatformName(result.getPlatform().getPlatformName() + " |");
+      }
+    }
+    return result;
+  }
+  
+  private String getAppNameInSettings() {
+    try {
+      Config config = settingsService.getConfiguration("customizations", "appName");
+      return config == null ? null : config.getValue();
+    } catch (Exception e) {
+    }
+    // return null instead of throwing exception when appName is not configured in settings.
+    return null;
   }
   
   private HttpHeaders buildHeaders(String email) {
