@@ -10,12 +10,12 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import io.boomerang.v4.model.enums.ref.RunPhase;
-import io.boomerang.v4.model.enums.ref.RunStatus;
-import io.boomerang.v4.model.ref.RunError;
-import io.boomerang.v4.model.ref.RunParam;
-import io.boomerang.v4.model.ref.RunResult;
-import io.boomerang.v4.model.ref.WorkflowWorkspace;
+import io.boomerang.model.RunError;
+import io.boomerang.model.RunParam;
+import io.boomerang.model.RunResult;
+import io.boomerang.model.WorkflowWorkspace;
+import io.boomerang.model.enums.RunPhase;
+import io.boomerang.model.enums.RunStatus;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(Include.NON_NULL)
@@ -34,6 +34,10 @@ public class WorkflowRunEntity   {
   private Date startTime;
 
   private long duration = 0;
+  
+  private long timeout = -1;
+  
+  private long retries = -1;
 
   private RunStatus status = RunStatus.notstarted;
   
@@ -107,6 +111,14 @@ public class WorkflowRunEntity   {
 
   public void setDuration(long duration) {
     this.duration = duration;
+  }
+
+  public long getTimeout() {
+    return timeout;
+  }
+
+  public void setTimeout(long timeout) {
+    this.timeout = timeout;
   }
 
   public String getId() {
@@ -219,6 +231,14 @@ public class WorkflowRunEntity   {
 
   public void setWorkspaces(List<WorkflowWorkspace> workspaces) {
     this.workspaces = workspaces;
+  }
+
+  public long getRetries() {
+    return retries;
+  }
+
+  public void setRetries(long retries) {
+    this.retries = retries;
   }
   
 }

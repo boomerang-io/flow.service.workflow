@@ -3,6 +3,7 @@ package io.boomerang.v4.client;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Sort;
+import io.boomerang.v4.model.ref.Workflow;
 import io.boomerang.v4.model.ref.WorkflowRun;
 import io.boomerang.v4.model.ref.WorkflowRunRequest;
 
@@ -19,4 +20,12 @@ public interface EngineClient {
 
   WorkflowRun startWorkflowRun(String workflowRunId,
       Optional<WorkflowRunRequest> optRunRequest);
+
+  WorkflowRun finalizeWorkflowRun(String workflowRunId);
+
+  WorkflowRun cancelWorkflowRun(String workflowRunId);
+
+  WorkflowRun retryWorkflowRun(String workflowRunId);
+
+  Workflow getWorkflow(String workflowId, Optional<Integer> version, boolean withTasks);
 }

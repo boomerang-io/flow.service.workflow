@@ -9,6 +9,7 @@ import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.domain.Sort.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -77,6 +78,7 @@ public class WorkflowRunV2Controller {
   }
 
   @PostMapping(value = "/{workflowId}/run/submit")
+  @AuthenticationScope(scopes = {TokenScope.global, TokenScope.team, TokenScope.user})
   @Operation(summary = "Submit a Workflow to be run. Will queue the Workflow Run ready for execution.")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -95,6 +97,7 @@ public class WorkflowRunV2Controller {
   }
 
   @PutMapping(value = "/run/{workflowRunId}/start")
+  @AuthenticationScope(scopes = {TokenScope.global, TokenScope.team, TokenScope.user})
   @Operation(summary = "Start Workflow Run execution. The Workflow Run has to already have been queued.")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -107,6 +110,7 @@ public class WorkflowRunV2Controller {
   }
 
   @PutMapping(value = "/run/{workflowRunId}/finalize")
+  @AuthenticationScope(scopes = {TokenScope.global, TokenScope.team, TokenScope.user})
   @Operation(summary = "End a Workflow Run")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -117,8 +121,8 @@ public class WorkflowRunV2Controller {
     return workflowRunService.finalize(workflowRunId);
   }
 
-  //TODO implement
-  @PutMapping(value = "/run/{workflowRunId}/cancel")
+  @DeleteMapping(value = "/run/{workflowRunId}/cancel")
+  @AuthenticationScope(scopes = {TokenScope.global, TokenScope.team, TokenScope.user})
   @Operation(summary = "Cancel a Workflow Run")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -126,11 +130,11 @@ public class WorkflowRunV2Controller {
       @Parameter(name = "workflowRunId",
       description = "ID of Workflow Run to Cancel",
       required = true) @PathVariable(required = true) String workflowRunId) {
-    return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+    return workflowRunService.cancel(workflowRunId);
   }
 
-  //TODO implement
   @PutMapping(value = "/run/{workflowRunId}/retry")
+  @AuthenticationScope(scopes = {TokenScope.global, TokenScope.team, TokenScope.user})
   @Operation(summary = "Retry Workflow Run execution.")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -139,6 +143,6 @@ public class WorkflowRunV2Controller {
       description = "ID of Workflow Run to Retry.",
       required = true) @PathVariable(required = true) String workflowRunId,
       @RequestBody Optional<WorkflowRunRequest> runRequest) {
-    return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+    return workflowRunService.retry(workflowRunId);
   }
 }

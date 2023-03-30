@@ -22,5 +22,9 @@ public interface WorkflowRunService {
       Optional<WorkflowRunRequest> optRunRequest);
 
   ResponseEntity<WorkflowRun> finalize(String workflowRunId);
+
+  ResponseEntity<WorkflowRun> cancel(String workflowRunId);
+
+  ResponseEntity<WorkflowRun> retry(String workflowRunId);
   
 }

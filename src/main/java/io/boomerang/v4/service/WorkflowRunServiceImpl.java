@@ -12,11 +12,17 @@ import io.boomerang.error.BoomerangError;
 import io.boomerang.error.BoomerangException;
 import io.boomerang.v4.client.EngineClient;
 import io.boomerang.v4.client.WorkflowRunResponsePage;
-import io.boomerang.v4.data.repository.RelationshipRepository;
 import io.boomerang.v4.model.enums.RelationshipRefType;
 import io.boomerang.v4.model.ref.WorkflowRun;
 import io.boomerang.v4.model.ref.WorkflowRunRequest;
 
+/*
+ * This service replicates the required calls for Engine WorkflowRunV1 APIs
+ * 
+ * It will
+ * - Check authorization using Relationships
+ * - Forward call onto Engine
+ */
 @Service
 public class WorkflowRunServiceImpl implements WorkflowRunService {
 
@@ -26,13 +32,10 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
   private EngineClient engineClient;
 
   @Autowired
-  private RelationshipRepository relationshipRepository;
-
-  @Autowired
   private FilterServiceV4 filterService;
   
   /*
-   * Pass query onto EngineClient
+   * Get Workflow Run
    * 
    * No need to validate params as they are either defaulted or optional
    */
@@ -55,7 +58,7 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
   @Override
   // TODO switch to WorkflowRun
   /*
-   * Pass query onto EngineClient
+   * Query for WorkflowRun
    * 
    * No need to validate params as they are either defaulted or optional
    */
@@ -68,7 +71,7 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
   }
 
   /*
-   * Pass query onto EngineClient
+   * Submit WorkflowRun
    * 
    * No need to validate params as they are either defaulted or optional
    */
@@ -91,7 +94,9 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
   }
   
   /*
-   * Pass query onto EngineClient
+   * Start WorkflowRun
+   * 
+   * TODO: do we expose this one?
    * 
    * No need to validate params as they are either defaulted or optional
    */
@@ -111,6 +116,11 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
     }
   }
 
+  /*
+   * Finalize WorkflowRun
+   * 
+   * TODO: do we expose this one?
+   */
   @Override
   public ResponseEntity<WorkflowRun> finalize(String workflowRunId) {
     if (workflowRunId == null || workflowRunId.isBlank()) {
@@ -119,6 +129,42 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
     List<String> workflowRunRefsList = filterService.getFilteredRefs(RelationshipRefType.WORKFLOWRUN, Optional.empty(), Optional.empty(), Optional.empty());
     if (!workflowRunRefsList.isEmpty() && workflowRunRefsList.contains(workflowRunId)) {
       WorkflowRun wfRun = engineClient.finalizeWorkflowRun(workflowRunId);
+      return ResponseEntity.ok(wfRun);
+    } else {
+      //TODO: do we want to return invalid ref or unauthorized
+      throw new BoomerangException(BoomerangError.WORKFLOW_RUN_INVALID_REF);
+    }
+  }
+
+  /*
+   * Cancel WorkflowRun
+   */
+  @Override
+  public ResponseEntity<WorkflowRun> cancel(String workflowRunId) {
+    if (workflowRunId == null || workflowRunId.isBlank()) {
+      throw new BoomerangException(BoomerangError.WORKFLOW_RUN_INVALID_REF);
+    }
+    List<String> workflowRunRefsList = filterService.getFilteredRefs(RelationshipRefType.WORKFLOWRUN, Optional.empty(), Optional.empty(), Optional.empty());
+    if (!workflowRunRefsList.isEmpty() && workflowRunRefsList.contains(workflowRunId)) {
+      WorkflowRun wfRun = engineClient.cancelWorkflowRun(workflowRunId);
+      return ResponseEntity.ok(wfRun);
+    } else {
+      //TODO: do we want to return invalid ref or unauthorized
+      throw new BoomerangException(BoomerangError.WORKFLOW_RUN_INVALID_REF);
+    }
+  }
+
+  /*
+   * Retry WorkflowRun
+   */
+  @Override
+  public ResponseEntity<WorkflowRun> retry(String workflowRunId) {
+    if (workflowRunId == null || workflowRunId.isBlank()) {
+      throw new BoomerangException(BoomerangError.WORKFLOW_RUN_INVALID_REF);
+    }
+    List<String> workflowRunRefsList = filterService.getFilteredRefs(RelationshipRefType.WORKFLOWRUN, Optional.empty(), Optional.empty(), Optional.empty());
+    if (!workflowRunRefsList.isEmpty() && workflowRunRefsList.contains(workflowRunId)) {
+      WorkflowRun wfRun = engineClient.retryWorkflowRun(workflowRunId);
       return ResponseEntity.ok(wfRun);
     } else {
       //TODO: do we want to return invalid ref or unauthorized
