@@ -1,6 +1,5 @@
 package io.boomerang.mongo.model;
 
 public enum TokenScope {
-  team,global,user
-
+  team,global,workflow,user
 }

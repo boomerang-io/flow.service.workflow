@@ -1,4 +1,4 @@
-package io.boomerang.security.service.impl;
+package io.boomerang.security.service;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,7 +13,6 @@ import io.boomerang.mongo.entity.WorkflowEntity;
 import io.boomerang.mongo.model.UserType;
 import io.boomerang.mongo.model.WorkflowScope;
 import io.boomerang.mongo.service.FlowWorkflowService;
-import io.boomerang.security.service.UserValidationService;
 import io.boomerang.service.UserIdentityService;
 import io.boomerang.service.crud.TeamService;
 

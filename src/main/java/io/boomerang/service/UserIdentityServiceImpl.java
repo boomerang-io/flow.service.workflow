@@ -29,7 +29,7 @@ import io.boomerang.security.model.GlobalToken;
 import io.boomerang.security.model.TeamToken;
 import io.boomerang.security.model.Token;
 import io.boomerang.security.model.UserToken;
-import io.boomerang.security.service.impl.NoLogging;
+import io.boomerang.security.service.NoLogging;
 import io.boomerang.service.crud.TeamService;
 import io.boomerang.service.crud.WorkflowService;
 

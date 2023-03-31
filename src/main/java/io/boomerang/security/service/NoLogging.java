@@ -1,4 +1,4 @@
-package io.boomerang.security.service.impl;
+package io.boomerang.security.service;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
