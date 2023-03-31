@@ -17,7 +17,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import io.boomerang.model.GenerateTokenResponse;
 import io.boomerang.v4.data.entity.ref.WorkflowEntity;
+import io.boomerang.v4.model.WorkflowCanvas;
 import io.boomerang.v4.model.ref.Workflow;
 import io.boomerang.v4.service.WorkflowService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -71,7 +73,7 @@ public class WorkflowV2Controller {
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
   public ResponseEntity<Workflow> createWorkflow(@RequestBody Workflow workflow) {
-    return workflowService.create(workflow, false);
+    return workflowService.create(workflow);
   }
 
   @PutMapping(value = "/")
@@ -85,21 +87,43 @@ public class WorkflowV2Controller {
     return workflowService.apply(workflow, replace);
   }
 
-  @DeleteMapping(value = "/{workflowId}")
-  @Operation(summary = "Archive a workflow")
-  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
-      @ApiResponse(responseCode = "400", description = "Bad Request")})
-  public ResponseEntity<Workflow> archiveWorkflow(@Parameter(name = "workflowId",
-      description = "ID of Workflow", required = true) @PathVariable String workflowId) {
-    return workflowService.archive(workflowId);
-  }
-
   @GetMapping(value = "/{workflowId}/compose")
   @Operation(summary = "Convert workflow to compose model for UI Designer and detailed Activity screens.")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
-  public ResponseEntity<Workflow> composeWorkflow(@Parameter(name = "workflowId",
-      description = "ID of Workflow", required = true) @PathVariable String workflowId) {
-    return workflowService.compose(workflowId);
+  public ResponseEntity<WorkflowCanvas> composeWorkflow(
+
+      @Parameter(name = "workflowId", description = "ID of Workflow",
+          required = true) @PathVariable String workflowId,
+      @Parameter(name = "version", description = "Workflow Version",
+          required = false) @RequestParam(required = false) Optional<Integer> version) {
+    return workflowService.compose(workflowId, version);
   }
+
+  @PutMapping(value = "/{workflowId}/enable")
+  @Operation(summary = "Enable a workflow")
+  @ApiResponses(value = {@ApiResponse(responseCode = "204", description = "OK"),
+      @ApiResponse(responseCode = "400", description = "Bad Request")})
+  public ResponseEntity<Void> enableWorkflow(@Parameter(name = "workflowId",
+      description = "ID of Workflow", required = true) @PathVariable String workflowId) {
+    return workflowService.enable(workflowId);
+  }
+
+  @PutMapping(value = "/{workflowId}/disable")
+  @Operation(summary = "Disable a workflow")
+  @ApiResponses(value = {@ApiResponse(responseCode = "204", description = "OK"),
+      @ApiResponse(responseCode = "400", description = "Bad Request")})
+  public ResponseEntity<Void> disableWorkflow(@Parameter(name = "workflowId",
+      description = "ID of Workflow", required = true) @PathVariable String workflowId) {
+    return workflowService.disable(workflowId);
+  }
+
+  @DeleteMapping(value = "/{workflowId}")
+  @Operation(summary = "Delete a workflow")
+  @ApiResponses(value = {@ApiResponse(responseCode = "204", description = "OK"),
+      @ApiResponse(responseCode = "400", description = "Bad Request")})
+  public ResponseEntity<Void> deleteWorkflow(@Parameter(name = "workflowId",
+      description = "ID of Workflow", required = true) @PathVariable String workflowId) {
+    return workflowService.delete(workflowId);
+  }  
 }

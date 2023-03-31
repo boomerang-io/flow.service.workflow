@@ -1,6 +1,6 @@
 package io.boomerang.v4.model.ref;
 
-import io.boomerang.model.enums.ParamType;
+import io.boomerang.v4.model.enums.ref.ParamType;
 
 public class ParamSpec {
   

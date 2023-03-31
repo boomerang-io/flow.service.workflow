@@ -1,21 +1,38 @@
 package io.boomerang.v4.service;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import io.boomerang.error.BoomerangError;
 import io.boomerang.error.BoomerangException;
+import io.boomerang.model.GenerateTokenResponse;
+import io.boomerang.model.WorkflowToken;
+import io.boomerang.mongo.entity.WorkflowEntity;
+import io.boomerang.mongo.model.TaskType;
 import io.boomerang.v4.client.EngineClient;
-import io.boomerang.v4.client.WorkflowRunResponsePage;
+import io.boomerang.v4.client.WorkflowResponsePage;
+import io.boomerang.v4.model.CanvasEdge;
+import io.boomerang.v4.model.CanvasEdgeData;
+import io.boomerang.v4.model.CanvasNode;
+import io.boomerang.v4.model.CanvasNodeData;
+import io.boomerang.v4.model.CanvasNodePosition;
+import io.boomerang.v4.model.WorkflowCanvas;
 import io.boomerang.v4.model.enums.RelationshipRefType;
+import io.boomerang.v4.model.ref.Task;
 import io.boomerang.v4.model.ref.Workflow;
-import io.boomerang.v4.model.ref.WorkflowRun;
-import io.boomerang.v4.model.ref.WorkflowRunRequest;
 
 /*
  * This service replicates the required calls for Engine WorkflowV1 APIs
@@ -35,7 +52,7 @@ public class WorkflowServiceImpl implements WorkflowService {
   private EngineClient engineClient;
 
   @Autowired
-  private FilterServiceV4 filterService;
+  private RelationshipService relationshipService;
   
   /*
    * Get Worklfow
@@ -43,14 +60,14 @@ public class WorkflowServiceImpl implements WorkflowService {
    * No need to validate params as they are either defaulted or optional
    */
   @Override
-  public ResponseEntity<Workflow> get(String workflowRunId, Optional<Integer> version, boolean withTasks) {
-    if (workflowRunId == null || workflowRunId.isBlank()) {
+  public ResponseEntity<Workflow> get(String workflowId, Optional<Integer> version, boolean withTasks) {
+    if (workflowId == null || workflowId.isBlank()) {
       throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
     }
 
-    List<String> workflowRefs = filterService.getFilteredRefs(RelationshipRefType.WORKFLOW, Optional.empty(), Optional.empty(), Optional.empty());
-    if (!workflowRefs.isEmpty() && workflowRefs.contains(workflowRunId)) {
-      Workflow workflow = engineClient.getWorkflow(workflowRunId, version, withTasks);
+    List<String> workflowRefs = relationshipService.getFilteredRefs(RelationshipRefType.WORKFLOW, Optional.empty(), Optional.empty(), Optional.empty());
+    if (!workflowRefs.isEmpty() && workflowRefs.contains(workflowId)) {
+      Workflow workflow = engineClient.getWorkflow(workflowId, version, withTasks);
       return ResponseEntity.ok(workflow);
     } else {
       //TODO: do we want to return invalid ref or unauthorized
@@ -58,20 +75,172 @@ public class WorkflowServiceImpl implements WorkflowService {
     }
   }
 
-  @Override
-  // TODO switch to WorkflowRun
   /*
-   * Pass query onto EngineClient
+   * Query for Workflows. Pass query onto EngineClient
    * 
    * No need to validate params as they are either defaulted or optional
    */
-  public WorkflowRunResponsePage query(int page, int limit, Sort sort, Optional<List<String>> queryLabels,
-      Optional<List<String>> queryStatus, Optional<List<String>> queryPhase) {
-    List<String> workflowRunRefs = filterService.getFilteredRefs(RelationshipRefType.WORKFLOWRUN, Optional.empty(), Optional.empty(), Optional.empty());
+  @Override
+  public WorkflowResponsePage query(int page, int limit, Sort sort, Optional<List<String>> queryLabels,
+      Optional<List<String>> queryStatus) {
+    List<String> workflowRunRefs = relationshipService.getFilteredRefs(RelationshipRefType.WORKFLOW, Optional.empty(), Optional.empty(), Optional.empty());
     LOGGER.debug("Query Ids: ", workflowRunRefs);
     
-    return engineClient.queryWorkflowRuns(page, limit, sort, queryLabels, queryStatus, queryPhase, Optional.of(workflowRunRefs));
+    return engineClient.queryWorkflows(page, limit, sort, queryLabels, queryStatus, Optional.of(workflowRunRefs));
+  }
+  
+  /*
+   * Create Workflow. Pass query onto EngineClient
+   * 
+   * No need to validate params as they are either defaulted or optional
+   */
+  @Override
+  public ResponseEntity<Workflow> create(Workflow workflow) {
+    Workflow createdWorkflow = engineClient.createWorkflow(workflow);
+    // TODO: move this to an Async Aspect or CloudEvent handler so that it stores the relationship
+    // regardless of REST thrown error.
+    relationshipService.createRelationshipRef(RelationshipRefType.WORKFLOW.getRef(),
+        createdWorkflow.getId());
+    return ResponseEntity.ok(createdWorkflow);
   }
 
+  /*
+   * Apply allows you to create a new version or override an existing Workflow as well as create new
+   * Workflow with supplied ID
+   */
+  @Override
+  public ResponseEntity<Workflow> apply(Workflow workflow, boolean replace) {   
+    String workflowId = workflow.getId();
+    List<String> workflowRefsList = relationshipService.getFilteredRefs(RelationshipRefType.WORKFLOW, Optional.empty(), Optional.empty(), Optional.empty());
+    if (workflowId == null || workflowId.isBlank() || (!workflowRefsList.isEmpty() && workflowRefsList.contains(workflowId))) {
+      Workflow appliedWorkflow = engineClient.applyWorkflow(workflow, replace);
+    //TODO: move this to an Async Aspect or CloudEvent handler so that it stores the relationship regardless of REST thrown error.
+      relationshipService.createRelationshipRef(RelationshipRefType.WORKFLOW.getRef(), appliedWorkflow.getId());
+      return ResponseEntity.ok(appliedWorkflow);
+    } else if (workflowId != null && !workflowId.isBlank() && !relationshipService.doesRelationshipExist(RelationshipRefType.WORKFLOW, workflowId)) {
+      return this.create(workflow);
+    } else {
+      //TODO: do we want to return invalid ref or unauthorized
+      throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
+    }
+  }
+
+  @Override
+  public ResponseEntity<Void> enable(String workflowId) {
+    if (workflowId == null || workflowId.isBlank()) {
+      throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
+    }
+
+    List<String> workflowRefs = relationshipService.getFilteredRefs(RelationshipRefType.WORKFLOW, Optional.empty(), Optional.empty(), Optional.empty());
+    if (!workflowRefs.isEmpty() && workflowRefs.contains(workflowId)) {
+      engineClient.enableWorkflow(workflowId);
+      return ResponseEntity.noContent().build();
+    } else {
+      //TODO: do we want to return invalid ref or unauthorized
+      throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
+    }
+  }
+
+  @Override
+  public ResponseEntity<Void> disable(String workflowId) {
+    if (workflowId == null || workflowId.isBlank()) {
+      throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
+    }
+
+    List<String> workflowRefs = relationshipService.getFilteredRefs(RelationshipRefType.WORKFLOW, Optional.empty(), Optional.empty(), Optional.empty());
+    if (!workflowRefs.isEmpty() && workflowRefs.contains(workflowId)) {
+      engineClient.disableWorkflow(workflowId);
+      return ResponseEntity.noContent().build();
+    } else {
+      //TODO: do we want to return invalid ref or unauthorized
+      throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
+    }
+  }
+
+  @Override
+  public ResponseEntity<Void> delete(String workflowId) {
+    if (workflowId == null || workflowId.isBlank()) {
+      throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
+    }
+
+    List<String> workflowRefs = relationshipService.getFilteredRefs(RelationshipRefType.WORKFLOW, Optional.empty(), Optional.empty(), Optional.empty());
+    if (!workflowRefs.isEmpty() && workflowRefs.contains(workflowId)) {
+      engineClient.deleteWorkflow(workflowId);
+      
+      //TODO: delete all triggers
+      //TODO: delete all tokens
+      return ResponseEntity.noContent().build();
+    } else {
+      //TODO: do we want to return invalid ref or unauthorized
+      throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
+    }
+  }
+
+  /*  
+   * Retrieves Workflow with Tasks and converts / composes it to the appropriate model.
+   * 
+   * TODO: add a type to handle canvas or Tekton YAML etc etc
+   */
+  @Override
+  public ResponseEntity<WorkflowCanvas> compose(String workflowId, Optional<Integer> version) {
+    if (workflowId == null || workflowId.isBlank()) {
+      throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
+    }
+
+    List<String> workflowRefs = relationshipService.getFilteredRefs(RelationshipRefType.WORKFLOW, Optional.empty(), Optional.empty(), Optional.empty());
+    if (!workflowRefs.isEmpty() && workflowRefs.contains(workflowId)) {
+      Workflow workflow = engineClient.getWorkflow(workflowId, version, true);
+      return ResponseEntity.ok(convertToCanvasModel(workflow));
+    } else {
+      //TODO: do we want to return invalid ref or unauthorized
+      throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
+    }
+  }
   
+  /*
+   * Converts from standard Workflow to Canvas Model
+   * 
+   * TODO: move this code to a private method or a Convertor class
+   */
+  private WorkflowCanvas convertToCanvasModel(Workflow workflow) {
+    List<Task> wfTasks = workflow.getTasks();
+    WorkflowCanvas wfCanvas = new WorkflowCanvas();
+    List<CanvasNode> nodes = new ArrayList<>();
+    List<CanvasEdge> edges = new ArrayList<>();
+    
+    wfTasks.forEach(task -> {
+      CanvasNode node = new CanvasNode();
+      node.setId(task.getName()); //TODO does the ID need to just be random
+      node.setType(task.getType());
+      if (task.getAnnotations().containsKey("io.boomerang/position")) {
+        Map<String, Number> position = (Map<String, Number>) task.getAnnotations().get("io.boomerang/position");
+        CanvasNodePosition nodePosition = new CanvasNodePosition();
+        nodePosition.setX(position.get("x"));
+        nodePosition.setY(position.get("y"));
+        LOGGER.info("Node Position:" + nodePosition.toString());
+        node.setPosition(nodePosition);
+      }
+      CanvasNodeData nodeData = new CanvasNodeData();
+      nodeData.setLabel(task.getName());
+      nodeData.setParams(task.getParams());
+      node.setData(nodeData);
+      nodes.add(node);
+
+      task.getDependencies().forEach(dep -> {
+        CanvasEdge edge = new CanvasEdge();
+        edge.setTarget(task.getName());
+        edge.setSource(dep.getTaskRef());
+        edge.setType(TaskType.decision.equals(task.getType()) ? "decision" : "let me know");
+        CanvasEdgeData edgeData = new CanvasEdgeData();
+        edgeData.setExecutionCondition(dep.getExecutionCondition());
+        edgeData.setDecisionCondition(dep.getDecisionCondition());
+        edges.add(edge);
+      });
+    });
+    
+    wfCanvas.setNodes(nodes);
+    wfCanvas.setEdges(edges);
+    
+    return wfCanvas;
+  }
 }

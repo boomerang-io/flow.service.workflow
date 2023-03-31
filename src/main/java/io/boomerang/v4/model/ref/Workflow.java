@@ -12,9 +12,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import io.boomerang.data.entity.WorkflowEntity;
-import io.boomerang.data.entity.WorkflowRevisionEntity;
-import io.boomerang.util.TaskMapper;
+import io.boomerang.v4.data.entity.ref.WorkflowEntity;
+import io.boomerang.v4.data.entity.ref.WorkflowRevisionEntity;
 
 /*
  * Workflow Model joining Workflow Entity and Workflow Revision Entity
@@ -85,11 +84,15 @@ public class Workflow {
     
   }
 
+  /*
+   * Creates a Workflow from WorkflowEntity and WorkflowRevisionEntity
+   * 
+   * Does not copy / convert the stored Tasks onto the Workflow. If you want the Tasks you need to run
+   * workflow.setTasks(TaskMapper.revisionTasksToListOfTasks(wfRevisionEntity.getTasks()));
+   */
   public Workflow(WorkflowEntity wfEntity, WorkflowRevisionEntity wfRevisionEntity) {
     BeanUtils.copyProperties(wfEntity, this);
     BeanUtils.copyProperties(wfRevisionEntity, this, "id", "tasks");
-    this.setTasks(TaskMapper.revisionTasksToListOfTasks(wfRevisionEntity.getTasks()));
-    
   }
 
   public String getId() {

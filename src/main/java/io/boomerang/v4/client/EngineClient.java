@@ -9,11 +9,11 @@ import io.boomerang.v4.model.ref.WorkflowRunRequest;
 
 public interface EngineClient {
 
+  WorkflowRun getWorkflowRun(String workflowRunId, boolean withTasks);
+
   WorkflowRunResponsePage queryWorkflowRuns(int page, int limit, Sort sort, Optional<List<String>> queryLabels,
       Optional<List<String>> queryStatus, Optional<List<String>> queryPhase,
       Optional<List<String>> queryIds);
-
-  WorkflowRun getWorkflowRun(String workflowRunId, boolean withTasks);
 
   WorkflowRun submitWorkflowRun(String workflowId, Optional<Integer> version, boolean start,
       Optional<WorkflowRunRequest> request);
@@ -28,4 +28,18 @@ public interface EngineClient {
   WorkflowRun retryWorkflowRun(String workflowRunId);
 
   Workflow getWorkflow(String workflowId, Optional<Integer> version, boolean withTasks);
+
+  WorkflowResponsePage queryWorkflows(int page, int limit, Sort sort,
+      Optional<List<String>> queryLabels, Optional<List<String>> queryStatus,
+      Optional<List<String>> queryIds);
+
+  Workflow createWorkflow(Workflow workflow);
+
+  Workflow applyWorkflow(Workflow workflow, boolean replace);
+
+  void enableWorkflow(String workflowId);
+
+  void disableWorkflow(String workflowId);
+
+  void deleteWorkflow(String workflowId);
 }

@@ -19,7 +19,7 @@ import io.boomerang.v4.data.repository.RelationshipRepository;
 import io.boomerang.v4.model.enums.RelationshipRefType;
 
 @Service
-public class FilterServiceV4Impl implements FilterServiceV4 {
+public class RelationshipServiceImpl implements RelationshipService {
 
   private static final Logger LOGGER = LogManager.getLogger();
 
@@ -163,6 +163,20 @@ public class FilterServiceV4Impl implements FilterServiceV4 {
       isAdmin = true;
     }
     return getFilteredRefsList(type, typeRefs, teamIds, scopes, user, isAdmin);
+  }
+  
+  /*
+   * Check if a Relationship exists with an object of that ID
+   * 
+   * This method can be used if noRefs are available but you need to check if the ID has already been used.
+   * 
+   *  @return boolean
+   */
+  @Override
+  public boolean doesRelationshipExist(RelationshipRefType type,
+      String fromRef) {
+    Optional<RelationshipEntity> relationship = relationshipRepository.findByFromTypeAndFromRef(type.getRef(), fromRef);
+    return relationship.isPresent();
   }
 
   private List<String> getFilteredRefsList(RelationshipRefType type,
