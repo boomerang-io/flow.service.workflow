@@ -1,9 +1,10 @@
 package io.boomerang.v4.data.entity;
 
+import java.util.HashMap;
+import java.util.Map;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
 
 /*
  * Entity for Relationships
@@ -19,6 +20,7 @@ public class RelationshipEntity {
   private String fromRef;
   private String toType; //TODO convert to enum
   private String toRef;
+  private Map<String, Object> data = new HashMap<>();
    
   @Override
   public String toString() {
@@ -60,5 +62,11 @@ public class RelationshipEntity {
   }
   public void setToRef(String toRef) {
     this.toRef = toRef;
+  }
+  public Map<String, Object> getData() {
+    return data;
+  }
+  public void setData(Map<String, Object> data) {
+    this.data = data;
   }
 }

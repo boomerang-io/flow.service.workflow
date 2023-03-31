@@ -15,9 +15,11 @@ public class WorkflowRunRequest {
   
   private List<WorkflowWorkspace> workspaces = new LinkedList<>();
   
-  private long timeout;
+  private Long timeout;
   
-  private long retries;
+  private Long retries;
+  
+  private String trigger;
 
   public Map<String, String> getLabels() {
     return labels;
@@ -51,19 +53,27 @@ public class WorkflowRunRequest {
     this.workspaces = workspaces;
   }
 
-  public long getTimeout() {
+  public Long getTimeout() {
     return timeout;
   }
 
-  public void setTimeout(long timeout) {
+  public void setTimeout(Long timeout) {
     this.timeout = timeout;
   }
 
-  public long getRetries() {
+  public Long getRetries() {
     return retries;
   }
 
-  public void setRetries(long retries) {
+  public void setRetries(Long retries) {
     this.retries = retries;
+  }
+
+  public String getTrigger() {
+    return trigger;
+  }
+
+  public void setTrigger(String trigger) {
+    this.trigger = trigger;
   }
 }

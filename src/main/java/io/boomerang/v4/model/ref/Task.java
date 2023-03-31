@@ -8,7 +8,7 @@ import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import io.boomerang.model.enums.TaskType;
+import io.boomerang.v4.model.enums.ref.TaskType;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Task {
