@@ -12,6 +12,7 @@ import io.boomerang.mongo.entity.FlowUserEntity;
 import io.boomerang.mongo.entity.TeamEntity;
 import io.boomerang.mongo.model.UserType;
 import io.boomerang.security.model.TeamToken;
+import io.boomerang.security.model.WorkflowToken;
 import io.boomerang.service.UserIdentityService;
 import io.boomerang.service.crud.TeamService;
 import io.boomerang.v4.data.entity.RelationshipEntity;
@@ -81,10 +82,15 @@ public class RelationshipServiceImpl implements RelationshipService {
         toType = RelationshipRefType.USER.getRef();
         toRef = user.getId();
         break;
+      case workflow:
+        toType = RelationshipRefType.WORKFLOW.getRef();
+        WorkflowToken wfToken = (WorkflowToken) userIdentityService.getRequestIdentity();
+        toRef = wfToken.getWorkflowRef();
+        break;
       case team:
         toType = RelationshipRefType.TEAM.getRef();
-        TeamToken token = (TeamToken) userIdentityService.getRequestIdentity();
-        toRef = token.getTeamId();
+        TeamToken teamToken = (TeamToken) userIdentityService.getRequestIdentity();
+        toRef = teamToken.getTeamId();
         break;
       case global:
         toType = RelationshipRefType.GLOBAL.getRef();
@@ -127,8 +133,14 @@ public class RelationshipServiceImpl implements RelationshipService {
           isAdmin = true;
         }
         break;
+      case workflow:
+        WorkflowToken wfToken = (WorkflowToken) userIdentityService.getRequestIdentity();
+        typeRefs.get().clear();
+        typeRefs.get().add(wfToken.getWorkflowRef());
       case team:
-
+        TeamToken teamToken = (TeamToken) userIdentityService.getRequestIdentity();
+        teamIds.get().clear();
+        teamIds.get().add(teamToken.getTeamId());
         break;
       case global:
         isAdmin = true;

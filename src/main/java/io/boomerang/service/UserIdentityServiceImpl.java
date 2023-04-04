@@ -29,6 +29,7 @@ import io.boomerang.security.model.GlobalToken;
 import io.boomerang.security.model.TeamToken;
 import io.boomerang.security.model.Token;
 import io.boomerang.security.model.UserToken;
+import io.boomerang.security.model.WorkflowToken;
 import io.boomerang.security.service.NoLogging;
 import io.boomerang.service.crud.TeamService;
 import io.boomerang.service.crud.WorkflowService;
@@ -265,6 +266,8 @@ public class UserIdentityServiceImpl implements UserIdentityService {
       Object details = SecurityContextHolder.getContext().getAuthentication().getDetails();
       if (details instanceof UserToken) {
         return TokenScope.user;
+      } else if (details instanceof WorkflowToken) {
+        return TokenScope.workflow;
       } else if (details instanceof TeamToken) {
         return TokenScope.team;
       } else if (details instanceof GlobalToken) {

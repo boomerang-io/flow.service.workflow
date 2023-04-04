@@ -56,7 +56,6 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
   }
 
   @Override
-  // TODO switch to WorkflowRun
   /*
    * Query for WorkflowRun
    * 

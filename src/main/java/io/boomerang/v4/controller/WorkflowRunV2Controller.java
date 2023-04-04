@@ -77,7 +77,7 @@ public class WorkflowRunV2Controller {
   }
 
   @PostMapping(value = "/{workflowId}/run/submit")
-  @AuthenticationScope(scopes = {TokenScope.global, TokenScope.team, TokenScope.user})
+  @AuthenticationScope(scopes = {TokenScope.global, TokenScope.team, TokenScope.user, TokenScope.workflow})
   @Operation(summary = "Submit a Workflow to be run. Will queue the Workflow Run ready for execution.")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -96,7 +96,7 @@ public class WorkflowRunV2Controller {
   }
 
   @PutMapping(value = "/run/{workflowRunId}/start")
-  @AuthenticationScope(scopes = {TokenScope.global, TokenScope.team, TokenScope.user})
+  @AuthenticationScope(scopes = {TokenScope.global, TokenScope.team, TokenScope.user, TokenScope.workflow})
   @Operation(summary = "Start Workflow Run execution. The Workflow Run has to already have been queued.")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -109,7 +109,7 @@ public class WorkflowRunV2Controller {
   }
 
   @PutMapping(value = "/run/{workflowRunId}/finalize")
-  @AuthenticationScope(scopes = {TokenScope.global, TokenScope.team, TokenScope.user})
+  @AuthenticationScope(scopes = {TokenScope.global, TokenScope.team, TokenScope.user, TokenScope.workflow})
   @Operation(summary = "End a Workflow Run")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -121,7 +121,7 @@ public class WorkflowRunV2Controller {
   }
 
   @DeleteMapping(value = "/run/{workflowRunId}/cancel")
-  @AuthenticationScope(scopes = {TokenScope.global, TokenScope.team, TokenScope.user})
+  @AuthenticationScope(scopes = {TokenScope.global, TokenScope.team, TokenScope.user, TokenScope.workflow})
   @Operation(summary = "Cancel a Workflow Run")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -133,7 +133,7 @@ public class WorkflowRunV2Controller {
   }
 
   @PutMapping(value = "/run/{workflowRunId}/retry")
-  @AuthenticationScope(scopes = {TokenScope.global, TokenScope.team, TokenScope.user})
+  @AuthenticationScope(scopes = {TokenScope.global, TokenScope.team, TokenScope.user, TokenScope.workflow})
   @Operation(summary = "Retry Workflow Run execution.")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
