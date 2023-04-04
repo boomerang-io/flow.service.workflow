@@ -1,16 +1,16 @@
 package io.boomerang.model;
 
 import org.springframework.beans.BeanUtils;
-import io.boomerang.mongo.entity.FlowSettingsEntity;
+import io.boomerang.v4.data.entity.SettingsEntity;
 
 
-public class FlowSettings extends FlowSettingsEntity{
+public class FlowSettings extends SettingsEntity{
 
   public FlowSettings() {
     super();
   }
 
-  public FlowSettings(FlowSettingsEntity entity) {
+  public FlowSettings(SettingsEntity entity) {
     BeanUtils.copyProperties(entity, this); // NOSONAR
   }
 }

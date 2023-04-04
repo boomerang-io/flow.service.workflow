@@ -14,13 +14,13 @@ import io.boomerang.model.Execution;
 import io.boomerang.model.FlowActivity;
 import io.boomerang.model.InsightsSummary;
 import io.boomerang.mongo.entity.ActivityEntity;
-import io.boomerang.mongo.entity.TeamEntity;
 import io.boomerang.mongo.entity.WorkflowEntity;
 import io.boomerang.mongo.model.WorkflowScope;
 import io.boomerang.mongo.service.FlowTeamService;
 import io.boomerang.mongo.service.FlowWorkflowActivityService;
 import io.boomerang.mongo.service.FlowWorkflowService;
 import io.boomerang.service.FilterService;
+import io.boomerang.v4.data.entity.TeamEntity;
 
 @Service
 public class InsightsServiceImpl implements InsightsService {

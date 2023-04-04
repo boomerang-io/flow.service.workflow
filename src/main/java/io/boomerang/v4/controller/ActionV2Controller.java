@@ -1,4 +1,5 @@
-package io.boomerang.controller;
+
+package io.boomerang.v4.controller;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -25,21 +26,30 @@ import io.boomerang.model.ApprovalRequest;
 import io.boomerang.model.ApprovalStatus;
 import io.boomerang.model.ListActionResponse;
 import io.boomerang.mongo.model.ManualType;
-import io.boomerang.service.ActionService;
+import io.boomerang.mongo.model.TokenScope;
+import io.boomerang.security.interceptors.AuthenticationScope;
+import io.boomerang.v4.service.ActionServiceV4;
 import io.swagger.v3.oas.annotations.Hidden;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 
 
 @RestController
-@RequestMapping("/workflow")
+@RequestMapping("/api/v2/action")
 @Hidden
-public class ActionController {
+public class ActionV2Controller {
 
   private static final String CREATIONDATESORT = "creationDate";
 
   @Autowired
-  private ActionService actionService;
+  private ActionServiceV4 actionService;
 
-  @PutMapping(value = "/actions/action")
+  @PutMapping(value = "/")
+  @AuthenticationScope(scopes = {TokenScope.global, TokenScope.team, TokenScope.user})
+  @Operation(summary = "Provide an Approval for an Action")
+  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
+      @ApiResponse(responseCode = "400", description = "Bad Request")})
   public void actionApproval(@RequestBody String request)
       throws JsonProcessingException {
     ObjectMapper mapper =

@@ -25,10 +25,8 @@ import org.springframework.security.web.authentication.www.BasicAuthenticationFi
 import org.springframework.util.StreamUtils;
 import com.slack.api.app_backend.SlackSignature.Generator;
 import com.slack.api.app_backend.SlackSignature.Verifier;
-import io.boomerang.mongo.entity.FlowUserEntity;
 import io.boomerang.mongo.entity.TokenEntity;
 import io.boomerang.mongo.model.TokenScope;
-import io.boomerang.mongo.service.FlowSettingsService;
 import io.boomerang.mongo.service.FlowTokenService;
 import io.boomerang.mongo.service.FlowUserService;
 import io.boomerang.security.AuthorizationException;
@@ -38,6 +36,8 @@ import io.boomerang.security.model.TeamToken;
 import io.boomerang.security.model.Token;
 import io.boomerang.security.model.UserToken;
 import io.boomerang.security.util.MultiReadHttpServletRequest;
+import io.boomerang.v4.data.entity.UserEntity;
+import io.boomerang.v4.service.SettingsService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.impl.DefaultJwtParser;
@@ -56,10 +56,10 @@ public class FlowAuthorizationFilter extends BasicAuthenticationFilter {
   private static final Logger LOGGER = LogManager.getLogger();
   private FlowTokenService tokenService;
   private FlowUserService flowUserService;
-  private FlowSettingsService flowSettingsService;
+  private SettingsService flowSettingsService;
   
   public FlowAuthorizationFilter(FlowTokenService tokenService, AuthenticationManager authManager,
-      FlowUserService flowUserService, FlowSettingsService flowSettingsService, String basicPassword) {
+      FlowUserService flowUserService, SettingsService flowSettingsService, String basicPassword) {
     super(authManager);
     this.tokenService = tokenService;
     this.basicPassword = basicPassword;
@@ -137,9 +137,9 @@ public class FlowAuthorizationFilter extends BasicAuthenticationFilter {
         return authToken;
       } else if (token.getScope() == TokenScope.user) {
         String userId = token.getUserId();
-        Optional<FlowUserEntity> user = flowUserService.getUserById(userId);
+        Optional<UserEntity> user = flowUserService.getUserById(userId);
         if (user.isPresent()) {
-          FlowUserEntity flowUser = user.get();
+          UserEntity flowUser = user.get();
           String name = flowUser.getName();
           String email = flowUser.getEmail();
           final UserToken userDetails = new UserToken(userId, name, "");

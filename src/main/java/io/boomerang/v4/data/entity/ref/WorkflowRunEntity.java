@@ -10,12 +10,12 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import io.boomerang.model.RunError;
-import io.boomerang.model.RunParam;
-import io.boomerang.model.RunResult;
-import io.boomerang.model.WorkflowWorkspace;
-import io.boomerang.model.enums.RunPhase;
-import io.boomerang.model.enums.RunStatus;
+import io.boomerang.v4.model.enums.ref.RunPhase;
+import io.boomerang.v4.model.enums.ref.RunStatus;
+import io.boomerang.v4.model.ref.RunError;
+import io.boomerang.v4.model.ref.RunParam;
+import io.boomerang.v4.model.ref.RunResult;
+import io.boomerang.v4.model.ref.WorkflowWorkspace;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(Include.NON_NULL)

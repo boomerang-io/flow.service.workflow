@@ -1,8 +1,8 @@
-package io.boomerang.model;
+package io.boomerang.v4.model;
 
 import java.util.Map;
 
-public class FlowFeatures {
+public class FeaturesAndQuotas {
 
   private Map<String, Object> features;
   private Map<String, Object> quotas;

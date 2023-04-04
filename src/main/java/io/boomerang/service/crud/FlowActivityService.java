@@ -13,10 +13,10 @@ import io.boomerang.model.ListActivityResponse;
 import io.boomerang.model.TaskExecutionResponse;
 import io.boomerang.model.controller.TaskWorkspace;
 import io.boomerang.mongo.entity.ActivityEntity;
-import io.boomerang.mongo.entity.FlowUserEntity;
 import io.boomerang.mongo.entity.TaskExecutionEntity;
 import io.boomerang.mongo.model.ErrorResponse;
 import io.boomerang.mongo.model.KeyValuePair;
+import io.boomerang.v4.data.entity.UserEntity;
 
 public interface FlowActivityService {
 
@@ -33,7 +33,7 @@ public interface FlowActivityService {
             Optional<List<String>> statuses, Optional<List<String>> triggers,
             Optional<List<String>> scopes, String property, Direction direction);
 
-    ListActivityResponse getAllActivitiesForUser(FlowUserEntity user, Optional<Date> from,
+    ListActivityResponse getAllActivitiesForUser(UserEntity user, Optional<Date> from,
             Optional<Date> to, Pageable page, String property, Direction direction);
 
     public List<TaskExecutionResponse> getTaskExecutions(String activityId);

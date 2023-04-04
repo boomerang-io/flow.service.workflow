@@ -21,10 +21,8 @@ import io.boomerang.model.WorkflowToken;
 import io.boomerang.mongo.entity.ActivityEntity;
 import io.boomerang.mongo.entity.FlowGlobalConfigEntity;
 import io.boomerang.mongo.entity.FlowTaskTemplateEntity;
-import io.boomerang.mongo.entity.FlowTeamConfiguration;
 import io.boomerang.mongo.entity.RevisionEntity;
 import io.boomerang.mongo.entity.TaskExecutionEntity;
-import io.boomerang.mongo.entity.TeamEntity;
 import io.boomerang.mongo.entity.WorkflowEntity;
 import io.boomerang.mongo.model.Dag;
 import io.boomerang.mongo.model.KeyValuePair;
@@ -35,19 +33,21 @@ import io.boomerang.mongo.model.WorkflowScope;
 import io.boomerang.mongo.model.next.DAGTask;
 import io.boomerang.mongo.service.ActivityTaskService;
 import io.boomerang.mongo.service.FlowGlobalConfigService;
-import io.boomerang.mongo.service.FlowSettingsService;
 import io.boomerang.mongo.service.FlowTaskTemplateService;
 import io.boomerang.mongo.service.FlowTeamService;
 import io.boomerang.mongo.service.RevisionService;
 import io.boomerang.service.crud.FlowActivityService;
 import io.boomerang.service.crud.WorkflowService;
 import io.boomerang.service.refactor.ControllerRequestProperties;
+import io.boomerang.v4.data.entity.TeamEntity;
+import io.boomerang.v4.data.model.TeamAbstractConfiguration;
+import io.boomerang.v4.service.SettingsService;
 
 @Service
 public class PropertyManagerImpl implements PropertyManager {
 
   @Autowired
-  private FlowSettingsService flowSettingsService;
+  private SettingsService flowSettingsService;
 
   @Autowired
   private RevisionService revisionService;
@@ -289,12 +289,12 @@ public class PropertyManagerImpl implements PropertyManager {
         return;
       }
 
-      List<FlowTeamConfiguration> teamConfig = null;
+      List<TeamAbstractConfiguration> teamConfig = null;
       if (flowTeamEntity.getSettings() != null) {
-        teamConfig = flowTeamEntity.getSettings().getProperties();
+        teamConfig = flowTeamEntity.getSettings().getParameters();
       }
       if (teamConfig != null) {
-        for (FlowTeamConfiguration config : teamConfig) {
+        for (TeamAbstractConfiguration config : teamConfig) {
           teamProperties.put(config.getKey(), config.getValue());
         }
       }

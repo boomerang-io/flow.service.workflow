@@ -35,14 +35,12 @@ import com.google.inject.internal.util.Maps;
 import io.boomerang.error.BoomerangError;
 import io.boomerang.error.BoomerangException;
 import io.boomerang.model.DuplicateRequest;
-import io.boomerang.model.FlowTeam;
 import io.boomerang.model.FlowWorkflowRevision;
 import io.boomerang.model.GenerateTokenResponse;
 import io.boomerang.model.TemplateWorkflowSummary;
 import io.boomerang.model.UserWorkflowSummary;
 import io.boomerang.model.WFETriggerResponse;
 import io.boomerang.model.WorkflowExport;
-import io.boomerang.model.WorkflowQuotas;
 import io.boomerang.model.WorkflowShortSummary;
 import io.boomerang.model.WorkflowSummary;
 import io.boomerang.model.WorkflowToken;
@@ -50,12 +48,10 @@ import io.boomerang.model.controller.TaskResult;
 import io.boomerang.model.projectstormv5.WorkflowRevision;
 import io.boomerang.mongo.entity.ActivityEntity;
 import io.boomerang.mongo.entity.FlowTaskTemplateEntity;
-import io.boomerang.mongo.entity.FlowUserEntity;
 import io.boomerang.mongo.entity.RevisionEntity;
 import io.boomerang.mongo.entity.WorkflowEntity;
 import io.boomerang.mongo.model.Dag;
 import io.boomerang.mongo.model.FlowTriggerEnum;
-import io.boomerang.mongo.model.Quotas;
 import io.boomerang.mongo.model.Revision;
 import io.boomerang.mongo.model.TaskStatus;
 import io.boomerang.mongo.model.TaskType;
@@ -68,7 +64,6 @@ import io.boomerang.mongo.model.WorkflowProperty;
 import io.boomerang.mongo.model.WorkflowScope;
 import io.boomerang.mongo.model.WorkflowStatus;
 import io.boomerang.mongo.model.next.DAGTask;
-import io.boomerang.mongo.service.FlowSettingsService;
 import io.boomerang.mongo.service.FlowTaskTemplateService;
 import io.boomerang.mongo.service.FlowWorkflowActivityService;
 import io.boomerang.mongo.service.FlowWorkflowService;
@@ -77,6 +72,12 @@ import io.boomerang.security.service.UserValidationService;
 import io.boomerang.service.PropertyManager;
 import io.boomerang.service.UserIdentityService;
 import io.boomerang.util.DataAdapterUtil.FieldType;
+import io.boomerang.v4.data.entity.UserEntity;
+import io.boomerang.v4.data.model.CurrentQuotas;
+import io.boomerang.v4.data.model.Quotas;
+import io.boomerang.v4.model.Team;
+import io.boomerang.v4.service.SettingsService;
+import io.boomerang.v4.service.TeamService;
 import io.boomerang.util.ModelConverterV5;
 
 @Service
@@ -111,7 +112,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 //  private ControllerClient controllerClient;
 
   @Autowired
-  private FlowSettingsService flowSettingsService;
+  private SettingsService flowSettingsService;
 
   @Autowired
   private UserValidationService userValidationService;
@@ -234,7 +235,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     setupTriggerDefaults(flowWorkflowEntity);
 
     if (flowWorkflowEntity.getScope() == WorkflowScope.user) {
-      FlowUserEntity user = userIdentityService.getCurrentUser();
+      UserEntity user = userIdentityService.getCurrentUser();
       flowWorkflowEntity.setOwnerUserId(user.getId());
     }
 
@@ -626,7 +627,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   private void setOwnerUser(WorkflowEntity entity, WorkflowScope scope) {
     if (WorkflowScope.user.equals(scope)) {
-      FlowUserEntity user = userIdentityService.getCurrentUser();
+      UserEntity user = userIdentityService.getCurrentUser();
       if (user != null) {
         entity.setOwnerUserId(user.getId());
       }
@@ -684,7 +685,7 @@ public class WorkflowServiceImpl implements WorkflowService {
           summaryList.add(summary);
         } else if (WorkflowScope.team == summary.getScope()) {
           if (flowTeamId != null) {
-            FlowTeam flowTeam = teamService.getTeamById(flowTeamId);
+            Team flowTeam = teamService.getTeamById(flowTeamId);
             if (flowTeam != null) {
               summary.setTeamName(flowTeam.getName());
               summaryList.add(summary);
@@ -761,7 +762,7 @@ public class WorkflowServiceImpl implements WorkflowService {
       return true;
     }
 
-    WorkflowQuotas workflowQuotas = teamService.getTeamQuotas(teamId);
+    CurrentQuotas workflowQuotas = teamService.getTeamQuotas(teamId);
     if (workflowQuotas.getCurrentConcurrentWorkflows() >= workflowQuotas.getMaxConcurrentWorkflows()
         || workflowQuotas.getCurrentWorkflowExecutionMonthly() >= workflowQuotas
             .getMaxWorkflowExecutionMonthly()) {
@@ -972,7 +973,7 @@ public class WorkflowServiceImpl implements WorkflowService {
         existingWorkflow.setScope(WorkflowScope.team);
       }
       if (duplicateRequest.getScope() == WorkflowScope.user) {
-        FlowUserEntity user = userIdentityService.getCurrentUser();
+        UserEntity user = userIdentityService.getCurrentUser();
         existingWorkflow.setOwnerUserId(user.getId());
         existingWorkflow.setScope(WorkflowScope.user);
       }
@@ -997,7 +998,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   @Override
   public UserWorkflowSummary getUserWorkflows() {
-    FlowUserEntity user = userIdentityService.getCurrentUser();
+    UserEntity user = userIdentityService.getCurrentUser();
 
     if (user == null) {
       return null;
@@ -1019,7 +1020,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     UserWorkflowSummary summary = new UserWorkflowSummary();
     summary.setWorkflows(newList);
 
-    WorkflowQuotas quotas = getQuotasForUser(user, workflows);
+    CurrentQuotas quotas = getQuotasForUser(user, workflows);
     summary.setUserQuotas(quotas);
 
     return summary;
@@ -1028,7 +1029,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   @Override
   public UserWorkflowSummary getUserWorkflows(String userId) {
-    FlowUserEntity user = userIdentityService.getUserByID(userId);
+    UserEntity user = userIdentityService.getUserByID(userId);
 
     if (user == null) {
       return null;
@@ -1049,14 +1050,14 @@ public class WorkflowServiceImpl implements WorkflowService {
     UserWorkflowSummary summary = new UserWorkflowSummary();
     summary.setWorkflows(newList);
 
-    WorkflowQuotas quotas = getQuotasForUser(user, workflows);
+    CurrentQuotas quotas = getQuotasForUser(user, workflows);
     summary.setUserQuotas(quotas);
 
     return summary;
   }
 
 
-  private WorkflowQuotas getQuotasForUser(FlowUserEntity user, List<WorkflowEntity> workflows) {
+  private CurrentQuotas getQuotasForUser(UserEntity user, List<WorkflowEntity> workflows) {
 
     final String configurationKey = "users";
 
@@ -1076,7 +1077,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     List<ActivityEntity> concurrentActivities = getConcurrentWorkflowActivities(workflows);
     List<ActivityEntity> activitiesMonthly = getMonthlyWorkflowActivities(page, user.getId());
 
-    WorkflowQuotas workflowQuotas = new WorkflowQuotas();
+    CurrentQuotas workflowQuotas = new CurrentQuotas();
     workflowQuotas.setMaxWorkflowCount(maxUserWorkflowCount);
     workflowQuotas.setMaxWorkflowExecutionMonthly(maxExecutionsMonthly);
     workflowQuotas.setMaxWorkflowStorage(quotas.getMaxWorkflowStorage());
@@ -1092,7 +1093,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     return workflowQuotas;
   }
 
-  private void setWorkflowResetDate(WorkflowQuotas workflowQuotas) {
+  private void setWorkflowResetDate(CurrentQuotas workflowQuotas) {
     Calendar nextMonth = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
     nextMonth.add(Calendar.MONTH, 1);
     nextMonth.set(Calendar.DAY_OF_MONTH, 1);
@@ -1103,7 +1104,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     workflowQuotas.setMonthlyResetDate(nextMonth.getTime());
   }
 
-  private Quotas setTeamQuotas(FlowUserEntity team) {
+  private Quotas setTeamQuotas(UserEntity team) {
     if (team.getQuotas() == null) {
       team.setQuotas(new Quotas());
     }
@@ -1164,7 +1165,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     UserWorkflowSummary summary =
         getUserWorkflows(workflowRepository.getWorkflow(workflowId).getOwnerUserId());
 
-    WorkflowQuotas workflowQuotas = summary.getUserQuotas();
+    CurrentQuotas workflowQuotas = summary.getUserQuotas();
     if (workflowQuotas.getCurrentConcurrentWorkflows() >= workflowQuotas.getMaxConcurrentWorkflows()
         || workflowQuotas.getCurrentWorkflowExecutionMonthly() >= workflowQuotas
             .getMaxWorkflowExecutionMonthly()) {

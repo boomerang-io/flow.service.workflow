@@ -7,25 +7,25 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import io.boomerang.model.FlowSettings;
-import io.boomerang.mongo.entity.FlowSettingsEntity;
 import io.boomerang.mongo.model.Config;
 import io.boomerang.mongo.model.ConfigurationType;
-import io.boomerang.mongo.service.FlowSettingsService;
 import io.boomerang.util.DateUtil;
+import io.boomerang.v4.data.entity.SettingsEntity;
+import io.boomerang.v4.service.SettingsService;
 
 @Service
 public class ConfigurationServiceImpl implements ConfigurationService {
 
   @Autowired
-  private FlowSettingsService serviceSettings;
+  private SettingsService serviceSettings;
 
   @Override
   public List<FlowSettings> getAllSettings() {
   
 
     final List<FlowSettings> settingList = new LinkedList<>();
-    final List<FlowSettingsEntity> entityList = serviceSettings.getAllConfigurations();
-    for (final FlowSettingsEntity entity : entityList) {
+    final List<SettingsEntity> entityList = serviceSettings.getAllConfigurations();
+    for (final SettingsEntity entity : entityList) {
       final FlowSettings newSetting = new FlowSettings(entity);
       settingList.add(newSetting);
     }
@@ -36,7 +36,7 @@ public class ConfigurationServiceImpl implements ConfigurationService {
   @Override
   public List<FlowSettings> updateSettings(List<FlowSettings> settings) {
     for (final FlowSettings setting : settings) {
-      final FlowSettingsEntity entity = serviceSettings.getConfigurationById(setting.getId());
+      final SettingsEntity entity = serviceSettings.getConfigurationById(setting.getId());
       if (entity.getType() == ConfigurationType.ValuesList) {
         setConfigsValue(setting, entity);
       }
@@ -49,7 +49,7 @@ public class ConfigurationServiceImpl implements ConfigurationService {
   }
 
 
-  private void setConfigsValue(final FlowSettings setting, final FlowSettingsEntity entity) {
+  private void setConfigsValue(final FlowSettings setting, final SettingsEntity entity) {
     for (final Config config : setting.getConfig()) {
       final String newValue = config.getValue();
       final Optional<Config> result = entity.getConfig().stream().parallel()

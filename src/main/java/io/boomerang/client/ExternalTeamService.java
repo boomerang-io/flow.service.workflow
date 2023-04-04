@@ -1,11 +1,11 @@
 package io.boomerang.client;
 
 import java.util.List;
-import io.boomerang.mongo.entity.FlowUserEntity;
-import io.boomerang.mongo.entity.TeamEntity;
+import io.boomerang.v4.data.entity.TeamEntity;
+import io.boomerang.v4.data.entity.UserEntity;
 
 public interface ExternalTeamService {
 
   List<TeamEntity>  getExternalTeams(String url);
-  List<FlowUserEntity> getExternalTeamMemberListing(String teamId);
+  List<UserEntity> getExternalTeamMemberListing(String teamId);
 }

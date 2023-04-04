@@ -51,12 +51,12 @@ import io.boomerang.mongo.entity.ExtensionEntity;
 import io.boomerang.mongo.entity.WorkflowEntity;
 import io.boomerang.mongo.model.KeyValuePair;
 import io.boomerang.mongo.repository.ExtensionRepository;
-import io.boomerang.mongo.service.FlowSettingsService;
 import io.boomerang.mongo.service.FlowWorkflowService;
 import io.boomerang.service.ExecutionService;
 import io.boomerang.service.FilterService;
 import io.boomerang.service.UserIdentityService;
 import io.boomerang.util.ParameterMapper;
+import io.boomerang.v4.service.SettingsService;
 
 /*
  * Handles the Slack app slash command and interactivity interactions
@@ -75,7 +75,7 @@ public class SlackExtensionImpl implements SlackExtension {
   private static final Logger LOGGER = LogManager.getLogger();
 
   @Autowired
-  private FlowSettingsService flowSettingsService;
+  private SettingsService flowSettingsService;
 
   @Autowired
   private FlowWorkflowService workflowRepository;

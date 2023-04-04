@@ -28,9 +28,7 @@ import io.boomerang.model.ListActivityResponse;
 import io.boomerang.model.TaskExecutionResponse;
 import io.boomerang.model.TeamWorkflowSummary;
 import io.boomerang.mongo.entity.ActivityEntity;
-import io.boomerang.mongo.entity.FlowUserEntity;
 import io.boomerang.mongo.entity.RevisionEntity;
-import io.boomerang.mongo.entity.TeamEntity;
 import io.boomerang.mongo.entity.WorkflowEntity;
 import io.boomerang.mongo.model.UserType;
 import io.boomerang.mongo.model.WorkflowScope;
@@ -38,7 +36,9 @@ import io.boomerang.mongo.service.FlowWorkflowService;
 import io.boomerang.mongo.service.RevisionService;
 import io.boomerang.service.UserIdentityService;
 import io.boomerang.service.crud.FlowActivityService;
-import io.boomerang.service.crud.TeamService;
+import io.boomerang.v4.data.entity.TeamEntity;
+import io.boomerang.v4.data.entity.UserEntity;
+import io.boomerang.v4.service.TeamService;
 
 @RestController
 @RequestMapping("/workflow/")
@@ -152,7 +152,7 @@ public class ActivityController {
 
     if (teamId != null) {
 
-      final FlowUserEntity user = userIdentityService.getCurrentUser();
+      final UserEntity user = userIdentityService.getCurrentUser();
 
       if (user != null) {
         List<String> teamIdList =

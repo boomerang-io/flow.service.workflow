@@ -21,10 +21,10 @@ import io.boomerang.model.profile.Navigation;
 import io.boomerang.model.profile.NavigationResponse;
 import io.boomerang.model.profile.Platform;
 import io.boomerang.mongo.model.Config;
-import io.boomerang.mongo.service.FlowSettingsService;
 import io.boomerang.security.model.UserToken;
 import io.boomerang.security.service.ApiTokenService;
 import io.boomerang.service.UserIdentityService;
+import io.boomerang.v4.service.SettingsService;
 
 @Service
 public class LaunchpadNavigationServiceImpl implements LaunchpadNavigationService {
@@ -58,7 +58,7 @@ public class LaunchpadNavigationServiceImpl implements LaunchpadNavigationServic
   private String platformNavigationUrl;
 
   @Autowired
-  private FlowSettingsService settingsService;
+  private SettingsService settingsService;
   
   private static final String AUTHORIZATION_HEADER = "Authorization";
   private static final String TOKEN_PREFIX = "Bearer ";

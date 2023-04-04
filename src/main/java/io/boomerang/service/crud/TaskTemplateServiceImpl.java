@@ -14,7 +14,6 @@ import io.boomerang.model.TemplateScope;
 import io.boomerang.model.WorkflowSummary;
 import io.boomerang.model.tekton.TektonTask;
 import io.boomerang.mongo.entity.FlowTaskTemplateEntity;
-import io.boomerang.mongo.entity.FlowUserEntity;
 import io.boomerang.mongo.model.ChangeLog;
 import io.boomerang.mongo.model.FlowTaskTemplateStatus;
 import io.boomerang.mongo.model.Revision;
@@ -23,6 +22,7 @@ import io.boomerang.mongo.model.WorkflowScope;
 import io.boomerang.mongo.service.FlowTaskTemplateService;
 import io.boomerang.service.UserIdentityService;
 import io.boomerang.service.tekton.TektonConverter;
+import io.boomerang.v4.data.entity.UserEntity;
 
 @Service
 public class TaskTemplateServiceImpl implements TaskTemplateService {
@@ -43,7 +43,7 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
       FlowTaskTemplate template = new FlowTaskTemplate(entity);
       for (Revision revision : template.getRevisions()) {
         if (revision.getChangelog() != null && revision.getChangelog().getUserId() != null) {
-          FlowUserEntity user =
+          UserEntity user =
               userIdentityService.getUserByID(revision.getChangelog().getUserId());
           if (revision.getChangelog() != null && user != null
               && revision.getChangelog().getUserName() == null) {
@@ -79,7 +79,7 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
     for (FlowTaskTemplate template : templates) {
       for (Revision revision : template.getRevisions()) {
         if (revision.getChangelog() != null && revision.getChangelog().getUserId() != null) {
-          FlowUserEntity user =
+          UserEntity user =
               userIdentityService.getUserByID(revision.getChangelog().getUserId());
           if (revision.getChangelog() != null && user != null
               && revision.getChangelog().getUserName() == null) {
@@ -92,7 +92,7 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
 
   @Override
   public FlowTaskTemplate insertTaskTemplate(FlowTaskTemplate flowTaskTemplateEntity) {
-    FlowUserEntity user = userIdentityService.getCurrentUser();
+    UserEntity user = userIdentityService.getCurrentUser();
 
     if (user.getType() == UserType.admin || user.getType() == UserType.operator) {
 
@@ -115,7 +115,7 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
 
   @Override
   public FlowTaskTemplate updateTaskTemplate(FlowTaskTemplate flowTaskTemplateEntity) {
-    FlowUserEntity user = userIdentityService.getCurrentUser();
+    UserEntity user = userIdentityService.getCurrentUser();
 
     if (user.getType() == UserType.admin || user.getType() == UserType.operator) {
 
@@ -134,7 +134,7 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
 
   @Override
   public void deleteTaskTemplateWithId(String id) {
-    FlowUserEntity user = userIdentityService.getCurrentUser();
+    UserEntity user = userIdentityService.getCurrentUser();
 
     if (user.getType() == UserType.admin || user.getType() == UserType.operator) {
       flowTaskTemplateService.deleteTaskTemplate(flowTaskTemplateService.getTaskTemplateWithId(id));
@@ -151,7 +151,7 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
 
   private void updateChangeLog(FlowTaskTemplate flowTaskTemplateEntity) {
     List<Revision> revisions = flowTaskTemplateEntity.getRevisions();
-    final FlowUserEntity user = userIdentityService.getCurrentUser();
+    final UserEntity user = userIdentityService.getCurrentUser();
 
     if (revisions != null) {
       for (Revision revision : revisions) {
@@ -210,7 +210,7 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
     if (revisions.size() == 1) {
       Revision revision = revisions.get(0);
 
-      final FlowUserEntity user = userIdentityService.getCurrentUser();
+      final UserEntity user = userIdentityService.getCurrentUser();
       if (user != null) {
         ChangeLog changelog = revision.getChangelog();
         changelog.setUserId(user.getId());
@@ -251,7 +251,7 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
       Revision revision = revisions.get(0);
       revision.setVersion(revisionId);
 
-      final FlowUserEntity user = userIdentityService.getCurrentUser();
+      final UserEntity user = userIdentityService.getCurrentUser();
       if (user != null) {
         ChangeLog changelog = revision.getChangelog();
         changelog.setUserId(user.getId());

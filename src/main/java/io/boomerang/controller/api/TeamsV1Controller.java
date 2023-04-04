@@ -20,16 +20,16 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import io.boomerang.model.FlowTeam;
-import io.boomerang.model.FlowUser;
 import io.boomerang.model.TeamQueryResult;
-import io.boomerang.model.WorkflowQuotas;
 import io.boomerang.model.profile.SortSummary;
-import io.boomerang.mongo.model.Quotas;
 import io.boomerang.mongo.model.TokenScope;
 import io.boomerang.mongo.service.FlowUserService;
 import io.boomerang.security.interceptors.AuthenticationScope;
-import io.boomerang.service.crud.TeamService;
+import io.boomerang.v4.data.model.CurrentQuotas;
+import io.boomerang.v4.data.model.Quotas;
+import io.boomerang.v4.model.Team;
+import io.boomerang.v4.model.User;
+import io.boomerang.v4.service.TeamService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -86,14 +86,14 @@ public class TeamsV1Controller {
   @Operation(summary = "Create flow team")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
-  public ResponseEntity<FlowTeam> addTeam(@RequestBody FlowTeam flowTeam) {
+  public ResponseEntity<Team> addTeam(@RequestBody Team flowTeam) {
 
 
     if (isTeamManagementAvaliable()) {
 
       List<String> userEmails = new ArrayList<>();
       if (flowTeam.getUsers() != null && !flowTeam.getUsers().isEmpty()) {
-        for (FlowUser user : flowTeam.getUsers()) {
+        for (User user : flowTeam.getUsers()) {
           if (!userEmails.contains(user.getEmail().toLowerCase())) {
             userEmails.add(user.getEmail().toLowerCase());
           } else {
@@ -102,11 +102,11 @@ public class TeamsV1Controller {
         }
       }
       String teamName = flowTeam.getName();
-      FlowTeam team = teamService.createStandaloneTeam(teamName, flowTeam.getQuotas());
+      Team team = teamService.createStandaloneTeam(teamName, flowTeam.getQuotas());
 
       List<String> userIdsToAdd = new ArrayList<>();
       if (flowTeam.getUsers() != null && !flowTeam.getUsers().isEmpty()) {
-        for (FlowUser flowUser : flowTeam.getUsers()) {
+        for (User flowUser : flowTeam.getUsers()) {
           if (flowUserService.getUserWithEmail(flowUser.getEmail()) != null) {
             userIdsToAdd.add(flowUserService.getUserWithEmail(flowUser.getEmail()).getId());
           } else {
@@ -155,7 +155,7 @@ public class TeamsV1Controller {
   @Operation(summary = "Update team details")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
-  public void updateTeamMembers(@PathVariable String teamId, @RequestBody FlowTeam flow) {
+  public void updateTeamMembers(@PathVariable String teamId, @RequestBody Team flow) {
     if (isTeamManagementAvaliable()) {
       teamService.updateTeam(teamId, flow);
     }
@@ -166,7 +166,7 @@ public class TeamsV1Controller {
   @Operation(summary = "Get currrent team quotas")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
-  public WorkflowQuotas getTeamQuotas(@PathVariable String teamId) {
+  public CurrentQuotas getTeamQuotas(@PathVariable String teamId) {
     return teamService.getTeamQuotas(teamId);
   }
 

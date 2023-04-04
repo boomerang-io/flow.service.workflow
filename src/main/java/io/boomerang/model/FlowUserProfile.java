@@ -1,10 +1,10 @@
 package io.boomerang.model;
 
 import java.util.List;
-import io.boomerang.mongo.entity.FlowUserEntity;
-import io.boomerang.mongo.entity.TeamEntity;
+import io.boomerang.v4.data.entity.TeamEntity;
+import io.boomerang.v4.data.entity.UserEntity;
 
-public class FlowUserProfile extends FlowUserEntity {
+public class FlowUserProfile extends UserEntity {
 
   private List<WorkflowSummary> workflows;
   private List<TeamEntity> userTeams;

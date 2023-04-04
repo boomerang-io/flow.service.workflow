@@ -10,10 +10,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.HttpClientErrorException;
 import io.boomerang.model.FlowSettings;
-import io.boomerang.mongo.entity.FlowUserEntity;
 import io.boomerang.mongo.model.UserType;
 import io.boomerang.service.UserIdentityService;
 import io.boomerang.service.crud.ConfigurationService;
+import io.boomerang.v4.data.entity.UserEntity;
 
 @RestController
 @RequestMapping("/workflow/settings")
@@ -39,7 +39,7 @@ public class ConfigurationController {
   
   protected void validateUser() {
 
-    FlowUserEntity userEntity = service.getCurrentUser();
+    UserEntity userEntity = service.getCurrentUser();
     if (userEntity == null || (!userEntity.getType().equals(UserType.admin)
         && !userEntity.getType().equals(UserType.operator))) {
 

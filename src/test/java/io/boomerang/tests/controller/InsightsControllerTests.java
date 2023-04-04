@@ -19,10 +19,10 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import io.boomerang.controller.InsightsController;
 import io.boomerang.misc.FlowTests;
 import io.boomerang.model.InsightsSummary;
-import io.boomerang.mongo.entity.FlowUserEntity;
 import io.boomerang.mongo.model.TokenScope;
 import io.boomerang.mongo.model.UserType;
 import io.boomerang.service.UserIdentityService;
+import io.boomerang.v4.data.entity.UserEntity;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
@@ -40,7 +40,7 @@ class InsightsControllerTests extends FlowTests {
   @Test
   void testGetInsightsTeamAndWorkflowFiltered() {
 
-    FlowUserEntity user = new FlowUserEntity();
+    UserEntity user = new UserEntity();
     user.setEmail("amhudson@us.ibm.com");
     user.setName("Adrienne Hudson");
     user.setType(UserType.admin);
@@ -75,7 +75,7 @@ class InsightsControllerTests extends FlowTests {
 
   @Test
   void testGetInsightsTeamFiltered() {
-    FlowUserEntity user = new FlowUserEntity();
+    UserEntity user = new UserEntity();
     user.setEmail("amhudson@us.ibm.com");
     user.setName("Adrienne Hudson");
     user.setType(UserType.admin);
@@ -105,7 +105,7 @@ class InsightsControllerTests extends FlowTests {
 
   @Test
   void testGetInsights() {
-    FlowUserEntity user = new FlowUserEntity();
+    UserEntity user = new UserEntity();
     user.setEmail("amhudson@us.ibm.com");
     user.setName("Adrienne Hudson");
     user.setType(UserType.admin);

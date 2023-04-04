@@ -1,26 +1,17 @@
 package io.boomerang.v4.service;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import io.boomerang.error.BoomerangError;
 import io.boomerang.error.BoomerangException;
-import io.boomerang.model.GenerateTokenResponse;
-import io.boomerang.model.WorkflowToken;
-import io.boomerang.mongo.entity.WorkflowEntity;
 import io.boomerang.mongo.model.TaskType;
 import io.boomerang.v4.client.EngineClient;
 import io.boomerang.v4.client.WorkflowResponsePage;
@@ -82,11 +73,11 @@ public class WorkflowServiceImpl implements WorkflowService {
    */
   @Override
   public WorkflowResponsePage query(int page, int limit, Sort sort, Optional<List<String>> queryLabels,
-      Optional<List<String>> queryStatus) {
-    List<String> workflowRunRefs = relationshipService.getFilteredRefs(RelationshipRefType.WORKFLOW, Optional.empty(), Optional.empty(), Optional.empty());
-    LOGGER.debug("Query Ids: ", workflowRunRefs);
+      Optional<List<String>> queryStatus, Optional<List<String>> queryTeams) {
+    List<String> workflowRefs = relationshipService.getFilteredRefs(RelationshipRefType.WORKFLOW, Optional.empty(), queryTeams, Optional.empty());
+    LOGGER.debug("Query Ids: ", workflowRefs);
     
-    return engineClient.queryWorkflows(page, limit, sort, queryLabels, queryStatus, Optional.of(workflowRunRefs));
+    return engineClient.queryWorkflows(page, limit, sort, queryLabels, queryStatus, Optional.of(workflowRefs));
   }
   
   /*

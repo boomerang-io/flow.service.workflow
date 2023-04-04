@@ -7,26 +7,26 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import io.boomerang.mongo.entity.FlowUserEntity;
 import io.boomerang.mongo.model.UserStatus;
 import io.boomerang.mongo.model.UserType;
-import io.boomerang.mongo.repository.FlowUserRepository;
+import io.boomerang.v4.data.entity.UserEntity;
+import io.boomerang.v4.data.repository.UserRepository;
 
 @Service
 public class FlowUserServiceImpl implements FlowUserService {
 
   @Autowired
-  private FlowUserRepository flowUserRepository;
+  private UserRepository flowUserRepository;
 
   @Override
-  public FlowUserEntity getOrRegisterUser(String email, String name, UserType usertype) {
+  public UserEntity getOrRegisterUser(String email, String name, UserType usertype) {
 
     Long count = this.flowUserRepository.countByEmailIgnoreCase(email);
     if (count == 1) {
       return this.flowUserRepository.findByEmailIgnoreCase(email);
     }
 
-    FlowUserEntity userEntity = new FlowUserEntity();
+    UserEntity userEntity = new UserEntity();
     userEntity.setEmail(email);
     userEntity.setName(name);
     userEntity.setFirstLoginDate(new Date());
@@ -39,27 +39,27 @@ public class FlowUserServiceImpl implements FlowUserService {
   }
 
   @Override
-  public Optional<FlowUserEntity> getUserById(String id) {
+  public Optional<UserEntity> getUserById(String id) {
     return flowUserRepository.findById(id);
   }
 
   @Override
-  public Page<FlowUserEntity> findBySearchTerm(String term, Pageable pageable) {
+  public Page<UserEntity> findBySearchTerm(String term, Pageable pageable) {
     return flowUserRepository.findByNameLikeIgnoreCaseOrEmailLikeIgnoreCase(term, term, pageable);
   }
 
   @Override
-  public Page<FlowUserEntity> findAll(Pageable pageable) {
+  public Page<UserEntity> findAll(Pageable pageable) {
     return flowUserRepository.findAll(pageable);
   }
 
   @Override
-  public List<FlowUserEntity> getUsersforTeams(List<String> teamIds) {
+  public List<UserEntity> getUsersforTeams(List<String> teamIds) {
     return flowUserRepository.findByFlowTeamsContaining(teamIds);
   }
 
   @Override
-  public FlowUserEntity save(FlowUserEntity user) {
+  public UserEntity save(UserEntity user) {
     return flowUserRepository.save(user);
   }
 
@@ -70,7 +70,7 @@ public class FlowUserServiceImpl implements FlowUserService {
   
   @Override
   @NoLogging
-  public FlowUserEntity getUserWithEmail(String userEmail) {
+  public UserEntity getUserWithEmail(String userEmail) {
 
     if (userEmail != null) {
     return flowUserRepository.findByEmailIgnoreCase(userEmail);
@@ -80,7 +80,7 @@ public class FlowUserServiceImpl implements FlowUserService {
   }
 
   @Override
-  public FlowUserEntity registerUser(FlowUserEntity user) {
+  public UserEntity registerUser(UserEntity user) {
     String email = user.getEmail();
     
     Long count = this.flowUserRepository.countByEmailIgnoreCase(email);

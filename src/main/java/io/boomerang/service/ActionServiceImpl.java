@@ -15,7 +15,6 @@ import org.springframework.stereotype.Service;
 import io.boomerang.model.ActionSummary;
 import io.boomerang.model.ApprovalRequest;
 import io.boomerang.model.ApprovalStatus;
-import io.boomerang.model.FlowTeam;
 import io.boomerang.model.ListActionResponse;
 import io.boomerang.model.Sort;
 import io.boomerang.model.Task;
@@ -23,10 +22,8 @@ import io.boomerang.model.WorkflowSummary;
 import io.boomerang.model.teams.Action;
 import io.boomerang.mongo.entity.ActivityEntity;
 import io.boomerang.mongo.entity.ApprovalEntity;
-import io.boomerang.mongo.entity.FlowUserEntity;
 import io.boomerang.mongo.entity.RevisionEntity;
 import io.boomerang.mongo.entity.TaskExecutionEntity;
-import io.boomerang.mongo.entity.TeamEntity;
 import io.boomerang.mongo.entity.WorkflowEntity;
 import io.boomerang.mongo.model.ApproverGroup;
 import io.boomerang.mongo.model.Audit;
@@ -40,11 +37,14 @@ import io.boomerang.mongo.service.ActivityTaskService;
 import io.boomerang.mongo.service.ApprovalService;
 import io.boomerang.mongo.service.RevisionService;
 import io.boomerang.service.crud.FlowActivityService;
-import io.boomerang.service.crud.TeamService;
 import io.boomerang.service.crud.WorkflowService;
 import io.boomerang.service.refactor.ControllerRequestProperties;
 import io.boomerang.service.refactor.TaskClient;
 import io.boomerang.service.refactor.TaskService;
+import io.boomerang.v4.data.entity.TeamEntity;
+import io.boomerang.v4.data.entity.UserEntity;
+import io.boomerang.v4.model.Team;
+import io.boomerang.v4.service.TeamService;
 
 @Service
 public class ActionServiceImpl implements ActionService {
@@ -85,7 +85,7 @@ public class ActionServiceImpl implements ActionService {
   @Override
   public void actionApproval(ApprovalRequest request) {
 
-    FlowUserEntity flowUser = userIdentityService.getCurrentUser();
+    UserEntity flowUser = userIdentityService.getCurrentUser();
     ApprovalEntity approvalEntity = approvalService.findById(request.getId());
 
     if (approvalEntity.getActioners() == null) {
@@ -200,7 +200,7 @@ public class ActionServiceImpl implements ActionService {
      
       approval.setNumberOfApprovals(aprovalCount);
       for (Audit audit : approvalEntity.getActioners()) {
-        FlowUserEntity user = this.userIdentityService.getUserByID(audit.getApproverId());
+        UserEntity user = this.userIdentityService.getUserByID(audit.getApproverId());
         if (user != null) {
           audit.setApproverName(user.getName());
           audit.setApproverEmail(user.getEmail());
@@ -214,7 +214,7 @@ public class ActionServiceImpl implements ActionService {
     approval.setScope(workflowSummary.getScope());
     
     if (approval.getTeamId() != null) {
-      FlowTeam flowTeam = teamService.getTeamById(approval.getTeamId());
+      Team flowTeam = teamService.getTeamById(approval.getTeamId());
       approval.setTeamName(flowTeam.getName());
       approval.setTaskName("");
     }

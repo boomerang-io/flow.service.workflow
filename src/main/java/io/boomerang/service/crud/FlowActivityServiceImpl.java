@@ -57,10 +57,8 @@ import io.boomerang.model.controller.TaskWorkspace;
 import io.boomerang.model.teams.Action;
 import io.boomerang.mongo.entity.ActivityEntity;
 import io.boomerang.mongo.entity.FlowTaskTemplateEntity;
-import io.boomerang.mongo.entity.FlowUserEntity;
 import io.boomerang.mongo.entity.RevisionEntity;
 import io.boomerang.mongo.entity.TaskExecutionEntity;
-import io.boomerang.mongo.entity.TeamEntity;
 import io.boomerang.mongo.entity.WorkflowEntity;
 import io.boomerang.mongo.model.Dag;
 import io.boomerang.mongo.model.ErrorResponse;
@@ -74,7 +72,6 @@ import io.boomerang.mongo.model.WorkflowProperty;
 import io.boomerang.mongo.model.WorkflowScope;
 import io.boomerang.mongo.model.next.DAGTask;
 import io.boomerang.mongo.service.ActivityTaskService;
-import io.boomerang.mongo.service.FlowSettingsService;
 import io.boomerang.mongo.service.FlowTaskTemplateService;
 import io.boomerang.mongo.service.FlowWorkflowActivityService;
 import io.boomerang.mongo.service.FlowWorkflowService;
@@ -85,6 +82,10 @@ import io.boomerang.service.PropertyManager;
 import io.boomerang.service.UserIdentityService;
 import io.boomerang.service.refactor.ControllerRequestProperties;
 import io.boomerang.util.DataAdapterUtil.FieldType;
+import io.boomerang.v4.data.entity.TeamEntity;
+import io.boomerang.v4.data.entity.UserEntity;
+import io.boomerang.v4.service.SettingsService;
+import io.boomerang.v4.service.TeamService;
 import io.boomerang.util.DateUtil;
 import io.boomerang.util.ParameterMapper;
 
@@ -92,7 +93,7 @@ import io.boomerang.util.ParameterMapper;
 public class FlowActivityServiceImpl implements FlowActivityService {
 
   @Autowired
-  private FlowSettingsService flowSettingsService;
+  private SettingsService flowSettingsService;
 
   @Autowired
   private FlowWorkflowActivityService flowActivityService;
@@ -189,7 +190,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
     }
 
     if (!trigger.isPresent() || "manual".equals(trigger.get())) {
-      final FlowUserEntity userEntity = userIdentityService.getCurrentUser();
+      final UserEntity userEntity = userIdentityService.getCurrentUser();
       activity.setInitiatedByUserId(userEntity.getId());
       activity.setInitiatedByUserName(userEntity.getName());
       activity.setTrigger(FlowTriggerEnum.manual.toString());
@@ -372,7 +373,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
   }
 
   @Override
-  public ListActivityResponse getAllActivitiesForUser(FlowUserEntity user, Optional<Date> from,
+  public ListActivityResponse getAllActivitiesForUser(UserEntity user, Optional<Date> from,
       Optional<Date> to, Pageable page, String property, Direction direction) {
 
     final Page<ActivityEntity> records = flowActivityService.findAllActivities(from, to, page);

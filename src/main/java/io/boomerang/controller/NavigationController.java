@@ -10,10 +10,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import io.boomerang.model.Navigation;
-import io.boomerang.mongo.entity.FlowUserEntity;
 import io.boomerang.mongo.model.UserType;
 import io.boomerang.service.UserIdentityService;
 import io.boomerang.service.crud.NavigationService;
+import io.boomerang.v4.data.entity.UserEntity;
 
 @RestController
 @RequestMapping("/workflow/navigation")
@@ -28,7 +28,7 @@ public class NavigationController {
   @GetMapping(value = "")
   public ResponseEntity<List<Navigation>> getNavigation(@RequestParam(required = false) String teamId) {
     boolean isUserAdmin = false;
-    final FlowUserEntity userEntity = userService.getCurrentUser();
+    final UserEntity userEntity = userService.getCurrentUser();
     if (userEntity != null
         && (userEntity.getType() == UserType.admin || userEntity.getType() == UserType.operator)) {
       isUserAdmin = true;
