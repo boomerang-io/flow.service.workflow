@@ -1,8 +1,8 @@
-package io.boomerang.mongo.entity;
+package io.boomerang.v4.data.model;
 
 import io.boomerang.mongo.model.AbstractConfigurationProperty;
 
-public class FlowTeamConfiguration extends AbstractConfigurationProperty {
+public class TeamAbstractConfiguration extends AbstractConfigurationProperty {
 
   private String id;
 

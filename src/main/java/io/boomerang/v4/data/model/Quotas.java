@@ -1,4 +1,4 @@
-package io.boomerang.mongo.model;
+package io.boomerang.v4.data.model;
 
 public class Quotas {
 

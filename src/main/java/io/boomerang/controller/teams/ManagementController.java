@@ -18,16 +18,16 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import io.boomerang.model.FlowTeam;
-import io.boomerang.model.FlowUser;
 import io.boomerang.model.FlowUserProfile;
 import io.boomerang.model.UserQueryResult;
 import io.boomerang.model.profile.SortSummary;
-import io.boomerang.mongo.entity.FlowUserEntity;
-import io.boomerang.mongo.entity.TeamEntity;
 import io.boomerang.mongo.model.KeyValuePair;
 import io.boomerang.service.UserIdentityService;
-import io.boomerang.service.crud.TeamService;
+import io.boomerang.v4.data.entity.TeamEntity;
+import io.boomerang.v4.data.entity.UserEntity;
+import io.boomerang.v4.model.Team;
+import io.boomerang.v4.model.User;
+import io.boomerang.v4.service.TeamService;
 
 
 @RestController
@@ -52,7 +52,7 @@ public class ManagementController {
   }
 
   @PatchMapping(value = "/users/{userId}")
-  public void updateFlowUser(@PathVariable String userId, @RequestBody FlowUser flowUser) {
+  public void updateFlowUser(@PathVariable String userId, @RequestBody User flowUser) {
     if (isUserManagementAvaliable()) {
       userIdentityService.updateFlowUser(userId, flowUser);
     }
@@ -66,11 +66,11 @@ public class ManagementController {
   }
 
   @PostMapping(value = "/users")
-  public FlowUserEntity addUser(@RequestBody FlowUser flowUser) {
+  public UserEntity addUser(@RequestBody User flowUser) {
     if (isUserManagementAvaliable()) {
       return userIdentityService.addFlowUser(flowUser);
     }
-    return new FlowUserEntity();
+    return new UserEntity();
   }
 
 
@@ -109,12 +109,12 @@ public class ManagementController {
   }
 
   @PostMapping(value = "/teams")
-  public FlowTeam addTeam(@RequestBody FlowTeam flowTeam) {
+  public Team addTeam(@RequestBody Team flowTeam) {
     if (isTeamManagementAvaliable()) {
       String teamName = flowTeam.getName();
       return teamService.createStandaloneTeam(teamName, flowTeam.getQuotas());
     }
-    return new FlowTeam();
+    return new Team();
   }
 
   @DeleteMapping(value = "/teams/{teamId}")
@@ -143,7 +143,7 @@ public class ManagementController {
   }
 
   @PutMapping(value = "/teams/{teamId}")
-  public void updateTeamMembers(@PathVariable String teamId, @RequestBody FlowTeam flow) {
+  public void updateTeamMembers(@PathVariable String teamId, @RequestBody Team flow) {
     if (isTeamManagementAvaliable()) {
       teamService.updateTeam(teamId, flow);
     }

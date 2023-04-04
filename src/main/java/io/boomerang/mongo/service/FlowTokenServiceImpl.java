@@ -12,11 +12,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import io.boomerang.model.Token;
 import io.boomerang.model.TokenResponse;
-import io.boomerang.mongo.entity.FlowUserEntity;
 import io.boomerang.mongo.entity.TokenEntity;
 import io.boomerang.mongo.model.TokenScope;
 import io.boomerang.mongo.repository.FlowTokenRepository;
 import io.boomerang.service.UserIdentityService;
+import io.boomerang.v4.data.entity.UserEntity;
 
 @Service
 public class FlowTokenServiceImpl implements FlowTokenService {
@@ -56,7 +56,7 @@ public class FlowTokenServiceImpl implements FlowTokenService {
     token.setExpiryDate(te.getExpiryDate());
     token.setCreationDate(te.getCreationDate());
     token.setCreatorId(creatorId);
-    FlowUserEntity user = userService.getUserByID(creatorId); 
+    UserEntity user = userService.getUserByID(creatorId); 
     if (user != null) {
       token.setCreatorName(user.getName());
     }
@@ -74,7 +74,7 @@ public class FlowTokenServiceImpl implements FlowTokenService {
 
   @Override
   public TokenResponse createTeamToken(String teamId, Date expiryDate, String description) {
-    FlowUserEntity currentUser = userService.getCurrentUser();
+    UserEntity currentUser = userService.getCurrentUser();
     String creatorId = currentUser.getId();
     TokenEntity tokenEntity = createNewToken(expiryDate, description, TokenScope.team, creatorId);
     tokenEntity.setTeamId(teamId);
@@ -94,7 +94,7 @@ public class FlowTokenServiceImpl implements FlowTokenService {
 
   @Override
   public TokenResponse createSystemToken(Date expiryDate, String description) {
-    FlowUserEntity currentUser = userService.getCurrentUser();
+    UserEntity currentUser = userService.getCurrentUser();
     String creatorId = currentUser.getId();
     TokenEntity tokenEntity = createNewToken(expiryDate, description, TokenScope.global, creatorId);
     String prefix = getPrefixForScope(TokenScope.global);

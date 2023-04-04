@@ -22,7 +22,6 @@ import io.boomerang.model.projectstormv5.ConfigNodes;
 import io.boomerang.model.projectstormv5.RestConfig;
 import io.boomerang.model.projectstormv5.TaskNode;
 import io.boomerang.mongo.entity.FlowTaskTemplateEntity;
-import io.boomerang.mongo.entity.FlowUserEntity;
 import io.boomerang.mongo.entity.RevisionEntity;
 import io.boomerang.mongo.entity.WorkflowEntity;
 import io.boomerang.mongo.model.ChangeLog;
@@ -35,6 +34,7 @@ import io.boomerang.mongo.service.FlowTaskTemplateService;
 import io.boomerang.mongo.service.FlowWorkflowService;
 import io.boomerang.mongo.service.RevisionService;
 import io.boomerang.service.UserIdentityService;
+import io.boomerang.v4.data.entity.UserEntity;
 
 @Service
 public class WorkflowVersionServiceImpl implements WorkflowVersionService {
@@ -176,7 +176,7 @@ public class WorkflowVersionServiceImpl implements WorkflowVersionService {
     final long currentCount = flowWorkflowService.getWorkflowCount(workFlowId);
 
     final ChangeLog changelog = new ChangeLog();
-    FlowUserEntity user = userIdentityService.getCurrentUser();
+    UserEntity user = userIdentityService.getCurrentUser();
 
     changelog.setUserId(user.getId());
 

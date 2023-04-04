@@ -27,12 +27,12 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.client.MockRestServiceServer;
 import io.boomerang.model.FlowActivity;
 import io.boomerang.model.teams.Action;
-import io.boomerang.mongo.entity.FlowUserEntity;
 import io.boomerang.mongo.model.TaskStatus;
 import io.boomerang.mongo.model.TokenScope;
 import io.boomerang.mongo.model.UserType;
 import io.boomerang.service.UserIdentityService;
 import io.boomerang.tests.IntegrationTests;
+import io.boomerang.v4.data.entity.UserEntity;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
@@ -46,7 +46,7 @@ class PMOExecuteTests extends IntegrationTests {
 
   @Test
   void testExecution() throws Exception {
-    FlowUserEntity user = new FlowUserEntity();
+    UserEntity user = new UserEntity();
     user.setEmail("amhudson@us.ibm.com");
     user.setName("Adrienne Hudson");
     user.setType(UserType.admin);

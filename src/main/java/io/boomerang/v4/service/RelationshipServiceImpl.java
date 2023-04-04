@@ -8,13 +8,12 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import io.boomerang.mongo.entity.FlowUserEntity;
-import io.boomerang.mongo.entity.TeamEntity;
 import io.boomerang.mongo.model.UserType;
 import io.boomerang.security.model.TeamToken;
 import io.boomerang.service.UserIdentityService;
-import io.boomerang.service.crud.TeamService;
 import io.boomerang.v4.data.entity.RelationshipEntity;
+import io.boomerang.v4.data.entity.TeamEntity;
+import io.boomerang.v4.data.entity.UserEntity;
 import io.boomerang.v4.data.repository.RelationshipRepository;
 import io.boomerang.v4.model.enums.RelationshipRefType;
 
@@ -70,7 +69,7 @@ public class RelationshipServiceImpl implements RelationshipService {
    */
   @Override
   public void createRelationshipRef(String fromType, String fromRef) {
-    FlowUserEntity user = null;
+    UserEntity user = null;
     String toType = null;
     String toRef = null;
 
@@ -116,7 +115,7 @@ public class RelationshipServiceImpl implements RelationshipService {
   @Override
   public List<String> getFilteredRefs(RelationshipRefType type, Optional<List<String>> typeRefs,
       Optional<List<String>> teamIds, Optional<List<String>> scopes) {
-    FlowUserEntity user = null;
+    UserEntity user = null;
     Boolean isAdmin = false;
 
     LOGGER.info("Current User Scope: " + userIdentityService.getCurrentScope());
@@ -157,7 +156,7 @@ public class RelationshipServiceImpl implements RelationshipService {
   public List<String> getFilteredRefsForUserEmail(RelationshipRefType type,
       Optional<List<String>> typeRefs, Optional<List<String>> teamIds,
       Optional<List<String>> scopes, String userEmail) {
-    FlowUserEntity user = userIdentityService.getUserByEmail(userEmail);
+    UserEntity user = userIdentityService.getUserByEmail(userEmail);
     Boolean isAdmin = false;
     if (user != null && user.getType() == UserType.admin) {
       isAdmin = true;
@@ -181,7 +180,7 @@ public class RelationshipServiceImpl implements RelationshipService {
 
   private List<String> getFilteredRefsList(RelationshipRefType type,
       Optional<List<String>> typeRefs, Optional<List<String>> teamIds,
-      Optional<List<String>> scopes, FlowUserEntity user, Boolean isAdmin) {
+      Optional<List<String>> scopes, UserEntity user, Boolean isAdmin) {
     List<String> refsList = new LinkedList<>();
     if (!typeRefs.isPresent()) {
       if (scopes.isPresent() && !scopes.get().isEmpty()) {
@@ -216,7 +215,7 @@ public class RelationshipServiceImpl implements RelationshipService {
     return refsList;
   }
 
-  private void addTeamRefs(RelationshipRefType type, Boolean isAdmin, final FlowUserEntity user,
+  private void addTeamRefs(RelationshipRefType type, Boolean isAdmin, final UserEntity user,
       List<String> refsList, Optional<List<String>> teamIds) {
     List<RelationshipEntity> relationships = null;
     if (teamIds.isPresent() && !teamIds.get().isEmpty()) {
@@ -248,7 +247,7 @@ public class RelationshipServiceImpl implements RelationshipService {
     refsList.addAll(systemWorkflowsIds);
   }
 
-  private void addUserWorkflows(RelationshipRefType type, final FlowUserEntity user, List<String> refsList) {
+  private void addUserWorkflows(RelationshipRefType type, final UserEntity user, List<String> refsList) {
     String userId = user.getId();
     List<RelationshipEntity> relationships =
         this.relationshipRepository.findByFromTypeAndToTypeAndToRef(type.getRef(), "User", userId);

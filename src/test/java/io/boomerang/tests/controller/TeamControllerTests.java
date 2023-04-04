@@ -19,12 +19,12 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import io.boomerang.controller.TeamController;
 import io.boomerang.misc.FlowTests;
-import io.boomerang.model.CreateFlowTeam;
-import io.boomerang.model.WorkflowQuotas;
 import io.boomerang.model.WorkflowSummary;
-import io.boomerang.mongo.entity.FlowTeamConfiguration;
-import io.boomerang.mongo.entity.TeamEntity;
-import io.boomerang.mongo.model.Quotas;
+import io.boomerang.v4.data.entity.TeamEntity;
+import io.boomerang.v4.data.model.CurrentQuotas;
+import io.boomerang.v4.data.model.Quotas;
+import io.boomerang.v4.data.model.TeamAbstractConfiguration;
+import io.boomerang.v4.model.CreateTeamRequest;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
@@ -65,7 +65,7 @@ public class TeamControllerTests extends FlowTests {
 
   @Test
   public void testCreateFlowTeam() {
-    CreateFlowTeam request = new CreateFlowTeam();
+    CreateTeamRequest request = new CreateTeamRequest();
     request.setName("WDC2 ISE Dev");
     request.setCreatedGroupId("5cedb53261a23a0001e4c1b6");
 
@@ -98,11 +98,11 @@ public class TeamControllerTests extends FlowTests {
 
   @Test
   public void testGetAllTeamProperties() {
-    List<FlowTeamConfiguration> configs =
+    List<TeamAbstractConfiguration> configs =
         controller.getAllTeamProperties("5d1a1841f6ca2c00014c4309");
     Assertions.assertEquals(0, configs.size());
 
-    List<FlowTeamConfiguration> configs2 =
+    List<TeamAbstractConfiguration> configs2 =
         controller.getAllTeamProperties("5d1a1841f6ca2c00014c4302");
     Assertions.assertEquals(1, configs2.size());
   }
@@ -119,24 +119,24 @@ public class TeamControllerTests extends FlowTests {
     Assertions.assertEquals(null,
         controller.getAllTeamProperties("5d1a1841f6ca2c00014c4302").get(0).getValue());
 
-    FlowTeamConfiguration property = new FlowTeamConfiguration();
+    TeamAbstractConfiguration property = new TeamAbstractConfiguration();
     property.setId("df5f5749-4d30-41c3-803e-56b54b768407");
     property.setValue("Updated Value");
 
-    List<FlowTeamConfiguration> updatedConfigs = controller.updateTeamProperty(
+    List<TeamAbstractConfiguration> updatedConfigs = controller.updateTeamProperty(
         "5d1a1841f6ca2c00014c4302", property, "df5f5749-4d30-41c3-803e-56b54b768407");
     Assertions.assertEquals("Updated Value", updatedConfigs.get(0).getValue());
   }
 
   @Test
   public void testCreateNewTeamProperty() {
-    FlowTeamConfiguration property = new FlowTeamConfiguration();
+    TeamAbstractConfiguration property = new TeamAbstractConfiguration();
     property.setKey("dylan.new.key");
     property.setValue("Dylan's New Value");
 
-    FlowTeamConfiguration newConfig =
+    TeamAbstractConfiguration newConfig =
         controller.createNewTeamProperty("5d1a1841f6ca2c00014c4309", property);
-    FlowTeamConfiguration newConfig2 =
+    TeamAbstractConfiguration newConfig2 =
         controller.createNewTeamProperty("5d1a1841f6ca2c00014c4302", property);
 
     Assertions.assertEquals("dylan.new.key", newConfig.getKey());
@@ -148,12 +148,12 @@ public class TeamControllerTests extends FlowTests {
   
   @Test
   public void testCreateNewTeamPropertyPassword() {
-    FlowTeamConfiguration property = new FlowTeamConfiguration();
+    TeamAbstractConfiguration property = new TeamAbstractConfiguration();
     property.setKey("dylan.new.key");
     property.setValue("Sensitive data");
     property.setType("password");
 
-    FlowTeamConfiguration newConfig =
+    TeamAbstractConfiguration newConfig =
         controller.createNewTeamProperty("5d1a1841f6ca2c00014c4309", property);
     
     Assertions.assertNull(newConfig.getValue());
@@ -161,7 +161,7 @@ public class TeamControllerTests extends FlowTests {
 
   @Test
   public void testGetTeamQuotas() {
-    WorkflowQuotas quotas = controller.getTeamQuotas("5d1a1841f6ca2c00014c4309");
+    CurrentQuotas quotas = controller.getTeamQuotas("5d1a1841f6ca2c00014c4309");
     Assertions.assertEquals(Integer.valueOf(15), quotas.getMaxWorkflowCount());
     Assertions.assertEquals(Integer.valueOf(150), quotas.getMaxWorkflowExecutionMonthly());
     Assertions.assertEquals(Integer.valueOf(10), quotas.getMaxWorkflowStorage());
@@ -190,7 +190,7 @@ public class TeamControllerTests extends FlowTests {
 
   @Test
   public void testResetTeamQuotas() {
-    WorkflowQuotas previousQuotas = controller.getTeamQuotas("5d1a1841f6ca2c00014c4309");
+    CurrentQuotas previousQuotas = controller.getTeamQuotas("5d1a1841f6ca2c00014c4309");
 
     Assertions.assertEquals(Integer.valueOf(15), previousQuotas.getMaxWorkflowCount());
     Assertions.assertEquals(Integer.valueOf(150), previousQuotas.getMaxWorkflowExecutionMonthly());
@@ -200,7 +200,7 @@ public class TeamControllerTests extends FlowTests {
 
     controller.resetTeamQuotas("5d1a1841f6ca2c00014c4309");
 
-    WorkflowQuotas updatedQuotas = controller.getTeamQuotas("5d1a1841f6ca2c00014c4309");
+    CurrentQuotas updatedQuotas = controller.getTeamQuotas("5d1a1841f6ca2c00014c4309");
 
     Assertions.assertEquals(Integer.valueOf(10), updatedQuotas.getMaxWorkflowCount());
     Assertions.assertEquals(Integer.valueOf(100), updatedQuotas.getMaxWorkflowExecutionMonthly());
@@ -218,7 +218,7 @@ public class TeamControllerTests extends FlowTests {
 
   @Test
   public void testUpdateQuotas() {
-    WorkflowQuotas current = controller.getTeamQuotas("5d1a1841f6ca2c00014c4303"); // team3.json
+    CurrentQuotas current = controller.getTeamQuotas("5d1a1841f6ca2c00014c4303"); // team3.json
     Assertions.assertEquals(Integer.valueOf(10), current.getMaxWorkflowCount());
     Assertions.assertEquals(Integer.valueOf(4), current.getMaxConcurrentWorkflows());
     Assertions.assertEquals(Integer.valueOf(100), current.getMaxWorkflowExecutionMonthly());
@@ -239,7 +239,7 @@ public class TeamControllerTests extends FlowTests {
     Assertions.assertEquals(Integer.valueOf(60), updateQuotas.getMaxWorkflowExecutionTime());
     Assertions.assertEquals(Integer.valueOf(10), updateQuotas.getMaxWorkflowStorage());
 
-    WorkflowQuotas updated = controller.getTeamQuotas("5d1a1841f6ca2c00014c4303");
+    CurrentQuotas updated = controller.getTeamQuotas("5d1a1841f6ca2c00014c4303");
     Assertions.assertEquals(updateQuotas.getMaxWorkflowCount(), updated.getMaxWorkflowCount());
     Assertions.assertEquals(updateQuotas.getMaxConcurrentWorkflows(),
         updated.getMaxConcurrentWorkflows());
@@ -267,7 +267,7 @@ public class TeamControllerTests extends FlowTests {
     Assertions.assertEquals(Integer.valueOf(74), newQuotas.getMaxWorkflowExecutionTime());
     Assertions.assertEquals(Integer.valueOf(8), newQuotas.getMaxWorkflowStorage());
 
-    WorkflowQuotas updated = controller.getTeamQuotas("5d1a1841f6ca2c00014c4302");
+    CurrentQuotas updated = controller.getTeamQuotas("5d1a1841f6ca2c00014c4302");
     Assertions.assertEquals(newQuotas.getMaxWorkflowCount(), updated.getMaxWorkflowCount());
     Assertions.assertEquals(newQuotas.getMaxConcurrentWorkflows(),
         updated.getMaxConcurrentWorkflows());

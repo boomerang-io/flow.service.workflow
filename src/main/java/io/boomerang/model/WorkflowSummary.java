@@ -6,17 +6,15 @@ import io.boomerang.mongo.entity.WorkflowEntity;
 public class WorkflowSummary extends WorkflowEntity {
 
   private long revisionCount;
-
-
   private boolean templateUpgradesAvailable;
 
 
-  public WorkflowSummary(WorkflowEntity entity) {
-    BeanUtils.copyProperties(entity, this);
-  }
-
   public WorkflowSummary() {
 
+  }
+
+  public WorkflowSummary(WorkflowEntity entity) {
+    BeanUtils.copyProperties(entity, this);
   }
 
   public long getRevisionCount() {

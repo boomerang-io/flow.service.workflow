@@ -4,29 +4,29 @@ import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import io.boomerang.mongo.entity.FlowUserEntity;
 import io.boomerang.mongo.model.UserType;
+import io.boomerang.v4.data.entity.UserEntity;
 
 public interface FlowUserService {
 
   public Long getUserCount();
 
-  public FlowUserEntity save(FlowUserEntity user);
+  public UserEntity save(UserEntity user);
 
-  public Optional<FlowUserEntity> getUserById(String id);
+  public Optional<UserEntity> getUserById(String id);
 
-  public FlowUserEntity getOrRegisterUser(String email, String name,
+  public UserEntity getOrRegisterUser(String email, String name,
       UserType userType);
 
-  Page<FlowUserEntity> findBySearchTerm(String term, Pageable pageable);
+  Page<UserEntity> findBySearchTerm(String term, Pageable pageable);
 
-  Page<FlowUserEntity> findAll(Pageable pageable);
+  Page<UserEntity> findAll(Pageable pageable);
 
-  List<FlowUserEntity> getUsersforTeams(List<String> teamIds);
+  List<UserEntity> getUsersforTeams(List<String> teamIds);
 
-  FlowUserEntity getUserWithEmail(String userEmail);
+  UserEntity getUserWithEmail(String userEmail);
 
-  FlowUserEntity registerUser(FlowUserEntity user);
+  UserEntity registerUser(UserEntity user);
 
 
 }

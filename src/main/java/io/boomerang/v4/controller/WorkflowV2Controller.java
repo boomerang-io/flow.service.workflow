@@ -60,12 +60,14 @@ public class WorkflowV2Controller {
       @Parameter(name = "status", description = "List of statuses to filter for. Defaults to all.",
           example = "active,archived",
           required = false) @RequestParam(required = false) Optional<List<String>> status,
+      @Parameter(name = "teams", description = "List of teamIds to filter for.", 
+          required = false) @RequestParam(required = false) Optional<List<String>> teams,
       @Parameter(name = "limit", description = "Result Size", example = "10",
           required = true) @RequestParam(defaultValue = "10") int limit,
       @Parameter(name = "page", description = "Page Number", example = "0",
           required = true) @RequestParam(defaultValue = "0") int page) {
     final Sort sort = Sort.by(new Order(Direction.ASC, "creationDate"));
-    return workflowService.query(page, limit, sort, labels, status);
+    return workflowService.query(page, limit, sort, labels, status, teams);
   }
 
   @PostMapping(value = "/")

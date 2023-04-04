@@ -7,15 +7,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import io.boomerang.client.model.Team;
-import io.boomerang.model.FlowTeam;
-import io.boomerang.mongo.entity.FlowUserEntity;
 import io.boomerang.mongo.entity.WorkflowEntity;
 import io.boomerang.mongo.model.UserType;
 import io.boomerang.mongo.model.WorkflowScope;
 import io.boomerang.mongo.service.FlowWorkflowService;
 import io.boomerang.security.service.UserValidationService;
 import io.boomerang.service.UserIdentityService;
-import io.boomerang.service.crud.TeamService;
+import io.boomerang.v4.data.entity.UserEntity;
+import io.boomerang.v4.service.TeamService;
 
 @Service
 public class UserValidationServiceImpl implements UserValidationService {
@@ -31,11 +30,11 @@ public class UserValidationServiceImpl implements UserValidationService {
 
   @Override
   public void validateUserForTeam(String teamId) {
-    FlowUserEntity user = userIdentityService.getCurrentUser();
-    FlowTeam team = teamService.getTeamByIdDetailed(teamId);
+    UserEntity user = userIdentityService.getCurrentUser();
+    Team team = teamService.getTeamByIdDetailed(teamId);
     List<String> userIds = new ArrayList<>();
     if (team.getUsers() != null) {
-      for (FlowUserEntity teamUser : team.getUsers()) {
+      for (UserEntity teamUser : team.getUsers()) {
         userIds.add(teamUser.getId());
       }
     }
@@ -53,16 +52,16 @@ public class UserValidationServiceImpl implements UserValidationService {
 
   @Override
   public void validateUserForWorkflow(String workflowId) {
-    FlowUserEntity user = userIdentityService.getCurrentUser();
+    UserEntity user = userIdentityService.getCurrentUser();
     WorkflowEntity workflow = workflowRepository.getWorkflow(workflowId);
     WorkflowScope scope = workflow.getScope();
     if (workflow.getScope() == WorkflowScope.team) {
 
-      FlowTeam team = teamService.getTeamByIdDetailed(workflow.getFlowTeamId());
+      Team team = teamService.getTeamByIdDetailed(workflow.getFlowTeamId());
 
       List<String> userIds = new ArrayList<>();
       if (team.getUsers() != null) {
-        for (FlowUserEntity teamUser : team.getUsers()) {
+        for (UserEntity teamUser : team.getUsers()) {
           userIds.add(teamUser.getId());
         }
       }

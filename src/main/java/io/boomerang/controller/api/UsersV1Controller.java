@@ -18,13 +18,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import io.boomerang.model.FlowUser;
 import io.boomerang.model.UserQueryResult;
 import io.boomerang.model.profile.SortSummary;
-import io.boomerang.mongo.entity.FlowUserEntity;
 import io.boomerang.mongo.model.TokenScope;
 import io.boomerang.security.interceptors.AuthenticationScope;
 import io.boomerang.service.UserIdentityService;
+import io.boomerang.v4.data.entity.UserEntity;
+import io.boomerang.v4.model.User;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -46,10 +46,10 @@ public class UsersV1Controller {
   @Operation(summary = "Get a Boomerang Flow user details")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "404", description = "Not Found")})
-  public ResponseEntity<FlowUser> getFlowUser(@PathVariable String userId) {
-    FlowUserEntity flowUser = userIdentityService.getUserByID(userId);
+  public ResponseEntity<User> getFlowUser(@PathVariable String userId) {
+    UserEntity flowUser = userIdentityService.getUserByID(userId);
     if (userIdentityService.getUserByID(userId) != null) {
-      FlowUser user = new FlowUser();
+      User user = new User();
       BeanUtils.copyProperties(flowUser, user);
       return ResponseEntity.ok(user);
     } else {
@@ -63,7 +63,7 @@ public class UsersV1Controller {
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
   public ResponseEntity<Void> updateFlowUser(@PathVariable String userId,
-      @RequestBody FlowUser flowUser) {
+      @RequestBody User flowUser) {
     if (isUserManagementAvaliable()) {
       userIdentityService.updateFlowUser(userId, flowUser);
       return ResponseEntity.ok().build();
@@ -91,9 +91,9 @@ public class UsersV1Controller {
   @Operation(summary = "Create a new Boomerang Flow user")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
-  public ResponseEntity<FlowUser> addUser(@RequestBody FlowUser flowUser) {
+  public ResponseEntity<User> addUser(@RequestBody User flowUser) {
     if (isUserManagementAvaliable()) {
-      FlowUser flowUserEntity = userIdentityService.addFlowUser(flowUser);
+      User flowUserEntity = userIdentityService.addFlowUser(flowUser);
       return ResponseEntity.ok(flowUserEntity);
     } else {
       return ResponseEntity.badRequest().build();

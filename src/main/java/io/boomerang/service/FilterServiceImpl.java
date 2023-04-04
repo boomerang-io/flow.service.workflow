@@ -10,12 +10,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import io.boomerang.model.FlowActivity;
 import io.boomerang.mongo.entity.ActivityEntity;
-import io.boomerang.mongo.entity.FlowUserEntity;
-import io.boomerang.mongo.entity.TeamEntity;
 import io.boomerang.mongo.entity.WorkflowEntity;
 import io.boomerang.mongo.model.UserType;
 import io.boomerang.mongo.service.FlowWorkflowService;
-import io.boomerang.service.crud.TeamService;
+import io.boomerang.v4.data.entity.TeamEntity;
+import io.boomerang.v4.data.entity.UserEntity;
+import io.boomerang.v4.service.TeamService;
 
 @Service
 public class FilterServiceImpl implements FilterService {
@@ -70,7 +70,7 @@ public class FilterServiceImpl implements FilterService {
   @Override
   public List<String> getFilteredWorkflowIds(Optional<List<String>> workflowIds,
       Optional<List<String>> teamIds, Optional<List<String>> scopes) {   
-    FlowUserEntity user = null;
+    UserEntity user = null;
     Boolean isAdmin = false;
     
     LOGGER.info("Current User Scope: " + userIdentityService.getCurrentScope());
@@ -105,7 +105,7 @@ public class FilterServiceImpl implements FilterService {
   @Override
   public List<String> getFilteredWorkflowIdsForUserEmail(Optional<List<String>> workflowIds,
       Optional<List<String>> teamIds, Optional<List<String>> scopes, String userEmail) {
-    FlowUserEntity user = userIdentityService.getUserByEmail(userEmail);
+    UserEntity user = userIdentityService.getUserByEmail(userEmail);
     Boolean isAdmin = false;
     if (user!= null && user.getType() == UserType.admin) {
       isAdmin = true;
@@ -114,7 +114,7 @@ public class FilterServiceImpl implements FilterService {
   }
     
     private List<String> getFilteredWorkflowIdsList(Optional<List<String>> workflowIds,
-        Optional<List<String>> teamIds, Optional<List<String>> scopes, FlowUserEntity user,
+        Optional<List<String>> teamIds, Optional<List<String>> scopes, UserEntity user,
         Boolean isAdmin) {
     List<String> workflowIdsList = new LinkedList<>();
     if (!workflowIds.isPresent()) {
@@ -147,7 +147,7 @@ public class FilterServiceImpl implements FilterService {
     return workflowIdsList;
   }
 
-  private void addTeamWorkflows(Boolean isAdmin, final FlowUserEntity user, List<String> workflowIdsList,
+  private void addTeamWorkflows(Boolean isAdmin, final UserEntity user, List<String> workflowIdsList,
       Optional<List<String>> teamIds) {
     List<WorkflowEntity> teamWorkflows = null;
     if (teamIds.isPresent() && !teamIds.get().isEmpty()) {
@@ -174,7 +174,7 @@ public class FilterServiceImpl implements FilterService {
     workflowIdsList.addAll(systemWorkflowsIds);
   }
 
-  private void addUserWorkflows(final FlowUserEntity user, List<String> workflowIdsList) {
+  private void addUserWorkflows(final UserEntity user, List<String> workflowIdsList) {
     String userId = user.getId();
     List<WorkflowEntity> userWorkflows = this.flowWorkflowService.getWorkflowsForUser(userId);
     List<String> userWorkflowIds =

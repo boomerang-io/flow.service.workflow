@@ -1,45 +1,37 @@
-package io.boomerang.mongo.entity;
+package io.boomerang.v4.data.entity;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import io.boomerang.client.model.Team;
 import io.boomerang.mongo.model.KeyValuePair;
-import io.boomerang.mongo.model.Quotas;
 import io.boomerang.mongo.model.UserStatus;
 import io.boomerang.mongo.model.UserType;
+import io.boomerang.v4.data.model.Quotas;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(Include.NON_NULL)
 @Document(collection = "#{@mongoConfiguration.fullCollectionName('users')}")
-public class FlowUserEntity {
+public class UserEntity {
 
   @Id
   private String id;
-
   private String email;
   private String name;
-  private Boolean isFirstVisit;
   private UserType type;
+  private Boolean isFirstVisit;
   private Boolean isShowHelp;
   private Date firstLoginDate;
   private Date lastLoginDate;
-
   private Quotas quotas;
-
-  private List<String> flowTeams;
-
   private UserStatus status;
-
-  private List<Team> teams;
-
   private Boolean hasConsented;
-  
-  private List<KeyValuePair> labels;
+  private Map<String, String> labels = new HashMap<>();
 
   public UserStatus getStatus() {
     return status;
@@ -113,22 +105,6 @@ public class FlowUserEntity {
     this.isShowHelp = isShowHelp;
   }
 
-  public List<String> getFlowTeams() {
-    return flowTeams;
-  }
-
-  public void setFlowTeams(List<String> flowTeams) {
-    this.flowTeams = flowTeams;
-  }
-
-  public List<Team> getTeams() {
-    return teams;
-  }
-
-  public void setTeams(List<Team> teams) {
-    this.teams = teams;
-  }
-
   public Quotas getQuotas() {
     return quotas;
   }
@@ -145,11 +121,11 @@ public class FlowUserEntity {
     this.hasConsented = hasConsented;
   }
 
-  public List<KeyValuePair> getLabels() {
+  public Map<String, String> getLabels() {
     return labels;
   }
 
-  public void setLabels(List<KeyValuePair> labels) {
+  public void setLabels(Map<String, String> labels) {
     this.labels = labels;
   }
 }

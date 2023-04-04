@@ -1,4 +1,4 @@
-package io.boomerang.mongo.entity;
+package io.boomerang.v4.data.entity;
 
 import java.util.Date;
 import java.util.List;
@@ -8,7 +8,7 @@ import io.boomerang.mongo.model.Config;
 import io.boomerang.mongo.model.ConfigurationType;
 
 @Document(collection = "#{@mongoConfiguration.fullCollectionName('settings')}")
-public class FlowSettingsEntity {
+public class SettingsEntity {
 
   private List<Config> config;
 

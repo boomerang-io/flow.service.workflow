@@ -1,10 +1,11 @@
 package io.boomerang.model;
 
 import java.util.List;
+import io.boomerang.v4.data.model.CurrentQuotas;
 
 public class UserWorkflowSummary {
 
-  private WorkflowQuotas userQuotas;
+  private CurrentQuotas userQuotas;
   private List<WorkflowSummary> workflows;
   
   public List<WorkflowSummary> getWorkflows() {
@@ -13,10 +14,10 @@ public class UserWorkflowSummary {
   public void setWorkflows(List<WorkflowSummary> workflows) {
     this.workflows = workflows;
   }
-  public WorkflowQuotas getUserQuotas() {
+  public CurrentQuotas getUserQuotas() {
     return userQuotas;
   }
-  public void setUserQuotas(WorkflowQuotas userQuotas) {
+  public void setUserQuotas(CurrentQuotas userQuotas) {
     this.userQuotas = userQuotas;
   }
   

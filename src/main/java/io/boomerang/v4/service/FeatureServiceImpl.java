@@ -1,23 +1,22 @@
-package io.boomerang.service;
+package io.boomerang.v4.service;
 
 import java.util.HashMap;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import io.boomerang.model.FlowFeatures;
 import io.boomerang.mongo.model.Config;
-import io.boomerang.mongo.service.FlowSettingsService;
+import io.boomerang.v4.model.FeaturesAndQuotas;
 
 @Service
 public class FeatureServiceImpl implements FeatureService {
 
   private static final String VERIFIED_TASK_EDIT_KEY = "enable.verified.tasks.edit";
   @Autowired
-  private FlowSettingsService settingsService;
+  private SettingsService settingsService;
 
   @Override
-  public FlowFeatures getFlowFeatures() {
-    FlowFeatures flowFeatures = new FlowFeatures();
+  public FeaturesAndQuotas getFlowFeatures() {
+    FeaturesAndQuotas flowFeatures = new FeaturesAndQuotas();
     Map<String, Object> features = new HashMap<>();
     Map<String, Object> quotas = new HashMap<>();
 

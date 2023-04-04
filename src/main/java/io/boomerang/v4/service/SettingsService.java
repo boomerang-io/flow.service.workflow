@@ -1,4 +1,4 @@
-package io.boomerang.mongo.service;
+package io.boomerang.v4.service;
 
 import java.util.List;
 import java.util.Optional;
@@ -6,29 +6,29 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import io.boomerang.model.AESAlgorithm;
-import io.boomerang.mongo.entity.FlowSettingsEntity;
 import io.boomerang.mongo.model.Config;
 import io.boomerang.mongo.model.EncryptionConfig;
-import io.boomerang.mongo.repository.FlowSettingsRepository;
+import io.boomerang.v4.data.entity.SettingsEntity;
+import io.boomerang.v4.data.repository.SettingsRepository;
 
 
 @Service
-public class FlowSettingsService {
+public class SettingsService {
 
   private static final String SECURED_TYPE = "secured";
 
   @Autowired
-  private FlowSettingsRepository configurationRepository;
+  private SettingsRepository settingsRepository;
 
   @Autowired
   private EncryptionConfig encryptConfig;
 
-  public List<FlowSettingsEntity> getAllConfigurations() {
-    return configurationRepository.findAll();
+  public List<SettingsEntity> getAllConfigurations() {
+    return settingsRepository.findAll();
   }
 
   public Config getConfiguration(String key, String name) {
-    final FlowSettingsEntity settings = this.configurationRepository.findOneByKey(key);
+    final SettingsEntity settings = this.settingsRepository.findOneByKey(key);
     final List<Config> configList = settings.getConfig();
     final Optional<Config> result =
         configList.stream().parallel().filter(x -> name.equals(x.getKey())).findFirst();
@@ -41,8 +41,8 @@ public class FlowSettingsService {
         () -> new IllegalArgumentException("Unable to find configuration object: " + name));
   }
 
-  public FlowSettingsEntity getConfigurationById(String id) {
-    Optional<FlowSettingsEntity> entity = configurationRepository.findById(id);
+  public SettingsEntity getConfigurationById(String id) {
+    Optional<SettingsEntity> entity = settingsRepository.findById(id);
     if (entity.isPresent()) {
       showDecryptedValues(entity.get());
     }
@@ -51,8 +51,8 @@ public class FlowSettingsService {
         () -> new IllegalArgumentException("Unable to find configuration with ID: " + id));
   }
 
-  public FlowSettingsEntity getConfigurationByKey(String key) {
-    final FlowSettingsEntity settingsEntity = configurationRepository.findOneByKey(key);
+  public SettingsEntity getConfigurationByKey(String key) {
+    final SettingsEntity settingsEntity = settingsRepository.findOneByKey(key);
     if (settingsEntity != null) {
       showDecryptedValues(settingsEntity);
       return settingsEntity;
@@ -61,19 +61,19 @@ public class FlowSettingsService {
     }
   }
 
-  public void updateConfiguration(FlowSettingsEntity configuration) {
+  public void updateConfiguration(SettingsEntity configuration) {
     setEncryptedValues(configuration);
 
-    this.configurationRepository.save(configuration);
+    this.settingsRepository.save(configuration);
   }
 
-  private void setEncryptedValues(FlowSettingsEntity configuration) {
+  private void setEncryptedValues(SettingsEntity configuration) {
     configuration.getConfig().stream()
         .filter(config -> SECURED_TYPE.equalsIgnoreCase(config.getType()))
         .forEach(c -> c.setValue(encrypt(c.getValue())));
   }
 
-  private void showDecryptedValues(FlowSettingsEntity configuration) {
+  private void showDecryptedValues(SettingsEntity configuration) {
     configuration.getConfig().stream()
         .filter(config -> SECURED_TYPE.equalsIgnoreCase(config.getType()))
         .forEach(c -> c.setValue(decrypt(c.getValue())));

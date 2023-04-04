@@ -14,12 +14,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
-import io.boomerang.model.FlowFeatures;
 import io.boomerang.model.Navigation;
 import io.boomerang.model.NavigationType;
 import io.boomerang.security.service.ApiTokenService;
-import io.boomerang.service.FeatureService;
 import io.boomerang.service.UserIdentityService;
+import io.boomerang.v4.model.FeaturesAndQuotas;
+import io.boomerang.v4.service.FeatureService;
 
 @Service
 public class NavigationServiceImpl implements NavigationService {
@@ -49,7 +49,7 @@ public class NavigationServiceImpl implements NavigationService {
   @Override
   public List<Navigation> getNavigation(boolean isUserAdmin, String teamId) {
 
-    FlowFeatures features = featureService.getFlowFeatures();
+    FeaturesAndQuotas features = featureService.getFlowFeatures();
 
     if (flowExternalUrlNavigation.isBlank()) {
       List<Navigation> response = new ArrayList<>();
