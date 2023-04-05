@@ -8,11 +8,12 @@ import org.springframework.http.ResponseEntity;
 import io.boomerang.v4.data.entity.TeamEntity;
 import io.boomerang.v4.data.entity.UserEntity;
 import io.boomerang.v4.data.model.TeamAbstractConfiguration;
+import io.boomerang.v4.model.CreateTeamRequest;
 import io.boomerang.v4.model.Team;
 
 public interface TeamService {
 
-  ResponseEntity<Team> create(String teamName, String externalRef);
+  ResponseEntity<Team> create(CreateTeamRequest createTeamRequest);
 
   ResponseEntity<Team> get(String teamId);
 

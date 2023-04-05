@@ -9,14 +9,18 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.apache.commons.compress.utils.Lists;
+import org.apache.commons.lang3.EnumUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import io.boomerang.error.BoomerangError;
@@ -30,8 +34,11 @@ import io.boomerang.v4.data.model.TeamAbstractConfiguration;
 import io.boomerang.v4.data.model.TeamSettings;
 import io.boomerang.v4.data.repository.TeamRepository;
 import io.boomerang.v4.data.repository.UserRepository;
+import io.boomerang.v4.model.CreateTeamRequest;
 import io.boomerang.v4.model.Team;
 import io.boomerang.v4.model.TeamResponsePage;
+import io.boomerang.v4.model.User;
+import io.boomerang.v4.model.UserSummary;
 import io.boomerang.v4.model.enums.RelationshipRefType;
 import io.boomerang.v4.model.enums.TeamStatus;
 
@@ -47,9 +54,6 @@ public class TeamServiceImpl implements TeamService {
   public static final String MAX_TEAM_WORKFLOW_DURATION = "max.team.workflow.duration";
 
   private static final Logger LOGGER = LogManager.getLogger();
-
-  @Autowired
-  private EngineClient engineClient;
 
   // @Autowired
   // private ExternalUserService boomerangUserService;
@@ -101,29 +105,53 @@ public class TeamServiceImpl implements TeamService {
    * Creates a new Team - Only available to Global tokens / admins
    */
   @Override
-  public ResponseEntity<Team> create(String teamName, String externalRef) {
+  public ResponseEntity<Team> create(CreateTeamRequest createTeamRequest) {
     // TODO: check user is admin or global token
-    // TODO: do we return a responseEntity or TeamEntity
-    final TeamEntity teamEntity = new TeamEntity();
-    teamEntity.setName(teamName);
-    teamEntity.setExternalRef(externalRef);
-    teamEntity.setStatus(TeamStatus.active);
+    if (!createTeamRequest.getName().isBlank()) {
+      final TeamEntity teamEntity = new TeamEntity();
+      teamEntity.setName(createTeamRequest.getName());
+      teamEntity.setExternalRef(createTeamRequest.getExternalRef());
 
-    Quotas quotas = new Quotas();
-    quotas.setMaxWorkflowCount(Integer
-        .valueOf(settingsService.getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_COUNT).getValue()));
-    quotas.setMaxWorkflowExecutionMonthly(Integer.valueOf(
-        settingsService.getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_EXECUTION_MONTHLY).getValue()));
-    quotas.setMaxWorkflowStorage(Integer.valueOf(settingsService
-        .getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_STORAGE).getValue().replace("Gi", "")));
-    quotas.setMaxWorkflowExecutionTime(Integer
-        .valueOf(settingsService.getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_DURATION).getValue()));
-    quotas.setMaxConcurrentWorkflows(Integer
-        .valueOf(settingsService.getConfiguration(TEAMS, MAX_TEAM_CONCURRENT_WORKFLOW).getValue()));
-    teamEntity.setQuotas(quotas);
+      Quotas quotas = new Quotas();
+      quotas.setMaxWorkflowCount(Integer
+          .valueOf(settingsService.getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_COUNT).getValue()));
+      quotas.setMaxWorkflowExecutionMonthly(Integer.valueOf(
+          settingsService.getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_EXECUTION_MONTHLY).getValue()));
+      quotas.setMaxWorkflowStorage(Integer.valueOf(settingsService
+          .getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_STORAGE).getValue().replace("Gi", "")));
+      quotas.setMaxWorkflowExecutionTime(Integer
+          .valueOf(settingsService.getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_DURATION).getValue()));
+      quotas.setMaxConcurrentWorkflows(Integer.valueOf(
+          settingsService.getConfiguration(TEAMS, MAX_TEAM_CONCURRENT_WORKFLOW).getValue()));
+      teamEntity.setQuotas(quotas);
 
-    teamRepository.save(teamEntity);
-    return ResponseEntity.ok(new Team(teamEntity));
+      // TOOD: check createTeamRequest for Quotas / Users / Labels
+      if (createTeamRequest.getUsers() != null && !createTeamRequest.getUsers().isEmpty()) {
+        for (UserSummary us : createTeamRequest.getUsers()) {
+          // if (flowUserService.getUserWithEmail(flowUser.getEmail()) != null) {
+          // userIdsToAdd.add(flowUserService.getUserWithEmail(flowUser.getEmail()).getId());
+          // } else {
+          // String userName = flowUser.getName();
+          // userIdsToAdd.add(flowUserService.getOrRegisterUser(flowUser.getEmail(),
+          // userName,flowUser.getType()).getId());
+          //
+          // }
+          if (!us.getId().isEmpty()) {
+            // TODO: check if user exists, if so create relationship
+          } else if (!us.getEmail().isEmpty()) {
+            // TODO: check if user exists, if so create relationship
+          } else {
+            return ResponseEntity.badRequest().build();
+          }
+        }
+      }
+
+      teamRepository.save(teamEntity);
+      return ResponseEntity.ok(new Team(teamEntity));
+    } else {
+      // TODO: make this a better error for unable to create team i.e. name is mandatory
+      throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
+    }
   }
 
   /*
@@ -192,16 +220,25 @@ public class TeamServiceImpl implements TeamService {
                   Optional.of(List.of(teamEntity.getId())), Optional.empty());
           Team team = new Team(teamEntity);
           team.setWorkflowRefs(teamWorkflowRefs);
-          List<String> userRefs = relationshipService.getFilteredRefs(RelationshipRefType.USER, Optional.empty(),
-              Optional.of(List.of(teamEntity.getId())), Optional.empty());
+          List<String> userRefs = relationshipService.getFilteredRefs(RelationshipRefType.USER,
+              Optional.empty(), Optional.of(List.of(teamEntity.getId())), Optional.empty());
           if (!userRefs.isEmpty()) {
-            List<User> teamUsers = new LinkedList<>();
-            userRefs.forEach(null)
-            team.setUserRefs(userRefs);
+            List<UserSummary> teamUsers = new LinkedList<>();
+            userRefs.forEach(ref -> {
+              Optional<UserEntity> ue = userRepository.findById(ref);
+              if (ue.isPresent()) {
+                UserSummary u = new UserSummary(ue.get());
+                teamUsers.add(u);
+              }
+            });
+            team.setUsers(teamUsers);
           }
-          
+
           // TODO: set current Quotas
           team.setQuotas(null);
+
+          // TODO: set Approver Groups
+          team.setApproverGroups(null);
 
           // If the parameter is a password, do not return its value, for security reasons.
           if (team.getSettings() != null && team.getSettings().getParameters() != null) {
@@ -288,7 +325,7 @@ public class TeamServiceImpl implements TeamService {
     teamRepository.save(entity.get());
     return ResponseEntity.noContent().build();
   }
-  
+
   //
   // @Override
   // public void deleteTeamProperty(String teamId, String configurationId) {
