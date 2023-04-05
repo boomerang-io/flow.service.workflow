@@ -7,8 +7,9 @@ import io.boomerang.v4.data.model.CurrentQuotas;
 
 public class Team extends TeamEntity {
 
-  private List<User> users;
+  private List<UserSummary> users;
   private List<String> workflowRefs;
+  private List<String> approverGroups;
   private CurrentQuotas quotas;
   
   public Team() {
@@ -19,11 +20,11 @@ public class Team extends TeamEntity {
     BeanUtils.copyProperties(entity, this);
   }
 
-  public List<User> getUserRefs() {
+  public List<UserSummary> getUsers() {
     return users;
   }
 
-  public void setUserRefs(List<User> users) {
+  public void setUsers(List<UserSummary> users) {
     this.users = users;
   }
 
@@ -33,6 +34,14 @@ public class Team extends TeamEntity {
 
   public void setWorkflowRefs(List<String> workflowRefs) {
     this.workflowRefs = workflowRefs;
+  }
+
+  public List<String> getApproverGroups() {
+    return approverGroups;
+  }
+
+  public void setApproverGroups(List<String> approverGroups) {
+    this.approverGroups = approverGroups;
   }
 
   public CurrentQuotas getQuotas() {

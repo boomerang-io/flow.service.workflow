@@ -82,48 +82,9 @@ public class TeamV2Controller {
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
   public ResponseEntity<Team> createTeam(@RequestBody CreateTeamRequest createTeamRequest) {
-    return teamService.create(createTeamRequest.getName(), createTeamRequest.getExternalRef());
+    return teamService.create(createTeamRequest);
   }
   
-  @PostMapping(value = "/")
-  @AuthenticationScope(scopes = {TokenScope.global})
-  @Operation(summary = "Create new team")
-  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
-      @ApiResponse(responseCode = "400", description = "Bad Request")})
-  public ResponseEntity<Team> createTeamFull(@RequestBody Team flowTeam) {
-      List<String> userEmails = new ArrayList<>();
-      if (flowTeam.getUsers() != null && !flowTeam.getUsers().isEmpty()) {
-        for (User user : flowTeam.getUsers()) {
-          if (!userEmails.contains(user.getEmail().toLowerCase())) {
-            userEmails.add(user.getEmail().toLowerCase());
-          } else {
-            return ResponseEntity.badRequest().build();
-          }
-        }
-      }
-      String teamName = flowTeam.getName();
-      Team team = teamService.createStandaloneTeam(teamName, flowTeam.getQuotas());
-
-      List<String> userIdsToAdd = new ArrayList<>();
-      if (flowTeam.getUsers() != null && !flowTeam.getUsers().isEmpty()) {
-        for (User flowUser : flowTeam.getUsers()) {
-          if (flowUserService.getUserWithEmail(flowUser.getEmail()) != null) {
-            userIdsToAdd.add(flowUserService.getUserWithEmail(flowUser.getEmail()).getId());
-          } else {
-            String userName = flowUser.getName();
-            userIdsToAdd.add(flowUserService.getOrRegisterUser(flowUser.getEmail(), userName,flowUser.getType()).getId());
-
-          }
-          teamService.updateTeamMembers(team.getId(), userIdsToAdd);
-        }
-      }
-
-      return ResponseEntity.ok(teamService.getTeamByIdDetailed(team.getId()));
-    } else {
-      return ResponseEntity.badRequest().build();
-    }
-  }
-
   @PutMapping(value = "/{teamId}/enable")
   @Operation(summary = "Enable a Team")
   @ApiResponses(value = {@ApiResponse(responseCode = "204", description = "OK"),
