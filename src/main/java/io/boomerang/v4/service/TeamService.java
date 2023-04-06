@@ -9,13 +9,16 @@ import io.boomerang.v4.data.model.CurrentQuotas;
 import io.boomerang.v4.data.model.Quotas;
 import io.boomerang.v4.data.model.TeamParameter;
 import io.boomerang.v4.model.ApproverGroup;
-import io.boomerang.v4.model.ApproverGroupCreateRequest;
-import io.boomerang.v4.model.CreateTeamRequest;
+import io.boomerang.v4.model.ApproverGroupRequest;
+import io.boomerang.v4.model.TeamRequest;
+import io.boomerang.v4.model.UserSummary;
 import io.boomerang.v4.model.Team;
 
 public interface TeamService {
 
-  ResponseEntity<Team> create(CreateTeamRequest createTeamRequest);
+  ResponseEntity<Team> create(TeamRequest createTeamRequest);
+
+  ResponseEntity<Team> update(TeamRequest createTeamRequest);
 
   ResponseEntity<Team> get(String teamId);
 
@@ -25,6 +28,10 @@ public interface TeamService {
   ResponseEntity<Void> enable(String teamId);
 
   ResponseEntity<Void> disable(String teamId);
+
+  ResponseEntity<List<UserSummary>> addMembers(String teamId, TeamRequest createTeamRequest);
+
+  ResponseEntity<List<UserSummary>> removeMembers(String teamId, TeamRequest request);
 
   ResponseEntity<TeamParameter> createParameter(String teamId, TeamParameter parameter);
   
@@ -47,7 +54,7 @@ public interface TeamService {
   ResponseEntity<Void> deleteApproverGroup(String teamId, String name);
 
   ResponseEntity<ApproverGroup> createApproverGroup(String teamId,
-      ApproverGroupCreateRequest createApproverGroupRequest);
+      ApproverGroupRequest createApproverGroupRequest);
 
-  ResponseEntity<Team> updateTeam(CreateTeamRequest createTeamRequest);
+  ResponseEntity<ApproverGroup> updateApproverGroup(String teamId, ApproverGroupRequest request);
 }

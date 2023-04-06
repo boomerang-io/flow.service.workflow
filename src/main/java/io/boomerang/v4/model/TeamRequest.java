@@ -5,13 +5,22 @@ import java.util.List;
 import java.util.Map;
 import io.boomerang.v4.data.model.Quotas;
 
-public class CreateTeamRequest {
+public class TeamRequest {
 
+  private String id;
   private String name;
   private String externalRef;
   private List<UserSummary> users;
   private Quotas quotas;
   private Map<String, String> labels = new HashMap<>();
+
+  public String getId() {
+    return id;
+  }
+
+  public void setId(String id) {
+    this.id = id;
+  }
 
   public String getName() {
     return name;

@@ -148,16 +148,14 @@ public class RelationshipServiceImpl implements RelationshipService {
   }
   
   /*
-   * Creates a new Relationship Ref for the provided inputs
-   *
-   * 
-   * @return RelationshipEntity
+   * Removes all relationships
    */
   @Override
-  public void removeRelationship(RelationshipRefType fromType, String fromRef) {
-    Optional<RelationshipEntity> optRelEntity = relationshipRepository.findByFromTypeAndFromRef(fromRef, fromRef);
-    if (optRelEntity.isPresent()) {
-      relationshipRepository.deleteById(optRelEntity.get().getId());
+  public void removeRelationships(RelationshipRefType fromType, List<String> fromRefs,
+      RelationshipRefType toType, List<String> toRefs) {
+    List<RelationshipEntity> relEntities = relationshipRepository.findByFromTypeAndFromRefInAndToTypeAndToRefIn(fromType.getRef(), fromRefs, toType.getRef(), toRefs);
+    if (!relEntities.isEmpty()) {
+      relationshipRepository.deleteAll(relEntities);
     }
   }
 
