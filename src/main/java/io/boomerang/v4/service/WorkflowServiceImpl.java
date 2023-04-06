@@ -87,10 +87,18 @@ public class WorkflowServiceImpl implements WorkflowService {
    */
   @Override
   public ResponseEntity<Workflow> create(Workflow workflow) {
+    // TODO: Add in the verification / handling of Workspaces for the UI
+    // CHeck the loader for v4 migration of Workspaces to know the object needed
+    // if (workflow.getStorage() == null) {
+    // workflow.setStorage(new Storage());
+    // }
+    // if (workflow.getStorage().getActivity() == null) {
+    // workflow.getStorage().setActivity(new ActivityStorage());
+    // }
     Workflow createdWorkflow = engineClient.createWorkflow(workflow);
     // TODO: move this to an Async Aspect or CloudEvent handler so that it stores the relationship
     // regardless of REST thrown error.
-    relationshipService.createRelationshipRef(RelationshipRefType.WORKFLOW.getRef(),
+    relationshipService.createRelationshipRef(RelationshipRefType.WORKFLOW,
         createdWorkflow.getId());
     return ResponseEntity.ok(createdWorkflow);
   }
@@ -106,7 +114,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     if (workflowId == null || workflowId.isBlank() || (!workflowRefsList.isEmpty() && workflowRefsList.contains(workflowId))) {
       Workflow appliedWorkflow = engineClient.applyWorkflow(workflow, replace);
     //TODO: move this to an Async Aspect or CloudEvent handler so that it stores the relationship regardless of REST thrown error.
-      relationshipService.createRelationshipRef(RelationshipRefType.WORKFLOW.getRef(), appliedWorkflow.getId());
+      relationshipService.createRelationshipRef(RelationshipRefType.WORKFLOW, appliedWorkflow.getId());
       return ResponseEntity.ok(appliedWorkflow);
     } else if (workflowId != null && !workflowId.isBlank() && !relationshipService.doesRelationshipExist(RelationshipRefType.WORKFLOW, workflowId)) {
       return this.create(workflow);

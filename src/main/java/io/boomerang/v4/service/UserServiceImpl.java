@@ -1,4 +1,4 @@
-package io.boomerang.mongo.service;
+package io.boomerang.v4.service;
 
 import java.util.Date;
 import java.util.List;
@@ -9,11 +9,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import io.boomerang.mongo.model.UserStatus;
 import io.boomerang.mongo.model.UserType;
+import io.boomerang.mongo.service.NoLogging;
 import io.boomerang.v4.data.entity.UserEntity;
 import io.boomerang.v4.data.repository.UserRepository;
 
 @Service
-public class FlowUserServiceImpl implements FlowUserService {
+public class UserServiceImpl implements UserService {
 
   @Autowired
   private UserRepository flowUserRepository;

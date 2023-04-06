@@ -25,7 +25,6 @@ import io.boomerang.mongo.entity.ApprovalEntity;
 import io.boomerang.mongo.entity.RevisionEntity;
 import io.boomerang.mongo.entity.TaskExecutionEntity;
 import io.boomerang.mongo.entity.WorkflowEntity;
-import io.boomerang.mongo.model.ApproverGroup;
 import io.boomerang.mongo.model.Audit;
 import io.boomerang.mongo.model.KeyValuePair;
 import io.boomerang.mongo.model.ManualType;
@@ -43,6 +42,7 @@ import io.boomerang.service.refactor.TaskClient;
 import io.boomerang.service.refactor.TaskService;
 import io.boomerang.v4.data.entity.TeamEntity;
 import io.boomerang.v4.data.entity.UserEntity;
+import io.boomerang.v4.data.model.TeamApproverGroup;
 import io.boomerang.v4.model.Team;
 import io.boomerang.v4.service.TeamService;
 
@@ -106,8 +106,8 @@ public class ActionServiceImpl implements ActionService {
           String teamId = workflow.getFlowTeamId();
           TeamEntity team = this.teamService.getTeamById(teamId);
           if (team.getApproverGroups() != null) {
-            List<ApproverGroup> approverGroups = team.getApproverGroups();
-            ApproverGroup group = approverGroups.stream()
+            List<TeamApproverGroup> approverGroups = team.getApproverGroups();
+            TeamApproverGroup group = approverGroups.stream()
                 .filter(x -> approverGroupId.equals(x.getId())).findFirst().orElse(null);
             if (group != null) {
               boolean partOfGroup = group.getApprovers().stream()

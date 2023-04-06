@@ -1,4 +1,4 @@
-package io.boomerang.mongo.service;
+package io.boomerang.v4.service;
 
 import java.util.List;
 import java.util.Optional;
@@ -7,7 +7,7 @@ import org.springframework.data.domain.Pageable;
 import io.boomerang.mongo.model.UserType;
 import io.boomerang.v4.data.entity.UserEntity;
 
-public interface FlowUserService {
+public interface UserService {
 
   public Long getUserCount();
 

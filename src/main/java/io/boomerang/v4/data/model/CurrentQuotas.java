@@ -1,14 +1,21 @@
 package io.boomerang.v4.data.model;
 
 import java.util.Date;
+import org.springframework.beans.BeanUtils;
 
 public class CurrentQuotas extends Quotas {
   
   private Integer currentWorkflowCount;
-  private Integer currentConcurrentWorkflows;
-  private Integer currentWorkflowExecutionMonthly;
-  private Integer currentWorkflowsPersistentStorage;
+  private Integer currentConcurrentRuns;
+  private Integer currentRunDuration;
+  private Integer currentPersistentStorage;
   private Date monthlyResetDate;
+  
+  public CurrentQuotas() {
+  }
+  public CurrentQuotas(Quotas quotas) {
+    BeanUtils.copyProperties(quotas, this);
+  }
   
   public Integer getCurrentWorkflowCount() {
     return currentWorkflowCount;
@@ -17,22 +24,22 @@ public class CurrentQuotas extends Quotas {
     this.currentWorkflowCount = currentWorkflowCount;
   }
   public Integer getCurrentConcurrentWorkflows() {
-    return currentConcurrentWorkflows;
+    return currentConcurrentRuns;
   }
   public void setCurrentConcurrentWorkflows(Integer currentConcurrentWorkflows) {
-    this.currentConcurrentWorkflows = currentConcurrentWorkflows;
+    this.currentConcurrentRuns = currentConcurrentWorkflows;
   }
   public Integer getCurrentWorkflowExecutionMonthly() {
-    return currentWorkflowExecutionMonthly;
+    return currentRunDuration;
   }
   public void setCurrentWorkflowExecutionMonthly(Integer currentWorkflowExecutionMonthly) {
-    this.currentWorkflowExecutionMonthly = currentWorkflowExecutionMonthly;
+    this.currentRunDuration = currentWorkflowExecutionMonthly;
   }
   public Integer getCurrentWorkflowsPersistentStorage() {
-    return currentWorkflowsPersistentStorage;
+    return currentPersistentStorage;
   }
   public void setCurrentWorkflowsPersistentStorage(Integer currentWorkflowsPersistentStorage) {
-    this.currentWorkflowsPersistentStorage = currentWorkflowsPersistentStorage;
+    this.currentPersistentStorage = currentWorkflowsPersistentStorage;
   }
   public Date getMonthlyResetDate() {
     return monthlyResetDate;

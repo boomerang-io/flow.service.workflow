@@ -40,7 +40,7 @@ import io.boomerang.service.crud.FlowActivityService;
 import io.boomerang.service.crud.WorkflowService;
 import io.boomerang.service.refactor.ControllerRequestProperties;
 import io.boomerang.v4.data.entity.TeamEntity;
-import io.boomerang.v4.data.model.TeamAbstractConfiguration;
+import io.boomerang.v4.data.model.TeamParameter;
 import io.boomerang.v4.service.SettingsService;
 
 @Service
@@ -289,12 +289,12 @@ public class PropertyManagerImpl implements PropertyManager {
         return;
       }
 
-      List<TeamAbstractConfiguration> teamConfig = null;
+      List<TeamParameter> teamConfig = null;
       if (flowTeamEntity.getSettings() != null) {
         teamConfig = flowTeamEntity.getSettings().getParameters();
       }
       if (teamConfig != null) {
-        for (TeamAbstractConfiguration config : teamConfig) {
+        for (TeamParameter config : teamConfig) {
           teamProperties.put(config.getKey(), config.getValue());
         }
       }

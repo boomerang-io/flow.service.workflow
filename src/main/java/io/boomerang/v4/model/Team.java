@@ -9,7 +9,7 @@ public class Team extends TeamEntity {
 
   private List<UserSummary> users;
   private List<String> workflowRefs;
-  private List<String> approverGroups;
+  private List<ApproverGroup> approverGroups;
   private CurrentQuotas quotas;
   
   public Team() {
@@ -36,11 +36,11 @@ public class Team extends TeamEntity {
     this.workflowRefs = workflowRefs;
   }
 
-  public List<String> getApproverGroups() {
+  public List<ApproverGroup> getApproverGroups() {
     return approverGroups;
   }
 
-  public void setApproverGroups(List<String> approverGroups) {
+  public void setApproverGroups(List<ApproverGroup> approverGroups) {
     this.approverGroups = approverGroups;
   }
 

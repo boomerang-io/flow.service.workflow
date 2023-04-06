@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 public enum RelationshipRefType {
 
   WORKFLOW("Workflow"), WORKFLOWRUN("WorkflowRun"), TASKTEMPLATE("TaskTemplate"), USER("User"), TEAM("Team"),
-  GLOBAL("Global"), SYSTEM("System");
+  GLOBAL("Global"), SYSTEM("System"), APPROVERGROUP("ApproverGroup");
 
   private String ref;
 

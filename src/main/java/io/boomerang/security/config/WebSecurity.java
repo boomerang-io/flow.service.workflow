@@ -13,8 +13,8 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import io.boomerang.mongo.service.FlowTokenService;
-import io.boomerang.mongo.service.FlowUserService;
 import io.boomerang.security.filters.FlowAuthorizationFilter;
+import io.boomerang.v4.service.UserService;
 import io.boomerang.v4.service.SettingsService;
 
 @Configuration
@@ -43,7 +43,7 @@ public class WebSecurity extends WebSecurityConfigurerAdapter {
   private FlowTokenService tokenService;
   
   @Autowired
-  private FlowUserService flowUserService;
+  private UserService flowUserService;
   
   @Autowired
   private SettingsService flowSettingsService;

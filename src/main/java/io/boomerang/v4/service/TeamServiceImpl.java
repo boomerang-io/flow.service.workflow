@@ -4,14 +4,17 @@ import static io.boomerang.util.DataAdapterUtil.filterValueByFieldType;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
-import org.apache.commons.compress.utils.Lists;
+import java.util.TimeZone;
+import java.util.stream.Collectors;
 import org.apache.commons.lang3.EnumUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -26,21 +29,25 @@ import org.springframework.stereotype.Service;
 import io.boomerang.error.BoomerangError;
 import io.boomerang.error.BoomerangException;
 import io.boomerang.util.DataAdapterUtil.FieldType;
-import io.boomerang.v4.client.EngineClient;
+import io.boomerang.v4.data.entity.ApproverGroupEntity;
 import io.boomerang.v4.data.entity.TeamEntity;
 import io.boomerang.v4.data.entity.UserEntity;
+import io.boomerang.v4.data.model.CurrentQuotas;
 import io.boomerang.v4.data.model.Quotas;
-import io.boomerang.v4.data.model.TeamAbstractConfiguration;
+import io.boomerang.v4.data.model.TeamParameter;
 import io.boomerang.v4.data.model.TeamSettings;
+import io.boomerang.v4.data.repository.ApproverGroupRepository;
 import io.boomerang.v4.data.repository.TeamRepository;
 import io.boomerang.v4.data.repository.UserRepository;
+import io.boomerang.v4.model.ApproverGroup;
+import io.boomerang.v4.model.ApproverGroupCreateRequest;
 import io.boomerang.v4.model.CreateTeamRequest;
 import io.boomerang.v4.model.Team;
 import io.boomerang.v4.model.TeamResponsePage;
-import io.boomerang.v4.model.User;
 import io.boomerang.v4.model.UserSummary;
 import io.boomerang.v4.model.enums.RelationshipRefType;
 import io.boomerang.v4.model.enums.TeamStatus;
+import io.boomerang.v4.model.ref.WorkflowRunInsight;
 
 @Service
 public class TeamServiceImpl implements TeamService {
@@ -72,6 +79,9 @@ public class TeamServiceImpl implements TeamService {
   //
   @Autowired
   private UserRepository userRepository;
+  //
+  @Autowired
+  private ApproverGroupRepository approverGroupRepository;
 
   @Autowired
   private SettingsService settingsService;
@@ -81,12 +91,12 @@ public class TeamServiceImpl implements TeamService {
 
   @Autowired
   private MongoTemplate mongoTemplate;
-  //
-  // @Autowired
-  // private FlowUserService flowUserService;
-  //
-  // @Autowired
-  // private FlowWorkflowActivityService flowWorkflowActivityService;
+  
+   @Autowired
+   private UserService userService;
+  
+   @Autowired
+   private WorkflowRunService workflowRunService;
   //
   // @Autowired
   // private FlowWorkflowService flowWorkflowService;
@@ -103,55 +113,74 @@ public class TeamServiceImpl implements TeamService {
 
   /*
    * Creates a new Team - Only available to Global tokens / admins
+   * 
+   * TODO: check user is admin or global token
    */
   @Override
   public ResponseEntity<Team> create(CreateTeamRequest createTeamRequest) {
-    // TODO: check user is admin or global token
     if (!createTeamRequest.getName().isBlank()) {
-      final TeamEntity teamEntity = new TeamEntity();
+      TeamEntity teamEntity = new TeamEntity();
       teamEntity.setName(createTeamRequest.getName());
-      teamEntity.setExternalRef(createTeamRequest.getExternalRef());
+      
+      if (createTeamRequest.getExternalRef() != null && !createTeamRequest.getExternalRef().isBlank()) {
+        teamEntity.setExternalRef(createTeamRequest.getExternalRef());
+      }
+      
+      if (createTeamRequest.getLabels() != null && !createTeamRequest.getLabels().isEmpty()) {
+        teamEntity.setLabels(createTeamRequest.getLabels());
+      }
 
+      // Set custom quotas
+      // Don't set default quotas as they can change over time and should be dynamic
       Quotas quotas = new Quotas();
-      quotas.setMaxWorkflowCount(Integer
-          .valueOf(settingsService.getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_COUNT).getValue()));
-      quotas.setMaxWorkflowExecutionMonthly(Integer.valueOf(
-          settingsService.getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_EXECUTION_MONTHLY).getValue()));
-      quotas.setMaxWorkflowStorage(Integer.valueOf(settingsService
-          .getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_STORAGE).getValue().replace("Gi", "")));
-      quotas.setMaxWorkflowExecutionTime(Integer
-          .valueOf(settingsService.getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_DURATION).getValue()));
-      quotas.setMaxConcurrentWorkflows(Integer.valueOf(
-          settingsService.getConfiguration(TEAMS, MAX_TEAM_CONCURRENT_WORKFLOW).getValue()));
+      //Override quotas based on creation request
+      setCustomQuotas(quotas, createTeamRequest.getQuotas());
       teamEntity.setQuotas(quotas);
-
-      // TOOD: check createTeamRequest for Quotas / Users / Labels
+      
+      teamEntity = teamRepository.save(teamEntity);
+      
+      // Create Relationships for Users
+      // If user does not exist, no relationship will be created
       if (createTeamRequest.getUsers() != null && !createTeamRequest.getUsers().isEmpty()) {
-        for (UserSummary us : createTeamRequest.getUsers()) {
-          // if (flowUserService.getUserWithEmail(flowUser.getEmail()) != null) {
-          // userIdsToAdd.add(flowUserService.getUserWithEmail(flowUser.getEmail()).getId());
-          // } else {
-          // String userName = flowUser.getName();
-          // userIdsToAdd.add(flowUserService.getOrRegisterUser(flowUser.getEmail(),
-          // userName,flowUser.getType()).getId());
-          //
-          // }
-          if (!us.getId().isEmpty()) {
-            // TODO: check if user exists, if so create relationship
-          } else if (!us.getEmail().isEmpty()) {
-            // TODO: check if user exists, if so create relationship
-          } else {
-            return ResponseEntity.badRequest().build();
+        for (UserSummary userSummary : createTeamRequest.getUsers()) {
+          UserEntity userEntity = null;
+          if (!userSummary.getId().isEmpty()) {
+            userEntity = userService.getUserById(userSummary.getId()).orElseGet(null);
+          } else if (!userSummary.getEmail().isEmpty()) {
+            userEntity = userService.getUserWithEmail(userSummary.getEmail());
+          }
+          if (userEntity != null) {
+            relationshipService.createRelationshipRef(RelationshipRefType.USER, userEntity.getId(), RelationshipRefType.TEAM, teamEntity.getId());
           }
         }
       }
 
-      teamRepository.save(teamEntity);
-      return ResponseEntity.ok(new Team(teamEntity));
+      return ResponseEntity.ok(convertTeamEntityToTeam(teamEntity));
     } else {
       // TODO: make this a better error for unable to create team i.e. name is mandatory
       throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
     }
+  }
+  
+  /*
+   * Retrieve a single team by ID
+   */
+  @Override
+  public ResponseEntity<Team> get(String teamId) {
+    if (teamId == null || teamId.isBlank()) {
+      throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
+    }
+    List<String> teamRefs = relationshipService.getFilteredRefs(RelationshipRefType.TEAM,
+        Optional.empty(), Optional.empty(), Optional.empty());
+    if (!teamRefs.contains(teamId)) {
+      throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
+    }
+    Optional<TeamEntity> entity = teamRepository.findById(teamId);
+    if (!entity.isPresent()) {
+      throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
+    }
+    
+    return ResponseEntity.ok(convertTeamEntityToTeam(entity.get()));
   }
 
   /*
@@ -214,40 +243,7 @@ public class TeamServiceImpl implements TeamService {
       List<TeamEntity> teamEntities = pages.getContent();
 
       if (!teamEntities.isEmpty()) {
-        teamEntities.forEach(teamEntity -> {
-          List<String> teamWorkflowRefs =
-              relationshipService.getFilteredRefs(RelationshipRefType.WORKFLOW, Optional.empty(),
-                  Optional.of(List.of(teamEntity.getId())), Optional.empty());
-          Team team = new Team(teamEntity);
-          team.setWorkflowRefs(teamWorkflowRefs);
-          List<String> userRefs = relationshipService.getFilteredRefs(RelationshipRefType.USER,
-              Optional.empty(), Optional.of(List.of(teamEntity.getId())), Optional.empty());
-          if (!userRefs.isEmpty()) {
-            List<UserSummary> teamUsers = new LinkedList<>();
-            userRefs.forEach(ref -> {
-              Optional<UserEntity> ue = userRepository.findById(ref);
-              if (ue.isPresent()) {
-                UserSummary u = new UserSummary(ue.get());
-                teamUsers.add(u);
-              }
-            });
-            team.setUsers(teamUsers);
-          }
-
-          // TODO: set current Quotas
-          team.setQuotas(null);
-
-          // TODO: set Approver Groups
-          team.setApproverGroups(null);
-
-          // If the parameter is a password, do not return its value, for security reasons.
-          if (team.getSettings() != null && team.getSettings().getParameters() != null) {
-            filterValueByFieldType(team.getSettings().getParameters(), false,
-                FieldType.PASSWORD.value());
-          }
-
-          teams.add(team);
-        });
+        teamEntities.forEach(teamEntity -> teams.add(convertTeamEntityToTeam(teamEntity)));
       }
       return new TeamResponsePage(teams, pageable, pages.getNumberOfElements());
     }
@@ -255,45 +251,19 @@ public class TeamServiceImpl implements TeamService {
     return null;
   }
 
-  @Override
-  public TeamAbstractConfiguration createParameter(String teamId,
-      TeamAbstractConfiguration parameter) {
-    List<String> teamRefs = relationshipService.getFilteredRefs(RelationshipRefType.TEAM,
-        Optional.empty(), Optional.empty(), Optional.empty());
-    if (!teamRefs.contains(teamId)) {
-      throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
-    }
-    Optional<TeamEntity> optTeamEntity = teamRepository.findById(teamId);
-    if (optTeamEntity.isPresent()) {
-      TeamEntity teamEntity = optTeamEntity.get();
-      if (teamEntity.getSettings() == null) {
-        teamEntity.setSettings(new TeamSettings());
-      }
-      List<TeamAbstractConfiguration> configItems = teamEntity.getSettings().getParameters();
-
-      String newUuid = UUID.randomUUID().toString();
-      parameter.setId(newUuid);
-      configItems.add(parameter);
-      teamRepository.save(teamEntity);
-      // If the parameter is a password, do not return its value, for security reasons.
-      filterValueByFieldType(List.of(parameter), false, FieldType.PASSWORD.value());
-    }
-
-    return parameter;
-  }
-
+  /*
+   * Make team active
+   */
   @Override
   public ResponseEntity<Void> enable(String teamId) {
     if (teamId == null || teamId.isBlank()) {
       throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
     }
-
     List<String> teamRefs = relationshipService.getFilteredRefs(RelationshipRefType.TEAM,
         Optional.empty(), Optional.empty(), Optional.empty());
     if (!teamRefs.contains(teamId)) {
       throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
     }
-
     Optional<TeamEntity> entity = teamRepository.findById(teamId);
     if (!entity.isPresent()) {
       throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
@@ -304,18 +274,19 @@ public class TeamServiceImpl implements TeamService {
     return ResponseEntity.noContent().build();
   }
 
+  /*
+   * Make team inactive
+   */
   @Override
   public ResponseEntity<Void> disable(String teamId) {
     if (teamId == null || teamId.isBlank()) {
       throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
     }
-
     List<String> teamRefs = relationshipService.getFilteredRefs(RelationshipRefType.TEAM,
         Optional.empty(), Optional.empty(), Optional.empty());
     if (!teamRefs.contains(teamId)) {
       throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
     }
-
     Optional<TeamEntity> entity = teamRepository.findById(teamId);
     if (!entity.isPresent()) {
       throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
@@ -326,357 +297,382 @@ public class TeamServiceImpl implements TeamService {
     return ResponseEntity.noContent().build();
   }
 
-  //
-  // @Override
-  // public void deleteTeamProperty(String teamId, String configurationId) {
-  // TeamEntity flowTeamEntity = flowTeamService.findById(teamId);
-  //
-  // if (flowTeamEntity.getSettings().getProperties() != null) {
-  // List<FlowTeamConfiguration> configItems = flowTeamEntity.getSettings().getProperties();
-  // FlowTeamConfiguration item = configItems.stream()
-  // .filter(config -> configurationId.equals(config.getId())).findAny().orElse(null);
-  //
-  // if (item != null) {
-  // configItems.remove(item);
-  // }
-  // flowTeamEntity.getSettings().setProperties(configItems);
-  // flowTeamService.save(flowTeamEntity);
-  // }
-  // }
-  //
-  // @Override
-  // public List<FlowTeamConfiguration> getAllTeamProperties(String teamId) {
-  // TeamEntity flowTeamEntity = flowTeamService.findById(teamId);
-  //
-  // if (flowTeamEntity.getSettings() != null
-  // && flowTeamEntity.getSettings().getProperties() != null) {
-  // filterValueByFieldType(flowTeamEntity.getSettings() == null ?
-  // null:flowTeamEntity.getSettings().getProperties(), false, FieldType.PASSWORD.value());
-  // return flowTeamEntity.getSettings().getProperties();
-  // } else {
-  // return Collections.emptyList();
-  // }
-  // }
-  //
-
-  // private List<ActivityEntity> getConcurrentWorkflowActivities(String teamId) {
-  // List<WorkflowEntity> teamWorkflows = flowWorkflowService.getWorkflowsForTeam(teamId);
-  // List<String> workflowIds = new ArrayList<>();
-  // for (WorkflowEntity workflow : teamWorkflows) {
-  // workflowIds.add(workflow.getId());
-  // }
-  // return flowWorkflowActivityService.findbyWorkflowIdsAndStatus(workflowIds,
-  // TaskStatus.inProgress);
-  // }
-  //
-  // private Map<String, List<ActivityEntity>> getConcurrentWorkflowActivities(List<String> teamIds)
-  // {
-  // List<ActivityEntity> activities = flowWorkflowActivityService.findByTeamIdsAndStatus(teamIds,
-  // TaskStatus.inProgress);
-  // Map<String, List<ActivityEntity>> activitiesMap = Maps.newHashMap();
-  // for(ActivityEntity activity: activities) {
-  // if(activitiesMap.get(activity.getTeamId()) == null) {
-  // activitiesMap.put(activity.getTeamId(), Lists.newArrayList());
-  // }
-  // activitiesMap.get(activity.getTeamId()).add(activity);
-  // }
-  // return activitiesMap;
-  // }
-  //
-  // @Override
-  // public Quotas getDefaultQuotas() {
-  // Quotas quota = new Quotas();
-  // quota.setMaxWorkflowCount(Integer
-  // .valueOf(flowSettingsService.getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_COUNT).getValue()));
-  // quota.setMaxWorkflowExecutionMonthly(Integer.valueOf(flowSettingsService
-  // .getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_EXECUTION_MONTHLY).getValue()));
-  // quota.setMaxWorkflowStorage(Integer.valueOf(flowSettingsService
-  // .getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_STORAGE).getValue().replace("Gi", "")));
-  // quota.setMaxWorkflowExecutionTime(Integer.valueOf(
-  // flowSettingsService.getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_DURATION).getValue()));
-  // quota.setMaxConcurrentWorkflows(Integer.valueOf(
-  // flowSettingsService.getConfiguration(TEAMS, MAX_TEAM_CONCURRENT_WORKFLOW).getValue()));
-  // return quota;
-  //
-  // }
-  //
-  // private List<ActivityEntity> getMonthlyWorkflowActivities(Pageable page, String teamId) {
-  // Calendar c = Calendar.getInstance();
-  // c.set(Calendar.DAY_OF_MONTH, 1);
-  // return flowWorkflowActivityService
-  // .findAllActivitiesForTeam(Optional.of(c.getTime()), Optional.of(new Date()), teamId, page)
-  // .getContent();
-  // }
-  //
-  // private Map<String, List<ActivityEntity>> getMonthlyWorkflowActivities(Pageable page,
-  // List<String> teamIds) {
-  // Calendar c = Calendar.getInstance();
-  // c.set(Calendar.DAY_OF_MONTH, 1);
-  // List<ActivityEntity> activities = flowWorkflowActivityService
-  // .findAllActivitiesForTeams(c.getTime(), new Date(), teamIds, page)
-  // .getContent();
-  // Map<String, List<ActivityEntity>> activitiesMap = Maps.newHashMap();
-  // for(ActivityEntity activity: activities) {
-  // if(activitiesMap.get(activity.getTeamId()) == null) {
-  // activitiesMap.put(activity.getTeamId(), Lists.newArrayList());
-  // }
-  // activitiesMap.get(activity.getTeamId()).add(activity);
-  // }
-  // return activitiesMap;
-  // }
-  //
-  // @Override
-  // public FlowTeam getTeamById(String teamId) {
-  // if (!flowExternalUrlTeam.isBlank()) {
-  // List<TeamEntity> allFlowteams =
-  // this.externalTeamService.getExternalTeams(flowExternalUrlTeam);
-  // if (allFlowteams != null) {
-  // TeamEntity flowEntity =
-  // allFlowteams.stream().filter(t -> teamId.equals(t.getId())).findFirst().orElse(null);
-  //
-  // FlowTeam flowTeam = new FlowTeam();
-  // if (flowEntity != null) {
-  // BeanUtils.copyProperties(flowEntity, flowTeam);
-  // }
-  // return flowTeam;
-  // }
-  //
-  // } else {
-  // TeamEntity flowEntity = flowTeamService.findById(teamId);
-  // FlowTeam flowTeam = new FlowTeam();
-  // if (flowEntity != null) {
-  // BeanUtils.copyProperties(flowEntity, flowTeam);
-  // }
-  //
-  // return flowTeam;
-  // }
-  // return null;
-  // }
-  //
-  // @Override
-  // public FlowTeam getTeamByIdDetailed(String teamId) {
-  // TeamEntity flowEntity = flowTeamService.findById(teamId);
-  // FlowTeam flowTeam = new FlowTeam();
-  // if (flowEntity != null) {
-  // BeanUtils.copyProperties(flowEntity, flowTeam);
-  // }
-  //
-  // final List<WorkflowSummary> workflowSummary = workflowService.getWorkflowsForTeam(teamId);
-  // flowTeam.setWorkflows(workflowSummary);
-  //
-  // List<String> teamIds = new LinkedList<>();
-  // teamIds.add(teamId);
-  //
-  // List<FlowUserEntity> existingUsers = this.userIdentiyService.getUsersForTeams(teamIds);
-  // convertToFlowUserList(flowTeam, existingUsers);
-  //
-  // return flowTeam;
-  // }
-  //
-  // private void convertToFlowUserList(FlowTeam flowTeam, List<FlowUserEntity> existingUsers) {
-  // List<FlowUser> users = new LinkedList<>();
-  //
-  // for (FlowUserEntity user : existingUsers) {
-  // FlowUser flowUser = new FlowUser();
-  // BeanUtils.copyProperties(user, flowUser);
-  //
-  // users.add(flowUser);
-  // }
-  // flowTeam.setUsers(users);
-  // }
-  //
-  // @Override
-  // public List<TeamWorkflowSummary> getTeamListing(FlowUserEntity userEntity) {
-  //
-  // List<TeamEntity> flowTeams = getUsersTeamListing(userEntity);
-  // List<TeamWorkflowSummary> flowTeamListing = new LinkedList<>();
-  //
-  // if (flowTeams != null) {
-  // for (TeamEntity team : flowTeams) {
-  // TeamWorkflowSummary summary = new TeamWorkflowSummary(team, null);
-  // flowTeamListing.add(summary);
-  // }
-  // }
-  //
-  // return flowTeamListing;
-  // }
-  //
-  // @Override
-  // public WorkflowQuotas getTeamQuotas(String teamId) {
-  // TeamEntity team = flowTeamService.findById(teamId);
-  //
-  // if (team == null) {
-  // WorkflowQuotas quotas = new WorkflowQuotas();
-  // quotas.setMaxConcurrentWorkflows(Integer.MAX_VALUE);
-  // quotas.setMaxWorkflowExecutionMonthly(Integer.MAX_VALUE);
-  // quotas.setMaxWorkflowExecutionTime(Integer.MAX_VALUE);
-  // quotas.setCurrentConcurrentWorkflows(0);
-  // quotas.setCurrentWorkflowCount(0);
-  // quotas.setCurrentWorkflowExecutionMonthly(0);
-  // return quotas;
-  // }
-  //
-  // List<WorkflowSummary> workflows = workflowService.getWorkflowsForTeam(team.getId());
-  // Pageable page = Pageable.unpaged();
-  // List<ActivityEntity> concurrentActivities = getConcurrentWorkflowActivities(teamId);
-  // List<ActivityEntity> activitiesMonthly = getMonthlyWorkflowActivities(page, teamId);
-  //
-  // Quotas quotas = setTeamQuotas(team);
-  //
-  // team.setQuotas(quotas);
-  // TeamEntity updatedTeam = this.flowTeamService.save(team);
-  //
-  // WorkflowQuotas workflowQuotas = new WorkflowQuotas();
-  // workflowQuotas.setMaxWorkflowCount(updatedTeam.getQuotas().getMaxWorkflowCount());
-  // workflowQuotas
-  // .setMaxWorkflowExecutionMonthly(updatedTeam.getQuotas().getMaxWorkflowExecutionMonthly());
-  // workflowQuotas.setMaxWorkflowStorage(updatedTeam.getQuotas().getMaxWorkflowStorage());
-  // workflowQuotas
-  // .setMaxWorkflowExecutionTime(updatedTeam.getQuotas().getMaxWorkflowExecutionTime());
-  // workflowQuotas.setMaxConcurrentWorkflows(updatedTeam.getQuotas().getMaxConcurrentWorkflows());
-  //
-  // workflowQuotas.setCurrentWorkflowCount(workflows.size());
-  // workflowQuotas.setCurrentConcurrentWorkflows(concurrentActivities.size());
-  // workflowQuotas.setCurrentWorkflowExecutionMonthly(activitiesMonthly.size());
-  // setWorkflowStorage(workflows, workflowQuotas);
-  // setWorkflowResetDate(workflowQuotas);
-  // return workflowQuotas;
-  // }
-  //
+  /*
+   * Creates a Team Parameter
+   */
   @Override
-  public List<TeamEntity> getUsersTeamListing(UserEntity userEntity) {
-    /*
-     * For the case that both flowExternalUrlUser and flowExternalUrlTeam are not configured 1. Get
-     * team id list from flow user entity 2. query flow_teamcollection against "_id"
-     */
-    List<String> teamIds = userEntity.getFlowTeams();
-    if (teamIds == null || teamIds.isEmpty()) {
-      return Lists.newArrayList();
+  public ResponseEntity<TeamParameter> createParameter(String teamId,
+      TeamParameter parameter) {
+    if (teamId == null || teamId.isBlank()) {
+      throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
     }
-    return teamRepository.findByIdInAndIsActive(teamIds, true);
+    List<String> teamRefs = relationshipService.getFilteredRefs(RelationshipRefType.TEAM,
+        Optional.empty(), Optional.empty(), Optional.empty());
+    if (!teamRefs.contains(teamId)) {
+      throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
+    }
+    Optional<TeamEntity> optTeamEntity = teamRepository.findById(teamId);
+    if (!optTeamEntity.isPresent()) {
+      throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
+    }
+    TeamEntity teamEntity = optTeamEntity.get();
+    if (teamEntity.getSettings() == null) {
+      teamEntity.setSettings(new TeamSettings());
+    }
+
+    List<TeamParameter> parameters = teamEntity.getSettings().getParameters();
+    TeamParameter existingParameter = parameters.stream()
+        .filter(p -> p.getKey().equals(parameter.getKey())).findAny().orElse(null);
+
+    if (existingParameter != null) {
+      // TODO better exception to say parameter already exists
+      throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
+    }
+
+    parameters.add(parameter);
+    teamRepository.save(teamEntity);
+    // If the parameter is a password, do not return its value, for security reasons.
+    filterValueByFieldType(List.of(parameter), false, FieldType.PASSWORD.value());
+
+    return ResponseEntity.ok(parameter);
   }
-  //
-  // @Override
-  // public List<TeamWorkflowSummary> getUserTeams(FlowUserEntity userEntity) {
-  //
-  // List<TeamEntity> flowTeam = getUsersTeamListing(userEntity);
-  //
-  // final List<TeamWorkflowSummary> teamWorkFlowSummary =
-  // populateWorkflowSummaryInformation(flowTeam);
-  // return teamWorkFlowSummary;
-  // }
-  //
-  // private List<TeamWorkflowSummary> populateWorkflowSummaryInformation(List<TeamEntity>
-  // flowTeams) {
-  // final List<TeamWorkflowSummary> teamWorkFlowSummary = new LinkedList<>();
-  // if(flowTeams == null || flowTeams.isEmpty()) {
-  // return teamWorkFlowSummary;
-  // }
-  // // Collect Team ID.
-  // List<String> flowTeamIds = flowTeams.stream().map(flowTeam -> flowTeam.getId())
-  // .collect(Collectors.toList());
-  //
-  // // Batch query workflow summaries map(key=flowTeamId, value=List<WorkflowSummary>) for a list
-  // of teams
-  // Map<String, List<WorkflowSummary>> workflowSummaryMap =
-  // workflowService.getWorkflowsForTeams(flowTeamIds);
-  // for (TeamEntity teamEntity : flowTeams) {
-  // teamWorkFlowSummary.add(new TeamWorkflowSummary(teamEntity,
-  // workflowSummaryMap.get(teamEntity.getId())));
-  // }
-  //
-  // updateTeamWorkflowSummaryWithQuotas(teamWorkFlowSummary);
-  // updateTeamWorkflowSummaryWithUpgradeFlags(teamWorkFlowSummary);
-  // return teamWorkFlowSummary;
-  // }
-  //
-  // @Override
-  // public WorkflowQuotas resetTeamQuotas(String teamId) {
-  // TeamEntity team = flowTeamService.findById(teamId);
-  // List<WorkflowSummary> workflows = workflowService.getWorkflowsForTeam(team.getId());
-  // Pageable page = Pageable.unpaged();
-  // List<ActivityEntity> concurrentActivities = getConcurrentWorkflowActivities(teamId);
-  // List<ActivityEntity> activitiesMonthly = getMonthlyWorkflowActivities(page, teamId);
-  //
-  // Quotas teamQuotas = team.getQuotas();
-  // teamQuotas.setMaxWorkflowCount(Integer
-  // .valueOf(flowSettingsService.getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_COUNT).getValue()));
-  // teamQuotas.setMaxWorkflowExecutionMonthly(Integer.valueOf(flowSettingsService
-  // .getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_EXECUTION_MONTHLY).getValue()));
-  // teamQuotas.setMaxWorkflowStorage(Integer.valueOf(flowSettingsService
-  // .getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_STORAGE).getValue().replace("Gi", "")));
-  // teamQuotas.setMaxWorkflowExecutionTime(Integer.valueOf(
-  // flowSettingsService.getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_DURATION).getValue()));
-  // teamQuotas.setMaxConcurrentWorkflows(Integer.valueOf(
-  // flowSettingsService.getConfiguration(TEAMS, MAX_TEAM_CONCURRENT_WORKFLOW).getValue()));
-  // TeamEntity updatedTeam = this.flowTeamService.save(team);
-  //
-  // WorkflowQuotas workflowQuotas = new WorkflowQuotas();
-  // workflowQuotas.setMaxWorkflowCount(updatedTeam.getQuotas().getMaxWorkflowCount());
-  // workflowQuotas
-  // .setMaxWorkflowExecutionMonthly(updatedTeam.getQuotas().getMaxWorkflowExecutionMonthly());
-  // workflowQuotas.setMaxWorkflowStorage(updatedTeam.getQuotas().getMaxWorkflowStorage());
-  // workflowQuotas
-  // .setMaxWorkflowExecutionTime(updatedTeam.getQuotas().getMaxWorkflowExecutionTime());
-  // workflowQuotas.setMaxConcurrentWorkflows(updatedTeam.getQuotas().getMaxConcurrentWorkflows());
-  // workflowQuotas.setCurrentWorkflowCount(workflows.size());
-  // workflowQuotas.setCurrentConcurrentWorkflows(concurrentActivities.size());
-  // workflowQuotas.setCurrentWorkflowExecutionMonthly(activitiesMonthly.size());
-  // setWorkflowStorage(workflows, workflowQuotas);
-  // setWorkflowResetDate(workflowQuotas);
-  // return workflowQuotas;
-  // }
-  //
-  // private Quotas setTeamQuotas(TeamEntity team) {
-  // if (team.getQuotas() == null) {
-  // team.setQuotas(new Quotas());
-  // }
-  //
-  // Quotas quotas = new Quotas();
-  //
-  // if (team.getQuotas().getMaxWorkflowCount() != null) {
-  // quotas.setMaxWorkflowCount(team.getQuotas().getMaxWorkflowCount());
-  // } else {
-  // quotas.setMaxWorkflowCount(Integer.valueOf(
-  // flowSettingsService.getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_COUNT).getValue()));
-  // }
-  // if (team.getQuotas().getMaxWorkflowExecutionMonthly() != null) {
-  // quotas.setMaxWorkflowExecutionMonthly(team.getQuotas().getMaxWorkflowExecutionMonthly());
-  // } else {
-  // quotas.setMaxWorkflowExecutionMonthly(Integer.valueOf(flowSettingsService
-  // .getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_EXECUTION_MONTHLY).getValue()));
-  // }
-  // if (team.getQuotas().getMaxWorkflowStorage() != null) {
-  // quotas.setMaxWorkflowStorage(team.getQuotas().getMaxWorkflowStorage());
-  // } else {
-  // quotas.setMaxWorkflowStorage(Integer.valueOf(flowSettingsService
-  // .getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_STORAGE).getValue().replace("Gi", "")));
-  // }
-  // if (team.getQuotas().getMaxWorkflowExecutionTime() != null) {
-  // quotas.setMaxWorkflowExecutionTime(team.getQuotas().getMaxWorkflowExecutionTime());
-  // } else {
-  // quotas.setMaxWorkflowExecutionTime(Integer.valueOf(
-  // flowSettingsService.getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_DURATION).getValue()));
-  // }
-  // if (team.getQuotas().getMaxConcurrentWorkflows() != null) {
-  // quotas.setMaxConcurrentWorkflows(team.getQuotas().getMaxConcurrentWorkflows());
-  // } else {
-  // quotas.setMaxConcurrentWorkflows(Integer.valueOf(
-  // flowSettingsService.getConfiguration(TEAMS, MAX_TEAM_CONCURRENT_WORKFLOW).getValue()));
-  // }
-  // return quotas;
-  // }
-  //
-  // private void setWorkflowResetDate(WorkflowQuotas workflowQuotas) {
-  // Calendar nextMonth = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-  // nextMonth.add(Calendar.MONTH, 1);
-  // nextMonth.set(Calendar.DAY_OF_MONTH, 1);
-  // nextMonth.set(Calendar.HOUR_OF_DAY, 0);
-  // nextMonth.set(Calendar.MINUTE, 0);
-  // nextMonth.set(Calendar.SECOND, 0);
-  // nextMonth.set(Calendar.MILLISECOND, 0);
-  // workflowQuotas.setMonthlyResetDate(nextMonth.getTime());
-  // }
+
+  /*
+   * Creates a Team Parameter
+   */
+  @Override
+  public ResponseEntity<TeamParameter> updateParameter(String teamId,
+      TeamParameter parameter) {
+    if (teamId == null || teamId.isBlank()) {
+      throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
+    }
+    List<String> teamRefs = relationshipService.getFilteredRefs(RelationshipRefType.TEAM,
+        Optional.empty(), Optional.empty(), Optional.empty());
+    if (!teamRefs.contains(teamId)) {
+      throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
+    }
+    Optional<TeamEntity> optTeamEntity = teamRepository.findById(teamId);
+    if (!optTeamEntity.isPresent()) {
+      throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
+    }
+    TeamEntity teamEntity = optTeamEntity.get();
+    if (teamEntity.getSettings() == null) {
+      teamEntity.setSettings(new TeamSettings());
+    }
+
+    List<TeamParameter> parameters = teamEntity.getSettings().getParameters();
+    TeamParameter existingParameter = parameters.stream()
+        .filter(p -> p.getKey().equals(parameter.getKey())).findAny().orElse(null);
+
+    if (existingParameter == null) {
+      // TODO better exception to say parameter already exists
+      throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
+    }
+    BeanUtils.copyProperties(parameter, existingParameter);
+    parameters.remove(existingParameter);
+    parameters.add(parameter);
+    teamRepository.save(teamEntity);
+    // If the parameter is a password, do not return its value, for security reasons.
+    filterValueByFieldType(List.of(parameter), false, FieldType.PASSWORD.value());
+
+    return ResponseEntity.ok(parameter);
+  }
+
+  /*
+   * Delete single parameter by key
+   */
+  @Override
+  public ResponseEntity<Void> deleteParameter(String teamId, String key) {
+    if (teamId == null || teamId.isBlank()) {
+      throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
+    }
+    List<String> teamRefs = relationshipService.getFilteredRefs(RelationshipRefType.TEAM,
+        Optional.empty(), Optional.empty(), Optional.empty());
+    if (!teamRefs.contains(teamId)) {
+      throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
+    }
+    Optional<TeamEntity> optTeamEntity = teamRepository.findById(teamId);
+    if (!optTeamEntity.isPresent()) {
+      throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
+    }
+    TeamEntity teamEntity = optTeamEntity.get();
+
+    if (teamEntity.getSettings() != null && teamEntity.getSettings().getParameters() != null) {
+      List<TeamParameter> parameters = teamEntity.getSettings().getParameters();
+      TeamParameter parameter = parameters.stream()
+          .filter(p -> p.getKey().equals(key)).findAny().orElse(null);
+
+      if (parameter != null) {
+        parameters.remove(parameter);
+      }
+      teamEntity.getSettings().setParameters(parameters);
+      teamRepository.save(teamEntity);
+
+      return ResponseEntity.noContent().build();
+    }
+
+    //TODO better exception for unable find key
+    throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
+  }
+  
+  /*
+   * Return all team Parameters
+   */
+  @Override
+  public ResponseEntity<List<TeamParameter>> getParameters(String teamId) {
+    if (teamId == null || teamId.isBlank()) {
+      throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
+    }
+    List<String> teamRefs = relationshipService.getFilteredRefs(RelationshipRefType.TEAM,
+        Optional.empty(), Optional.empty(), Optional.empty());
+    if (!teamRefs.contains(teamId)) {
+      throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
+    }
+    Optional<TeamEntity> optTeamEntity = teamRepository.findById(teamId);
+    if (!optTeamEntity.isPresent()) {
+      throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
+    }
+    TeamEntity teamEntity = optTeamEntity.get();
+    List<TeamParameter> parameters = Collections.emptyList();
+    if (teamEntity.getSettings() != null
+        && teamEntity.getSettings().getParameters() != null) {
+      parameters = teamEntity.getSettings().getParameters();
+    
+      filterValueByFieldType(parameters, false, FieldType.PASSWORD.value());
+    } 
+    return ResponseEntity.ok(parameters);
+  }
+
+  /*
+   * Get Current and Default Quotas for a Team
+   */
+  @Override
+  public ResponseEntity<CurrentQuotas> getQuotas(String teamId) {
+    if (teamId == null || teamId.isBlank()) {
+      throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
+    }
+    List<String> teamRefs = relationshipService.getFilteredRefs(RelationshipRefType.TEAM,
+        Optional.empty(), Optional.empty(), Optional.empty());
+    if (!teamRefs.contains(teamId)) {
+      throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
+    }
+    Optional<TeamEntity> optTeamEntity = teamRepository.findById(teamId);
+    if (!optTeamEntity.isPresent()) {
+      throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
+    }
+    TeamEntity teamEntity = optTeamEntity.get();
+
+    // Set default & custom stored Quotas
+    Quotas quotas = setDefaultQuotas();
+    setCustomQuotas(quotas, teamEntity.getQuotas());
+    CurrentQuotas currentQuotas = new CurrentQuotas(quotas);
+    setCurrentQuotas(currentQuotas, teamId);
+    
+    return ResponseEntity.ok(currentQuotas);
+  }
+
+  /*
+   * Patch the quotas on a team.
+   */
+  @Override
+  public ResponseEntity<Quotas> patchQuotas(String teamId, Quotas patchQuotas) {
+    if (teamId == null || teamId.isBlank()) {
+      throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
+    }
+    List<String> teamRefs = relationshipService.getFilteredRefs(RelationshipRefType.TEAM,
+        Optional.empty(), Optional.empty(), Optional.empty());
+    if (!teamRefs.contains(teamId)) {
+      throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
+    }
+    Optional<TeamEntity> optTeamEntity = teamRepository.findById(teamId);
+    if (!optTeamEntity.isPresent()) {
+      throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
+    }
+    TeamEntity teamEntity = optTeamEntity.get();
+
+    // Update and save the patched quotas
+    setCustomQuotas(teamEntity.getQuotas(), patchQuotas);
+    teamRepository.save(teamEntity);
+    
+    // Return with a full set of quotas (default + what is set)
+    Quotas returnQuotas = setDefaultQuotas();
+    setCustomQuotas(returnQuotas, teamEntity.getQuotas());
+    
+    return ResponseEntity.ok(returnQuotas);
+  }
+
+  /*
+   * Reset quotas to default (i.e. delete custom quotas on the team)
+   */
+  @Override
+  public ResponseEntity<Quotas> resetQuotas(String teamId) {
+    if (teamId == null || teamId.isBlank()) {
+      throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
+    }
+    List<String> teamRefs = relationshipService.getFilteredRefs(RelationshipRefType.TEAM,
+        Optional.empty(), Optional.empty(), Optional.empty());
+    if (!teamRefs.contains(teamId)) {
+      throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
+    }
+    Optional<TeamEntity> optTeamEntity = teamRepository.findById(teamId);
+    if (!optTeamEntity.isPresent()) {
+      throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
+    }
+    TeamEntity teamEntity = optTeamEntity.get();
+
+    // Delete any custom quotas set on the team
+    // This will then reset and default to the Team Quotas set in Settings
+    teamEntity.setQuotas(new Quotas());
+    teamRepository.save(teamEntity);
+    
+    return ResponseEntity.ok(setDefaultQuotas());
+  }
+
+  /*
+   * Reset quotas to default (i.e. delete custom quotas on the team)
+   */
+  @Override
+  public ResponseEntity<Quotas> getDefaultQuotas() {
+    return ResponseEntity.ok(setDefaultQuotas());
+  }
+
+  /*
+   * Set default quotas
+   */
+  private Quotas setDefaultQuotas() {
+    Quotas quotas = new Quotas();
+    quotas.setMaxWorkflowCount(Integer
+        .valueOf(settingsService.getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_COUNT).getValue()));
+    quotas.setMaxWorkflowExecutionMonthly(Integer.valueOf(
+        settingsService.getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_EXECUTION_MONTHLY).getValue()));
+    quotas.setMaxWorkflowStorage(Integer.valueOf(settingsService
+        .getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_STORAGE).getValue().replace("Gi", "")));
+    quotas.setMaxWorkflowExecutionTime(Integer
+        .valueOf(settingsService.getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_DURATION).getValue()));
+    quotas.setMaxConcurrentWorkflows(Integer
+        .valueOf(settingsService.getConfiguration(TEAMS, MAX_TEAM_CONCURRENT_WORKFLOW).getValue()));
+    return quotas;
+  }
+
+  private void setCustomQuotas(Quotas quotas, Quotas customQuotas) {
+    if (customQuotas != null) {
+      if (customQuotas.getMaxWorkflowCount() != null) {
+        quotas.setMaxWorkflowCount(customQuotas.getMaxWorkflowCount());
+      }
+      if (customQuotas.getMaxWorkflowExecutionMonthly() != null) {
+        quotas.setMaxWorkflowExecutionMonthly(customQuotas.getMaxWorkflowExecutionMonthly());
+      }
+      if (customQuotas.getMaxWorkflowStorage() != null) {
+        quotas.setMaxWorkflowStorage(customQuotas.getMaxWorkflowStorage());
+      }
+      if (customQuotas.getMaxWorkflowExecutionTime() != null) {
+        quotas.setMaxWorkflowExecutionTime(customQuotas.getMaxWorkflowExecutionTime());
+      }
+      if (customQuotas.getMaxConcurrentWorkflows() != null) {
+        quotas.setMaxConcurrentWorkflows(customQuotas.getMaxConcurrentWorkflows());
+      }
+    }
+  }
+
+  private CurrentQuotas setCurrentQuotas(CurrentQuotas currentQuotas, String teamId) {
+    // Set Quota Reset Date
+    Calendar nextMonth = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+    nextMonth.add(Calendar.MONTH, 1);
+    nextMonth.set(Calendar.DAY_OF_MONTH, 1);
+    nextMonth.set(Calendar.HOUR_OF_DAY, 0);
+    nextMonth.set(Calendar.MINUTE, 0);
+    nextMonth.set(Calendar.SECOND, 0);
+    nextMonth.set(Calendar.MILLISECOND, 0);
+    currentQuotas.setMonthlyResetDate(nextMonth.getTime());
+
+    Calendar currentMonthStart = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+    nextMonth.set(Calendar.DAY_OF_MONTH, 1);
+    nextMonth.set(Calendar.HOUR_OF_DAY, 0);
+    nextMonth.set(Calendar.MINUTE, 0);
+    nextMonth.set(Calendar.SECOND, 0);
+    nextMonth.set(Calendar.MILLISECOND, 0);
+
+    Calendar currentMonthEnd = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+    nextMonth.add(Calendar.MONTH, 1);
+    nextMonth.set(Calendar.DAY_OF_MONTH, 1);
+    nextMonth.set(Calendar.HOUR_OF_DAY, 0);
+    nextMonth.set(Calendar.MINUTE, 0);
+    nextMonth.set(Calendar.SECOND, 0);
+    nextMonth.set(Calendar.MILLISECOND, 0);
+    
+    WorkflowRunInsight insight = workflowRunService.insight(Optional.of(currentMonthStart.getTimeInMillis()), Optional.of(currentMonthEnd.getTimeInMillis()), Optional.empty(), Optional.of(List.of(teamId)));
+    currentQuotas.setCurrentConcurrentWorkflows(insight.getConcurrentRuns().intValue());
+    currentQuotas.setCurrentWorkflowExecutionMonthly(insight.getTotalDuration().intValue());
+    
+    //TODO update to only be active workflows
+    List<String> workflowRefs = relationshipService.getFilteredRefs(RelationshipRefType.WORKFLOW,
+      Optional.empty(), Optional.of(List.of(teamId)), Optional.empty());
+    currentQuotas.setCurrentWorkflowCount(workflowRefs.size());
+    
+    //TODO look into this one
+    currentQuotas.setCurrentWorkflowsPersistentStorage(null);
+   return currentQuotas;
+ }
+
+   /*
+    * Converts the TeamEntity to Team and adds the extra Users, WorkflowRefs, ApproverGroupRefs, Quotas
+    */
+   private Team convertTeamEntityToTeam(TeamEntity teamEntity) {
+     Team team = new Team(teamEntity);
+     
+     // Get and Set WorkflowRefs
+     List<String> teamWorkflowRefs =
+         relationshipService.getFilteredRefs(RelationshipRefType.WORKFLOW, Optional.empty(),
+             Optional.of(List.of(teamEntity.getId())), Optional.empty());
+     team.setWorkflowRefs(teamWorkflowRefs);
+     
+     // Get and Set Users
+     team.setUsers(getUsersForTeam(teamEntity.getId()));
+
+     // Set default & custom stored Quotas
+     Quotas quotas = setDefaultQuotas();
+     setCustomQuotas(quotas, teamEntity.getQuotas());
+     CurrentQuotas currentQuotas = new CurrentQuotas(quotas);
+     setCurrentQuotas(currentQuotas, teamEntity.getId());
+     team.setQuotas(currentQuotas);
+
+     // Set Approver Groups
+     List<String> approverGroupRefs =
+         relationshipService.getFilteredRefs(RelationshipRefType.APPROVERGROUP, Optional.empty(),
+             Optional.of(List.of(teamEntity.getId())), Optional.empty());
+     List<ApproverGroupEntity> approverGroupEntities = approverGroupRepository.findByIdIn(approverGroupRefs);
+     List<ApproverGroup> approverGroups = Collections.emptyList();
+     approverGroupEntities.forEach(age -> {
+       ApproverGroup ag = convertEntityToApproverGroup(age);
+       approverGroups.add(ag);
+     });
+     team.setApproverGroups(approverGroups);
+
+     // If the parameter is a password, do not return its value, for security reasons.
+     if (team.getSettings() != null && team.getSettings().getParameters() != null) {
+       filterValueByFieldType(team.getSettings().getParameters(), false,
+           FieldType.PASSWORD.value());
+     }
+     
+     return team;
+   }
+
+  private List<UserSummary> getUsersForTeam(String teamId) {
+    List<String> userRefs = relationshipService.getFilteredRefs(RelationshipRefType.USER,
+         Optional.empty(), Optional.of(List.of(teamId)), Optional.empty());
+    List<UserSummary> teamUsers = new LinkedList<>();
+     if (!userRefs.isEmpty()) {
+       userRefs.forEach(ref -> {
+         Optional<UserEntity> ue = userRepository.findById(ref);
+         if (ue.isPresent()) {
+           UserSummary u = new UserSummary(ue.get());
+           teamUsers.add(u);
+         }
+       });
+     }
+     return teamUsers;
+  }
+
   //
   // private void setWorkflowStorage(List<WorkflowSummary> workflows, WorkflowQuotas workflowQuotas)
   // {
@@ -698,152 +694,7 @@ public class TeamServiceImpl implements TeamService {
   // workflowQuotas.setCurrentWorkflowsPersistentStorage(currentWorkflowsPersistentStorage);
   // }
   //
-  // @Override
-  // public Quotas updateQuotasForTeam(String teamId, Quotas quotas) {
-  // TeamEntity team = flowTeamService.findById(teamId);
-  // team.setQuotas(quotas);
-  // return flowTeamService.save(team).getQuotas();
-  // }
-  //
-  // private void updateTeamWorkflowSummaryWithQuotas(List<TeamWorkflowSummary>
-  // teamWorkflowSummaryList){
-  // setTeamQuotas(teamWorkflowSummaryList);
-  // setWorkflowQuotas(teamWorkflowSummaryList);
-  // }
-  //
-  // private void setTeamQuotas(List<Team> teams) {
-  // int maxWorkflowCount = Integer.valueOf(settingsService
-  // .getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_COUNT).getValue());
-  // int maxTeamFlowExecutionMonthly = Integer.valueOf(settingsService
-  // .getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_EXECUTION_MONTHLY).getValue());
-  // int maxTeamWorkflowStorageInGB = Integer.valueOf(settingsService
-  // .getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_STORAGE).getValue().replace("Gi", ""));
-  // int maxTeamWorkflowDuration = Integer.valueOf(settingsService
-  // .getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_DURATION).getValue());
-  // int maxTeamWorkflowConcurrent = Integer.valueOf(settingsService
-  // .getConfiguration(TEAMS, MAX_TEAM_CONCURRENT_WORKFLOW).getValue());
-  // for(Team team: teams) {
-  // Quotas quotas = new Quotas();
-  // if (team.getQuotas() != null && team.getQuotas().getMaxWorkflowCount() != null) {
-  // quotas.setMaxWorkflowCount(team.getQuotas().getMaxWorkflowCount());
-  // } else {
-  // quotas.setMaxWorkflowCount(maxWorkflowCount);
-  // }
-  // if (team.getQuotas() != null && team.getQuotas().getMaxWorkflowExecutionMonthly() != null) {
-  // quotas.setMaxWorkflowExecutionMonthly(team.getQuotas().getMaxWorkflowExecutionMonthly());
-  // } else {
-  // quotas.setMaxWorkflowExecutionMonthly(maxTeamFlowExecutionMonthly);
-  // }
-  // if (team.getQuotas() != null && team.getQuotas().getMaxWorkflowStorage() != null) {
-  // quotas.setMaxWorkflowStorage(team.getQuotas().getMaxWorkflowStorage());
-  // } else {
-  // quotas.setMaxWorkflowStorage(maxTeamWorkflowStorageInGB);
-  // }
-  // if (team.getQuotas() != null && team.getQuotas().getMaxWorkflowExecutionTime() != null) {
-  // quotas.setMaxWorkflowExecutionTime(team.getQuotas().getMaxWorkflowExecutionTime());
-  // } else {
-  // quotas.setMaxWorkflowExecutionTime(maxTeamWorkflowDuration);
-  // }
-  // if (team.getQuotas() != null && team.getQuotas().getMaxConcurrentWorkflows() != null) {
-  // quotas.setMaxConcurrentWorkflows(team.getQuotas().getMaxConcurrentWorkflows());
-  // } else {
-  // quotas.setMaxConcurrentWorkflows(maxTeamWorkflowConcurrent);
-  // }
-  // team.setQuotas(quotas);
-  // }
-  // }
-  //
-  // private void setWorkflowQuotas(List<Team> teams) {
-  // List<String> teamIds = teams.stream().map(team -> team.getId())
-  // .collect(Collectors.toList());
-  // Map<String, List<ActivityEntity>> concurrentActivitiesMap =
-  // getConcurrentWorkflowActivities(teamIds);
-  // Map<String, List<ActivityEntity>> monthlyActivitiesMap =
-  // getMonthlyWorkflowActivities(Pageable.unpaged(), teamIds);
-  // for(TeamWorkflowSummary teamWorkFlow: teamWorkflowSummaryList) {
-  // WorkflowQuotas workflowQuotas = new WorkflowQuotas();
-  // Quotas quotas = teamWorkFlow.getQuotas();
-  // List<ActivityEntity> concurrentActivities = concurrentActivitiesMap.get(teamWorkFlow.getId());
-  // List<ActivityEntity> monthlyActivities = monthlyActivitiesMap.get(teamWorkFlow.getId());
-  // workflowQuotas.setMaxWorkflowCount(quotas.getMaxWorkflowCount());
-  // workflowQuotas.setMaxWorkflowExecutionMonthly(quotas.getMaxWorkflowExecutionMonthly());
-  // workflowQuotas.setMaxWorkflowStorage(quotas.getMaxWorkflowStorage());
-  // workflowQuotas.setMaxWorkflowExecutionTime(quotas.getMaxWorkflowExecutionTime());
-  // workflowQuotas.setMaxConcurrentWorkflows(quotas.getMaxConcurrentWorkflows());
-  //
-  // workflowQuotas.setCurrentWorkflowCount(teamWorkFlow.getWorkflows() == null?
-  // 0:teamWorkFlow.getWorkflows().size());
-  // workflowQuotas.setCurrentConcurrentWorkflows(concurrentActivities == null? 0 :
-  // concurrentActivities.size());
-  // workflowQuotas.setCurrentWorkflowExecutionMonthly(monthlyActivities == null? 0 :
-  // monthlyActivities.size());
-  // setWorkflowStorage(teamWorkFlow.getWorkflows(), workflowQuotas);
-  // setWorkflowResetDate(workflowQuotas);
-  // teamWorkFlow.setWorkflowQuotas(workflowQuotas);
-  // }
-  // }
-  //
-  // private void updateTeamWorkflowSummaryWithUpgradeFlags(List<TeamWorkflowSummary>
-  // teamWorkflowSummaries) {
-  // // Collect workflow IDs.
-  // List<String> workflowIds = new ArrayList<String>();
-  // for(TeamWorkflowSummary teamWorkflowSummary: teamWorkflowSummaries) {
-  // if (teamWorkflowSummary.getWorkflows() == null) {
-  // continue;
-  // }
-  // teamWorkflowSummary.getWorkflows().stream().forEach(workflow ->{
-  // workflowIds.add(workflow.getId());
-  // });
-  // }
-  //
-  // // Batch query latest workflow revisions with upgrade flags updated.
-  // List<FlowWorkflowRevision> latestRevisions =
-  // workflowVersionService.getLatestWorkflowVersionWithUpgradeFlags(workflowIds);
-  // Map<String, FlowWorkflowRevision> latestRevisionsMap = Maps.newHashMap();
-  // latestRevisions.stream().forEach(latestFlowRevision->{
-  // latestRevisionsMap.put(latestFlowRevision.getWorkFlowId(), latestFlowRevision);
-  // });
-  //
-  // // Set TemplateUpgradesAvailable of team flow summary with the value of its latest revision.
-  // for(TeamWorkflowSummary flowSummary: teamWorkflowSummaries) {
-  // if (flowSummary.getWorkflows() == null) {
-  // continue;
-  // }
-  // flowSummary.getWorkflows().stream().forEach(workflow ->{
-  // if(latestRevisionsMap.get(workflow.getId()) != null) {
-  // workflow.setTemplateUpgradesAvailable(latestRevisionsMap.get(workflow.getId()).isTemplateUpgradesAvailable());
-  // }
-  // });
-  // }
-  // }
-  //
-  // @Override
-  // public void updateSummaryWithUpgradeFlags(List<WorkflowSummary> workflowSummary) {
-  //
-  // for (WorkflowSummary summary : workflowSummary) {
-  // String workflowId = summary.getId();
-  // FlowWorkflowRevision latestRevision =
-  // workflowVersionService.getLatestWorkflowVersion(workflowId);
-  // if (latestRevision != null) {
-  // summary.setTemplateUpgradesAvailable(latestRevision.isTemplateUpgradesAvailable());
-  // }
-  // }
-  //
-  // }
-  //
-  // @Override
-  // public void updateTeam(String teamId, FlowTeam flow) {
-  // validateUser();
-  // TeamEntity team = flowTeamService.findById(teamId);
-  // if (flow.getName() != null) {
-  // team.setName(flow.getName());
-  // }
-  // if (flow.getIsActive() != null) {
-  // team.setIsActive(flow.getIsActive());
-  // }
-  //
-  // this.flowTeamService.save(team);
-  // }
+
   //
   // @Override
   // public void updateTeamMembers(String teamId, List<String> teamMembers) {
@@ -885,66 +736,7 @@ public class TeamServiceImpl implements TeamService {
   // }
   // }
   //
-  //
-  // @Override
-  // public List<FlowTeamConfiguration> updateTeamProperty(String teamId,
-  // FlowTeamConfiguration property) {
-  // TeamEntity flowTeamEntity = flowTeamService.findById(teamId);
-  //
-  // if (flowTeamEntity.getSettings().getProperties() != null) {
-  // List<FlowTeamConfiguration> configItems = flowTeamEntity.getSettings().getProperties();
-  // String existingId = property.getId();
-  // FlowTeamConfiguration item = configItems.stream()
-  // .filter(config -> existingId.equals(config.getId())).findAny().orElse(null);
-  //
-  // if (item != null) {
-  // configItems.remove(item);
-  // configItems.add(property);
-  // }
-  // flowTeamEntity.getSettings().setProperties(configItems);
-  // flowTeamService.save(flowTeamEntity);
-  //
-  // return configItems;
-  // }
-  //
-  // return Collections.emptyList();
-  // }
-  //
-  // @Override
-  // public Quotas updateTeamQuotas(String teamId, Quotas quotas) {
-  // TeamEntity team = flowTeamService.findById(teamId);
-  //
-  // if (team.getQuotas() == null) {
-  // team.setQuotas(new Quotas());
-  // }
-  // if (quotas.getMaxWorkflowCount() != null) {
-  // team.getQuotas().setMaxWorkflowCount(quotas.getMaxWorkflowCount());
-  // }
-  // if (quotas.getMaxConcurrentWorkflows() != null) {
-  // team.getQuotas().setMaxConcurrentWorkflows(quotas.getMaxConcurrentWorkflows());
-  // }
-  // if (quotas.getMaxWorkflowExecutionMonthly() != null) {
-  // team.getQuotas().setMaxWorkflowExecutionMonthly(quotas.getMaxWorkflowExecutionMonthly());
-  // }
-  // if (quotas.getMaxWorkflowExecutionTime() != null) {
-  // team.getQuotas().setMaxWorkflowExecutionTime(quotas.getMaxWorkflowExecutionTime());
-  // }
-  // if (quotas.getMaxWorkflowStorage() != null) {
-  // team.getQuotas().setMaxWorkflowStorage(quotas.getMaxWorkflowStorage());
-  // }
-  //
-  // return flowTeamService.save(team).getQuotas();
-  // }
-  //
-  // protected void validateUser() {
-  //
-  // FlowUserEntity userEntity = userIdentiyService.getCurrentUser();
-  // if (userEntity == null || (!userEntity.getType().equals(UserType.admin)
-  // && !userEntity.getType().equals(UserType.operator))) {
-  //
-  // throw new HttpClientErrorException(HttpStatus.FORBIDDEN);
-  // }
-  // }
+
   //
   // @Override
   // public List<TeamMember> getTeamMembers(String teamId) {
@@ -964,105 +756,120 @@ public class TeamServiceImpl implements TeamService {
   // return members;
   // }
   //
-  // private void mapToTeamMemberList(List<TeamMember> members, List<FlowUserEntity> existingUsers)
-  // {
-  // for (FlowUserEntity u : existingUsers) {
-  // TeamMember user = new TeamMember();
-  // user.setEmail(u.getEmail());
-  // user.setUserName(u.getName());
-  // user.setUserId(u.getId());
-  // members.add(user);
-  // }
-  // }
-  //
-  // @Override
-  // public void deleteApproverGroup(String teamId, String groupId) {
-  // TeamEntity team = flowTeamService.findById(teamId);
-  //
-  // if (team != null) {
-  // if (team.getApproverGroups() == null) {
-  // team.setApproverGroups(new LinkedList<ApproverGroup>());
-  // }
-  // ApproverGroup deletedGroup = team.getApproverGroups().stream()
-  // .filter(x -> groupId.equals(x.getId())).findFirst().orElse(null);
-  // if (deletedGroup != null) {
-  // team.getApproverGroups().remove(deletedGroup);
-  // }
-  // flowTeamService.save(team);
-  // }
-  // }
-  //
-  // @Override
-  // public List<ApproverGroupResponse> getTeamApproverGroups(String teamId) {
-  // TeamEntity team = flowTeamService.findById(teamId);
-  // List<ApproverGroupResponse> response = new LinkedList<>();
-  //
-  // if (team != null && team.getApproverGroups() != null) {
-  //
-  // for (ApproverGroup group : team.getApproverGroups()) {
-  // ApproverGroupResponse approverGroupResponse = this.createApproverGroupResponse(group, team);
-  // response.add(approverGroupResponse);
-  // }
-  // }
-  // return response;
-  // }
-  //
-  // @Override
-  // public ApproverGroupResponse createApproverGroup(String teamId,
-  // CreateApproverGroupRequest createApproverGroupRequest) {
-  // String newGroupId = UUID.randomUUID().toString();
-  // ApproverGroup group = new ApproverGroup();
-  // group.setId(newGroupId);
-  // group.setName(createApproverGroupRequest.getGroupName());
-  //
-  // if (createApproverGroupRequest.getApprovers() != null) {
-  // List<ApproverUser> users = new LinkedList<>();
-  // for (ApproverUser user : createApproverGroupRequest.getApprovers()) {
-  // ApproverUser newUser = new ApproverUser();
-  // newUser.setUserId(user.getUserId());
-  //
-  // users.add(newUser);
-  // }
-  // group.setApprovers(users);
-  // }
-  //
-  // TeamEntity team = flowTeamService.findById(teamId);
-  //
-  // if (team != null) {
-  // if (team.getApproverGroups() == null) {
-  // team.setApproverGroups(new LinkedList<ApproverGroup>());
-  // }
-  // List<ApproverGroup> approverGroups = team.getApproverGroups();
-  // approverGroups.add(group);
-  // flowTeamService.save(team);
-  // return this.createApproverGroupResponse(group, team);
-  // }
-  // return null;
-  // }
-  //
-  // private ApproverGroupResponse createApproverGroupResponse(ApproverGroup group, TeamEntity team)
-  // {
-  //
-  // ApproverGroupResponse approverGroupResponse = new ApproverGroupResponse();
-  // approverGroupResponse.setGroupId(group.getId());
-  // approverGroupResponse.setGroupName(group.getName());
-  // approverGroupResponse.setTeamId(team.getId());
-  // approverGroupResponse.setTeamName(team.getName());
-  //
-  // if (group.getApprovers() == null) {
-  // group.setApprovers(new LinkedList<>());
-  // }
-  //
-  // approverGroupResponse.setApprovers(group.getApprovers());
-  //
-  // for (ApproverUser approverUser : group.getApprovers()) {
-  // FlowUserEntity flowUser = this.userIdentiyService.getUserByID(approverUser.getUserId());
-  // approverUser.setUserEmail(flowUser.getEmail());
-  // approverUser.setUserName(flowUser.getName());
-  // }
-  //
-  // return approverGroupResponse;
-  // }
+  
+  @Override
+  public ResponseEntity<List<ApproverGroup>> getApproverGroups(String teamId) {
+    if (teamId == null || teamId.isBlank()) {
+      throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
+    }
+    List<String> teamRefs = relationshipService.getFilteredRefs(RelationshipRefType.TEAM,
+        Optional.empty(), Optional.empty(), Optional.empty());
+    if (!teamRefs.contains(teamId)) {
+      throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
+    }
+    Optional<TeamEntity> optTeamEntity = teamRepository.findById(teamId);
+    if (!optTeamEntity.isPresent()) {
+      throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
+    }
+    TeamEntity teamEntity = optTeamEntity.get();
+    
+    // Get and Set WorkflowRefs
+    List<String> approverGroupRefs =
+        relationshipService.getFilteredRefs(RelationshipRefType.APPROVERGROUP, Optional.empty(),
+            Optional.of(List.of(teamEntity.getId())), Optional.empty());
+
+    List<ApproverGroupEntity> approverGroupEntities = approverGroupRepository.findByIdIn(approverGroupRefs);
+    List<ApproverGroup> approverGroups = Collections.emptyList();
+    approverGroupEntities.forEach(age -> {
+      ApproverGroup ag = convertEntityToApproverGroup(age);
+      approverGroups.add(ag);
+    });
+    
+    return ResponseEntity.ok(approverGroups);
+  }
+  
+   @Override
+   public ResponseEntity<Void> deleteApproverGroup(String teamId, String id) {
+     if (teamId == null || teamId.isBlank()) {
+       throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
+     }
+     List<String> teamRefs = relationshipService.getFilteredRefs(RelationshipRefType.TEAM,
+         Optional.empty(), Optional.empty(), Optional.empty());
+     if (!teamRefs.contains(teamId)) {
+       throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
+     }
+     Optional<TeamEntity> optTeamEntity = teamRepository.findById(teamId);
+     if (!optTeamEntity.isPresent()) {
+       throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
+     }
+     TeamEntity teamEntity = optTeamEntity.get();
+     
+     List<String> approverGroupRefs =
+         relationshipService.getFilteredRefs(RelationshipRefType.APPROVERGROUP, Optional.empty(),
+             Optional.of(List.of(teamEntity.getId())), Optional.empty());
+     
+     if (approverGroupRefs.isEmpty() || !approverGroupRefs.contains(id)) {
+       //TODO better exception for not the right Approver Group Ref
+       throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
+     }
+     Optional<ApproverGroupEntity> ag = approverGroupRepository.findById(id);
+     if (ag.isPresent()) {
+       relationshipService.removeRelationship(RelationshipRefType.APPROVERGROUP, id);
+     }
+     approverGroupRepository.deleteById(id);
+
+     return ResponseEntity.noContent().build(); 
+   }
+  
+   @Override
+   public ResponseEntity<ApproverGroup> createApproverGroup(String teamId,
+   ApproverGroupCreateRequest approverGroupCreateRequest) {
+     if (teamId == null || teamId.isBlank()) {
+       throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
+     }
+     List<String> teamRefs = relationshipService.getFilteredRefs(RelationshipRefType.TEAM,
+         Optional.empty(), Optional.empty(), Optional.empty());
+     if (!teamRefs.contains(teamId)) {
+       throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
+     }
+     Optional<TeamEntity> optTeamEntity = teamRepository.findById(teamId);
+     if (!optTeamEntity.isPresent()) {
+       throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
+     }
+     TeamEntity teamEntity = optTeamEntity.get();
+     
+     if (approverGroupCreateRequest == null || approverGroupCreateRequest.getName().isBlank()) {
+       //TODO better exception for invalid Team Parameter Name
+       throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
+     }
+
+     List<String> approverGroupRefs =
+         relationshipService.getFilteredRefs(RelationshipRefType.APPROVERGROUP, Optional.empty(),
+             Optional.of(List.of(teamEntity.getId())), Optional.empty());
+     List<ApproverGroupEntity> approverGroupEntities = approverGroupRepository.findByIdIn(approverGroupRefs);
+     
+     if (approverGroupEntities.stream().anyMatch(ag -> ag.getName().equalsIgnoreCase(approverGroupCreateRequest.getName()))) {
+       //TODO better exception for non unique team name
+       throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
+     }
+     
+     ApproverGroupEntity approverGroupEntity = new ApproverGroupEntity();
+     approverGroupEntity.setName(approverGroupCreateRequest.getName());
+  
+     if (approverGroupCreateRequest.getApprovers() != null) {
+       List<String> userRefs =
+           relationshipService.getFilteredRefs(RelationshipRefType.USER, Optional.empty(),
+               Optional.of(List.of(teamEntity.getId())), Optional.empty());
+       approverGroupCreateRequest.getApprovers().forEach(a -> {
+         if (userRefs.contains(a)) {
+           approverGroupEntity.getApproverRefs().add(a);
+         }
+       });
+     }
+     approverGroupRepository.save(approverGroupEntity);
+     
+   return ResponseEntity.ok(convertEntityToApproverGroup(approverGroupEntity));
+   }
   //
   // @Override
   // public ApproverGroupResponse updateApproverGroup(String teamId, String groupId,
@@ -1094,28 +901,18 @@ public class TeamServiceImpl implements TeamService {
   // }
   // return null;
   // }
-  //
-  // @Override
-  // public ApproverGroupResponse getSingleAproverGroup(String teamId, String groupId) {
-  // TeamEntity team = flowTeamService.findById(teamId);
-  // if (team != null) {
-  // if (team.getApproverGroups() == null) {
-  // team.setApproverGroups(new LinkedList<ApproverGroup>());
-  // }
-  // ApproverGroup group = team.getApproverGroups().stream().filter(x -> groupId.equals(x.getId()))
-  // .findFirst().orElse(null);
-  // if (group != null) {
-  // return this.createApproverGroupResponse(group, team);
-  // }
-  // }
-  // return null;
-  // }
-  //
-  // @Override
-  // public TeamEntity updateTeamLabels(String teamId, List<KeyValuePair> labels) {
-  // TeamEntity team = flowTeamService.findById(teamId);
-  // team.setLabels(labels);
-  // return flowTeamService.save(team);
-  // }
 
+   private ApproverGroup convertEntityToApproverGroup(ApproverGroupEntity age) {
+     ApproverGroup ag = new ApproverGroup(age);
+     if (!age.getApproverRefs().isEmpty()) {
+       age.getApproverRefs().forEach(ref -> {
+         Optional<UserEntity> ue = userRepository.findById(ref);
+         if (ue.isPresent()) {
+           UserSummary u = new UserSummary(ue.get());
+           ag.getApprovers().add(u);
+         }
+       });
+     }
+     return ag;
+   }
 }
