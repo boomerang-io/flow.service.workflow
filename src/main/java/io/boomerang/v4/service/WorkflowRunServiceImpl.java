@@ -14,6 +14,7 @@ import io.boomerang.v4.client.EngineClient;
 import io.boomerang.v4.client.WorkflowRunResponsePage;
 import io.boomerang.v4.model.enums.RelationshipRefType;
 import io.boomerang.v4.model.ref.WorkflowRun;
+import io.boomerang.v4.model.ref.WorkflowRunInsight;
 import io.boomerang.v4.model.ref.WorkflowRunRequest;
 
 /*
@@ -56,18 +57,25 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
   }
 
   @Override
-  // TODO switch to WorkflowRun
   /*
    * Query for WorkflowRun
    * 
    * No need to validate params as they are either defaulted or optional
    */
   public WorkflowRunResponsePage query(int page, int limit, Sort sort, Optional<List<String>> queryLabels,
-      Optional<List<String>> queryStatus, Optional<List<String>> queryPhase) {
-    List<String> workflowRunRefs = relationshipService.getFilteredRefs(RelationshipRefType.WORKFLOWRUN, Optional.empty(), Optional.empty(), Optional.empty());
+      Optional<List<String>> queryStatus, Optional<List<String>> queryPhase, Optional<List<String>> queryTeams) {
+    List<String> workflowRunRefs = relationshipService.getFilteredRefs(RelationshipRefType.WORKFLOWRUN, Optional.empty(), queryTeams, Optional.empty());
     LOGGER.debug("Query Ids: ", workflowRunRefs);
     
     return engineClient.queryWorkflowRuns(page, limit, sort, queryLabels, queryStatus, queryPhase, Optional.of(workflowRunRefs));
+  }
+  
+  @Override
+  public WorkflowRunInsight insight(Optional<Long> from, Optional<Long> to,  Optional<List<String>> queryLabels, Optional<List<String>> queryTeams) {
+    List<String> workflowRunRefs = relationshipService.getFilteredRefs(RelationshipRefType.WORKFLOWRUN, Optional.empty(), queryTeams, Optional.empty());
+    LOGGER.debug("Query Ids: ", workflowRunRefs);
+    
+    return engineClient.insightWorkflowRuns(queryLabels, Optional.of(workflowRunRefs), from, to);
   }
 
   /*
@@ -85,7 +93,7 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
     if (!workflowRefsList.isEmpty() && workflowRefsList.contains(workflowId)) {
       WorkflowRun wfRun = engineClient.submitWorkflowRun(workflowId, version, start, optRunRequest);
       //TODO: move this to an Async Aspect or CloudEvent handler so that it stores the relationship regardless of REST thrown error.
-      relationshipService.createRelationshipRef(RelationshipRefType.WORKFLOWRUN.getRef(), wfRun.getId());
+      relationshipService.createRelationshipRef(RelationshipRefType.WORKFLOWRUN, wfRun.getId());
       return ResponseEntity.ok(wfRun);
     } else {
       //TODO: do we want to return invalid ref or unauthorized

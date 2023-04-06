@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Example;
 import org.springframework.stereotype.Service;
 import io.boomerang.mongo.model.UserType;
 import io.boomerang.security.model.TeamToken;
@@ -68,7 +69,7 @@ public class RelationshipServiceImpl implements RelationshipService {
    * @return RelationshipEntity
    */
   @Override
-  public void createRelationshipRef(String fromType, String fromRef) {
+  public void createRelationshipRef(RelationshipRefType fromType, String fromRef) {
     UserEntity user = null;
     String toType = null;
     String toRef = null;
@@ -90,13 +91,74 @@ public class RelationshipServiceImpl implements RelationshipService {
         break;
     }
     RelationshipEntity relEntity = new RelationshipEntity();
-    relEntity.setFromType(fromType);
+    relEntity.setFromType(fromType.getRef());
     relEntity.setFromRef(fromRef);
     relEntity.setRelationship("belongs-to");
     relEntity.setToType(toType);
     relEntity.setToRef(toRef);
     LOGGER.info("Relationship: " + relEntity.toString());
     relationshipRepository.save(relEntity);
+  }
+  
+  /*
+   * Creates a new Relationship Ref for the provided inputs
+   *
+   * 
+   * @return RelationshipEntity
+   */
+  @Override
+  public void createRelationshipRef(RelationshipRefType fromType, String fromRef, RelationshipRefType toType, String toRef) {
+    RelationshipEntity relEntity = new RelationshipEntity();
+    relEntity.setFromType(fromType.getRef());
+    relEntity.setFromRef(fromRef);
+    relEntity.setRelationship("belongs-to");
+    relEntity.setToType(toType.getRef());
+    relEntity.setToRef(toRef);
+    LOGGER.info("Relationship: " + relEntity.toString());
+    relationshipRepository.save(relEntity);
+  }
+  
+  /*
+   * Creates a new Relationship Ref for the provided inputs
+   *
+   * 
+   * @return RelationshipEntity
+   */
+  @Override
+  public Optional<RelationshipEntity> getRelationship(RelationshipRefType fromType, String fromRef) {
+    return relationshipRepository.findByFromTypeAndFromRef(fromRef, fromRef);
+  }
+  
+  /*
+   * Creates a new Relationship Ref for the provided inputs
+   *
+   * 
+   * @return RelationshipEntity
+   */
+  @Override
+  public List<RelationshipEntity> getRelationship(RelationshipRefType fromType, String fromRef, RelationshipRefType toType, String toRef) {
+    RelationshipEntity relEntity = new RelationshipEntity();
+    relEntity.setFromType(fromType.getRef());
+    relEntity.setFromRef(fromRef);
+    relEntity.setRelationship("belongs-to");
+    relEntity.setToType(toType.getRef());
+    relEntity.setToRef(toRef);
+    LOGGER.info("Relationship: " + relEntity.toString());
+    return relationshipRepository.findAll(Example.of(relEntity));
+  }
+  
+  /*
+   * Creates a new Relationship Ref for the provided inputs
+   *
+   * 
+   * @return RelationshipEntity
+   */
+  @Override
+  public void removeRelationship(RelationshipRefType fromType, String fromRef) {
+    Optional<RelationshipEntity> optRelEntity = relationshipRepository.findByFromTypeAndFromRef(fromRef, fromRef);
+    if (optRelEntity.isPresent()) {
+      relationshipRepository.deleteById(optRelEntity.get().getId());
+    }
   }
 
   /*

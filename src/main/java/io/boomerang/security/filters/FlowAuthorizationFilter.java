@@ -28,7 +28,6 @@ import com.slack.api.app_backend.SlackSignature.Verifier;
 import io.boomerang.mongo.entity.TokenEntity;
 import io.boomerang.mongo.model.TokenScope;
 import io.boomerang.mongo.service.FlowTokenService;
-import io.boomerang.mongo.service.FlowUserService;
 import io.boomerang.security.AuthorizationException;
 import io.boomerang.security.model.FlowAuthenticationToken;
 import io.boomerang.security.model.GlobalToken;
@@ -37,6 +36,7 @@ import io.boomerang.security.model.Token;
 import io.boomerang.security.model.UserToken;
 import io.boomerang.security.util.MultiReadHttpServletRequest;
 import io.boomerang.v4.data.entity.UserEntity;
+import io.boomerang.v4.service.UserService;
 import io.boomerang.v4.service.SettingsService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -55,11 +55,11 @@ public class FlowAuthorizationFilter extends BasicAuthenticationFilter {
 
   private static final Logger LOGGER = LogManager.getLogger();
   private FlowTokenService tokenService;
-  private FlowUserService flowUserService;
+  private UserService flowUserService;
   private SettingsService flowSettingsService;
   
   public FlowAuthorizationFilter(FlowTokenService tokenService, AuthenticationManager authManager,
-      FlowUserService flowUserService, SettingsService flowSettingsService, String basicPassword) {
+      UserService flowUserService, SettingsService flowSettingsService, String basicPassword) {
     super(authManager);
     this.tokenService = tokenService;
     this.basicPassword = basicPassword;

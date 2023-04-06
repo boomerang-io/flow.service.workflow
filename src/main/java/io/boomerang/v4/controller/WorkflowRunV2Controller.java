@@ -53,12 +53,14 @@ public class WorkflowRunV2Controller {
       @Parameter(name = "phase",
       description = "List of phases to filter for. Defaults to all.", example = "completed,finalized",
       required = false) @RequestParam(required = false)  Optional<List<String>> phase,
+      @Parameter(name = "teams", description = "List of teamIds to filter for.", 
+      required = false) @RequestParam(required = false) Optional<List<String>> teams,
       @Parameter(name = "limit", description = "Result Size", example = "10",
           required = true) @RequestParam(defaultValue = "10") int limit,
       @Parameter(name = "page", description = "Page Number", example = "0",
           required = true) @RequestParam(defaultValue = "0") int page) {
     final Sort sort = Sort.by(new Order(Direction.ASC, "creationDate"));
-    return workflowRunService.query(page, limit, sort, labels, status, phase);
+    return workflowRunService.query(page, limit, sort, labels, status, phase, teams);
   }
 
   @GetMapping(value = "/run/{workflowRunId}")

@@ -22,7 +22,6 @@ import io.boomerang.model.UserWorkflowSummary;
 import io.boomerang.mongo.model.TokenScope;
 import io.boomerang.mongo.model.UserStatus;
 import io.boomerang.mongo.model.UserType;
-import io.boomerang.mongo.service.FlowUserService;
 import io.boomerang.security.model.GlobalToken;
 import io.boomerang.security.model.TeamToken;
 import io.boomerang.security.model.Token;
@@ -31,6 +30,7 @@ import io.boomerang.security.service.impl.NoLogging;
 import io.boomerang.service.crud.WorkflowService;
 import io.boomerang.v4.data.entity.UserEntity;
 import io.boomerang.v4.model.User;
+import io.boomerang.v4.service.UserService;
 import io.boomerang.v4.service.TeamService;
 
 @Service
@@ -46,7 +46,7 @@ public class UserIdentityServiceImpl implements UserIdentityService {
   private ExternalUserService coreUserService;
 
   @Autowired
-  private FlowUserService flowUserService;
+  private UserService flowUserService;
 
   @Value("${boomerang.otc}")
   private String corePlatformOTC;

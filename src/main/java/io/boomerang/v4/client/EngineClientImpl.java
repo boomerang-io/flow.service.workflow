@@ -24,6 +24,7 @@ import org.springframework.web.client.RestTemplate;
 import io.boomerang.error.BoomerangException;
 import io.boomerang.v4.model.ref.Workflow;
 import io.boomerang.v4.model.ref.WorkflowRun;
+import io.boomerang.v4.model.ref.WorkflowRunInsight;
 import io.boomerang.v4.model.ref.WorkflowRunRequest;
 
 @Service
@@ -34,6 +35,9 @@ public class EngineClientImpl implements EngineClient {
 
   @Value("${flow.engine.workflowrun.query.url}")
   public String queryWorkflowRunURL;
+  
+  @Value("${flow.engine.workflowrun.insight.url}")
+  public String insightWorkflowRunURL;
 
   @Value("${flow.engine.workflowrun.get.url}")
   public String getWorkflowRunURL;
@@ -143,6 +147,42 @@ public class EngineClientImpl implements EngineClient {
       
       logger.info("Status Response: " + response.getStatusCode());
       logger.info("Content Response: " + response.getBody().getContent().toString());
+      
+      return response.getBody();
+    } catch (RestClientException ex) {
+      logger.error(ex.toString());
+      throw new BoomerangException(ex, HttpStatus.INTERNAL_SERVER_ERROR.value(), ex.getClass().getSimpleName(), "Exception in communicating with internal services.", HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @Override
+  public WorkflowRunInsight insightWorkflowRuns(Optional<List<String>> queryLabels,
+      Optional<List<String>> queryIds, Optional<Long> fromDate, Optional<Long> toDate) {
+    try {
+      Map<String, String> requestParams = new HashMap<>();
+      if (queryLabels.isPresent()) {
+        requestParams.put("labels", queryLabels.get().toString());
+      }
+      if (queryIds.isPresent() && !queryIds.get().isEmpty()) {
+        requestParams.put("ids", queryIds.get().toString());
+      }
+      if (fromDate.isPresent()) {
+        requestParams.put("fromDate", fromDate.get().toString());
+      }
+      if (toDate.isPresent()) {
+        requestParams.put("toDate", toDate.get().toString());
+      }
+
+      String encodedURL =
+          requestParams.keySet().stream().map(key -> key + "=" + requestParams.get(key)).collect(
+              Collectors.joining("&", insightWorkflowRunURL + "?", ""));
+      
+      logger.info("Query URL: " + encodedURL);
+
+      ResponseEntity<WorkflowRunInsight> response = restTemplate.getForEntity(encodedURL, WorkflowRunInsight.class);
+      
+      logger.info("Status Response: " + response.getStatusCode());
+      logger.info("Content Response: " + response.getBody().toString());
       
       return response.getBody();
     } catch (RestClientException ex) {

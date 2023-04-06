@@ -5,6 +5,7 @@ import java.util.Optional;
 import org.springframework.data.domain.Sort;
 import io.boomerang.v4.model.ref.Workflow;
 import io.boomerang.v4.model.ref.WorkflowRun;
+import io.boomerang.v4.model.ref.WorkflowRunInsight;
 import io.boomerang.v4.model.ref.WorkflowRunRequest;
 
 public interface EngineClient {
@@ -14,6 +15,9 @@ public interface EngineClient {
   WorkflowRunResponsePage queryWorkflowRuns(int page, int limit, Sort sort, Optional<List<String>> queryLabels,
       Optional<List<String>> queryStatus, Optional<List<String>> queryPhase,
       Optional<List<String>> queryIds);
+
+  WorkflowRunInsight insightWorkflowRuns(Optional<List<String>> queryLabels,
+      Optional<List<String>> queryIds, Optional<Long> fromDate, Optional<Long> toDate);
 
   WorkflowRun submitWorkflowRun(String workflowId, Optional<Integer> version, boolean start,
       Optional<WorkflowRunRequest> request);

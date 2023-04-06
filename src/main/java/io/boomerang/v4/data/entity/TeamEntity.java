@@ -2,9 +2,11 @@ package io.boomerang.v4.data.entity;
 
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -23,7 +25,7 @@ public class TeamEntity {
   private Date creationDate = new Date();
   private TeamStatus status = TeamStatus.active;
   private String externalRef;
-  private TeamSettings settings;
+  private TeamSettings settings = new TeamSettings();
   private Quotas quotas;
   private Map<String, String> labels = new HashMap<>();
   
