@@ -23,9 +23,10 @@ import io.boomerang.security.interceptors.AuthenticationScope;
 import io.boomerang.v4.data.model.CurrentQuotas;
 import io.boomerang.v4.data.model.Quotas;
 import io.boomerang.v4.data.model.TeamParameter;
-import io.boomerang.v4.model.ApproverGroupCreateRequest;
+import io.boomerang.v4.model.ApproverGroupRequest;
 import io.boomerang.v4.model.ApproverGroup;
-import io.boomerang.v4.model.CreateTeamRequest;
+import io.boomerang.v4.model.TeamRequest;
+import io.boomerang.v4.model.UserSummary;
 import io.boomerang.v4.model.Team;
 import io.boomerang.v4.service.TeamService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -39,16 +40,6 @@ public class TeamV2Controller {
 
   @Autowired
   private TeamService teamService;  
-  
-//
-//  @Autowired
-//  private UserIdentityService userIdentityService;
-//  
-//  @Autowired
-//  private UserValidationService userValidationService;
-//  
-//  @Autowired
-//  private WorkflowService workflowService;
 
   @GetMapping(value = "/query")
   @AuthenticationScope(scopes = {TokenScope.global})
@@ -86,17 +77,17 @@ public class TeamV2Controller {
   @Operation(summary = "Create new team")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
-  public ResponseEntity<Team> createTeam(@RequestBody CreateTeamRequest createTeamRequest) {
-    return teamService.create(createTeamRequest);
+  public ResponseEntity<Team> createTeam(@RequestBody TeamRequest request) {
+    return teamService.create(request);
   }
   
   @PatchMapping(value = "/")
   @AuthenticationScope(scopes = {TokenScope.global})
-  @Operation(summary = "Create new team")
+  @Operation(summary = "Patch or update a team")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
-  public ResponseEntity<Team> updateTeam(@RequestBody CreateTeamRequest createTeamRequest) {
-    return teamService.updateTeam(createTeamRequest);
+  public ResponseEntity<Team> updateTeam(@RequestBody TeamRequest request) {
+    return teamService.update(request);
   }
   
   @PutMapping(value = "/{teamId}/enable")
@@ -117,6 +108,18 @@ public class TeamV2Controller {
   public ResponseEntity<Void> disableWorkflow(@Parameter(name = "teamId",
       description = "ID of Team", required = true) @PathVariable String teamId) {
     return teamService.disable(teamId);
+  }
+  
+  @PutMapping(value = "/{teamId}/members")
+  public ResponseEntity<List<UserSummary>> addMembers(@Parameter(name = "teamId",
+      description = "ID of Team", required = true) @PathVariable String teamId, @RequestBody TeamRequest request) {
+    return teamService.addMembers(teamId, request);
+  }
+  
+  @DeleteMapping(value = "/{teamId}/members")
+  public ResponseEntity<List<UserSummary>> removeMembers(@Parameter(name = "teamId",
+      description = "ID of Team", required = true) @PathVariable String teamId, @RequestBody TeamRequest request) {
+    return teamService.removeMembers(teamId, request);
   }
 
   @GetMapping(value = "/{teamId}/parameters")
@@ -187,33 +190,19 @@ public class TeamV2Controller {
   @PostMapping(value = "/{teamId}/approvers")
   public ResponseEntity<ApproverGroup> createApproverGroup(@Parameter(name = "teamId", description = "ID of Team",
       required = true) @PathVariable String teamId,
-      @RequestBody ApproverGroupCreateRequest createApproverGroupRequest) {
-    return teamService.createApproverGroup(teamId, createApproverGroupRequest);
+      @RequestBody ApproverGroupRequest request) {
+    return teamService.createApproverGroup(teamId, request);
   }
   
-  @PutMapping(value = "/{teamId}/approvers/{groupId}")
-  public ApproverGroup updateApproverGroup(@PathVariable String teamId, @PathVariable String groupId, @RequestBody ApproverGroupCreateRequest updateApproverGroup) {
-    return teamService.updateApproverGroup(teamId, groupId, updateApproverGroup);
+  @PutMapping(value = "/{teamId}/approvers")
+  public ResponseEntity<ApproverGroup> updateApproverGroup(@Parameter(name = "teamId", description = "ID of Team",
+      required = true) @PathVariable String teamId,
+      @RequestBody ApproverGroupRequest request) {
+    return teamService.updateApproverGroup(teamId, request);
   }
-//  
-//  @GetMapping(value = "/{teamId}/approvers/{groupId}")
-//  public ApproverGroupResponse getSingleAproverGroup(@PathVariable String teamId, @PathVariable String groupId) {
-//    return teamService.getSingleAproverGroup(teamId, groupId);
-//  }
   
   @DeleteMapping(value = "/{teamId}/approvers/{name}")
   public void deleteApproverGroup(@PathVariable String teamId,@PathVariable String name) {
     teamService.deleteApproverGroup(teamId, name);
-  }
-  
-  //TODO: confirm if we need this now that Users are returned on the Team Detail
-//  @GetMapping(value = "/teams/{teamId}/members")
-//  public List<User> getTeamMembers(@PathVariable String teamId) {
-//    return teamService.getTeamMembers(teamId);
-//  }
-  
-//  @GetMapping(value = "/teams/{teamId}/workflows")
-//  public List<WorkflowSummary> getTeamWorkflows(@PathVariable String teamId) {
-//    return workflowService.getWorkflowsForTeam(teamId);
-//  }
+  }  
 }

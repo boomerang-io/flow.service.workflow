@@ -2,7 +2,9 @@ package io.boomerang.v4.model;
 
 import java.util.List;
 
-public class ApproverGroupCreateRequest {
+public class ApproverGroupRequest {
+
+  private String id;
   
   private String name;
   
@@ -22,6 +24,14 @@ public class ApproverGroupCreateRequest {
 
   public void setApprovers(List<String> approvers) {
     this.approvers = approvers;
+  }
+
+  public String getId() {
+    return id;
+  }
+
+  public void setId(String id) {
+    this.id = id;
   }
 
 }

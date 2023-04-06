@@ -16,4 +16,7 @@ public interface RelationshipRepository extends MongoRepository<RelationshipEnti
 
   List<RelationshipEntity> findByFromTypeAndToTypeAndToRefIn(String fromType, String toType,
       List<String> toRef);
+
+  List<RelationshipEntity> findByFromTypeAndFromRefInAndToTypeAndToRefIn(String fromType, List<String> fromRef, String toType,
+      List<String> toRef);
 }

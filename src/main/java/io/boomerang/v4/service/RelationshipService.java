@@ -26,4 +26,7 @@ public interface RelationshipService {
   Optional<RelationshipEntity> getRelationship(RelationshipRefType fromType, String fromRef);
 
   void removeRelationship(RelationshipRefType fromType, String fromRef);
+
+  void removeRelationships(RelationshipRefType fromType, List<String> fromRefs,
+      RelationshipRefType toType, List<String> toRefs);
 }
