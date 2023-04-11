@@ -17,6 +17,7 @@ import io.boomerang.v4.data.entity.TeamEntity;
 import io.boomerang.v4.data.entity.UserEntity;
 import io.boomerang.v4.data.repository.RelationshipRepository;
 import io.boomerang.v4.model.enums.RelationshipRefType;
+import io.boomerang.v4.model.enums.RelationshipType;
 
 @Service
 public class RelationshipServiceImpl implements RelationshipService {
@@ -63,88 +64,89 @@ public class RelationshipServiceImpl implements RelationshipService {
   // }
   
   /*
-   * Creates a new Relationship Ref for the current Scope
-   *
+   * Creates a new RelationshipEntity for the provided inputs
    * 
    * @return RelationshipEntity
    */
   @Override
-  public void createRelationshipRef(RelationshipRefType fromType, String fromRef) {
+  public RelationshipEntity createRelationshipRef(RelationshipRefType fromType, String fromRef) {
     UserEntity user = null;
-    String toType = null;
+    RelationshipRefType toType = null;
     String toRef = null;
+    RelationshipType relationship = RelationshipType.belongsTo;
 
     LOGGER.info("Current User Scope: " + userIdentityService.getCurrentScope());
     switch (userIdentityService.getCurrentScope()) {
       case user:
         user = userIdentityService.getCurrentUser();
-        toType = RelationshipRefType.USER.getRef();
+        toType = RelationshipRefType.USER;
         toRef = user.getId();
         break;
       case team:
-        toType = RelationshipRefType.TEAM.getRef();
+        toType = RelationshipRefType.TEAM;
         TeamToken token = (TeamToken) userIdentityService.getRequestIdentity();
         toRef = token.getTeamId();
         break;
       case global:
-        toType = RelationshipRefType.GLOBAL.getRef();
+        toType = RelationshipRefType.GLOBAL;
         break;
     }
+    
+    if (RelationshipRefType.USER.equals(fromType) && RelationshipRefType.TEAM.equals(toType)) {
+      relationship = RelationshipType.memberOf;
+    }
+    
     RelationshipEntity relEntity = new RelationshipEntity();
-    relEntity.setFromType(fromType.getRef());
+    relEntity.setFromType(fromType);
     relEntity.setFromRef(fromRef);
-    relEntity.setRelationship("belongs-to");
+    relEntity.setRelationship(relationship);
     relEntity.setToType(toType);
     relEntity.setToRef(toRef);
     LOGGER.info("Relationship: " + relEntity.toString());
-    relationshipRepository.save(relEntity);
+    return relationshipRepository.save(relEntity);
   }
   
   /*
-   * Creates a new Relationship Ref for the provided inputs
-   *
+   * Creates a new RelationshipEntity for the provided inputs
    * 
    * @return RelationshipEntity
    */
   @Override
-  public void createRelationshipRef(RelationshipRefType fromType, String fromRef, RelationshipRefType toType, String toRef) {
+  public RelationshipEntity createRelationshipRef(RelationshipRefType fromType, String fromRef, RelationshipRefType toType, String toRef) {
+    RelationshipType relationship = RelationshipType.belongsTo;
+    if (RelationshipRefType.USER.equals(fromType) && RelationshipRefType.TEAM.equals(toType)) {
+      relationship = RelationshipType.memberOf;
+    }
+    
     RelationshipEntity relEntity = new RelationshipEntity();
-    relEntity.setFromType(fromType.getRef());
+    relEntity.setFromType(fromType);
     relEntity.setFromRef(fromRef);
-    relEntity.setRelationship("belongs-to");
-    relEntity.setToType(toType.getRef());
+    relEntity.setRelationship(relationship);
+    relEntity.setToType(toType);
     relEntity.setToRef(toRef);
     LOGGER.info("Relationship: " + relEntity.toString());
-    relationshipRepository.save(relEntity);
+    return relationshipRepository.save(relEntity);
   }
   
   /*
-   * Creates a new Relationship Ref for the provided inputs
+   * Retrieve RelationshipEntity for the provided inputs
    *
    * 
    * @return RelationshipEntity
    */
   @Override
   public Optional<RelationshipEntity> getRelationship(RelationshipRefType fromType, String fromRef) {
-    return relationshipRepository.findByFromTypeAndFromRef(fromRef, fromRef);
+    return relationshipRepository.findByFromTypeAndFromRef(fromType, fromRef);
   }
   
   /*
-   * Creates a new Relationship Ref for the provided inputs
-   *
+   * Returns the RelationshipEntities for the matching criteria
    * 
-   * @return RelationshipEntity
+   * @return RelationshipEntity List
    */
   @Override
   public List<RelationshipEntity> getRelationship(RelationshipRefType fromType, String fromRef, RelationshipRefType toType, String toRef) {
-    RelationshipEntity relEntity = new RelationshipEntity();
-    relEntity.setFromType(fromType.getRef());
-    relEntity.setFromRef(fromRef);
-    relEntity.setRelationship("belongs-to");
-    relEntity.setToType(toType.getRef());
-    relEntity.setToRef(toRef);
-    LOGGER.info("Relationship: " + relEntity.toString());
-    return relationshipRepository.findAll(Example.of(relEntity));
+    return relationshipRepository.findAll(Example.of(this.createRelationshipRef(fromType, fromRef, toType, toRef)));
   }
   
   /*
@@ -153,7 +155,7 @@ public class RelationshipServiceImpl implements RelationshipService {
   @Override
   public void removeRelationships(RelationshipRefType fromType, List<String> fromRefs,
       RelationshipRefType toType, List<String> toRefs) {
-    List<RelationshipEntity> relEntities = relationshipRepository.findByFromTypeAndFromRefInAndToTypeAndToRefIn(fromType.getRef(), fromRefs, toType.getRef(), toRefs);
+    List<RelationshipEntity> relEntities = relationshipRepository.findByFromTypeAndFromRefInAndToTypeAndToRefIn(fromType, fromRefs, toType, toRefs);
     if (!relEntities.isEmpty()) {
       relationshipRepository.deleteAll(relEntities);
     }
@@ -234,7 +236,7 @@ public class RelationshipServiceImpl implements RelationshipService {
   @Override
   public boolean doesRelationshipExist(RelationshipRefType type,
       String fromRef) {
-    Optional<RelationshipEntity> relationship = relationshipRepository.findByFromTypeAndFromRef(type.getRef(), fromRef);
+    Optional<RelationshipEntity> relationship = relationshipRepository.findByFromTypeAndFromRef(type, fromRef);
     return relationship.isPresent();
   }
 
@@ -279,17 +281,17 @@ public class RelationshipServiceImpl implements RelationshipService {
       List<String> refsList, Optional<List<String>> teamIds) {
     List<RelationshipEntity> relationships = null;
     if (teamIds.isPresent() && !teamIds.get().isEmpty()) {
-      relationships = this.relationshipRepository.findByFromTypeAndToTypeAndToRefIn(type.getRef(),
-          "Team", teamIds.get());
+      relationships = this.relationshipRepository.findByFromTypeAndToTypeAndToRefIn(type,
+          RelationshipRefType.TEAM, teamIds.get());
     } else {
       if (isAdmin) {
-        relationships = this.relationshipRepository.findByFromTypeAndToType(type.getRef(), "Team");
+        relationships = this.relationshipRepository.findByFromTypeAndToType(type, RelationshipRefType.TEAM);
       } else if (user != null) {
-        List<TeamEntity> flowTeam = teamService.getUsersTeamListing(user);
-        List<String> flowTeamIds =
-            flowTeam.stream().map(TeamEntity::getId).collect(Collectors.toList());
-        relationships = this.relationshipRepository.findByFromTypeAndToTypeAndToRefIn(type.getRef(),
-            "Team", flowTeamIds);
+        List<RelationshipEntity> userRefs = this.relationshipRepository.findByFromTypeAndFromRefAndToType(RelationshipRefType.USER, user.getId(), RelationshipRefType.TEAM);
+        List<String> teamRefs =
+            userRefs.stream().map(RelationshipEntity::getToRef).collect(Collectors.toList());
+        relationships = this.relationshipRepository.findByFromTypeAndToTypeAndToRefIn(type,
+            RelationshipRefType.TEAM, teamRefs);
       }
     }
     if (relationships != null) {
@@ -301,7 +303,7 @@ public class RelationshipServiceImpl implements RelationshipService {
 
   private void addSystemWorkflows(RelationshipRefType type, List<String> refsList) {
     List<RelationshipEntity> relationships =
-        this.relationshipRepository.findByFromTypeAndToType(type.getRef(), "System");
+        this.relationshipRepository.findByFromTypeAndToType(type, RelationshipRefType.SYSTEM);
     List<String> systemWorkflowsIds =
         relationships.stream().map(RelationshipEntity::getFromRef).collect(Collectors.toList());
     refsList.addAll(systemWorkflowsIds);
@@ -310,7 +312,7 @@ public class RelationshipServiceImpl implements RelationshipService {
   private void addUserWorkflows(RelationshipRefType type, final UserEntity user, List<String> refsList) {
     String userId = user.getId();
     List<RelationshipEntity> relationships =
-        this.relationshipRepository.findByFromTypeAndToTypeAndToRef(type.getRef(), "User", userId);
+        this.relationshipRepository.findByFromTypeAndToTypeAndToRef(type,  RelationshipRefType.USER, userId);
     List<String> userWorkflowIds =
         relationships.stream().map(RelationshipEntity::getFromRef).collect(Collectors.toList());
     refsList.addAll(userWorkflowIds);

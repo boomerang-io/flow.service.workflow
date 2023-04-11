@@ -1,10 +1,13 @@
 package io.boomerang.v4.data.entity;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.boomerang.v4.model.enums.RelationshipRefType;
+import io.boomerang.v4.model.enums.RelationshipType;
 
 /*
  * Entity for Relationships
@@ -15,10 +18,11 @@ public class RelationshipEntity {
 
   @Id
   private String id;
-  private String relationship; //TODO convert to enum - belongs-to, initiated-by, 
-  private String fromType; //TODO convert to enum
+  private Date creationDate = new Date();
+  private RelationshipType relationship; 
+  private RelationshipRefType fromType;
   private String fromRef;
-  private String toType; //TODO convert to enum
+  private RelationshipRefType toType;
   private String toRef;
   private Map<String, Object> data = new HashMap<>();
    
@@ -33,16 +37,16 @@ public class RelationshipEntity {
   public void setId(String id) {
     this.id = id;
   }
-  public String getRelationship() {
+  public RelationshipType getRelationship() {
     return relationship;
   }
-  public void setRelationship(String relationship) {
+  public void setRelationship(RelationshipType relationship) {
     this.relationship = relationship;
   }
-  public String getFromType() {
+  public RelationshipRefType getFromType() {
     return fromType;
   }
-  public void setFromType(String fromType) {
+  public void setFromType(RelationshipRefType fromType) {
     this.fromType = fromType;
   }
   public String getFromRef() {
@@ -51,10 +55,10 @@ public class RelationshipEntity {
   public void setFromRef(String fromRef) {
     this.fromRef = fromRef;
   }
-  public String getToType() {
+  public RelationshipRefType getToType() {
     return toType;
   }
-  public void setToType(String toType) {
+  public void setToType(RelationshipRefType toType) {
     this.toType = toType;
   }
   public String getToRef() {
@@ -68,5 +72,11 @@ public class RelationshipEntity {
   }
   public void setData(Map<String, Object> data) {
     this.data = data;
+  }
+  public Date getCreationDate() {
+    return creationDate;
+  }
+  public void setCreationDate(Date creationDate) {
+    this.creationDate = creationDate;
   }
 }

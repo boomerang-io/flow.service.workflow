@@ -4,19 +4,22 @@ import java.util.List;
 import java.util.Optional;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import io.boomerang.v4.data.entity.RelationshipEntity;
+import io.boomerang.v4.model.enums.RelationshipRefType;
 
 public interface RelationshipRepository extends MongoRepository<RelationshipEntity, String> {
 
-  Optional<RelationshipEntity> findByFromTypeAndFromRef(String fromType, String fromRef);
+  Optional<RelationshipEntity> findByFromTypeAndFromRef(RelationshipRefType fromType, String fromRef);
 
-  List<RelationshipEntity> findByFromTypeAndToType(String fromType, String toType);
+  List<RelationshipEntity> findByFromTypeAndFromRefAndToType(RelationshipRefType fromType, String fromRef, RelationshipRefType toType);
 
-  List<RelationshipEntity> findByFromTypeAndToTypeAndToRef(String fromType, String toType,
+  List<RelationshipEntity> findByFromTypeAndToType(RelationshipRefType fromType, RelationshipRefType toType);
+
+  List<RelationshipEntity> findByFromTypeAndToTypeAndToRef(RelationshipRefType fromType, RelationshipRefType toType,
       String toRef);
 
-  List<RelationshipEntity> findByFromTypeAndToTypeAndToRefIn(String fromType, String toType,
+  List<RelationshipEntity> findByFromTypeAndToTypeAndToRefIn(RelationshipRefType fromType, RelationshipRefType toType,
       List<String> toRef);
 
-  List<RelationshipEntity> findByFromTypeAndFromRefInAndToTypeAndToRefIn(String fromType, List<String> fromRef, String toType,
+  List<RelationshipEntity> findByFromTypeAndFromRefInAndToTypeAndToRefIn(RelationshipRefType fromType, List<String> fromRef, RelationshipRefType toType,
       List<String> toRef);
 }

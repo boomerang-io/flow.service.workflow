@@ -2,15 +2,16 @@ package io.boomerang.v4.data.entity;
 
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import io.boomerang.v4.data.model.Quotas;
+import io.boomerang.v4.data.model.TeamParameter;
 import io.boomerang.v4.data.model.TeamSettings;
 import io.boomerang.v4.model.enums.TeamStatus;
 
@@ -25,9 +26,10 @@ public class TeamEntity {
   private Date creationDate = new Date();
   private TeamStatus status = TeamStatus.active;
   private String externalRef;
-  private TeamSettings settings = new TeamSettings();
-  private Quotas quotas;
   private Map<String, String> labels = new HashMap<>();
+  private List<TeamParameter> parameters = new LinkedList<>();
+  private Quotas quotas;
+  private TeamSettings settings = new TeamSettings();
   
   public String getId() {
     return id;
@@ -76,5 +78,11 @@ public class TeamEntity {
   }
   public void setLabels(Map<String, String> labels) {
     this.labels = labels;
+  }
+  public List<TeamParameter> getParameters() {
+    return parameters;
+  }
+  public void setParameters(List<TeamParameter> parameters) {
+    this.parameters = parameters;
   }
 }

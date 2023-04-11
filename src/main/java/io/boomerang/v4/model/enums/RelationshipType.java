@@ -1,11 +1,11 @@
 package io.boomerang.v4.model.enums;
 
 /*
- * Type for Manual Action and Approval Action
+ * Relationship Type
  * 
- * Shared with the Workflow Service
+ * Ref: 
+ * - https://learn.microsoft.com/en-us/azure/cosmos-db/gremlin/modeling#relationship-labels
  */
 public enum RelationshipType {
-  belongs
-
+  belongsTo, memberOf;
 }

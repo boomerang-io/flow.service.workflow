@@ -2,7 +2,14 @@ package io.boomerang.v4.data.entity;
 
 import java.util.Date;
 import java.util.List;
+import org.springframework.data.mongodb.core.mapping.Document;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonInclude(Include.NON_NULL)
+@Document(collection = "#{@mongoConfiguration.fullCollectionName('approver_groups')}")
 public class ApproverGroupEntity {
 
   private String id;
