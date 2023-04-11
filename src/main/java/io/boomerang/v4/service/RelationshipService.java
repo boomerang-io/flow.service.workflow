@@ -16,16 +16,14 @@ public interface RelationshipService {
 
   boolean doesRelationshipExist(RelationshipRefType type, String typeRef);
 
-  void createRelationshipRef(RelationshipRefType fromType, String fromRef);
+  RelationshipEntity createRelationshipRef(RelationshipRefType fromType, String fromRef);
 
-  void createRelationshipRef(RelationshipRefType fromType, String fromRef, RelationshipRefType toType, String toRef);
+  RelationshipEntity createRelationshipRef(RelationshipRefType fromType, String fromRef, RelationshipRefType toType, String toRef);
 
   List<RelationshipEntity> getRelationship(RelationshipRefType fromType, String fromRef,
       RelationshipRefType toType, String toRef);
 
   Optional<RelationshipEntity> getRelationship(RelationshipRefType fromType, String fromRef);
-
-  void removeRelationship(RelationshipRefType fromType, String fromRef);
 
   void removeRelationships(RelationshipRefType fromType, List<String> fromRefs,
       RelationshipRefType toType, List<String> toRefs);
