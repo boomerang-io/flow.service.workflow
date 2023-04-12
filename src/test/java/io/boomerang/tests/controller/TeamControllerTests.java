@@ -23,8 +23,8 @@ import io.boomerang.model.WorkflowSummary;
 import io.boomerang.v4.data.entity.TeamEntity;
 import io.boomerang.v4.data.model.CurrentQuotas;
 import io.boomerang.v4.data.model.Quotas;
-import io.boomerang.v4.data.model.TeamAbstractConfiguration;
-import io.boomerang.v4.model.CreateTeamRequest;
+import io.boomerang.v4.data.model.TeamParameter;
+import io.boomerang.v4.model.TeamRequest;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
@@ -65,7 +65,7 @@ public class TeamControllerTests extends FlowTests {
 
   @Test
   public void testCreateFlowTeam() {
-    CreateTeamRequest request = new CreateTeamRequest();
+    TeamRequest request = new TeamRequest();
     request.setName("WDC2 ISE Dev");
     request.setCreatedGroupId("5cedb53261a23a0001e4c1b6");
 
@@ -98,11 +98,11 @@ public class TeamControllerTests extends FlowTests {
 
   @Test
   public void testGetAllTeamProperties() {
-    List<TeamAbstractConfiguration> configs =
+    List<TeamParameter> configs =
         controller.getAllTeamProperties("5d1a1841f6ca2c00014c4309");
     Assertions.assertEquals(0, configs.size());
 
-    List<TeamAbstractConfiguration> configs2 =
+    List<TeamParameter> configs2 =
         controller.getAllTeamProperties("5d1a1841f6ca2c00014c4302");
     Assertions.assertEquals(1, configs2.size());
   }
@@ -119,24 +119,24 @@ public class TeamControllerTests extends FlowTests {
     Assertions.assertEquals(null,
         controller.getAllTeamProperties("5d1a1841f6ca2c00014c4302").get(0).getValue());
 
-    TeamAbstractConfiguration property = new TeamAbstractConfiguration();
+    TeamParameter property = new TeamParameter();
     property.setId("df5f5749-4d30-41c3-803e-56b54b768407");
     property.setValue("Updated Value");
 
-    List<TeamAbstractConfiguration> updatedConfigs = controller.updateTeamProperty(
+    List<TeamParameter> updatedConfigs = controller.updateTeamProperty(
         "5d1a1841f6ca2c00014c4302", property, "df5f5749-4d30-41c3-803e-56b54b768407");
     Assertions.assertEquals("Updated Value", updatedConfigs.get(0).getValue());
   }
 
   @Test
   public void testCreateNewTeamProperty() {
-    TeamAbstractConfiguration property = new TeamAbstractConfiguration();
+    TeamParameter property = new TeamParameter();
     property.setKey("dylan.new.key");
     property.setValue("Dylan's New Value");
 
-    TeamAbstractConfiguration newConfig =
+    TeamParameter newConfig =
         controller.createNewTeamProperty("5d1a1841f6ca2c00014c4309", property);
-    TeamAbstractConfiguration newConfig2 =
+    TeamParameter newConfig2 =
         controller.createNewTeamProperty("5d1a1841f6ca2c00014c4302", property);
 
     Assertions.assertEquals("dylan.new.key", newConfig.getKey());
@@ -148,12 +148,12 @@ public class TeamControllerTests extends FlowTests {
   
   @Test
   public void testCreateNewTeamPropertyPassword() {
-    TeamAbstractConfiguration property = new TeamAbstractConfiguration();
+    TeamParameter property = new TeamParameter();
     property.setKey("dylan.new.key");
     property.setValue("Sensitive data");
     property.setType("password");
 
-    TeamAbstractConfiguration newConfig =
+    TeamParameter newConfig =
         controller.createNewTeamProperty("5d1a1841f6ca2c00014c4309", property);
     
     Assertions.assertNull(newConfig.getValue());

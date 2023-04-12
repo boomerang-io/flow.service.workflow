@@ -3,28 +3,26 @@ package io.boomerang.v4.service;
 import java.util.List;
 import java.util.Optional;
 import io.boomerang.v4.data.entity.RelationshipEntity;
-import io.boomerang.v4.model.enums.RelationshipRefType;
+import io.boomerang.v4.model.enums.RelationshipRef;
+import io.boomerang.v4.model.enums.RelationshipType;
 
 public interface RelationshipService {
 
-  List<String> getFilteredRefs(RelationshipRefType type, Optional<List<String>> typeIds,
-      Optional<List<String>> teamIds, Optional<List<String>> scopes);
+  RelationshipEntity addRelationshipRefForCurrentScope(RelationshipRef fromType, String fromRef);
 
-  List<String> getFilteredRefsForUserEmail(RelationshipRefType type,
-      Optional<List<String>> typeRefs, Optional<List<String>> teamIds,
-      Optional<List<String>> scopes, String userEmail);
+  RelationshipEntity addRelationshipRef(RelationshipRef fromType, String fromRef,
+      RelationshipRef toType, Optional<String> toRef);
 
-  boolean doesRelationshipExist(RelationshipRefType type, String typeRef);
+  RelationshipEntity addRelationshipRef(RelationshipRef fromType, String fromRef,
+      RelationshipType relationship, RelationshipRef toType, Optional<String> toRef);
 
-  RelationshipEntity createRelationshipRef(RelationshipRefType fromType, String fromRef);
+  void removeRelationships(RelationshipRef fromType, List<String> fromRefs, RelationshipRef toType,
+      List<String> toRefs);
 
-  RelationshipEntity createRelationshipRef(RelationshipRefType fromType, String fromRef, RelationshipRefType toType, String toRef);
+  List<String> getFilteredRefs(RelationshipRef fromRef, Optional<List<String>> refs,
+      Optional<RelationshipType> type, Optional<RelationshipRef> toRef,
+      Optional<List<String>> teamIds);
 
-  List<RelationshipEntity> getRelationship(RelationshipRefType fromType, String fromRef,
-      RelationshipRefType toType, String toRef);
-
-  Optional<RelationshipEntity> getRelationship(RelationshipRefType fromType, String fromRef);
-
-  void removeRelationships(RelationshipRefType fromType, List<String> fromRefs,
-      RelationshipRefType toType, List<String> toRefs);
+  Optional<RelationshipEntity> getRelationship(RelationshipRef fromType, String fromRef,
+      RelationshipType relationship);
 }

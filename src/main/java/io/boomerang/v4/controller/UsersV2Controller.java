@@ -1,4 +1,4 @@
-package io.boomerang.controller.api;
+package io.boomerang.v4.controller;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -33,20 +33,17 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @RestController
 @RequestMapping("/apis/v1")
 @Tag(name = "User Management", description = "List, Create, update and delete users.")
-public class UsersV1Controller {
-
-  @Value("${flow.externalUrl.user}")
-  private String flowExternalUrlUser;
+public class UsersV2Controller {
 
   @Autowired
   private UserIdentityService userIdentityService;
 
   @GetMapping(value = "/users/{userId}")
   @AuthenticationScope(scopes = {TokenScope.global})
-  @Operation(summary = "Get a Boomerang Flow user details")
+  @Operation(summary = "Get a users details")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "404", description = "Not Found")})
-  public ResponseEntity<User> getFlowUser(@PathVariable String userId) {
+  public ResponseEntity<User> getUser(@PathVariable String userId) {
     UserEntity flowUser = userIdentityService.getUserByID(userId);
     if (userIdentityService.getUserByID(userId) != null) {
       User user = new User();

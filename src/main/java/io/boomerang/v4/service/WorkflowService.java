@@ -6,16 +6,14 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import io.boomerang.v4.client.WorkflowResponsePage;
 import io.boomerang.v4.model.WorkflowCanvas;
+import io.boomerang.v4.model.enums.WorkflowScope;
 import io.boomerang.v4.model.ref.Workflow;
 
 public interface WorkflowService {
 
   ResponseEntity<Workflow> get(String workflowId, Optional<Integer> version, boolean withTasks);
 
-  WorkflowResponsePage query(int page, int limit, Sort sort, Optional<List<String>> queryLabels,
-      Optional<List<String>> queryStatus, Optional<List<String>> queryTeams);
-
-  ResponseEntity<Workflow> create(Workflow workflow);
+  ResponseEntity<Workflow> create(Workflow workflow, Optional<WorkflowScope> scope, Optional<String> owner);
 
   ResponseEntity<Workflow> apply(Workflow workflow, boolean replace);
 
@@ -26,4 +24,8 @@ public interface WorkflowService {
   ResponseEntity<Void> disable(String workflowId);
   
   ResponseEntity<Void> delete(String workflowId);
+
+  WorkflowResponsePage query(int page, int limit, Sort sort, Optional<List<String>> queryLabels,
+      Optional<List<String>> queryStatus, Optional<WorkflowScope> queryScope,
+      Optional<List<String>> queryRefs);
 }
