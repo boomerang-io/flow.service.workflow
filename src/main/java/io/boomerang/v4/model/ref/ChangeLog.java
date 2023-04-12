@@ -3,11 +3,9 @@ package io.boomerang.v4.model.ref;
 import java.util.Date;
 
 public class ChangeLog {
-
-  private String userId;
+  private String author;
   private String reason;
   private Date date;
-  private String userName;
 
   public ChangeLog() {
   }
@@ -18,12 +16,19 @@ public class ChangeLog {
     this.date = new Date();
   }
 
-  public String getUserId() {
-    return userId;
+  public ChangeLog(String author, String reason) {
+    super();
+    this.author = author;
+    this.reason = reason;
+    this.date = new Date();
   }
 
-  public void setUserId(String userId) {
-    this.userId = userId;
+  public String getAuthor() {
+    return author;
+  }
+
+  public void setAuthor(String author) {
+    this.author = author;
   }
 
   public String getReason() {
@@ -42,12 +47,6 @@ public class ChangeLog {
     this.date = date;
   }
 
-  public String getUserName() {
-    return userName;
-  }
-
-  public void setUserName(String userName) {
-    this.userName = userName;
-  }
+  
 
 }

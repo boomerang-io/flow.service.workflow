@@ -45,7 +45,7 @@ import io.boomerang.v4.model.TeamRequest;
 import io.boomerang.v4.model.Team;
 import io.boomerang.v4.model.TeamResponsePage;
 import io.boomerang.v4.model.UserSummary;
-import io.boomerang.v4.model.enums.RelationshipRefType;
+import io.boomerang.v4.model.enums.RelationshipRef;
 import io.boomerang.v4.model.enums.TeamStatus;
 import io.boomerang.v4.model.ref.WorkflowRunInsight;
 
@@ -138,7 +138,7 @@ public class TeamServiceImpl implements TeamService {
       if (request.getId() == null || request.getId().isBlank()) {
         throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
       }
-      List<String> teamRefs = relationshipService.getFilteredRefs(RelationshipRefType.TEAM,
+      List<String> teamRefs = relationshipService.getFilteredRefs(RelationshipRef.TEAM, List.of(request.getId())
           Optional.empty(), Optional.empty(), Optional.empty());
       if (!teamRefs.contains(request.getId())) {
         throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
@@ -174,7 +174,7 @@ public class TeamServiceImpl implements TeamService {
     if (teamId == null || teamId.isBlank()) {
       throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
     }
-    List<String> teamRefs = relationshipService.getFilteredRefs(RelationshipRefType.TEAM,
+    List<String> teamRefs = relationshipService.getFilteredRefs(RelationshipRef.TEAM,
         Optional.empty(), Optional.empty(), Optional.empty());
     if (!teamRefs.contains(teamId)) {
       throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
@@ -197,7 +197,7 @@ public class TeamServiceImpl implements TeamService {
       Optional<List<String>> queryStatus) {
     final Pageable pageable = PageRequest.of(page, limit, sort);
     List<Team> teams = new LinkedList<>();
-    List<String> teamRefs = relationshipService.getFilteredRefs(RelationshipRefType.TEAM,
+    List<String> teamRefs = relationshipService.getFilteredRefs(RelationshipRef.TEAM,
         Optional.empty(), Optional.empty(), Optional.empty());
 
     if (!teamRefs.isEmpty()) {
@@ -263,7 +263,7 @@ public class TeamServiceImpl implements TeamService {
     if (teamId == null || teamId.isBlank()) {
       throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
     }
-    List<String> teamRefs = relationshipService.getFilteredRefs(RelationshipRefType.TEAM,
+    List<String> teamRefs = relationshipService.getFilteredRefs(RelationshipRef.TEAM,
         Optional.empty(), Optional.empty(), Optional.empty());
     if (!teamRefs.contains(teamId)) {
       throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
@@ -286,7 +286,7 @@ public class TeamServiceImpl implements TeamService {
     if (teamId == null || teamId.isBlank()) {
       throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
     }
-    List<String> teamRefs = relationshipService.getFilteredRefs(RelationshipRefType.TEAM,
+    List<String> teamRefs = relationshipService.getFilteredRefs(RelationshipRef.TEAM,
         Optional.empty(), Optional.empty(), Optional.empty());
     if (!teamRefs.contains(teamId)) {
       throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
@@ -308,7 +308,7 @@ public class TeamServiceImpl implements TeamService {
       if (request.getId() == null || request.getId().isBlank()) {
         throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
       }
-      List<String> teamRefs = relationshipService.getFilteredRefs(RelationshipRefType.TEAM,
+      List<String> teamRefs = relationshipService.getFilteredRefs(RelationshipRef.TEAM,
           Optional.empty(), Optional.empty(), Optional.empty());
       if (!teamRefs.contains(request.getId())) {
         throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
@@ -333,7 +333,7 @@ public class TeamServiceImpl implements TeamService {
       if (request.getId() == null || request.getId().isBlank()) {
         throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
       }
-      List<String> teamRefs = relationshipService.getFilteredRefs(RelationshipRefType.TEAM,
+      List<String> teamRefs = relationshipService.getFilteredRefs(RelationshipRef.TEAM,
           Optional.empty(), Optional.empty(), Optional.empty());
       if (!teamRefs.contains(request.getId())) {
         throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
@@ -355,8 +355,8 @@ public class TeamServiceImpl implements TeamService {
           userRefs.add(userEntity.getId());
         }
       }
-      relationshipService.removeRelationships(RelationshipRefType.USER, userRefs,
-          RelationshipRefType.TEAM, List.of(request.getId()));
+      relationshipService.removeRelationships(RelationshipRef.USER, userRefs,
+          RelationshipRef.TEAM, List.of(request.getId()));
     }
 
     return ResponseEntity.ok(getUsersForTeam(teamId));
@@ -370,7 +370,7 @@ public class TeamServiceImpl implements TeamService {
     if (teamId == null || teamId.isBlank()) {
       throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
     }
-    List<String> teamRefs = relationshipService.getFilteredRefs(RelationshipRefType.TEAM,
+    List<String> teamRefs = relationshipService.getFilteredRefs(RelationshipRef.TEAM,
         Optional.empty(), Optional.empty(), Optional.empty());
     if (!teamRefs.contains(teamId)) {
       throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
@@ -409,7 +409,7 @@ public class TeamServiceImpl implements TeamService {
     if (teamId == null || teamId.isBlank()) {
       throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
     }
-    List<String> teamRefs = relationshipService.getFilteredRefs(RelationshipRefType.TEAM,
+    List<String> teamRefs = relationshipService.getFilteredRefs(RelationshipRef.TEAM,
         Optional.empty(), Optional.empty(), Optional.empty());
     if (!teamRefs.contains(teamId)) {
       throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
@@ -449,7 +449,7 @@ public class TeamServiceImpl implements TeamService {
     if (teamId == null || teamId.isBlank()) {
       throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
     }
-    List<String> teamRefs = relationshipService.getFilteredRefs(RelationshipRefType.TEAM,
+    List<String> teamRefs = relationshipService.getFilteredRefs(RelationshipRef.TEAM,
         Optional.empty(), Optional.empty(), Optional.empty());
     if (!teamRefs.contains(teamId)) {
       throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
@@ -486,7 +486,7 @@ public class TeamServiceImpl implements TeamService {
     if (teamId == null || teamId.isBlank()) {
       throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
     }
-    List<String> teamRefs = relationshipService.getFilteredRefs(RelationshipRefType.TEAM,
+    List<String> teamRefs = relationshipService.getFilteredRefs(RelationshipRef.TEAM,
         Optional.empty(), Optional.empty(), Optional.empty());
     if (!teamRefs.contains(teamId)) {
       throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
@@ -513,7 +513,7 @@ public class TeamServiceImpl implements TeamService {
     if (teamId == null || teamId.isBlank()) {
       throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
     }
-    List<String> teamRefs = relationshipService.getFilteredRefs(RelationshipRefType.TEAM,
+    List<String> teamRefs = relationshipService.getFilteredRefs(RelationshipRef.TEAM,
         Optional.empty(), Optional.empty(), Optional.empty());
     if (!teamRefs.contains(teamId)) {
       throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
@@ -541,7 +541,7 @@ public class TeamServiceImpl implements TeamService {
     if (teamId == null || teamId.isBlank()) {
       throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
     }
-    List<String> teamRefs = relationshipService.getFilteredRefs(RelationshipRefType.TEAM,
+    List<String> teamRefs = relationshipService.getFilteredRefs(RelationshipRef.TEAM,
         Optional.empty(), Optional.empty(), Optional.empty());
     if (!teamRefs.contains(teamId)) {
       throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
@@ -571,7 +571,7 @@ public class TeamServiceImpl implements TeamService {
     if (teamId == null || teamId.isBlank()) {
       throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
     }
-    List<String> teamRefs = relationshipService.getFilteredRefs(RelationshipRefType.TEAM,
+    List<String> teamRefs = relationshipService.getFilteredRefs(RelationshipRef.TEAM,
         Optional.empty(), Optional.empty(), Optional.empty());
     if (!teamRefs.contains(teamId)) {
       throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
@@ -670,7 +670,7 @@ public class TeamServiceImpl implements TeamService {
     if (teamId == null || teamId.isBlank()) {
       throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
     }
-    List<String> teamRefs = relationshipService.getFilteredRefs(RelationshipRefType.TEAM,
+    List<String> teamRefs = relationshipService.getFilteredRefs(RelationshipRef.TEAM,
         Optional.empty(), Optional.empty(), Optional.empty());
     if (!teamRefs.contains(teamId)) {
       throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
@@ -683,7 +683,7 @@ public class TeamServiceImpl implements TeamService {
 
     // Get and Set WorkflowRefs
     List<String> approverGroupRefs =
-        relationshipService.getFilteredRefs(RelationshipRefType.APPROVERGROUP, Optional.empty(),
+        relationshipService.getFilteredRefs(RelationshipRef.APPROVERGROUP, Optional.empty(),
             Optional.of(List.of(teamEntity.getId())), Optional.empty());
 
     List<ApproverGroupEntity> approverGroupEntities =
@@ -709,7 +709,7 @@ public class TeamServiceImpl implements TeamService {
     if (teamId == null || teamId.isBlank()) {
       throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
     }
-    List<String> teamRefs = relationshipService.getFilteredRefs(RelationshipRefType.TEAM,
+    List<String> teamRefs = relationshipService.getFilteredRefs(RelationshipRef.TEAM,
         Optional.empty(), Optional.empty(), Optional.empty());
     if (!teamRefs.contains(teamId)) {
       throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
@@ -726,7 +726,7 @@ public class TeamServiceImpl implements TeamService {
     }
 
     List<String> approverGroupRefs =
-        relationshipService.getFilteredRefs(RelationshipRefType.APPROVERGROUP, Optional.empty(),
+        relationshipService.getFilteredRefs(RelationshipRef.APPROVERGROUP, Optional.empty(),
             Optional.of(List.of(teamEntity.getId())), Optional.empty());
     List<ApproverGroupEntity> approverGroupEntities =
         approverGroupRepository.findByIdIn(approverGroupRefs);
@@ -741,12 +741,12 @@ public class TeamServiceImpl implements TeamService {
     approverGroupEntity.setName(request.getName());
 
     if (request.getApprovers() != null) {
-      List<String> userRefs = relationshipService.getFilteredRefs(RelationshipRefType.USER,
+      List<String> userRefs = relationshipService.getFilteredRefs(RelationshipRef.USER,
           Optional.empty(), Optional.of(List.of(teamEntity.getId())), Optional.empty());
       approverGroupEntity.getApproverRefs().addAll(request.getApprovers().stream().filter(a -> userRefs.contains(a)).collect(Collectors.toList()));
     }
     approverGroupEntity = approverGroupRepository.save(approverGroupEntity);
-    relationshipService.createRelationshipRef(RelationshipRefType.APPROVERGROUP, approverGroupEntity.getId(), RelationshipRefType.TEAM, teamId);
+    relationshipService.addRelationshipRef(RelationshipRef.APPROVERGROUP, approverGroupEntity.getId(), RelationshipRef.TEAM, teamId);
 
     return ResponseEntity.ok(convertEntityToApproverGroup(approverGroupEntity));
   }
@@ -762,7 +762,7 @@ public class TeamServiceImpl implements TeamService {
     if (teamId == null || teamId.isBlank()) {
       throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
     }
-    List<String> teamRefs = relationshipService.getFilteredRefs(RelationshipRefType.TEAM,
+    List<String> teamRefs = relationshipService.getFilteredRefs(RelationshipRef.TEAM,
         Optional.empty(), Optional.empty(), Optional.empty());
     if (!teamRefs.contains(teamId)) {
       throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
@@ -779,7 +779,7 @@ public class TeamServiceImpl implements TeamService {
     }
 
     List<String> approverGroupRefs =
-        relationshipService.getFilteredRefs(RelationshipRefType.APPROVERGROUP, Optional.empty(),
+        relationshipService.getFilteredRefs(RelationshipRef.APPROVERGROUP, Optional.empty(),
             Optional.of(List.of(teamEntity.getId())), Optional.empty());
     List<ApproverGroupEntity> approverGroupEntities =
         approverGroupRepository.findByIdIn(approverGroupRefs);
@@ -800,7 +800,7 @@ public class TeamServiceImpl implements TeamService {
 
     List<String> approverRefs = Collections.emptyList();
     if (request.getApprovers() != null) {
-      List<String> userRefs = relationshipService.getFilteredRefs(RelationshipRefType.USER,
+      List<String> userRefs = relationshipService.getFilteredRefs(RelationshipRef.USER,
           Optional.empty(), Optional.of(List.of(teamEntity.getId())), Optional.empty());
       request.getApprovers().forEach(a -> {
         if (userRefs.contains(a)) {
@@ -823,7 +823,7 @@ public class TeamServiceImpl implements TeamService {
     if (teamId == null || teamId.isBlank()) {
       throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
     }
-    List<String> teamRefs = relationshipService.getFilteredRefs(RelationshipRefType.TEAM,
+    List<String> teamRefs = relationshipService.getFilteredRefs(RelationshipRef.TEAM,
         Optional.empty(), Optional.empty(), Optional.empty());
     if (!teamRefs.contains(teamId)) {
       throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
@@ -835,7 +835,7 @@ public class TeamServiceImpl implements TeamService {
     TeamEntity teamEntity = optTeamEntity.get();
 
     List<String> approverGroupRefs =
-        relationshipService.getFilteredRefs(RelationshipRefType.APPROVERGROUP, Optional.empty(),
+        relationshipService.getFilteredRefs(RelationshipRef.APPROVERGROUP, Optional.empty(),
             Optional.of(List.of(teamEntity.getId())), Optional.empty());
 
     if (approverGroupRefs.isEmpty() || !approverGroupRefs.contains(id)) {
@@ -844,7 +844,7 @@ public class TeamServiceImpl implements TeamService {
     }
     Optional<ApproverGroupEntity> ag = approverGroupRepository.findById(id);
     if (ag.isPresent()) {
-      relationshipService.removeRelationships(RelationshipRefType.APPROVERGROUP, List.of(id), RelationshipRefType.TEAM, List.of(teamId));
+      relationshipService.removeRelationships(RelationshipRef.APPROVERGROUP, List.of(id), RelationshipRef.TEAM, List.of(teamId));
     }
     approverGroupRepository.deleteById(id);
 
@@ -860,7 +860,7 @@ public class TeamServiceImpl implements TeamService {
 
     // Get and Set WorkflowRefs
     List<String> teamWorkflowRefs =
-        relationshipService.getFilteredRefs(RelationshipRefType.WORKFLOW, Optional.empty(),
+        relationshipService.getFilteredRefs(RelationshipRef.WORKFLOW, Optional.empty(),
             Optional.of(List.of(teamEntity.getId())), Optional.empty());
     team.setWorkflowRefs(teamWorkflowRefs);
 
@@ -876,7 +876,7 @@ public class TeamServiceImpl implements TeamService {
 
     // Set Approver Groups
     List<String> approverGroupRefs =
-        relationshipService.getFilteredRefs(RelationshipRefType.APPROVERGROUP, Optional.empty(),
+        relationshipService.getFilteredRefs(RelationshipRef.APPROVERGROUP, Optional.empty(),
             Optional.of(List.of(teamEntity.getId())), Optional.empty());
     List<ApproverGroupEntity> approverGroupEntities =
         approverGroupRepository.findByIdIn(approverGroupRefs);
@@ -974,7 +974,7 @@ public class TeamServiceImpl implements TeamService {
     currentQuotas.setCurrentWorkflowExecutionMonthly(insight.getTotalDuration().intValue());
 
     // TODO update to only be active workflows
-    List<String> workflowRefs = relationshipService.getFilteredRefs(RelationshipRefType.WORKFLOW,
+    List<String> workflowRefs = relationshipService.getFilteredRefs(RelationshipRef.WORKFLOW,
         Optional.empty(), Optional.of(List.of(teamId)), Optional.empty());
     currentQuotas.setCurrentWorkflowCount(workflowRefs.size());
 
@@ -1004,7 +1004,7 @@ public class TeamServiceImpl implements TeamService {
    * Returns the List of UserSummary for a team
    */
   private List<UserSummary> getUsersForTeam(String teamId) {
-    List<String> userRefs = relationshipService.getFilteredRefs(RelationshipRefType.USER,
+    List<String> userRefs = relationshipService.getFilteredRefs(RelationshipRef.USER,
         Optional.empty(), Optional.of(List.of(teamId)), Optional.empty());
     List<UserSummary> teamUsers = new LinkedList<>();
     if (!userRefs.isEmpty()) {
@@ -1023,7 +1023,7 @@ public class TeamServiceImpl implements TeamService {
    * Creates a Relationship between User(s) and a Team
    */
   private void createUserRelationships(String teamId, TeamRequest request) {
-    List<String> userRefs = relationshipService.getFilteredRefs(RelationshipRefType.USER,
+    List<String> userRefs = relationshipService.getFilteredRefs(RelationshipRef.USER,
         Optional.empty(), Optional.of(List.of(request.getId())), Optional.empty());
     if (request.getUsers() != null && !request.getUsers().isEmpty()) {
       for (UserSummary userSummary : request.getUsers()) {
@@ -1034,8 +1034,8 @@ public class TeamServiceImpl implements TeamService {
           userEntity = userService.getUserWithEmail(userSummary.getEmail());
         }
         if (userEntity != null && !userRefs.contains(userEntity.getId())) {
-          relationshipService.createRelationshipRef(RelationshipRefType.USER, userEntity.getId(),
-              RelationshipRefType.TEAM, teamId);
+          relationshipService.addRelationshipRef(RelationshipRef.USER, userEntity.getId(),
+              RelationshipRef.TEAM, Optional.of(teamId));
         }
       }
     }

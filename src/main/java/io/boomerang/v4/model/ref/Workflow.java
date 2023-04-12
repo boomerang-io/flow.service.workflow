@@ -12,6 +12,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import io.boomerang.model.ChangeLog;
 import io.boomerang.v4.data.entity.ref.WorkflowEntity;
 import io.boomerang.v4.data.entity.ref.WorkflowRevisionEntity;
 
@@ -34,6 +35,8 @@ public class Workflow {
   private Integer version = 1;
   
   private Date creationDate = new Date();
+
+  private ChangeLog changelog;
   
   private String icon;
 
@@ -133,6 +136,14 @@ public class Workflow {
 
   public void setCreationDate(Date creationDate) {
     this.creationDate = creationDate;
+  }
+
+  public ChangeLog getChangelog() {
+    return changelog;
+  }
+
+  public void setChangelog(ChangeLog changelog) {
+    this.changelog = changelog;
   }
 
   public String getIcon() {

@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import io.boomerang.v4.data.entity.ref.WorkflowEntity;
 import io.boomerang.v4.model.WorkflowCanvas;
+import io.boomerang.v4.model.enums.WorkflowScope;
 import io.boomerang.v4.model.ref.Workflow;
 import io.boomerang.v4.service.WorkflowService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -59,22 +60,29 @@ public class WorkflowV2Controller {
       @Parameter(name = "status", description = "List of statuses to filter for. Defaults to all.",
           example = "active,archived",
           required = false) @RequestParam(required = false) Optional<List<String>> status,
-      @Parameter(name = "teams", description = "List of teamIds to filter for.", 
-          required = false) @RequestParam(required = false) Optional<List<String>> teams,
+      @Parameter(name = "scope", description = "The level of scope to filter to.", example = "global, template, team, or user", 
+      required = false) @RequestParam(required = false) Optional<WorkflowScope> scope,
+      @Parameter(name = "refs", description = "List of ids to filter for. Combined with scope.", 
+      required = false) @RequestParam(required = false) Optional<List<String>> refs,
       @Parameter(name = "limit", description = "Result Size", example = "10",
           required = true) @RequestParam(defaultValue = "10") int limit,
       @Parameter(name = "page", description = "Page Number", example = "0",
           required = true) @RequestParam(defaultValue = "0") int page) {
     final Sort sort = Sort.by(new Order(Direction.ASC, "creationDate"));
-    return workflowService.query(page, limit, sort, labels, status, teams);
+    return workflowService.query(page, limit, sort, labels, status, scope, refs);
   }
 
   @PostMapping(value = "/")
   @Operation(summary = "Create a new workflow")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
-  public ResponseEntity<Workflow> createWorkflow(@RequestBody Workflow workflow) {
-    return workflowService.create(workflow);
+  public ResponseEntity<Workflow> createWorkflow(
+      @Parameter(name = "scope", description = "The level of scope to apply to the Workflow.", example = "global, template, team, or user", 
+      required = false) @RequestParam(required = false) Optional<WorkflowScope> scope,
+    @Parameter(name = "owner", description = "Owner reference. Only relevant if scope = team|user", example = "63d3656ca845957db7d25ef0,63a3e732b0496509a7f1d763",
+        required = false) @RequestParam(required = false) Optional<String> owner,
+    @RequestBody Workflow workflow) {
+    return workflowService.create(workflow, scope, owner);
   }
 
   @PutMapping(value = "/")
