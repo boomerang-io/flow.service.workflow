@@ -52,12 +52,14 @@ public class TeamV2Controller {
       @Parameter(name = "status", description = "List of statuses to filter for. Defaults to all.",
           example = "active,inactive",
           required = false) @RequestParam(required = false) Optional<List<String>> status,
+      @Parameter(name = "refs", description = "List of ids to filter for. Combined with scope.", 
+      required = false) @RequestParam(required = false) Optional<List<String>> refs,
       @Parameter(name = "limit", description = "Result Size", example = "10",
           required = true) @RequestParam(defaultValue = "10") int limit,
       @Parameter(name = "page", description = "Page Number", example = "0",
           required = true) @RequestParam(defaultValue = "0") int page) {
     final Sort sort = Sort.by(new Order(Direction.ASC, "creationDate"));
-    return teamService.query(page, limit, sort, labels, status);
+    return teamService.query(page, limit, sort, labels, status, refs);
   }
   
   @GetMapping(value = "/{teamId}")

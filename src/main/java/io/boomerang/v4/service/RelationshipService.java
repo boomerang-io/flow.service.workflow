@@ -19,10 +19,9 @@ public interface RelationshipService {
   void removeRelationships(RelationshipRef fromType, List<String> fromRefs, RelationshipRef toType,
       List<String> toRefs);
 
-  List<String> getFilteredRefs(RelationshipRef fromRef, Optional<List<String>> refs,
-      Optional<RelationshipType> type, Optional<RelationshipRef> toRef,
-      Optional<List<String>> teamIds);
-
   Optional<RelationshipEntity> getRelationship(RelationshipRef fromType, String fromRef,
       RelationshipType relationship);
+
+  List<String> getFilteredRefs(Optional<RelationshipRef> from, Optional<List<String>> fromRefs,
+      Optional<RelationshipType> type, Optional<RelationshipRef> to, Optional<List<String>> toRefs);
 }

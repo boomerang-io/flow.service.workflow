@@ -8,35 +8,19 @@ import io.boomerang.v4.model.enums.RelationshipRef;
 import io.boomerang.v4.model.enums.RelationshipType;
 
 public interface RelationshipRepository extends MongoRepository<RelationshipEntity, String> {
-
-//  Optional<RelationshipEntity> findByFromTypeAndFromRef(RelationshipRef fromType, String fromRef);
 //
-  Optional<RelationshipEntity> findByFromTypeAndFromRefAndRelationship(RelationshipRef fromType, String fromRef, RelationshipType relationship);
-//
-//  List<RelationshipEntity> findByFromTypeAndFromRefAndToType(RelationshipRef fromType, String fromRef, RelationshipRef toType);
-//
-//  List<RelationshipEntity> findByFromTypeAndFromRefAndRelationshipAndToType(RelationshipRef fromType, String fromRef, RelationshipType relationship, RelationshipRef toType);
-//
-//  List<RelationshipEntity> findByFromTypeAndToType(RelationshipRef fromType, RelationshipRef toType);
+  Optional<RelationshipEntity> findByFromAndFromRefAndType(RelationshipRef from, String fromRef, RelationshipType type);
 //  
-//  List<RelationshipEntity> findByFromTypeAndRelationship(RelationshipRef fromType, RelationshipType relationship);
-//  
-  List<RelationshipEntity> findByFromTypeAndRelationshipAndToType(RelationshipRef fromType, RelationshipType relationship, RelationshipRef toType);
-//
-//  List<RelationshipEntity> findByFromTypeAndToTypeAndToRef(RelationshipRef fromType, RelationshipRef toType,
-//      String toRef);
-//
-//  List<RelationshipEntity> findByFromTypeAndToTypeAndToRefIn(RelationshipRef fromType, RelationshipRef toType,
-//      List<String> toRef);
+  List<RelationshipEntity> findByFromAndTypeAndTo(RelationshipRef from, RelationshipType type, RelationshipRef to);
   
-List<RelationshipEntity> findByFromTypeAndFromRefInAndRelationshipAndToType(RelationshipRef fromType, List<String> fromRef, RelationshipType relationship, RelationshipRef toType);
+List<RelationshipEntity> findByFromAndFromRefInAndTypeAndTo(RelationshipRef from, List<String> fromRef, RelationshipType type, RelationshipRef to);
   
-List<RelationshipEntity> findByFromTypeAndRelationshipAndToTypeAndToRefIn(RelationshipRef fromType, RelationshipType relationship, RelationshipRef toType,
+List<RelationshipEntity> findByFromAndTypeAndToAndToRefIn(RelationshipRef from, RelationshipType type, RelationshipRef to,
     List<String> toRef);
 
-  List<RelationshipEntity> findByFromTypeAndFromRefInAndToTypeAndToRefIn(RelationshipRef fromType, List<String> fromRef, RelationshipRef toType,
+  List<RelationshipEntity> findByFromAndFromRefInAndToAndToRefIn(RelationshipRef from, List<String> fromRef, RelationshipRef to,
       List<String> toRef);
 
-  List<RelationshipEntity> findByFromTypeAndFromRefInAndRelationshipAndToTypeAndToRefIn(RelationshipRef fromType, List<String> fromRef, RelationshipType relationship, RelationshipRef toType,
+  List<RelationshipEntity> findByFromAndFromRefInAndTypeAndToAndToRefIn(RelationshipRef from, List<String> fromRef, RelationshipType type, RelationshipRef to,
       List<String> toRef);
 }

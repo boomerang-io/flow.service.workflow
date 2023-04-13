@@ -19,17 +19,17 @@ public class RelationshipEntity {
   @Id
   private String id;
   private Date creationDate = new Date();
-  private RelationshipType relationship; 
-  private RelationshipRef fromType;
+  private RelationshipType type; 
+  private RelationshipRef from;
   private String fromRef;
-  private RelationshipRef toType;
+  private RelationshipRef to;
   private String toRef;
   private Map<String, Object> data = new HashMap<>();
    
   @Override
   public String toString() {
-    return "RelationshipEntity [id=" + id + ", relationship=" + relationship + ", fromType="
-        + fromType + ", fromRef=" + fromRef + ", toType=" + toType + ", toRef=" + toRef + "]";
+    return "RelationshipEntity [id=" + id + ", relationship=" + type + ", fromType="
+        + from + ", fromRef=" + fromRef + ", toType=" + to + ", toRef=" + toRef + "]";
   }
   public String getId() {
     return id;
@@ -38,16 +38,16 @@ public class RelationshipEntity {
     this.id = id;
   }
   public RelationshipType getRelationship() {
-    return relationship;
+    return type;
   }
   public void setRelationship(RelationshipType relationship) {
-    this.relationship = relationship;
+    this.type = relationship;
   }
   public RelationshipRef getFromType() {
-    return fromType;
+    return from;
   }
   public void setFromType(RelationshipRef fromType) {
-    this.fromType = fromType;
+    this.from = fromType;
   }
   public String getFromRef() {
     return fromRef;
@@ -56,10 +56,10 @@ public class RelationshipEntity {
     this.fromRef = fromRef;
   }
   public RelationshipRef getToType() {
-    return toType;
+    return to;
   }
   public void setToType(RelationshipRef toType) {
-    this.toType = toType;
+    this.to = toType;
   }
   public String getToRef() {
     return toRef;

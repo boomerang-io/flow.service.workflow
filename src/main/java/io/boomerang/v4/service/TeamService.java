@@ -23,7 +23,7 @@ public interface TeamService {
   ResponseEntity<Team> get(String teamId);
 
   Page<Team> query(int page, int limit, Sort sort, Optional<List<String>> labels,
-      Optional<List<String>> status);
+      Optional<List<String>> status, Optional<List<String>> refs);
 
   ResponseEntity<Void> enable(String teamId);
 
