@@ -31,13 +31,13 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.boomerang.model.ApprovalRequest;
 import io.boomerang.model.FlowActivity;
 import io.boomerang.model.FlowExecutionRequest;
 import io.boomerang.model.FlowWebhookResponse;
 import io.boomerang.model.ListActionResponse;
 import io.boomerang.model.RequestFlowExecution;
-import io.boomerang.model.teams.Action;
+import io.boomerang.v4.model.Action;
+import io.boomerang.v4.model.ActionRequest;
 
 
 public abstract class IntegrationTests extends AbstractFlowTests {
@@ -140,7 +140,7 @@ public abstract class IntegrationTests extends AbstractFlowTests {
   protected void approveWorkflow(boolean status, String activityId) {
     try {
 
-      ApprovalRequest request = new ApprovalRequest();
+      ActionRequest request = new ActionRequest();
       request.setApproved(status);
       request.setComments("Test comment");
       request.setId(activityId);
@@ -148,7 +148,7 @@ public abstract class IntegrationTests extends AbstractFlowTests {
       HttpHeaders headers = new HttpHeaders();
       headers.add(AUTHORIZATION_HEADER, TOKEN_PREFIX + BEARER_TOKEN);
       headers.add("Content-type", "application/json");
-      HttpEntity<ApprovalRequest> requestUpdate = new HttpEntity<>(request, headers);
+      HttpEntity<ActionRequest> requestUpdate = new HttpEntity<>(request, headers);
 
       String url = "http://localhost:" + port + "/workflow/actions/action?id=" + activityId
           + "&approved=" + status;

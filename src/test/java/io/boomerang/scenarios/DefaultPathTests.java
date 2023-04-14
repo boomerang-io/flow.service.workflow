@@ -27,10 +27,10 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.client.MockRestServiceServer;
 import io.boomerang.Application;
 import io.boomerang.model.FlowActivity;
-import io.boomerang.model.teams.Action;
 import io.boomerang.mongo.model.TaskStatus;
 import io.boomerang.tests.IntegrationTests;
 import io.boomerang.tests.MongoConfig;
+import io.boomerang.v4.model.Action;
 
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @ExtendWith(SpringExtension.class)

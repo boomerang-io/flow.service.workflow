@@ -3,10 +3,10 @@ package io.boomerang.model;
 import java.util.Date;
 import java.util.List;
 import org.springframework.data.annotation.Id;
-import io.boomerang.model.teams.Action;
 import io.boomerang.mongo.model.ErrorResponse;
 import io.boomerang.mongo.model.TaskStatus;
 import io.boomerang.mongo.model.TaskType;
+import io.boomerang.v4.model.Action;
 
 public class TaskExecutionResponse {
   private List<TaskOutputResult> results;

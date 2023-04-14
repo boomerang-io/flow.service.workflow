@@ -9,7 +9,6 @@ import io.boomerang.mongo.model.Audit;
 import io.boomerang.v4.model.enums.ref.ActionStatus;
 import io.boomerang.v4.model.enums.ref.ActionType;
 
-
 /*
  * Entity for Manual Action and Approval Action
  * 
@@ -27,6 +26,7 @@ public class ActionEntity {
   private List<Audit> actioners;
   private ActionStatus status;
   private ActionType type;
+  private String instructions;
   private Date creationDate;
   private int numberOfApprovers;
   private String approverGroupRef;
@@ -90,5 +90,11 @@ public class ActionEntity {
   }
   public void setApproverGroupRef(String approverGroupRef) {
     this.approverGroupRef = approverGroupRef;
+  }
+  public String getInstructions() {
+    return instructions;
+  }
+  public void setInstructions(String instructions) {
+    this.instructions = instructions;
   }
 }

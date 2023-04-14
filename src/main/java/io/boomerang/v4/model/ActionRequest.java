@@ -1,7 +1,10 @@
-package io.boomerang.model;
+package io.boomerang.v4.model;
 
-public class ApprovalRequest {
+public class ActionRequest {
   private String id;
+private String comments;
+//TODO change name of approved
+private boolean approved;
   public String getId() {
     return id;
   }
@@ -20,7 +23,5 @@ public class ApprovalRequest {
   public void setApproved(boolean approved) {
     this.approved = approved;
   }
-  private String comments;
-  private boolean approved;
 
 }

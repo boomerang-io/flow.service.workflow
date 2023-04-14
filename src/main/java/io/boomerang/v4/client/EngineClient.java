@@ -3,6 +3,8 @@ package io.boomerang.v4.client;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Sort;
+import io.boomerang.v4.model.ref.TaskRun;
+import io.boomerang.v4.model.ref.TaskRunEndRequest;
 import io.boomerang.v4.model.ref.Workflow;
 import io.boomerang.v4.model.ref.WorkflowRun;
 import io.boomerang.v4.model.ref.WorkflowRunInsight;
@@ -46,4 +48,8 @@ public interface EngineClient {
   void disableWorkflow(String workflowId);
 
   void deleteWorkflow(String workflowId);
+
+  TaskRun endTaskRun(String taskRunId, TaskRunEndRequest request);
+
+  TaskRun getTaskRun(String taskRunId);
 }

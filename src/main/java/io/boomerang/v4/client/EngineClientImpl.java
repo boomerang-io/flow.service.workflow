@@ -22,6 +22,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import io.boomerang.error.BoomerangException;
+import io.boomerang.v4.model.ref.TaskRun;
+import io.boomerang.v4.model.ref.TaskRunEndRequest;
 import io.boomerang.v4.model.ref.Workflow;
 import io.boomerang.v4.model.ref.WorkflowRun;
 import io.boomerang.v4.model.ref.WorkflowRunInsight;
@@ -78,10 +80,22 @@ public class EngineClientImpl implements EngineClient {
   @Value("${flow.engine.workflow.delete.url}")
   public String deleteWorkflowURL;
 
+  @Value("${flow.engine.taskrun.get.url}")
+  public String getTaskRunURL;
+
+  @Value("${flow.engine.taskrun.end.url}")
+  public String endTaskRunURL;
+
   @Autowired
   @Qualifier("internalRestTemplate")
   public RestTemplate restTemplate;
 
+
+  /* 
+   * **************************************
+   * WorkflowRun endpoints
+   * **************************************
+   */
   @Override
   public WorkflowRun getWorkflowRun(String workflowRunId, boolean withTasks) {
     try {
@@ -300,8 +314,10 @@ public class EngineClientImpl implements EngineClient {
     }
   }
 
-  /*
-   * Start Workflow based client Endpoints
+  /* 
+   * **************************************
+   * Workflow endpoints
+   * **************************************
    */
   @Override
   public Workflow getWorkflow(String workflowId, Optional<Integer> version, boolean withTasks) {
@@ -481,6 +497,54 @@ public class EngineClientImpl implements EngineClient {
       if (!HttpStatus.NO_CONTENT.equals(response.getStatusCode())) {
         throw new RestClientException("Unable to delete Workflow");
       }
+    } catch (RestClientException ex) {
+      logger.error(ex.toString());
+      throw new BoomerangException(ex, HttpStatus.INTERNAL_SERVER_ERROR.value(),
+          ex.getClass().getSimpleName(), "Exception in communicating with internal services.",
+          HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  /* 
+   * **************************************
+   * TaskRun endpoints
+   * **************************************
+   */
+  @Override
+  public TaskRun getTaskRun(String taskRunId) {
+    try {
+      String url = getTaskRunURL.replace("{taskRunId}", taskRunId);
+      logger.info("URL: " + url);
+
+      ResponseEntity<TaskRun> response = restTemplate.getForEntity(url, TaskRun.class);
+      
+      logger.info("Status Response: " + response.getStatusCode());
+      logger.info("Content Response: " + response.getBody().toString());
+      
+      return response.getBody();
+    } catch (RestClientException ex) {
+      logger.error(ex.toString());
+      throw new BoomerangException(ex, HttpStatus.INTERNAL_SERVER_ERROR.value(), ex.getClass().getSimpleName(), "Exception in communicating with internal services.", HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @Override
+  public TaskRun endTaskRun(String taskRunId, TaskRunEndRequest request) {
+    try {
+      String url = endTaskRunURL.replace("{taskRunId}", taskRunId);
+      
+      logger.info("URL: " + url);
+
+      final HttpHeaders headers = new HttpHeaders();
+      headers.setContentType(MediaType.APPLICATION_JSON);
+      HttpEntity<TaskRunEndRequest> entity = new HttpEntity<TaskRunEndRequest>(request, headers);
+      ResponseEntity<TaskRun> response =
+          restTemplate.exchange(url, HttpMethod.PUT, entity, TaskRun.class);
+
+      logger.info("Status Response: " + response.getStatusCode());
+      logger.info("Content Response: " + response.getBody().toString());
+
+      return response.getBody();
     } catch (RestClientException ex) {
       logger.error(ex.toString());
       throw new BoomerangException(ex, HttpStatus.INTERNAL_SERVER_ERROR.value(),

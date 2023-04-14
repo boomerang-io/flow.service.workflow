@@ -1,7 +1,7 @@
 package io.boomerang.model;
 
 import java.util.List;
-import io.boomerang.model.teams.Action;
+import io.boomerang.v4.model.Action;
 
 public class ListActionResponse {
   private Pageable pageable;

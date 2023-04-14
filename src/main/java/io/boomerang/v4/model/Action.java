@@ -1,17 +1,22 @@
-package io.boomerang.model.teams;
+package io.boomerang.v4.model;
 
-import io.boomerang.mongo.entity.ApprovalEntity;
-import io.boomerang.mongo.model.WorkflowScope;
+import org.springframework.beans.BeanUtils;
+import io.boomerang.v4.data.entity.ref.ActionEntity;
 
-public class Action extends ApprovalEntity {
+public class Action extends ActionEntity {
   
   private String taskName;
   private String workflowName;
   private String teamName;
-  private String instructions;
-  private WorkflowScope scope;
   private long numberOfApprovals;
   private long approvalsRequired;
+  
+  public Action() {
+  }
+  
+  public Action(ActionEntity entity) {
+    BeanUtils.copyProperties(entity, this);
+  }
   
   public String getTaskName() {
     return taskName;
@@ -30,18 +35,6 @@ public class Action extends ApprovalEntity {
   }
   public void setTeamName(String teamName) {
     this.teamName = teamName;
-  }
-  public String getInstructions() {
-    return instructions;
-  }
-  public void setInstructions(String instructions) {
-    this.instructions = instructions;
-  }
-  public WorkflowScope getScope() {
-    return scope;
-  }
-  public void setScope(WorkflowScope scope) {
-    this.scope = scope;
   }
   public long getApprovalsRequired() {
     return approvalsRequired;
