@@ -12,7 +12,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import io.boomerang.model.ChangeLog;
 import io.boomerang.v4.data.entity.ref.WorkflowEntity;
 import io.boomerang.v4.data.entity.ref.WorkflowRevisionEntity;
 

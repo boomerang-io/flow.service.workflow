@@ -66,29 +66,10 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
    * No need to validate params as they are either defaulted or optional
    */
   public WorkflowRunResponsePage query(int page, int limit, Sort sort, Optional<List<String>> queryLabels,
-      Optional<List<String>> queryStatus, Optional<List<String>> queryPhase, Optional<WorkflowScope> queryScope, Optional<List<String>> queryRefs) {
-    
-    // Convert WorkflowScope to RelationshipRef
-    RelationshipRef toRef = null;
-    if (queryScope.isPresent()) {
-      switch (queryScope.get()) {
-        case system:
-          toRef = RelationshipRef.SYSTEM;
-          break;
-        case template:
-          toRef = RelationshipRef.TEMPLATE;
-          break;
-        case team:
-          toRef = RelationshipRef.TEAM;
-          break;
-        case user:
-          toRef = RelationshipRef.USER;
-      }
-    }
+      Optional<List<String>> queryStatus, Optional<List<String>> queryPhase, Optional<List<String>> queryTeams, Optional<List<String>> queryRefs) {
     // Get Refs that request has access to
     List<String> workflowRunRefs = relationshipService.getFilteredRefs(Optional.of(RelationshipRef.WORKFLOWRUN),
-        Optional.empty(), Optional.of(RelationshipType.BELONGSTO), Optional.ofNullable(toRef),
-        toRef != null ? queryRefs : Optional.empty());
+        queryRefs, Optional.of(RelationshipType.BELONGSTO), Optional.of(RelationshipRef.TEAM), queryTeams);
     
     if (!workflowRunRefs.isEmpty()) {
       return engineClient.queryWorkflowRuns(page, limit, sort, queryLabels, queryStatus, queryPhase, Optional.of(workflowRunRefs));
@@ -125,11 +106,9 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
         Optional.of(List.of(workflowId)), Optional.of(RelationshipType.BELONGSTO), Optional.empty(), Optional.empty());
     if (!workflowRefs.isEmpty()) {
       WorkflowRun wfRun = engineClient.submitWorkflowRun(workflowId, version, start, optRunRequest);
-      // TODO Creates the relationship with the Workflow
-      // Currently on the WorkflowRunEntity as a workflowRef - relationship not needed. If added at a future date, will need to update all the getFilteredRefs calls.
-      // relationshipService.createRelationshipRef(RelationshipRefType.WORKFLOWRUN, wfRun.getId(), RelationshipRefType.WORKFLOW, Optional.of(workflowId));
-      
-      // Creates the owning relationship with the user / team / system that owns the Workflow
+       // TODO: FUTURE - Creates the relationship with the Workflow
+//       relationshipService.addRelationshipRef(RelationshipRef.WORKFLOWRUN, wfRun.getId(), RelationshipType.EXECUTIONOF, RelationshipRef.WORKFLOW, Optional.of(workflowId));
+      // Creates the owning relationship with the team that owns the Workflow
       Optional<RelationshipEntity> relEntity = relationshipService.getRelationship(RelationshipRef.WORKFLOW, workflowId, RelationshipType.BELONGSTO);
       relationshipService.addRelationshipRef(RelationshipRef.WORKFLOWRUN, wfRun.getId(), relEntity.get().getToType(), Optional.of(relEntity.get().getToRef()));
       return ResponseEntity.ok(wfRun);

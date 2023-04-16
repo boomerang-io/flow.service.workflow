@@ -60,16 +60,16 @@ public class WorkflowV2Controller {
       @Parameter(name = "status", description = "List of statuses to filter for. Defaults to all.",
           example = "active,archived",
           required = false) @RequestParam(required = false) Optional<List<String>> status,
-      @Parameter(name = "scope", description = "The level of scope to filter to.", example = "global, template, team, or user", 
-      required = false) @RequestParam(required = false) Optional<WorkflowScope> scope,
-      @Parameter(name = "refs", description = "List of ids to filter for. Combined with scope.", 
-      required = false) @RequestParam(required = false) Optional<List<String>> refs,
+      @Parameter(name = "workflows", description = "List of workflows to filter for.", 
+      required = false) @RequestParam(required = false) Optional<List<String>> workflows,
+      @Parameter(name = "teams", description = "List of teams to filter for.", 
+      required = false) @RequestParam(required = false) Optional<List<String>> teams,
       @Parameter(name = "limit", description = "Result Size", example = "10",
           required = true) @RequestParam(defaultValue = "10") int limit,
       @Parameter(name = "page", description = "Page Number", example = "0",
           required = true) @RequestParam(defaultValue = "0") int page) {
     final Sort sort = Sort.by(new Order(Direction.ASC, "creationDate"));
-    return workflowService.query(page, limit, sort, labels, status, scope, refs);
+    return workflowService.query(page, limit, sort, labels, status, teams, workflows);
   }
 
   @PostMapping(value = "/")
@@ -77,12 +77,10 @@ public class WorkflowV2Controller {
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
   public ResponseEntity<Workflow> createWorkflow(
-      @Parameter(name = "scope", description = "The level of scope to apply to the Workflow.", example = "global, template, team, or user", 
-      required = false) @RequestParam(required = false) Optional<WorkflowScope> scope,
     @Parameter(name = "owner", description = "Owner reference. Only relevant if scope = team|user", example = "63d3656ca845957db7d25ef0,63a3e732b0496509a7f1d763",
         required = false) @RequestParam(required = false) Optional<String> owner,
     @RequestBody Workflow workflow) {
-    return workflowService.create(workflow, scope, owner);
+    return workflowService.create(workflow, owner);
   }
 
   @PutMapping(value = "/")

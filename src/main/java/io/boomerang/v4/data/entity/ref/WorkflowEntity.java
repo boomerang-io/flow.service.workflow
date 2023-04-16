@@ -10,7 +10,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import io.boomerang.model.WorkflowToken;
-import io.boomerang.v4.model.enums.WorkflowScope;
 import io.boomerang.v4.model.ref.WorkflowStatus;
 import io.boomerang.v4.model.ref.WorkflowTrigger;
 

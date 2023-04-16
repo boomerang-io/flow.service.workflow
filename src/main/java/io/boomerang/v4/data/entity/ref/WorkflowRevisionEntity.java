@@ -7,11 +7,11 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import io.boomerang.data.model.WorkflowRevisionTask;
-import io.boomerang.model.ChangeLog;
-import io.boomerang.model.ParamSpec;
-import io.boomerang.model.WorkflowConfig;
-import io.boomerang.model.WorkflowWorkspace;
+import io.boomerang.v4.data.model.ref.WorkflowRevisionTask;
+import io.boomerang.v4.model.ref.ChangeLog;
+import io.boomerang.v4.model.ref.ParamSpec;
+import io.boomerang.v4.model.ref.WorkflowConfig;
+import io.boomerang.v4.model.ref.WorkflowWorkspace;
 
 /*
  * Workflow Revision Entity stores the detail for each version of the workflow in conjunction with Workflow Entity

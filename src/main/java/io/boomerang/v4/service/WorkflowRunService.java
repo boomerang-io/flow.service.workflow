@@ -5,7 +5,6 @@ import java.util.Optional;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import io.boomerang.v4.client.WorkflowRunResponsePage;
-import io.boomerang.v4.model.enums.WorkflowScope;
 import io.boomerang.v4.model.ref.WorkflowRun;
 import io.boomerang.v4.model.ref.WorkflowRunInsight;
 import io.boomerang.v4.model.ref.WorkflowRunRequest;
@@ -14,7 +13,7 @@ public interface WorkflowRunService {
 
   WorkflowRunResponsePage query(int page, int limit, Sort sort, Optional<List<String>> queryLabels,
       Optional<List<String>> queryStatus, Optional<List<String>> queryPhase,
-      Optional<WorkflowScope> queryScope, Optional<List<String>> queryRefs);
+      Optional<List<String>> teams, Optional<List<String>> queryRefs);
 
   ResponseEntity<WorkflowRun> get(String workflowRunId, boolean withTasks);
 
