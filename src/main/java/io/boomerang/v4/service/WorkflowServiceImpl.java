@@ -13,6 +13,8 @@ import org.springframework.stereotype.Service;
 import io.boomerang.error.BoomerangError;
 import io.boomerang.error.BoomerangException;
 import io.boomerang.mongo.model.TaskType;
+import io.boomerang.util.DataAdapterUtil;
+import io.boomerang.util.DataAdapterUtil.FieldType;
 import io.boomerang.v4.client.EngineClient;
 import io.boomerang.v4.client.WorkflowResponsePage;
 import io.boomerang.v4.model.CanvasEdge;
@@ -59,6 +61,9 @@ public class WorkflowServiceImpl implements WorkflowService {
         Optional.of(List.of(workflowId)), Optional.of(RelationshipType.BELONGSTO), Optional.empty(), Optional.empty());
     if (!workflowRefs.isEmpty()) {
       Workflow workflow = engineClient.getWorkflow(workflowId, version, withTasks);
+      DataAdapterUtil.filterParamSpecValueByFieldType(workflow.getConfig(), workflow.getParams(), FieldType.PASSWORD.value());
+      
+      //TODO: add triggers
       return ResponseEntity.ok(workflow);
     } else {
       // TODO: do we want to return invalid ref or unauthorized
@@ -81,8 +86,15 @@ public class WorkflowServiceImpl implements WorkflowService {
         queryTeams);
     LOGGER.debug("Query Ids: ", workflowRefs);
 
-    return engineClient.queryWorkflows(page, limit, sort, queryLabels, queryStatus,
+    WorkflowResponsePage response = engineClient.queryWorkflows(page, limit, sort, queryLabels, queryStatus,
         Optional.of(workflowRefs));
+    
+    if (!response.getContent().isEmpty()) {
+      response.getContent().forEach(w -> 
+      DataAdapterUtil.filterParamSpecValueByFieldType(w.getConfig(), w.getParams(), FieldType.PASSWORD.value()));
+    }
+    
+    return response;
   }
 
   /*
@@ -101,6 +113,8 @@ public class WorkflowServiceImpl implements WorkflowService {
     // if (workflow.getStorage().getActivity() == null) {
     // workflow.getStorage().setActivity(new ActivityStorage());
     // }
+    
+    //TODO default Triggers
     Workflow workflow = engineClient.createWorkflow(request);
     if (owner.isPresent()) {
     // Create BELONGSTO relationship for mapping Workflow to Owner
@@ -180,6 +194,20 @@ public class WorkflowServiceImpl implements WorkflowService {
 
       // TODO: delete all triggers
       // TODO: delete all tokens
+//      if (entity.getTriggers() != null) {
+//        Triggers trigger = entity.getTriggers();
+//        if (trigger != null) {
+//          TriggerScheduler scheduler = trigger.getScheduler();
+//          if (scheduler != null && scheduler.getEnable()) {
+//            try {
+//              workflowScheduleService.deleteAllSchedules(workflowId);
+//            } catch (SchedulerException e) {
+//              logger.info("Unable to remove job. ");
+//              logger.error(e);
+//            }
+//          }
+//        }
+//      }
       return ResponseEntity.noContent().build();
     } else {
       // TODO: do we want to return invalid ref or unauthorized

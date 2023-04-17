@@ -20,7 +20,6 @@ import org.springframework.web.bind.annotation.RestController;
 import io.boomerang.mongo.model.TokenScope;
 import io.boomerang.security.interceptors.AuthenticationScope;
 import io.boomerang.v4.data.entity.ref.WorkflowRunEntity;
-import io.boomerang.v4.model.enums.WorkflowScope;
 import io.boomerang.v4.model.ref.WorkflowRun;
 import io.boomerang.v4.model.ref.WorkflowRunRequest;
 import io.boomerang.v4.service.WorkflowRunService;

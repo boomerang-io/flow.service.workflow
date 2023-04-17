@@ -19,7 +19,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import io.boomerang.v4.data.entity.ref.WorkflowEntity;
 import io.boomerang.v4.model.WorkflowCanvas;
-import io.boomerang.v4.model.enums.WorkflowScope;
 import io.boomerang.v4.model.ref.Workflow;
 import io.boomerang.v4.service.WorkflowService;
 import io.swagger.v3.oas.annotations.Operation;

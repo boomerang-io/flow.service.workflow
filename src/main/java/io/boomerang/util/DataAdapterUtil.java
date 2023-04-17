@@ -1,8 +1,9 @@
 package io.boomerang.util;
 
 import java.util.List;
-
 import io.boomerang.mongo.model.AbstractConfigurationProperty;
+import io.boomerang.v4.model.ref.ParamSpec;
+import io.boomerang.v4.model.ref.RunParam;
 
 public class DataAdapterUtil {
 	public enum FieldType {
@@ -20,7 +21,7 @@ public class DataAdapterUtil {
 	}
 	
 	/**
-	 * Method for filtering sensitive data (e.g. make null the value of any password
+	 * Method for filtering sensitive data from AbstractConfigs (e.g. make null the value of any password
 	 * type field)
 	 * 
 	 * @param properties
@@ -48,4 +49,36 @@ public class DataAdapterUtil {
 	  }
 	  return properties;
 	}
+    
+    /**
+     * Method for filtering sensitive data from Parameters based on AbstractConfig type (e.g. make null the value of any password
+     * type field)
+     * 
+     * @param properties
+     * @param fieldType
+     * @return
+     */
+    public static void filterParamSpecValueByFieldType(
+            List<? extends AbstractConfigurationProperty> config, List<ParamSpec> params, String fieldType) {      
+      config.stream().filter(p -> fieldType.equals(p.getType())).forEach(p -> {
+        p.setValue(null);
+        params.stream().filter(param -> param.getName().equalsIgnoreCase((p.getKey()))).findFirst().get().setDefaultValue(null);
+      });
+    }
+    
+    /**
+     * Method for filtering sensitive data from Parameters based on AbstractConfig type (e.g. make null the value of any password
+     * type field)
+     * 
+     * @param properties
+     * @param fieldType
+     * @return
+     */
+    public static void filterRunParamValueByFieldType(
+            List<? extends AbstractConfigurationProperty> config, List<RunParam> params, String fieldType) {      
+      config.stream().filter(p -> fieldType.equals(p.getType())).forEach(p -> {
+        p.setValue(null);
+        params.stream().filter(param -> param.getName().equalsIgnoreCase((p.getKey()))).findFirst().get().setValue(null);
+      });
+    }
 }

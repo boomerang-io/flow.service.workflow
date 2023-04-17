@@ -15,7 +15,6 @@ import io.boomerang.v4.client.WorkflowRunResponsePage;
 import io.boomerang.v4.data.entity.RelationshipEntity;
 import io.boomerang.v4.model.enums.RelationshipRef;
 import io.boomerang.v4.model.enums.RelationshipType;
-import io.boomerang.v4.model.enums.WorkflowScope;
 import io.boomerang.v4.model.ref.WorkflowRun;
 import io.boomerang.v4.model.ref.WorkflowRunInsight;
 import io.boomerang.v4.model.ref.WorkflowRunRequest;
