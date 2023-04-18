@@ -34,6 +34,10 @@ public class ParamLayers {
   @JsonIgnore
   private Map<String, Object> taskParams = new HashMap<>();
 
+  @JsonIgnore
+  private Map<String, Object> contextParams = new HashMap<>();
+
+  @JsonIgnore
   public Map<String, Object> getTaskInputProperties() {
     return taskParams;
   }

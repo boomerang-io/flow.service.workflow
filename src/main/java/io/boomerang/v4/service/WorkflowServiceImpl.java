@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Optional;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.bson.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.data.domain.Sort;
@@ -22,7 +23,6 @@ import io.boomerang.error.BoomerangError;
 import io.boomerang.error.BoomerangException;
 import io.boomerang.model.controller.TaskResult;
 import io.boomerang.mongo.entity.FlowTaskTemplateEntity;
-import io.boomerang.mongo.entity.WorkflowEntity;
 import io.boomerang.mongo.model.Dag;
 import io.boomerang.mongo.model.Revision;
 import io.boomerang.mongo.model.WorkflowScope;
@@ -50,6 +50,7 @@ import io.boomerang.v4.model.ref.TriggerScheduler;
 import io.boomerang.v4.model.ref.Workflow;
 import io.boomerang.v4.model.ref.WorkflowStatus;
 import io.boomerang.v4.model.ref.WorkflowTrigger;
+import io.boomerang.v4.model.ref.WorkflowWorkspace;
 
 /*
  * This service replicates the required calls for Engine WorkflowV1 APIs
@@ -137,18 +138,12 @@ public class WorkflowServiceImpl implements WorkflowService {
   @Override
   public ResponseEntity<Workflow> create(Workflow request,
       Optional<String> team) {
-    //Default triggers
+    //Default Triggers
     setupTriggerDefaults(request);
-
-    // TODO: Add in the verification / handling of Workspaces for the UI
-    // CHeck the loader for v4 migration of Workspaces to know the object needed
-    // if (workflow.getStorage() == null) {
-    // workflow.setStorage(new Storage());
-    // }
-    // if (workflow.getStorage().getActivity() == null) {
-    // workflow.getStorage().setActivity(new ActivityStorage());
-    //
-    //    setupWorkspaceDefaults();
+    
+    //Default Workspaces 
+    setUpWorkspaceDefaults(request);
+    
     Workflow workflow = engineClient.createWorkflow(request);
     if (team.isPresent()) {
     // Create BELONGSTO relationship for mapping Workflow to Owner
@@ -163,6 +158,36 @@ public class WorkflowServiceImpl implements WorkflowService {
     // Filter out sensitive values
     DataAdapterUtil.filterParamSpecValueByFieldType(workflow.getConfig(), workflow.getParams(), FieldType.PASSWORD.value());
     return ResponseEntity.ok(workflow);
+  }
+
+  private void setUpWorkspaceDefaults(Workflow request) {
+    Boolean addWorkflowWS = true;
+    Boolean addWorkflowRunWS = true;
+    if (request.getWorkspaces() != null && !request.getWorkspaces().isEmpty()) {
+      for (WorkflowWorkspace ws : request.getWorkspaces()) {
+        if (ws.getType().equals("workflow")) {
+          addWorkflowWS = false;
+        } else if (ws.getType().equals("workflowRun")) {
+          addWorkflowRunWS = false;
+        }
+      }
+    }
+    if (addWorkflowWS) {
+      WorkflowWorkspace workflowWorkspace = new WorkflowWorkspace();
+      workflowWorkspace.setName("workflow");
+      workflowWorkspace.setType("workflow");
+      workflowWorkspace.setOptional(false);
+      //TODO set the Spec ... i believe this includes size - will need to check against the default in Settings + Quota
+      request.getWorkspaces().add(workflowWorkspace);
+    }
+    if (addWorkflowRunWS) {
+      WorkflowWorkspace workflowRunWorkspace = new WorkflowWorkspace();
+      workflowRunWorkspace.setName("activity");
+      workflowRunWorkspace.setType("workflowRun");
+      workflowRunWorkspace.setOptional(false);
+      //TODO set the Spec ... i believe this includes size - will need to check against the default in Settings + Quota
+      request.getWorkspaces().add(workflowRunWorkspace);
+    }
   }
 
   /*
@@ -263,6 +288,8 @@ public class WorkflowServiceImpl implements WorkflowService {
 //          }
 //        }
 //      }
+      
+      //TODO delete all workspaces
       return ResponseEntity.noContent().build();
     } else {
       // TODO: do we want to return invalid ref or unauthorized

@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import io.boomerang.v4.model.enums.ref.TaskDeletion;
 
 public class WorkflowRunRequest {
 
@@ -20,6 +21,10 @@ public class WorkflowRunRequest {
   private Long retries;
   
   private String trigger;
+  
+  private Boolean debug;
+  
+  private TaskDeletion taskDeletion;
 
   public Map<String, String> getLabels() {
     return labels;
@@ -75,5 +80,21 @@ public class WorkflowRunRequest {
 
   public void setTrigger(String trigger) {
     this.trigger = trigger;
+  }
+
+  public Boolean getDebug() {
+    return debug;
+  }
+
+  public void setDebug(Boolean debug) {
+    this.debug = debug;
+  }
+
+  public TaskDeletion getTaskDeletion() {
+    return taskDeletion;
+  }
+
+  public void setTaskDeletion(TaskDeletion taskDeletion) {
+    this.taskDeletion = taskDeletion;
   }
 }

@@ -93,6 +93,7 @@ public class ParameterManagerImpl implements ParameterManager {
     Map<String, Object> teamParams = paramLayers.getTeamProperties();
     Map<String, Object> workflowParams = paramLayers.getWorkflowProperties();
     Map<String, Object> systemParams = paramLayers.getSystemProperties();
+//    Map<String, Object> contextParams = paramLayers.getSystemProperties();
     
 //    buildSystemProperties(task, activityId, workflowId, systemProperties);
     buildGlobalParams(globalParams);
@@ -105,10 +106,10 @@ public class ParameterManagerImpl implements ParameterManager {
       }
     }
 
-    buildTokenParamList(reservedParams, workflowId);
+//    buildTokenParamList(systemParams, workflowId);
     buildWorkflowProperties(workflowParams, activityId, workflowId);
 
-    if (task != null) {
+    if (taskRunParams != null) {
       buildTaskInputProperties(paramLayers, task, activityId);
     }
 
@@ -258,36 +259,36 @@ public class ParameterManagerImpl implements ParameterManager {
   private void buildSystemParams(Task task, String activityId, String workflowId,
       Map<String, String> systemProperties) {
 
-//    WorkflowEntity workflow = workflowService.getWorkflow(workflowId);
-//    if (activityId != null) {
-//      ActivityEntity activity = activityService.findWorkflowActivity(activityId);
-//      RevisionEntity revision =
-//          revisionService.getWorkflowlWithId(activity.getWorkflowRevisionid());
-//
-//      if (revision != null) {
-//        systemProperties.put("workflow-version", Long.toString(revision.getVersion()));
-//      }
-//      systemProperties.put("trigger-type", activity.getTrigger());
-//      systemProperties.put("workflow-activity-initiator", "");
-//      if (activity.getInitiatedByUserId() != null) {
-//        systemProperties.put("workflow-activity-initiator", activity.getInitiatedByUserId());
-//      }
-//    }
-//
-//    systemProperties.put("workflow-name", workflow.getName());
-//    systemProperties.put("workflow-activity-id", activityId);
-//    systemProperties.put("workflow-id", workflow.getId());
-//
-//    systemProperties.put("trigger-webhook-url", this.webhookUrl);
-//    systemProperties.put("trigger-wfe-url", this.waitForEventUrl);
-//    systemProperties.put("trigger-event-url", this.eventUrl);
-//
-//
-//    if (task != null) {
-//      systemProperties.put("task-name", task.getTaskName());
-//      systemProperties.put("task-id", task.getTaskId());
-//      systemProperties.put("task-type", task.getTaskType().toString());
-//    }
+    WorkflowEntity workflow = workflowService.getWorkflow(workflowId);
+    if (activityId != null) {
+      ActivityEntity activity = activityService.findWorkflowActivity(activityId);
+      RevisionEntity revision =
+          revisionService.getWorkflowlWithId(activity.getWorkflowRevisionid());
+
+      if (revision != null) {
+        systemProperties.put("workflow-version", Long.toString(revision.getVersion()));
+      }
+      systemProperties.put("trigger-type", activity.getTrigger());
+      systemProperties.put("workflow-activity-initiator", "");
+      if (activity.getInitiatedByUserId() != null) {
+        systemProperties.put("workflow-activity-initiator", activity.getInitiatedByUserId());
+      }
+    }
+
+    systemProperties.put("workflow-name", workflow.getName());
+    systemProperties.put("workflow-activity-id", activityId);
+    systemProperties.put("workflow-id", workflow.getId());
+
+    systemProperties.put("trigger-webhook-url", this.webhookUrl);
+    systemProperties.put("trigger-wfe-url", this.waitForEventUrl);
+    systemProperties.put("trigger-event-url", this.eventUrl);
+
+
+    if (task != null) {
+      systemProperties.put("task-name", task.getTaskName());
+      systemProperties.put("task-id", task.getTaskId());
+      systemProperties.put("task-type", task.getTaskType().toString());
+    }
   }
 
   /*

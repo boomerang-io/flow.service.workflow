@@ -15,7 +15,7 @@ public class WorkflowRun extends WorkflowRunEntity {
   }
 
   public WorkflowRun(WorkflowRunEntity entity) {
-    BeanUtils.copyProperties(entity, this);
+    BeanUtils.copyProperties(entity, this, "debug", "taskDeletion");
   }
 
   @Override

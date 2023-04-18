@@ -16,6 +16,7 @@ import io.boomerang.v4.data.entity.RelationshipEntity;
 import io.boomerang.v4.data.model.CurrentQuotas;
 import io.boomerang.v4.model.enums.RelationshipRef;
 import io.boomerang.v4.model.enums.RelationshipType;
+import io.boomerang.v4.model.enums.ref.TaskDeletion;
 import io.boomerang.v4.model.ref.WorkflowRun;
 import io.boomerang.v4.model.ref.WorkflowRunInsight;
 import io.boomerang.v4.model.ref.WorkflowRunRequest;
@@ -111,9 +112,42 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
     List<String> workflowRefs = relationshipService.getFilteredRefs(Optional.of(RelationshipRef.WORKFLOW),
         Optional.of(List.of(workflowId)), Optional.of(RelationshipType.BELONGSTO), Optional.empty(), Optional.empty());
     if (!workflowRefs.isEmpty() && canRunWithQuotas(workflowId)) {
+      if (optRunRequest.isEmpty()) {
+        optRunRequest = Optional.of(new WorkflowRunRequest());
+      }
+      // Set Task Deletion
+      if (optRunRequest.get().getTaskDeletion() == null && !List.of(TaskDeletion.values()).contains(optRunRequest.get().getTaskDeletion())) {
+        TaskDeletion taskDeletion = TaskDeletion.Never;
+        String setting =
+            this.settingsService.getConfiguration("controller", "job.deletion.policy").getValue();
+        if (setting != null) {
+          taskDeletion = TaskDeletion.valueOf(setting);
+        }
+        optRunRequest.get().setTaskDeletion(taskDeletion);
+      }
+      // Set Workflow & Task Debug
+      if (optRunRequest.get().getDebug() == null) {
+        boolean enableDebug = false;
+        String setting =
+            this.settingsService.getConfiguration("controller", "enable.debug").getValue();
+        if (setting != null) {
+          enableDebug = Boolean.parseBoolean(setting);
+        }
+        optRunRequest.get().setDebug(Boolean.valueOf(enableDebug));
+      }
+      // Set Workflow Timeout
+      if (optRunRequest.get().getTimeout() == null) {
+        String setting =
+            this.settingsService.getConfiguration("controller", "task.timeout.configuration").getValue();
+        if (setting != null) {
+          optRunRequest.get().setTimeout(Long.valueOf(setting));
+        }
+      }
+      
       WorkflowRun wfRun = engineClient.submitWorkflowRun(workflowId, version, start, optRunRequest);
        // TODO: FUTURE - Creates the relationship with the Workflow
 //       relationshipService.addRelationshipRef(RelationshipRef.WORKFLOWRUN, wfRun.getId(), RelationshipType.EXECUTIONOF, RelationshipRef.WORKFLOW, Optional.of(workflowId));
+      
       // Creates the owning relationship with the team that owns the Workflow
       Optional<RelationshipEntity> relEntity = relationshipService.getRelationship(RelationshipRef.WORKFLOW, workflowId, RelationshipType.BELONGSTO);
       relationshipService.addRelationshipRef(RelationshipRef.WORKFLOWRUN, wfRun.getId(), relEntity.get().getTo(), Optional.of(relEntity.get().getToRef()));

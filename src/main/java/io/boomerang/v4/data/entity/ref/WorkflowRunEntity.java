@@ -12,6 +12,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import io.boomerang.v4.model.enums.ref.RunPhase;
 import io.boomerang.v4.model.enums.ref.RunStatus;
+import io.boomerang.v4.model.enums.ref.TaskDeletion;
 import io.boomerang.v4.model.ref.RunError;
 import io.boomerang.v4.model.ref.RunParam;
 import io.boomerang.v4.model.ref.RunResult;
@@ -35,9 +36,13 @@ public class WorkflowRunEntity   {
 
   private long duration = 0;
   
-  private long timeout = -1;
+  private Long timeout;
   
-  private long retries = -1;
+  private Long retries;
+
+  private Boolean debug;
+
+  private TaskDeletion taskDeletion;
 
   private RunStatus status = RunStatus.notstarted;
   
@@ -113,12 +118,36 @@ public class WorkflowRunEntity   {
     this.duration = duration;
   }
 
-  public long getTimeout() {
+  public Long getTimeout() {
     return timeout;
   }
 
-  public void setTimeout(long timeout) {
+  public void setTimeout(Long timeout) {
     this.timeout = timeout;
+  }
+
+  public Long getRetries() {
+    return retries;
+  }
+
+  public void setRetries(Long retries) {
+    this.retries = retries;
+  }
+
+  public Boolean getDebug() {
+    return debug;
+  }
+
+  public void setDebug(Boolean debug) {
+    this.debug = debug;
+  }
+
+  public TaskDeletion getTaskDeletion() {
+    return taskDeletion;
+  }
+
+  public void setTaskDeletion(TaskDeletion deletion) {
+    this.taskDeletion = deletion;
   }
 
   public String getId() {
@@ -231,14 +260,5 @@ public class WorkflowRunEntity   {
 
   public void setWorkspaces(List<WorkflowWorkspace> workspaces) {
     this.workspaces = workspaces;
-  }
-
-  public long getRetries() {
-    return retries;
-  }
-
-  public void setRetries(long retries) {
-    this.retries = retries;
-  }
-  
+  }  
 }
