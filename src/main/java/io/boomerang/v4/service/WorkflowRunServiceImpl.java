@@ -108,7 +108,7 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
       throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
     }
     
-    List<String> workflowRefs = relationshipService.getFilteredRefs(Optional.of(RelationshipRef.WORKFLOWRUN),
+    List<String> workflowRefs = relationshipService.getFilteredRefs(Optional.of(RelationshipRef.WORKFLOW),
         Optional.of(List.of(workflowId)), Optional.of(RelationshipType.BELONGSTO), Optional.empty(), Optional.empty());
     if (!workflowRefs.isEmpty() && canRunWithQuotas(workflowId)) {
       WorkflowRun wfRun = engineClient.submitWorkflowRun(workflowId, version, start, optRunRequest);

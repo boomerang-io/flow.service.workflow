@@ -13,9 +13,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import io.boomerang.model.Task;
-import io.boomerang.model.WorkflowSummary;
 import io.boomerang.model.WorkflowToken;
 import io.boomerang.mongo.entity.ActivityEntity;
 import io.boomerang.mongo.entity.FlowTaskTemplateEntity;
@@ -30,10 +30,13 @@ import io.boomerang.mongo.model.WorkflowProperty;
 import io.boomerang.mongo.model.WorkflowScope;
 import io.boomerang.mongo.model.next.DAGTask;
 import io.boomerang.util.ParameterLayers;
-import io.boomerang.v4.data.entity.GlobalParamEntity;
 import io.boomerang.v4.data.entity.TeamEntity;
 import io.boomerang.v4.data.model.TeamParameter;
+import io.boomerang.v4.model.GlobalParam;
+import io.boomerang.v4.model.enums.RelationshipRef;
+import io.boomerang.v4.model.enums.RelationshipType;
 import io.boomerang.v4.model.ref.ParamLayers;
+import io.boomerang.v4.model.ref.RunParam;
 
 @Service
 public class ParameterManagerImpl implements ParameterManager {
@@ -49,6 +52,12 @@ public class ParameterManagerImpl implements ParameterManager {
 
   @Autowired
   private TeamService teamService;
+
+  @Autowired
+  private GlobalParamService globalParamService;
+  
+  @Autowired
+  private RelationshipService relationshipService;
 
 //  @Autowired
 //  private FlowActivityService activityService;
@@ -77,23 +86,27 @@ public class ParameterManagerImpl implements ParameterManager {
   final String[] reserved = {"system", "workflow", "global", "team", "workflow"};
 
   @Override
-  public ParamLayers buildParameterLayering(Task task, String activityId,
-      String workflowId) {
+  public ParamLayers buildParameterLayering(String wfRunId, List<RunParam> wfRunParams,
+      List<RunParam> taskRunParams) {
     ParamLayers paramLayers = new ParamLayers();
-    Map<String, Object> systemProperties = paramLayers.getSystemProperties();
-    Map<String, Object> globalProperties = paramLayers.getGlobalProperties();
-    Map<String, Object> teamProperties = paramLayers.getTeamProperties();
-    Map<String, Object> workflowProperties = paramLayers.getWorkflowProperties();
-    Map<String, Object> reservedProperties = paramLayers.getReservedProperties();
+    Map<String, Object> globalParams = paramLayers.getGlobalProperties();
+    Map<String, Object> teamParams = paramLayers.getTeamProperties();
+    Map<String, Object> workflowParams = paramLayers.getWorkflowProperties();
+    Map<String, Object> systemParams = paramLayers.getSystemProperties();
+    
+//    buildSystemProperties(task, activityId, workflowId, systemProperties);
+    buildGlobalParams(globalParams);
 
-    buildGlobalParams(globalProperties);
-    buildSystemProperties(task, activityId, workflowId, systemProperties);
-    buildReservedPropertyList(reservedProperties, workflowId);
-
-    if (settingsService.getConfiguration("features", "teamParameters").getBooleanValue()) {
-      buildTeamProperties(teamProperties, workflowId);
+    List<String> workflowRefs = relationshipService.getFilteredRefs(Optional.of(RelationshipRef.WORKFLOWRUN),
+        Optional.of(List.of(wfRunId)), Optional.of(RelationshipType.BELONGSTO), Optional.empty(), Optional.empty());
+    if (!workflowRefs.isEmpty()) {
+      if (settingsService.getConfiguration("features", "teamParameters").getBooleanValue()) {
+        buildTeamParams(teamParams, workflowRefs.get(0));
+      }
     }
-    buildWorkflowProperties(workflowProperties, activityId, workflowId);
+
+    buildTokenParamList(reservedParams, workflowId);
+    buildWorkflowProperties(workflowParams, activityId, workflowId);
 
     if (task != null) {
       buildTaskInputProperties(paramLayers, task, activityId);
@@ -103,7 +116,7 @@ public class ParameterManagerImpl implements ParameterManager {
     return paramLayers;
   }
 
-  private void buildReservedPropertyList(Map<String, String> reservedProperties,
+  private void buildTokenParamList(Map<String, String> reservedProperties,
       String workflowId) {
 
     WorkflowEntity workflow = workflowService.getWorkflow(workflowId);
@@ -225,69 +238,66 @@ public class ParameterManagerImpl implements ParameterManager {
     }
   }
 
+  /*
+   * Build up global Params layer - defaultValue is not used with Global Params and can be ignored.
+   */
   private void buildGlobalParams(Map<String, Object> globalParams) {
-    List<GlobalParamEntity> globalConfigs = this.flowGlobalConfigService.getGlobalConfigs();
-    for (GlobalParamEntity entity : globalConfigs) {
-      if (entity.getValue() != null) {
-        globalParams.put(entity.getKey(), entity.getValue());
+    List<GlobalParam> params = this.globalParamService.getAll();
+    for (GlobalParam param : params) {
+      if (param.getValue() != null) {
+        globalParams.put(param.getKey(), param.getValue());
       }
     }
   }
 
-  @Override
-  public void buildSystemProperties(Task task, String activityId, String workflowId,
+  /*
+   * Build up the reserved system Params
+   * 
+   * TODO: check this with the reserved Tekton ones
+   */
+  private void buildSystemParams(Task task, String activityId, String workflowId,
       Map<String, String> systemProperties) {
 
-    WorkflowEntity workflow = workflowService.getWorkflow(workflowId);
-    if (activityId != null) {
-      ActivityEntity activity = activityService.findWorkflowActivity(activityId);
-      RevisionEntity revision =
-          revisionService.getWorkflowlWithId(activity.getWorkflowRevisionid());
-
-      if (revision != null) {
-        systemProperties.put("workflow-version", Long.toString(revision.getVersion()));
-      }
-      systemProperties.put("trigger-type", activity.getTrigger());
-      systemProperties.put("workflow-activity-initiator", "");
-      if (activity.getInitiatedByUserId() != null) {
-        systemProperties.put("workflow-activity-initiator", activity.getInitiatedByUserId());
-      }
-    }
-
-    systemProperties.put("workflow-name", workflow.getName());
-    systemProperties.put("workflow-activity-id", activityId);
-    systemProperties.put("workflow-id", workflow.getId());
-
-    systemProperties.put("trigger-webhook-url", this.webhookUrl);
-    systemProperties.put("trigger-wfe-url", this.waitForEventUrl);
-    systemProperties.put("trigger-event-url", this.eventUrl);
-
-
-    if (task != null) {
-      systemProperties.put("task-name", task.getTaskName());
-      systemProperties.put("task-id", task.getTaskId());
-      systemProperties.put("task-type", task.getTaskType().toString());
-    }
+//    WorkflowEntity workflow = workflowService.getWorkflow(workflowId);
+//    if (activityId != null) {
+//      ActivityEntity activity = activityService.findWorkflowActivity(activityId);
+//      RevisionEntity revision =
+//          revisionService.getWorkflowlWithId(activity.getWorkflowRevisionid());
+//
+//      if (revision != null) {
+//        systemProperties.put("workflow-version", Long.toString(revision.getVersion()));
+//      }
+//      systemProperties.put("trigger-type", activity.getTrigger());
+//      systemProperties.put("workflow-activity-initiator", "");
+//      if (activity.getInitiatedByUserId() != null) {
+//        systemProperties.put("workflow-activity-initiator", activity.getInitiatedByUserId());
+//      }
+//    }
+//
+//    systemProperties.put("workflow-name", workflow.getName());
+//    systemProperties.put("workflow-activity-id", activityId);
+//    systemProperties.put("workflow-id", workflow.getId());
+//
+//    systemProperties.put("trigger-webhook-url", this.webhookUrl);
+//    systemProperties.put("trigger-wfe-url", this.waitForEventUrl);
+//    systemProperties.put("trigger-event-url", this.eventUrl);
+//
+//
+//    if (task != null) {
+//      systemProperties.put("task-name", task.getTaskName());
+//      systemProperties.put("task-id", task.getTaskId());
+//      systemProperties.put("task-type", task.getTaskType().toString());
+//    }
   }
 
-  @Override
-  public void buildTeamProperties(Map<String, String> teamProperties, String workflowId) {
-    WorkflowSummary workflow = workflowService.getWorkflow(workflowId);
-
-    if (WorkflowScope.team.equals(workflow.getScope())) {
-      TeamEntity flowTeamEntity = this.teamService.findById(workflow.getFlowTeamId());
-      if (flowTeamEntity == null) {
-        return;
-      }
-
-      List<TeamParameter> teamConfig = null;
-      if (flowTeamEntity.getSettings() != null) {
-        teamConfig = flowTeamEntity.getSettings().getParameters();
-      }
-      if (teamConfig != null) {
-        for (TeamParameter config : teamConfig) {
-          teamProperties.put(config.getKey(), config.getValue());
-        }
+  /*
+   * Build up the Team Params - defaultValue is not used with Team Params and can be ignored.
+   */
+  public void buildTeamParams(Map<String, Object> teamParams, String teamId) {
+    ResponseEntity<List<TeamParameter>> params = this.teamService.getParameters(teamId);
+    if (params.getBody() != null) {
+      for (TeamParameter param : params.getBody()) {
+        teamParams.put(param.getKey(), param.getValue());
       }
     }
   }

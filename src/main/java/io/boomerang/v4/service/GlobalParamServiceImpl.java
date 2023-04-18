@@ -12,6 +12,13 @@ import io.boomerang.v4.data.entity.GlobalParamEntity;
 import io.boomerang.v4.data.repository.GlobalParamRepository;
 import io.boomerang.v4.model.GlobalParam;
 
+/*
+ * CRUD for Global Params
+ * 
+ * TODO: validate no need to hide sensitive params as only Admins can access
+ * 
+ * TODO: check if this is feature gated in settings
+ */
 @Service
 public class GlobalParamServiceImpl implements GlobalParamService {
 
