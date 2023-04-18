@@ -13,6 +13,7 @@ import io.boomerang.error.BoomerangException;
 import io.boomerang.v4.client.EngineClient;
 import io.boomerang.v4.client.WorkflowRunResponsePage;
 import io.boomerang.v4.data.entity.RelationshipEntity;
+import io.boomerang.v4.data.model.CurrentQuotas;
 import io.boomerang.v4.model.enums.RelationshipRef;
 import io.boomerang.v4.model.enums.RelationshipType;
 import io.boomerang.v4.model.ref.WorkflowRun;
@@ -36,6 +37,12 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
 
   @Autowired
   private RelationshipService relationshipService;
+  
+  @Autowired
+  private TeamService teamService;
+  
+  @Autowired
+  private SettingsService settingsService;
   
   /*
    * Get Workflow Run
@@ -103,13 +110,13 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
     
     List<String> workflowRefs = relationshipService.getFilteredRefs(Optional.of(RelationshipRef.WORKFLOWRUN),
         Optional.of(List.of(workflowId)), Optional.of(RelationshipType.BELONGSTO), Optional.empty(), Optional.empty());
-    if (!workflowRefs.isEmpty()) {
+    if (!workflowRefs.isEmpty() && canRunWithQuotas(workflowId)) {
       WorkflowRun wfRun = engineClient.submitWorkflowRun(workflowId, version, start, optRunRequest);
        // TODO: FUTURE - Creates the relationship with the Workflow
 //       relationshipService.addRelationshipRef(RelationshipRef.WORKFLOWRUN, wfRun.getId(), RelationshipType.EXECUTIONOF, RelationshipRef.WORKFLOW, Optional.of(workflowId));
       // Creates the owning relationship with the team that owns the Workflow
       Optional<RelationshipEntity> relEntity = relationshipService.getRelationship(RelationshipRef.WORKFLOW, workflowId, RelationshipType.BELONGSTO);
-      relationshipService.addRelationshipRef(RelationshipRef.WORKFLOWRUN, wfRun.getId(), relEntity.get().getToType(), Optional.of(relEntity.get().getToRef()));
+      relationshipService.addRelationshipRef(RelationshipRef.WORKFLOWRUN, wfRun.getId(), relEntity.get().getTo(), Optional.of(relEntity.get().getToRef()));
       return ResponseEntity.ok(wfRun);
     } else {
       //TODO: do we want to return invalid ref or unauthorized
@@ -194,5 +201,26 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
       //TODO: do we want to return invalid ref or unauthorized
       throw new BoomerangException(BoomerangError.WORKFLOW_RUN_INVALID_REF);
     }
+  }
+
+  /*
+   * Check if the quotas allow a Workflow to run
+   */
+  private boolean canRunWithQuotas(String workflowId) {
+    if (!settingsService.getConfiguration("features", "workflowQuotas").getBooleanValue()) {
+      return true;
+    }
+
+    Optional<RelationshipEntity> relEntities = relationshipService.getRelationship(RelationshipRef.WORKFLOWRUN,
+        workflowId, RelationshipType.BELONGSTO);
+    if (relEntities.isPresent() && relEntities.get().getTo().equals(RelationshipRef.TEAM)) {
+      CurrentQuotas quotas = teamService.getQuotas(relEntities.get().getToRef()).getBody();
+      if (quotas.getCurrentConcurrentWorkflows() <= quotas.getMaxConcurrentWorkflows()
+          || quotas.getCurrentWorkflowExecutionMonthly() <= quotas
+              .getMaxWorkflowExecutionMonthly()) {
+        return true;
+      }
+    }
+    return false;
   }
 }

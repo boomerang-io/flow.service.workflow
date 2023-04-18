@@ -1,20 +1,6 @@
 package io.boomerang.model;
 
-import io.boomerang.mongo.model.WorkflowScope;
-
-public class DuplicateRequest {
-  public WorkflowScope getScope() {
-    return scope;
-  }
-  public void setScope(WorkflowScope scope) {
-    this.scope = scope;
-  }
-  public String getTeamId() {
-    return teamId;
-  }
-  public void setTeamId(String teamId) {
-    this.teamId = teamId;
-  }
+public class WorkflowDuplicateRequest {
   public String getName() {
     return name;
   }
@@ -39,8 +25,6 @@ public class DuplicateRequest {
   public void setIcon(String icon) {
     this.icon = icon;
   }
-  private WorkflowScope scope;
-  private String teamId;
   private String name;
   private String description;
   private String summary;

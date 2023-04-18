@@ -34,12 +34,12 @@ import com.google.inject.internal.util.Lists;
 import com.google.inject.internal.util.Maps;
 import io.boomerang.error.BoomerangError;
 import io.boomerang.error.BoomerangException;
-import io.boomerang.model.DuplicateRequest;
 import io.boomerang.model.FlowWorkflowRevision;
 import io.boomerang.model.GenerateTokenResponse;
 import io.boomerang.model.TemplateWorkflowSummary;
 import io.boomerang.model.UserWorkflowSummary;
 import io.boomerang.model.WFETriggerResponse;
+import io.boomerang.model.WorkflowDuplicateRequest;
 import io.boomerang.model.WorkflowExport;
 import io.boomerang.model.WorkflowShortSummary;
 import io.boomerang.model.WorkflowSummary;
@@ -51,7 +51,6 @@ import io.boomerang.mongo.entity.FlowTaskTemplateEntity;
 import io.boomerang.mongo.entity.RevisionEntity;
 import io.boomerang.mongo.entity.WorkflowEntity;
 import io.boomerang.mongo.model.Dag;
-import io.boomerang.mongo.model.FlowTriggerEnum;
 import io.boomerang.mongo.model.Revision;
 import io.boomerang.mongo.model.TaskStatus;
 import io.boomerang.mongo.model.TaskType;
@@ -69,15 +68,17 @@ import io.boomerang.mongo.service.FlowWorkflowActivityService;
 import io.boomerang.mongo.service.FlowWorkflowService;
 import io.boomerang.mongo.service.RevisionService;
 import io.boomerang.security.service.UserValidationService;
-import io.boomerang.service.PropertyManager;
 import io.boomerang.service.UserIdentityService;
 import io.boomerang.util.DataAdapterUtil.FieldType;
 import io.boomerang.v4.data.entity.UserEntity;
 import io.boomerang.v4.data.model.CurrentQuotas;
 import io.boomerang.v4.data.model.Quotas;
 import io.boomerang.v4.model.Team;
+import io.boomerang.v4.model.enums.TriggerEnum;
+import io.boomerang.v4.service.ParameterManager;
 import io.boomerang.v4.service.SettingsService;
 import io.boomerang.v4.service.TeamService;
+import io.boomerang.v4.service.WorkflowScheduleService;
 import io.boomerang.util.ModelConverterV5;
 
 @Service
@@ -102,7 +103,7 @@ public class WorkflowServiceImpl implements WorkflowService {
   private UserIdentityService userIdentityService;
 
   @Autowired
-  private PropertyManager propertyManager;
+  private ParameterManager propertyManager;
 
   @Autowired
   private TeamService teamService;
@@ -712,8 +713,8 @@ public class WorkflowServiceImpl implements WorkflowService {
   @Override
   public boolean canExecuteWorkflow(String workflowId, Optional<String> trigger) {
     // Check no further if trigger not provided or is not Manual or Schedule
-    if (!trigger.isPresent() || (!FlowTriggerEnum.manual.toString().equals(trigger.get())
-        && (!FlowTriggerEnum.scheduler.toString().equals(trigger.get())))) {
+    if (!trigger.isPresent() || (!TriggerEnum.manual.toString().equals(trigger.get())
+        && (!TriggerEnum.scheduler.toString().equals(trigger.get())))) {
       return true;
     }
 
@@ -722,13 +723,13 @@ public class WorkflowServiceImpl implements WorkflowService {
     if (workflow != null && WorkflowStatus.active.equals(workflow.getStatus())) {
       if (workflow.getTriggers() != null) {
         Triggers triggers = workflow.getTriggers();
-        if (FlowTriggerEnum.manual.toString().equals(trigger.get())
+        if (TriggerEnum.manual.toString().equals(trigger.get())
             && triggers.getManual() != null) {
           Trigger manualTrigger = triggers.getManual();
           if (manualTrigger != null) {
             return manualTrigger.getEnable();
           }
-        } else if (FlowTriggerEnum.scheduler.toString().equals(trigger.get())
+        } else if (TriggerEnum.scheduler.toString().equals(trigger.get())
             && triggers.getScheduler() != null) {
           Trigger scheduleTrigger = triggers.getScheduler();
           if (scheduleTrigger != null) {
@@ -946,7 +947,7 @@ public class WorkflowServiceImpl implements WorkflowService {
   }
 
   @Override
-  public WorkflowSummary duplicateWorkflow(String id, DuplicateRequest duplicateRequest) {
+  public WorkflowSummary duplicateWorkflow(String id, WorkflowDuplicateRequest duplicateRequest) {
     WorkflowEntity existingWorkflow = workflowRepository.getWorkflow(id);
     String newName = existingWorkflow.getName() + " (duplicate)";
     existingWorkflow.setId(null);

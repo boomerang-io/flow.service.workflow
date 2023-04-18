@@ -1,14 +1,14 @@
-package io.boomerang.mongo.model;
+package io.boomerang.v4.model.enums;
 
 import java.util.Arrays;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-public enum FlowTriggerEnum {
+public enum TriggerEnum {
   manual("manual"), scheduler("scheduler"), webhook("webhook"), custom("custom");
 
   private String trigger;
 
-  FlowTriggerEnum(String trigger) {
+  TriggerEnum(String trigger) {
     this.trigger = trigger;
   }
 
@@ -17,8 +17,8 @@ public enum FlowTriggerEnum {
     return trigger;
   }
 
-  public static FlowTriggerEnum getFlowTriggerEnum(String flowTriggerEnum) {
-    return Arrays.asList(FlowTriggerEnum.values()).stream()
+  public static TriggerEnum getFlowTriggerEnum(String flowTriggerEnum) {
+    return Arrays.asList(TriggerEnum.values()).stream()
         .filter(value -> value.getTrigger().equals(flowTriggerEnum)).findFirst().orElse(null);
   }
 }

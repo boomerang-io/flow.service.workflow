@@ -105,10 +105,10 @@ public class RelationshipServiceImpl implements RelationshipService {
   @Override
   public RelationshipEntity addRelationshipRef(RelationshipRef fromType, String fromRef, RelationshipType relationship, RelationshipRef toType, Optional<String> toRef) {   
     RelationshipEntity relEntity = new RelationshipEntity();
-    relEntity.setFromType(fromType);
+    relEntity.setFrom(fromType);
     relEntity.setFromRef(fromRef);
-    relEntity.setRelationship(relationship);
-    relEntity.setToType(toType);
+    relEntity.setType(relationship);
+    relEntity.setTo(toType);
     if (toRef.isPresent()) {
       relEntity.setToRef(toRef.get());
     }

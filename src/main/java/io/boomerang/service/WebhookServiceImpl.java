@@ -12,10 +12,10 @@ import io.boomerang.model.FlowWebhookResponse;
 import io.boomerang.model.RequestFlowExecution;
 import io.boomerang.model.controller.TaskWorkspace;
 import io.boomerang.mongo.entity.WorkflowEntity;
-import io.boomerang.mongo.model.FlowTriggerEnum;
 import io.boomerang.mongo.model.WorkflowScope;
 import io.boomerang.mongo.service.FlowWorkflowActivityService;
 import io.boomerang.mongo.service.FlowWorkflowService;
+import io.boomerang.v4.model.enums.TriggerEnum;
 
 @Service
 public class WebhookServiceImpl implements WebhookService {
@@ -59,7 +59,7 @@ public class WebhookServiceImpl implements WebhookService {
     FlowActivity activity = null;
     if (workflowId != null) {
       activity = executionService.executeWorkflow(workflowId,
-          Optional.of(FlowTriggerEnum.webhook.toString()), Optional.of(executionRequest),
+          Optional.of(TriggerEnum.webhook.toString()), Optional.of(executionRequest),
           workspaces);
     }
     FlowWebhookResponse response = new FlowWebhookResponse();

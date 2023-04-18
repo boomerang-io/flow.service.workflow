@@ -4,20 +4,20 @@ import java.util.ArrayList;
 import java.util.List;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.ReadingConverter;
-import io.boomerang.mongo.model.FlowTriggerEnum;
+import io.boomerang.v4.model.enums.TriggerEnum;
 
 @ReadingConverter
-public abstract class FlowTriggerEnumConverter implements Converter<String, FlowTriggerEnum> { // NOSONAR
+public abstract class FlowTriggerEnumConverter implements Converter<String, TriggerEnum> { // NOSONAR
 
   private FlowTriggerEnumConverter() {
     // Do nothing
   }
 
-  public static List<FlowTriggerEnum> convert(List<String> sources) {
-    List<FlowTriggerEnum> enums = new ArrayList<>();
+  public static List<TriggerEnum> convert(List<String> sources) {
+    List<TriggerEnum> enums = new ArrayList<>();
 
     for (String source : sources) {
-      FlowTriggerEnum triggerEnum = FlowTriggerEnum.getFlowTriggerEnum(source);
+      TriggerEnum triggerEnum = TriggerEnum.getFlowTriggerEnum(source);
       enums.add(triggerEnum);
     }
     return enums;

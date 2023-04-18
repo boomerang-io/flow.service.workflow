@@ -28,8 +28,8 @@ public class RelationshipEntity {
    
   @Override
   public String toString() {
-    return "RelationshipEntity [id=" + id + ", relationship=" + type + ", fromType="
-        + from + ", fromRef=" + fromRef + ", toType=" + to + ", toRef=" + toRef + "]";
+    return "RelationshipEntity [id=" + id + ", type=" + type + ", from="
+        + from + ", fromRef=" + fromRef + ", to=" + to + ", toRef=" + toRef + ", date=" + creationDate + "]";
   }
   public String getId() {
     return id;
@@ -37,17 +37,17 @@ public class RelationshipEntity {
   public void setId(String id) {
     this.id = id;
   }
-  public RelationshipType getRelationship() {
+  public RelationshipType getType() {
     return type;
   }
-  public void setRelationship(RelationshipType relationship) {
-    this.type = relationship;
+  public void setType(RelationshipType type) {
+    this.type = type;
   }
-  public RelationshipRef getFromType() {
+  public RelationshipRef getFrom() {
     return from;
   }
-  public void setFromType(RelationshipRef fromType) {
-    this.from = fromType;
+  public void setFrom(RelationshipRef from) {
+    this.from = from;
   }
   public String getFromRef() {
     return fromRef;
@@ -55,11 +55,11 @@ public class RelationshipEntity {
   public void setFromRef(String fromRef) {
     this.fromRef = fromRef;
   }
-  public RelationshipRef getToType() {
+  public RelationshipRef getTo() {
     return to;
   }
-  public void setToType(RelationshipRef toType) {
-    this.to = toType;
+  public void setTo(RelationshipRef to) {
+    this.to = to;
   }
   public String getToRef() {
     return toRef;

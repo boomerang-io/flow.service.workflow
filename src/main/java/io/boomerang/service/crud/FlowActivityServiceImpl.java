@@ -61,7 +61,6 @@ import io.boomerang.mongo.entity.TaskExecutionEntity;
 import io.boomerang.mongo.entity.WorkflowEntity;
 import io.boomerang.mongo.model.Dag;
 import io.boomerang.mongo.model.ErrorResponse;
-import io.boomerang.mongo.model.FlowTriggerEnum;
 import io.boomerang.mongo.model.KeyValuePair;
 import io.boomerang.mongo.model.Revision;
 import io.boomerang.mongo.model.TaskStatus;
@@ -77,16 +76,17 @@ import io.boomerang.mongo.service.FlowWorkflowService;
 import io.boomerang.mongo.service.RevisionService;
 import io.boomerang.service.ActionService;
 import io.boomerang.service.FilterService;
-import io.boomerang.service.PropertyManager;
 import io.boomerang.service.UserIdentityService;
-import io.boomerang.service.refactor.ControllerRequestProperties;
 import io.boomerang.util.DataAdapterUtil.FieldType;
 import io.boomerang.v4.data.entity.TeamEntity;
 import io.boomerang.v4.data.entity.UserEntity;
 import io.boomerang.v4.model.Action;
+import io.boomerang.v4.model.enums.TriggerEnum;
+import io.boomerang.v4.service.ParameterManager;
 import io.boomerang.v4.service.SettingsService;
 import io.boomerang.v4.service.TeamService;
 import io.boomerang.util.DateUtil;
+import io.boomerang.util.ParameterLayers;
 import io.boomerang.util.ParameterMapper;
 
 @Service
@@ -137,7 +137,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
   private FlowTaskTemplateService templateService;
 
   @Autowired
-  private PropertyManager propertyManager;
+  private ParameterManager propertyManager;
 
 //  @Autowired
 //  @Lazy
@@ -193,7 +193,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
       final UserEntity userEntity = userIdentityService.getCurrentUser();
       activity.setInitiatedByUserId(userEntity.getId());
       activity.setInitiatedByUserName(userEntity.getName());
-      activity.setTrigger(FlowTriggerEnum.manual.toString());
+      activity.setTrigger(TriggerEnum.manual.toString());
     }
 
     if (request.getProperties() != null) {
@@ -650,8 +650,8 @@ public class FlowActivityServiceImpl implements FlowActivityService {
     task.setTaskId(taskId);
     task.setTaskType(taskExecution.getTaskType());
 
-    ControllerRequestProperties applicationProperties =
-        propertyManager.buildRequestPropertyLayering(task, activityId, activity.getWorkflowId());
+    ParameterLayers applicationProperties =
+        propertyManager.buildParameterLayering(task, activityId, activity.getWorkflowId());
     Map<String, String> map = applicationProperties.getMap(false);
 
     String workflowRevisionId = activity.getWorkflowRevisionid();

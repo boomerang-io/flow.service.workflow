@@ -25,7 +25,7 @@ import org.springframework.scheduling.quartz.SchedulerFactoryBean;
 import org.springframework.stereotype.Component;
 import io.boomerang.model.CronValidationResponse;
 import io.boomerang.mongo.entity.WorkflowScheduleEntity;
-import io.boomerang.service.crud.WorkflowScheduleService;
+import io.boomerang.v4.service.WorkflowScheduleService;
 
 @Component
 public class QuartzSchedulerService {

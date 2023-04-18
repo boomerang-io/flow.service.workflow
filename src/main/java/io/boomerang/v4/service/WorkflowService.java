@@ -2,6 +2,7 @@ package io.boomerang.v4.service;
 
 import java.util.List;
 import java.util.Optional;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import io.boomerang.v4.client.WorkflowResponsePage;
@@ -26,4 +27,10 @@ public interface WorkflowService {
 
   WorkflowResponsePage query(int page, int limit, Sort sort, Optional<List<String>> queryLabels,
       Optional<List<String>> queryStatus, Optional<List<String>> queryTeams, Optional<List<String>> workflows);
+
+  ResponseEntity<InputStreamResource> export(String workflowId);
+
+  ResponseEntity<Workflow> duplicate(String workflowId);
+
+  List<String> getAvailableParameters(String workflowId);
 }

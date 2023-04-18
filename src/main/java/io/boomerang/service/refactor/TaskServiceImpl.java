@@ -49,9 +49,10 @@ import io.boomerang.mongo.service.FlowTaskTemplateService;
 import io.boomerang.mongo.service.FlowWorkflowActivityService;
 import io.boomerang.mongo.service.FlowWorkflowService;
 import io.boomerang.mongo.service.RevisionService;
-import io.boomerang.service.PropertyManager;
 import io.boomerang.service.crud.FlowActivityService;
-import io.boomerang.service.crud.WorkflowScheduleService;
+import io.boomerang.util.ParameterLayers;
+import io.boomerang.v4.service.ParameterManager;
+import io.boomerang.v4.service.WorkflowScheduleService;
 
 @Service
 public class TaskServiceImpl implements TaskService {
@@ -85,7 +86,7 @@ public class TaskServiceImpl implements TaskService {
   private ApprovalService approvalService;
 
   @Autowired
-  private PropertyManager propertyManager;
+  private ParameterManager propertyManager;
 
   @Autowired
   private LockManager lockManager;
@@ -204,8 +205,8 @@ public class TaskServiceImpl implements TaskService {
 
   private void processDecision(Task task, String activityId) {
     String decisionValue = task.getDecisionValue();
-    ControllerRequestProperties properties =
-        propertyManager.buildRequestPropertyLayering(task, activityId, task.getWorkflowId());
+    ParameterLayers properties =
+        propertyManager.buildParameterLayering(task, activityId, task.getWorkflowId());
     String value = decisionValue;
     value = propertyManager.replaceValueWithProperty(value, activityId, properties);
     TaskExecutionEntity taskExecution = taskActivityService.findById(task.getTaskActivityId());
@@ -303,8 +304,8 @@ public class TaskServiceImpl implements TaskService {
         LOGGER.debug("With execution set to: " + executionCal.getTime().toString() + " in UTC");
 
         // Define new properties removing the System Task specific properties
-        ControllerRequestProperties requestProperties = propertyManager
-            .buildRequestPropertyLayering(task, activity.getId(), activity.getWorkflowId());
+        ParameterLayers requestProperties = propertyManager
+            .buildParameterLayering(task, activity.getId(), activity.getWorkflowId());
 
         Map<String, String> properties = new HashMap<>();
         for (Map.Entry<String, String> entry : task.getInputs().entrySet()) {
@@ -421,8 +422,8 @@ public class TaskServiceImpl implements TaskService {
     KeyValuePair outputProperty = new KeyValuePair();
     outputProperty.setKey(output);
 
-    ControllerRequestProperties requestProperties = propertyManager
-        .buildRequestPropertyLayering(task, activity.getId(), activity.getWorkflowId());
+    ParameterLayers requestProperties = propertyManager
+        .buildParameterLayering(task, activity.getId(), activity.getWorkflowId());
     String outputValue =
         propertyManager.replaceValueWithProperty(input, activity.getId(), requestProperties);
 
@@ -791,8 +792,8 @@ public class TaskServiceImpl implements TaskService {
           if (coreProperty != null && topic.equals(coreProperty.getValue())) {
 
             String text = coreProperty.getValue();
-            ControllerRequestProperties properties = propertyManager
-                .buildRequestPropertyLayering(null, activityId, activity.getWorkflowId());
+            ParameterLayers properties = propertyManager
+                .buildParameterLayering(null, activityId, activity.getWorkflowId());
             text = propertyManager.replaceValueWithProperty(text, activityId, properties);
 
             String taskId = task.getTaskId();

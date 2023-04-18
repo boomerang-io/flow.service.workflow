@@ -11,9 +11,9 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import io.boomerang.controller.GlobalConfigController;
 import io.boomerang.misc.FlowTests;
 import io.boomerang.service.config.model.GlobalConfig;
+import io.boomerang.v4.controller.GlobalParamController;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
@@ -23,7 +23,7 @@ import io.boomerang.service.config.model.GlobalConfig;
 public class GlobalConfigControllerTests extends FlowTests {
 
   @Autowired
-  private GlobalConfigController globalConfigController;
+  private GlobalParamController globalConfigController;
 
   @Test
   public void testGlobalConfigUpdate() {

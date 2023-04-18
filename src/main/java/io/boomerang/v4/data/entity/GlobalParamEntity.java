@@ -1,4 +1,4 @@
-package io.boomerang.mongo.entity;
+package io.boomerang.v4.data.entity;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -9,11 +9,11 @@ import io.boomerang.mongo.model.AbstractConfigurationProperty;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(Include.NON_NULL)
-@Document(collection = "#{@mongoConfiguration.fullCollectionName('global_config')}")
-public class FlowGlobalConfigEntity extends AbstractConfigurationProperty {
+@Document(collection = "#{@mongoConfiguration.fullCollectionName('global_params')}")
+public class GlobalParamEntity extends AbstractConfigurationProperty {
 
   @Id
-  private String id;
+  String id;
 
   public String getId() {
     return id;
@@ -22,5 +22,4 @@ public class FlowGlobalConfigEntity extends AbstractConfigurationProperty {
   public void setId(String id) {
     this.id = id;
   }
-
 }

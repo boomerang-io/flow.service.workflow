@@ -1,15 +1,18 @@
 package io.boomerang.v4.controller;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.domain.Sort.Order;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -17,7 +20,14 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import io.boomerang.v4.data.entity.ref.WorkflowEntity;
+import io.boomerang.error.BoomerangException;
+import io.boomerang.model.GenerateTokenResponse;
+import io.boomerang.model.WorkflowDuplicateRequest;
+import io.boomerang.model.WorkflowSchedule;
+import io.boomerang.model.WorkflowScheduleCalendar;
+import io.boomerang.model.WorkflowSummary;
+import io.boomerang.mongo.model.WorkflowProperty;
+import io.boomerang.v4.client.WorkflowResponsePage;
 import io.boomerang.v4.model.WorkflowCanvas;
 import io.boomerang.v4.model.ref.Workflow;
 import io.boomerang.v4.service.WorkflowService;
@@ -53,7 +63,7 @@ public class WorkflowV2Controller {
   @Operation(summary = "Search for Workflows")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
-  public Page<WorkflowEntity> queryWorkflows(@Parameter(name = "labels",
+  public WorkflowResponsePage queryWorkflows(@Parameter(name = "labels",
       description = "List of url encoded labels. For example Organization=Boomerang,customKey=test would be encoded as Organization%3DBoomerang,customKey%3Dtest)",
       required = false) @RequestParam(required = false) Optional<List<String>> labels,
       @Parameter(name = "status", description = "List of statuses to filter for. Defaults to all.",
@@ -76,10 +86,10 @@ public class WorkflowV2Controller {
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
   public ResponseEntity<Workflow> createWorkflow(
-    @Parameter(name = "owner", description = "Owner reference. Only relevant if scope = team|user", example = "63d3656ca845957db7d25ef0,63a3e732b0496509a7f1d763",
-        required = false) @RequestParam(required = false) Optional<String> owner,
+    @Parameter(name = "team", description = "Team as owner reference.", example = "63d3656ca845957db7d25ef0,63a3e732b0496509a7f1d763",
+        required = false) @RequestParam(required = false) Optional<String> team,
     @RequestBody Workflow workflow) {
-    return workflowService.create(workflow, owner);
+    return workflowService.create(workflow, team);
   }
 
   @PutMapping(value = "/")
@@ -91,19 +101,6 @@ public class WorkflowV2Controller {
           required = false) @RequestParam(required = false,
               defaultValue = "false") boolean replace) {
     return workflowService.apply(workflow, replace);
-  }
-
-  @GetMapping(value = "/{workflowId}/compose")
-  @Operation(summary = "Convert workflow to compose model for UI Designer and detailed Activity screens.")
-  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
-      @ApiResponse(responseCode = "400", description = "Bad Request")})
-  public ResponseEntity<WorkflowCanvas> composeWorkflow(
-
-      @Parameter(name = "workflowId", description = "ID of Workflow",
-          required = true) @PathVariable String workflowId,
-      @Parameter(name = "version", description = "Workflow Version",
-          required = false) @RequestParam(required = false) Optional<Integer> version) {
-    return workflowService.compose(workflowId, version);
   }
 
   @PutMapping(value = "/{workflowId}/enable")
@@ -132,4 +129,69 @@ public class WorkflowV2Controller {
       description = "ID of Workflow", required = true) @PathVariable String workflowId) {
     return workflowService.delete(workflowId);
   }  
+
+  @GetMapping(value = "/{workflowId}/export", produces = "application/json")
+  @Operation(summary = "Export the Workflow as JSON.")
+  public ResponseEntity<InputStreamResource> export(@PathVariable String workflowId) {
+    return workflowService.export(workflowId);
+  }
+
+  @GetMapping(value = "/{workflowId}/compose")
+  @Operation(summary = "Convert workflow to compose model for UI Designer and detailed Activity screens.")
+  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
+      @ApiResponse(responseCode = "400", description = "Bad Request")})
+  public ResponseEntity<WorkflowCanvas> compose(
+      @Parameter(name = "workflowId", description = "ID of Workflow",
+          required = true) @PathVariable String workflowId,
+      @Parameter(name = "version", description = "Workflow Version",
+          required = false) @RequestParam(required = false) Optional<Integer> version) {
+    return workflowService.compose(workflowId, version);
+  }
+
+  @PostMapping(value = "/{workflowId}/duplicate")
+  @Operation(summary = "Duplicates the workflow.")
+  public ResponseEntity<Workflow> duplicateWorkflow(
+      @Parameter(name = "workflowId", description = "ID of Workflow",
+      required = true) @PathVariable String workflowId) {
+    return workflowService.duplicate(workflowId);
+  }
+
+//  @PostMapping(value = "{id}/token")
+//  public GenerateTokenResponse createToken(@PathVariable String id, @RequestParam String label) {
+//    return workflowService.generateTriggerToken(id, label);
+//  }
+//
+//  @DeleteMapping(value = "{id}/token")
+//  public void deleteToken(@PathVariable String id, @RequestParam String label) {
+//    workflowService.deleteToken(id, label);
+//  }
+
+  @PatchMapping(value = "/{workflowId}/parameters")
+  public WorkflowSummary updateWorkflowProperties(@PathVariable String workFlowId,
+      @RequestBody List<WorkflowProperty> properties) {
+    return workflowService.updateWorkflowProperties(workFlowId, properties);
+  }
+
+  @GetMapping(value = "/{workflowId}/available-parameters")
+  @Operation(summary = "Retrieve the parameters.")
+  public List<String> getAvailableParameters(@PathVariable String workflowId) {
+    return workflowService.getAvailableParameters(workflowId);
+  }
+
+//  @GetMapping(value = "/{workflowId}/schedules")
+//  public List<WorkflowSchedule> getSchedulesForWorkflow(@PathVariable String workflowId) {
+//    return workflowScheduleService.getSchedulesForWorkflow(workflowId);
+//  }
+//
+//  @GetMapping(value = "/{workflowId}/schedules/calendar")
+//  public List<WorkflowScheduleCalendar> getCalendarsForWorkflow(@PathVariable String workflowId,
+//      @RequestParam Long fromDate, @RequestParam Long toDate) {
+//    if (workflowId != null && fromDate != null && toDate != null) {
+//      Date from = new Date(fromDate * 1000);
+//      Date to = new Date(toDate * 1000);
+//      return workflowScheduleService.getCalendarsForWorkflow(workflowId, from, to);
+//    } else {
+//      throw new BoomerangException(0, "Invalid fromDate or toDate", HttpStatus.BAD_REQUEST);
+//    }
+//  }
 }

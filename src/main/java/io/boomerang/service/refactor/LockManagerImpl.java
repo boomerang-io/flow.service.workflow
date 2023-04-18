@@ -17,8 +17,9 @@ import org.springframework.stereotype.Service;
 import com.github.alturkovic.lock.exception.LockNotAvailableException;
 import io.boomerang.model.Task;
 import io.boomerang.mongo.service.MongoConfiguration;
-import io.boomerang.service.PropertyManager;
 import io.boomerang.util.FlowMongoLock;
+import io.boomerang.util.ParameterLayers;
+import io.boomerang.v4.service.ParameterManager;
 
 @Service
 public class LockManagerImpl implements LockManager {
@@ -30,7 +31,7 @@ public class LockManagerImpl implements LockManager {
   private MongoConfiguration mongoConfiguration;
 
   @Autowired
-  private PropertyManager propertyManager;
+  private ParameterManager propertyManager;
 
   private static final Logger LOGGER = LogManager.getLogger(LockManagerImpl.class);
 
@@ -55,8 +56,8 @@ public class LockManagerImpl implements LockManager {
       
       if (properties.get("key") != null) {
         key = properties.get("key");
-        ControllerRequestProperties propertiesList =
-            propertyManager.buildRequestPropertyLayering(null, activityId, workflowId);
+        ParameterLayers propertiesList =
+            propertyManager.buildParameterLayering(null, activityId, workflowId);
         key = propertyManager.replaceValueWithProperty(key, activityId, propertiesList);
       }
       
@@ -113,16 +114,16 @@ public class LockManagerImpl implements LockManager {
       Map<String, String> properties = taskExecution.getInputs();
       if (properties.get("key") != null) {
         key = properties.get("key");
-        ControllerRequestProperties propertiesList =
-            propertyManager.buildRequestPropertyLayering(taskExecution, activityId, workflowId);
+        ParameterLayers propertiesList =
+            propertyManager.buildParameterLayering(taskExecution, activityId, workflowId);
         key = propertyManager.replaceValueWithProperty(key, activityId, propertiesList);
       }
     }
 
     if (key != null) {
       String workflowId = taskExecution.getWorkflowId();
-      ControllerRequestProperties properties =
-          propertyManager.buildRequestPropertyLayering(null, activityId, workflowId);
+      ParameterLayers properties =
+          propertyManager.buildParameterLayering(null, activityId, workflowId);
       final String textValue =
           propertyManager.replaceValueWithProperty(key, activityId, properties);
       Supplier<String> supplier = () -> textValue;

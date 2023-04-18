@@ -15,9 +15,9 @@ import org.springframework.scheduling.quartz.SchedulerFactoryBean;
 import io.boomerang.controller.ExecutionController;
 import io.boomerang.model.FlowExecutionRequest;
 import io.boomerang.model.WorkflowSchedule;
-import io.boomerang.mongo.model.FlowTriggerEnum;
 import io.boomerang.mongo.model.WorkflowScheduleType;
-import io.boomerang.service.crud.WorkflowScheduleService;
+import io.boomerang.v4.model.enums.TriggerEnum;
+import io.boomerang.v4.service.WorkflowScheduleService;
 
 @PersistJobDataAfterExecution
 public class WorkflowExecuteJob extends QuartzJobBean {
@@ -72,6 +72,6 @@ public class WorkflowExecuteJob extends QuartzJobBean {
     FlowExecutionRequest request = new FlowExecutionRequest();
     request.setProperties(properties);
 
-    executionController.executeWorkflow(workflowId, Optional.of(FlowTriggerEnum.scheduler.toString()), Optional.of(request));
+    executionController.executeWorkflow(workflowId, Optional.of(TriggerEnum.scheduler.toString()), Optional.of(request));
   }
 }

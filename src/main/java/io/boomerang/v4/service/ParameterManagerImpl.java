@@ -1,4 +1,4 @@
-package io.boomerang.service;
+package io.boomerang.v4.service;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -13,13 +13,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import io.boomerang.model.Task;
 import io.boomerang.model.WorkflowSummary;
 import io.boomerang.model.WorkflowToken;
 import io.boomerang.mongo.entity.ActivityEntity;
-import io.boomerang.mongo.entity.FlowGlobalConfigEntity;
 import io.boomerang.mongo.entity.FlowTaskTemplateEntity;
 import io.boomerang.mongo.entity.RevisionEntity;
 import io.boomerang.mongo.entity.TaskExecutionEntity;
@@ -31,84 +29,78 @@ import io.boomerang.mongo.model.TaskTemplateConfig;
 import io.boomerang.mongo.model.WorkflowProperty;
 import io.boomerang.mongo.model.WorkflowScope;
 import io.boomerang.mongo.model.next.DAGTask;
-import io.boomerang.mongo.service.ActivityTaskService;
-import io.boomerang.mongo.service.FlowGlobalConfigService;
-import io.boomerang.mongo.service.FlowTaskTemplateService;
-import io.boomerang.mongo.service.FlowTeamService;
-import io.boomerang.mongo.service.RevisionService;
-import io.boomerang.service.crud.FlowActivityService;
-import io.boomerang.service.crud.WorkflowService;
-import io.boomerang.service.refactor.ControllerRequestProperties;
+import io.boomerang.util.ParameterLayers;
+import io.boomerang.v4.data.entity.GlobalParamEntity;
 import io.boomerang.v4.data.entity.TeamEntity;
 import io.boomerang.v4.data.model.TeamParameter;
-import io.boomerang.v4.service.SettingsService;
+import io.boomerang.v4.model.ref.ParamLayers;
 
 @Service
-public class PropertyManagerImpl implements PropertyManager {
+public class ParameterManagerImpl implements ParameterManager {
 
   @Autowired
-  private SettingsService flowSettingsService;
-
-  @Autowired
-  private RevisionService revisionService;
+  private SettingsService settingsService;
+//
+//  @Autowired
+//  private RevisionService revisionService;
 
   @Autowired
   private WorkflowService workflowService;
 
   @Autowired
-  private FlowTeamService flowTeamService;
+  private TeamService teamService;
 
-  @Autowired
-  private FlowActivityService activityService;
+//  @Autowired
+//  private FlowActivityService activityService;
+//
+//  @Autowired
+//  public ActivityTaskService taskService;
 
-  @Autowired
-  public ActivityTaskService taskService;
+//  @Autowired
+//  private FlowGlobalConfigService flowGlobalConfigService;
+//
+//  @Autowired
+//  private FlowTaskTemplateService flowTaskTemplateService;
 
-  @Autowired
-  private FlowGlobalConfigService flowGlobalConfigService;
-
-  @Autowired
-  private FlowTaskTemplateService flowTaskTemplateService;
-
-  @Value("${flow.services.listener.webhook.url}")
-  private String webhookUrl;
-
-
-  @Value("${flow.services.listener.wfe.url}")
-  private String waitForEventUrl;
-
-
-  @Value("${flow.services.listener.event.url}")
-  private String eventUrl;
+//  @Value("${flow.services.listener.webhook.url}")
+//  private String webhookUrl;
+//
+//
+//  @Value("${flow.services.listener.wfe.url}")
+//  private String waitForEventUrl;
+//
+//
+//  @Value("${flow.services.listener.event.url}")
+//  private String eventUrl;
 
 
   final String[] reserved = {"system", "workflow", "global", "team", "workflow"};
 
   @Override
-  public ControllerRequestProperties buildRequestPropertyLayering(Task task, String activityId,
+  public ParamLayers buildParameterLayering(Task task, String activityId,
       String workflowId) {
-    ControllerRequestProperties applicationProperties = new ControllerRequestProperties();
-    Map<String, String> systemProperties = applicationProperties.getSystemProperties();
-    Map<String, String> globalProperties = applicationProperties.getGlobalProperties();
-    Map<String, String> teamProperties = applicationProperties.getTeamProperties();
-    Map<String, String> workflowProperties = applicationProperties.getWorkflowProperties();
-    Map<String, String> reservedProperties = applicationProperties.getReservedProperties();
+    ParamLayers paramLayers = new ParamLayers();
+    Map<String, Object> systemProperties = paramLayers.getSystemProperties();
+    Map<String, Object> globalProperties = paramLayers.getGlobalProperties();
+    Map<String, Object> teamProperties = paramLayers.getTeamProperties();
+    Map<String, Object> workflowProperties = paramLayers.getWorkflowProperties();
+    Map<String, Object> reservedProperties = paramLayers.getReservedProperties();
 
-    buildGlobalProperties(globalProperties);
+    buildGlobalParams(globalProperties);
     buildSystemProperties(task, activityId, workflowId, systemProperties);
     buildReservedPropertyList(reservedProperties, workflowId);
 
-    if (flowSettingsService.getConfiguration("features", "teamParameters").getBooleanValue()) {
+    if (settingsService.getConfiguration("features", "teamParameters").getBooleanValue()) {
       buildTeamProperties(teamProperties, workflowId);
     }
     buildWorkflowProperties(workflowProperties, activityId, workflowId);
 
     if (task != null) {
-      buildTaskInputProperties(applicationProperties, task, activityId);
+      buildTaskInputProperties(paramLayers, task, activityId);
     }
 
 
-    return applicationProperties;
+    return paramLayers;
   }
 
   private void buildReservedPropertyList(Map<String, String> reservedProperties,
@@ -122,7 +114,7 @@ public class PropertyManagerImpl implements PropertyManager {
     }
   }
 
-  private void buildTaskInputProperties(ControllerRequestProperties applicationProperties,
+  private void buildTaskInputProperties(ParameterLayers applicationProperties,
       Task task, String activityId) {
     ActivityEntity activity = activityService.findWorkflowActivity(activityId);
 
@@ -233,12 +225,11 @@ public class PropertyManagerImpl implements PropertyManager {
     }
   }
 
-  @Override
-  public void buildGlobalProperties(Map<String, String> globalProperties) {
-    List<FlowGlobalConfigEntity> globalConfigs = this.flowGlobalConfigService.getGlobalConfigs();
-    for (FlowGlobalConfigEntity entity : globalConfigs) {
+  private void buildGlobalParams(Map<String, Object> globalParams) {
+    List<GlobalParamEntity> globalConfigs = this.flowGlobalConfigService.getGlobalConfigs();
+    for (GlobalParamEntity entity : globalConfigs) {
       if (entity.getValue() != null) {
-        globalProperties.put(entity.getKey(), entity.getValue());
+        globalParams.put(entity.getKey(), entity.getValue());
       }
     }
   }
@@ -284,7 +275,7 @@ public class PropertyManagerImpl implements PropertyManager {
     WorkflowSummary workflow = workflowService.getWorkflow(workflowId);
 
     if (WorkflowScope.team.equals(workflow.getScope())) {
-      TeamEntity flowTeamEntity = this.flowTeamService.findById(workflow.getFlowTeamId());
+      TeamEntity flowTeamEntity = this.teamService.findById(workflow.getFlowTeamId());
       if (flowTeamEntity == null) {
         return;
       }
@@ -303,7 +294,7 @@ public class PropertyManagerImpl implements PropertyManager {
 
   @Override
   public String replaceValueWithProperty(String value, String activityId,
-      ControllerRequestProperties properties) {
+      ParameterLayers properties) {
 
     String replacementString = value;
     replacementString = replaceProperties(replacementString, activityId, properties);
@@ -312,7 +303,7 @@ public class PropertyManagerImpl implements PropertyManager {
   }
 
   private String replaceProperties(String value, String activityId,
-      ControllerRequestProperties applicationProperties) {
+      ParameterLayers applicationProperties) {
 
     Map<String, String> executionProperties = applicationProperties.getMap(true);
 
@@ -405,7 +396,7 @@ public class PropertyManagerImpl implements PropertyManager {
   }
 
   private String replaceAllParams(String value, String activityId,
-      ControllerRequestProperties applicationProperties) {
+      ParameterLayers applicationProperties) {
 
     String regex = "(?<=\\$\\().+?(?=\\))";
     Pattern pattern = Pattern.compile(regex);

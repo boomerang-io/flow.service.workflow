@@ -1,15 +1,15 @@
-package io.boomerang.service;
+package io.boomerang.v4.service;
 
 import java.util.Map;
 import io.boomerang.model.Task;
-import io.boomerang.service.refactor.ControllerRequestProperties;
+import io.boomerang.util.ParameterLayers;
 
-public interface PropertyManager {
+public interface ParameterManager {
 
-  ControllerRequestProperties buildRequestPropertyLayering(Task task, String activityId, String workflowId);
+  ParameterLayers buildParameterLayering(Task task, String activityId, String workflowId);
 
   public String replaceValueWithProperty(String value, String activityId,
-      ControllerRequestProperties properties);
+      ParameterLayers properties);
 
   public void buildSystemProperties(Task task, String activityId, String workflowId,
       Map<String, String> systemProperties);

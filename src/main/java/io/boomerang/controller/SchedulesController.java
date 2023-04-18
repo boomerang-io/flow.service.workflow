@@ -19,7 +19,7 @@ import io.boomerang.error.BoomerangException;
 import io.boomerang.model.CronValidationResponse;
 import io.boomerang.model.WorkflowSchedule;
 import io.boomerang.model.WorkflowScheduleCalendar;
-import io.boomerang.service.crud.WorkflowScheduleService;
+import io.boomerang.v4.service.WorkflowScheduleService;
 
 @RestController
 @RequestMapping("/workflow/schedules")

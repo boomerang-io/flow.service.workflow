@@ -20,7 +20,7 @@ import io.boomerang.model.CronValidationResponse;
 import io.boomerang.model.WorkflowSchedule;
 import io.boomerang.mongo.model.WorkflowScheduleStatus;
 import io.boomerang.mongo.model.WorkflowScheduleType;
-import io.boomerang.service.crud.WorkflowScheduleService;
+import io.boomerang.v4.service.WorkflowScheduleService;
 
 
 @ExtendWith(SpringExtension.class)

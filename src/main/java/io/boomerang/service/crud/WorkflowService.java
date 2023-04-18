@@ -6,12 +6,12 @@ import java.util.Optional;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import io.boomerang.model.DuplicateRequest;
 import io.boomerang.model.FlowWorkflowRevision;
 import io.boomerang.model.GenerateTokenResponse;
 import io.boomerang.model.TemplateWorkflowSummary;
 import io.boomerang.model.UserWorkflowSummary;
 import io.boomerang.model.WFETriggerResponse;
+import io.boomerang.model.WorkflowDuplicateRequest;
 import io.boomerang.model.WorkflowExport;
 import io.boomerang.model.WorkflowShortSummary;
 import io.boomerang.model.WorkflowSummary;
@@ -66,7 +66,7 @@ public interface WorkflowService {
 
   List<String> getWorkflowParameters(String workflowId, FlowWorkflowRevision workflowSummaryEntity);
 
-  WorkflowSummary duplicateWorkflow(String id, DuplicateRequest duplicateRequest);
+  WorkflowSummary duplicateWorkflow(String id, WorkflowDuplicateRequest duplicateRequest);
 
   boolean canExecuteWorkflowForQuotasForUser(String workflowId);
 

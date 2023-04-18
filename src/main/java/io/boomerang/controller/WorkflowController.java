@@ -23,10 +23,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.HttpClientErrorException;
 import io.boomerang.error.BoomerangException;
-import io.boomerang.model.DuplicateRequest;
 import io.boomerang.model.FlowWorkflowRevision;
 import io.boomerang.model.GenerateTokenResponse;
 import io.boomerang.model.RevisionResponse;
+import io.boomerang.model.WorkflowDuplicateRequest;
 import io.boomerang.model.WorkflowExport;
 import io.boomerang.model.WorkflowSchedule;
 import io.boomerang.model.WorkflowScheduleCalendar;
@@ -38,9 +38,9 @@ import io.boomerang.mongo.model.WorkflowScope;
 import io.boomerang.mongo.model.WorkflowStatus;
 import io.boomerang.mongo.service.FlowWorkflowService;
 import io.boomerang.service.UserIdentityService;
-import io.boomerang.service.crud.WorkflowScheduleService;
 import io.boomerang.service.crud.WorkflowService;
 import io.boomerang.service.crud.WorkflowVersionService;
+import io.boomerang.v4.service.WorkflowScheduleService;
 
 @RestController
 @RequestMapping("/workflow/workflow")
@@ -106,7 +106,7 @@ public class WorkflowController {
 
   @PostMapping(value = "/{workFlowId}/duplicate")
   public WorkflowSummary duplicateWorkflow(@PathVariable String workFlowId,
-      @RequestBody(required = false) DuplicateRequest duplicateRequest) {
+      @RequestBody(required = false) WorkflowDuplicateRequest duplicateRequest) {
     return workflowService.duplicateWorkflow(workFlowId, duplicateRequest);
   }
 
