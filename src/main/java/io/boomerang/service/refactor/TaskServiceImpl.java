@@ -206,7 +206,7 @@ public class TaskServiceImpl implements TaskService {
   private void processDecision(Task task, String activityId) {
     String decisionValue = task.getDecisionValue();
     ParameterLayers properties =
-        propertyManager.buildParameterLayering(task, activityId, task.getWorkflowId());
+        propertyManager.buildParameterLayers(task, activityId, task.getWorkflowId());
     String value = decisionValue;
     value = propertyManager.replaceValueWithProperty(value, activityId, properties);
     TaskExecutionEntity taskExecution = taskActivityService.findById(task.getTaskActivityId());
@@ -305,7 +305,7 @@ public class TaskServiceImpl implements TaskService {
 
         // Define new properties removing the System Task specific properties
         ParameterLayers requestProperties = propertyManager
-            .buildParameterLayering(task, activity.getId(), activity.getWorkflowId());
+            .buildParameterLayers(task, activity.getId(), activity.getWorkflowId());
 
         Map<String, String> properties = new HashMap<>();
         for (Map.Entry<String, String> entry : task.getInputs().entrySet()) {
@@ -423,7 +423,7 @@ public class TaskServiceImpl implements TaskService {
     outputProperty.setKey(output);
 
     ParameterLayers requestProperties = propertyManager
-        .buildParameterLayering(task, activity.getId(), activity.getWorkflowId());
+        .buildParameterLayers(task, activity.getId(), activity.getWorkflowId());
     String outputValue =
         propertyManager.replaceValueWithProperty(input, activity.getId(), requestProperties);
 
@@ -793,7 +793,7 @@ public class TaskServiceImpl implements TaskService {
 
             String text = coreProperty.getValue();
             ParameterLayers properties = propertyManager
-                .buildParameterLayering(null, activityId, activity.getWorkflowId());
+                .buildParameterLayers(null, activityId, activity.getWorkflowId());
             text = propertyManager.replaceValueWithProperty(text, activityId, properties);
 
             String taskId = task.getTaskId();

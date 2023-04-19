@@ -3,14 +3,12 @@ package io.boomerang.v4.service;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.bson.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.data.domain.Sort;
@@ -21,12 +19,6 @@ import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.boomerang.error.BoomerangError;
 import io.boomerang.error.BoomerangException;
-import io.boomerang.model.controller.TaskResult;
-import io.boomerang.mongo.entity.FlowTaskTemplateEntity;
-import io.boomerang.mongo.model.Dag;
-import io.boomerang.mongo.model.Revision;
-import io.boomerang.mongo.model.WorkflowScope;
-import io.boomerang.mongo.model.next.DAGTask;
 import io.boomerang.util.DataAdapterUtil;
 import io.boomerang.util.DataAdapterUtil.FieldType;
 import io.boomerang.v4.client.EngineClient;
@@ -42,7 +34,6 @@ import io.boomerang.v4.model.enums.RelationshipRef;
 import io.boomerang.v4.model.enums.RelationshipType;
 import io.boomerang.v4.model.enums.TriggerEnum;
 import io.boomerang.v4.model.enums.ref.TaskType;
-import io.boomerang.v4.model.ref.ParamSpec;
 import io.boomerang.v4.model.ref.Task;
 import io.boomerang.v4.model.ref.Trigger;
 import io.boomerang.v4.model.ref.TriggerEvent;
@@ -76,6 +67,9 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   @Autowired
   private SettingsService settingsService;
+  
+  @Autowired
+  private ParameterManager parameterManager;
 
   /*
    * Get Worklfow
@@ -362,89 +356,29 @@ public class WorkflowServiceImpl implements WorkflowService {
       throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
     }
   }  
+
   @Override
   public List<String> getAvailableParameters(String workflowId) {
-    final ResponseEntity<Workflow> response = this.get(workflowId, Optional.empty(), true);
-    Workflow workflow = response.getBody();
-    List<ParamSpec> parameters = workflow.getParams() != null ? workflow.getParams() : new ArrayList<>();
-
-    if (settingsService.getConfiguration("features", "globalParameters").getBooleanValue()) {
-      Map<String, String> globalProperties = new HashMap<>();
-      propertyManager.buildGlobalProperties(globalProperties);
-
-      for (Map.Entry<String, String> globalProperty : globalProperties.entrySet()) {
-        parameters.add("global.params." + globalProperty.getKey());
-        parameters.add("params." + globalProperty.getKey());
-      }
+    if (workflowId == null || workflowId.isBlank()) {
+      throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
     }
-
-    if (flowSettingsService.getConfiguration("features", "teamParameters").getBooleanValue()
-        && workflow.getScope() != null && WorkflowScope.team.equals(workflow.getScope())) {
-      Map<String, String> teamProperties = new HashMap<>();
-      propertyManager.buildTeamProperties(teamProperties, workflow.getId());
-
-      for (Map.Entry<String, String> teamProperty : teamProperties.entrySet()) {
-        parameters.add("team.params." + teamProperty.getKey());
-        parameters.add("params." + teamProperty.getKey());
-      }
+    List<String> teamRefs = relationshipService.getFilteredRefs(Optional.of(RelationshipRef.WORKFLOW),
+        Optional.of(List.of(workflowId)), Optional.of(RelationshipType.BELONGSTO),  Optional.of(RelationshipRef.TEAM), Optional.empty());
+    if (!teamRefs.isEmpty()) {
+      Workflow workflow = engineClient.getWorkflow(workflowId, Optional.empty(), false);
+      List<String> paramKeys = parameterManager.buildParamKeys(teamRefs.get(0), workflow.getParams());
+      workflow.getTasks().forEach(t -> {
+        t.getResults().forEach(r -> {
+          String key = "tasks." + t.getName() + ".results." + r.getName();
+          paramKeys.add(key);
+        });
+        //TODO get Results defined on Template
+      });
+    return paramKeys;
+    } else {
+      // TODO: do we want to return invalid ref or unauthorized
+      throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
     }
-
-    Map<String, String> workflowProperties = new HashMap<>();
-    propertyManager.buildWorkflowProperties(workflowProperties, null, workflow.getId());
-    for (Map.Entry<String, String> workflowProperty : workflowProperties.entrySet()) {
-      parameters.add("workflow.params." + workflowProperty.getKey());
-      parameters.add("params." + workflowProperty.getKey());
-    }
-
-    Map<String, String> systemProperties = new HashMap<>();
-    propertyManager.buildSystemProperties(null, null, workflow.getId(), systemProperties);
-    for (Map.Entry<String, String> systemProperty : systemProperties.entrySet()) {
-      parameters.add("system.params." + systemProperty.getKey());
-      parameters.add("params." + systemProperty.getKey());
-    }
-
-
-    if (revision != null) {
-      Dag dag = revision.getDag();
-      List<DAGTask> dagkTasks = dag.getTasks();
-      if (dagkTasks != null) {
-        for (DAGTask task : dagkTasks) {
-          String taskName = task.getLabel();
-          if (task.getTemplateId() != null) {
-            String templateId = task.getTemplateId();
-            FlowTaskTemplateEntity taskTemplate = templateService.getTaskTemplateWithId(templateId);
-
-            if (taskTemplate != null) {
-              if ("templateTask".equals(taskTemplate.getNodetype())) {
-                int revisionCount = taskTemplate.getRevisions().size();
-                Revision latestRevision = taskTemplate.getRevisions().stream()
-                    .filter(x -> x.getVersion() == revisionCount).findFirst().orElse(null);
-                if (latestRevision != null) {
-                  List<TaskResult> results = latestRevision.getResults();
-                  if (results != null) {
-                    for (TaskResult result : results) {
-                      String key = "tasks." + taskName + ".results." + result.getName();
-                      parameters.add(key);
-                    }
-                  }
-                }
-              } else {
-                List<TaskResult> results = task.getResults();
-                if (results != null) {
-                  for (TaskResult result : results) {
-                    String key = "tasks." + taskName + ".results." + result.getName();
-                    parameters.add(key);
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-
-    }
-
-    return parameters;
   }
   
   /*

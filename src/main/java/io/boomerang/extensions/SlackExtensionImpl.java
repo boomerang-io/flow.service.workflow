@@ -56,7 +56,7 @@ import io.boomerang.service.ExecutionService;
 import io.boomerang.service.FilterService;
 import io.boomerang.service.UserIdentityService;
 import io.boomerang.util.ParameterMapper;
-import io.boomerang.v4.service.SettingsService;
+import io.boomerang.v4.service.SettingsServiceImpl;
 
 /*
  * Handles the Slack app slash command and interactivity interactions
@@ -75,7 +75,7 @@ public class SlackExtensionImpl implements SlackExtension {
   private static final Logger LOGGER = LogManager.getLogger();
 
   @Autowired
-  private SettingsService flowSettingsService;
+  private SettingsServiceImpl flowSettingsService;
 
   @Autowired
   private FlowWorkflowService workflowRepository;
@@ -420,11 +420,11 @@ public class SlackExtensionImpl implements SlackExtension {
    */
   public ResponseEntity<?> handleAuth(String code) {
     final String appId =
-        flowSettingsService.getConfiguration("extensions", "slack.appId").getValue();
+        flowSettingsService.getSetting("extensions", "slack.appId").getValue();
     final String clientId =
-        flowSettingsService.getConfiguration("extensions", "slack.clientId").getValue();
+        flowSettingsService.getSetting("extensions", "slack.clientId").getValue();
     final String clientSecret =
-        flowSettingsService.getConfiguration("extensions", "slack.clientSecret").getValue();
+        flowSettingsService.getSetting("extensions", "slack.clientSecret").getValue();
 
     Slack slack = Slack.getInstance();
     try {
@@ -546,7 +546,7 @@ public class SlackExtensionImpl implements SlackExtension {
         LOGGER.debug("Using existing team Slack auth token: " + teamAuthToken);
         return teamAuthToken;
     }
-    String defaultAuthToken = flowSettingsService.getConfiguration("extensions", "slack.token").getValue();
+    String defaultAuthToken = flowSettingsService.getSetting("extensions", "slack.token").getValue();
     LOGGER.debug("Using default Slack auth token: " + defaultAuthToken);
     return defaultAuthToken;
   }
@@ -634,8 +634,8 @@ public class SlackExtensionImpl implements SlackExtension {
    * submitted in slack
    */
   private List<LayoutBlock> appHomeBlocks() {
-    String appName = flowSettingsService.getConfiguration("customizations", "appName").getValue();
-    String platformName = flowSettingsService.getConfiguration("customizations", "platformName").getValue();
+    String appName = flowSettingsService.getSetting("customizations", "appName").getValue();
+    String platformName = flowSettingsService.getSetting("customizations", "platformName").getValue();
     String joinedName = platformName + " " + appName;
     List<LayoutBlock> blocks = new LinkedList<>();
     blocks.add(HeaderBlock.builder()
@@ -703,7 +703,7 @@ public class SlackExtensionImpl implements SlackExtension {
   @Override
   public ResponseEntity<?> installRedirect() throws URISyntaxException {
     final String installURL = 
-        flowSettingsService.getConfiguration("extensions", "slack.installURL").getValue();
+        flowSettingsService.getSetting("extensions", "slack.installURL").getValue();
     return ResponseEntity.status(HttpStatus.FOUND).location(new URI(installURL)).build();
   }
   
@@ -717,7 +717,7 @@ public class SlackExtensionImpl implements SlackExtension {
    */
   @Override
   public Boolean verifySignature(String signature, String timestamp, String body) {
-    String key = this.flowSettingsService.getConfiguration("extensions", "slack.signingSecret").getValue();
+    String key = this.flowSettingsService.getSetting("extensions", "slack.signingSecret").getValue();
     LOGGER.debug("Key: " + key);
     LOGGER.debug("Slack Timestamp: " + timestamp);
     LOGGER.debug("Slack Body: " + body);

@@ -76,7 +76,7 @@ import io.boomerang.v4.data.model.Quotas;
 import io.boomerang.v4.model.Team;
 import io.boomerang.v4.model.enums.TriggerEnum;
 import io.boomerang.v4.service.ParameterManager;
-import io.boomerang.v4.service.SettingsService;
+import io.boomerang.v4.service.SettingsServiceImpl;
 import io.boomerang.v4.service.TeamService;
 import io.boomerang.v4.service.WorkflowScheduleService;
 import io.boomerang.util.ModelConverterV5;
@@ -113,7 +113,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 //  private ControllerClient controllerClient;
 
   @Autowired
-  private SettingsService flowSettingsService;
+  private SettingsServiceImpl flowSettingsService;
 
   @Autowired
   private UserValidationService userValidationService;
@@ -759,7 +759,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   @Override
   public boolean canExecuteWorkflowForQuotas(String teamId) {
-    if (!flowSettingsService.getConfiguration("features", "workflowQuotas").getBooleanValue()) {
+    if (!flowSettingsService.getSetting("features", "workflowQuotas").getBooleanValue()) {
       return true;
     }
 
@@ -859,7 +859,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     List<String> parameters = new ArrayList<>();
     WorkflowEntity workflow = workflowRepository.getWorkflow(workFlowId);
 
-    if (flowSettingsService.getConfiguration("features", "globalParameters").getBooleanValue()) {
+    if (flowSettingsService.getSetting("features", "globalParameters").getBooleanValue()) {
       Map<String, String> globalProperties = new HashMap<>();
       propertyManager.buildGlobalProperties(globalProperties);
 
@@ -869,7 +869,7 @@ public class WorkflowServiceImpl implements WorkflowService {
       }
     }
 
-    if (flowSettingsService.getConfiguration("features", "teamParameters").getBooleanValue()
+    if (flowSettingsService.getSetting("features", "teamParameters").getBooleanValue()
         && workflow.getScope() != null && WorkflowScope.team.equals(workflow.getScope())) {
       Map<String, String> teamProperties = new HashMap<>();
       propertyManager.buildTeamProperties(teamProperties, workflow.getId());
@@ -1063,13 +1063,13 @@ public class WorkflowServiceImpl implements WorkflowService {
     final String configurationKey = "users";
 
     int maxUserWorkflowCount = Integer.parseInt(flowSettingsService
-        .getConfiguration(configurationKey, "max.user.workflow.count").getValue());
+        .getSetting(configurationKey, "max.user.workflow.count").getValue());
     int maxExecutionsMonthly = Integer.parseInt(flowSettingsService
-        .getConfiguration(configurationKey, "max.user.workflow.execution.monthly").getValue());
+        .getSetting(configurationKey, "max.user.workflow.execution.monthly").getValue());
     int maxConcurrentExecutions = Integer.parseInt(flowSettingsService
-        .getConfiguration(configurationKey, "max.user.concurrent.workflows").getValue());
+        .getSetting(configurationKey, "max.user.concurrent.workflows").getValue());
     int maxWorkflowDuration = Integer.parseInt(flowSettingsService
-        .getConfiguration(configurationKey, "max.user.workflow.duration").getValue());
+        .getSetting(configurationKey, "max.user.workflow.duration").getValue());
 
 
     Quotas quotas = setTeamQuotas(user);
@@ -1159,7 +1159,7 @@ public class WorkflowServiceImpl implements WorkflowService {
   @Override
   public boolean canExecuteWorkflowForQuotasForUser(String workflowId) {
 
-    if (!flowSettingsService.getConfiguration("features", "workflowQuotas").getBooleanValue()) {
+    if (!flowSettingsService.getSetting("features", "workflowQuotas").getBooleanValue()) {
       return true;
     }
 

@@ -28,6 +28,7 @@ import io.boomerang.v4.model.ref.Workflow;
 import io.boomerang.v4.model.ref.WorkflowRun;
 import io.boomerang.v4.model.ref.WorkflowRunInsight;
 import io.boomerang.v4.model.ref.WorkflowRunRequest;
+import io.boomerang.v4.model.ref.WorkflowRunSubmitRequest;
 
 @Service
 @Primary
@@ -205,13 +206,10 @@ public class EngineClientImpl implements EngineClient {
   }
 
   @Override
-  public WorkflowRun submitWorkflowRun(String workflowId, Optional<Integer> version, boolean start, Optional<WorkflowRunRequest> request) {
+  public WorkflowRun submitWorkflowRun(WorkflowRunSubmitRequest request, boolean start) {
     try {
-      String url = submitWorkflowRunURL.replace("{workflowId}", workflowId);
+      String url = submitWorkflowRunURL;
       Map<String, String> requestParams = new HashMap<>();
-      if (version.isPresent()) {
-        requestParams.put("version", Integer.toString(version.get()));
-      }
       requestParams.put("start", Boolean.toString(start));
       String encodedURL =
           requestParams.keySet().stream().map(key -> key + "=" + requestParams.get(key)).collect(

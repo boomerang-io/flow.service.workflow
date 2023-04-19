@@ -15,7 +15,7 @@ import org.springframework.security.web.authentication.www.BasicAuthenticationFi
 import io.boomerang.mongo.service.FlowTokenService;
 import io.boomerang.security.filters.FlowAuthorizationFilter;
 import io.boomerang.v4.service.UserService;
-import io.boomerang.v4.service.SettingsService;
+import io.boomerang.v4.service.SettingsServiceImpl;
 
 @Configuration
 @EnableWebSecurity
@@ -46,7 +46,7 @@ public class WebSecurity extends WebSecurityConfigurerAdapter {
   private UserService flowUserService;
   
   @Autowired
-  private SettingsService flowSettingsService;
+  private SettingsServiceImpl flowSettingsService;
 
   @Value("${boomerang.authorization.enabled:false}")
   private boolean boomerangAuthorization;

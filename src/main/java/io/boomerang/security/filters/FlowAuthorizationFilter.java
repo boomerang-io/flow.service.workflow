@@ -37,7 +37,7 @@ import io.boomerang.security.model.UserToken;
 import io.boomerang.security.util.MultiReadHttpServletRequest;
 import io.boomerang.v4.data.entity.UserEntity;
 import io.boomerang.v4.service.UserService;
-import io.boomerang.v4.service.SettingsService;
+import io.boomerang.v4.service.SettingsServiceImpl;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.impl.DefaultJwtParser;
@@ -56,10 +56,10 @@ public class FlowAuthorizationFilter extends BasicAuthenticationFilter {
   private static final Logger LOGGER = LogManager.getLogger();
   private FlowTokenService tokenService;
   private UserService flowUserService;
-  private SettingsService flowSettingsService;
+  private SettingsServiceImpl flowSettingsService;
   
   public FlowAuthorizationFilter(FlowTokenService tokenService, AuthenticationManager authManager,
-      UserService flowUserService, SettingsService flowSettingsService, String basicPassword) {
+      UserService flowUserService, SettingsServiceImpl flowSettingsService, String basicPassword) {
     super(authManager);
     this.tokenService = tokenService;
     this.basicPassword = basicPassword;
@@ -264,7 +264,7 @@ public class FlowAuthorizationFilter extends BasicAuthenticationFilter {
 * </ul>
 */
 private Boolean verifySignature(String signature, String timestamp, String body) {
- String key = this.flowSettingsService.getConfiguration("extensions", "slack.signingSecret").getValue();
+ String key = this.flowSettingsService.getSetting("extensions", "slack.signingSecret").getValue();
  LOGGER.debug("Key: " + key);
  LOGGER.debug("Slack Timestamp: " + timestamp);
  LOGGER.debug("Slack Body: " + body);

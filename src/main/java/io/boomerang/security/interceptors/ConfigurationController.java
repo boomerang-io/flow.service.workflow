@@ -9,11 +9,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.HttpClientErrorException;
-import io.boomerang.model.FlowSettings;
 import io.boomerang.mongo.model.UserType;
 import io.boomerang.service.UserIdentityService;
 import io.boomerang.service.crud.ConfigurationService;
 import io.boomerang.v4.data.entity.UserEntity;
+import io.boomerang.v4.model.Settings;
 
 @RestController
 @RequestMapping("/workflow/settings")
@@ -26,13 +26,13 @@ public class ConfigurationController {
   UserIdentityService service;
 
   @GetMapping(value = "")
-  public List<FlowSettings> getAppConfiguration() {
+  public List<Settings> getAppConfiguration() {
     validateUser();
     return configurationService.getAllSettings();
   }
 
   @PutMapping(value = "")
-  public List<FlowSettings> updateSettings(@RequestBody List<FlowSettings> settings) {
+  public List<Settings> updateSettings(@RequestBody List<Settings> settings) {
     validateUser();
     return configurationService.updateSettings(settings);
   }

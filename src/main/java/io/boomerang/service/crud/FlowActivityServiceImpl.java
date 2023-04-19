@@ -83,7 +83,7 @@ import io.boomerang.v4.data.entity.UserEntity;
 import io.boomerang.v4.model.Action;
 import io.boomerang.v4.model.enums.TriggerEnum;
 import io.boomerang.v4.service.ParameterManager;
-import io.boomerang.v4.service.SettingsService;
+import io.boomerang.v4.service.SettingsServiceImpl;
 import io.boomerang.v4.service.TeamService;
 import io.boomerang.util.DateUtil;
 import io.boomerang.util.ParameterLayers;
@@ -93,7 +93,7 @@ import io.boomerang.util.ParameterMapper;
 public class FlowActivityServiceImpl implements FlowActivityService {
 
   @Autowired
-  private SettingsService flowSettingsService;
+  private SettingsServiceImpl flowSettingsService;
 
   @Autowired
   private FlowWorkflowActivityService flowActivityService;
@@ -651,7 +651,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
     task.setTaskType(taskExecution.getTaskType());
 
     ParameterLayers applicationProperties =
-        propertyManager.buildParameterLayering(task, activityId, activity.getWorkflowId());
+        propertyManager.buildParameterLayers(task, activityId, activity.getWorkflowId());
     Map<String, String> map = applicationProperties.getMap(false);
 
     String workflowRevisionId = activity.getWorkflowRevisionid();
@@ -819,7 +819,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
     long maxDuration = TimeUnit.MINUTES.toMillis(this.maxWorkflowDuration);
     if (scope == WorkflowScope.user) {
       maxDuration = TimeUnit.MINUTES.toMillis(Integer.parseInt(
-          flowSettingsService.getConfiguration("users", "max.user.workflow.duration").getValue()));
+          flowSettingsService.getSetting("users", "max.user.workflow.duration").getValue()));
 
     } else if (scope == WorkflowScope.team) {
       maxDuration = TimeUnit.MINUTES.toMillis(teamService.getTeamById(workflow.getFlowTeamId())

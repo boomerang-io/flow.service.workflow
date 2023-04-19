@@ -922,15 +922,15 @@ public class TeamServiceImpl implements TeamService {
   private Quotas setDefaultQuotas() {
     Quotas quotas = new Quotas();
     quotas.setMaxWorkflowCount(Integer
-        .valueOf(settingsService.getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_COUNT).getValue()));
+        .valueOf(settingsService.getSetting(TEAMS, MAX_TEAM_WORKFLOW_COUNT).getValue()));
     quotas.setMaxWorkflowExecutionMonthly(Integer.valueOf(
-        settingsService.getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_EXECUTION_MONTHLY).getValue()));
+        settingsService.getSetting(TEAMS, MAX_TEAM_WORKFLOW_EXECUTION_MONTHLY).getValue()));
     quotas.setMaxWorkflowStorage(Integer.valueOf(settingsService
-        .getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_STORAGE).getValue().replace("Gi", "")));
+        .getSetting(TEAMS, MAX_TEAM_WORKFLOW_STORAGE).getValue().replace("Gi", "")));
     quotas.setMaxWorkflowExecutionTime(Integer
-        .valueOf(settingsService.getConfiguration(TEAMS, MAX_TEAM_WORKFLOW_DURATION).getValue()));
+        .valueOf(settingsService.getSetting(TEAMS, MAX_TEAM_WORKFLOW_DURATION).getValue()));
     quotas.setMaxConcurrentWorkflows(Integer
-        .valueOf(settingsService.getConfiguration(TEAMS, MAX_TEAM_CONCURRENT_WORKFLOW).getValue()));
+        .valueOf(settingsService.getSetting(TEAMS, MAX_TEAM_CONCURRENT_WORKFLOW).getValue()));
     return quotas;
   }
 

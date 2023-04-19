@@ -7,10 +7,10 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import io.boomerang.model.FlowSettings;
 import io.boomerang.mongo.model.TokenScope;
 import io.boomerang.security.interceptors.AuthenticationScope;
 import io.boomerang.service.crud.ConfigurationService;
+import io.boomerang.v4.model.Settings;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -30,7 +30,7 @@ public class FlowManagementV1Controller {
   @Operation(summary = "Retrieve Boomerang Flow Settings")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
-  public List<FlowSettings> getAppConfiguration() {
+  public List<Settings> getAppConfiguration() {
     return configurationService.getAllSettings();
   }
 
@@ -39,7 +39,7 @@ public class FlowManagementV1Controller {
   @Operation(summary = "Update Boomerang Flow Settings")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
-  public List<FlowSettings> updateSettings(@RequestBody List<FlowSettings> settings) {
+  public List<Settings> updateSettings(@RequestBody List<Settings> settings) {
     return configurationService.updateSettings(settings);
   }
 }

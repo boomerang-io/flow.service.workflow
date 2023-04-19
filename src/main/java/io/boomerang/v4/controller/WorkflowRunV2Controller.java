@@ -22,6 +22,7 @@ import io.boomerang.security.interceptors.AuthenticationScope;
 import io.boomerang.v4.data.entity.ref.WorkflowRunEntity;
 import io.boomerang.v4.model.ref.WorkflowRun;
 import io.boomerang.v4.model.ref.WorkflowRunRequest;
+import io.boomerang.v4.model.ref.WorkflowRunSubmitRequest;
 import io.boomerang.v4.service.WorkflowRunService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -30,7 +31,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
-@RequestMapping("/api/v2/workflow")
+@RequestMapping("/api/v2/workflowrun")
 @Tag(name = "WorkflowRun Activity Management",
     description = "Submit requests to execute workflows and provide the ability to search and retrieve workflow activities.")
 public class WorkflowRunV2Controller {
@@ -38,7 +39,7 @@ public class WorkflowRunV2Controller {
   @Autowired
   private WorkflowRunService workflowRunService;
 
-  @GetMapping(value = "/run/query")
+  @GetMapping(value = "/query")
   @AuthenticationScope(scopes = {TokenScope.global, TokenScope.team, TokenScope.user})
   @Operation(summary = "Search for Workflow Runs")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
@@ -65,7 +66,20 @@ public class WorkflowRunV2Controller {
     return workflowRunService.query(page, limit, sort, labels, status, phase, teams, workflowRuns);
   }
 
-  @GetMapping(value = "/run/{workflowRunId}")
+  @PostMapping(value = "/submit")
+  @AuthenticationScope(scopes = {TokenScope.global, TokenScope.team, TokenScope.user})
+  @Operation(summary = "Submit a Workflow to be run. Will queue the Workflow Run ready for execution.")
+  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
+      @ApiResponse(responseCode = "400", description = "Bad Request")})
+  public ResponseEntity<WorkflowRun> submitWorkflowRun(
+      @Parameter(name = "start",
+      description = "Start the Workflow Run immediately after submission",
+      required = false) @RequestParam(required = false, defaultValue = "false") boolean start,
+      @RequestBody WorkflowRunSubmitRequest request) {
+    return workflowRunService.submit(request, start);
+  }
+
+  @GetMapping(value = "/{workflowRunId}")
   @AuthenticationScope(scopes = {TokenScope.global, TokenScope.team, TokenScope.user})
   @Operation(summary = "Retrieve a specific Workflow Run.")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
@@ -80,26 +94,7 @@ public class WorkflowRunV2Controller {
     return workflowRunService.get(workflowRunId, withTasks);
   }
 
-  @PostMapping(value = "/{workflowId}/run/submit")
-  @AuthenticationScope(scopes = {TokenScope.global, TokenScope.team, TokenScope.user})
-  @Operation(summary = "Submit a Workflow to be run. Will queue the Workflow Run ready for execution.")
-  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
-      @ApiResponse(responseCode = "400", description = "Bad Request")})
-  public ResponseEntity<WorkflowRun> submitWorkflowRun(
-      @Parameter(name = "workflowId",
-      description = "ID of Workflow to Request a Run for",
-      required = true) @PathVariable(required = true) String workflowId,
-      @Parameter(name = "version",
-      description = "Workflow Version",
-      required = false) @RequestParam(required = false) Optional<Integer> version,
-      @Parameter(name = "start",
-      description = "Start the Workflow Run immediately after submission",
-      required = false) @RequestParam(required = false, defaultValue = "false") boolean start,
-      @RequestBody Optional<WorkflowRunRequest> runRequest) {
-    return workflowRunService.submit(workflowId, version, start, runRequest);
-  }
-
-  @PutMapping(value = "/run/{workflowRunId}/start")
+  @PutMapping(value = "/{workflowRunId}/start")
   @AuthenticationScope(scopes = {TokenScope.global, TokenScope.team, TokenScope.user})
   @Operation(summary = "Start Workflow Run execution. The Workflow Run has to already have been queued.")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
@@ -112,7 +107,7 @@ public class WorkflowRunV2Controller {
     return workflowRunService.start(workflowRunId, runRequest);
   }
 
-  @PutMapping(value = "/run/{workflowRunId}/finalize")
+  @PutMapping(value = "/{workflowRunId}/finalize")
   @AuthenticationScope(scopes = {TokenScope.global, TokenScope.team, TokenScope.user})
   @Operation(summary = "End a Workflow Run")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
@@ -124,7 +119,7 @@ public class WorkflowRunV2Controller {
     return workflowRunService.finalize(workflowRunId);
   }
 
-  @DeleteMapping(value = "/run/{workflowRunId}/cancel")
+  @DeleteMapping(value = "/{workflowRunId}/cancel")
   @AuthenticationScope(scopes = {TokenScope.global, TokenScope.team, TokenScope.user})
   @Operation(summary = "Cancel a Workflow Run")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
@@ -136,7 +131,7 @@ public class WorkflowRunV2Controller {
     return workflowRunService.cancel(workflowRunId);
   }
 
-  @PutMapping(value = "/run/{workflowRunId}/retry")
+  @PutMapping(value = "/{workflowRunId}/retry")
   @AuthenticationScope(scopes = {TokenScope.global, TokenScope.team, TokenScope.user})
   @Operation(summary = "Retry Workflow Run execution.")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),

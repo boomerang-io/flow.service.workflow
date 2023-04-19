@@ -57,7 +57,7 @@ public class LockManagerImpl implements LockManager {
       if (properties.get("key") != null) {
         key = properties.get("key");
         ParameterLayers propertiesList =
-            propertyManager.buildParameterLayering(null, activityId, workflowId);
+            propertyManager.buildParameterLayers(null, activityId, workflowId);
         key = propertyManager.replaceValueWithProperty(key, activityId, propertiesList);
       }
       
@@ -115,7 +115,7 @@ public class LockManagerImpl implements LockManager {
       if (properties.get("key") != null) {
         key = properties.get("key");
         ParameterLayers propertiesList =
-            propertyManager.buildParameterLayering(taskExecution, activityId, workflowId);
+            propertyManager.buildParameterLayers(taskExecution, activityId, workflowId);
         key = propertyManager.replaceValueWithProperty(key, activityId, propertiesList);
       }
     }
@@ -123,7 +123,7 @@ public class LockManagerImpl implements LockManager {
     if (key != null) {
       String workflowId = taskExecution.getWorkflowId();
       ParameterLayers properties =
-          propertyManager.buildParameterLayering(null, activityId, workflowId);
+          propertyManager.buildParameterLayers(null, activityId, workflowId);
       final String textValue =
           propertyManager.replaceValueWithProperty(key, activityId, properties);
       Supplier<String> supplier = () -> textValue;

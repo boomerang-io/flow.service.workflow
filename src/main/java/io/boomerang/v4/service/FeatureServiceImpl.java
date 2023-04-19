@@ -20,7 +20,7 @@ public class FeatureServiceImpl implements FeatureService {
     Map<String, Object> features = new HashMap<>();
     Map<String, Object> quotas = new HashMap<>();
 
-    Config config = settingsService.getConfiguration("controller", "enable.tasks");
+    Config config = settingsService.getSetting("controller", "enable.tasks");
 
     if (config != null) {
       features.put(VERIFIED_TASK_EDIT_KEY, config.getBooleanValue());
@@ -28,31 +28,31 @@ public class FeatureServiceImpl implements FeatureService {
       features.put(VERIFIED_TASK_EDIT_KEY, false);
     }
     features.put("workflow.quotas",
-        settingsService.getConfiguration("features", "workflowQuotas").getBooleanValue());
+        settingsService.getSetting("features", "workflowQuotas").getBooleanValue());
     features.put("workflow.triggers",
-        settingsService.getConfiguration("features", "workflowTriggers").getBooleanValue());
+        settingsService.getSetting("features", "workflowTriggers").getBooleanValue());
     features.put("workflow.tokens",
-        settingsService.getConfiguration("features", "workflowTokens").getBooleanValue());
+        settingsService.getSetting("features", "workflowTokens").getBooleanValue());
     features.put("team.parameters",
-        settingsService.getConfiguration("features", "teamParameters").getBooleanValue());
+        settingsService.getSetting("features", "teamParameters").getBooleanValue());
     features.put("global.parameters",
-        settingsService.getConfiguration("features", "globalParameters").getBooleanValue());
+        settingsService.getSetting("features", "globalParameters").getBooleanValue());
     features.put("team.management",
-        settingsService.getConfiguration("features", "teamManagement").getBooleanValue());
+        settingsService.getSetting("features", "teamManagement").getBooleanValue());
     features.put("user.management",
-        settingsService.getConfiguration("features", "userManagement").getBooleanValue());
+        settingsService.getSetting("features", "userManagement").getBooleanValue());
     features.put("activity",
-        settingsService.getConfiguration("features", "activity").getBooleanValue());
+        settingsService.getSetting("features", "activity").getBooleanValue());
     features.put("insights",
-        settingsService.getConfiguration("features", "insights").getBooleanValue());
+        settingsService.getSetting("features", "insights").getBooleanValue());
     features.put("team.tasks",
-        settingsService.getConfiguration("features", "teamTasks").getBooleanValue());
+        settingsService.getSetting("features", "teamTasks").getBooleanValue());
 
     quotas.put("maxActivityStorageSize", settingsService
-        .getConfiguration("activity", "max.storage.size").getValue().replace("Gi", ""));
+        .getSetting("activity", "max.storage.size").getValue().replace("Gi", ""));
 
     quotas.put("maxWorkflowStorageSize", settingsService
-        .getConfiguration("workflow", "max.storage.size").getValue().replace("Gi", ""));
+        .getSetting("workflow", "max.storage.size").getValue().replace("Gi", ""));
 
     flowFeatures.setFeatures(features);
     flowFeatures.setQuotas(quotas);

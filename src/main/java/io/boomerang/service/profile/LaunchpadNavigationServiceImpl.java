@@ -24,7 +24,7 @@ import io.boomerang.mongo.model.Config;
 import io.boomerang.security.model.UserToken;
 import io.boomerang.security.service.ApiTokenService;
 import io.boomerang.service.UserIdentityService;
-import io.boomerang.v4.service.SettingsService;
+import io.boomerang.v4.service.SettingsServiceImpl;
 
 @Service
 public class LaunchpadNavigationServiceImpl implements LaunchpadNavigationService {
@@ -58,7 +58,7 @@ public class LaunchpadNavigationServiceImpl implements LaunchpadNavigationServic
   private String platformNavigationUrl;
 
   @Autowired
-  private SettingsService settingsService;
+  private SettingsServiceImpl settingsService;
   
   private static final String AUTHORIZATION_HEADER = "Authorization";
   private static final String TOKEN_PREFIX = "Bearer ";
@@ -99,10 +99,10 @@ public class LaunchpadNavigationServiceImpl implements LaunchpadNavigationServic
     
     navigationResponse.setFeatures(features);
 
-    String appName = settingsService.getConfiguration("customizations", "appName").getValue();
-    String platformName = settingsService.getConfiguration("customizations", "platformName").getValue();
-    String displayLogo = settingsService.getConfiguration("customizations", "displayLogo").getValue();
-    String logoURL = settingsService.getConfiguration("customizations", "logoURL").getValue();
+    String appName = settingsService.getSetting("customizations", "appName").getValue();
+    String platformName = settingsService.getSetting("customizations", "platformName").getValue();
+    String displayLogo = settingsService.getSetting("customizations", "displayLogo").getValue();
+    String logoURL = settingsService.getSetting("customizations", "logoURL").getValue();
     String name = platformName + " " + appName;
     Platform platform = new Platform();
     platform.setName(name.trim());
@@ -145,7 +145,7 @@ public class LaunchpadNavigationServiceImpl implements LaunchpadNavigationServic
   
   private String getAppNameInSettings() {
     try {
-      Config config = settingsService.getConfiguration("customizations", "appName");
+      Config config = settingsService.getSetting("customizations", "appName");
       return config == null ? null : config.getValue();
     } catch (Exception e) {
     }

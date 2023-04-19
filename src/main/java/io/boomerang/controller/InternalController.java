@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.fasterxml.jackson.databind.JsonNode;
 import io.boomerang.model.FlowActivity;
-import io.boomerang.model.FlowSettings;
 import io.boomerang.model.FlowWebhookResponse;
 import io.boomerang.model.GenerateTokenResponse;
 import io.boomerang.model.RequestFlowExecution;
@@ -31,6 +30,7 @@ import io.boomerang.service.WebhookService;
 import io.boomerang.service.crud.ConfigurationService;
 import io.boomerang.service.crud.WorkflowService;
 import io.boomerang.service.refactor.TaskService;
+import io.boomerang.v4.model.Settings;
 import io.cloudevents.v1.CloudEventImpl;
 
 @RestController
@@ -106,13 +106,13 @@ public class InternalController {
 
   @GetMapping(value = "/workflow/settings")
   @Deprecated
-  public List<FlowSettings> getAppConfiguration() {
+  public List<Settings> getAppConfiguration() {
     return configurationService.getAllSettings();
   }
 
   @PutMapping(value = "/workflow/settings")
   @Deprecated
-  public List<FlowSettings> updateSettings(@RequestBody List<FlowSettings> settings) {
+  public List<Settings> updateSettings(@RequestBody List<Settings> settings) {
     return configurationService.updateSettings(settings);
   }
 

@@ -9,6 +9,7 @@ import io.boomerang.v4.model.ref.Workflow;
 import io.boomerang.v4.model.ref.WorkflowRun;
 import io.boomerang.v4.model.ref.WorkflowRunInsight;
 import io.boomerang.v4.model.ref.WorkflowRunRequest;
+import io.boomerang.v4.model.ref.WorkflowRunSubmitRequest;
 
 public interface EngineClient {
 
@@ -21,8 +22,7 @@ public interface EngineClient {
   WorkflowRunInsight insightWorkflowRuns(Optional<List<String>> queryLabels,
       Optional<List<String>> queryIds, Optional<Long> fromDate, Optional<Long> toDate);
 
-  WorkflowRun submitWorkflowRun(String workflowId, Optional<Integer> version, boolean start,
-      Optional<WorkflowRunRequest> request);
+  WorkflowRun submitWorkflowRun(WorkflowRunSubmitRequest request, boolean start);
 
   WorkflowRun startWorkflowRun(String workflowRunId,
       Optional<WorkflowRunRequest> optRunRequest);
