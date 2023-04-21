@@ -6,8 +6,8 @@ import io.boomerang.v4.model.ref.ParamSpec;
 
 public interface ParameterManager {
 
-  ParamLayers buildParamLayers(String wfRunId);
-
   List<String> buildParamKeys(String teamId, List<ParamSpec> workflowParamSpecs);
+
+  ParamLayers buildParamLayers(String teamId);
 
 }

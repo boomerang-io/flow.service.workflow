@@ -16,13 +16,14 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
+/*
+ * Holds the Param Layers to be built up and resolved
+ * 
+ * CAUTION: tightly coupled between Engine and Workflow services
+ */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ParamLayers {
   private static final Logger LOGGER = LogManager.getLogger();
-
-  private boolean includeGlobalParams = true;
-
-  private boolean includeContextParams = true;
 
   @JsonIgnore
   private Map<String, Object> contextParams = new HashMap<>();
@@ -80,37 +81,15 @@ public class ParamLayers {
     this.workflowParams = workflowProperties;
   }
 
-  public boolean isIncludeGlobalParams() {
-    return includeGlobalParams;
-  }
-
-  public void setIncludeGlobalParams(boolean includeGlobalParams) {
-    this.includeGlobalParams = includeGlobalParams;
-  }
-
-  public boolean isIncludeContextParams() {
-    return includeContextParams;
-  }
-
-  public void setIncludeContextParams(boolean includeContextParams) {
-    this.includeContextParams = includeContextParams;
-  }
-
   @JsonAnyGetter
   public Map<String, Object> getFlatMap() {
 
     Map<String, Object> finalProperties = new TreeMap<>();
-
-    if (this.includeGlobalParams) {
-      copyFlatParams(globalParams, finalProperties, "global");
-    }
-
+    copyFlatParams(globalParams, finalProperties, "global");
     copyFlatParams(teamParams, finalProperties, "team");
     copyFlatParams(workflowParams, finalProperties, "workflow");
     copyFlatParams(taskParams, finalProperties, null);
-    if (this.includeContextParams) {
-      copyFlatParams(contextParams, finalProperties, "context");
-    }
+    copyFlatParams(contextParams, finalProperties, "context");
 
     return finalProperties;
   }
@@ -132,17 +111,11 @@ public class ParamLayers {
   @JsonAnyGetter
   public List<String> getFlatKeys() {
     HashSet<String> keys = new HashSet<>();
-
-    if (this.includeGlobalParams) {
-      copyFlatKeys(globalParams, keys, "global");
-    }
-
+    copyFlatKeys(globalParams, keys, "global");
     copyFlatKeys(teamParams, keys, "team");
     copyFlatKeys(workflowParams, keys, "workflow");
     copyFlatKeys(taskParams, keys, null);
-    if (this.includeContextParams) {
-      copyFlatKeys(contextParams, keys, "context");
-    }
+    copyFlatKeys(contextParams, keys, "context");
 
     return new ArrayList<String>(keys);
   }

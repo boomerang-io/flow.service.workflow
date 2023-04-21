@@ -33,9 +33,12 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping("/api/v2/team")
+@Tag(name = "Team Management",
+description = "Manage Teams, Team Members, Quotas, ApprovalGroups and Parameters.")
 public class TeamV2Controller {
 
   @Autowired
