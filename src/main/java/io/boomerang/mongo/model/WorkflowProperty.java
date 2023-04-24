@@ -1,6 +1,8 @@
 package io.boomerang.mongo.model;
 
-public class WorkflowProperty extends AbstractConfigurationProperty {
+import io.boomerang.v4.model.AbstractParam;
+
+public class WorkflowProperty extends AbstractParam {
   
   private String jsonPath;
 

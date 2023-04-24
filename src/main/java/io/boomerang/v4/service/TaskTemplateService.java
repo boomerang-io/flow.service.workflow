@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import io.boomerang.v4.client.TaskTemplateResponsePage;
 import io.boomerang.v4.data.entity.ref.TaskTemplateEntity;
 import io.boomerang.v4.model.ref.TaskTemplate;
+import io.boomerang.v4.model.ref.Workflow;
 
 public interface TaskTemplateService {
 //
@@ -29,4 +30,6 @@ public interface TaskTemplateService {
 
   TaskTemplateResponsePage query(int page, int limit, Sort sort, Optional<List<String>> labels,
       Optional<List<String>> status, Optional<List<String>> names, Optional<List<String>> teams);
+
+  ResponseEntity<TaskTemplate> create(TaskTemplate request, Optional<String> team);
 }

@@ -1,4 +1,4 @@
-package io.boomerang.v4.data.model.ref;
+package io.boomerang.v4.model.ref;
 
 import java.util.HashMap;
 import java.util.List;

@@ -5,12 +5,12 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import io.boomerang.mongo.model.AbstractConfigurationProperty;
+import io.boomerang.v4.model.AbstractParam;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(Include.NON_NULL)
 @Document(collection = "#{@mongoConfiguration.fullCollectionName('global_params')}")
-public class GlobalParamEntity extends AbstractConfigurationProperty {
+public class GlobalParamEntity extends AbstractParam {
 
   @Id
   String id;

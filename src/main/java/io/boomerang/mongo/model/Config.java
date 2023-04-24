@@ -1,5 +1,7 @@
 package io.boomerang.mongo.model;
 
-public class Config extends AbstractConfigurationProperty {
+import io.boomerang.v4.model.AbstractParam;
+
+public class Config extends AbstractParam {
 
 }

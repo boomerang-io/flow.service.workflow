@@ -1,60 +1,43 @@
-package io.boomerang.mongo.model;
+package io.boomerang.v4.model;
 
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.boomerang.mongo.model.KeyValuePair;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public abstract class AbstractConfigurationProperty {
+public class AbstractParam {
 
-  @JsonProperty("description")
-  private String description;
-
-  @JsonProperty("key")
   private String key;
-
-  @JsonProperty("label")
+  private String description;
   private String label;
-
-  @JsonProperty("type")
   private String type;
-
-  @JsonProperty("minValueLength")
   private Integer minValueLength;
-
-  @JsonProperty("maxValueLength")
   private Integer maxValueLength;
-
-  @JsonProperty("options")
   private List<KeyValuePair> options;
-
   private Boolean required;
   private String placeholder;
-
   @JsonProperty("helperText")
   private String helpertext;
-
-	private Boolean hiddenValue;
-
-	public Boolean isHiddenValue() {
-		return hiddenValue;
-	}
-
-	public void setHiddenValue(Boolean hiddenValue) {
-		this.hiddenValue = hiddenValue;
-	}
-
-	private String language;
-	private Boolean disabled;
+  private String language;
+  private Boolean disabled;
   private String defaultValue;
-
   private String value;
-
   private List<String> values;
-
   private boolean readOnly;
+  private Boolean hiddenValue;
 
+  public AbstractParam() {
+  }
+
+  public Boolean isHiddenValue() {
+    return hiddenValue;
+  }
+
+  public void setHiddenValue(Boolean hiddenValue) {
+    this.hiddenValue = hiddenValue;
+  }
 
   public boolean isReadOnly() {
     return readOnly;

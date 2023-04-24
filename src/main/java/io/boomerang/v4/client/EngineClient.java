@@ -55,4 +55,10 @@ public interface EngineClient {
   TaskRun getTaskRun(String taskRunId);
 
   TaskTemplate getTaskTemplate(String name, Optional<Integer> version);
+
+  TaskTemplateResponsePage queryTaskTemplates(int page, int limit, Sort sort,
+      Optional<List<String>> queryLabels, Optional<List<String>> queryStatus,
+      Optional<List<String>> queryIds);
+
+  TaskTemplate createTaskTemplate(TaskTemplate taskTemplate);
 }

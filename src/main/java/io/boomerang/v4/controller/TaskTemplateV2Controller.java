@@ -79,8 +79,11 @@ public class TaskTemplateV2Controller {
             description = "The name needs to be unique and must only contain alphanumeric and - characeters.")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
-  public ResponseEntity<TaskTemplate> createTaskTemplate(@RequestBody TaskTemplate taskTemplate) {
-    return taskTemplateService.create(taskTemplate);
+  public ResponseEntity<TaskTemplate> createTaskTemplate(
+      @Parameter(name = "team", description = "Team as owner reference.", example = "63d3656ca845957db7d25ef0,63a3e732b0496509a7f1d763",
+      required = false) @RequestParam(required = false) Optional<String> team,
+      @RequestBody TaskTemplate taskTemplate) {
+    return taskTemplateService.create(taskTemplate, team);
   }
 
   @PutMapping(value = "/")

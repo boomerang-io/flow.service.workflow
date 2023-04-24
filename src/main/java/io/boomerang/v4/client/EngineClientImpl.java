@@ -88,6 +88,15 @@ public class EngineClientImpl implements EngineClient {
   @Value("${flow.engine.taskrun.end.url}")
   public String endTaskRunURL;
 
+  @Value("${flow.engine.tasktemplate.get.url}")
+  public String getTaskTemplateURL;
+
+  @Value("${flow.engine.tasktemplate.query.url}")
+  public String queryTaskTemplateURL;
+
+  @Value("${flow.engine.tasktemplate.create.url}")
+  public String createTaskTemplateURL;
+
   @Autowired
   @Qualifier("internalRestTemplate")
   public RestTemplate restTemplate;
@@ -345,7 +354,6 @@ public class EngineClientImpl implements EngineClient {
     }
   }
   
-
   @Override
   public WorkflowResponsePage queryWorkflows(int page, int limit, Sort sort, Optional<List<String>> queryLabels,
       Optional<List<String>> queryStatus, Optional<List<String>> queryIds) {
@@ -559,7 +567,7 @@ public class EngineClientImpl implements EngineClient {
   @Override
   public TaskTemplate getTaskTemplate(String name, Optional<Integer> version) {
     try {
-      String url = getTaskRunURL.replace("{name}", name);
+      String url = getTaskTemplateURL.replace("{name}", name);
       Map<String, String> requestParams = new HashMap<>();
       if (version.isPresent()) {
         requestParams.put("version", version.toString());
@@ -582,4 +590,65 @@ public class EngineClientImpl implements EngineClient {
       throw new BoomerangException(ex, HttpStatus.INTERNAL_SERVER_ERROR.value(), ex.getClass().getSimpleName(), "Exception in communicating with internal services.", HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
+  
+  @Override
+  public TaskTemplateResponsePage queryTaskTemplates(int page, int limit, Sort sort, Optional<List<String>> queryLabels,
+      Optional<List<String>> queryStatus, Optional<List<String>> queryIds) {
+    try {
+
+      Map<String, String> requestParams = new HashMap<>();
+      requestParams.put("page", Integer.toString(page));
+      requestParams.put("limit", Integer.toString(limit));
+
+      StringBuilder sb = new StringBuilder();
+      sort.forEach(s -> sb.append(s.getProperty()).append(",").append(s.getDirection()));
+      requestParams.put("sort", sb.toString());
+      if (queryLabels.isPresent()) {
+        requestParams.put("labels", queryLabels.get().toString());
+      }
+      if (queryStatus.isPresent()) {
+        requestParams.put("status", queryStatus.get().toString());
+      }
+      if (queryIds.isPresent() && !queryIds.get().isEmpty()) {
+        requestParams.put("ids", queryIds.get().toString());
+      }
+
+      String encodedURL =
+          requestParams.keySet().stream().map(key -> key + "=" + requestParams.get(key)).collect(
+              Collectors.joining("&", queryTaskTemplateURL + "?", ""));
+      
+      LOGGER.info("Query URL: " + encodedURL);
+
+      ResponseEntity<TaskTemplateResponsePage> response = restTemplate.getForEntity(encodedURL, TaskTemplateResponsePage.class);
+      
+      LOGGER.info("Status Response: " + response.getStatusCode());
+      LOGGER.info("Content Response: " + response.getBody().getContent().toString());
+      
+      return response.getBody();
+    } catch (RestClientException ex) {
+      LOGGER.error(ex.toString());
+      throw new BoomerangException(ex, HttpStatus.INTERNAL_SERVER_ERROR.value(), ex.getClass().getSimpleName(), "Exception in communicating with internal services.", HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @Override
+  public TaskTemplate createTaskTemplate(TaskTemplate taskTemplate) {
+    try {
+      LOGGER.info("URL: " + createTaskTemplateURL);
+
+      ResponseEntity<TaskTemplate> response =
+          restTemplate.postForEntity(createTaskTemplateURL, taskTemplate, TaskTemplate.class);
+
+      LOGGER.info("Status Response: " + response.getStatusCode());
+      LOGGER.info("Content Response: " + response.getBody().toString());
+
+      return response.getBody();
+    } catch (RestClientException ex) {
+      LOGGER.error(ex.toString());
+      throw new BoomerangException(ex, HttpStatus.INTERNAL_SERVER_ERROR.value(),
+          ex.getClass().getSimpleName(), "Exception in communicating with internal services.",
+          HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
 }

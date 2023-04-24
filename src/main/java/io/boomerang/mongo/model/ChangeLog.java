@@ -3,18 +3,32 @@ package io.boomerang.mongo.model;
 import java.util.Date;
 
 public class ChangeLog {
-
-  private String userId;
+  private String author;
   private String reason;
   private Date date;
-  private String userName;
 
-  public String getUserId() {
-    return userId;
+  public ChangeLog() {
   }
 
-  public void setUserId(String userId) {
-    this.userId = userId;
+  public ChangeLog(String reason) {
+    super();
+    this.reason = reason;
+    this.date = new Date();
+  }
+
+  public ChangeLog(String author, String reason) {
+    super();
+    this.author = author;
+    this.reason = reason;
+    this.date = new Date();
+  }
+
+  public String getAuthor() {
+    return author;
+  }
+
+  public void setAuthor(String author) {
+    this.author = author;
   }
 
   public String getReason() {
@@ -32,13 +46,4 @@ public class ChangeLog {
   public void setDate(Date date) {
     this.date = date;
   }
-
-  public String getUserName() {
-    return userName;
-  }
-
-  public void setUserName(String userName) {
-    this.userName = userName;
-  }
-
 }

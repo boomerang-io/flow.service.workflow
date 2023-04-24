@@ -7,12 +7,11 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import io.boomerang.mongo.model.TaskTemplateConfig;
-import io.boomerang.v4.data.model.ref.TaskTemplateSpec;
-import io.boomerang.v4.model.enums.ref.TaskTemplateScope;
+import io.boomerang.v4.model.AbstractParam;
 import io.boomerang.v4.model.enums.ref.TaskTemplateStatus;
 import io.boomerang.v4.model.enums.ref.TaskType;
 import io.boomerang.v4.model.ref.ChangeLog;
+import io.boomerang.v4.model.ref.TaskTemplateSpec;
 import nonapi.io.github.classgraph.json.Id;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -33,7 +32,7 @@ public class TaskTemplateEntity {
   private TaskType type;
   private TaskTemplateSpec spec;
   private TaskTemplateStatus status;
-  private List<TaskTemplateConfig> config;
+  private List<AbstractParam> config;
   private String icon;
   private boolean verified;
 
@@ -153,11 +152,11 @@ public class TaskTemplateEntity {
     this.verified = verified;
   }
 
-  public List<TaskTemplateConfig> getConfig() {
+  public List<AbstractParam> getConfig() {
     return config;
   }
 
-  public void setConfig(List<TaskTemplateConfig> config) {
+  public void setConfig(List<AbstractParam> config) {
     this.config = config;
   }
 

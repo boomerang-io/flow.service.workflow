@@ -1,4 +1,4 @@
-package io.boomerang.v4.data.model.ref;
+package io.boomerang.v4.model.ref;
 
 import java.util.HashMap;
 import java.util.List;
@@ -6,6 +6,7 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.boomerang.v4.model.enums.ref.TaskDeletionEnum;
 
 public class TaskRunSpec {
 

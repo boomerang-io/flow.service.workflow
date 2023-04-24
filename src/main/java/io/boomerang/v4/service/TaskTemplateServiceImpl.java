@@ -19,22 +19,22 @@ import io.boomerang.model.FlowTaskTemplate;
 import io.boomerang.model.TemplateScope;
 import io.boomerang.model.WorkflowSummary;
 import io.boomerang.model.tekton.TektonTask;
-import io.boomerang.mongo.entity.FlowTaskTemplateEntity;
-import io.boomerang.mongo.model.ChangeLog;
 import io.boomerang.mongo.model.FlowTaskTemplateStatus;
 import io.boomerang.mongo.model.Revision;
 import io.boomerang.mongo.model.UserType;
 import io.boomerang.mongo.model.WorkflowScope;
 import io.boomerang.service.tekton.TektonConverter;
 import io.boomerang.util.DataAdapterUtil;
+import io.boomerang.util.ParameterUtil;
 import io.boomerang.util.DataAdapterUtil.FieldType;
 import io.boomerang.v4.client.EngineClient;
 import io.boomerang.v4.client.TaskTemplateResponsePage;
-import io.boomerang.v4.client.WorkflowResponsePage;
 import io.boomerang.v4.data.entity.UserEntity;
 import io.boomerang.v4.model.enums.RelationshipRef;
 import io.boomerang.v4.model.enums.RelationshipType;
+import io.boomerang.v4.model.ref.ChangeLog;
 import io.boomerang.v4.model.ref.TaskTemplate;
+import io.boomerang.v4.model.ref.Workflow;
 
 /*
  * This service replicates the required calls for Engine TaskTemplateV1 APIs
@@ -70,6 +70,14 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
         Optional.of(List.of(name)), Optional.of(RelationshipType.BELONGSTO), Optional.empty(), Optional.empty());
     if (!refs.isEmpty()) {
       TaskTemplate taskTemplate = engineClient.getTaskTemplate(name, version);
+      
+      // Process Parameters - create configs for any Params
+      if (taskTemplate.getSpec().getParams() != null && !taskTemplate.getSpec().getParams().isEmpty()) {
+        ParameterUtil.paramSpecToAbstractParam(taskTemplate.getSpec().getParams(), taskTemplate.getConfig());
+      }
+      
+      // Switch from UserId to Users Name
+      updateChangeLogAuthor(taskTemplate.getChangelog());
       return ResponseEntity.ok(taskTemplate);
     } else {
       // TODO: do we want to return invalid ref or unauthorized
@@ -83,38 +91,98 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
   @Override
   public TaskTemplateResponsePage query(int page, int limit, Sort sort,
       Optional<List<String>> queryLabels, Optional<List<String>> queryStatus,
-      Optional<List<String>> queryNames, 
-      Optional<List<String>> queryTeams) {
-    
+      Optional<List<String>> queryNames, Optional<List<String>> queryTeams) {
+
     // Get Refs that request has access to
-    List<String> workflowRefs = relationshipService.getFilteredRefs(Optional.of(RelationshipRef.TASKTEMPLATE),
-        queryNames, Optional.of(RelationshipType.BELONGSTO), Optional.ofNullable(RelationshipRef.TEAM),
-        queryTeams);
-    LOGGER.debug("Query Ids: ", workflowRefs);
+    // TODO: this doesn't work for Global TaskTemplates
+    List<String> refs =
+        relationshipService.getFilteredRefs(Optional.of(RelationshipRef.TASKTEMPLATE), queryNames,
+            Optional.of(RelationshipType.BELONGSTO), Optional.ofNullable(RelationshipRef.TEAM),
+            queryTeams);
+    LOGGER.debug("Query Ids: ", refs);
 
-    WorkflowResponsePage response = engineClient.queryWorkflows(page, limit, sort, queryLabels, queryStatus,
-        Optional.of(workflowRefs));
+    TaskTemplateResponsePage response = engineClient.queryTaskTemplates(page, limit, sort,
+        queryLabels, queryStatus, Optional.of(refs));
 
-    // Filter out sensitive values
     if (!response.getContent().isEmpty()) {
-      response.getContent().forEach(w -> 
-      DataAdapterUtil.filterParamSpecValueByFieldType(w.getConfig(), w.getParams(), FieldType.PASSWORD.value()));
+      response.getContent().forEach(t -> updateChangeLogAuthor(t.getChangelog()));
     }
-    
     return response;
   }
+  
+  /*
+   * Creates the TaskTemplate and Relationship
+   * 
+   * The Engine checks for unique names so this method does not have to, however it does need to add the 
+   */
+  @Override
+  public ResponseEntity<TaskTemplate> create(TaskTemplate request,
+      Optional<String> team) {
+    // Set verfied to false - this is only able to be set via Engine or Loader
+    request.setVerified(false);
+    
+    // Process Parameters - if no Params are set but Config is then create ParamSpecs
+    if (request.getConfig() != null && !request.getConfig().isEmpty() && request.getSpec() != null) {
+      ParameterUtil.abstractParamToParamSpec(request.getConfig(), request.getSpec().getParams());
+    }
+    
+    // Update Changelog
+    // TODO: figure out how to get current user or if token then type of token
+//    ChangeLog changelog = new ChangeLog(CHANGELOG_INITIAL);
+//    if (taskTemplate.getChangelog() != null) {
+//      if (taskTemplate.getChangelog().getAuthor() != null) {
+//        changelog.setAuthor(taskTemplate.getChangelog().getAuthor());
+//      }
+//      if (taskTemplate.getChangelog().getReason() != null) {
+//        changelog.setReason(taskTemplate.getChangelog().getReason());
+//      }
+//      if (taskTemplate.getChangelog().getDate() != null) {
+//        changelog.setDate(taskTemplate.getChangelog().getDate());
+//      }
+//    }
+    
+    // TODO: add a check that they are prefixed with the current team scope OR are a valid Global TaskTemplate
+    
+    TaskTemplate taskTemplate = engineClient.createTaskTemplate(request);
+    if (team.isPresent()) {
+    // Create BELONGSTO relationship for mapping Workflow to Owner
+      relationshipService.addRelationshipRef(RelationshipRef.TASKTEMPLATE, taskTemplate.getName(), RelationshipRef.TEAM,
+          team);
+    } else {
+      // Creates a relationship based on current used Security Scope
+      relationshipService.addRelationshipRefForCurrentScope(RelationshipRef.TASKTEMPLATE,
+          taskTemplate.getName());
+    }
+    return ResponseEntity.ok(taskTemplate);
+  }
 
-  private void updateTemplateListUserNames(List<FlowTaskTemplate> templates) {
-    for (FlowTaskTemplate template : templates) {
-      for (Revision revision : template.getRevisions()) {
-        if (revision.getChangelog() != null && revision.getChangelog().getUserId() != null) {
-          UserEntity user =
-              userIdentityService.getUserByID(revision.getChangelog().getUserId());
-          if (revision.getChangelog() != null && user != null
-              && revision.getChangelog().getUserName() == null) {
-            revision.getChangelog().setUserName(user.getName());
-          }
-        }
+  /*
+   * Apply allows you to create a new version as well as create new
+   */
+  @Override
+  public ResponseEntity<Workflow> apply(Workflow workflow, boolean replace) {
+    String workflowId = workflow.getId();
+    List<String> workflowRefs = relationshipService.getFilteredRefs(Optional.of(RelationshipRef.WORKFLOW),
+        Optional.of(List.of(workflowId)), Optional.of(RelationshipType.BELONGSTO), Optional.of(RelationshipRef.TEAM), Optional.empty());
+
+    if (workflowId != null && !workflowId.isBlank() && !workflowRefs.isEmpty()) {
+      updateScheduleTriggers(workflow, this.get(workflowId, Optional.empty(), false).getBody().getTriggers());
+      setupTriggerDefaults(workflow);
+      Workflow appliedWorkflow = engineClient.applyWorkflow(workflow, replace);
+      // Filter out sensitive values
+      DataAdapterUtil.filterParamSpecValueByFieldType(appliedWorkflow.getConfig(), appliedWorkflow.getParams(), FieldType.PASSWORD.value());
+      return ResponseEntity.ok(appliedWorkflow);
+    } else {
+      workflow.setId(null);
+      return this.create(workflow, Optional.empty());
+    }
+  }
+
+  private void updateChangeLogAuthor(ChangeLog changelog) {
+    if (changelog != null && changelog.getAuthor() != null) {
+      UserEntity user = userIdentityService.getUserByID(changelog.getAuthor());
+      if (user != null) {
+        changelog.setAuthor(user.getName());
       }
     }
   }
