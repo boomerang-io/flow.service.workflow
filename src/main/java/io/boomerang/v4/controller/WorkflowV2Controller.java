@@ -29,7 +29,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping("/api/v2/workflow")
-@Tag(name = "Workflow Management", description = "Create, List, and Manage your workflows.")
+@Tag(name = "Workflow Management", description = "Create, List, and Manage your Workflows.")
 public class WorkflowV2Controller {
 
   @Autowired

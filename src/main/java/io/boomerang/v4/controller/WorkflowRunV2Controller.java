@@ -32,8 +32,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping("/api/v2/workflowrun")
-@Tag(name = "WorkflowRun Activity Management",
-    description = "Submit requests to execute workflows and provide the ability to search and retrieve workflow activities.")
+@Tag(name = "WorkflowRun Management",
+    description = "Submit requests to execute Workflows and provide the ability to search and retrieve Workflow activities.")
 public class WorkflowRunV2Controller {
 
   @Autowired

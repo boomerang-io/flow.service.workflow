@@ -25,14 +25,16 @@ import io.boomerang.v4.model.ActionSummary;
 import io.boomerang.v4.model.enums.ref.ActionStatus;
 import io.boomerang.v4.model.enums.ref.ActionType;
 import io.boomerang.v4.service.ActionService;
-import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping("/api/v2/action")
+@Tag(name = "Actions Management",
+description = "Create and Manage the Manual and Approval Actions.")
 public class ActionV2Controller {
 
   @Autowired

@@ -14,13 +14,13 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import io.boomerang.controller.TaskTemplateController;
 import io.boomerang.misc.FlowTests;
 import io.boomerang.model.FlowTaskTemplate;
 import io.boomerang.model.tekton.TektonTask;
 import io.boomerang.mongo.model.ChangeLog;
 import io.boomerang.mongo.model.FlowTaskTemplateStatus;
 import io.boomerang.mongo.model.Revision;
+import io.boomerang.v4.controller.TaskTemplateV2Controller;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
@@ -30,7 +30,7 @@ import io.boomerang.mongo.model.Revision;
 public class TaskTemplateControllerTests extends FlowTests {
 
   @Autowired
-  private TaskTemplateController controller;
+  private TaskTemplateV2Controller controller;
 
   @Test
   public void testGetTaskTemplateWithId() {

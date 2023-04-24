@@ -64,9 +64,6 @@ public class WorkflowServiceImpl implements WorkflowService {
   
   @Autowired
   private WorkflowScheduleService workflowScheduleService;
-
-  @Autowired
-  private SettingsService settingsService;
   
   @Autowired
   private ParameterManager parameterManager;
@@ -137,6 +134,8 @@ public class WorkflowServiceImpl implements WorkflowService {
     
     //Default Workspaces 
     setUpWorkspaceDefaults(request);
+
+    // TODO: add a check that they are prefixed with the current team scope OR are a valid Global TaskTemplate
     
     Workflow workflow = engineClient.createWorkflow(request);
     if (team.isPresent()) {

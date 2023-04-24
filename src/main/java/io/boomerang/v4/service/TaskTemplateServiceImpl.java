@@ -1,14 +1,20 @@
-package io.boomerang.service.crud;
+package io.boomerang.v4.service;
 
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+import io.boomerang.error.BoomerangError;
+import io.boomerang.error.BoomerangException;
 import io.boomerang.model.FlowTaskTemplate;
 import io.boomerang.model.TemplateScope;
 import io.boomerang.model.WorkflowSummary;
@@ -19,60 +25,83 @@ import io.boomerang.mongo.model.FlowTaskTemplateStatus;
 import io.boomerang.mongo.model.Revision;
 import io.boomerang.mongo.model.UserType;
 import io.boomerang.mongo.model.WorkflowScope;
-import io.boomerang.mongo.service.FlowTaskTemplateService;
-import io.boomerang.service.UserIdentityService;
 import io.boomerang.service.tekton.TektonConverter;
+import io.boomerang.util.DataAdapterUtil;
+import io.boomerang.util.DataAdapterUtil.FieldType;
+import io.boomerang.v4.client.EngineClient;
+import io.boomerang.v4.client.TaskTemplateResponsePage;
+import io.boomerang.v4.client.WorkflowResponsePage;
 import io.boomerang.v4.data.entity.UserEntity;
+import io.boomerang.v4.model.enums.RelationshipRef;
+import io.boomerang.v4.model.enums.RelationshipType;
+import io.boomerang.v4.model.ref.TaskTemplate;
 
+/*
+ * This service replicates the required calls for Engine TaskTemplateV1 APIs
+ * 
+ * - Checks authorization using Relationships
+ * - Determines if to add or remove elements
+ * - Forward call onto Engine (if applicable)
+ * - Converts response as needed for UI
+ */
 @Service
 public class TaskTemplateServiceImpl implements TaskTemplateService {
 
-  @Autowired
-  private FlowTaskTemplateService flowTaskTemplateService;
+  private static final Logger LOGGER = LogManager.getLogger();
 
   @Autowired
-  private UserIdentityService userIdentityService;
+  private EngineClient engineClient;
 
   @Autowired
-  private WorkflowService workflowService;
+  private RelationshipService relationshipService;
 
+  /*
+   * Get TaskTemplate by name and optional version. If no version specified, will retrieve the latest.
+   */
   @Override
-  public FlowTaskTemplate getTaskTemplateWithId(String id) {
-    FlowTaskTemplateEntity entity = flowTaskTemplateService.getTaskTemplateWithId(id);
-    if (entity != null) {
-      FlowTaskTemplate template = new FlowTaskTemplate(entity);
-      for (Revision revision : template.getRevisions()) {
-        if (revision.getChangelog() != null && revision.getChangelog().getUserId() != null) {
-          UserEntity user =
-              userIdentityService.getUserByID(revision.getChangelog().getUserId());
-          if (revision.getChangelog() != null && user != null
-              && revision.getChangelog().getUserName() == null) {
-            revision.getChangelog().setUserName(user.getName());
-          }
-        }
-      }
-      return template;
+  public ResponseEntity<TaskTemplate> get(String name, Optional<Integer> version) {
+    if (name == null || name.isBlank()) {
+      throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
     }
-    return null;
+
+    // Check if requester has access to refs
+    // TODO: determine if all users need to be able to access (READ) but not edit (CREATE, UPDATE, DELETE) 
+    List<String> refs = relationshipService.getFilteredRefs(Optional.of(RelationshipRef.TASKTEMPLATE),
+        Optional.of(List.of(name)), Optional.of(RelationshipType.BELONGSTO), Optional.empty(), Optional.empty());
+    if (!refs.isEmpty()) {
+      TaskTemplate taskTemplate = engineClient.getTaskTemplate(name, version);
+      return ResponseEntity.ok(taskTemplate);
+    } else {
+      // TODO: do we want to return invalid ref or unauthorized
+      throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
+    }
   }
 
+  /*
+   * Query for Workflows.
+   */
   @Override
-  public List<FlowTaskTemplate> getAllTaskTemplates(TemplateScope scope, String teamId) {
-    List<FlowTaskTemplate> templates = new LinkedList<>();
+  public TaskTemplateResponsePage query(int page, int limit, Sort sort,
+      Optional<List<String>> queryLabels, Optional<List<String>> queryStatus,
+      Optional<List<String>> queryNames, 
+      Optional<List<String>> queryTeams) {
+    
+    // Get Refs that request has access to
+    List<String> workflowRefs = relationshipService.getFilteredRefs(Optional.of(RelationshipRef.TASKTEMPLATE),
+        queryNames, Optional.of(RelationshipType.BELONGSTO), Optional.ofNullable(RelationshipRef.TEAM),
+        queryTeams);
+    LOGGER.debug("Query Ids: ", workflowRefs);
 
-    if (scope == TemplateScope.global || scope == null) {
-      templates = flowTaskTemplateService.getAllGlobalTasks().stream().map(FlowTaskTemplate::new)
-          .collect(Collectors.toList());
-    } else if (scope == TemplateScope.team) {
-      templates = flowTaskTemplateService.getTaskTemplatesforTeamId(teamId).stream()
-          .map(FlowTaskTemplate::new).collect(Collectors.toList());
-    } else if (scope == TemplateScope.system) {
-      templates = flowTaskTemplateService.getAllSystemTasks().stream().map(FlowTaskTemplate::new)
-          .collect(Collectors.toList());
+    WorkflowResponsePage response = engineClient.queryWorkflows(page, limit, sort, queryLabels, queryStatus,
+        Optional.of(workflowRefs));
+
+    // Filter out sensitive values
+    if (!response.getContent().isEmpty()) {
+      response.getContent().forEach(w -> 
+      DataAdapterUtil.filterParamSpecValueByFieldType(w.getConfig(), w.getParams(), FieldType.PASSWORD.value()));
     }
-
-    updateTemplateListUserNames(templates);
-    return templates;
+    
+    return response;
   }
 
   private void updateTemplateListUserNames(List<FlowTaskTemplate> templates) {

@@ -31,14 +31,14 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
-@RequestMapping("/apis/v1")
-@Tag(name = "User Management", description = "List, Create, update and delete users.")
+@RequestMapping("/api/v1/users")
+@Tag(name = "User Management", description = "List, Create, update and delete Users.")
 public class UsersV2Controller {
 
   @Autowired
   private UserIdentityService userIdentityService;
 
-  @GetMapping(value = "/users/{userId}")
+  @GetMapping(value = "/{userId}")
   @AuthenticationScope(scopes = {TokenScope.global})
   @Operation(summary = "Get a users details")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),

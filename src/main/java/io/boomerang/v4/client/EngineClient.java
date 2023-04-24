@@ -5,6 +5,7 @@ import java.util.Optional;
 import org.springframework.data.domain.Sort;
 import io.boomerang.v4.model.ref.TaskRun;
 import io.boomerang.v4.model.ref.TaskRunEndRequest;
+import io.boomerang.v4.model.ref.TaskTemplate;
 import io.boomerang.v4.model.ref.Workflow;
 import io.boomerang.v4.model.ref.WorkflowRun;
 import io.boomerang.v4.model.ref.WorkflowRunInsight;
@@ -52,4 +53,6 @@ public interface EngineClient {
   TaskRun endTaskRun(String taskRunId, TaskRunEndRequest request);
 
   TaskRun getTaskRun(String taskRunId);
+
+  TaskTemplate getTaskTemplate(String name, Optional<Integer> version);
 }

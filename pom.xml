@@ -58,12 +58,12 @@
 		<dependency>
 			<groupId>org.springdoc</groupId>
 			<artifactId>springdoc-openapi-ui</artifactId>
-			<version>1.6.10</version>
+			<version>1.6.14</version>
 		</dependency>
 		<dependency>
-			<groupId>org.webjars</groupId>
-			<artifactId>swagger-ui</artifactId>
-			<version>4.13.2</version>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-webmvc-core</artifactId>
+			<version>1.6.14</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.commons</groupId>
@@ -268,7 +268,6 @@
 		    <version>1.24.0</version>
 		</dependency>
 	</dependencies>
-
 	<build>
 		<plugins>
 			<plugin>

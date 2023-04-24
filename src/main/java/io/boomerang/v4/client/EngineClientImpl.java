@@ -24,6 +24,7 @@ import org.springframework.web.client.RestTemplate;
 import io.boomerang.error.BoomerangException;
 import io.boomerang.v4.model.ref.TaskRun;
 import io.boomerang.v4.model.ref.TaskRunEndRequest;
+import io.boomerang.v4.model.ref.TaskTemplate;
 import io.boomerang.v4.model.ref.Workflow;
 import io.boomerang.v4.model.ref.WorkflowRun;
 import io.boomerang.v4.model.ref.WorkflowRunInsight;
@@ -547,6 +548,38 @@ public class EngineClientImpl implements EngineClient {
       throw new BoomerangException(ex, HttpStatus.INTERNAL_SERVER_ERROR.value(),
           ex.getClass().getSimpleName(), "Exception in communicating with internal services.",
           HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  /* 
+   * **************************************
+   * TaskTemplate endpoints
+   * **************************************
+   */
+  @Override
+  public TaskTemplate getTaskTemplate(String name, Optional<Integer> version) {
+    try {
+      String url = getTaskRunURL.replace("{name}", name);
+      Map<String, String> requestParams = new HashMap<>();
+      if (version.isPresent()) {
+        requestParams.put("version", version.toString());
+      }
+
+      String encodedURL =
+          requestParams.keySet().stream().map(key -> key + "=" + requestParams.get(key)).collect(
+              Collectors.joining("&", url + "?", ""));
+      
+      LOGGER.info("URL: " + encodedURL);
+
+      ResponseEntity<TaskTemplate> response = restTemplate.getForEntity(url, TaskTemplate.class);
+      
+      LOGGER.info("Status Response: " + response.getStatusCode());
+      LOGGER.info("Content Response: " + response.getBody().toString());
+      
+      return response.getBody();
+    } catch (RestClientException ex) {
+      LOGGER.error(ex.toString());
+      throw new BoomerangException(ex, HttpStatus.INTERNAL_SERVER_ERROR.value(), ex.getClass().getSimpleName(), "Exception in communicating with internal services.", HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 }

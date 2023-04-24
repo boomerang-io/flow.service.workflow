@@ -17,9 +17,12 @@ import io.boomerang.v4.service.GlobalParamService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping("/api/v2/global-params")
+@Tag(name = "Global Parameter Management",
+description = "Create and Manage the Global Parameters.")
 public class GlobalParamController {
 
   @Autowired
