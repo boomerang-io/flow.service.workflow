@@ -1,6 +1,7 @@
-package io.boomerang.model.tekton;
+package io.boomerang.tekton;
 
 import java.util.List;
+import io.boomerang.v4.model.ref.TaskEnvVar;
 
 public class Step {
 
@@ -8,7 +9,7 @@ public class Step {
   private String image;
   private String script;
   private String workingDir;
-  private List<Env> env;
+  private List<TaskEnvVar> env;
   private List<String> command;
   private List<String> args;
 
@@ -52,11 +53,11 @@ public class Step {
     this.script = script;
   }
 
-  public List<Env> getEnv() {
+  public List<TaskEnvVar> getEnv() {
     return env;
   }
 
-  public void setEnv(List<Env> env) {
+  public void setEnv(List<TaskEnvVar> env) {
     this.env = env;
   }
 

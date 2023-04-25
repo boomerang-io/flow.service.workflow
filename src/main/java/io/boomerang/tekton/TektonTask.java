@@ -1,4 +1,4 @@
-package io.boomerang.model.tekton;
+package io.boomerang.tekton;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 

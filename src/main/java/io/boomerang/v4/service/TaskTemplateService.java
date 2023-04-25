@@ -2,29 +2,13 @@ package io.boomerang.v4.service;
 
 import java.util.List;
 import java.util.Optional;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
+import io.boomerang.tekton.TektonTask;
 import io.boomerang.v4.client.TaskTemplateResponsePage;
-import io.boomerang.v4.data.entity.ref.TaskTemplateEntity;
 import io.boomerang.v4.model.ref.TaskTemplate;
-import io.boomerang.v4.model.ref.Workflow;
 
 public interface TaskTemplateService {
-//
-//  TektonTask getTaskTemplateYamlWithId(String id);
-//
-//  TektonTask getTaskTemplateYamlWithIdAndRevision(String id, Integer revisionNumber);
-//
-//  FlowTaskTemplate insertTaskTemplateYaml(TektonTask tektonTask,TemplateScope scope, String teamId);
-//
-//  FlowTaskTemplate updateTaskTemplateWithYaml(String id, TektonTask tektonTask);
-//
-//  FlowTaskTemplate updateTaskTemplateWithYaml(String id, TektonTask tektonTask, Integer revision, String comment);
-//
-//  List<FlowTaskTemplate> getAllTaskTemplatesForWorkfow(String workflowId);
-//
-//  FlowTaskTemplate validateTaskTemplate(TektonTask tektonTask);
 
   ResponseEntity<TaskTemplate> get(String name, Optional<Integer> version);
 
@@ -33,9 +17,18 @@ public interface TaskTemplateService {
 
   ResponseEntity<TaskTemplate> create(TaskTemplate request, Optional<String> team);
 
-  ResponseEntity<TaskTemplate> apply(TaskTemplate workflow, boolean replace);
+  ResponseEntity<TaskTemplate> apply(TaskTemplate request, boolean replace,
+      Optional<String> teamId);
 
   void enable(String name);
 
   void disable(String name);
+
+  TektonTask getAsTekton(String name, Optional<Integer> version);
+
+  TektonTask createAsTekton(TektonTask tektonTask, Optional<String> teamId);
+
+  TektonTask applyAsTekton(TektonTask tektonTask, boolean replace, Optional<String> teamId);
+
+  void validateAsTekton(TektonTask tektonTask);
 }

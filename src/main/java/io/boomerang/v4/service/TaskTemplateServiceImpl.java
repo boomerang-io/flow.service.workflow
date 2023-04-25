@@ -18,12 +18,12 @@ import io.boomerang.error.BoomerangException;
 import io.boomerang.model.FlowTaskTemplate;
 import io.boomerang.model.TemplateScope;
 import io.boomerang.model.WorkflowSummary;
-import io.boomerang.model.tekton.TektonTask;
 import io.boomerang.mongo.model.FlowTaskTemplateStatus;
 import io.boomerang.mongo.model.Revision;
 import io.boomerang.mongo.model.UserType;
 import io.boomerang.mongo.model.WorkflowScope;
-import io.boomerang.service.tekton.TektonConverter;
+import io.boomerang.tekton.TektonConverter;
+import io.boomerang.tekton.TektonTask;
 import io.boomerang.util.DataAdapterUtil;
 import io.boomerang.util.ParameterUtil;
 import io.boomerang.util.DataAdapterUtil.FieldType;
@@ -148,7 +148,7 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
    * Apply allows you to create a new version as well as create new
    */
   @Override
-  public ResponseEntity<TaskTemplate> apply(TaskTemplate request, boolean replace) {
+  public ResponseEntity<TaskTemplate> apply(TaskTemplate request, boolean replace, Optional<String> teamId) {
     String templateName = request.getName();
     List<String> refs = relationshipService.getFilteredRefs(Optional.of(RelationshipRef.TASKTEMPLATE),
         Optional.of(List.of(templateName)), Optional.of(RelationshipType.BELONGSTO), Optional.empty(), Optional.empty());
@@ -224,135 +224,32 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
   }
 
   @Override
-  public TektonTask getTaskTemplateYamlWithId(String id) {
-    FlowTaskTemplateEntity template = flowTaskTemplateService.getTaskTemplateWithId(id);
-    return TektonConverter.convertFlowTaskToTekton(template, Optional.empty());
+  public TektonTask getAsTekton(String name, Optional<Integer> version) {
+    ResponseEntity<TaskTemplate> template = this.get(name, version);
+    if (template.getBody()!= null) {
+      return TektonConverter.convertTaskTemplateToTektonTask(template.getBody());
+    } else {
+      // TODO: do we want to return invalid ref or unauthorized
+      throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
+    }
   }
 
   @Override
-  public TektonTask getTaskTemplateYamlWithIdAndRevision(String id, Integer revisionNumber) {
-    FlowTaskTemplateEntity template = flowTaskTemplateService.getTaskTemplateWithId(id);
-    return TektonConverter.convertFlowTaskToTekton(template, Optional.of(revisionNumber));
+  public TektonTask createAsTekton(TektonTask tektonTask, Optional<String> teamId) {
+    TaskTemplate template = TektonConverter.convertTektonTaskToTaskTemplate(tektonTask);
+    this.create(template, teamId);
+    return tektonTask;
   }
 
   @Override
-  public FlowTaskTemplate insertTaskTemplateYaml(TektonTask tektonTask, TemplateScope scope,
-      String teamId) {
-    FlowTaskTemplateEntity template = TektonConverter.convertTektonTaskToNewFlowTask(tektonTask);
-    template.setStatus(FlowTaskTemplateStatus.active);
-    template.setScope(scope);
-    template.setFlowTeamId(teamId);
-
-    flowTaskTemplateService.insertTaskTemplate(template);
-    return new FlowTaskTemplate(template);
+  public TektonTask applyAsTekton(TektonTask tektonTask, boolean replace, Optional<String> teamId) {
+    TaskTemplate template = TektonConverter.convertTektonTaskToTaskTemplate(tektonTask);
+    this.apply(template, replace, teamId);
+    return tektonTask;
   }
 
   @Override
-  public FlowTaskTemplate updateTaskTemplateWithYaml(String id, TektonTask tektonTask) {
-    FlowTaskTemplateEntity tektonTemplate =
-        TektonConverter.convertTektonTaskToNewFlowTask(tektonTask);
-    FlowTaskTemplateEntity dbTemplate = flowTaskTemplateService.getTaskTemplateWithId(id);
-
-    if (tektonTemplate.getName() != null && !tektonTemplate.getName().isBlank()) {
-      dbTemplate.setName(tektonTemplate.getName());
-    }
-    if (tektonTemplate.getCategory() != null && !tektonTemplate.getCategory().isBlank()) {
-      dbTemplate.setCategory(tektonTemplate.getCategory());
-    }
-
-    if (tektonTemplate.getDescription() != null && !tektonTemplate.getDescription().isBlank()) {
-      dbTemplate.setDescription(tektonTemplate.getDescription());
-    }
-
-    List<Revision> revisions = tektonTemplate.getRevisions();
-    if (revisions.size() == 1) {
-      Revision revision = revisions.get(0);
-
-      final UserEntity user = userIdentityService.getCurrentUser();
-      if (user != null) {
-        ChangeLog changelog = revision.getChangelog();
-        changelog.setUserId(user.getId());
-        changelog.setDate(new Date());
-      }
-
-
-      List<Revision> existingRevisions = dbTemplate.getRevisions();
-      int count = existingRevisions.size();
-      revision.setVersion(count + 1);
-      existingRevisions.add(revision);
-    }
-    dbTemplate.setLastModified(new Date());
-    flowTaskTemplateService.updateTaskTemplate(dbTemplate);
-    return this.getTaskTemplateWithId(id);
-  }
-
-  @Override
-  public FlowTaskTemplate updateTaskTemplateWithYaml(String id, TektonTask tektonTask,
-      Integer revisionId, String comment) {
-    FlowTaskTemplateEntity tektonTemplate =
-        TektonConverter.convertTektonTaskToNewFlowTask(tektonTask);
-    FlowTaskTemplateEntity dbTemplate = flowTaskTemplateService.getTaskTemplateWithId(id);
-
-    if (tektonTemplate.getName() != null && !tektonTemplate.getName().isBlank()) {
-      dbTemplate.setName(tektonTemplate.getName());
-    }
-    if (tektonTemplate.getCategory() != null && !tektonTemplate.getCategory().isBlank()) {
-      dbTemplate.setCategory(tektonTemplate.getCategory());
-    }
-
-    if (tektonTemplate.getDescription() != null && !tektonTemplate.getDescription().isBlank()) {
-      dbTemplate.setDescription(tektonTemplate.getDescription());
-    }
-
-    List<Revision> revisions = tektonTemplate.getRevisions();
-    if (revisions.size() == 1) {
-      Revision revision = revisions.get(0);
-      revision.setVersion(revisionId);
-
-      final UserEntity user = userIdentityService.getCurrentUser();
-      if (user != null) {
-        ChangeLog changelog = revision.getChangelog();
-        changelog.setUserId(user.getId());
-        changelog.setDate(new Date());
-        changelog.setReason(comment);
-      }
-
-      List<Revision> existingRevisions = dbTemplate.getRevisions();
-
-      Revision oldRevision = existingRevisions.stream()
-          .filter(a -> a.getVersion().equals(revisionId)).findFirst().orElse(null);
-      if (oldRevision != null) {
-        existingRevisions.remove(oldRevision);
-
-      }
-      existingRevisions.add(revision);
-    }
-    dbTemplate.setLastModified(new Date());
-    flowTaskTemplateService.updateTaskTemplate(dbTemplate);
-    return this.getTaskTemplateWithId(id);
-  }
-
-  @Override
-  public List<FlowTaskTemplate> getAllTaskTemplatesForWorkfow(String workflowId) {
-    List<FlowTaskTemplate> templates = new LinkedList<>();
-
-    WorkflowSummary workflow = this.workflowService.getWorkflow(workflowId);
-    String flowTeamId = workflow.getFlowTeamId();
-    if (workflow.getScope() == WorkflowScope.team || workflow.getScope() == null) {
-      templates = flowTaskTemplateService.getAllTaskTemplatesforTeamId(flowTeamId).stream()
-          .map(FlowTaskTemplate::new).collect(Collectors.toList());
-    } else if (workflow.getScope() == WorkflowScope.system || workflow.getScope() == WorkflowScope.user || workflow.getScope() == WorkflowScope.template) {
-      templates = flowTaskTemplateService.getAllTaskTemplatesForSystem().stream()
-          .map(FlowTaskTemplate::new).collect(Collectors.toList());
-    }
-
-    return templates;
-  }
-
-  @Override
-  public FlowTaskTemplate validateTaskTemplate(TektonTask tektonTask) {
-    FlowTaskTemplateEntity template = TektonConverter.convertTektonTaskToNewFlowTask(tektonTask);
-    template.setStatus(FlowTaskTemplateStatus.active);
-    return new FlowTaskTemplate(template);
+  public void validateAsTekton(TektonTask tektonTask) {
+    TektonConverter.convertTektonTaskToTaskTemplate(tektonTask);
   }
 }

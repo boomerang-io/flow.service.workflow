@@ -1,15 +1,17 @@
-package io.boomerang.model.tekton;
+package io.boomerang.tekton;
 
+import java.time.Duration;
 import java.util.List;
 import io.boomerang.model.Result;
+import io.boomerang.v4.model.ref.ResultSpec;
 
 public class Spec {
 
   private String description;
   private List<Param> params;
   private List<Step> steps;
-
-  private List<Result> results;
+  private Duration timeout;
+  private List<ResultSpec> results;
   
   public List<Step> getSteps() {
     return steps;
@@ -35,11 +37,19 @@ public class Spec {
     this.description = description;
   }
 
-  public List<Result> getResults() {
+  public List<ResultSpec> getResults() {
     return results;
   }
 
-  public void setResults(List<Result> results) {
+  public void setResults(List<ResultSpec> results) {
     this.results = results;
+  }
+
+  public Duration getTimeout() {
+    return timeout;
+  }
+
+  public void setTimeout(Duration timeout) {
+    this.timeout = timeout;
   }
 }

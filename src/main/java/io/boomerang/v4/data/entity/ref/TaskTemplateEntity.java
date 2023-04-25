@@ -23,6 +23,7 @@ public class TaskTemplateEntity {
   private String name;
   private String displayName;
   private String description;
+  private TaskTemplateStatus status = TaskTemplateStatus.active;
   private Map<String, String> labels = new HashMap<>();
   private Map<String, Object> annotations = new HashMap<>();
   private Integer version;
@@ -31,7 +32,6 @@ public class TaskTemplateEntity {
   private String category;
   private TaskType type;
   private TaskTemplateSpec spec;
-  private TaskTemplateStatus status;
   private List<AbstractParam> config;
   private String icon;
   private boolean verified;

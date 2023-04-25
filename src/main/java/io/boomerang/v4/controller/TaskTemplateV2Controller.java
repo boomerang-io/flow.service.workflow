@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import io.boomerang.model.FlowTaskTemplate;
 import io.boomerang.model.TemplateScope;
-import io.boomerang.model.tekton.TektonTask;
+import io.boomerang.tekton.TektonTask;
 import io.boomerang.v4.client.TaskTemplateResponsePage;
 import io.boomerang.v4.model.ref.TaskTemplate;
 import io.boomerang.v4.service.TaskTemplateService;

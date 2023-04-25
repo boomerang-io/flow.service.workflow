@@ -14,15 +14,15 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
-import io.boomerang.model.tekton.Annotations;
-import io.boomerang.model.tekton.Labels;
-import io.boomerang.model.tekton.Metadata;
-import io.boomerang.model.tekton.Param;
-import io.boomerang.model.tekton.Spec;
-import io.boomerang.model.tekton.Step;
-import io.boomerang.model.tekton.TektonTask;
 import io.boomerang.mongo.entity.FlowTaskTemplateEntity;
-import io.boomerang.service.tekton.TektonConverter;
+import io.boomerang.tekton.Annotations;
+import io.boomerang.tekton.Labels;
+import io.boomerang.tekton.Metadata;
+import io.boomerang.tekton.Param;
+import io.boomerang.tekton.Spec;
+import io.boomerang.tekton.Step;
+import io.boomerang.tekton.TektonConverter;
+import io.boomerang.tekton.TektonTask;
 
 public class TektonImportExportTests {
 
@@ -55,7 +55,7 @@ public class TektonImportExportTests {
   @Test
   public void testYamlConversion() throws IOException {
     TektonTask task = loadTektonTask("yaml/import.yaml");
-    FlowTaskTemplateEntity entity = TektonConverter.convertTektonTaskToNewFlowTask(task);
+    FlowTaskTemplateEntity entity = TektonConverter.convertTektonTaskToTaskTemplate(task);
      assertEquals("example-task-name", entity.getName());
      assertEquals("Worker", entity.getCategory());
     logObjectASJson(entity);
