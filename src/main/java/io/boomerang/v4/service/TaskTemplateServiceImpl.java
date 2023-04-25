@@ -1,32 +1,20 @@
 package io.boomerang.v4.service;
 
 import java.util.Date;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 import io.boomerang.error.BoomerangError;
 import io.boomerang.error.BoomerangException;
-import io.boomerang.model.FlowTaskTemplate;
-import io.boomerang.model.TemplateScope;
-import io.boomerang.model.WorkflowSummary;
-import io.boomerang.mongo.model.FlowTaskTemplateStatus;
-import io.boomerang.mongo.model.Revision;
-import io.boomerang.mongo.model.UserType;
-import io.boomerang.mongo.model.WorkflowScope;
+import io.boomerang.service.UserIdentityService;
 import io.boomerang.tekton.TektonConverter;
 import io.boomerang.tekton.TektonTask;
-import io.boomerang.util.DataAdapterUtil;
 import io.boomerang.util.ParameterUtil;
-import io.boomerang.util.DataAdapterUtil.FieldType;
 import io.boomerang.v4.client.EngineClient;
 import io.boomerang.v4.client.TaskTemplateResponsePage;
 import io.boomerang.v4.data.entity.UserEntity;
@@ -34,7 +22,6 @@ import io.boomerang.v4.model.enums.RelationshipRef;
 import io.boomerang.v4.model.enums.RelationshipType;
 import io.boomerang.v4.model.ref.ChangeLog;
 import io.boomerang.v4.model.ref.TaskTemplate;
-import io.boomerang.v4.model.ref.Workflow;
 
 /*
  * This service replicates the required calls for Engine TaskTemplateV1 APIs
@@ -54,6 +41,9 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
 
   @Autowired
   private RelationshipService relationshipService;
+
+  @Autowired
+  private UserIdentityService userIdentityService;
 
   /*
    * Get TaskTemplate by name and optional version. If no version specified, will retrieve the latest.
