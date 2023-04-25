@@ -14,6 +14,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import io.boomerang.v4.data.entity.ref.WorkflowEntity;
 import io.boomerang.v4.data.entity.ref.WorkflowRevisionEntity;
+import io.boomerang.v4.model.AbstractParam;
 
 /*
  * Workflow Model joining Workflow Entity and Workflow Revision Entity
@@ -67,7 +68,7 @@ public class Workflow {
   
   private List<WorkflowWorkspace> workspaces = new LinkedList<>();
   
-  private List<WorkflowConfig> config;
+  private List<AbstractParam> config;
 
   private Map<String, Object> unknownFields = new HashMap<>();
 
@@ -217,11 +218,11 @@ public class Workflow {
     this.workspaces = workspaces;
   }
 
-  public List<WorkflowConfig> getConfig() {
+  public List<AbstractParam> getConfig() {
     return config;
   }
 
-  public void setConfig(List<WorkflowConfig> config) {
+  public void setConfig(List<AbstractParam> config) {
     this.config = config;
   }
 

@@ -30,8 +30,8 @@ public class DataAdapterUtil {
 	 * @param fieldType
 	 * @return
 	 */
-	public static List<? extends AbstractParam> filterValueByFieldType(
-			List<? extends AbstractParam> properties, boolean isDefaultValue, String fieldType) {
+	public static List<AbstractParam> filterValueByFieldType(
+			List<AbstractParam> properties, boolean isDefaultValue, String fieldType) {
 	  if (properties == null || fieldType == null) {
 	    return null;
 	  }
@@ -59,7 +59,7 @@ public class DataAdapterUtil {
      * @return
      */
     public static void filterParamSpecValueByFieldType(
-            List<? extends AbstractParam> config, List<ParamSpec> params, String fieldType) {      
+            List<AbstractParam> config, List<ParamSpec> params, String fieldType) {      
       config.stream().filter(p -> fieldType.equals(p.getType())).forEach(p -> {
         p.setValue(null);
         params.stream().filter(param -> param.getName().equalsIgnoreCase((p.getKey()))).findFirst().get().setDefaultValue(null);
@@ -75,7 +75,7 @@ public class DataAdapterUtil {
      * @return
      */
     public static void filterRunParamValueByFieldType(
-            List<? extends AbstractParam> config, List<RunParam> params, String fieldType) {      
+            List<AbstractParam> config, List<RunParam> params, String fieldType) {      
       config.stream().filter(p -> fieldType.equals(p.getType())).forEach(p -> {
         p.setValue(null);
         params.stream().filter(param -> param.getName().equalsIgnoreCase((p.getKey()))).findFirst().get().setValue(null);

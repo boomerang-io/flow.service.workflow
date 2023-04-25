@@ -11,7 +11,7 @@ public enum BoomerangError {
    * @param reason Key to look up in messages.properties
    * @param HttpStatus status to respond as
    * 
-   * Last updated 2023/04/04 - keep this date updated as this is used across the services.
+   * Last updated 2023/04/25 - keep this date updated as this is used across the services.
    * 
    * */
   TEAM_INVALID_REF(100, "TEAM_INVALID_REF", HttpStatus.BAD_REQUEST),
@@ -36,7 +36,7 @@ public enum BoomerangError {
   TASK_TEMPLATE_INVALID_REF(1501, "TASK_TEMPLATE_INVALID_REFERENCE", HttpStatus.BAD_REQUEST),
   TASK_TEMPLATE_ALREADY_EXISTS(1502, "TASK_TEMPLATE_ALREADY_EXISTS", HttpStatus.BAD_REQUEST),
   TASK_TEMPLATE_INVALID_NAME(1503, "TASK_TEMPLATE_INVALID_NAME", HttpStatus.BAD_REQUEST),
-  TASK_TEMPLATE_INVALID_SCOPE_CHANGE(1504, "TASK_TEMPLATE_INVALID_SCOPE_CHANGE", HttpStatus.BAD_REQUEST),
+  TASK_TEMPLATE_INACTIVE_STATUS(1504, "TASK_TEMPLATE_INACTIVE_STATUS", HttpStatus.BAD_REQUEST),
   ACTION_INVALID_REF(1601, "ACTION_INVALID_REF", HttpStatus.BAD_REQUEST);
   
   private final int code;
