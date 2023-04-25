@@ -97,6 +97,15 @@ public class EngineClientImpl implements EngineClient {
   @Value("${flow.engine.tasktemplate.create.url}")
   public String createTaskTemplateURL;
 
+  @Value("${flow.engine.tasktemplate.apply.url}")
+  public String applyTaskTemplateURL;
+
+  @Value("${flow.engine.tasktemplate.enable.url}")
+  public String enableTaskTemplateURL;
+
+  @Value("${flow.engine.tasktemplate.disable.url}")
+  public String disableTaskTemplateURL;
+
   @Autowired
   @Qualifier("internalRestTemplate")
   public RestTemplate restTemplate;
@@ -643,6 +652,81 @@ public class EngineClientImpl implements EngineClient {
       LOGGER.info("Content Response: " + response.getBody().toString());
 
       return response.getBody();
+    } catch (RestClientException ex) {
+      LOGGER.error(ex.toString());
+      throw new BoomerangException(ex, HttpStatus.INTERNAL_SERVER_ERROR.value(),
+          ex.getClass().getSimpleName(), "Exception in communicating with internal services.",
+          HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @Override
+  public TaskTemplate applyTaskTemplate(TaskTemplate taskTemplate, boolean replace) {
+    try {
+      String url = applyTaskTemplateURL;
+      Map<String, String> requestParams = new HashMap<>();
+      requestParams.put("replace", Boolean.toString(replace));
+
+      String encodedURL =
+          requestParams.keySet().stream().map(key -> key + "=" + requestParams.get(key)).collect(
+              Collectors.joining("&", url + "?", ""));
+      
+      LOGGER.info("URL: " + encodedURL);
+
+      final HttpHeaders headers = new HttpHeaders();
+      headers.setContentType(MediaType.APPLICATION_JSON);
+      HttpEntity<TaskTemplate> entity = new HttpEntity<TaskTemplate>(taskTemplate, headers);
+      ResponseEntity<TaskTemplate> response =
+          restTemplate.exchange(encodedURL, HttpMethod.PUT, entity, TaskTemplate.class);
+
+      LOGGER.info("Status Response: " + response.getStatusCode());
+      LOGGER.info("Content Response: " + response.getBody().toString());
+
+      return response.getBody();
+    } catch (RestClientException ex) {
+      LOGGER.error(ex.toString());
+      throw new BoomerangException(ex, HttpStatus.INTERNAL_SERVER_ERROR.value(),
+          ex.getClass().getSimpleName(), "Exception in communicating with internal services.",
+          HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @Override
+  public void enableTaskTemplate(String name) {
+    try {
+      String url = enableTaskTemplateURL.replace("{name}", name);
+      
+      LOGGER.info("URL: " + url);
+      ResponseEntity<Void> response =
+        restTemplate.exchange(url, HttpMethod.PUT, null, Void.class);
+
+      LOGGER.info("Status Response: " + response.getStatusCode());
+      
+      if (!HttpStatus.NO_CONTENT.equals(response.getStatusCode())) {
+        throw new RestClientException("Unable to enable TaskTemplate");
+      }
+    } catch (RestClientException ex) {
+      LOGGER.error(ex.toString());
+      throw new BoomerangException(ex, HttpStatus.INTERNAL_SERVER_ERROR.value(),
+          ex.getClass().getSimpleName(), "Exception in communicating with internal services.",
+          HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @Override
+  public void disableTaskTemplate(String name) {
+    try {
+      String url = disableTaskTemplateURL.replace("{name}", name);
+      
+      LOGGER.info("URL: " + url);
+      ResponseEntity<Void> response =
+        restTemplate.exchange(url, HttpMethod.PUT, null, Void.class);
+
+      LOGGER.info("Status Response: " + response.getStatusCode());
+      
+      if (!HttpStatus.NO_CONTENT.equals(response.getStatusCode())) {
+        throw new RestClientException("Unable to disable TaskTemplate");
+      }
     } catch (RestClientException ex) {
       LOGGER.error(ex.toString());
       throw new BoomerangException(ex, HttpStatus.INTERNAL_SERVER_ERROR.value(),

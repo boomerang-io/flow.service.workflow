@@ -61,4 +61,10 @@ public interface EngineClient {
       Optional<List<String>> queryIds);
 
   TaskTemplate createTaskTemplate(TaskTemplate taskTemplate);
+
+  TaskTemplate applyTaskTemplate(TaskTemplate workflow, boolean replace);
+
+  void enableTaskTemplate(String name);
+
+  void disableTaskTemplate(String name);
 }

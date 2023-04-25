@@ -77,7 +77,7 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
       }
       
       // Switch from UserId to Users Name
-      updateChangeLogAuthor(taskTemplate.getChangelog());
+      switchChangeLogAuthorToUserName(taskTemplate.getChangelog());
       return ResponseEntity.ok(taskTemplate);
     } else {
       // TODO: do we want to return invalid ref or unauthorized
@@ -105,7 +105,7 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
         queryLabels, queryStatus, Optional.of(refs));
 
     if (!response.getContent().isEmpty()) {
-      response.getContent().forEach(t -> updateChangeLogAuthor(t.getChangelog()));
+      response.getContent().forEach(t -> switchChangeLogAuthorToUserName(t.getChangelog()));
     }
     return response;
   }
@@ -127,19 +127,7 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
     }
     
     // Update Changelog
-    // TODO: figure out how to get current user or if token then type of token
-//    ChangeLog changelog = new ChangeLog(CHANGELOG_INITIAL);
-//    if (taskTemplate.getChangelog() != null) {
-//      if (taskTemplate.getChangelog().getAuthor() != null) {
-//        changelog.setAuthor(taskTemplate.getChangelog().getAuthor());
-//      }
-//      if (taskTemplate.getChangelog().getReason() != null) {
-//        changelog.setReason(taskTemplate.getChangelog().getReason());
-//      }
-//      if (taskTemplate.getChangelog().getDate() != null) {
-//        changelog.setDate(taskTemplate.getChangelog().getDate());
-//      }
-//    }
+    updateChangeLog(request.getChangelog());
     
     // TODO: add a check that they are prefixed with the current team scope OR are a valid Global TaskTemplate
     
@@ -160,25 +148,41 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
    * Apply allows you to create a new version as well as create new
    */
   @Override
-  public ResponseEntity<Workflow> apply(Workflow workflow, boolean replace) {
-    String workflowId = workflow.getId();
-    List<String> workflowRefs = relationshipService.getFilteredRefs(Optional.of(RelationshipRef.WORKFLOW),
-        Optional.of(List.of(workflowId)), Optional.of(RelationshipType.BELONGSTO), Optional.of(RelationshipRef.TEAM), Optional.empty());
+  public ResponseEntity<TaskTemplate> apply(TaskTemplate request, boolean replace) {
+    String templateName = request.getName();
+    List<String> refs = relationshipService.getFilteredRefs(Optional.of(RelationshipRef.TASKTEMPLATE),
+        Optional.of(List.of(templateName)), Optional.of(RelationshipType.BELONGSTO), Optional.empty(), Optional.empty());
 
-    if (workflowId != null && !workflowId.isBlank() && !workflowRefs.isEmpty()) {
-      updateScheduleTriggers(workflow, this.get(workflowId, Optional.empty(), false).getBody().getTriggers());
-      setupTriggerDefaults(workflow);
-      Workflow appliedWorkflow = engineClient.applyWorkflow(workflow, replace);
-      // Filter out sensitive values
-      DataAdapterUtil.filterParamSpecValueByFieldType(appliedWorkflow.getConfig(), appliedWorkflow.getParams(), FieldType.PASSWORD.value());
-      return ResponseEntity.ok(appliedWorkflow);
+    if (templateName != null && !templateName.isBlank() && !refs.isEmpty()) {
+      // Set verfied to false - this is only able to be set via Engine or Loader
+      request.setVerified(false);
+      
+      // Update Changelog
+      updateChangeLog(request.getChangelog());
+      
+      // Process Parameters - if no Params are set but Config is then create ParamSpecs
+      if (request.getConfig() != null && !request.getConfig().isEmpty() && request.getSpec() != null) {
+        ParameterUtil.abstractParamToParamSpec(request.getConfig(), request.getSpec().getParams());
+      }
+      TaskTemplate template = engineClient.applyTaskTemplate(request, replace);
+      return ResponseEntity.ok(template);
     } else {
-      workflow.setId(null);
-      return this.create(workflow, Optional.empty());
+      // TODO: do we want to return invalid ref or unauthorized
+      throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
     }
   }
 
-  private void updateChangeLogAuthor(ChangeLog changelog) {
+  // Override changelog date and set author. Used on creation/update of TaskTemplate
+  private void updateChangeLog(ChangeLog changelog) {
+    if (changelog == null) {
+      changelog = new ChangeLog();
+    }
+    changelog.setDate(new Date());
+    //TODO: update Author ID
+  }
+
+  //TODO: update to correct User Service. Used on retrieval of TaskTemplate
+  private void switchChangeLogAuthorToUserName(ChangeLog changelog) {
     if (changelog != null && changelog.getAuthor() != null) {
       UserEntity user = userIdentityService.getUserByID(changelog.getAuthor());
       if (user != null) {
@@ -188,78 +192,35 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
   }
 
   @Override
-  public FlowTaskTemplate insertTaskTemplate(FlowTaskTemplate flowTaskTemplateEntity) {
-    UserEntity user = userIdentityService.getCurrentUser();
-
-    if (user.getType() == UserType.admin || user.getType() == UserType.operator) {
-
-      Date creationDate = new Date();
-
-      flowTaskTemplateEntity.setCreatedDate(creationDate);
-      flowTaskTemplateEntity.setLastModified(creationDate);
-      flowTaskTemplateEntity.setVerified(false);
-
-      updateChangeLog(flowTaskTemplateEntity);
-
-      return new FlowTaskTemplate(
-          flowTaskTemplateService.insertTaskTemplate(flowTaskTemplateEntity));
-
-    } else {
-      throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+  public void enable(String name) {
+    if (name == null || name.isBlank()) {
+      // TODO: do we want to return invalid ref or unauthorized
+      throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
     }
+    List<String> refs = relationshipService.getFilteredRefs(Optional.of(RelationshipRef.TASKTEMPLATE),
+        Optional.of(List.of(name)), Optional.of(RelationshipType.BELONGSTO), Optional.empty(), Optional.empty());
 
+    if (refs.isEmpty()) {
+      // TODO: do we want to return invalid ref or unauthorized
+      throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
+    }
+    engineClient.enableTaskTemplate(name);
   }
 
   @Override
-  public FlowTaskTemplate updateTaskTemplate(FlowTaskTemplate flowTaskTemplateEntity) {
-    UserEntity user = userIdentityService.getCurrentUser();
-
-    if (user.getType() == UserType.admin || user.getType() == UserType.operator) {
-
-      updateChangeLog(flowTaskTemplateEntity);
-
-      flowTaskTemplateEntity.setLastModified(new Date());
-      flowTaskTemplateEntity.setVerified(flowTaskTemplateService
-          .getTaskTemplateWithId(flowTaskTemplateEntity.getId()).isVerified());
-      return new FlowTaskTemplate(
-          flowTaskTemplateService.updateTaskTemplate(flowTaskTemplateEntity));
-
-    } else {
-      throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+  public void disable(String name) {
+    if (name == null || name.isBlank()) {
+      // TODO: do we want to return invalid ref or unauthorized
+      throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
     }
-  }
+    List<String> refs = relationshipService.getFilteredRefs(Optional.of(RelationshipRef.TASKTEMPLATE),
+        Optional.of(List.of(name)), Optional.of(RelationshipType.BELONGSTO), Optional.empty(), Optional.empty());
 
-  @Override
-  public void deleteTaskTemplateWithId(String id) {
-    UserEntity user = userIdentityService.getCurrentUser();
-
-    if (user.getType() == UserType.admin || user.getType() == UserType.operator) {
-      flowTaskTemplateService.deleteTaskTemplate(flowTaskTemplateService.getTaskTemplateWithId(id));
-    } else {
-      throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+    if (refs.isEmpty()) {
+      // TODO: do we want to return invalid ref or unauthorized
+      throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
     }
-  }
-
-  @Override
-  public void activateTaskTemplate(String id) {
-    flowTaskTemplateService.activateTaskTemplate(flowTaskTemplateService.getTaskTemplateWithId(id));
-
-  }
-
-  private void updateChangeLog(FlowTaskTemplate flowTaskTemplateEntity) {
-    List<Revision> revisions = flowTaskTemplateEntity.getRevisions();
-    final UserEntity user = userIdentityService.getCurrentUser();
-
-    if (revisions != null) {
-      for (Revision revision : revisions) {
-        ChangeLog changelog = revision.getChangelog();
-        if (changelog != null && changelog.getUserId() == null) {
-          changelog.setUserId(user.getId());
-          changelog.setDate(new Date());
-          changelog.setUserName(user.getName());
-        }
-      }
-    }
+    engineClient.disableTaskTemplate(name);
   }
 
   @Override

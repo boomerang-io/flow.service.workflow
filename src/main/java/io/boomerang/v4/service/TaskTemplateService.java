@@ -32,4 +32,10 @@ public interface TaskTemplateService {
       Optional<List<String>> status, Optional<List<String>> names, Optional<List<String>> teams);
 
   ResponseEntity<TaskTemplate> create(TaskTemplate request, Optional<String> team);
+
+  ResponseEntity<TaskTemplate> apply(TaskTemplate workflow, boolean replace);
+
+  void enable(String name);
+
+  void disable(String name);
 }
