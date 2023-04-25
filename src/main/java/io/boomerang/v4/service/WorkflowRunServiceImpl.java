@@ -107,6 +107,8 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
     }
     List<String> workflowRefs = relationshipService.getFilteredRefs(Optional.of(RelationshipRef.WORKFLOW),
         Optional.of(List.of(request.getWorkflowRef())), Optional.of(RelationshipType.BELONGSTO), Optional.empty(), Optional.empty());
+    // Check if Workflow can run (Quotas & Triggers)
+    // TODO: check triggers allow submission
     if (!workflowRefs.isEmpty() && canRunWithQuotas(request.getWorkflowRef())) {
       // Set Workflow & Task Debug
       if (request.getDebug() == null) {

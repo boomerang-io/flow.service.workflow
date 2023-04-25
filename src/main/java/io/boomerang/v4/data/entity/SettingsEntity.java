@@ -4,13 +4,13 @@ import java.util.Date;
 import java.util.List;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
-import io.boomerang.mongo.model.Config;
 import io.boomerang.mongo.model.ConfigurationType;
+import io.boomerang.v4.model.AbstractParam;
 
 @Document(collection = "#{@mongoConfiguration.fullCollectionName('settings')}")
 public class SettingsEntity {
 
-  private List<Config> config;
+  private List<AbstractParam> config;
 
   private String description;
   @Id
@@ -25,7 +25,7 @@ public class SettingsEntity {
 
   private ConfigurationType type;
 
-  public List<Config> getConfig() {
+  public List<AbstractParam> getConfig() {
     return config;
   }
 
@@ -57,7 +57,7 @@ public class SettingsEntity {
     return type;
   }
 
-  public void setConfig(List<Config> config) {
+  public void setConfig(List<AbstractParam> config) {
     this.config = config;
   }
 

@@ -7,10 +7,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import io.boomerang.model.AESAlgorithm;
-import io.boomerang.mongo.model.Config;
 import io.boomerang.mongo.model.EncryptionConfig;
 import io.boomerang.v4.data.entity.SettingsEntity;
 import io.boomerang.v4.data.repository.SettingsRepository;
+import io.boomerang.v4.model.AbstractParam;
 
 
 @Service
@@ -96,10 +96,10 @@ public class SettingsServiceImpl implements SettingsService {
   }
 
   @Override
-  public Config getSetting(String key, String name) {
+  public AbstractParam getSetting(String key, String name) {
     final SettingsEntity settings = this.settingsRepository.findOneByKey(key);
-    final List<Config> configList = settings.getConfig();
-    final Optional<Config> result =
+    final List<AbstractParam> configList = settings.getConfig();
+    final Optional<AbstractParam> result =
         configList.stream().parallel().filter(x -> name.equals(x.getKey())).findFirst();
 
     if (result.isPresent() && SECURED_TYPE.equalsIgnoreCase(result.get().getType())) {
