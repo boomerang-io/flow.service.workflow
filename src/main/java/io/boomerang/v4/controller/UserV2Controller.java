@@ -1,4 +1,4 @@
-package io.boomerang.controller.users;
+package io.boomerang.v4.controller;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +18,7 @@ import io.boomerang.service.UserIdentityService;
 
 @RestController
 @RequestMapping("/workflow/users")
-public class UsersController {
+public class UserV2Controller {
 
   @Autowired
   @Qualifier("internalRestTemplate")
