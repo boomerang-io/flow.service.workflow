@@ -1,5 +1,6 @@
 package io.boomerang.v4.controller;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -21,6 +23,13 @@ import org.springframework.web.bind.annotation.RestController;
 import io.boomerang.controller.WorkflowScope;
 import io.boomerang.model.GenerateTokenResponse;
 import io.boomerang.model.WorkflowExport;
+import io.boomerang.error.BoomerangException;
+import io.boomerang.model.GenerateTokenResponse;
+import io.boomerang.model.WorkflowDuplicateRequest;
+import io.boomerang.model.WorkflowSchedule;
+import io.boomerang.model.WorkflowScheduleCalendar;
+import io.boomerang.model.WorkflowSummary;
+import io.boomerang.mongo.model.WorkflowProperty;
 import io.boomerang.v4.client.WorkflowResponsePage;
 import io.boomerang.v4.model.WorkflowCanvas;
 import io.boomerang.v4.model.ref.Workflow;
@@ -168,6 +177,7 @@ public class WorkflowV2Controller {
 //    workflowService.deleteToken(id, label);
 //  }
 
+<<<<<<< HEAD
 //  @PostMapping(value = "/workflow/{id}/validateToken", consumes = "application/json; charset=utf-8")
 //  public ResponseEntity<HttpStatus> validateToken(@PathVariable String id,
 //      @RequestBody GenerateTokenResponse tokenPayload) {
@@ -179,6 +189,13 @@ public class WorkflowV2Controller {
 //      @RequestBody List<WorkflowProperty> properties) {
 //    return workflowService.updateWorkflowProperties(workFlowId, properties);
 //  }
+=======
+  @PatchMapping(value = "/{workflowId}/parameters")
+  public WorkflowSummary updateWorkflowProperties(@PathVariable String workFlowId,
+      @RequestBody List<WorkflowProperty> properties) {
+    return workflowService.updateWorkflowProperties(workFlowId, properties);
+  }
+>>>>>>> parent of f21d546c (WIP - removed external Team and User and Event clients)
 
   @GetMapping(value = "/{workflowId}/available-parameters")
   @Operation(summary = "Retrieve the parameters.")
