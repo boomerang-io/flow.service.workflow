@@ -9,7 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import io.boomerang.mongo.model.UserStatus;
 import io.boomerang.mongo.model.UserType;
-import io.boomerang.mongo.service.NoLogging;
+import io.boomerang.security.service.NoLogging;
 import io.boomerang.v4.data.entity.UserEntity;
 import io.boomerang.v4.data.repository.UserRepository;
 

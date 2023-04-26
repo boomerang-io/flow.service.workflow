@@ -30,6 +30,7 @@ import io.boomerang.security.service.NoLogging;
 import io.boomerang.v4.data.entity.UserEntity;
 import io.boomerang.v4.model.User;
 import io.boomerang.v4.service.UserService;
+import io.boomerang.v4.service.WorkflowService;
 import io.boomerang.v4.service.TeamService;
 
 @Service
@@ -292,11 +293,6 @@ public class UserIdentityServiceImpl implements UserIdentityService {
       if (flowUser.isPresent()) {
         FlowUserProfile profile = new FlowUserProfile();
         BeanUtils.copyProperties(flowUser.get(), profile);
-        UserWorkflowSummary workflowList = workflowService.getUserWorkflows(profile.getId());
-
-        if (workflowList != null) {
-          profile.setWorkflows(workflowList.getWorkflows());
-        }
         setUserTeams(profile);
         return profile;
       }
@@ -306,12 +302,6 @@ public class UserIdentityServiceImpl implements UserIdentityService {
       if (userProfile != null) {
         BeanUtils.copyProperties(userProfile, flowUser);
         flowUser.setType(userProfile.getType());
-
-        UserWorkflowSummary workflowList = workflowService.getUserWorkflows(userProfile.getId());
-        if (workflowList != null) {
-          flowUser.setWorkflows(workflowList.getWorkflows());
-        }
-
         setUserTeams(flowUser);
 
         return flowUser;

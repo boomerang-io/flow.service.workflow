@@ -18,22 +18,18 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.web.client.RequestCallback;
 import org.springframework.web.client.ResponseExtractor;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
-import io.boomerang.mongo.entity.ActivityEntity;
-import io.boomerang.service.DAGTask;
-import io.boomerang.service.Dag;
-import io.boomerang.service.FlowTaskTemplateEntity;
-import io.boomerang.service.ParameterLayers;
-import io.boomerang.service.Revision;
-import io.boomerang.service.RevisionEntity;
-import io.boomerang.service.Task;
-import io.boomerang.service.TaskExecutionEntity;
-import io.boomerang.service.TaskTemplateConfig;
+import io.boomerang.v4.client.EngineClient;
+import io.boomerang.v4.model.ref.TaskRun;
+import io.boomerang.v4.model.ref.WorkflowRun;
 
 public class TaskRunServiceImpl implements TaskRunService {
 
@@ -42,17 +38,23 @@ public class TaskRunServiceImpl implements TaskRunService {
   @Value("${flow.hanlder.streamlogs.url}")
   private String getStreamDownloadPath;
 
+  @Autowired
+  @Qualifier("internalRestTemplate")
+  public RestTemplate restTemplate;
+
+  @Autowired
+  private EngineClient engineClient;
+
   @Override
   public StreamingResponseBody getTaskRunLog(String workflowRunId, String taskRunId) {
 
-    LOGGER.info("Getting TaskRun log for activity: {} task id: {}", activityId, taskId);
+    LOGGER.info("Getting TaskRun log for activity: {} task id: {}", workflowRunId, taskRunId);
+    
+    TaskRun taskRun = engineClient.getTaskRun(taskRunId);
+    
+    WorkflowRun workflowRun = engineClient.getWorkflowRun(workflowRunId, false);
 
-    TaskExecutionEntity taskExecution = taskService.findByTaskIdAndActivityId(taskId, activityId);
-
-    ActivityEntity activity =
-        workflowActivityService.findWorkflowActivtyById(taskExecution.getActivityId());
-
-    List<String> removeList = buildRemovalList(taskId, taskExecution, activity);
+    List<String> removeList = buildRemovalList(taskRunId, taskRun, workflowRun);
     LOGGER.debug("Removal List Count: {} ", removeList.size());
 
     return outputStream -> {
@@ -126,20 +128,17 @@ public class TaskRunServiceImpl implements TaskRunService {
     }
   }
 
-  private List<String> buildRemovalList(String taskId, TaskExecutionEntity taskExecution,
-      ActivityEntity activity) {
+  private List<String> buildRemovalList(String taskId, TaskRun taskRun,
+      WorkflowRun workflowRun) {
 
-    String activityId = activity.getId();
+    String activityId = workflowRun.getId();
     List<String> removalList = new LinkedList<>();
-    Task task = new Task();
-    task.setTaskId(taskId);
-    task.setTaskType(taskExecution.getTaskType());
 
     ParameterLayers applicationProperties =
-        propertyManager.buildParameterLayers(task, activityId, activity.getWorkflowId());
+        propertyManager.buildParameterLayers(task, activityId, workflowRun.getWorkflowId());
     Map<String, String> map = applicationProperties.getMap(false);
 
-    String workflowRevisionId = activity.getWorkflowRevisionid();
+    String workflowRevisionId = workflowRun.getWorkflowRevisionid();
 
     Optional<RevisionEntity> revisionOptional = this.versionService.getRevision(workflowRevisionId);
     if (revisionOptional.isEmpty()) {

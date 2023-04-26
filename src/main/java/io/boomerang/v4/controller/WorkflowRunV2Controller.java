@@ -3,11 +3,8 @@ package io.boomerang.v4.controller;
 import java.util.List;
 import java.util.Optional;
 import javax.servlet.http.HttpServletResponse;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.domain.Sort.Order;
@@ -30,6 +27,7 @@ import io.boomerang.v4.data.entity.ref.WorkflowRunEntity;
 import io.boomerang.v4.model.ref.WorkflowRun;
 import io.boomerang.v4.model.ref.WorkflowRunRequest;
 import io.boomerang.v4.model.ref.WorkflowRunSubmitRequest;
+import io.boomerang.v4.service.TaskRunService;
 import io.boomerang.v4.service.WorkflowRunService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -47,7 +45,7 @@ public class WorkflowRunV2Controller {
   private WorkflowRunService workflowRunService;
 
   @Autowired
-  private WorkflowRunService taskRunService;
+  private TaskRunService taskRunService;
 
   @GetMapping(value = "/query")
   @AuthenticationScope(scopes = {TokenScope.global, TokenScope.team, TokenScope.user})
@@ -176,6 +174,6 @@ public class WorkflowRunV2Controller {
       HttpServletResponse response) {
   response.setContentType("text/plain");
   response.setCharacterEncoding("UTF-8");
-  return new ResponseEntity<>(taskRunService.getTaskRunLog(workflowRunId, taskRunId), HttpStatus.OK);
+  return new ResponseEntity<StreamingResponseBody>(taskRunService.getTaskRunLog(workflowRunId, taskRunId), HttpStatus.OK);
   }
 }

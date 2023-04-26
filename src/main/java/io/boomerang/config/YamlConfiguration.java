@@ -1,4 +1,4 @@
-package io.boomerang.service;
+package io.boomerang.config;
 
 import java.util.List;
 import org.springframework.context.annotation.Configuration;
