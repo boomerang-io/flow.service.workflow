@@ -18,7 +18,6 @@ import io.boomerang.client.UserProfile;
 import io.boomerang.model.FlowUserProfile;
 import io.boomerang.model.OneTimeCode;
 import io.boomerang.model.UserQueryResult;
-import io.boomerang.model.UserWorkflowSummary;
 import io.boomerang.mongo.model.TokenScope;
 import io.boomerang.mongo.model.UserStatus;
 import io.boomerang.mongo.model.UserType;
@@ -29,9 +28,9 @@ import io.boomerang.security.model.UserToken;
 import io.boomerang.security.service.NoLogging;
 import io.boomerang.v4.data.entity.UserEntity;
 import io.boomerang.v4.model.User;
+import io.boomerang.v4.service.TeamService;
 import io.boomerang.v4.service.UserService;
 import io.boomerang.v4.service.WorkflowService;
-import io.boomerang.v4.service.TeamService;
 
 @Service
 public class UserIdentityServiceImpl implements UserIdentityService {
@@ -313,9 +312,11 @@ public class UserIdentityServiceImpl implements UserIdentityService {
 
   private void setUserTeams(FlowUserProfile flowUser) {
     if (flowUser.getType() == UserType.admin) {
-      flowUser.setUserTeams(flowTeamService.getAllTeamsListing());
+//      flowUser.setUserTeams(flowTeamService.getAllTeamsListing());
+      flowUser.setUserTeams(null);
     } else {
-      flowUser.setUserTeams(flowTeamService.getUsersTeamListing(flowUser));
+//      flowUser.setUserTeams(flowTeamService.getUsersTeamListing(flowUser));
+      flowUser.setUserTeams(null);
     }
   }
 }

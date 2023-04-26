@@ -7,12 +7,10 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.Reader;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -28,8 +26,9 @@ import org.springframework.web.client.ResponseExtractor;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import io.boomerang.v4.client.EngineClient;
+import io.boomerang.v4.model.ref.ParamLayers;
+import io.boomerang.v4.model.ref.RunParam;
 import io.boomerang.v4.model.ref.TaskRun;
-import io.boomerang.v4.model.ref.WorkflowRun;
 
 public class TaskRunServiceImpl implements TaskRunService {
 
@@ -45,24 +44,26 @@ public class TaskRunServiceImpl implements TaskRunService {
   @Autowired
   private EngineClient engineClient;
 
+  @Autowired
+  private ParameterManager parameterManager;
+
   @Override
   public StreamingResponseBody getTaskRunLog(String workflowRunId, String taskRunId) {
 
     LOGGER.info("Getting TaskRun log for activity: {} task id: {}", workflowRunId, taskRunId);
     
     TaskRun taskRun = engineClient.getTaskRun(taskRunId);
-    
-    WorkflowRun workflowRun = engineClient.getWorkflowRun(workflowRunId, false);
 
-    List<String> removeList = buildRemovalList(taskRunId, taskRun, workflowRun);
+    List<String> removeList = buildRemovalList(workflowRunId, taskRunId, taskRun);
     LOGGER.debug("Removal List Count: {} ", removeList.size());
 
+    //TODO come back and making this work with the new Handler request
     return outputStream -> {
       Map<String, String> requestParams = new HashMap<>();
-      requestParams.put("workflowId", activity.getWorkflowId());
-      requestParams.put("workflowActivityId", activityId);
-      requestParams.put("taskActivityId", taskExecution.getId());
-      requestParams.put("labels", taskId);
+//      requestParams.put("workflowId", activity.getWorkflowId());
+//      requestParams.put("workflowActivityId", activityId);
+//      requestParams.put("taskActivityId", taskExecution.getId());
+//      requestParams.put("labels", taskId);
 
       String encodedURL =
           requestParams.keySet().stream().map(key -> key + "=" + requestParams.get(key)).collect(
@@ -79,7 +80,7 @@ public class TaskRunServiceImpl implements TaskRunService {
       try {
         restTemplate.execute(encodedURL, HttpMethod.GET, requestCallback, responseExtractor);
       } catch (Exception ex) {
-        LOGGER.error("Error downloading logs: {} task id: {}", activityId, taskId);
+        LOGGER.error("Error downloading logs: {} task id: {}", workflowRunId, taskRunId);
         LOGGER.error(ExceptionUtils.getStackTrace(ex));
       }
 
@@ -112,7 +113,7 @@ public class TaskRunServiceImpl implements TaskRunService {
           String input = null;
           while ((input = bufferedReader.readLine()) != null) {
 
-            printWriter.println(satanzieInput(input, maskWordList));
+            printWriter.println(sanitizeInput(input, maskWordList));
             if (!input.isBlank()) {
               printWriter.flush();
             }
@@ -128,68 +129,34 @@ public class TaskRunServiceImpl implements TaskRunService {
     }
   }
 
-  private List<String> buildRemovalList(String taskId, TaskRun taskRun,
-      WorkflowRun workflowRun) {
-
-    String activityId = workflowRun.getId();
+  //TODO: verify this - i doubt we need to do it this way anymore. The TaskRun has the resolved parameters. So we can just check type and value and replace.
+  private List<String> buildRemovalList(String workflowRunId, String taskRunId, TaskRun taskRun) {
     List<String> removalList = new LinkedList<>();
+    ParamLayers paramLayers =
+        parameterManager.buildParamLayers(workflowRunId);
+    Map<String, Object> map = paramLayers.getFlatMap();
 
-    ParameterLayers applicationProperties =
-        propertyManager.buildParameterLayers(task, activityId, workflowRun.getWorkflowId());
-    Map<String, String> map = applicationProperties.getMap(false);
-
-    String workflowRevisionId = workflowRun.getWorkflowRevisionid();
-
-    Optional<RevisionEntity> revisionOptional = this.versionService.getRevision(workflowRevisionId);
-    if (revisionOptional.isEmpty()) {
-      return new LinkedList<>();
-    }
-
-    RevisionEntity revision = revisionOptional.get();
-    Dag dag = revision.getDag();
-    List<DAGTask> dagTasks = dag.getTasks();
-    DAGTask dagTask =
-        dagTasks.stream().filter((t) -> taskId.equals(t.getTaskId())).findFirst().orElse(null);
-    if (dagTask != null) {
-      if (dagTask.getTemplateId() != null) {
-        FlowTaskTemplateEntity flowTaskTemplateEntity =
-            templateService.getTaskTemplateWithId(dagTask.getTemplateId());
-        if (flowTaskTemplateEntity != null && flowTaskTemplateEntity.getRevisions() != null) {
-          Optional<Revision> latestRevision = flowTaskTemplateEntity.getRevisions().stream()
-              .sorted(Comparator.comparingInt(Revision::getVersion).reversed()).findFirst();
-          if (latestRevision.isPresent()) {
-            Revision rev = latestRevision.get();
-            for (TaskTemplateConfig taskConfig : rev.getConfig()) {
-              if ("password".equals(taskConfig.getType())) {
-                LOGGER.debug("Found a secured property being used: {}", taskConfig.getKey());
-                String key = taskConfig.getKey();
-                String inputValue = map.get(key);
-                if (inputValue == null || inputValue.isBlank()) {
-                  inputValue = taskConfig.getDefaultValue();
-                }
-                String value = propertyManager.replaceValueWithProperty(inputValue, activityId,
-                    applicationProperties);
-                value = propertyManager.replaceValueWithProperty(value, activityId,
-                    applicationProperties);
-                LOGGER.debug("New Value: {}", value);
-                if (!value.isBlank()) {
-                  removalList.add(value);
-                }
-              }
-            }
+    if (taskRun != null && taskRun.getParams() != null) {
+      for (RunParam param : taskRun.getParams()) {
+        if ("password".equals(param.getType().toString())) {
+          LOGGER.debug("Found a secured property being used - Name: {}", param.getName());
+          // Assume that Password types are of String Param type
+          String value = (String) map.get(param.getName());
+          if (!value.isBlank()) {
+            removalList.add(value);
           }
         }
       }
     }
 
-    LOGGER.debug("Displaying removal list");
+    LOGGER.debug("Param removal list");
     for (String item : removalList) {
       LOGGER.debug("Item: {}", item);
     }
     return removalList;
   }
 
-  private String satanzieInput(String input, List<String> removeList) {
+  private String sanitizeInput(String input, List<String> removeList) {
     for (String value : removeList) {
       input = input.replaceAll(Pattern.quote(value), "******");
     }
