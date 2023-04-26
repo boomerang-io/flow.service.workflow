@@ -35,7 +35,6 @@ import io.boomerang.mongo.entity.WorkflowEntity;
 import io.boomerang.mongo.model.KeyValuePair;
 import io.boomerang.mongo.model.Triggers;
 import io.boomerang.mongo.model.WorkflowProperty;
-import io.boomerang.service.crud.WorkflowService;
 import io.boomerang.service.refactor.TaskService;
 import io.boomerang.util.ParameterMapper;
 import io.boomerang.util.DataAdapterUtil.FieldType;

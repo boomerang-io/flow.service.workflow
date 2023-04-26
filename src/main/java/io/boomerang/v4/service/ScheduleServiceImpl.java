@@ -38,7 +38,7 @@ import io.boomerang.util.ParameterMapper;
  * @since Flow 3.6.0
  */
 @Service
-public class WorkflowScheduleServiceImpl implements WorkflowScheduleService {
+public class ScheduleServiceImpl implements ScheduleService {
 
   private final Logger logger = LogManager.getLogger(getClass());
 

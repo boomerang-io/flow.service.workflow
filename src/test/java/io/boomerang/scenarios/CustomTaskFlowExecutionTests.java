@@ -31,7 +31,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.client.MockRestServiceServer;
 import io.boomerang.model.FlowActivity;
 import io.boomerang.model.FlowExecutionRequest;
-import io.boomerang.service.crud.FlowActivityService;
+import io.boomerang.service.FlowActivityService;
 import io.boomerang.tests.IntegrationTests;
 
 @ExtendWith(SpringExtension.class)

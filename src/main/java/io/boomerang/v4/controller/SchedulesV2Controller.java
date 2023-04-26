@@ -1,4 +1,4 @@
-package io.boomerang.controller;
+package io.boomerang.v4.controller;
 
 import java.util.Date;
 import java.util.List;
@@ -19,14 +19,14 @@ import io.boomerang.error.BoomerangException;
 import io.boomerang.model.CronValidationResponse;
 import io.boomerang.model.WorkflowSchedule;
 import io.boomerang.model.WorkflowScheduleCalendar;
-import io.boomerang.v4.service.WorkflowScheduleService;
+import io.boomerang.v4.service.ScheduleService;
 
 @RestController
-@RequestMapping("/workflow/schedules")
-public class SchedulesController {
+@RequestMapping("/api/v2/schedules")
+public class SchedulesV2Controller {
 
   @Autowired
-  private WorkflowScheduleService workflowScheduleService;
+  private ScheduleService workflowScheduleService;
   
   @GetMapping(value = "/validate/cron")
   public CronValidationResponse validateCron(@RequestParam String cron) {

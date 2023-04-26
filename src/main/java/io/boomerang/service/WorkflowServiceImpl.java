@@ -1,4 +1,4 @@
-package io.boomerang.service.crud;
+package io.boomerang.service;
 
 import static io.boomerang.util.DataAdapterUtil.filterValueByFieldType;
 import java.io.ByteArrayInputStream;
@@ -68,7 +68,6 @@ import io.boomerang.mongo.service.FlowWorkflowActivityService;
 import io.boomerang.mongo.service.FlowWorkflowService;
 import io.boomerang.mongo.service.RevisionService;
 import io.boomerang.security.service.UserValidationService;
-import io.boomerang.service.UserIdentityService;
 import io.boomerang.util.DataAdapterUtil.FieldType;
 import io.boomerang.v4.data.entity.UserEntity;
 import io.boomerang.v4.data.model.CurrentQuotas;
@@ -78,7 +77,7 @@ import io.boomerang.v4.model.enums.TriggerEnum;
 import io.boomerang.v4.service.ParameterManager;
 import io.boomerang.v4.service.SettingsServiceImpl;
 import io.boomerang.v4.service.TeamService;
-import io.boomerang.v4.service.WorkflowScheduleService;
+import io.boomerang.v4.service.ScheduleService;
 import io.boomerang.util.ModelConverterV5;
 
 @Service
@@ -91,7 +90,7 @@ public class WorkflowServiceImpl implements WorkflowService {
   private FlowWorkflowService workflowRepository;
 
   @Autowired
-  private WorkflowScheduleService workflowScheduleService;
+  private ScheduleService workflowScheduleService;
 
   @Autowired
   private RevisionService workflowVersionService;

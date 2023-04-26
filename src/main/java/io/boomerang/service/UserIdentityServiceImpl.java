@@ -27,7 +27,6 @@ import io.boomerang.security.model.TeamToken;
 import io.boomerang.security.model.Token;
 import io.boomerang.security.model.UserToken;
 import io.boomerang.security.service.impl.NoLogging;
-import io.boomerang.service.crud.WorkflowService;
 import io.boomerang.v4.data.entity.UserEntity;
 import io.boomerang.v4.model.User;
 import io.boomerang.v4.service.UserService;

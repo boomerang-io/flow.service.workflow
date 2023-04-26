@@ -1,4 +1,4 @@
-package io.boomerang.service.crud;
+package io.boomerang.service;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,7 +17,6 @@ import org.springframework.web.util.UriComponentsBuilder;
 import io.boomerang.model.Navigation;
 import io.boomerang.model.NavigationType;
 import io.boomerang.security.service.ApiTokenService;
-import io.boomerang.service.UserIdentityService;
 import io.boomerang.v4.model.FeaturesAndQuotas;
 import io.boomerang.v4.service.FeatureService;
 

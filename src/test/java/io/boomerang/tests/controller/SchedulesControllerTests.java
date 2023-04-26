@@ -14,13 +14,13 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import io.boomerang.controller.SchedulesController;
 import io.boomerang.misc.FlowTests;
 import io.boomerang.model.CronValidationResponse;
 import io.boomerang.model.WorkflowSchedule;
 import io.boomerang.mongo.model.WorkflowScheduleStatus;
 import io.boomerang.mongo.model.WorkflowScheduleType;
-import io.boomerang.v4.service.WorkflowScheduleService;
+import io.boomerang.v4.controller.SchedulesV2Controller;
+import io.boomerang.v4.service.ScheduleService;
 
 
 @ExtendWith(SpringExtension.class)
@@ -31,10 +31,10 @@ import io.boomerang.v4.service.WorkflowScheduleService;
 public class SchedulesControllerTests extends FlowTests {
 
   @Autowired
-  private SchedulesController controller;
+  private SchedulesV2Controller controller;
 
   @Autowired
-  private WorkflowScheduleService workflowScheduleService;
+  private ScheduleService workflowScheduleService;
 
   @Test
   /*

@@ -1,4 +1,4 @@
-package io.boomerang.service.crud;
+package io.boomerang.service;
 
 import java.util.Date;
 import java.util.List;

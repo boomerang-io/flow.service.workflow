@@ -25,7 +25,7 @@ import org.springframework.scheduling.quartz.SchedulerFactoryBean;
 import org.springframework.stereotype.Component;
 import io.boomerang.model.CronValidationResponse;
 import io.boomerang.mongo.entity.WorkflowScheduleEntity;
-import io.boomerang.v4.service.WorkflowScheduleService;
+import io.boomerang.v4.service.ScheduleService;
 
 @Component
 public class QuartzSchedulerService {
@@ -36,7 +36,7 @@ public class QuartzSchedulerService {
   private SchedulerFactoryBean schedulerFactoryBean;
 
   @Autowired
-  private WorkflowScheduleService workflowScheduleService;
+  private ScheduleService workflowScheduleService;
 
   public void createOrUpdateCronJob(WorkflowScheduleEntity schedule) {
     String cronString = schedule.getCronSchedule();

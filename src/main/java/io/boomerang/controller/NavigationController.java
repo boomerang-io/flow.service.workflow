@@ -11,8 +11,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import io.boomerang.model.Navigation;
 import io.boomerang.mongo.model.UserType;
+import io.boomerang.service.NavigationService;
 import io.boomerang.service.UserIdentityService;
-import io.boomerang.service.crud.NavigationService;
 import io.boomerang.v4.data.entity.UserEntity;
 
 @RestController

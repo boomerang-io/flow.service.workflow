@@ -63,7 +63,7 @@ public class WorkflowServiceImpl implements WorkflowService {
   private RelationshipService relationshipService;
   
   @Autowired
-  private WorkflowScheduleService workflowScheduleService;
+  private ScheduleService workflowScheduleService;
   
   @Autowired
   private ParameterManager parameterManager;

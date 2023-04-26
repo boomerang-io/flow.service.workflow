@@ -6,8 +6,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import io.boomerang.model.profile.NavigationResponse;
 import io.boomerang.mongo.model.UserType;
+import io.boomerang.service.LaunchpadNavigationService;
 import io.boomerang.service.UserIdentityService;
-import io.boomerang.service.profile.LaunchpadNavigationService;
 import io.boomerang.v4.data.entity.UserEntity;
 
 @RestController

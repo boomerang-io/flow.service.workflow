@@ -1,4 +1,4 @@
-package io.boomerang.service.crud;
+package io.boomerang.service;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -19,7 +19,6 @@ import io.boomerang.mongo.model.WorkflowScope;
 import io.boomerang.mongo.service.FlowTeamService;
 import io.boomerang.mongo.service.FlowWorkflowActivityService;
 import io.boomerang.mongo.service.FlowWorkflowService;
-import io.boomerang.service.FilterService;
 import io.boomerang.v4.data.entity.TeamEntity;
 
 @Service

@@ -1,4 +1,4 @@
-package io.boomerang.service.profile;
+package io.boomerang.service;
 
 import io.boomerang.model.profile.NavigationResponse;
 

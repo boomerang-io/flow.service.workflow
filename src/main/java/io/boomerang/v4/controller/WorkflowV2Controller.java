@@ -7,6 +7,7 @@ import org.springframework.core.io.InputStreamResource;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.domain.Sort.Order;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,6 +18,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import io.boomerang.controller.WorkflowScope;
+import io.boomerang.model.GenerateTokenResponse;
+import io.boomerang.model.WorkflowExport;
 import io.boomerang.v4.client.WorkflowResponsePage;
 import io.boomerang.v4.model.WorkflowCanvas;
 import io.boomerang.v4.model.ref.Workflow;
@@ -126,6 +130,14 @@ public class WorkflowV2Controller {
     return workflowService.export(workflowId);
   }
 
+  //TODO: confirm this is no longer needed.
+//  @PostMapping(value = "/import")
+//  public void importWorkflow(@RequestBody WorkflowExport export, @RequestParam Boolean update,
+//      @RequestParam(required = false) String flowTeamId,
+//      @RequestParam(required = true) WorkflowScope scope) {
+//    workflowService.importWorkflow(export, update, flowTeamId, scope);
+//  }
+
   @GetMapping(value = "/{workflowId}/compose")
   @Operation(summary = "Convert workflow to compose model for UI Designer and detailed Activity screens.")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
@@ -154,6 +166,12 @@ public class WorkflowV2Controller {
 //  @DeleteMapping(value = "{id}/token")
 //  public void deleteToken(@PathVariable String id, @RequestParam String label) {
 //    workflowService.deleteToken(id, label);
+//  }
+
+//  @PostMapping(value = "/workflow/{id}/validateToken", consumes = "application/json; charset=utf-8")
+//  public ResponseEntity<HttpStatus> validateToken(@PathVariable String id,
+//      @RequestBody GenerateTokenResponse tokenPayload) {
+//    return workflowService.validateWorkflowToken(id, tokenPayload);
 //  }
 
 //  @PatchMapping(value = "/{workflowId}/parameters")

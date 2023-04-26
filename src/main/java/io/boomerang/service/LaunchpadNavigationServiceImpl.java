@@ -1,4 +1,4 @@
-package io.boomerang.service.profile;
+package io.boomerang.service;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,7 +23,6 @@ import io.boomerang.model.profile.Platform;
 import io.boomerang.mongo.model.Config;
 import io.boomerang.security.model.UserToken;
 import io.boomerang.security.service.ApiTokenService;
-import io.boomerang.service.UserIdentityService;
 import io.boomerang.v4.service.SettingsServiceImpl;
 
 @Service

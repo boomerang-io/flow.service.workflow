@@ -1,4 +1,4 @@
-package io.boomerang.service.crud;
+package io.boomerang.service;
 
 import java.util.List;
 import java.util.Map;

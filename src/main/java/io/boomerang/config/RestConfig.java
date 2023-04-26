@@ -1,4 +1,4 @@
-package io.boomerang.rest.config;
+package io.boomerang.config;
 
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;

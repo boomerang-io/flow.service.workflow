@@ -1,4 +1,4 @@
-package io.boomerang.service.crud;
+package io.boomerang.service;
 
 import static java.util.stream.Collectors.groupingBy;
 import java.io.BufferedReader;
@@ -75,8 +75,6 @@ import io.boomerang.mongo.service.FlowWorkflowActivityService;
 import io.boomerang.mongo.service.FlowWorkflowService;
 import io.boomerang.mongo.service.RevisionService;
 import io.boomerang.service.ActionService;
-import io.boomerang.service.FilterService;
-import io.boomerang.service.UserIdentityService;
 import io.boomerang.util.DataAdapterUtil.FieldType;
 import io.boomerang.v4.data.entity.TeamEntity;
 import io.boomerang.v4.data.entity.UserEntity;

@@ -94,8 +94,10 @@ public class TaskTemplateV2Controller {
   public ResponseEntity<TaskTemplate> applyTaskTemplate(@RequestBody TaskTemplate taskTemplate,
       @Parameter(name = "replace",
       description = "Replace existing version",
-      required = false) @RequestParam(required = false, defaultValue = "false") boolean replace) {
-    return taskTemplateService.apply(taskTemplate, replace);
+      required = false) @RequestParam(required = false, defaultValue = "false") boolean replace,
+      @Parameter(name = "team", description = "Team as owner reference.", example = "63d3656ca845957db7d25ef0,63a3e732b0496509a7f1d763",
+      required = false) @RequestParam(required = false) Optional<String> team) {
+    return taskTemplateService.apply(taskTemplate, replace, team);
   }
 
   @PutMapping(value = "/{name}/enable")
@@ -119,39 +121,52 @@ public class TaskTemplateV2Controller {
       required = true) @PathVariable String name) {
     taskTemplateService.disable(name);
   }
+  
+  @GetMapping(value = "{name}/yaml", produces = "application/x-yaml")
+  @Operation(summary = "Retrieve a specific task template as Tekton Task YAML. If no version specified, the latest version is returned.")
+  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
+      @ApiResponse(responseCode = "400", description = "Bad Request")})
+  public TektonTask getTaskTemplateYAML(
+      @Parameter(name = "name",
+      description = "Name of Task Template",
+      required = true) @PathVariable String name,
+      @Parameter(name = "version",
+      description = "Task Template Version",
+      required = false) @RequestParam(required = false) Optional<Integer> version) {
+    return taskTemplateService.getAsTekton(name, version);
+  }
 
-  @PostMapping(value = "yaml/validate", consumes = "application/x-yaml", produces = "application/json")
-  public FlowTaskTemplate validateYaml(@RequestBody TektonTask tektonTask) {
-    return taskTemplateService.validateTaskTemplate(tektonTask);
-  }
-  
-  @GetMapping(value = "{id}")
-  public FlowTaskTemplate getTaskTemplateWithId(@PathVariable String id) {
-    return taskTemplateService.getTaskTemplateWithId(id);
+  //TODO determine if the consumes is enough to direct it here.
+  @PostMapping(value = "/", consumes = "application/x-yaml", produces = "application/x-yaml")
+  @Operation(summary = "Create a new Task Template using Tekton Task YAML",
+            description = "The name needs to be unique and must only contain alphanumeric and - characeters.")
+  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
+      @ApiResponse(responseCode = "400", description = "Bad Request")})
+  public TektonTask createTaskTemplateYAML(
+      @Parameter(name = "team", description = "Team as owner reference.", example = "63d3656ca845957db7d25ef0,63a3e732b0496509a7f1d763",
+      required = false) @RequestParam(required = false) Optional<String> team,
+      @RequestBody TektonTask taskTemplate) {
+    return taskTemplateService.createAsTekton(taskTemplate, team);
   }
 
-  @GetMapping(value = "{id}/yaml",  produces = "application/x-yaml")
-  public TektonTask getTaskTemplateYamlWithId(@PathVariable String id) {
-    return taskTemplateService.getTaskTemplateYamlWithId(id);
+//TODO determine if the consumes is enough to direct it here.
+  @PutMapping(value = "/")
+  @Operation(summary = "Update, replace, or create new, Task Template",
+            description = "The name must only contain alphanumeric and - characeters. If the name exists, apply will create a new version.")
+  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
+      @ApiResponse(responseCode = "400", description = "Bad Request")})
+  public TektonTask applyTaskTemplateYAML(@RequestBody TektonTask taskTemplate,
+      @Parameter(name = "replace",
+      description = "Replace existing version",
+      required = false) @RequestParam(required = false, defaultValue = "false") boolean replace,
+      @Parameter(name = "team", description = "Team as owner reference.", example = "63d3656ca845957db7d25ef0,63a3e732b0496509a7f1d763",
+      required = false) @RequestParam(required = false) Optional<String> team) {
+    return taskTemplateService.applyAsTekton(taskTemplate, replace, team);
   }
-  
-  @GetMapping(value = "{id}/yaml/{revision}",  produces = "application/x-yaml")
-  public TektonTask getTaskTemplateYamlWithIdandRevision(@PathVariable String id, @PathVariable Integer revision ) {
-    return taskTemplateService.getTaskTemplateYamlWithIdAndRevision(id, revision);
-  }
-  
-  @PostMapping(value = "yaml", consumes = "application/x-yaml", produces = "application/json")
-  public FlowTaskTemplate insertTaskTemplateYaml(@RequestBody TektonTask tektonTask, @RequestParam(required = true) TemplateScope scope, @RequestParam(required = false) String teamId) {
-    return taskTemplateService.insertTaskTemplateYaml(tektonTask, scope, teamId);
-  }
-  
-  @PutMapping(value = "{id}/yaml", consumes = "application/x-yaml", produces = "application/json")
-  public FlowTaskTemplate updateTaskTemplateWithYaml(@PathVariable String id, @RequestBody TektonTask tektonTask) {
-    return taskTemplateService.updateTaskTemplateWithYaml(id, tektonTask);
-  }
-  
-  @PutMapping(value = "{id}/yaml/{revision}", consumes = "application/x-yaml", produces = "application/json")
-  public FlowTaskTemplate updateTaskTemplateWithYamlForRevision(@PathVariable String id, @RequestBody TektonTask tektonTask, @PathVariable Integer revision,  @RequestParam(required = false) String comment) {
-    return taskTemplateService.updateTaskTemplateWithYaml(id, tektonTask, revision, comment);
+
+//TODO determine if the consumes is enough to direct it here.
+  @PostMapping(value = "validate", consumes = "application/x-yaml", produces = "application/x-yaml")
+  public void validateYaml(@RequestBody TektonTask tektonTask) {
+    taskTemplateService.validateAsTekton(tektonTask);
   }
 }

@@ -9,7 +9,7 @@ import io.boomerang.model.CronValidationResponse;
 import io.boomerang.model.WorkflowSchedule;
 import io.boomerang.model.WorkflowScheduleCalendar;
 
-public interface WorkflowScheduleService {
+public interface ScheduleService {
 
   WorkflowSchedule createSchedule(WorkflowSchedule schedule);
 

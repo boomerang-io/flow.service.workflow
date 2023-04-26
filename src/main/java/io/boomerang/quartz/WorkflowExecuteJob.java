@@ -17,7 +17,7 @@ import io.boomerang.model.FlowExecutionRequest;
 import io.boomerang.model.WorkflowSchedule;
 import io.boomerang.mongo.model.WorkflowScheduleType;
 import io.boomerang.v4.model.enums.TriggerEnum;
-import io.boomerang.v4.service.WorkflowScheduleService;
+import io.boomerang.v4.service.ScheduleService;
 
 @PersistJobDataAfterExecution
 public class WorkflowExecuteJob extends QuartzJobBean {
@@ -51,7 +51,7 @@ public class WorkflowExecuteJob extends QuartzJobBean {
     }
 
     ExecutionController executionController = applicationContext.getBean(ExecutionController.class);
-    WorkflowScheduleService workflowScheduleService = applicationContext.getBean(WorkflowScheduleService.class);
+    ScheduleService workflowScheduleService = applicationContext.getBean(ScheduleService.class);
 
     String workflowId = jobDetail.getKey().getGroup();
     

@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import io.boomerang.model.InsightsSummary;
 import io.boomerang.mongo.model.TokenScope;
 import io.boomerang.security.interceptors.AuthenticationScope;
-import io.boomerang.service.crud.InsightsService;
+import io.boomerang.service.InsightsService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
