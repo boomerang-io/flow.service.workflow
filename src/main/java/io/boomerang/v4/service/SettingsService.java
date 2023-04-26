@@ -1,9 +1,9 @@
 package io.boomerang.v4.service;
 
 import java.util.List;
-import io.boomerang.mongo.model.Config;
-import io.boomerang.v4.data.entity.SettingsEntity;
+import io.boomerang.v4.data.entity.SettingEntity;
 import io.boomerang.v4.model.AbstractParam;
+import io.boomerang.v4.model.Setting;
 
 public interface SettingsService {
 
@@ -13,14 +13,16 @@ public interface SettingsService {
 
   String getWFEURL();
 
-  List<SettingsEntity> getAllSettings();
+  List<Setting> getAllSettings();
 
   AbstractParam getSetting(String key, String name);
 
-  SettingsEntity getSettingById(String id);
+  SettingEntity getSettingById(String id);
 
-  SettingsEntity getSettingByKey(String key);
+  SettingEntity getSettingByKey(String key);
 
-  void updateSetting(SettingsEntity configuration);
+  void updateSetting(SettingEntity configuration);
+
+  List<Setting> updateSettings(List<Setting> settings);
   
 }

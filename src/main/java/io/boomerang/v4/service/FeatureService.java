@@ -4,6 +4,6 @@ import io.boomerang.v4.model.FeaturesAndQuotas;
 
 public interface FeatureService {
   
-  FeaturesAndQuotas getFlowFeatures();
+  FeaturesAndQuotas get();
 
 }

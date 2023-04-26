@@ -141,8 +141,8 @@ public class EngineClientImpl implements EngineClient {
   }
 
   @Override
-  public WorkflowRunResponsePage queryWorkflowRuns(int page, int limit, Sort sort, Optional<List<String>> queryLabels,
-      Optional<List<String>> queryStatus, Optional<List<String>> queryPhase, Optional<List<String>> queryIds) {
+  public WorkflowRunResponsePage queryWorkflowRuns(int page, int limit, Sort sort, Optional<Long> fromDate, Optional<Long> toDate, Optional<List<String>> queryLabels,
+      Optional<List<String>> queryStatus, Optional<List<String>> queryPhase, Optional<List<String>> queryWorkflowRuns, Optional<List<String>> queryWorkflows) {
     try {
 
       Map<String, String> requestParams = new HashMap<>();
@@ -152,6 +152,12 @@ public class EngineClientImpl implements EngineClient {
       StringBuilder sb = new StringBuilder();
       sort.forEach(s -> sb.append(s.getProperty()).append(",").append(s.getDirection()));
       requestParams.put("sort", sb.toString());
+      if (fromDate.isPresent()) {
+        requestParams.put("fromDate", fromDate.get().toString());
+      }
+      if (toDate.isPresent()) {
+        requestParams.put("toDate", toDate.get().toString());
+      }
       if (queryLabels.isPresent()) {
         requestParams.put("labels", queryLabels.get().toString());
       }
@@ -161,8 +167,11 @@ public class EngineClientImpl implements EngineClient {
       if (queryPhase.isPresent()) {
         requestParams.put("phase", queryPhase.get().toString());
       }
-      if (queryIds.isPresent() && !queryIds.get().isEmpty()) {
-        requestParams.put("ids", queryIds.get().toString());
+      if (queryWorkflowRuns.isPresent() && !queryWorkflowRuns.get().isEmpty()) {
+        requestParams.put("workflowruns", queryWorkflowRuns.get().toString());
+      }
+      if (queryWorkflows.isPresent() && !queryWorkflows.get().isEmpty()) {
+        requestParams.put("workflows", queryWorkflows.get().toString());
       }
 
       String encodedURL =
@@ -190,14 +199,17 @@ public class EngineClientImpl implements EngineClient {
 
   @Override
   public WorkflowRunInsight insightWorkflowRuns(Optional<List<String>> queryLabels,
-      Optional<List<String>> queryIds, Optional<Long> fromDate, Optional<Long> toDate) {
+      Optional<List<String>> queryWorkflowRuns, Optional<List<String>> queryWorkflows, Optional<Long> fromDate, Optional<Long> toDate) {
     try {
       Map<String, String> requestParams = new HashMap<>();
       if (queryLabels.isPresent()) {
         requestParams.put("labels", queryLabels.get().toString());
       }
-      if (queryIds.isPresent() && !queryIds.get().isEmpty()) {
-        requestParams.put("ids", queryIds.get().toString());
+      if (queryWorkflowRuns.isPresent() && !queryWorkflowRuns.get().isEmpty()) {
+        requestParams.put("workflowruns", queryWorkflowRuns.get().toString());
+      }
+      if (queryWorkflows.isPresent() && !queryWorkflows.get().isEmpty()) {
+        requestParams.put("workflows", queryWorkflows.get().toString());
       }
       if (fromDate.isPresent()) {
         requestParams.put("fromDate", fromDate.get().toString());

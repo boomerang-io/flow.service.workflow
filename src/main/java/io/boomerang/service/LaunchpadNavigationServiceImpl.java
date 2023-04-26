@@ -2,7 +2,6 @@ package io.boomerang.service;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -20,9 +19,9 @@ import io.boomerang.model.profile.Features;
 import io.boomerang.model.profile.Navigation;
 import io.boomerang.model.profile.NavigationResponse;
 import io.boomerang.model.profile.Platform;
-import io.boomerang.mongo.model.Config;
 import io.boomerang.security.model.UserToken;
 import io.boomerang.security.service.ApiTokenService;
+import io.boomerang.v4.model.AbstractParam;
 import io.boomerang.v4.service.SettingsServiceImpl;
 
 @Service
@@ -144,7 +143,7 @@ public class LaunchpadNavigationServiceImpl implements LaunchpadNavigationServic
   
   private String getAppNameInSettings() {
     try {
-      Config config = settingsService.getSetting("customizations", "appName");
+      AbstractParam config = settingsService.getSetting("customizations", "appName");
       return config == null ? null : config.getValue();
     } catch (Exception e) {
     }

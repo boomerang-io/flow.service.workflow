@@ -3,7 +3,7 @@ package io.boomerang.service;
 import java.util.List;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import io.boomerang.client.model.UserProfile;
+import io.boomerang.client.UserProfile;
 import io.boomerang.model.FlowUserProfile;
 import io.boomerang.model.OneTimeCode;
 import io.boomerang.model.UserQueryResult;

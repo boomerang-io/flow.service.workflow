@@ -11,8 +11,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import io.boomerang.v4.data.model.Quotas;
-import io.boomerang.v4.data.model.TeamParameter;
 import io.boomerang.v4.data.model.TeamSettings;
+import io.boomerang.v4.model.AbstractParam;
 import io.boomerang.v4.model.enums.TeamStatus;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -27,7 +27,7 @@ public class TeamEntity {
   private TeamStatus status = TeamStatus.active;
   private String externalRef;
   private Map<String, String> labels = new HashMap<>();
-  private List<TeamParameter> parameters = new LinkedList<>();
+  private List<AbstractParam> parameters = new LinkedList<>();
   private Quotas quotas;
   private TeamSettings settings = new TeamSettings();
   
@@ -79,10 +79,10 @@ public class TeamEntity {
   public void setLabels(Map<String, String> labels) {
     this.labels = labels;
   }
-  public List<TeamParameter> getParameters() {
+  public List<AbstractParam> getParameters() {
     return parameters;
   }
-  public void setParameters(List<TeamParameter> parameters) {
+  public void setParameters(List<AbstractParam> parameters) {
     this.parameters = parameters;
   }
 }

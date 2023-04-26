@@ -72,14 +72,14 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
    * 
    * No need to validate params as they are either defaulted or optional
    */
-  public WorkflowRunResponsePage query(int page, int limit, Sort sort, Optional<List<String>> queryLabels,
-      Optional<List<String>> queryStatus, Optional<List<String>> queryPhase, Optional<List<String>> queryTeams, Optional<List<String>> queryRefs) {
+  public WorkflowRunResponsePage query(int page, int limit, Sort sort, Optional<Long> fromDate, Optional<Long> toDate, Optional<List<String>> queryLabels,
+      Optional<List<String>> queryStatus, Optional<List<String>> queryPhase, Optional<List<String>> queryTeams, Optional<List<String>> queryWorkflowRuns, Optional<List<String>> queryWorkflows) {
     // Get Refs that request has access to
     List<String> workflowRunRefs = relationshipService.getFilteredRefs(Optional.of(RelationshipRef.WORKFLOWRUN),
-        queryRefs, Optional.of(RelationshipType.BELONGSTO), Optional.of(RelationshipRef.TEAM), queryTeams);
+        queryWorkflowRuns, Optional.of(RelationshipType.BELONGSTO), Optional.of(RelationshipRef.TEAM), queryTeams);
     
     if (!workflowRunRefs.isEmpty()) {
-      return engineClient.queryWorkflowRuns(page, limit, sort, queryLabels, queryStatus, queryPhase, Optional.of(workflowRunRefs));
+      return engineClient.queryWorkflowRuns(page, limit, sort, fromDate, toDate, queryLabels, queryStatus, queryPhase, Optional.of(workflowRunRefs), queryWorkflows);
     } else {
       //TODO: do we want to return invalid ref or unauthorized
       throw new BoomerangException(BoomerangError.WORKFLOW_RUN_INVALID_REF);
@@ -90,11 +90,11 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
    * Retrieve the insights / statistics for a specific period of time and filters
    */
   @Override
-  public WorkflowRunInsight insight(Optional<Long> from, Optional<Long> to,  Optional<List<String>> queryLabels, Optional<List<String>> queryTeams) {
+  public WorkflowRunInsight insight(Optional<Long> from, Optional<Long> to,  Optional<List<String>> queryLabels, Optional<List<String>> queryWorkflows, Optional<List<String>> queryTeams) {
     List<String> workflowRunRefs = relationshipService.getFilteredRefs(Optional.of(RelationshipRef.WORKFLOWRUN), Optional.empty(), Optional.of(RelationshipType.BELONGSTO), Optional.empty(), Optional.empty());
     LOGGER.debug("Query Ids: ", workflowRunRefs);
     
-    return engineClient.insightWorkflowRuns(queryLabels, Optional.of(workflowRunRefs), from, to);
+    return engineClient.insightWorkflowRuns(queryLabels, Optional.of(workflowRunRefs), queryWorkflows, from, to);
   }
 
   /*

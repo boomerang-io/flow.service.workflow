@@ -35,6 +35,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Tag(name = "User Management", description = "List, Create, update and delete Users.")
 public class UsersV2Controller {
 
+  @Value("${flow.externalUrl.user}")
+  private String flowExternalUrlUser;
+
   @Autowired
   private UserIdentityService userIdentityService;
 

@@ -48,7 +48,7 @@ public class NavigationServiceImpl implements NavigationService {
   @Override
   public List<Navigation> getNavigation(boolean isUserAdmin, String teamId) {
 
-    FeaturesAndQuotas features = featureService.getFlowFeatures();
+    FeaturesAndQuotas features = featureService.get();
 
     if (flowExternalUrlNavigation.isBlank()) {
       List<Navigation> response = new ArrayList<>();

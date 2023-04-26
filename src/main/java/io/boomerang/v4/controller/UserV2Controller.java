@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
-import io.boomerang.client.model.UserProfile;
+import io.boomerang.client.UserProfile;
 import io.boomerang.model.OneTimeCode;
 import io.boomerang.service.UserIdentityService;
 

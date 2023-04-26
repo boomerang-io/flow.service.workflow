@@ -16,12 +16,14 @@ public interface EngineClient {
 
   WorkflowRun getWorkflowRun(String workflowRunId, boolean withTasks);
 
-  WorkflowRunResponsePage queryWorkflowRuns(int page, int limit, Sort sort, Optional<List<String>> queryLabels,
-      Optional<List<String>> queryStatus, Optional<List<String>> queryPhase,
-      Optional<List<String>> queryIds);
+  WorkflowRunResponsePage queryWorkflowRuns(int page, int limit, Sort sort, Optional<Long> fromDate,
+      Optional<Long> toDate, Optional<List<String>> queryLabels, Optional<List<String>> queryStatus,
+      Optional<List<String>> queryPhase, Optional<List<String>> queryWorkflowRuns,
+      Optional<List<String>> queryWorkflows);
 
   WorkflowRunInsight insightWorkflowRuns(Optional<List<String>> queryLabels,
-      Optional<List<String>> queryIds, Optional<Long> fromDate, Optional<Long> toDate);
+      Optional<List<String>> queryWorkflowRuns, Optional<List<String>> queryWorkflows,
+      Optional<Long> fromDate, Optional<Long> toDate);
 
   WorkflowRun submitWorkflowRun(WorkflowRunSubmitRequest request, boolean start);
 

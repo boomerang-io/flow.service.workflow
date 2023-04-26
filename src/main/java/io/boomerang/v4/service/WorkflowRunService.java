@@ -12,9 +12,10 @@ import io.boomerang.v4.model.ref.WorkflowRunSubmitRequest;
 
 public interface WorkflowRunService {
 
-  WorkflowRunResponsePage query(int page, int limit, Sort sort, Optional<List<String>> queryLabels,
+  WorkflowRunResponsePage query(int page, int limit, Sort sort, Optional<Long> fromDate, Optional<Long> toDate, Optional<List<String>> queryLabels,
       Optional<List<String>> queryStatus, Optional<List<String>> queryPhase,
-      Optional<List<String>> teams, Optional<List<String>> queryRefs);
+      Optional<List<String>> queryTeams, Optional<List<String>> queryWorkflowRuns,
+      Optional<List<String>> queryWorkflows);
 
   ResponseEntity<WorkflowRun> submit(WorkflowRunSubmitRequest request, boolean start);
 
@@ -30,6 +31,7 @@ public interface WorkflowRunService {
   ResponseEntity<WorkflowRun> retry(String workflowRunId);
 
   WorkflowRunInsight insight(Optional<Long> from, Optional<Long> to,
-      Optional<List<String>> queryLabels, Optional<List<String>> queryTeams);
+      Optional<List<String>> queryLabels, Optional<List<String>> queryWorkflows,
+      Optional<List<String>> queryTeams);
   
 }

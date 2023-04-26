@@ -21,7 +21,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.client.MockRestServiceServer;
 import io.boomerang.client.ExternalUserService;
-import io.boomerang.client.model.UserProfile;
+import io.boomerang.client.UserProfile;
 import io.boomerang.misc.FlowTests;
 
 @ExtendWith(SpringExtension.class)

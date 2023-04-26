@@ -1,5 +1,7 @@
 package io.boomerang.v4.service;
 
+import java.time.LocalDateTime;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,10 +9,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import io.boomerang.model.AESAlgorithm;
+import io.boomerang.mongo.model.ConfigurationType;
 import io.boomerang.mongo.model.EncryptionConfig;
-import io.boomerang.v4.data.entity.SettingsEntity;
+import io.boomerang.util.DateUtil;
+import io.boomerang.v4.data.entity.SettingEntity;
 import io.boomerang.v4.data.repository.SettingsRepository;
 import io.boomerang.v4.model.AbstractParam;
+import io.boomerang.v4.model.Setting;
 
 
 @Service
@@ -35,45 +40,44 @@ public class SettingsServiceImpl implements SettingsService {
   @Autowired
   private EncryptionConfig encryptConfig;
   
-//  @Override
-//  public List<Settings> getAllSettings() {
-//    final List<Settings> settingList = new LinkedList<>();
-//    final List<SettingsEntity> entityList = serviceSettings.getAllSettings();
-//    for (final SettingsEntity entity : entityList) {
-//      final Settings newSetting = new Settings(entity);
-//      settingList.add(newSetting);
-//    }
-//
-//    return settingList;
-//  }
-//
-//  @Override
-//  public List<Settings> updateSettings(List<Settings> settings) {
-//    for (final Settings setting : settings) {
-//      final SettingsEntity entity = serviceSettings.getSettingById(setting.getId());
-//      if (entity.getType() == ConfigurationType.ValuesList) {
-//        setConfigsValue(setting, entity);
-//      }
-//      entity.setLastModiifed(DateUtil.asDate(LocalDateTime.now()));
-//
-//      serviceSettings.updateSetting(entity);
-//    }
-//
-//    return this.getAllSettings();
-//  }
-//
-//
-//  private void setConfigsValue(final Settings setting, final SettingsEntity entity) {
-//    for (final Config config : setting.getConfig()) {
-//      final String newValue = config.getValue();
-//      final Optional<Config> result = entity.getConfig().stream().parallel()
-//          .filter(x -> config.getKey().equals(x.getKey())).findFirst();
-//      if (result.isPresent()) {
-//        final Config originalConfig = result.get();
-//        originalConfig.setValue(newValue);
-//      }
-//    }
-//  }
+  @Override
+  public List<Setting> getAllSettings() {
+    final List<Setting> settingList = new LinkedList<>();
+    final List<SettingEntity> entityList = settingsRepository.findAll();
+    for (final SettingEntity entity : entityList) {
+      final Setting newSetting = new Setting(entity);
+      settingList.add(newSetting);
+    }
+
+    return settingList;
+  }
+
+  @Override
+  public List<Setting> updateSettings(List<Setting> settings) {
+    for (final Setting setting : settings) {
+      final SettingEntity entity = this.getSettingById(setting.getId());
+      if (entity.getType() == ConfigurationType.ValuesList) {
+        setConfigsValue(setting, entity);
+      }
+      entity.setLastModiifed(DateUtil.asDate(LocalDateTime.now()));
+
+      this.updateSetting(entity);
+    }
+
+    return this.getAllSettings();
+  }
+
+  private void setConfigsValue(final Setting setting, final SettingEntity entity) {
+    for (final AbstractParam config : setting.getConfig()) {
+      final String newValue = config.getValue();
+      final Optional<AbstractParam> result = entity.getConfig().stream().parallel()
+          .filter(x -> config.getKey().equals(x.getKey())).findFirst();
+      if (result.isPresent()) {
+        final AbstractParam originalConfig = result.get();
+        originalConfig.setValue(newValue);
+      }
+    }
+  }
 
   @Override
   public String getWebhookURL() {
@@ -91,13 +95,8 @@ public class SettingsServiceImpl implements SettingsService {
   }
 
   @Override
-  public List<SettingsEntity> getAllSettings() {
-    return settingsRepository.findAll();
-  }
-
-  @Override
   public AbstractParam getSetting(String key, String name) {
-    final SettingsEntity settings = this.settingsRepository.findOneByKey(key);
+    final SettingEntity settings = this.settingsRepository.findOneByKey(key);
     final List<AbstractParam> configList = settings.getConfig();
     final Optional<AbstractParam> result =
         configList.stream().parallel().filter(x -> name.equals(x.getKey())).findFirst();
@@ -111,8 +110,8 @@ public class SettingsServiceImpl implements SettingsService {
   }
 
   @Override
-  public SettingsEntity getSettingById(String id) {
-    Optional<SettingsEntity> entity = settingsRepository.findById(id);
+  public SettingEntity getSettingById(String id) {
+    Optional<SettingEntity> entity = settingsRepository.findById(id);
     if (entity.isPresent()) {
       showDecryptedValues(entity.get());
     }
@@ -122,8 +121,8 @@ public class SettingsServiceImpl implements SettingsService {
   }
 
   @Override
-  public SettingsEntity getSettingByKey(String key) {
-    final SettingsEntity settingsEntity = settingsRepository.findOneByKey(key);
+  public SettingEntity getSettingByKey(String key) {
+    final SettingEntity settingsEntity = settingsRepository.findOneByKey(key);
     if (settingsEntity != null) {
       showDecryptedValues(settingsEntity);
       return settingsEntity;
@@ -133,19 +132,19 @@ public class SettingsServiceImpl implements SettingsService {
   }
 
   @Override
-  public void updateSetting(SettingsEntity configuration) {
+  public void updateSetting(SettingEntity configuration) {
     setEncryptedValues(configuration);
 
     this.settingsRepository.save(configuration);
   }
 
-  private void setEncryptedValues(SettingsEntity configuration) {
+  private void setEncryptedValues(SettingEntity configuration) {
     configuration.getConfig().stream()
         .filter(config -> SECURED_TYPE.equalsIgnoreCase(config.getType()))
         .forEach(c -> c.setValue(encrypt(c.getValue())));
   }
 
-  private void showDecryptedValues(SettingsEntity configuration) {
+  private void showDecryptedValues(SettingEntity configuration) {
     configuration.getConfig().stream()
         .filter(config -> SECURED_TYPE.equalsIgnoreCase(config.getType()))
         .forEach(c -> c.setValue(decrypt(c.getValue())));

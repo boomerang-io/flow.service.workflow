@@ -13,7 +13,7 @@ import io.boomerang.mongo.model.UserType;
 import io.boomerang.service.UserIdentityService;
 import io.boomerang.service.crud.ConfigurationService;
 import io.boomerang.v4.data.entity.UserEntity;
-import io.boomerang.v4.model.Settings;
+import io.boomerang.v4.model.Setting;
 
 @RestController
 @RequestMapping("/workflow/settings")
@@ -26,13 +26,13 @@ public class ConfigurationController {
   UserIdentityService service;
 
   @GetMapping(value = "")
-  public List<Settings> getAppConfiguration() {
+  public List<Setting> getAppConfiguration() {
     validateUser();
     return configurationService.getAllSettings();
   }
 
   @PutMapping(value = "")
-  public List<Settings> updateSettings(@RequestBody List<Settings> settings) {
+  public List<Setting> updateSettings(@RequestBody List<Setting> settings) {
     validateUser();
     return configurationService.updateSettings(settings);
   }

@@ -7,12 +7,12 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import io.boomerang.v4.data.model.CurrentQuotas;
 import io.boomerang.v4.data.model.Quotas;
-import io.boomerang.v4.data.model.TeamParameter;
+import io.boomerang.v4.model.AbstractParam;
 import io.boomerang.v4.model.ApproverGroup;
 import io.boomerang.v4.model.ApproverGroupRequest;
+import io.boomerang.v4.model.Team;
 import io.boomerang.v4.model.TeamRequest;
 import io.boomerang.v4.model.UserSummary;
-import io.boomerang.v4.model.Team;
 
 public interface TeamService {
 
@@ -33,13 +33,13 @@ public interface TeamService {
 
   ResponseEntity<List<UserSummary>> removeMembers(String teamId, TeamRequest request);
 
-  ResponseEntity<TeamParameter> createParameter(String teamId, TeamParameter parameter);
+  ResponseEntity<AbstractParam> createParameter(String teamId, AbstractParam parameter);
   
   ResponseEntity<Void> deleteParameter(String teamId, String key);
 
-  ResponseEntity<List<TeamParameter>> getParameters(String teamId);
+  ResponseEntity<List<AbstractParam>> getParameters(String teamId);
   
-  ResponseEntity<TeamParameter> updateParameter(String teamId, TeamParameter parameter);
+  ResponseEntity<AbstractParam> updateParameter(String teamId, AbstractParam parameter);
 
   ResponseEntity<CurrentQuotas> getQuotas(String teamId);
 

@@ -34,15 +34,15 @@ import io.boomerang.v4.data.entity.TeamEntity;
 import io.boomerang.v4.data.entity.UserEntity;
 import io.boomerang.v4.data.model.CurrentQuotas;
 import io.boomerang.v4.data.model.Quotas;
-import io.boomerang.v4.data.model.TeamParameter;
 import io.boomerang.v4.data.model.TeamSettings;
 import io.boomerang.v4.data.repository.ApproverGroupRepository;
 import io.boomerang.v4.data.repository.TeamRepository;
 import io.boomerang.v4.data.repository.UserRepository;
+import io.boomerang.v4.model.AbstractParam;
 import io.boomerang.v4.model.ApproverGroup;
 import io.boomerang.v4.model.ApproverGroupRequest;
-import io.boomerang.v4.model.TeamRequest;
 import io.boomerang.v4.model.Team;
+import io.boomerang.v4.model.TeamRequest;
 import io.boomerang.v4.model.TeamResponsePage;
 import io.boomerang.v4.model.UserSummary;
 import io.boomerang.v4.model.enums.RelationshipRef;
@@ -366,7 +366,7 @@ public class TeamServiceImpl implements TeamService {
    * Creates a Team Parameter
    */
   @Override
-  public ResponseEntity<TeamParameter> createParameter(String teamId, TeamParameter parameter) {
+  public ResponseEntity<AbstractParam> createParameter(String teamId, AbstractParam parameter) {
     if (teamId == null || teamId.isBlank()) {
       throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
     }
@@ -385,8 +385,8 @@ public class TeamServiceImpl implements TeamService {
       teamEntity.setSettings(new TeamSettings());
     }
 
-    List<TeamParameter> parameters = teamEntity.getParameters();
-    TeamParameter existingParameter = parameters.stream()
+    List<AbstractParam> parameters = teamEntity.getParameters();
+    AbstractParam existingParameter = parameters.stream()
         .filter(p -> p.getKey().equals(parameter.getKey())).findAny().orElse(null);
 
     if (existingParameter != null) {
@@ -406,7 +406,7 @@ public class TeamServiceImpl implements TeamService {
    * Creates a Team Parameter
    */
   @Override
-  public ResponseEntity<TeamParameter> updateParameter(String teamId, TeamParameter parameter) {
+  public ResponseEntity<AbstractParam> updateParameter(String teamId, AbstractParam parameter) {
     if (teamId == null || teamId.isBlank()) {
       throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
     }
@@ -425,8 +425,8 @@ public class TeamServiceImpl implements TeamService {
       teamEntity.setSettings(new TeamSettings());
     }
 
-    List<TeamParameter> parameters = teamEntity.getParameters();
-    TeamParameter existingParameter = parameters.stream()
+    List<AbstractParam> parameters = teamEntity.getParameters();
+    AbstractParam existingParameter = parameters.stream()
         .filter(p -> p.getKey().equals(parameter.getKey())).findAny().orElse(null);
 
     if (existingParameter == null) {
@@ -464,8 +464,8 @@ public class TeamServiceImpl implements TeamService {
     TeamEntity teamEntity = optTeamEntity.get();
 
     if (teamEntity.getSettings() != null && teamEntity.getParameters() != null) {
-      List<TeamParameter> parameters = teamEntity.getParameters();
-      TeamParameter parameter =
+      List<AbstractParam> parameters = teamEntity.getParameters();
+      AbstractParam parameter =
           parameters.stream().filter(p -> p.getKey().equals(key)).findAny().orElse(null);
 
       if (parameter != null) {
@@ -485,7 +485,7 @@ public class TeamServiceImpl implements TeamService {
    * Return all team Parameters
    */
   @Override
-  public ResponseEntity<List<TeamParameter>> getParameters(String teamId) {
+  public ResponseEntity<List<AbstractParam>> getParameters(String teamId) {
     if (teamId == null || teamId.isBlank()) {
       throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
     }
@@ -500,7 +500,7 @@ public class TeamServiceImpl implements TeamService {
       throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
     }
     TeamEntity teamEntity = optTeamEntity.get();
-    List<TeamParameter> parameters = Collections.emptyList();
+    List<AbstractParam> parameters = Collections.emptyList();
     if (teamEntity.getSettings() != null && teamEntity.getParameters() != null) {
       parameters = teamEntity.getParameters();
 
@@ -988,7 +988,7 @@ public class TeamServiceImpl implements TeamService {
 
     WorkflowRunInsight insight =
         workflowRunService.insight(Optional.of(currentMonthStart.getTimeInMillis()),
-            Optional.of(currentMonthEnd.getTimeInMillis()), Optional.empty(),
+            Optional.of(currentMonthEnd.getTimeInMillis()), Optional.empty(), Optional.empty(),
             Optional.of(List.of(teamId)));
     currentQuotas.setCurrentConcurrentWorkflows(insight.getConcurrentRuns().intValue());
     currentQuotas.setCurrentWorkflowExecutionMonthly(insight.getTotalDuration().intValue());

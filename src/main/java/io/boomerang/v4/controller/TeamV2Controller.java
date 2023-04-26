@@ -22,12 +22,12 @@ import io.boomerang.mongo.model.TokenScope;
 import io.boomerang.security.interceptors.AuthenticationScope;
 import io.boomerang.v4.data.model.CurrentQuotas;
 import io.boomerang.v4.data.model.Quotas;
-import io.boomerang.v4.data.model.TeamParameter;
-import io.boomerang.v4.model.ApproverGroupRequest;
+import io.boomerang.v4.model.AbstractParam;
 import io.boomerang.v4.model.ApproverGroup;
+import io.boomerang.v4.model.ApproverGroupRequest;
+import io.boomerang.v4.model.Team;
 import io.boomerang.v4.model.TeamRequest;
 import io.boomerang.v4.model.UserSummary;
-import io.boomerang.v4.model.Team;
 import io.boomerang.v4.service.TeamService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -128,7 +128,7 @@ public class TeamV2Controller {
   }
 
   @GetMapping(value = "/{teamId}/parameters")
-  public ResponseEntity<List<TeamParameter>> getParameters(
+  public ResponseEntity<List<AbstractParam>> getParameters(
       @Parameter(name = "teamId",
       description = "ID of Team",
       required = true) @PathVariable String teamId) {
@@ -147,18 +147,18 @@ public class TeamV2Controller {
   }
 
   @PatchMapping(value = "/{teamId}/parameters")
-  public ResponseEntity<TeamParameter> patchParameter(
+  public ResponseEntity<AbstractParam> patchParameter(
       @Parameter(name = "teamId", description = "ID of Team",
           required = true) @PathVariable String teamId,
-      @RequestBody TeamParameter parameter) {
+      @RequestBody AbstractParam parameter) {
     return teamService.updateParameter(teamId, parameter);
   }
 
   @PostMapping(value = "/{teamId}/parameters")
-  public ResponseEntity<TeamParameter> createNewTeamProperty(
+  public ResponseEntity<AbstractParam> createNewTeamProperty(
       @Parameter(name = "teamId", description = "ID of Team",
       required = true) @PathVariable String teamId,
-  @RequestBody TeamParameter parameter) {
+  @RequestBody AbstractParam parameter) {
     return teamService.createParameter(teamId, parameter);
   }
 

@@ -1,11 +1,14 @@
 package io.boomerang.v4.model.ref;
 
+import java.util.List;
+
 public class WorkflowRunInsight {
 
   private Long totalRuns;
   private Long concurrentRuns;
   private Long totalDuration;
   private Long medianDuration;
+  private List<WorkflowRunSummary> runs;
 
   public Long getTotalRuns() {
     return totalRuns;
@@ -38,12 +41,13 @@ public class WorkflowRunInsight {
   public void setMedianDuration(Long medianDuration) {
     this.medianDuration = medianDuration;
   }
-  // public List<Execution> getExecutions() {
-  // return executions;
-  // }
-  //
-  // public void setExecutions(List<Execution> executions) {
-  // this.executions = executions;
-  // }
+
+  public List<WorkflowRunSummary> getRuns() {
+    return runs;
+  }
+
+  public void setRuns(List<WorkflowRunSummary> runs) {
+    this.runs = runs;
+  }
 
 }

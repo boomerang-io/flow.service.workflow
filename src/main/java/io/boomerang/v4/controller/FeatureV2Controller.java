@@ -19,6 +19,6 @@ public class FeatureV2Controller {
   
   @GetMapping(value = "/")
   public FeaturesAndQuotas getFlowFeatures() {
-    return featureService.getFlowFeatures();
+    return featureService.get();
   }
 }

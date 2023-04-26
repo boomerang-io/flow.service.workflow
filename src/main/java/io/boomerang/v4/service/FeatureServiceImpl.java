@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import io.boomerang.mongo.model.Config;
+import io.boomerang.v4.model.AbstractParam;
 import io.boomerang.v4.model.FeaturesAndQuotas;
 
 @Service
@@ -15,12 +15,12 @@ public class FeatureServiceImpl implements FeatureService {
   private SettingsService settingsService;
 
   @Override
-  public FeaturesAndQuotas getFlowFeatures() {
+  public FeaturesAndQuotas get() {
     FeaturesAndQuotas flowFeatures = new FeaturesAndQuotas();
     Map<String, Object> features = new HashMap<>();
     Map<String, Object> quotas = new HashMap<>();
 
-    Config config = settingsService.getSetting("controller", "enable.tasks");
+    AbstractParam config = settingsService.getSetting("controller", "enable.tasks");
 
     if (config != null) {
       features.put(VERIFIED_TASK_EDIT_KEY, config.getBooleanValue());

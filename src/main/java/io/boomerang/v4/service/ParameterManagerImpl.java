@@ -7,7 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import io.boomerang.v4.data.entity.RelationshipEntity;
-import io.boomerang.v4.data.model.TeamParameter;
+import io.boomerang.v4.model.AbstractParam;
 import io.boomerang.v4.model.GlobalParam;
 import io.boomerang.v4.model.enums.RelationshipRef;
 import io.boomerang.v4.model.enums.RelationshipType;
@@ -103,9 +103,9 @@ public class ParameterManagerImpl implements ParameterManager {
    * Build up the Team Params - defaultValue is not used with Team Params and can be ignored.
    */
   private void buildTeamParams(Map<String, Object> teamParams, String teamId) {
-    ResponseEntity<List<TeamParameter>> params = this.teamService.getParameters(teamId);
+    ResponseEntity<List<AbstractParam>> params = this.teamService.getParameters(teamId);
     if (params.getBody() != null) {
-      for (TeamParameter param : params.getBody()) {
+      for (AbstractParam param : params.getBody()) {
         teamParams.put(param.getKey(), param.getValue());
       }
     }
