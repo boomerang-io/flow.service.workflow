@@ -8,18 +8,18 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 public interface SlackExtension {
 
-  Supplier<Boolean> executeRunModal(JsonNode payload);
-
-  ResponseEntity<?> handleAuth(String code);
-
-  Supplier<Boolean> createRunModal(Map<String, String> result);
-
-  Supplier<Boolean> appHomeOpened(JsonNode payload);
-
-  ResponseEntity<?> installRedirect() throws URISyntaxException;
-
-  Boolean verifySignature(String signature, String timestamp, String body);
-
-  Supplier appUninstalled(JsonNode payload);
+//  Supplier<Boolean> executeRunModal(JsonNode payload);
+//
+//  ResponseEntity<?> handleAuth(String code);
+//
+//  Supplier<Boolean> createRunModal(Map<String, String> result);
+//
+//  Supplier<Boolean> appHomeOpened(JsonNode payload);
+//
+//  ResponseEntity<?> installRedirect() throws URISyntaxException;
+//
+//  Boolean verifySignature(String signature, String timestamp, String body);
+//
+//  Supplier appUninstalled(JsonNode payload);
   
 }

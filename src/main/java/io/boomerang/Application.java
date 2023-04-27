@@ -10,7 +10,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-import com.github.alturkovic.lock.mongo.configuration.EnableMongoDistributedLock;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeIn;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
@@ -21,7 +20,6 @@ import io.swagger.v3.oas.models.OpenAPI;
 @SpringBootApplication
 @EnableScheduling
 @EnableAsync(proxyTargetClass = true)
-@EnableMongoDistributedLock
 @SecurityScheme(type = SecuritySchemeType.APIKEY, in = SecuritySchemeIn.HEADER,
     name = "serviceToken", description = "x-access-token")
 @OpenAPIDefinition(info = @Info(title = "Boomerang Flow", version = "3.4", description = ""))

@@ -1,6 +1,7 @@
 package io.boomerang.v4.service;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -412,18 +413,20 @@ public class RelationshipServiceImpl implements RelationshipService {
    * @param FlowUserEntity user
    * 
    * @return list of filtered Refs
+   * 
+   * TODO: implement this by reusing getFilteredRefs
    */
-//  @Override
-//  public List<String> getFilteredRefsForUserEmail(RelationshipRef fromRef,
-//      Optional<List<String>> fromRefs, Optional<RelationshipType> type, Optional<RelationshipRef> toRef, 
-//      Optional<List<String>> toRefs, String userEmail) {
-//    UserEntity user = userIdentityService.getUserByEmail(userEmail);
-//    Boolean isAdmin = false;
-//    if (user != null && user.getType() == UserType.admin) {
-//      isAdmin = true;
-//    }
+  @Override
+  public List<String> getFilteredRefsForUserEmail(Optional<RelationshipRef> from, Optional<List<String>> fromRefs, Optional<RelationshipType> type, Optional<RelationshipRef> to, 
+      Optional<List<String>> toRefs, String userEmail) {
+    UserEntity user = userIdentityService.getUserByEmail(userEmail);
+    Boolean isAdmin = false;
+    if (user != null && user.getType() == UserType.admin) {
+      isAdmin = true;
+    }
 //    return getFilteredRefs(fromRef, fromRefs, type, toRef, toRefs);
-//  }
+    return new LinkedList<>();
+  }
   
 //  /*
 //   * Check if a Relationship exists with an object of that ID
