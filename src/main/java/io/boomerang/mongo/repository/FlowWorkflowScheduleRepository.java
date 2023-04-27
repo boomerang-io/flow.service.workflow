@@ -4,8 +4,8 @@ import java.util.Date;
 import java.util.List;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
-import io.boomerang.mongo.entity.WorkflowScheduleEntity;
-import io.boomerang.mongo.model.WorkflowScheduleStatus;
+import io.boomerang.v4.data.entity.WorkflowScheduleEntity;
+import io.boomerang.v4.model.enums.WorkflowScheduleStatus;
 
 public interface FlowWorkflowScheduleRepository
     extends MongoRepository<WorkflowScheduleEntity, String> {

@@ -47,11 +47,11 @@ import io.boomerang.mongo.model.TriggerEvent;
 import io.boomerang.mongo.model.TriggerScheduler;
 import io.boomerang.mongo.model.Triggers;
 import io.boomerang.mongo.model.WorkflowConfiguration;
-import io.boomerang.mongo.model.WorkflowProperty;
 import io.boomerang.mongo.model.WorkflowScope;
 import io.boomerang.mongo.model.WorkflowStatus;
 import io.boomerang.util.DataAdapterUtil.FieldType;
 import io.boomerang.v4.controller.EventV2Controller;
+import io.boomerang.v4.model.ref.WorkflowAbstractParam;
 
 
 @ExtendWith(SpringExtension.class)
@@ -94,7 +94,7 @@ public class WorkflowControllerTests extends FlowTests {
   public void testGetWorkflowWithId() {
     WorkflowSummary summary = controller.getWorkflowWithId("5d1a188af6ca2c00014c4314");
      assertEquals("5d1a188af6ca2c00014c4314", summary.getId());
-		Optional<WorkflowProperty> passProp = summary.getProperties().stream()
+		Optional<WorkflowAbstractParam> passProp = summary.getProperties().stream()
 				.filter(f -> FieldType.PASSWORD.value().equals(f.getType())).findAny();
 		if (passProp.isPresent()) {
 			assertNull(passProp.get().getDefaultValue());
@@ -142,14 +142,14 @@ public class WorkflowControllerTests extends FlowTests {
   @Test
   public void testUpdateWorkflowProperties() {
 
-    WorkflowProperty property = new WorkflowProperty();
+    WorkflowAbstractParam property = new WorkflowAbstractParam();
     property.setKey("testKey");
     property.setDescription("testDescription");
     property.setLabel("testLabel");
     property.setRequired(true);
     property.setType("testing");
 
-    List<WorkflowProperty> properties = new ArrayList<>();
+    List<WorkflowAbstractParam> properties = new ArrayList<>();
     properties.add(property);
 
     WorkflowEntity entity =
@@ -164,7 +164,7 @@ public class WorkflowControllerTests extends FlowTests {
   @Test
   public void testUpdateWorkflowPasswordProperty() {
    
-    WorkflowProperty passProperty = new WorkflowProperty();
+    WorkflowAbstractParam passProperty = new WorkflowAbstractParam();
     passProperty.setKey("myPassword");
     passProperty.setDescription("testDescriptionPass");
     passProperty.setLabel("testLabelPass");
@@ -172,12 +172,12 @@ public class WorkflowControllerTests extends FlowTests {
     passProperty.setType("password");
     passProperty.setDefaultValue("sensitiveData");
 
-    List<WorkflowProperty> properties = new ArrayList<>();
+    List<WorkflowAbstractParam> properties = new ArrayList<>();
     properties.add(passProperty);
 
     WorkflowEntity entity =
         controller.updateWorkflowProperties("5d1a188af6ca2c00014c4314", properties);
-    Optional<WorkflowProperty> passProp = entity.getProperties().stream().filter(f->FieldType.PASSWORD.value().equals(f.getType())).findAny();
+    Optional<WorkflowAbstractParam> passProp = entity.getProperties().stream().filter(f->FieldType.PASSWORD.value().equals(f.getType())).findAny();
      assertTrue(passProp.isPresent());
      assertNull(passProp.get().getDefaultValue());
      assertTrue(passProp.get().isHiddenValue());

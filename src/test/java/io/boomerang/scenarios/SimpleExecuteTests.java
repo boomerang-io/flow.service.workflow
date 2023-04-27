@@ -51,7 +51,7 @@ class SimpleExecuteTests extends IntegrationTests {
     String workflowId = "5f4fc9e95683833cf0b1335b";
     RequestFlowExecution request = new RequestFlowExecution();
 
-    request.setWorkflowId(workflowId);
+    request.setWorkflowRef(workflowId);
 
 
     Map<String, String> map = new HashMap<>();

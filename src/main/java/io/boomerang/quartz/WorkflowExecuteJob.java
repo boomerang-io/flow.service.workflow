@@ -1,8 +1,5 @@
 package io.boomerang.quartz;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -12,12 +9,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.scheduling.quartz.QuartzJobBean;
 import org.springframework.scheduling.quartz.SchedulerFactoryBean;
-import io.boomerang.controller.ExecutionController;
-import io.boomerang.model.FlowExecutionRequest;
-import io.boomerang.model.WorkflowSchedule;
-import io.boomerang.mongo.model.WorkflowScheduleType;
-import io.boomerang.v4.model.enums.TriggerEnum;
+import io.boomerang.v4.model.WorkflowSchedule;
+import io.boomerang.v4.model.enums.WorkflowScheduleType;
+import io.boomerang.v4.model.ref.WorkflowRunSubmitRequest;
 import io.boomerang.v4.service.ScheduleService;
+import io.boomerang.v4.service.WorkflowRunService;
 
 @PersistJobDataAfterExecution
 public class WorkflowExecuteJob extends QuartzJobBean {
@@ -50,28 +46,23 @@ public class WorkflowExecuteJob extends QuartzJobBean {
       logger.info("applicationContext is null");
     }
 
-    ExecutionController executionController = applicationContext.getBean(ExecutionController.class);
+    WorkflowRunService workflowRunService = applicationContext.getBean(WorkflowRunService.class);
     ScheduleService workflowScheduleService = applicationContext.getBean(ScheduleService.class);
-
-    String workflowId = jobDetail.getKey().getGroup();
     
-    Map<String, String> properties = new HashMap<>();
-    
-    WorkflowSchedule schedule = workflowScheduleService.getSchedule(jobDetail.getKey().getName());
+    WorkflowSchedule schedule = workflowScheduleService.get(jobDetail.getKey().getName());
     if (schedule != null) {
-      if (schedule.getParametersMap() != null) {
-        logger.debug("Schedule Parameters: ", schedule.getParametersMap().toString());
-        properties = schedule.getParametersMap();
-      }
       if (schedule.getType().equals(WorkflowScheduleType.runOnce)) {
         logger.info("Executing runOnce schedule: {}, and marking as completed.", schedule.getId());
-        workflowScheduleService.completeSchedule(schedule.getId());
+        workflowScheduleService.complete(schedule.getId());
       }
+
+      WorkflowRunSubmitRequest request = new WorkflowRunSubmitRequest();
+      request.setWorkflowRef(jobDetail.getKey().getGroup());
+      request.setLabels(schedule.getLabels());
+      request.setParams(request.getParams());
+      request.setTrigger("schedule");
+      
+      workflowRunService.submit(request, true);
     }
-
-    FlowExecutionRequest request = new FlowExecutionRequest();
-    request.setProperties(properties);
-
-    executionController.executeWorkflow(workflowId, Optional.of(TriggerEnum.scheduler.toString()), Optional.of(request));
-  }
+    }
 }

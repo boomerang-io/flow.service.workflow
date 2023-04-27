@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Optional;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.quartz.SchedulerException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.data.domain.Sort;
@@ -30,16 +31,17 @@ import io.boomerang.v4.model.CanvasNode;
 import io.boomerang.v4.model.CanvasNodeData;
 import io.boomerang.v4.model.CanvasNodePosition;
 import io.boomerang.v4.model.WorkflowCanvas;
+import io.boomerang.v4.model.WorkflowDuplicateRequest;
 import io.boomerang.v4.model.enums.RelationshipRef;
 import io.boomerang.v4.model.enums.RelationshipType;
 import io.boomerang.v4.model.enums.TriggerEnum;
 import io.boomerang.v4.model.enums.ref.TaskType;
+import io.boomerang.v4.model.enums.ref.WorkflowStatus;
 import io.boomerang.v4.model.ref.Task;
 import io.boomerang.v4.model.ref.Trigger;
 import io.boomerang.v4.model.ref.TriggerEvent;
 import io.boomerang.v4.model.ref.TriggerScheduler;
 import io.boomerang.v4.model.ref.Workflow;
-import io.boomerang.v4.model.ref.WorkflowStatus;
 import io.boomerang.v4.model.ref.WorkflowTrigger;
 import io.boomerang.v4.model.ref.WorkflowWorkspace;
 
@@ -63,7 +65,7 @@ public class WorkflowServiceImpl implements WorkflowService {
   private RelationshipService relationshipService;
   
   @Autowired
-  private ScheduleService workflowScheduleService;
+  private ScheduleService scheduleService;
   
   @Autowired
   private ParameterManager parameterManager;
@@ -263,9 +265,13 @@ public class WorkflowServiceImpl implements WorkflowService {
         Optional.of(List.of(workflowId)), Optional.of(RelationshipType.BELONGSTO), Optional.of(RelationshipRef.TEAM), Optional.empty());
     if (!workflowRefs.isEmpty()) {
       engineClient.deleteWorkflow(workflowId);
-
+      try {
+        scheduleService.deleteAllForWorkflow(workflowId);
+      } catch (SchedulerException e) {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
+      }
       // TODO: delete all triggers
-      // TODO: delete all schedules
       // TODO: delete all tokens
 //      if (entity.getTriggers() != null) {
 //        Triggers trigger = entity.getTriggers();
@@ -324,11 +330,24 @@ public class WorkflowServiceImpl implements WorkflowService {
    * Export the Workflow as JSON
    */
   @Override
-  public ResponseEntity<Workflow> duplicate(String workflowId) {
+  public ResponseEntity<Workflow> duplicate(String workflowId, WorkflowDuplicateRequest request) {
     final ResponseEntity<Workflow> response = this.get(workflowId, Optional.empty(), true);
     Workflow workflow = response.getBody();
     workflow.setId(null);
-    workflow.setName(workflow.getName() + " (duplicate)");
+    if (request != null && request.getName() != null && !request.getName().isEmpty() && workflow.getName().equals(request.getName())) {
+      workflow.setName(request.getName());
+    } else {
+      workflow.setName(workflow.getName() + " (duplicate)");
+    }
+    if (request != null && request.getDescription() != null && !request.getDescription().isEmpty()) {
+      workflow.setDescription(request.getDescription());
+    } 
+    if (request != null && request.getSummary() != null && !request.getSummary().isEmpty()) {
+      workflow.setShortDescription(request.getSummary());
+    } 
+    if (request != null && request.getIcon() != null && !request.getIcon().isEmpty()) {
+      workflow.setIcon(request.getIcon());
+    } 
     
     Optional<RelationshipEntity> relEntity = relationshipService.getRelationship(RelationshipRef.WORKFLOW, workflowId, RelationshipType.BELONGSTO);
     return this.create(workflow, Optional.of(relEntity.get().getToRef()));
@@ -474,9 +493,9 @@ public class WorkflowServiceImpl implements WorkflowService {
       }
       boolean updatedSchedulerEnabled = updatedWorkflow.getTriggers() != null ? updatedWorkflow.getTriggers().getScheduler().getEnable() : false;
       if (updatedSchedulerEnabled == false) {
-        workflowScheduleService.disableAllTriggerSchedules(updatedWorkflow.getId());
+        scheduleService.disableAllTriggerSchedules(updatedWorkflow.getId());
       } else if (currentSchedulerEnabled == false && updatedSchedulerEnabled == true) {
-        workflowScheduleService.enableAllTriggerSchedules(updatedWorkflow.getId());
+        scheduleService.enableAllTriggerSchedules(updatedWorkflow.getId());
       }
     }
   }

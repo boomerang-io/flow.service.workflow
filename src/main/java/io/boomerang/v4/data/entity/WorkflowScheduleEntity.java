@@ -1,35 +1,37 @@
-package io.boomerang.mongo.entity;
+package io.boomerang.v4.data.entity;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.format.annotation.DateTimeFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import io.boomerang.mongo.model.KeyValuePair;
-import io.boomerang.mongo.model.WorkflowScheduleStatus;
-import io.boomerang.mongo.model.WorkflowScheduleType;
+import io.boomerang.v4.model.enums.WorkflowScheduleStatus;
+import io.boomerang.v4.model.enums.WorkflowScheduleType;
+import io.boomerang.v4.model.ref.RunParam;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(Include.NON_NULL)
-@Document(collection = "#{@mongoConfiguration.fullCollectionName('workflows_schedules')}")
+@Document(collection = "#{@mongoConfiguration.fullCollectionName('workflow_schedules')}")
 public class WorkflowScheduleEntity {
 
   private String id;
-  private String workflowId;
+  private String workflowRef;
   private String name;
   private String description;
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-  private Date creationDate;
+  private Date creationDate = new Date();
   private WorkflowScheduleType type = WorkflowScheduleType.cron;
   private WorkflowScheduleStatus status = WorkflowScheduleStatus.active;
-  private List<KeyValuePair> labels;
+  private Map<String, String> labels = new HashMap<>();
   private String cronSchedule;
   private Date dateSchedule;
   private String timezone;
-  private List<KeyValuePair> parameters = new LinkedList<>();
+  private List<RunParam> params = new LinkedList<>();
   
   public String getId() {
     return id;
@@ -37,11 +39,11 @@ public class WorkflowScheduleEntity {
   public void setId(String id) {
     this.id = id;
   }
-  public String getWorkflowId() {
-    return workflowId;
+  public String getWorkflowRef() {
+    return workflowRef;
   }
-  public void setWorkflowId(String workflowId) {
-    this.workflowId = workflowId;
+  public void setWorkflowRef(String workflowId) {
+    this.workflowRef = workflowId;
   }
   public String getName() {
     return name;
@@ -73,10 +75,10 @@ public class WorkflowScheduleEntity {
   public void setStatus(WorkflowScheduleStatus status) {
     this.status = status;
   }
-  public List<KeyValuePair> getLabels() {
+  public Map<String, String> getLabels() {
     return labels;
   }
-  public void setLabels(List<KeyValuePair> labels) {
+  public void setLabels(Map<String, String> labels) {
     this.labels = labels;
   }
   public String getCronSchedule() {
@@ -97,10 +99,10 @@ public class WorkflowScheduleEntity {
   public void setTimezone(String timezone) {
     this.timezone = timezone;
   }
-  public List<KeyValuePair> getParameters() {
-    return parameters;
+  public List<RunParam> getParams() {
+    return params;
   }
-  public void setParameters(List<KeyValuePair> parameters) {
-    this.parameters = parameters;
+  public void setParams(List<RunParam> params) {
+    this.params = params;
   }
 }

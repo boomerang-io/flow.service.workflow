@@ -7,6 +7,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import io.boomerang.v4.client.WorkflowResponsePage;
 import io.boomerang.v4.model.WorkflowCanvas;
+import io.boomerang.v4.model.WorkflowDuplicateRequest;
 import io.boomerang.v4.model.ref.Workflow;
 
 public interface WorkflowService {
@@ -30,7 +31,7 @@ public interface WorkflowService {
 
   ResponseEntity<InputStreamResource> export(String workflowId);
 
-  ResponseEntity<Workflow> duplicate(String workflowId);
+  ResponseEntity<Workflow> duplicate(String workflowId, WorkflowDuplicateRequest request);
 
   List<String> getAvailableParameters(String workflowId);
 }

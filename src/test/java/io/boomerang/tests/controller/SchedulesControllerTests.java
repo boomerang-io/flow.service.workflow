@@ -16,10 +16,10 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import io.boomerang.misc.FlowTests;
 import io.boomerang.model.CronValidationResponse;
-import io.boomerang.model.WorkflowSchedule;
-import io.boomerang.mongo.model.WorkflowScheduleStatus;
-import io.boomerang.mongo.model.WorkflowScheduleType;
 import io.boomerang.v4.controller.SchedulesV2Controller;
+import io.boomerang.v4.model.WorkflowSchedule;
+import io.boomerang.v4.model.enums.WorkflowScheduleStatus;
+import io.boomerang.v4.model.enums.WorkflowScheduleType;
 import io.boomerang.v4.service.ScheduleService;
 
 
@@ -48,14 +48,14 @@ public class SchedulesControllerTests extends FlowTests {
     newSchedule.setType(WorkflowScheduleType.runOnce);
     newSchedule.setStatus(WorkflowScheduleStatus.active);
     newSchedule.setTimezone("Australia/Melbourne");
-    newSchedule.setWorkflowId("5d1a188af6ca2c00014c4314");
+    newSchedule.setWorkflowRef("5d1a188af6ca2c00014c4314");
     Date executionDate = new Date();
     Calendar executionCal = Calendar.getInstance();
     executionCal.setTime(executionDate);
     executionCal.add(Calendar.DATE, 7);
     newSchedule.setDateSchedule(executionCal.getTime());
 
-    WorkflowSchedule savedSchedule = workflowScheduleService.createSchedule(newSchedule);
+    WorkflowSchedule savedSchedule = workflowScheduleService.create(newSchedule);
     Assertions.assertEquals(WorkflowScheduleStatus.active, savedSchedule.getStatus());
     Assertions.assertEquals(WorkflowScheduleType.runOnce, savedSchedule.getType());
     Assertions.assertEquals(executionCal.getTime(), savedSchedule.getDateSchedule());

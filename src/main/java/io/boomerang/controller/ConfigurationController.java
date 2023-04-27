@@ -1,4 +1,4 @@
-package io.boomerang.security.interceptors;
+package io.boomerang.controller;
 
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,16 +11,16 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.HttpClientErrorException;
 import io.boomerang.mongo.model.UserType;
 import io.boomerang.service.UserIdentityService;
-import io.boomerang.service.crud.ConfigurationService;
 import io.boomerang.v4.data.entity.UserEntity;
 import io.boomerang.v4.model.Setting;
+import io.boomerang.v4.service.SettingsService;
 
 @RestController
 @RequestMapping("/workflow/settings")
 public class ConfigurationController {
 
   @Autowired
-  private ConfigurationService configurationService;
+  private SettingsService settingsService;
   
   @Autowired
   UserIdentityService service;
@@ -28,13 +28,13 @@ public class ConfigurationController {
   @GetMapping(value = "")
   public List<Setting> getAppConfiguration() {
     validateUser();
-    return configurationService.getAllSettings();
+    return settingsService.getAllSettings();
   }
 
   @PutMapping(value = "")
   public List<Setting> updateSettings(@RequestBody List<Setting> settings) {
     validateUser();
-    return configurationService.updateSettings(settings);
+    return settingsService.updateSettings(settings);
   }
   
   protected void validateUser() {

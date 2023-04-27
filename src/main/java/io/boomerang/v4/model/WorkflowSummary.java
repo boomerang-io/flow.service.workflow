@@ -6,8 +6,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import io.boomerang.v4.data.entity.ref.WorkflowEntity;
+import io.boomerang.v4.model.enums.ref.WorkflowStatus;
 import io.boomerang.v4.model.ref.Workflow;
-import io.boomerang.v4.model.ref.WorkflowStatus;
 
 /*
  * Workflow Summary copies from Workflow to include in the Team response

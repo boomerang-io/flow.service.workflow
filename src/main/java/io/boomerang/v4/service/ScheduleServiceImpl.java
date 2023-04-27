@@ -1,15 +1,25 @@
 package io.boomerang.v4.service;
 
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
+import org.apache.commons.lang3.EnumUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.quartz.SchedulerException;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import com.cronutils.mapper.CronMapper;
@@ -17,19 +27,19 @@ import com.cronutils.model.Cron;
 import com.cronutils.model.CronType;
 import com.cronutils.model.definition.CronDefinitionBuilder;
 import com.cronutils.parser.CronParser;
+import io.boomerang.error.BoomerangError;
+import io.boomerang.error.BoomerangException;
 import io.boomerang.model.CronValidationResponse;
-import io.boomerang.model.WorkflowSchedule;
-import io.boomerang.model.WorkflowScheduleCalendar;
-import io.boomerang.mongo.entity.WorkflowEntity;
-import io.boomerang.mongo.entity.WorkflowScheduleEntity;
-import io.boomerang.mongo.model.KeyValuePair;
-import io.boomerang.mongo.model.WorkflowScheduleStatus;
-import io.boomerang.mongo.model.WorkflowScheduleType;
-import io.boomerang.mongo.service.FlowWorkflowService;
-import io.boomerang.mongo.service.ScheduleService;
 import io.boomerang.quartz.QuartzSchedulerService;
-import io.boomerang.service.FilterService;
-import io.boomerang.util.ParameterMapper;
+import io.boomerang.v4.data.entity.WorkflowScheduleEntity;
+import io.boomerang.v4.data.repository.WorkflowScheduleRepository;
+import io.boomerang.v4.model.WorkflowSchedule;
+import io.boomerang.v4.model.WorkflowScheduleCalendar;
+import io.boomerang.v4.model.enums.RelationshipRef;
+import io.boomerang.v4.model.enums.RelationshipType;
+import io.boomerang.v4.model.enums.WorkflowScheduleStatus;
+import io.boomerang.v4.model.enums.WorkflowScheduleType;
+import io.boomerang.v4.model.ref.Workflow;
 
 /*
  * Workflow Schedule Service provides all the methods for both the Schedules page and the individual Workflow Schedule
@@ -46,51 +56,16 @@ public class ScheduleServiceImpl implements ScheduleService {
   private QuartzSchedulerService taskScheduler;
 
   @Autowired
-  private ScheduleService workflowScheduleRepository;
+  private WorkflowScheduleRepository scheduleRepository;
 
   @Autowired
-  private FlowWorkflowService workflowRepository;
+  private WorkflowService workflowService;
   
   @Autowired
-  private FilterService filterService;
+  private RelationshipService relationshipService;
   
-  /*
-   * Provides an all encompassing schedule retrieval method with optional filters. Ignores deleted schedules.
-   * 
-   * @return list of Workflow Schedules
-   */
-  @Override
-  public List<WorkflowSchedule> getSchedules(Optional<List<String>> workflowIds,
-      Optional<List<String>> teamIds, Optional<List<String>> statuses, Optional<List<String>> types,
-      Optional<List<String>> scopes) {
-    List<WorkflowSchedule> schedules = new LinkedList<>();
-
-    List<String> filteredWorkflowIds = filterService.getFilteredWorkflowIds(workflowIds, teamIds, scopes);
-    final List<WorkflowScheduleEntity> entities = workflowScheduleRepository.getAllSchedulesNotCompletedOrDeleted(filteredWorkflowIds, statuses, types);
-    if (entities != null) {
-      entities.forEach(e -> {
-        schedules.add(convertScheduleEntityToModel(e));
-      });
-    }
-    return schedules;
-  }
-  
-  /*
-   * Retrieves all non deleted schedules for a specific workflow.
-   * 
-   * @return list of Workflow Schedules
-   */
-  @Override
-  public List<WorkflowSchedule> getSchedulesForWorkflow(String workflowId) {
-    List<WorkflowSchedule> schedules = new LinkedList<>();
-    final List<WorkflowScheduleEntity> entities = workflowScheduleRepository.getSchedulesForWorkflowNotCompletedOrDeleted(workflowId);
-    if (entities != null) {
-      entities.forEach(e -> {
-        schedules.add(convertScheduleEntityToModel(e));
-      });
-    }
-    return schedules;
-  }
+  @Autowired
+  private MongoTemplate mongoTemplate;
   
   /*
    * Retrieves a specific schedule
@@ -98,12 +73,123 @@ public class ScheduleServiceImpl implements ScheduleService {
    * @return a single Workflow Schedule
    */
   @Override
-  public WorkflowSchedule getSchedule(String scheduleId) {
-    final WorkflowScheduleEntity scheduleEntity = workflowScheduleRepository.getSchedule(scheduleId);
-    if (scheduleEntity != null) {
+  public WorkflowSchedule get(String scheduleId) {
+    final Optional<WorkflowScheduleEntity> scheduleEntity = scheduleRepository.findById(scheduleId);
+    if (scheduleEntity.isPresent()) {
+      // Get Refs that request has access to
+      List<String> refs = relationshipService.getFilteredRefs(Optional.of(RelationshipRef.WORKFLOW),
+          Optional.of(List.of(scheduleEntity.get().getWorkflowRef())), Optional.of(RelationshipType.BELONGSTO), Optional.ofNullable(RelationshipRef.TEAM),
+          Optional.empty());
+      if (!refs.isEmpty()) {
+        return convertScheduleEntityToModel(scheduleEntity.get());
+      }
+    }
+    //TODO change error
+    throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
+  }
+  
+  /*
+   * Provides an all encompassing schedule retrieval method with optional filters. Ignores deleted schedules.
+   * 
+   * @return list of Workflow Schedules
+   */
+  @Override
+  public Page<WorkflowSchedule> query(int page, int limit, Sort sort, Optional<List<String>> queryWorkflows,
+      Optional<List<String>> queryTeams, Optional<List<String>> queryStatus, Optional<List<String>> queryTypes) {
+    // Get Refs that request has access to
+    List<String> refs = relationshipService.getFilteredRefs(Optional.of(RelationshipRef.WORKFLOW),
+        queryWorkflows, Optional.of(RelationshipType.BELONGSTO), Optional.ofNullable(RelationshipRef.TEAM),
+        queryTeams);
+
+    if (!refs.isEmpty()) {
+      List<Criteria> criteriaList = new ArrayList<>();
+      Criteria criteria = Criteria.where("workflowRef").in(refs);
+      criteriaList.add(criteria);
+
+      if (queryStatus.isPresent()) {
+        if (queryStatus.get().stream()
+            .allMatch(q -> EnumUtils.isValidEnumIgnoreCase(WorkflowScheduleStatus.class, q))) {
+          Criteria statusCriteria = Criteria.where("status").in(queryStatus.get());
+          criteriaList.add(statusCriteria);
+        } else {
+          throw new BoomerangException(BoomerangError.QUERY_INVALID_FILTERS, "status");
+        }
+      }
+      
+      if (queryTypes.isPresent()) {
+        Criteria queryCriteria = Criteria.where("type").in(queryTypes.get());
+        criteriaList.add(queryCriteria);
+      }
+
+      Criteria[] criteriaArray = criteriaList.toArray(new Criteria[criteriaList.size()]);
+      Criteria allCriteria = new Criteria();
+      if (criteriaArray.length > 0) {
+        allCriteria.andOperator(criteriaArray);
+      }
+      Query query = new Query(allCriteria);
+      final Pageable pageable = PageRequest.of(page, limit, sort);
+      query.with(pageable);
+      
+      List<WorkflowScheduleEntity> scheduleEntities = mongoTemplate.find(query.with(pageable), WorkflowScheduleEntity.class);
+      
+      List<WorkflowSchedule> workflowSchedules = new LinkedList<>();
+      scheduleEntities.forEach(e -> {
+          workflowSchedules.add(convertScheduleEntityToModel(e));
+        });
+
+      Page<WorkflowSchedule> pages = PageableExecutionUtils.getPage(
+          workflowSchedules, pageable,
+          () -> mongoTemplate.count(query, WorkflowScheduleEntity.class));
+      return pages;
+    } else {
+      // TODO: do we want to return invalid ref or unauthorized
+      throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
+    }
+  }
+  
+  /*
+   * Create a schedule based on the payload which includes the Workflow Id.
+   * 
+   * @return echos the created schedule
+   */
+  @Override
+  public WorkflowSchedule create(final WorkflowSchedule schedule, Optional<String> teamId) {
+    if (schedule != null && schedule.getWorkflowRef() != null && teamId.isPresent()) {
+      // Get Refs that request has access to
+      final List<String> refs = relationshipService.getFilteredRefs(Optional.of(RelationshipRef.WORKFLOW),
+          Optional.of(List.of(schedule.getWorkflowRef())), Optional.of(RelationshipType.BELONGSTO),
+          Optional.ofNullable(RelationshipRef.TEAM), Optional.of(List.of(teamId.get())));
+      if (refs.isEmpty()) {
+        // TODO: better error
+        throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
+      }
+      // Validate required fields are present
+      if ((WorkflowScheduleType.runOnce.equals(schedule.getType())
+          && schedule.getDateSchedule() == null)
+          || (!WorkflowScheduleType.runOnce.equals(schedule.getType())
+              && schedule.getCronSchedule() == null)
+          || schedule.getTimezone() == null || schedule.getTimezone().isBlank()) {
+        // TODO: better accurate error
+        throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
+      }
+      Workflow workflow =
+          workflowService.get(schedule.getWorkflowRef(), Optional.empty(), false).getBody();
+      WorkflowScheduleEntity scheduleEntity = new WorkflowScheduleEntity();
+      BeanUtils.copyProperties(schedule, scheduleEntity);
+      Boolean enableJob = false;
+      if (WorkflowScheduleStatus.active.equals(scheduleEntity.getStatus())
+          && workflow.getTriggers().getScheduler().getEnable()) {
+        enableJob = true;
+      } else if (WorkflowScheduleStatus.active.equals(scheduleEntity.getStatus())
+          && !workflow.getTriggers().getScheduler().getEnable()) {
+        scheduleEntity.setStatus(WorkflowScheduleStatus.trigger_disabled);
+      }
+      scheduleRepository.save(scheduleEntity);
+      createOrUpdateSchedule(scheduleEntity, enableJob);
       return convertScheduleEntityToModel(scheduleEntity);
     }
-    return null;
+    // TODO: better return error
+    throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
   }
   
   /*
@@ -112,13 +198,12 @@ public class ScheduleServiceImpl implements ScheduleService {
    * @return the single returnable schedule.
    */
   private WorkflowSchedule convertScheduleEntityToModel(WorkflowScheduleEntity entity) {
-    WorkflowSchedule schedule = new WorkflowSchedule(entity);
     try {
-      schedule.setNextScheduleDate(this.taskScheduler.getNextTriggerDate(entity));
+      return new WorkflowSchedule(entity, this.taskScheduler.getNextTriggerDate(entity));
     } catch (Exception e) {
       logger.info("Unable to retrieve next schedule date for {}, skipping.", entity.getId());
+      return new WorkflowSchedule(entity);
     }
-    return schedule;
   }
   
   /*
@@ -128,10 +213,11 @@ public class ScheduleServiceImpl implements ScheduleService {
    */
   @Override
   public List<WorkflowScheduleCalendar> getCalendarsForSchedules(final List<String> scheduleIds, Date fromDate, Date toDate) {
+    
     List<WorkflowScheduleCalendar> scheduleCalendars = new LinkedList<>();
-    final List<WorkflowScheduleEntity> scheduleEntities = workflowScheduleRepository.getSchedulesNotCompletedOrDeleted(scheduleIds);
-    if (scheduleEntities != null) {
-      scheduleEntities.forEach(e -> {
+    final Optional<List<WorkflowScheduleEntity>> scheduleEntities = scheduleRepository.findByWorkflowRefInAndStatusIn(scheduleIds, getStatusesNotCompletedOrDeleted());
+    if (scheduleEntities.isPresent()) {
+      scheduleEntities.get().forEach(e -> {
         WorkflowScheduleCalendar scheduleCalendar = new WorkflowScheduleCalendar();
         scheduleCalendar.setScheduleId(e.getId());
         scheduleCalendar.setDates(getCalendarForDates(e.getId(), fromDate, toDate));
@@ -149,9 +235,9 @@ public class ScheduleServiceImpl implements ScheduleService {
   @Override
   public List<WorkflowScheduleCalendar> getCalendarsForWorkflow(final String workflowId, Date fromDate, Date toDate) {
     List<WorkflowScheduleCalendar> scheduleCalendars = new LinkedList<>();
-    final List<WorkflowScheduleEntity> scheduleEntities = workflowScheduleRepository.getSchedulesForWorkflowNotCompletedOrDeleted(workflowId);
-    if (scheduleEntities != null) {
-      scheduleEntities.forEach(e -> {
+    final Optional<List<WorkflowScheduleEntity>> scheduleEntities = scheduleRepository.findByWorkflowRefInAndStatusIn(List.of(workflowId), getStatusesNotCompletedOrDeleted());
+    if (scheduleEntities.isPresent()) {
+      scheduleEntities.get().forEach(e -> {
         WorkflowScheduleCalendar scheduleCalendar = new WorkflowScheduleCalendar();
         scheduleCalendar.setScheduleId(e.getId());
         scheduleCalendar.setDates(getCalendarForDates(e.getId(), fromDate, toDate));
@@ -168,7 +254,7 @@ public class ScheduleServiceImpl implements ScheduleService {
    */
   @Override
   public List<Date> getCalendarForDates(final String scheduleId, Date fromDate, Date toDate) {
-    final WorkflowScheduleEntity scheduleEntity = workflowScheduleRepository.getSchedule(scheduleId);
+    final WorkflowScheduleEntity scheduleEntity = scheduleRepository.findById(scheduleId).orElse(null);
     if (scheduleEntity != null) {
       try {
         return this.taskScheduler.getJobTriggerDates(scheduleEntity, fromDate, toDate);
@@ -182,75 +268,35 @@ public class ScheduleServiceImpl implements ScheduleService {
   }
   
   /*
-   * Create a schedule based on the payload which includes the Workflow Id.
-   * 
-   * @return echos the created schedule
-   */
-  @Override
-  public WorkflowSchedule createSchedule(final WorkflowSchedule schedule) {
-//  TODO: do we have to check if they have authorization to create a workflow against that team?
-//  TODO: do we have to check if any of the elements on the Schedule are invalid? such as the cron?
-//  TODO: return an error if the minimum required fields arent provided.
-
-    if (schedule != null && schedule.getWorkflowId() != null) {
-      WorkflowEntity wfEntity = workflowRepository.getWorkflow(schedule.getWorkflowId());
-      if (wfEntity != null) {
-          schedule.setCreationDate(new Date());
-          WorkflowScheduleEntity scheduleEntity = new WorkflowScheduleEntity();
-          BeanUtils.copyProperties(schedule, scheduleEntity);
-          if (schedule.getParametersMap() != null && !schedule.getParametersMap().isEmpty()) {
-            List<KeyValuePair> propertyList = ParameterMapper.mapToKeyValuePairList(schedule.getParametersMap());
-            scheduleEntity.setParameters(propertyList);
-          }
-          Boolean enableJob = false;
-          if (WorkflowScheduleStatus.active.equals(scheduleEntity.getStatus()) && wfEntity.getTriggers().getScheduler().getEnable()) {
-            enableJob = true;
-          } else if (WorkflowScheduleStatus.active.equals(scheduleEntity.getStatus()) && !wfEntity.getTriggers().getScheduler().getEnable()) {
-            scheduleEntity.setStatus(WorkflowScheduleStatus.trigger_disabled);
-          }
-          workflowScheduleRepository.saveSchedule(scheduleEntity);
-          createOrUpdateSchedule(scheduleEntity, enableJob);
-          return new WorkflowSchedule(scheduleEntity);
-        }
-      }
-    return null;
-  }
-  
-  /*
    * Update a schedule based on the payload and the Schedules Id.
    * 
    * @return echos the updated schedule
    */
   @Override
-  public WorkflowSchedule updateSchedule(final String scheduleId, final WorkflowSchedule patchSchedule) {
+  public WorkflowSchedule update(final String scheduleId, final WorkflowSchedule patchSchedule) {
     if (patchSchedule != null) {
-      WorkflowScheduleEntity scheduleEntity = workflowScheduleRepository.getSchedule(scheduleId);
-      if (scheduleEntity != null) {
+      final Optional<WorkflowScheduleEntity> optScheduleEntity = scheduleRepository.findById(scheduleId);
+      if (optScheduleEntity.isPresent()) {
+        WorkflowScheduleEntity scheduleEntity = optScheduleEntity.get();
         /*
-         * The copy ignores certain fields
-         * - ID and creationDate to ensure data integrity
-         * - parameters and parametersMap due to the need to convert the property structure
+         * The copy ignores ID and creationDate to ensure data integrity
          */
         WorkflowScheduleStatus previousStatus = scheduleEntity.getStatus();
-        BeanUtils.copyProperties(patchSchedule, scheduleEntity, "id", "creationDate", "parameters", "parametersMap");
-        if (patchSchedule.getParametersMap() != null && !patchSchedule.getParametersMap().isEmpty()) {
-          List<KeyValuePair> propertyList = ParameterMapper.mapToKeyValuePairList(patchSchedule.getParametersMap());
-          scheduleEntity.setParameters(propertyList);
-        }
+        BeanUtils.copyProperties(patchSchedule, scheduleEntity, "id", "creationDate");
         
         /*
          * Complex Status checking to determine what can and can't be enabled
          */
         //Check if job is trying to be enabled with date in the past
         WorkflowScheduleStatus newStatus = scheduleEntity.getStatus();
-        WorkflowEntity wfEntity = workflowRepository.getWorkflow(scheduleEntity.getWorkflowId());
+        Workflow workflow = workflowService.get(scheduleEntity.getWorkflowRef(), Optional.empty(), false).getBody();
         Boolean enableJob = true;
         if (!previousStatus.equals(newStatus)) {
           if (WorkflowScheduleStatus.active.equals(previousStatus) && WorkflowScheduleStatus.inactive.equals(newStatus)) {
             scheduleEntity.setStatus(WorkflowScheduleStatus.inactive);
             enableJob = false;
           } else if (WorkflowScheduleStatus.inactive.equals(previousStatus) && WorkflowScheduleStatus.active.equals(newStatus)) {
-            if (wfEntity != null && !wfEntity.getTriggers().getScheduler().getEnable()) {
+            if (workflow != null && !workflow.getTriggers().getScheduler().getEnable()) {
               scheduleEntity.setStatus(WorkflowScheduleStatus.trigger_disabled);
               enableJob = false;
             }
@@ -259,7 +305,7 @@ public class ScheduleServiceImpl implements ScheduleService {
               if (scheduleEntity.getDateSchedule().getTime() < currentDate.getTime()) {
                 logger.info("Cannot enable schedule (" + scheduleEntity.getId() + ") as it is in the past.");
                 scheduleEntity.setStatus(WorkflowScheduleStatus.error);
-                workflowScheduleRepository.saveSchedule(scheduleEntity);
+                scheduleRepository.save(scheduleEntity);
                 try {
                   this.taskScheduler.cancelJob(scheduleEntity);
                 } catch (SchedulerException e) {
@@ -274,9 +320,9 @@ public class ScheduleServiceImpl implements ScheduleService {
             enableJob = false;
           }
         }
-        workflowScheduleRepository.saveSchedule(scheduleEntity);
+        scheduleRepository.save(scheduleEntity);
         createOrUpdateSchedule(scheduleEntity, enableJob);
-        return new WorkflowSchedule(scheduleEntity);
+        return convertScheduleEntityToModel(scheduleEntity);
       }
     }
     return null;
@@ -311,9 +357,9 @@ public class ScheduleServiceImpl implements ScheduleService {
    */
   @Override
   public void enableAllTriggerSchedules(final String workflowId) {
-    final List<WorkflowScheduleEntity> entities = workflowScheduleRepository.getSchedulesForWorkflowWithStatus(workflowId, WorkflowScheduleStatus.trigger_disabled);
-    if (entities != null) {
-      entities.forEach(s -> {
+    final Optional<List<WorkflowScheduleEntity>> entities = scheduleRepository.findByWorkflowRefInAndStatusIn(List.of(workflowId), List.of(WorkflowScheduleStatus.trigger_disabled));
+    if (entities.isPresent()) {
+      entities.get().forEach(s -> {
         try {
           enableSchedule(s.getId());
         } catch (SchedulerException e) {
@@ -328,8 +374,9 @@ public class ScheduleServiceImpl implements ScheduleService {
    * Enables a specific schedule
    */
   private void enableSchedule(String scheduleId) throws SchedulerException {
-    WorkflowScheduleEntity schedule = workflowScheduleRepository.getSchedule(scheduleId);
-    if (schedule!= null && !WorkflowScheduleStatus.deleted.equals(schedule.getStatus())) {
+    Optional<WorkflowScheduleEntity> optSchedule = scheduleRepository.findById(scheduleId);
+    if (optSchedule.isPresent() && !WorkflowScheduleStatus.deleted.equals(optSchedule.get().getStatus())) {
+      WorkflowScheduleEntity schedule = optSchedule.get();
       if (WorkflowScheduleType.runOnce.equals(schedule.getType())) {
         Date currentDate = new Date();
         logger.info("Current DateTime: ", currentDate.getTime());
@@ -337,14 +384,15 @@ public class ScheduleServiceImpl implements ScheduleService {
         if (schedule.getDateSchedule().getTime() < currentDate.getTime()) {
           logger.info("Cannot enable schedule (" + schedule.getId() + ") as it is in the past.");
           schedule.setStatus(WorkflowScheduleStatus.error);
+          scheduleRepository.save(schedule);
         } else {
           schedule.setStatus(WorkflowScheduleStatus.active);
-          workflowScheduleRepository.saveSchedule(schedule);
+          scheduleRepository.save(schedule);
           this.taskScheduler.resumeJob(schedule);
         }
       } else {
         schedule.setStatus(WorkflowScheduleStatus.active);
-        workflowScheduleRepository.saveSchedule(schedule);
+        scheduleRepository.save(schedule);
         this.taskScheduler.resumeJob(schedule);
       }
     }
@@ -355,16 +403,13 @@ public class ScheduleServiceImpl implements ScheduleService {
    */
   @Override
   public void disableAllTriggerSchedules(final String workflowId) {
-    final List<WorkflowScheduleEntity> entities = workflowScheduleRepository.getSchedulesForWorkflowWithStatus(workflowId, WorkflowScheduleStatus.active);
-    if (entities != null) {
-      entities.forEach(s -> {
+    final Optional<List<WorkflowScheduleEntity>> entities = scheduleRepository.findByWorkflowRefInAndStatusIn(List.of(workflowId), List.of(WorkflowScheduleStatus.active));
+    if (entities.isPresent()) {
+      entities.get().forEach(s -> {
         try {
-          WorkflowScheduleEntity schedule = workflowScheduleRepository.getSchedule(s.getId());
-          if (schedule!= null) {
-            schedule.setStatus(WorkflowScheduleStatus.trigger_disabled);
-            workflowScheduleRepository.saveSchedule(schedule);
-            this.taskScheduler.pauseJob(schedule);
-          }
+          s.setStatus(WorkflowScheduleStatus.trigger_disabled);
+          scheduleRepository.save(s);
+          this.taskScheduler.pauseJob(s);
         } catch (SchedulerException e) {
           // TODO Auto-generated catch block
           e.printStackTrace();
@@ -377,11 +422,11 @@ public class ScheduleServiceImpl implements ScheduleService {
    * Disable a specific schedule
    */
   private void disableSchedule(String scheduleId) throws SchedulerException {
-    WorkflowScheduleEntity schedule = workflowScheduleRepository.getSchedule(scheduleId);
-    if (schedule!= null && !WorkflowScheduleStatus.deleted.equals(schedule.getStatus())) {
-      schedule.setStatus(WorkflowScheduleStatus.inactive);
-      workflowScheduleRepository.saveSchedule(schedule);
-      this.taskScheduler.pauseJob(schedule);
+    Optional<WorkflowScheduleEntity> schedule = scheduleRepository.findById(scheduleId);
+    if (schedule.isPresent() && !WorkflowScheduleStatus.deleted.equals(schedule.get().getStatus())) {
+      schedule.get().setStatus(WorkflowScheduleStatus.inactive);
+      scheduleRepository.save(schedule.get());
+      this.taskScheduler.pauseJob(schedule.get());
     } else {
 //        TODO: return that it couldn't be disabled or doesn't exist
     }
@@ -391,13 +436,13 @@ public class ScheduleServiceImpl implements ScheduleService {
    * Disable a specific schedule
    */
   @Override
-  public ResponseEntity<?> completeSchedule(String scheduleId) {
-    WorkflowScheduleEntity schedule = workflowScheduleRepository.getSchedule(scheduleId);
-    if (schedule!= null && !WorkflowScheduleStatus.deleted.equals(schedule.getStatus())) {
-      schedule.setStatus(WorkflowScheduleStatus.completed);
+  public ResponseEntity<?> complete(String scheduleId) {
+    Optional<WorkflowScheduleEntity> schedule = scheduleRepository.findById(scheduleId);
+    if (schedule.isPresent() && !WorkflowScheduleStatus.deleted.equals(schedule.get().getStatus())) {
+      schedule.get().setStatus(WorkflowScheduleStatus.completed);
       try {
-        workflowScheduleRepository.saveSchedule(schedule);
-        this.taskScheduler.pauseJob(schedule);
+        scheduleRepository.save(schedule.get());
+        this.taskScheduler.pauseJob(schedule.get());
       } catch (SchedulerException e) {
         logger.info("Unable to delete schedule {}.", scheduleId);
         logger.error(e);
@@ -413,12 +458,11 @@ public class ScheduleServiceImpl implements ScheduleService {
    * Mark all schedules as deleted and cancel the quartz jobs. This is used when a workflow is deleted.
    */
   @Override
-  public void deleteAllSchedules(final String workflowId) {
-//    TODO: get this integrated with the deleteWorkflow
-    final List<WorkflowScheduleEntity> entities = workflowScheduleRepository.getSchedulesForWorkflow(workflowId);
-    if (entities != null) {
-      entities.forEach(s -> {
-        deleteSchedule(s.getId());
+  public void deleteAllForWorkflow(final String workflowId) {
+    final Optional<List<WorkflowScheduleEntity>> entities = scheduleRepository.findByWorkflowRef(workflowId);
+    if (entities.isPresent()) {
+      entities.get().forEach(s -> {
+        delete(s.getId());
       });
     }
   }
@@ -427,13 +471,13 @@ public class ScheduleServiceImpl implements ScheduleService {
    * Mark a single schedule as deleted and cancel the quartz jobs. Used by the UI when deleting a schedule.
    */
   @Override
-  public ResponseEntity<?> deleteSchedule(final String scheduleId) {
+  public ResponseEntity<?> delete(final String scheduleId) {
     try {
-      WorkflowScheduleEntity scheduleEntity = workflowScheduleRepository.getSchedule(scheduleId);
-      if (scheduleEntity != null) {
-        scheduleEntity.setStatus(WorkflowScheduleStatus.deleted);
-        workflowScheduleRepository.saveSchedule(scheduleEntity);
-        this.taskScheduler.cancelJob(scheduleEntity);
+      final Optional<WorkflowScheduleEntity> schedule = scheduleRepository.findById(scheduleId);
+      if (schedule.isPresent()) {
+        schedule.get().setStatus(WorkflowScheduleStatus.deleted);
+        scheduleRepository.save(schedule.get());
+        this.taskScheduler.cancelJob(schedule.get());
       } else {
         return ResponseEntity.badRequest().build();
       }
@@ -484,5 +528,14 @@ public class ScheduleServiceImpl implements ScheduleService {
       logger.info("Final CRON: {} .", cronString);
     }
     return response;
+  }  
+  
+  private List<WorkflowScheduleStatus> getStatusesNotCompletedOrDeleted() {
+    List<WorkflowScheduleStatus> statuses = new LinkedList<>();
+    statuses.add(WorkflowScheduleStatus.active);
+    statuses.add(WorkflowScheduleStatus.inactive);
+    statuses.add(WorkflowScheduleStatus.trigger_disabled);
+    statuses.add(WorkflowScheduleStatus.error);
+    return statuses;
   }
 }

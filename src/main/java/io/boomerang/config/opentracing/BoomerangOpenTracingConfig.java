@@ -1,4 +1,4 @@
-package io.boomerang.opentracing.config;
+package io.boomerang.config.opentracing;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;

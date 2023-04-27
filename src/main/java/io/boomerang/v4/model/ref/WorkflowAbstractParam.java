@@ -1,8 +1,9 @@
-package io.boomerang.mongo.model;
+package io.boomerang.v4.model.ref;
 
 import io.boomerang.v4.model.AbstractParam;
 
-public class WorkflowProperty extends AbstractParam {
+//TODO: figure out if we need this - can we just use the name jsonPath on the param.
+public class WorkflowAbstractParam extends AbstractParam {
   
   private String jsonPath;
 

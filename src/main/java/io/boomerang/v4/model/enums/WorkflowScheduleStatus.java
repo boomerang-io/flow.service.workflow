@@ -1,4 +1,4 @@
-package io.boomerang.mongo.model;
+package io.boomerang.v4.model.enums;
 
 /*
  * Enum containing all Workflow Schedule Status'

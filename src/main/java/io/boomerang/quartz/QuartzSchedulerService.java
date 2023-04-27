@@ -24,7 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.quartz.SchedulerFactoryBean;
 import org.springframework.stereotype.Component;
 import io.boomerang.model.CronValidationResponse;
-import io.boomerang.mongo.entity.WorkflowScheduleEntity;
+import io.boomerang.v4.data.entity.WorkflowScheduleEntity;
 import io.boomerang.v4.service.ScheduleService;
 
 @Component
@@ -56,7 +56,7 @@ public class QuartzSchedulerService {
       }
       TimeZone timeZone = TimeZone.getTimeZone(timezone);
       String scheduleId = schedule.getId();
-      String workflowId = schedule.getWorkflowId();
+      String workflowId = schedule.getWorkflowRef();
       Scheduler scheduler = schedulerFactoryBean.getScheduler();
       JobDetail jobDetail =
           JobBuilder.newJob(WorkflowExecuteJob.class).withIdentity(scheduleId, workflowId).build();         
@@ -71,7 +71,7 @@ public class QuartzSchedulerService {
           scheduler.scheduleJob(jobDetail, trigger);
           logger.info("Scheduled Cron Schedule: {} for Workflow: {}.", scheduleId, workflowId);
         } else {
-          scheduler.rescheduleJob(new TriggerKey(schedule.getId(), schedule.getWorkflowId()),trigger);
+          scheduler.rescheduleJob(new TriggerKey(schedule.getId(), schedule.getWorkflowRef()),trigger);
           logger.info("Updated RunOnce Schedule: {} for Workflow: {}.", scheduleId, workflowId);
         }
       } catch (SchedulerException e1) {
@@ -83,7 +83,7 @@ public class QuartzSchedulerService {
   
   public void createOrUpdateRunOnceJob(WorkflowScheduleEntity schedule) throws Exception {
     String scheduleId = schedule.getId();
-    String workflowId = schedule.getWorkflowId();
+    String workflowId = schedule.getWorkflowRef();
     Scheduler scheduler = schedulerFactoryBean.getScheduler();
     JobDetail jobDetail = JobBuilder.newJob(WorkflowExecuteJob.class).withIdentity(scheduleId, workflowId).build();
     SimpleScheduleBuilder simpleScheduleBuilder = SimpleScheduleBuilder.simpleSchedule().withRepeatCount(0);
@@ -94,7 +94,7 @@ public class QuartzSchedulerService {
           scheduler.scheduleJob(jobDetail, trigger);
           logger.info("Created RunOnce Schedule: {} for Workflow: {}.", scheduleId, workflowId);
       } else {
-        scheduler.rescheduleJob(new TriggerKey(schedule.getId(), schedule.getWorkflowId()),trigger);
+        scheduler.rescheduleJob(new TriggerKey(schedule.getId(), schedule.getWorkflowRef()),trigger);
         logger.info("Updated RunOnce Schedule: {} for Workflow: {}.", scheduleId, workflowId);
       }
     } catch (SchedulerException e1) {
@@ -105,29 +105,29 @@ public class QuartzSchedulerService {
   
   public void pauseJob(WorkflowScheduleEntity schedule) throws SchedulerException {
     Scheduler scheduler = schedulerFactoryBean.getScheduler();
-    scheduler.pauseJob(new JobKey(schedule.getId(), schedule.getWorkflowId()));
+    scheduler.pauseJob(new JobKey(schedule.getId(), schedule.getWorkflowRef()));
   }
   
   public void resumeJob(WorkflowScheduleEntity schedule) throws SchedulerException {
     Scheduler scheduler = schedulerFactoryBean.getScheduler();
-    scheduler.resumeJob(new JobKey(schedule.getId(), schedule.getWorkflowId()));
+    scheduler.resumeJob(new JobKey(schedule.getId(), schedule.getWorkflowRef()));
   }
   
   public void cancelJob(WorkflowScheduleEntity schedule) throws SchedulerException {
     Scheduler scheduler = schedulerFactoryBean.getScheduler();
-    scheduler.deleteJob(new JobKey(schedule.getId(), schedule.getWorkflowId()));
+    scheduler.deleteJob(new JobKey(schedule.getId(), schedule.getWorkflowRef()));
   }
   
   public List<Date> getJobTriggerDates(WorkflowScheduleEntity schedule, Date fromDate, Date toDate) throws SchedulerException {
     Scheduler scheduler = schedulerFactoryBean.getScheduler();
-    Trigger trigger = scheduler.getTrigger(new TriggerKey(schedule.getId(), schedule.getWorkflowId()));
+    Trigger trigger = scheduler.getTrigger(new TriggerKey(schedule.getId(), schedule.getWorkflowRef()));
     logger.info("Retrieving Dates from: " + fromDate.toString() + ", to: " + toDate.toString() + ", for Schedule: " + schedule.getId());
     return org.quartz.TriggerUtils.computeFireTimesBetween((OperableTrigger) trigger, new BaseCalendar(), fromDate, toDate);
   }
   
   public Date getNextTriggerDate(WorkflowScheduleEntity schedule) throws SchedulerException {
     Scheduler scheduler = schedulerFactoryBean.getScheduler();
-    Trigger trigger = scheduler.getTrigger(new TriggerKey(schedule.getId(), schedule.getWorkflowId()));
+    Trigger trigger = scheduler.getTrigger(new TriggerKey(schedule.getId(), schedule.getWorkflowRef()));
     logger.info("Retrieving Next Schedule Date for Schedule: " + schedule.getId());
     return trigger.getNextFireTime();
   }

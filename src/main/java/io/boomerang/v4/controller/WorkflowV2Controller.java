@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import io.boomerang.v4.client.WorkflowResponsePage;
 import io.boomerang.v4.model.WorkflowCanvas;
+import io.boomerang.v4.model.WorkflowDuplicateRequest;
 import io.boomerang.v4.model.ref.Workflow;
 import io.boomerang.v4.service.WorkflowService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -126,14 +127,6 @@ public class WorkflowV2Controller {
     return workflowService.export(workflowId);
   }
 
-  //TODO: confirm this is no longer needed.
-//  @PostMapping(value = "/import")
-//  public void importWorkflow(@RequestBody WorkflowExport export, @RequestParam Boolean update,
-//      @RequestParam(required = false) String flowTeamId,
-//      @RequestParam(required = true) WorkflowScope scope) {
-//    workflowService.importWorkflow(export, update, flowTeamId, scope);
-//  }
-
   @GetMapping(value = "/{workflowId}/compose")
   @Operation(summary = "Convert workflow to compose model for UI Designer and detailed Activity screens.")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
@@ -150,8 +143,9 @@ public class WorkflowV2Controller {
   @Operation(summary = "Duplicates the workflow.")
   public ResponseEntity<Workflow> duplicateWorkflow(
       @Parameter(name = "workflowId", description = "ID of Workflow",
-      required = true) @PathVariable String workflowId) {
-    return workflowService.duplicate(workflowId);
+      required = true) @PathVariable String workflowId,
+      @RequestBody WorkflowDuplicateRequest request) {
+    return workflowService.duplicate(workflowId, request);
   }
 
 //  @PostMapping(value = "{id}/token")

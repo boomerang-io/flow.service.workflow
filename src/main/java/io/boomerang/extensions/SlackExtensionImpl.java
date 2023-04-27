@@ -46,17 +46,18 @@ import com.slack.api.model.view.ViewSubmit;
 import com.slack.api.model.view.ViewTitle;
 import io.boomerang.error.BoomerangException;
 import io.boomerang.exceptions.RunWorkflowException;
-import io.boomerang.model.FlowActivity;
 import io.boomerang.mongo.entity.ExtensionEntity;
-import io.boomerang.mongo.entity.WorkflowEntity;
 import io.boomerang.mongo.model.KeyValuePair;
 import io.boomerang.mongo.repository.ExtensionRepository;
-import io.boomerang.mongo.service.FlowWorkflowService;
-import io.boomerang.service.ExecutionService;
-import io.boomerang.service.FilterService;
 import io.boomerang.service.UserIdentityService;
 import io.boomerang.util.ParameterMapper;
+import io.boomerang.v4.model.ref.Workflow;
+import io.boomerang.v4.model.ref.WorkflowRun;
+import io.boomerang.v4.model.ref.WorkflowRunSubmitRequest;
+import io.boomerang.v4.service.RelationshipService;
 import io.boomerang.v4.service.SettingsServiceImpl;
+import io.boomerang.v4.service.WorkflowRunService;
+import io.boomerang.v4.service.WorkflowService;
 
 /*
  * Handles the Slack app slash command and interactivity interactions
@@ -78,16 +79,16 @@ public class SlackExtensionImpl implements SlackExtension {
   private SettingsServiceImpl flowSettingsService;
 
   @Autowired
-  private FlowWorkflowService workflowRepository;
+  private WorkflowService workflowService;
   
   @Autowired
-  private ExecutionService executionService;
+  private WorkflowRunService workflowRunService;
 
   @Autowired
   private ExtensionRepository extensionsRepository;
 
   @Autowired
-  private FilterService filterService;
+  private RelationshipService relationshipService;
 
   @Autowired
   private UserIdentityService userIdentityService;
@@ -133,7 +134,7 @@ public class SlackExtensionImpl implements SlackExtension {
       Slack slack = Slack.getInstance();
       View modalView;
       Boolean notFound = false;
-      WorkflowEntity workflowSummary = new WorkflowEntity();
+      Workflow workflow = new Workflow();
       if ("help".equals(workflowId)) {
         modalView = modalViewBuilder.blocks(modalHelpBlocks()).build();
       } else {
@@ -151,8 +152,8 @@ public class SlackExtensionImpl implements SlackExtension {
           // Trigger workflow Execution and impersonate Slack user
           String userEmail = userInfo.getUser().getProfile().getEmail();
           if (userEmail != null && canExecuteWorkflow(workflowId, userEmail)) {
-            workflowSummary = workflowRepository.getWorkflow(workflowId);
-            if (workflowSummary != null) {
+            workflow = workflowService.get(workflowId, Optional.empty(), false).getBody();
+            if (workflow != null) {
               modalViewBuilder.submit(ViewSubmit.builder().type("plain_text")
                   .text(":point_right: Run it").emoji(true).build());
             } else {
@@ -164,8 +165,8 @@ public class SlackExtensionImpl implements SlackExtension {
           }
         }
   
-        modalView = modalViewBuilder.blocks(modalRunBlocks(workflowId, workflowSummary.getName(),
-            workflowSummary.getShortDescription(), notFound)).build();
+        modalView = modalViewBuilder.blocks(modalRunBlocks(workflowId, workflow.getName(),
+            workflow.getShortDescription(), notFound)).build();
       }
       try {
         ViewsOpenResponse viewResponse =
@@ -309,25 +310,27 @@ public class SlackExtensionImpl implements SlackExtension {
           // Trigger workflow Execution and impersonate Slack user
           String userEmail = userInfo.getUser().getProfile().getEmail();
           if (userEmail != null && canExecuteWorkflow(workflowId, userEmail)) {
-            FlowActivity flowActivity =
-                executionService.executeWorkflow(workflowId, Optional.of("webhook"), Optional.empty(), Optional.empty());
-            LOGGER.debug(flowActivity.toString());
+            WorkflowRunSubmitRequest request = new WorkflowRunSubmitRequest();
+            request.setWorkflowRef(workflowId);
+            request.setTrigger("webhook");
+            WorkflowRun workflowRun =
+                workflowRunService.submit(request, true).getBody();
+            LOGGER.debug(workflowRun.toString());
 
             ChatPostMessageResponse messageResponse = slack.methods(authToken)
                 .chatPostMessage(req -> req.channel(userId)
-                    .blocks(activityBlocks(workflowId, flowActivity.getWorkflowName(),
-                        flowActivity.getShortDescription(), flowActivity.getId())));
+                    .blocks(activityBlocks(workflowId, workflow.getName(),
+                        workflowRun.getShortDescription(), workflowRun.getId())));
             LOGGER.debug(messageResponse.toString());
           } else {
-            throw new RunWorkflowException(":slightly_frowning_face: Unfortunately we are unable to find a Workflow with the specified ID ("
+            throw new RuntimeException(":slightly_frowning_face: Unfortunately we are unable to find a Workflow with the specified ID ("
                 + workflowId + "), or you do not have the neceesary permissions.");
           }
         } else {
-          throw new RunWorkflowException(
+          throw new RuntimeException(
               "Unable to retrieve a matching User Profile to use when executing the Workflow.");
         }
-      } catch (RunWorkflowException | IOException | SlackApiException | HttpClientErrorException
-          | BoomerangException e) {
+      } catch (RuntimeException | IOException | SlackApiException e) {
         LOGGER.error(e);
         exception = e;
       }

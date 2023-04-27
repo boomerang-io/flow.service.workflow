@@ -2,8 +2,8 @@ package io.boomerang.v4.model.ref;
 
 import java.util.Date;
 import org.springframework.beans.BeanUtils;
-import io.boomerang.data.entity.WorkflowRunEntity;
-import io.boomerang.model.enums.RunStatus;
+import io.boomerang.v4.data.entity.ref.WorkflowRunEntity;
+import io.boomerang.v4.model.enums.ref.RunStatus;
 
 public class WorkflowRunSummary {
 

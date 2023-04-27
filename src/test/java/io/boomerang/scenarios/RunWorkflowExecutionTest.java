@@ -59,7 +59,7 @@ public class RunWorkflowExecutionTest extends IntegrationTests {
     String workflowId = "603936f5c3a72a0d655fb337";
     RequestFlowExecution request = new RequestFlowExecution();
 
-    request.setWorkflowId(workflowId);
+    request.setWorkflowRef(workflowId);
 
     Map<String, String> map = new HashMap<>();
     map.put("foobar", "Hello World");

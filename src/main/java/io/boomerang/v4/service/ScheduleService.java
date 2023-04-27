@@ -4,25 +4,29 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import org.quartz.SchedulerException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import io.boomerang.model.CronValidationResponse;
-import io.boomerang.model.WorkflowSchedule;
-import io.boomerang.model.WorkflowScheduleCalendar;
+import io.boomerang.v4.model.WorkflowSchedule;
+import io.boomerang.v4.model.WorkflowScheduleCalendar;
 
 public interface ScheduleService {
 
-  WorkflowSchedule createSchedule(WorkflowSchedule schedule);
+  WorkflowSchedule get(String scheduleId);
 
-  List<WorkflowSchedule> getSchedules(Optional<List<String>> workflowIds,
-      Optional<List<String>> teamIds, Optional<List<String>> statuses, Optional<List<String>> types,
-      Optional<List<String>> scopes);
+  Page<WorkflowSchedule> query(int page, int limit, Sort sort,
+      Optional<List<String>> queryWorkflows, Optional<List<String>> queryTeams,
+      Optional<List<String>> queryStatus, Optional<List<String>> queryTypes);
 
-  WorkflowSchedule getSchedule(String scheduleId);
+  WorkflowSchedule create(WorkflowSchedule schedule, Optional<String> team);
 
-  ResponseEntity<?> deleteSchedule(String scheduleId);
+  ResponseEntity<?> delete(String scheduleId);
 
-  WorkflowSchedule updateSchedule(String scheduleId,
+  WorkflowSchedule update(String scheduleId,
       WorkflowSchedule patchSchedule);
+
+  ResponseEntity<?> complete(String scheduleId);
 
   CronValidationResponse validateCron(String cronString);
 
@@ -32,15 +36,11 @@ public interface ScheduleService {
 
   void disableAllTriggerSchedules(String workflowId);
 
-  void deleteAllSchedules(String workflowId) throws SchedulerException;
+  void deleteAllForWorkflow(String workflowId) throws SchedulerException;
 
   List<WorkflowScheduleCalendar> getCalendarsForWorkflow(String workflowId, Date fromDate,
       Date toDate);
 
   List<WorkflowScheduleCalendar> getCalendarsForSchedules(List<String> scheduleIds, Date fromDate,
       Date toDate);
-
-  List<WorkflowSchedule> getSchedulesForWorkflow(String workflowId);
-
-  ResponseEntity<?> completeSchedule(String scheduleId);
 }

@@ -1,4 +1,4 @@
-package io.boomerang.mongo.model;
+package io.boomerang.v4.model.enums;
 
 public enum WorkflowScheduleType {
   runOnce, cron, advancedCron // NOSONAR
