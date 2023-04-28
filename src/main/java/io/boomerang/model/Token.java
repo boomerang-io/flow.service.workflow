@@ -3,7 +3,15 @@ package io.boomerang.model;
 import java.util.Date;
 
 public class Token {
-  
+
+  private String id;
+  private boolean expired;
+  private Date creationDate;
+  private Date expiryDate;
+  private String description;
+  private String creatorId;
+  private String creatorName;
+
   public Date getCreationDate() {
     return creationDate;
   }
@@ -43,14 +51,6 @@ public class Token {
   public void setId(String id) {
     this.id = id;
   }
-
-  private Date creationDate;
-  private Date expiryDate;
-  private String creatorId;
-  private String description;
-
-  private String id;
-  private boolean expired;
   
   public String getCreatorName() {
     return creatorName;
@@ -66,7 +66,5 @@ public class Token {
   public void setExpired(boolean expired) {
     this.expired = expired;
   }
-
-  private String creatorName;
 
 }

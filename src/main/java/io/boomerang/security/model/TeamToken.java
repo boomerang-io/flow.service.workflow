@@ -4,11 +4,14 @@ import io.boomerang.mongo.model.TokenScope;
 
 public class TeamToken extends Token {
   
-  public TeamToken() {
+  private String teamId;
+  
+  public TeamToken(String teamId) {
+    super();
     this.setScope(TokenScope.team);
+    this.teamId = teamId;
   }
   
-  private String teamId;
   public String getTeamId() {
     return teamId;
   }

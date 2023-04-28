@@ -1,21 +1,20 @@
-package io.boomerang.model;
+package io.boomerang.security.model;
 
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
-import io.boomerang.security.model.TokenAccessScope;
-import io.boomerang.security.model.TokenType;
 
 public class TokenResponse {  
   
   private String id;
-  private List<TokenAccessScope> scopes = new LinkedList<>();
   private TokenType type;
+  private String description;
   private Date creationDate;
   private Date expirationDate;
   private boolean valid;
   private String author;
-  
+  private List<TokenAccessScope> scopes = new LinkedList<>();
+
   public String getId() {
     return id;
   }
@@ -57,5 +56,11 @@ public class TokenResponse {
   }
   public void setAuthor(String author) {
     this.author = author;
+  }
+  public String getDescription() {
+    return description;
+  }
+  public void setDescription(String description) {
+    this.description = description;
   }
 }

@@ -1,32 +1,21 @@
 package io.boomerang;
 
 import java.time.Clock;
-import java.util.concurrent.Executor;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
-import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
-import io.swagger.v3.oas.annotations.enums.SecuritySchemeIn;
-import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.info.Info;
-import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import io.swagger.v3.oas.models.OpenAPI;
 
 @SpringBootApplication
 @EnableScheduling
-@EnableAsync(proxyTargetClass = true)
-@SecurityScheme(type = SecuritySchemeType.APIKEY, in = SecuritySchemeIn.HEADER,
-    name = "serviceToken", description = "x-access-token")
-@OpenAPIDefinition(info = @Info(title = "Boomerang Flow", version = "3.4", description = ""))
+@EnableWebSecurity
+@OpenAPIDefinition(info = @Info(title = "Boomerang Flow", version = "4.0", description = "Cloud-native Workflow Automation"))
 public class Application {
-
-  private static final Logger LOGGER = LogManager.getLogger();
-
+  
   public static void main(String[] args) {
     SpringApplication.run(Application.class, args);
   }
@@ -34,24 +23,6 @@ public class Application {
   @Bean
   public Clock clock() {
     return Clock.systemDefaultZone();
-  }
-
-  @Bean(name = "flowAsyncExecutor")
-  public Executor getCiExecutor() {
-    int maxThreads = 200;
-    int maxQueue = 100000;
-
-    LOGGER.info("Creating task executor service: (max concurrent threads: %d) (max queue: %d)",
-        maxThreads, maxQueue);
-
-    ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-    executor.setCorePoolSize(maxThreads);
-    executor.setMaxPoolSize(maxThreads);
-    executor.setQueueCapacity(maxQueue);
-
-    executor.setThreadNamePrefix("WorfklowServiceExecutor-");
-    executor.initialize();
-    return executor;
   }
 
   @Bean

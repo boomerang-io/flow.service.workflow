@@ -4,17 +4,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-import io.boomerang.service.UserIdentityService;
+import io.boomerang.security.service.TokenService;
 
 @Configuration
-public class SecurityConfig implements WebMvcConfigurer {
-  
+public class InterceptorConfig implements WebMvcConfigurer {
+
   @Autowired
-  private UserIdentityService userDetailsService;
+  private TokenService tokenService;
   
   @Override
   public void addInterceptors(InterceptorRegistry registry) {
-     registry.addInterceptor(new SecurityInterceptor(userDetailsService));
+     registry.addInterceptor(new SecurityInterceptor(tokenService));
   }
 
 }

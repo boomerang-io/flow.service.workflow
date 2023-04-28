@@ -29,7 +29,6 @@ public class WorkflowEntity {
   private Map<String, String> labels = new HashMap<>();
   private Map<String, Object> annotations = new HashMap<>();
   private WorkflowTrigger triggers;
-  private List<WorkflowToken> tokens;
 
   public String getId() {
     return id;
@@ -109,13 +108,5 @@ public class WorkflowEntity {
 
   public void setTriggers(WorkflowTrigger triggers) {
     this.triggers = triggers;
-  }
-
-  public List<WorkflowToken> getTokens() {
-    return tokens;
-  }
-
-  public void setTokens(List<WorkflowToken> tokens) {
-    this.tokens = tokens;
   }
 }

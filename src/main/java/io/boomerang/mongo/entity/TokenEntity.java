@@ -1,89 +1,106 @@
 package io.boomerang.mongo.entity;
 
 import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.DocumentReference;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import io.boomerang.mongo.model.TokenScope;
+import io.boomerang.security.model.TokenAccessScope;
+import io.boomerang.security.model.TokenType;
+import io.boomerang.v4.data.entity.UserEntity;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(Include.NON_NULL)
 @Document(collection = "#{@mongoConfiguration.fullCollectionName('tokens')}")
 public class TokenEntity {
 
+  @Id
+  private String id;
+  private TokenType type;
+  private String description;
+  private Date creationDate;
+  private Date expirationDate;
+  private boolean valid;
+  @DocumentReference(lazy = true)
+  private UserEntity createdBy;
+  private List<TokenAccessScope> scopes = new LinkedList<>();
+  private String token;
 
-  public Date getCreationDate() {
-    return creationDate;
+  public String getId() {
+    return id;
   }
-  public void setCreationDate(Date creationDate) {
-    this.creationDate = creationDate;
+
+  public void setId(String id) {
+    this.id = id;
   }
-  public Date getExpiryDate() {
-    return expiryDate;
+
+  public TokenType getType() {
+    return type;
   }
-  public void setExpiryDate(Date expiryDate) {
-    this.expiryDate = expiryDate;
+
+  public void setType(TokenType type) {
+    this.type = type;
   }
-  public String getCreatorId() {
-    return creatorId;
-  }
-  public void setCreatorId(String creatorId) {
-    this.creatorId = creatorId;
-  }
+
   public String getDescription() {
     return description;
   }
+
   public void setDescription(String description) {
     this.description = description;
   }
 
-  public String getTeamId() {
-    return teamId;
+  public Date getCreationDate() {
+    return creationDate;
   }
-  public void setTeamId(String teamId) {
-    this.teamId = teamId;
+
+  public void setCreationDate(Date creationDate) {
+    this.creationDate = creationDate;
   }
+
+  public Date getExpirationDate() {
+    return expirationDate;
+  }
+
+  public void setExpirationDate(Date expirationDate) {
+    this.expirationDate = expirationDate;
+  }
+
+  public UserEntity getCreatedBy() {
+    return createdBy;
+  }
+
+  public void setCreatedBy(UserEntity createdBy) {
+    this.createdBy = createdBy;
+  }
+
   public String getToken() {
     return token;
   }
-  public String getId() {
-    return id;
-  }
-  public void setId(String id) {
-    this.id = id;
-  }
+
   public void setToken(String token) {
     this.token = token;
   }
-  public TokenScope getScope() {
-    return scope;
-  }
-  public void setScope(TokenScope scope) {
-    this.scope = scope;
-  }
-
-  
-  public String getUserId() {
-    return userId;
-  }
-  public void setUserId(String userId) {
-    this.userId = userId;
-  }
 
 
-  private TokenScope scope;  
-  private Date creationDate;
-  private Date expiryDate;
-  private String creatorId;
-  private String description;
-  private String teamId;
-  private String userId;
-  private String token;
-  @Id
-  private String id;
-  
+  public boolean isValid() {
+    return valid;
+  }
 
+  public void setValid(boolean valid) {
+    this.valid = valid;
+  }
+
+  public List<TokenAccessScope> getScopes() {
+    return scopes;
+  }
+
+  public void setScopes(List<TokenAccessScope> scopes) {
+    this.scopes = scopes;
+  }
 
 }
