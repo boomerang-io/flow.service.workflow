@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
+import org.springframework.stereotype.Service;
 import org.springframework.web.client.RequestCallback;
 import org.springframework.web.client.ResponseExtractor;
 import org.springframework.web.client.RestTemplate;
@@ -30,6 +31,7 @@ import io.boomerang.v4.model.ref.ParamLayers;
 import io.boomerang.v4.model.ref.RunParam;
 import io.boomerang.v4.model.ref.TaskRun;
 
+@Service
 public class TaskRunServiceImpl implements TaskRunService {
 
   private static final Logger LOGGER = LogManager.getLogger();

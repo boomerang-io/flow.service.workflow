@@ -10,7 +10,7 @@ public interface WorkflowScheduleRepository extends MongoRepository<WorkflowSche
   
   Optional<List<WorkflowScheduleEntity>> findByWorkflowRef(String ref);
   
-  Optional<List<WorkflowScheduleEntity>> findByIdInStatusIn(List<String> ids, List<WorkflowScheduleStatus> statuses);
+  Optional<List<WorkflowScheduleEntity>> findByIdInAndStatusIn(List<String> ids, List<WorkflowScheduleStatus> statuses);
   
   Optional<List<WorkflowScheduleEntity>> findByWorkflowRefInAndStatusIn(List<String> workflowRefs, List<WorkflowScheduleStatus> statuses);
 

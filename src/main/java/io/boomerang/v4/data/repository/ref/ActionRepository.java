@@ -16,7 +16,7 @@ public interface ActionRepository extends MongoRepository<ActionEntity, String> 
   
   long countByCreationDateBetween(Date from, Date to);
   
-  long countByTypeAndCreationDateBetweenAndWorkflowRefsInAndStatus(ActionType type, Date from, Date to, List<String> workflowRefs, ActionStatus status);
+  long countByTypeAndCreationDateBetweenAndWorkflowRefInAndStatus(ActionType type, Date from, Date to, List<String> workflowRefs, ActionStatus status);
 
   long countByType(ActionType type);
 

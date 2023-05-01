@@ -2,7 +2,6 @@ package io.boomerang.tekton;
 
 import java.time.Duration;
 import java.util.List;
-import io.boomerang.model.Result;
 import io.boomerang.v4.model.ref.ResultSpec;
 
 public class Spec {

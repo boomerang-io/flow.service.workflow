@@ -19,7 +19,7 @@ public class HandlerClientImpl implements HandlerClient {
 
   private static final Logger LOGGER = LogManager.getLogger();
 
-  @Value("${flow.hanlder.deleteworkspace.url}")
+  @Value("${flow.handler.deleteworkspace.url}")
   public String deleteWorkspaceURL;
 
   @Autowired

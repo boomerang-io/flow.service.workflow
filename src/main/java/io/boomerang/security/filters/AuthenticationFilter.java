@@ -21,6 +21,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
 import org.springframework.util.StreamUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 import com.slack.api.app_backend.SlackSignature.Generator;
@@ -37,6 +38,7 @@ import io.jsonwebtoken.impl.DefaultJwtParser;
  * The Filter ensures that the user is Authenticated prior to the Interceptor which validates
  * Authorization
  */
+@Service
 public class AuthenticationFilter extends OncePerRequestFilter {
 
   private static final String X_FORWARDED_USER = "x-forwarded-user";

@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import io.boomerang.mongo.model.KeyValuePair;
+import io.boomerang.v4.model.KeyValuePair;
 
 public class ParameterMapper {
   

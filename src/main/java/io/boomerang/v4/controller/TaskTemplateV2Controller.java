@@ -148,7 +148,7 @@ public class TaskTemplateV2Controller {
   }
 
 //TODO determine if the consumes is enough to direct it here.
-  @PutMapping(value = "/")
+  @PutMapping(value = "/", consumes = "application/x-yaml", produces = "application/x-yaml")
   @Operation(summary = "Update, replace, or create new, Task Template",
             description = "The name must only contain alphanumeric and - characeters. If the name exists, apply will create a new version.")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
