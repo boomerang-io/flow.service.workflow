@@ -87,10 +87,10 @@ public class SecurityConfiguration {
 //        .authenticated().and().addFilterBefore(tokenAuthFilter, UsernamePasswordAuthenticationFilter.class).build();
 //  }
 //
-//  @Bean
-//  SecurityFilterChain unauthenticatedFilterChain(HttpSecurity http) throws Exception {
-//    http.csrf().disable().authorizeHttpRequests((authz) -> authz.anyRequest().permitAll());
-//    return http.build();
-//  }
+  @Bean
+  SecurityFilterChain unauthenticatedFilterChain(HttpSecurity http) throws Exception {
+    http.csrf().disable().authorizeHttpRequests((authz) -> authz.anyRequest().permitAll());
+    return http.build();
+  }
 //  
 }

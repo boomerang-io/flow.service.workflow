@@ -16,6 +16,7 @@ import org.apache.commons.text.WordUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -62,14 +63,18 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 
   @Autowired
   private SettingsService settingsService;
+  
+  @Value("${flow.debug}")
+  private boolean flowDebug;
 
   @Override
   protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res,
       FilterChain chain) throws IOException, ServletException {
-    LOGGER.error("In AuthFilter()");
+    LOGGER.debug("In AuthFilter()");
     try {
       MultiReadHttpServletRequest multiReadRequest = new MultiReadHttpServletRequest(req);
       Authentication authentication = null;
+      
       if (multiReadRequest.getHeader(AUTHORIZATION_HEADER) != null) {
         authentication = getUserAuthentication(req);
       } else if (multiReadRequest.getHeader(X_FORWARDED_EMAIL) != null) {
@@ -77,6 +82,8 @@ public class AuthenticationFilter extends OncePerRequestFilter {
       } else if (multiReadRequest.getHeader(X_ACCESS_TOKEN) != null
           || req.getParameter(TOKEN_URL_PARAM_NAME) != null) {
         authentication = getTokenBasedAuthentication(req);
+      } else if (flowDebug) {
+        authentication = getDebugToken();
       }
 
       if (multiReadRequest.getHeader(X_SLACK_SIGNATURE) != null) {
@@ -91,12 +98,20 @@ public class AuthenticationFilter extends OncePerRequestFilter {
           return;
         }
       }
-      LOGGER.debug("Setting Auth");
       SecurityContextHolder.getContext().setAuthentication(authentication);
       chain.doFilter(multiReadRequest, res);
     } catch (final AuthenticationException e) {
       LOGGER.error(e);
     }
+  }
+
+  private UsernamePasswordAuthenticationToken getDebugToken() {
+    final Token userSessionToken = tokenService.createUserSessionToken("boomrng@useboomerang.io", "Boomerang Joe");
+    final List<GrantedAuthority> authorities = new ArrayList<>();
+    final UsernamePasswordAuthenticationToken authToken =
+        new UsernamePasswordAuthenticationToken("boomrng@useboomerang.io", null, authorities);
+    authToken.setDetails(userSessionToken);
+    return authToken;
   }
 
   /*

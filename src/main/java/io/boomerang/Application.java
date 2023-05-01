@@ -13,7 +13,7 @@ import io.swagger.v3.oas.models.OpenAPI;
 @SpringBootApplication
 @EnableScheduling
 @EnableWebSecurity
-@OpenAPIDefinition(info = @Info(title = "Boomerang Flow", version = "4.0", description = "Cloud-native Workflow Automation"))
+@OpenAPIDefinition(info = @Info(title = "Boomerang Flow - Workflow Service", version = "4.0.0", description = "Cloud-native Workflow Automation"))
 public class Application {
   
   public static void main(String[] args) {

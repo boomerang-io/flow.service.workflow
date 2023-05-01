@@ -53,7 +53,7 @@ public class TokenServiceImpl implements TokenService {
   @Autowired
   private RelationshipService relationshipService;
 
-  @Value("${flow.token.user.max-session-duration}")
+  @Value("${flow.token.max-user-session-duration}")
   private Integer MAX_USER_SESSION_TOKEN_DURATION;
 
   /*

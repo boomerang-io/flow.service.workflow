@@ -33,6 +33,8 @@ public class SecurityInterceptor implements HandlerInterceptor {
 
       LOGGER.debug(userIDService.getCurrentScope());
       
+      // TODO: shift this to receiving from the Security Context rather than the header
+      
       String header = request.getHeader("x-access-token");
 
       if (header == null || header.isBlank()) {

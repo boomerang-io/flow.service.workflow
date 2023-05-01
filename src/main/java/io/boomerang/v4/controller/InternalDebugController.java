@@ -10,11 +10,13 @@ import org.springframework.web.bind.annotation.RestController;
 import io.boomerang.security.model.CreateTokenRequest;
 import io.boomerang.security.model.CreateTokenResponse;
 import io.boomerang.security.service.TokenService;
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 
 @RestController
 @RequestMapping("/internal/debug")
 @ConditionalOnProperty(name = "flow.debug", havingValue = "true")
+@Hidden
 public class InternalDebugController {
 
   @Autowired
