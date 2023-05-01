@@ -3,6 +3,7 @@ package io.boomerang.v4.service;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -12,6 +13,7 @@ import org.apache.logging.log4j.Logger;
 import org.quartz.SchedulerException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -100,7 +102,7 @@ public class WorkflowServiceImpl implements WorkflowService {
    * Query for Workflows.
    */
   @Override
-  public WorkflowResponsePage query(int page, int limit, Sort sort,
+  public WorkflowResponsePage query(Optional<Date> from, Optional<Date> to, Pageable pageable,
       Optional<List<String>> queryLabels, Optional<List<String>> queryStatus,
       Optional<List<String>> queryTeams,
       Optional<List<String>> queryWorkflows) {

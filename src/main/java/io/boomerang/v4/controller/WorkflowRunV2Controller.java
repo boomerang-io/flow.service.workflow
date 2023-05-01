@@ -21,8 +21,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
-import io.boomerang.mongo.model.TokenScope;
-import io.boomerang.security.interceptors.AuthenticationScope;
 import io.boomerang.v4.data.entity.ref.WorkflowRunEntity;
 import io.boomerang.v4.model.ref.WorkflowRun;
 import io.boomerang.v4.model.ref.WorkflowRunRequest;
@@ -48,7 +46,6 @@ public class WorkflowRunV2Controller {
   private TaskRunService taskRunService;
 
   @GetMapping(value = "/query")
-  @AuthenticationScope(scopes = {TokenScope.global, TokenScope.team, TokenScope.user})
   @Operation(summary = "Search for WorkflowRuns")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -81,7 +78,6 @@ public class WorkflowRunV2Controller {
   }
 
   @PostMapping(value = "/submit")
-  @AuthenticationScope(scopes = {TokenScope.global, TokenScope.team, TokenScope.user})
   @Operation(summary = "Submit a Workflow to be run. Will queue the WorkflowRun ready for execution.")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -94,7 +90,6 @@ public class WorkflowRunV2Controller {
   }
 
   @GetMapping(value = "/{workflowRunId}")
-  @AuthenticationScope(scopes = {TokenScope.global, TokenScope.team, TokenScope.user})
   @Operation(summary = "Retrieve a specific WorkflowRun.")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -109,7 +104,6 @@ public class WorkflowRunV2Controller {
   }
 
   @PutMapping(value = "/{workflowRunId}/start")
-  @AuthenticationScope(scopes = {TokenScope.global, TokenScope.team, TokenScope.user})
   @Operation(summary = "Start Workflow Run execution. The Workflow Run has to already have been queued.")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -122,7 +116,6 @@ public class WorkflowRunV2Controller {
   }
 
   @PutMapping(value = "/{workflowRunId}/finalize")
-  @AuthenticationScope(scopes = {TokenScope.global, TokenScope.team, TokenScope.user})
   @Operation(summary = "End a WorkflowRun")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -134,7 +127,6 @@ public class WorkflowRunV2Controller {
   }
 
   @DeleteMapping(value = "/{workflowRunId}/cancel")
-  @AuthenticationScope(scopes = {TokenScope.global, TokenScope.team, TokenScope.user})
   @Operation(summary = "Cancel a WorkflowRun")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -146,7 +138,6 @@ public class WorkflowRunV2Controller {
   }
 
   @PutMapping(value = "/{workflowRunId}/retry")
-  @AuthenticationScope(scopes = {TokenScope.global, TokenScope.team, TokenScope.user})
   @Operation(summary = "Retry Workflow Run execution.")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -159,7 +150,6 @@ public class WorkflowRunV2Controller {
   }
 
   @GetMapping(value = "/{workflowRunId}/{taskRunId}/log")
-  @AuthenticationScope(scopes = {TokenScope.global, TokenScope.team, TokenScope.user})
   @Operation(summary = "Retrieve a TaskRuns log from a specific WorkflowRun.")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})

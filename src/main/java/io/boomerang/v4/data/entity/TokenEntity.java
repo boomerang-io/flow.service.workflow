@@ -1,4 +1,4 @@
-package io.boomerang.mongo.entity;
+package io.boomerang.v4.data.entity;
 
 import java.util.Date;
 import java.util.LinkedList;
@@ -9,9 +9,8 @@ import org.springframework.data.mongodb.core.mapping.DocumentReference;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import io.boomerang.security.model.TokenAccessScope;
+import io.boomerang.security.model.TokenScope;
 import io.boomerang.security.model.TokenType;
-import io.boomerang.v4.data.entity.UserEntity;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(Include.NON_NULL)
@@ -21,13 +20,14 @@ public class TokenEntity {
   @Id
   private String id;
   private TokenType type;
+  private String name;
   private String description;
-  private Date creationDate;
+  private Date creationDate = new Date();
   private Date expirationDate;
   private boolean valid;
   @DocumentReference(lazy = true)
   private UserEntity createdBy;
-  private List<TokenAccessScope> scopes = new LinkedList<>();
+  private List<TokenScope> scopes = new LinkedList<>();
   private String token;
 
   public String getId() {
@@ -44,6 +44,14 @@ public class TokenEntity {
 
   public void setType(TokenType type) {
     this.type = type;
+  }
+
+  public String getName() {
+    return name;
+  }
+
+  public void setName(String name) {
+    this.name = name;
   }
 
   public String getDescription() {
@@ -95,11 +103,11 @@ public class TokenEntity {
     this.valid = valid;
   }
 
-  public List<TokenAccessScope> getScopes() {
+  public List<TokenScope> getScopes() {
     return scopes;
   }
 
-  public void setScopes(List<TokenAccessScope> scopes) {
+  public void setScopes(List<TokenScope> scopes) {
     this.scopes = scopes;
   }
 

@@ -37,7 +37,7 @@ public class WorkflowV2Controller {
   private WorkflowService workflowService;
 
   @GetMapping(value = "/{workflowId}")
-  @Operation(summary = "Retrieve a version of the workflow. Defaults to latest.")
+  @Operation(summary = "Retrieve a Workflow", description = "Retrieve a version of the Workflow. Defaults to latest. Optionally without Tasks")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
   public ResponseEntity<Workflow> getWorkflow(

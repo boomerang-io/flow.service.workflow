@@ -34,7 +34,7 @@ public class InsightsV2Controller {
   private static final String CREATIONDATESORT = "creationDate";
 
   @GetMapping(value = "/insights")
-  @AuthenticationScope(scopes = {TokenScope.global, TokenScope.team, TokenScope.user})
+  @AuthenticationScope(scopes = {TokenPermission.global, TokenPermission.team, TokenPermission.user})
   @Operation(summary = "Retrieve insights for a team.")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})

@@ -45,7 +45,7 @@ public class TeamV2Controller {
   private TeamService teamService;  
 
   @GetMapping(value = "/query")
-  @AuthenticationScope(scopes = {TokenScope.global})
+  @AuthenticationScope(scopes = {TokenPermission.global})
   @Operation(summary = "Search for Teams")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -66,7 +66,7 @@ public class TeamV2Controller {
   }
   
   @GetMapping(value = "/{teamId}")
-  @AuthenticationScope(scopes = {TokenScope.global, TokenScope.team, TokenScope.user})
+  @AuthenticationScope(scopes = {TokenPermission.global, TokenPermission.team, TokenPermission.user})
   @Operation(summary = "Get teams")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -78,7 +78,7 @@ public class TeamV2Controller {
   }
   
   @PostMapping(value = "/")
-  @AuthenticationScope(scopes = {TokenScope.global})
+  @AuthenticationScope(scopes = {TokenPermission.global})
   @Operation(summary = "Create new team")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -87,7 +87,7 @@ public class TeamV2Controller {
   }
   
   @PatchMapping(value = "/")
-  @AuthenticationScope(scopes = {TokenScope.global})
+  @AuthenticationScope(scopes = {TokenPermission.global})
   @Operation(summary = "Patch or update a team")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})

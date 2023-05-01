@@ -26,7 +26,7 @@ public class ManagementV2Controller {
   private SettingsService settingsService;
   
   @GetMapping(value = "/settings")
-  @AuthenticationScope(scopes = {TokenScope.global})
+  @AuthenticationScope(scopes = {TokenPermission.global})
   @Operation(summary = "Retrieve Boomerang Flow Settings")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -35,7 +35,7 @@ public class ManagementV2Controller {
   }
 
   @PutMapping(value = "/settings")
-  @AuthenticationScope(scopes = {TokenScope.global})
+  @AuthenticationScope(scopes = {TokenPermission.global})
   @Operation(summary = "Update Boomerang Flow Settings")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})

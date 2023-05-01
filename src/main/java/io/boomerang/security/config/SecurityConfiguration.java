@@ -8,7 +8,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import io.boomerang.security.filters.FlowAuthorizationFilter;
+import io.boomerang.security.filters.AuthenticationFilter;
 
 @Configuration
 @EnableGlobalMethodSecurity(prePostEnabled = true, securedEnabled = true, proxyTargetClass = true)
@@ -32,7 +32,7 @@ public class SecurityConfiguration {
 //  private String jwtSecret;
 //  
   @Autowired
-  private FlowAuthorizationFilter authFilter;
+  private AuthenticationFilter authFilter;
 //
 //  @Value("${boomerang.authorization.enabled:false}")
 //  private boolean boomerangAuthorization;

@@ -51,7 +51,7 @@ class ApproveExecuteTests extends IntegrationTests {
     user.setName("Adrienne Hudson");
     user.setType(UserType.admin);
 
-    when(service.getCurrentScope()).thenReturn(TokenScope.user);
+    when(service.getCurrentScope()).thenReturn(TokenPermission.user);
     when(service.getCurrentUser()).thenReturn(user);
     String workflowId = "5f4fc9e95683833cf0b1335b";
     FlowActivity activity = submitWorkflow(workflowId);

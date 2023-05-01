@@ -37,7 +37,7 @@ public class TokenControllerTests extends FlowTests {
     request.setDescription("Sample token");
     request.setExpiryDate(new Date());
 
-    TokenResponse response = tokenController.createNewGlobalToken(request);
+    Token response = tokenController.createNewGlobalToken(request);
     Assertions.assertNotNull(response.getTokenValue());
 
     String tokenValue = response.getTokenValue();
@@ -59,7 +59,7 @@ public class TokenControllerTests extends FlowTests {
     request.setExpiryDate(new Date());
     request.setTeamId("12345");
 
-    TokenResponse response = tokenController.createNewTeamToken(request);
+    Token response = tokenController.createNewTeamToken(request);
     Assertions.assertNotNull(response.getTokenValue());
 
     String tokenValue = response.getTokenValue();

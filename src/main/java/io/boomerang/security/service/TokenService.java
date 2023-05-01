@@ -1,17 +1,24 @@
 package io.boomerang.security.service;
 
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
 import javax.validation.Valid;
 import org.springframework.data.domain.Page;
-import io.boomerang.model.CreateTokenRequest;
-import io.boomerang.model.CreateTokenResponse;
-import io.boomerang.model.TokenResponse;
+import org.springframework.data.domain.Pageable;
+import io.boomerang.security.model.CreateTokenRequest;
+import io.boomerang.security.model.CreateTokenResponse;
+import io.boomerang.security.model.Token;
+import io.boomerang.security.model.TokenType;
 import io.boomerang.v4.data.entity.UserEntity;
 
 public interface TokenService {
-  public TokenResponse getToken(String value);
-  public CreateTokenResponse createUserSessionToken(UserEntity user);
-  public CreateTokenResponse createToken(CreateTokenRequest token);
-  public boolean validateToken(String token);
-  public boolean deleteToken(@Valid String id);
-  public Page<TokenResponse> getAllTokens();
+  public Token get(String value);
+  public Token createUserSessionToken(UserEntity user);
+  Token createUserSessionToken(String email, String name);
+  public CreateTokenResponse create(CreateTokenRequest token);
+  public boolean validate(String token);
+  public boolean delete(@Valid String id);
+  public Page<Token> query(Optional<Date> from, Optional<Date> to, Pageable pageable,
+      Optional<List<TokenType>> queryTypes);
 }

@@ -42,7 +42,7 @@ public class UsersV2Controller {
   private UserIdentityService userIdentityService;
 
   @GetMapping(value = "/{userId}")
-  @AuthenticationScope(scopes = {TokenScope.global})
+  @AuthenticationScope(scopes = {TokenPermission.global})
   @Operation(summary = "Get a users details")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "404", description = "Not Found")})
@@ -58,7 +58,7 @@ public class UsersV2Controller {
   }
 
   @PatchMapping(value = "/users/{userId}")
-  @AuthenticationScope(scopes = {TokenScope.global})
+  @AuthenticationScope(scopes = {TokenPermission.global})
   @Operation(summary = "Update a Boomerang Flow user details")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -73,7 +73,7 @@ public class UsersV2Controller {
   }
 
   @DeleteMapping(value = "/users/{userId}")
-  @AuthenticationScope(scopes = {TokenScope.global})
+  @AuthenticationScope(scopes = {TokenPermission.global})
   @Operation(summary = "Delete a Boomerang Flow user")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -87,7 +87,7 @@ public class UsersV2Controller {
   }
 
   @PostMapping(value = "/users")
-  @AuthenticationScope(scopes = {TokenScope.global})
+  @AuthenticationScope(scopes = {TokenPermission.global})
   @Operation(summary = "Create a new Boomerang Flow user")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -101,7 +101,7 @@ public class UsersV2Controller {
   }
 
   @GetMapping(value = "/users")
-  @AuthenticationScope(scopes = {TokenScope.global})
+  @AuthenticationScope(scopes = {TokenPermission.global})
   @Operation(summary = "Search for users registed on Boomerang Flow")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})

@@ -45,7 +45,7 @@ class InsightsControllerTests extends FlowTests {
     user.setName("Adrienne Hudson");
     user.setType(UserType.admin);
 
-    when(service.getCurrentScope()).thenReturn(TokenScope.user);
+    when(service.getCurrentScope()).thenReturn(TokenPermission.user);
     when(service.getCurrentUser()).thenReturn(user);
 
     List<String> workflowIds = new ArrayList<>();
@@ -80,7 +80,7 @@ class InsightsControllerTests extends FlowTests {
     user.setName("Adrienne Hudson");
     user.setType(UserType.admin);
 
-    when(service.getCurrentScope()).thenReturn(TokenScope.user);
+    when(service.getCurrentScope()).thenReturn(TokenPermission.user);
     when(service.getCurrentUser()).thenReturn(user);
 
 
@@ -110,7 +110,7 @@ class InsightsControllerTests extends FlowTests {
     user.setName("Adrienne Hudson");
     user.setType(UserType.admin);
 
-    when(service.getCurrentScope()).thenReturn(TokenScope.user);
+    when(service.getCurrentScope()).thenReturn(TokenPermission.user);
     when(service.getCurrentUser()).thenReturn(user);
 
     InsightsSummary summary = insightsController.getInsights(getOptionalOrder(Direction.ASC),

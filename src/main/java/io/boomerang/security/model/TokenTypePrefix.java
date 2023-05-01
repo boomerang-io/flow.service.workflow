@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public enum TokenTypePrefix {
-  global("bfg"), team("bft"), workflow("bff"), user("bfu");
+  global("bfg"), team("bft"), workflow("bff"), user("bfu"), session("bfs");
 
   public final String label;
 

@@ -7,7 +7,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
-import java.util.Optional;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -16,33 +15,29 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.WordUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.util.StreamUtils;
+import org.springframework.web.filter.OncePerRequestFilter;
 import com.slack.api.app_backend.SlackSignature.Generator;
 import com.slack.api.app_backend.SlackSignature.Verifier;
-import io.boomerang.mongo.entity.TokenEntity;
-import io.boomerang.mongo.model.TokenScope;
-import io.boomerang.mongo.service.FlowTokenService;
-import io.boomerang.security.AuthorizationException;
-import io.boomerang.security.model.FlowAuthenticationToken;
-import io.boomerang.security.model.GlobalToken;
-import io.boomerang.security.model.TeamToken;
 import io.boomerang.security.model.Token;
-import io.boomerang.security.model.UserToken;
+import io.boomerang.security.service.TokenService;
 import io.boomerang.security.util.MultiReadHttpServletRequest;
-import io.boomerang.v4.data.entity.UserEntity;
-import io.boomerang.v4.service.UserService;
-import io.boomerang.v4.service.SettingsServiceImpl;
+import io.boomerang.v4.service.SettingsService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.impl.DefaultJwtParser;
 
-public class FlowAuthorizationFilter extends BasicAuthenticationFilter {
+/*
+ * The Filter ensures that the user is Authenticated prior to the Interceptor which validates
+ * Authorization
+ */
+public class AuthenticationFilter extends OncePerRequestFilter {
 
   private static final String X_FORWARDED_USER = "x-forwarded-user";
   private static final String X_FORWARDED_EMAIL = "x-forwarded-email";
@@ -54,18 +49,15 @@ public class FlowAuthorizationFilter extends BasicAuthenticationFilter {
   private String basicPassword;
 
   private static final Logger LOGGER = LogManager.getLogger();
-  private FlowTokenService tokenService;
-  private UserService flowUserService;
-  private SettingsServiceImpl flowSettingsService;
-  
-  public FlowAuthorizationFilter(FlowTokenService tokenService, AuthenticationManager authManager,
-      UserService flowUserService, SettingsServiceImpl flowSettingsService, String basicPassword) {
-    super(authManager);
-    this.tokenService = tokenService;
-    this.basicPassword = basicPassword;
-    this.flowUserService = flowUserService;
-    this.flowSettingsService = flowSettingsService; 
-  }
+
+  @Autowired
+  private TokenService tokenService;
+
+//  @Autowired
+//  private UserService userService;
+
+  @Autowired
+  private SettingsService settingsService;
 
   @Override
   protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res,
@@ -75,10 +67,10 @@ public class FlowAuthorizationFilter extends BasicAuthenticationFilter {
       Authentication authentication = null;
       if (multiReadRequest.getHeader(AUTHORIZATION_HEADER) != null) {
         authentication = getUserAuthentication(req);
-      } else if (multiReadRequest.getHeader(X_FORWARDED_EMAIL) != null) { 
+      } else if (multiReadRequest.getHeader(X_FORWARDED_EMAIL) != null) {
         authentication = getGithubUserAuthentication(req);
-      }
-      else if (multiReadRequest.getHeader(X_ACCESS_TOKEN) != null || req.getParameter(TOKEN_URL_PARAM_NAME) != null) {
+      } else if (multiReadRequest.getHeader(X_ACCESS_TOKEN) != null
+          || req.getParameter(TOKEN_URL_PARAM_NAME) != null) {
         authentication = getTokenBasedAuthentication(req);
       }
 
@@ -87,7 +79,7 @@ public class FlowAuthorizationFilter extends BasicAuthenticationFilter {
         byte[] body = StreamUtils.copyToByteArray(inputStream);
         String signature = multiReadRequest.getHeader(X_SLACK_SIGNATURE);
         String timestamp = multiReadRequest.getHeader(X_SLACK_TIMESTAMP);
-        
+
         if (!verifySignature(signature, timestamp, new String(body))) {
           LOGGER.error("Fail SlackSignatureVerificationFilter()");
           res.sendError(401);
@@ -97,68 +89,20 @@ public class FlowAuthorizationFilter extends BasicAuthenticationFilter {
 
       SecurityContextHolder.getContext().setAuthentication(authentication);
       chain.doFilter(multiReadRequest, res);
-    } catch (final AuthorizationException e) {
+    } catch (final AuthenticationException e) {
       LOGGER.error(e);
     }
   }
 
-  private Authentication getGithubUserAuthentication(HttpServletRequest req) {
-    String email = req.getHeader(X_FORWARDED_EMAIL);
-    String userName = req.getHeader(X_FORWARDED_USER);
-    final UserToken userDetails = new UserToken(email, userName, "");
-    if (email != null && !email.isBlank()) {
-      final List<GrantedAuthority> authorities = new ArrayList<>();
-      final UsernamePasswordAuthenticationToken authToken =
-          new UsernamePasswordAuthenticationToken(email, email, authorities);
-      authToken.setDetails(userDetails);
-      return authToken;
-    }
-    return null;
-  }
-
-  private Authentication getTokenBasedAuthentication(HttpServletRequest request) {
-    String xAccessToken = request.getHeader(X_ACCESS_TOKEN) != null ? request.getHeader(X_ACCESS_TOKEN) : 
-      request.getParameter(TOKEN_URL_PARAM_NAME);
-    TokenEntity token = tokenService.getAccessToken(xAccessToken);
-    if (token != null) {
-      final List<GrantedAuthority> authorities = new ArrayList<>();
-      if (token.getScope() == TokenScope.global) {
-        Token t = new GlobalToken();
-        final FlowAuthenticationToken authToken = new FlowAuthenticationToken(authorities);
-        authToken.setDetails(t);
-        return authToken;
-      } else if (token.getScope() == TokenScope.team) {
-        TeamToken t = new TeamToken();
-        String teamId = token.getTeamId();
-        t.setTeamId(teamId);
-        
-        final FlowAuthenticationToken authToken = new FlowAuthenticationToken(authorities);
-        authToken.setDetails(t);
-        return authToken;
-      } else if (token.getScope() == TokenScope.user) {
-        String userId = token.getUserId();
-        Optional<UserEntity> user = flowUserService.getUserById(userId);
-        if (user.isPresent()) {
-          UserEntity flowUser = user.get();
-          String name = flowUser.getName();
-          String email = flowUser.getEmail();
-          final UserToken userDetails = new UserToken(userId, name, "");
-          if (userId != null) {
-            final UsernamePasswordAuthenticationToken authToken =
-                new UsernamePasswordAuthenticationToken(email, null, authorities);
-            authToken.setDetails(userDetails);
-            return authToken;
-          }
-        }
-      }
-    }
-    return null;
-  }
-
+  /*
+   * Authorization Header Bearer Token
+   * 
+   * Populated by the app via OAuth2_Proxy
+   */
   private UsernamePasswordAuthenticationToken getUserAuthentication(HttpServletRequest request) // NOSONAR
   {
     final String token = request.getHeader(AUTHORIZATION_HEADER);
-    
+
     if (token.startsWith("Bearer ")) {
       final String jws = token.replace("Bearer ", "");
       Claims claims;
@@ -169,11 +113,11 @@ public class FlowAuthorizationFilter extends BasicAuthenticationFilter {
         claims = e.getClaims();
 
       }
-      String userId = null;
+      String email = null;
       if (claims.get("emailAddress") != null) {
-        userId = (String) claims.get("emailAddress");
+        email = (String) claims.get("emailAddress");
       } else if (claims.get("email") != null) {
-        userId = (String) claims.get("email");
+        email = (String) claims.get("email");
       }
 
       String firstName = null;
@@ -190,49 +134,43 @@ public class FlowAuthorizationFilter extends BasicAuthenticationFilter {
         lastName = (String) claims.get("family_name");
       }
 
-      firstName = santaize(firstName);
-      lastName = santaize(lastName);
+      firstName = sanitize(firstName);
+      lastName = sanitize(lastName);
 
-      final UserToken userDetails = new UserToken(userId, firstName, lastName);
-      if (userId != null) {
+      if (email != null && !email.isBlank()) {
+        final Token userSessionToken = tokenService.createUserSessionToken(email, firstName + " " + lastName);
         final List<GrantedAuthority> authorities = new ArrayList<>();
         final UsernamePasswordAuthenticationToken authToken =
-            new UsernamePasswordAuthenticationToken(userId, null, authorities);
-        authToken.setDetails(userDetails);
-
+            new UsernamePasswordAuthenticationToken(email, null, authorities);
+        authToken.setDetails(userSessionToken);
         return authToken;
-
       }
       return null;
     } else if (token.startsWith("Basic ")) {
-
-      
-      
       String base64Credentials =
           request.getHeader(AUTHORIZATION_HEADER).substring("Basic".length()).trim();
-      
+
       byte[] credDecoded = Base64.getDecoder().decode(base64Credentials);
       String credentials = new String(credDecoded, StandardCharsets.UTF_8);
 
       String password = "";
       final String[] values = credentials.split(":", 2);
-      String username = values[0];
-   
+      String email = values[0];
+
       if (values.length > 1) {
         password = values[1];
       }
-      
+
       if (!basicPassword.equals(password)) {
         return null;
       }
 
-      final UserToken userDetails = new UserToken(username, username, "");
-
-      if (username != null) {
+      if (email != null && !email.isBlank()) {
+        final Token userSessionToken = tokenService.createUserSessionToken(email, null);
         final List<GrantedAuthority> authorities = new ArrayList<>();
         final UsernamePasswordAuthenticationToken authToken =
-            new UsernamePasswordAuthenticationToken(username, password, authorities);
-        authToken.setDetails(userDetails);
+            new UsernamePasswordAuthenticationToken(email, password, authorities);
+        authToken.setDetails(userSessionToken);
         return authToken;
       }
       return null;
@@ -240,7 +178,78 @@ public class FlowAuthorizationFilter extends BasicAuthenticationFilter {
     return null;
   }
 
-  private String santaize(String value) {
+  /*
+   * Validate and Bump GitHub Protected Auth
+   * 
+   * TODO: what is the value for X_FORWARDED_USER
+   */
+  private Authentication getGithubUserAuthentication(HttpServletRequest req) {
+    String email = req.getHeader(X_FORWARDED_EMAIL);
+     String userName = req.getHeader(X_FORWARDED_USER);
+    final Token userSessionToken = tokenService.createUserSessionToken(email, userName);
+    if (email != null && !email.isBlank()) {
+      final List<GrantedAuthority> authorities = new ArrayList<>();
+      final UsernamePasswordAuthenticationToken authToken =
+          new UsernamePasswordAuthenticationToken(email, null, authorities);
+      authToken.setDetails(userSessionToken);
+      return authToken;
+    }
+    return null;
+  }
+
+  /*
+   * Validate and Bump Token Based Auth
+   */
+  private Authentication getTokenBasedAuthentication(HttpServletRequest request) {
+    String xAccessToken =
+        request.getHeader(X_ACCESS_TOKEN) != null ? request.getHeader(X_ACCESS_TOKEN)
+            : request.getParameter(TOKEN_URL_PARAM_NAME);
+    if (tokenService.validate(xAccessToken)) {
+      Token token = tokenService.get(xAccessToken);
+      if (token != null) {
+      final List<GrantedAuthority> authorities = new ArrayList<>();
+      final UsernamePasswordAuthenticationToken authToken =
+          new UsernamePasswordAuthenticationToken(token.getAuthor(), null, authorities);
+      authToken.setDetails(token);
+      return authToken;
+      }
+    }
+//    if (token != null) {
+//      final List<GrantedAuthority> authorities = new ArrayList<>();
+//      if (token.getScope() == TokenPermission.global) {
+//        Token t = new GlobalToken();
+//        final FlowAuthenticationToken authToken = new FlowAuthenticationToken(authorities);
+//        authToken.setDetails(t);
+//        return authToken;
+//      } else if (token.getScope() == TokenPermission.team) {
+//        TeamToken t = new TeamToken();
+//        String teamId = token.getTeamId();
+//        t.setTeamId(teamId);
+//
+//        final FlowAuthenticationToken authToken = new FlowAuthenticationToken(authorities);
+//        authToken.setDetails(t);
+//        return authToken;
+//      } else if (token.getScope() == TokenPermission.user) {
+//        String userId = token.getUserId();
+//        Optional<UserEntity> user = userService.getUserById(userId);
+//        if (user.isPresent()) {
+//          UserEntity flowUser = user.get();
+//          String name = flowUser.getName();
+//          String email = flowUser.getEmail();
+//          final UserToken userDetails = new UserToken(userId, name, "");
+//          if (userId != null) {
+//            final UsernamePasswordAuthenticationToken authToken =
+//                new UsernamePasswordAuthenticationToken(email, null, authorities);
+//            authToken.setDetails(userDetails);
+//            return authToken;
+//          }
+//        }
+//      }
+//    }
+    return null;
+  }
+
+  private String sanitize(String value) {
     if (StringUtils.isBlank(value)) {
       return value;
     }
@@ -254,25 +263,24 @@ public class FlowAuthorizationFilter extends BasicAuthenticationFilter {
     cleanString = WordUtils.capitalizeFully(cleanString);
     return cleanString;
   }
-  
-/*
-* Utlity method for verifying requests are signed by Slack
-* 
-* <h4>Specifications</h4>
-* <ul>
-* <li><a href="https://api.slack.com/authentication/verifying-requests-from-slack">Verifying Requests from Slack</a></li>
-* </ul>
-*/
-private Boolean verifySignature(String signature, String timestamp, String body) {
- String key = this.flowSettingsService.getSetting("extensions", "slack.signingSecret").getValue();
- LOGGER.debug("Key: " + key);
- LOGGER.debug("Slack Timestamp: " + timestamp);
- LOGGER.debug("Slack Body: " + body);
- Generator generator = new Generator(key);
- Verifier verifier = new Verifier(generator);
- LOGGER.debug("Slack Signature: " + signature);
- LOGGER.debug("Computed Signature: " + generator.generate(timestamp, body));
- return verifier.isValid(timestamp, body, signature);
-}
+
+  /*
+   * Utlity method for verifying requests are signed by Slack
+   * 
+   * <h4>Specifications</h4> <ul> <li><a
+   * href="https://api.slack.com/authentication/verifying-requests-from-slack">Verifying Requests
+   * from Slack</a></li> </ul>
+   */
+  private Boolean verifySignature(String signature, String timestamp, String body) {
+    String key = this.settingsService.getSetting("extensions", "slack.signingSecret").getValue();
+    LOGGER.debug("Key: " + key);
+    LOGGER.debug("Slack Timestamp: " + timestamp);
+    LOGGER.debug("Slack Body: " + body);
+    Generator generator = new Generator(key);
+    Verifier verifier = new Verifier(generator);
+    LOGGER.debug("Slack Signature: " + signature);
+    LOGGER.debug("Computed Signature: " + generator.generate(timestamp, body));
+    return verifier.isValid(timestamp, body, signature);
+  }
 
 }

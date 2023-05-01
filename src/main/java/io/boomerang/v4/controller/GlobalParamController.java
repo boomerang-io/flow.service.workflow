@@ -29,7 +29,7 @@ public class GlobalParamController {
   private GlobalParamService paramService;
 
   @GetMapping(value = "/")
-  @AuthenticationScope(scopes = {TokenScope.global})
+  @AuthenticationScope(scopes = {TokenPermission.global})
   @Operation(summary = "Get all global Params")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -38,7 +38,7 @@ public class GlobalParamController {
   }
 
   @PostMapping(value = "/")
-  @AuthenticationScope(scopes = {TokenScope.global})
+  @AuthenticationScope(scopes = {TokenPermission.global})
   @Operation(summary = "Create new global Param")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -52,7 +52,7 @@ public class GlobalParamController {
   }
 
   @DeleteMapping(value = "/{key}")
-  @AuthenticationScope(scopes = {TokenScope.global})
+  @AuthenticationScope(scopes = {TokenPermission.global})
   @Operation(summary = "Delete specific global Param")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})

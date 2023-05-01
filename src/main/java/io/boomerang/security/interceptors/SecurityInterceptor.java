@@ -5,9 +5,9 @@ import javax.servlet.http.HttpServletResponse;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
 import io.boomerang.security.model.TokenAccess;
-import io.boomerang.security.model.TokenAccessScope;
+import io.boomerang.security.model.TokenScope;
 import io.boomerang.security.model.TokenObject;
-import io.boomerang.security.model.TokenResponse;
+import io.boomerang.security.model.Token;
 import io.boomerang.security.service.TokenService;
 
 public class SecurityInterceptor implements HandlerInterceptor {
@@ -40,10 +40,10 @@ public class SecurityInterceptor implements HandlerInterceptor {
       TokenObject tokenObject = scope.object();
       TokenAccess tokenAccess = scope.access();
 
-      TokenResponse requestToken = this.tokenService.getToken(header);
+      Token requestToken = this.tokenService.get(header);
       boolean validRequest = false;
 
-      for (TokenAccessScope s : requestToken.getScopes()) {
+      for (TokenScope s : requestToken.getScopes()) {
         if (s.getAccess() == tokenAccess && s.getObject() == tokenObject) {
           validRequest = true;
           break;

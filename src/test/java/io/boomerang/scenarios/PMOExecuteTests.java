@@ -51,7 +51,7 @@ class PMOExecuteTests extends IntegrationTests {
     user.setName("Adrienne Hudson");
     user.setType(UserType.admin);
 
-    when(service.getCurrentScope()).thenReturn(TokenScope.user);
+    when(service.getCurrentScope()).thenReturn(TokenPermission.user);
     when(service.getCurrentUser()).thenReturn(user);
 
     String workflowId = "5fd0099a2dfe2d6d5e4295de";

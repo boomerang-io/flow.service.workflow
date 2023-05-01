@@ -7,8 +7,9 @@ import io.boomerang.client.UserProfile;
 import io.boomerang.model.FlowUserProfile;
 import io.boomerang.model.OneTimeCode;
 import io.boomerang.model.UserQueryResult;
-import io.boomerang.mongo.model.TokenScope;
 import io.boomerang.security.model.Token;
+import io.boomerang.security.model.TokenPermission;
+import io.boomerang.security.model.TokenType;
 import io.boomerang.security.model.UserToken;
 import io.boomerang.v4.data.entity.UserEntity;
 import io.boomerang.v4.model.User;
@@ -36,9 +37,9 @@ public interface UserIdentityService {
 
   public User addFlowUser(User flowUser);
 
-  public UserToken getUserDetails();
+  public UserEntity getUserDetails();
 
-  public TokenScope getCurrentScope();
+  public TokenType getCurrentScope();
   
   public Token getRequestIdentity();
 

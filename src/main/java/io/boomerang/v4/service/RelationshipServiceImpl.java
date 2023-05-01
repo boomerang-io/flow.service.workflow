@@ -12,9 +12,9 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
-import io.boomerang.mongo.model.TokenScope;
 import io.boomerang.mongo.model.UserType;
 import io.boomerang.security.model.TeamToken;
+import io.boomerang.security.model.TokenPermission;
 import io.boomerang.service.UserIdentityService;
 import io.boomerang.v4.data.entity.RelationshipEntity;
 import io.boomerang.v4.data.entity.UserEntity;
@@ -305,12 +305,12 @@ public class RelationshipServiceImpl implements RelationshipService {
     }
 
     // TODO rename userIdentifyService to accessService or identityService
-    TokenScope accessScope = userIdentityService.getCurrentScope();
+    TokenPermission accessScope = userIdentityService.getCurrentScope();
     LOGGER.info("Current Access Scope: " + userIdentityService.getCurrentScope());
     
     // If User is Admin provide global access
-    if (TokenScope.user.equals(accessScope) && UserType.admin.equals(userIdentityService.getCurrentUser().getType())) {
-      accessScope = TokenScope.global;
+    if (TokenPermission.user.equals(accessScope) && UserType.admin.equals(userIdentityService.getCurrentUser().getType())) {
+      accessScope = TokenPermission.global;
     }
 
     switch (accessScope) {

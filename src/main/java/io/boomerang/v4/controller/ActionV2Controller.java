@@ -41,7 +41,6 @@ public class ActionV2Controller {
   private ActionService actionService;
 
   @PutMapping(value = "/")
-  @AuthenticationScope(scopes = {TokenScope.user})
   @Operation(summary = "Provide an update for an Action")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -50,7 +49,6 @@ public class ActionV2Controller {
   }
 
   @GetMapping(value = "/{actionId}")
-  @AuthenticationScope(scopes = {TokenScope.user})
   @Operation(summary = "Provide an update for an Action")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -61,7 +59,6 @@ public class ActionV2Controller {
   }
 
   @GetMapping(value = "/")
-  @AuthenticationScope(scopes = {TokenScope.user})
   @Operation(summary = "Provide an update for an Action")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})

@@ -81,7 +81,7 @@ class ActivityControllerTests extends FlowTests {
     user.setName("Adrienne Hudson");
     user.setType(UserType.admin);
 
-    when(service.getCurrentScope()).thenReturn(TokenScope.user);
+    when(service.getCurrentScope()).thenReturn(TokenPermission.user);
     when(service.getCurrentUser()).thenReturn(user);
 
     List<String> workflowIds = new ArrayList<>();
@@ -115,7 +115,7 @@ class ActivityControllerTests extends FlowTests {
     user.setName("Adrienne Hudson");
     user.setType(UserType.admin);
 
-    when(service.getCurrentScope()).thenReturn(TokenScope.user);
+    when(service.getCurrentScope()).thenReturn(TokenPermission.user);
     when(service.getCurrentUser()).thenReturn(user);
 
 
@@ -142,7 +142,7 @@ class ActivityControllerTests extends FlowTests {
     user.setName("Adrienne Hudson");
     user.setType(UserType.admin);
 
-    when(service.getCurrentScope()).thenReturn(TokenScope.user);
+    when(service.getCurrentScope()).thenReturn(TokenPermission.user);
     when(service.getCurrentUser()).thenReturn(user);
 
     Map<String, Long> activitySummary = activityController.getFlowActivitySummary(Direction.ASC, 0,
