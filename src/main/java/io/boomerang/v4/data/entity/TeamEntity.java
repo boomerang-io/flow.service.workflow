@@ -28,8 +28,8 @@ public class TeamEntity {
   private String externalRef;
   private Map<String, String> labels = new HashMap<>();
   private List<AbstractParam> parameters = new LinkedList<>();
-  private Quotas quotas;
   private TeamSettings settings = new TeamSettings();
+  private Quotas quotas;
   
   public String getId() {
     return id;
@@ -67,12 +67,6 @@ public class TeamEntity {
   public void setSettings(TeamSettings settings) {
     this.settings = settings;
   }
-  public Quotas getQuotas() {
-    return quotas;
-  }
-  public void setQuotas(Quotas quotas) {
-    this.quotas = quotas;
-  }
   public Map<String, String> getLabels() {
     return labels;
   }
@@ -84,5 +78,11 @@ public class TeamEntity {
   }
   public void setParameters(List<AbstractParam> parameters) {
     this.parameters = parameters;
+  }
+  public Quotas getQuotas() {
+    return quotas;
+  }
+  public void setQuotas(Quotas quotas) {
+    this.quotas = quotas;
   }
 }

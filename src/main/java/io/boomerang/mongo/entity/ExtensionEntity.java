@@ -8,7 +8,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import io.boomerang.mongo.model.KeyValuePair;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(Include.NON_NULL)
@@ -21,7 +20,7 @@ public class ExtensionEntity {
   
   private Map<String, Object> data;
 
-  private List<KeyValuePair> labels;
+  private  Map<String, String> labels;
 
   private List<String> users = new LinkedList<>();
 
@@ -49,11 +48,11 @@ public class ExtensionEntity {
     this.data = data;
   }
 
-  public List<KeyValuePair> getLabels() {
+  public Map<String, String> getLabels() {
     return labels;
   }
 
-  public void setLabels(List<KeyValuePair> labels) {
+  public void setLabels(Map<String, String> labels) {
     this.labels = labels;
   }
 

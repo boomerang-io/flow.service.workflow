@@ -9,13 +9,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import io.boomerang.model.AESAlgorithm;
-import io.boomerang.mongo.model.ConfigurationType;
 import io.boomerang.mongo.model.EncryptionConfig;
 import io.boomerang.util.DateUtil;
 import io.boomerang.v4.data.entity.SettingEntity;
 import io.boomerang.v4.data.repository.SettingsRepository;
 import io.boomerang.v4.model.AbstractParam;
 import io.boomerang.v4.model.Setting;
+import io.boomerang.v4.model.enums.ConfigurationType;
 
 
 @Service

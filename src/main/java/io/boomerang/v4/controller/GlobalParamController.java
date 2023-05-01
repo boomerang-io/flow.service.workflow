@@ -10,8 +10,6 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import io.boomerang.mongo.model.TokenScope;
-import io.boomerang.security.interceptors.AuthenticationScope;
 import io.boomerang.v4.model.GlobalParam;
 import io.boomerang.v4.service.GlobalParamService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -29,7 +27,7 @@ public class GlobalParamController {
   private GlobalParamService paramService;
 
   @GetMapping(value = "/")
-  @AuthenticationScope(scopes = {TokenPermission.global})
+//  @AuthenticationScope(scopes = {TokenPermission.global})
   @Operation(summary = "Get all global Params")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -38,7 +36,7 @@ public class GlobalParamController {
   }
 
   @PostMapping(value = "/")
-  @AuthenticationScope(scopes = {TokenPermission.global})
+//  @AuthenticationScope(scopes = {TokenPermission.global})
   @Operation(summary = "Create new global Param")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -52,7 +50,7 @@ public class GlobalParamController {
   }
 
   @DeleteMapping(value = "/{key}")
-  @AuthenticationScope(scopes = {TokenPermission.global})
+//  @AuthenticationScope(scopes = {TokenPermission.global})
   @Operation(summary = "Delete specific global Param")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})

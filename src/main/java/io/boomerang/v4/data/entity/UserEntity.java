@@ -2,14 +2,12 @@ package io.boomerang.v4.data.entity;
 
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import io.boomerang.mongo.model.KeyValuePair;
 import io.boomerang.mongo.model.UserStatus;
 import io.boomerang.mongo.model.UserType;
 import io.boomerang.v4.data.model.Quotas;

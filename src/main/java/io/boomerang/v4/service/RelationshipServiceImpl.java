@@ -13,8 +13,8 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 import io.boomerang.mongo.model.UserType;
-import io.boomerang.security.model.TeamToken;
-import io.boomerang.security.model.TokenPermission;
+import io.boomerang.security.model.Token;
+import io.boomerang.security.model.TokenType;
 import io.boomerang.service.UserIdentityService;
 import io.boomerang.v4.data.entity.RelationshipEntity;
 import io.boomerang.v4.data.entity.UserEntity;
@@ -63,8 +63,9 @@ public class RelationshipServiceImpl implements RelationshipService {
 //        break;        
       case team:
         toType = RelationshipRef.TEAM;
-        TeamToken token = (TeamToken) userIdentityService.getRequestIdentity();
-        toRef = token.getTeamId();
+        Token token = userIdentityService.getRequestIdentity();
+        String teamId = ""; //TODO retrieve teamId from Token or Authorizes relationship
+        toRef = teamId;
         break;
       case global:
         toType = RelationshipRef.GLOBAL;
@@ -305,12 +306,12 @@ public class RelationshipServiceImpl implements RelationshipService {
     }
 
     // TODO rename userIdentifyService to accessService or identityService
-    TokenPermission accessScope = userIdentityService.getCurrentScope();
+    TokenType accessScope = userIdentityService.getCurrentScope();
     LOGGER.info("Current Access Scope: " + userIdentityService.getCurrentScope());
     
     // If User is Admin provide global access
-    if (TokenPermission.user.equals(accessScope) && UserType.admin.equals(userIdentityService.getCurrentUser().getType())) {
-      accessScope = TokenPermission.global;
+    if (TokenType.user.equals(accessScope) && UserType.admin.equals(userIdentityService.getCurrentUser().getType())) {
+      accessScope = TokenType.global;
     }
 
     switch (accessScope) {
@@ -339,13 +340,14 @@ public class RelationshipServiceImpl implements RelationshipService {
         break;
       case team:
         // Add refs based on TeamTokens teamId
-        TeamToken token = (TeamToken) userIdentityService.getRequestIdentity();
+        Token token = userIdentityService.getRequestIdentity();
+        String teamId = ""; // TODO retrieve this from Token or special Token relationship retrieval for AUTHORIZES
         if (to.isPresent() && RelationshipRef.TEAM.equals(to.get())) {
-          if (!toRefs.isPresent() || (toRefs.isPresent() && toRefs.get().contains(token.getTeamId()))) {
-            toRefs = Optional.of(getRefsForTeams(from.get(), fromRefs, List.of(token.getTeamId())));
+          if (!toRefs.isPresent() || (toRefs.isPresent() && toRefs.get().contains(teamId))) {
+            toRefs = Optional.of(getRefsForTeams(from.get(), fromRefs, List.of(teamId)));
           }
         } else if (!to.isPresent()) {
-          toRefs = Optional.of(List.of(token.getTeamId())); 
+          toRefs = Optional.of(List.of(teamId)); 
         }
         break;
       case global:

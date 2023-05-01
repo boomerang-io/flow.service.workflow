@@ -8,9 +8,7 @@ import io.boomerang.model.FlowUserProfile;
 import io.boomerang.model.OneTimeCode;
 import io.boomerang.model.UserQueryResult;
 import io.boomerang.security.model.Token;
-import io.boomerang.security.model.TokenPermission;
 import io.boomerang.security.model.TokenType;
-import io.boomerang.security.model.UserToken;
 import io.boomerang.v4.data.entity.UserEntity;
 import io.boomerang.v4.model.User;
 

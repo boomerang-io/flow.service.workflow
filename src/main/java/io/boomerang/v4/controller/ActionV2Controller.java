@@ -17,8 +17,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import io.boomerang.mongo.model.TokenScope;
-import io.boomerang.security.interceptors.AuthenticationScope;
 import io.boomerang.v4.model.Action;
 import io.boomerang.v4.model.ActionRequest;
 import io.boomerang.v4.model.ActionSummary;

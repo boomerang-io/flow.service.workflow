@@ -10,7 +10,7 @@ public class Team extends TeamEntity {
   private List<UserSummary> users;
   private List<String> workflowRefs;
   private List<ApproverGroup> approverGroups;
-  private CurrentQuotas quotas;
+  private CurrentQuotas currentQuotas;
   
   public Team() {
     
@@ -45,10 +45,10 @@ public class Team extends TeamEntity {
   }
 
   public CurrentQuotas getQuotas() {
-    return quotas;
+    return currentQuotas;
   }
 
   public void setQuotas(CurrentQuotas quotas) {
-    this.quotas = quotas;
+    this.currentQuotas = quotas;
   }
 }

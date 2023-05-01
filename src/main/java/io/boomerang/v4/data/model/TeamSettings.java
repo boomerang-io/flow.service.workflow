@@ -1,6 +1,6 @@
 package io.boomerang.v4.data.model;
 
-// For future expansion
+// Future extensibility
 public class TeamSettings {
 
 }

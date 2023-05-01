@@ -7,8 +7,6 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import io.boomerang.mongo.model.TokenScope;
-import io.boomerang.security.interceptors.AuthenticationScope;
 import io.boomerang.v4.model.Setting;
 import io.boomerang.v4.service.SettingsService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -26,7 +24,7 @@ public class ManagementV2Controller {
   private SettingsService settingsService;
   
   @GetMapping(value = "/settings")
-  @AuthenticationScope(scopes = {TokenPermission.global})
+//  @AuthenticationScope(scopes = {TokenPermission.global})
   @Operation(summary = "Retrieve Boomerang Flow Settings")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -35,7 +33,7 @@ public class ManagementV2Controller {
   }
 
   @PutMapping(value = "/settings")
-  @AuthenticationScope(scopes = {TokenPermission.global})
+//  @AuthenticationScope(scopes = {TokenPermission.global})
   @Operation(summary = "Update Boomerang Flow Settings")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})

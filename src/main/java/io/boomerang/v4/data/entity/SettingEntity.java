@@ -4,8 +4,8 @@ import java.util.Date;
 import java.util.List;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
-import io.boomerang.mongo.model.ConfigurationType;
 import io.boomerang.v4.model.AbstractParam;
+import io.boomerang.v4.model.enums.ConfigurationType;
 
 @Document(collection = "#{@mongoConfiguration.fullCollectionName('settings')}")
 public class SettingEntity {
