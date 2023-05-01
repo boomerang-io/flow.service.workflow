@@ -2,20 +2,28 @@ package io.boomerang.security.interceptors;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
-import io.boomerang.security.model.TokenAccess;
-import io.boomerang.security.model.TokenScope;
-import io.boomerang.security.model.TokenObject;
 import io.boomerang.security.model.Token;
+import io.boomerang.security.model.TokenAccess;
+import io.boomerang.security.model.TokenObject;
+import io.boomerang.security.model.TokenScope;
 import io.boomerang.security.service.TokenService;
+import io.boomerang.security.service.UserIdentityService;
 
 public class SecurityInterceptor implements HandlerInterceptor {
+  
+  private static final Logger LOGGER = LogManager.getLogger();
 
   private TokenService tokenService;
+  
+  private UserIdentityService userIDService;
 
-  public SecurityInterceptor(TokenService tokenService) {
+  public SecurityInterceptor(TokenService tokenService, UserIdentityService userIDService) {
     this.tokenService = tokenService;
+    this.userIDService = userIDService;
   }
 
   @Override
@@ -23,12 +31,14 @@ public class SecurityInterceptor implements HandlerInterceptor {
       throws Exception {
     if (handler instanceof HandlerMethod) {
 
+      LOGGER.debug(userIDService.getCurrentScope());
+      
       String header = request.getHeader("x-access-token");
 
       if (header == null || header.isBlank()) {
         response.getWriter().write("");
         response.setStatus(403);
-        return false;
+        return true;
       }
       
       HandlerMethod handlerMethod = (HandlerMethod) handler;
@@ -53,7 +63,7 @@ public class SecurityInterceptor implements HandlerInterceptor {
       if (!validRequest) {
         response.getWriter().write("");
         response.setStatus(401);
-        return false;
+        return true;
       }
       return true;
     } else {

@@ -16,7 +16,7 @@ import org.springframework.stereotype.Service;
 import io.boomerang.error.BoomerangError;
 import io.boomerang.error.BoomerangException;
 import io.boomerang.mongo.model.Audit;
-import io.boomerang.service.UserIdentityService;
+import io.boomerang.security.service.UserIdentityService;
 import io.boomerang.v4.client.EngineClient;
 import io.boomerang.v4.data.entity.ApproverGroupEntity;
 import io.boomerang.v4.data.entity.UserEntity;

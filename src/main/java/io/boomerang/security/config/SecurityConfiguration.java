@@ -1,6 +1,7 @@
 package io.boomerang.security.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -12,6 +13,7 @@ import io.boomerang.security.filters.AuthenticationFilter;
 
 @Configuration
 @EnableGlobalMethodSecurity(prePostEnabled = true, securedEnabled = true, proxyTargetClass = true)
+@ConditionalOnProperty(name = "flow.authorization.enabled", havingValue = "true", matchIfMissing = true)
 public class SecurityConfiguration {
 
 //  private static final Logger LOGGER = LogManager.getLogger();
@@ -84,11 +86,11 @@ public class SecurityConfiguration {
 //    return http.csrf().disable().antMatcher(API_BASE_PATH).authorizeRequests().anyRequest()
 //        .authenticated().and().addFilterBefore(tokenAuthFilter, UsernamePasswordAuthenticationFilter.class).build();
 //  }
-
-  @Bean
-  SecurityFilterChain unauthenticatedFilterChain(HttpSecurity http) throws Exception {
-    http.csrf().disable().authorizeHttpRequests((authz) -> authz.anyRequest().permitAll());
-    return http.build();
-  }
-  
+//
+//  @Bean
+//  SecurityFilterChain unauthenticatedFilterChain(HttpSecurity http) throws Exception {
+//    http.csrf().disable().authorizeHttpRequests((authz) -> authz.anyRequest().permitAll());
+//    return http.build();
+//  }
+//  
 }

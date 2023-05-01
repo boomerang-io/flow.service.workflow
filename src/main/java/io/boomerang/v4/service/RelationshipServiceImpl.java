@@ -15,7 +15,7 @@ import org.springframework.stereotype.Service;
 import io.boomerang.mongo.model.UserType;
 import io.boomerang.security.model.Token;
 import io.boomerang.security.model.TokenType;
-import io.boomerang.service.UserIdentityService;
+import io.boomerang.security.service.UserIdentityService;
 import io.boomerang.v4.data.entity.RelationshipEntity;
 import io.boomerang.v4.data.entity.UserEntity;
 import io.boomerang.v4.data.repository.RelationshipRepository;

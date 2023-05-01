@@ -1,4 +1,4 @@
-package io.boomerang.service;
+package io.boomerang.security.service;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -22,12 +22,9 @@ import io.boomerang.mongo.model.UserStatus;
 import io.boomerang.mongo.model.UserType;
 import io.boomerang.security.model.Token;
 import io.boomerang.security.model.TokenType;
-import io.boomerang.security.service.NoLogging;
 import io.boomerang.v4.data.entity.UserEntity;
 import io.boomerang.v4.model.User;
-import io.boomerang.v4.service.TeamService;
 import io.boomerang.v4.service.UserService;
-import io.boomerang.v4.service.WorkflowService;
 
 @Service
 public class UserIdentityServiceImpl implements UserIdentityService {
@@ -259,7 +256,9 @@ public class UserIdentityServiceImpl implements UserIdentityService {
   public TokenType getCurrentScope() {
     if (SecurityContextHolder.getContext() != null
         && SecurityContextHolder.getContext().getAuthentication() != null
-        && SecurityContextHolder.getContext().getAuthentication().getDetails() != null) {
+        && SecurityContextHolder.getContext().getAuthentication().getDetails() != null
+        && SecurityContextHolder.getContext().getAuthentication()
+        .getDetails() instanceof Token) {
 //      Object details = SecurityContextHolder.getContext().getAuthentication().getDetails();
       Token details = (Token) SecurityContextHolder.getContext().getAuthentication().getDetails();
 //      if (details instanceof UserToken) {

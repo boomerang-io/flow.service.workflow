@@ -21,6 +21,7 @@ import io.boomerang.model.profile.NavigationResponse;
 import io.boomerang.model.profile.Platform;
 import io.boomerang.security.model.UserToken;
 import io.boomerang.security.service.ApiTokenService;
+import io.boomerang.security.service.UserIdentityService;
 import io.boomerang.v4.model.AbstractParam;
 import io.boomerang.v4.service.SettingsServiceImpl;
 

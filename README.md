@@ -34,3 +34,17 @@ The following links will help provide guidance in development
 - http://www.quartz-scheduler.org/documentation/2.4.0-SNAPSHOT/cookbook/UpdateTrigger.html
 - https://github.com/StackAbuse/spring-boot-quartz/blob/master/src/main/java/com/stackabuse/service/SchedulerJobService.java
 - https://stackabuse.com/guide-to-quartz-with-spring-boot-job-scheduling-and-automation/
+
+## Security
+
+Security is enabled / disabled through the `flow.authorization.enabled` flag in the application.properties
+
+The following classes are conditionally loaded based on this flag
+
+| Class | Condition |
+| AuthenticationFilter | true |
+| InterceptorConfig (and by association SecurityInterceptor) | true |
+| SecurityConfiguration | true |
+| SecurityDisabledConfiguration | false |
+
+

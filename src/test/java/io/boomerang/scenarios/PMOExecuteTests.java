@@ -29,7 +29,7 @@ import io.boomerang.model.FlowActivity;
 import io.boomerang.mongo.model.TaskStatus;
 import io.boomerang.mongo.model.TokenScope;
 import io.boomerang.mongo.model.UserType;
-import io.boomerang.service.UserIdentityService;
+import io.boomerang.security.service.UserIdentityService;
 import io.boomerang.tests.IntegrationTests;
 import io.boomerang.v4.data.entity.UserEntity;
 import io.boomerang.v4.model.Action;

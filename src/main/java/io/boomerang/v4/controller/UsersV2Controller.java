@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import io.boomerang.model.UserQueryResult;
 import io.boomerang.model.profile.SortSummary;
-import io.boomerang.service.UserIdentityService;
+import io.boomerang.security.service.UserIdentityService;
 import io.boomerang.v4.data.entity.UserEntity;
 import io.boomerang.v4.model.User;
 import io.swagger.v3.oas.annotations.Operation;

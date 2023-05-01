@@ -14,7 +14,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 import io.boomerang.security.service.ApiTokenService;
-import io.boomerang.service.UserIdentityService;
+import io.boomerang.security.service.UserIdentityService;
 
 @Service
 public class ExternalUserServiceImpl implements ExternalUserService {

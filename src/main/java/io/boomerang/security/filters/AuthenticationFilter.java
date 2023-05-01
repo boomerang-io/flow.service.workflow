@@ -16,6 +16,7 @@ import org.apache.commons.text.WordUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -39,6 +40,7 @@ import io.jsonwebtoken.impl.DefaultJwtParser;
  * Authorization
  */
 @Service
+@ConditionalOnProperty(name = "flow.authorization.enabled", havingValue = "true", matchIfMissing = true)
 public class AuthenticationFilter extends OncePerRequestFilter {
 
   private static final String X_FORWARDED_USER = "x-forwarded-user";
@@ -64,6 +66,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
   @Override
   protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res,
       FilterChain chain) throws IOException, ServletException {
+    LOGGER.error("In AuthFilter()");
     try {
       MultiReadHttpServletRequest multiReadRequest = new MultiReadHttpServletRequest(req);
       Authentication authentication = null;
@@ -88,7 +91,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
           return;
         }
       }
-
+      LOGGER.debug("Setting Auth");
       SecurityContextHolder.getContext().setAuthentication(authentication);
       chain.doFilter(multiReadRequest, res);
     } catch (final AuthenticationException e) {

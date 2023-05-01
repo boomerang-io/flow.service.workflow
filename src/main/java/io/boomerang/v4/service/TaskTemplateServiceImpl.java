@@ -11,7 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import io.boomerang.error.BoomerangError;
 import io.boomerang.error.BoomerangException;
-import io.boomerang.service.UserIdentityService;
+import io.boomerang.security.service.UserIdentityService;
 import io.boomerang.tekton.TektonConverter;
 import io.boomerang.tekton.TektonTask;
 import io.boomerang.util.ParameterUtil;

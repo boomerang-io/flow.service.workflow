@@ -36,7 +36,7 @@ import io.boomerang.model.ListActivityResponse;
 import io.boomerang.mongo.model.TaskStatus;
 import io.boomerang.mongo.model.TokenScope;
 import io.boomerang.mongo.model.UserType;
-import io.boomerang.service.UserIdentityService;
+import io.boomerang.security.service.UserIdentityService;
 import io.boomerang.v4.data.entity.UserEntity;
 
 @ExtendWith(SpringExtension.class)

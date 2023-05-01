@@ -14,7 +14,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import io.boomerang.client.UserProfile;
 import io.boomerang.model.OneTimeCode;
-import io.boomerang.service.UserIdentityService;
+import io.boomerang.security.service.UserIdentityService;
 
 @RestController
 @RequestMapping("/workflow/users")
