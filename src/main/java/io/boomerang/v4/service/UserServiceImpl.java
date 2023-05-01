@@ -1,6 +1,7 @@
 package io.boomerang.v4.service;
 
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,7 +57,8 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public List<UserEntity> getUsersforTeams(List<String> teamIds) {
-    return flowUserRepository.findByFlowTeamsContaining(teamIds);
+//    return flowUserRepository.findByFlowTeamsContaining(teamIds);
+    return new LinkedList<>();
   }
 
   @Override

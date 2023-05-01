@@ -314,10 +314,10 @@ public class UserIdentityServiceImpl implements UserIdentityService {
   private void setUserTeams(FlowUserProfile flowUser) {
     if (flowUser.getType() == UserType.admin) {
 //      flowUser.setUserTeams(flowTeamService.getAllTeamsListing());
-      flowUser.setUserTeams(null);
+//      flowUser.setUserTeams(null);
     } else {
 //      flowUser.setUserTeams(flowTeamService.getUsersTeamListing(flowUser));
-      flowUser.setUserTeams(null);
+//      flowUser.setUserTeams(null);
     }
   }
 }
