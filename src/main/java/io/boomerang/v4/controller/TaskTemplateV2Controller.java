@@ -3,9 +3,7 @@ package io.boomerang.v4.controller;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
-import org.springframework.data.domain.Sort.Order;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -65,11 +63,12 @@ public class TaskTemplateV2Controller {
       @Parameter(name = "teams", description = "List of teams to filter for.", 
       required = false) @RequestParam(required = false) Optional<List<String>> teams,
       @Parameter(name = "limit", description = "Result Size", example = "10",
-          required = true) @RequestParam(defaultValue = "10") int limit,
-      @Parameter(name = "page", description = "Page Number", example = "0",
-          required = true) @RequestParam(defaultValue = "0") int page) {
-    final Sort sort = Sort.by(new Order(Direction.ASC, "creationDate"));
-    return taskTemplateService.query(page, limit, sort, labels, status, names, teams);
+      required = true) @RequestParam(required = false) Optional<Integer> limit,
+  @Parameter(name = "page", description = "Page Number", example = "0",
+      required = true) @RequestParam(defaultValue = "0") Optional<Integer> page,
+  @Parameter(name = "sort", description = "Ascending (ASC) or Descending (DESC) sort on creationDate", example = "ASC",
+  required = true) @RequestParam(defaultValue = "ASC") Optional<Direction> sort) {
+    return taskTemplateService.query(limit, page, sort, labels, status, names, teams);
   }
 
   @PostMapping(value = "/")
