@@ -303,6 +303,11 @@ public class AuthenticationFilter extends OncePerRequestFilter {
     LOGGER.debug("Slack Signature: " + signature);
     LOGGER.debug("Computed Signature: " + generator.generate(timestamp, body));
     return verifier.isValid(timestamp, body, signature);
-  }
+  }  
 
+  @Override
+  protected boolean shouldNotFilter(HttpServletRequest request) {
+    String path = request.getServletPath();
+    return !path.startsWith("/internal") && !path.startsWith("/error");
+  }
 }

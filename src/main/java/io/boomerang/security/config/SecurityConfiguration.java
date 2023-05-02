@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import io.boomerang.security.filters.AuthenticationFilter;
@@ -32,6 +33,8 @@ public class SecurityConfiguration {
   private static final String WEBJARS = "/webjars/**";
 
   private static final String SLACK_INSTALL = "/api/v2/extensions/slack/install";
+
+  private static final String API = "/api/**";
   //
   // @Value("${jwt.secret:secret}")
   // private String jwtSecret;
@@ -70,8 +73,10 @@ public class SecurityConfiguration {
   @Order(1)
   SecurityFilterChain tokenFilterChain(HttpSecurity http) throws Exception {
     final AuthenticationFilter authFilter = new AuthenticationFilter(tokenService, settingsService);
-    return http.csrf().disable().authorizeRequests().anyRequest().authenticated().and()
-        .addFilterBefore(authFilter, BasicAuthenticationFilter.class).build();
+    http.csrf().disable().authorizeRequests().antMatchers(API).authenticated().and()
+        .addFilterBefore(authFilter, BasicAuthenticationFilter.class).sessionManagement()
+        .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+    return http.build();
   }
 
   @Bean
