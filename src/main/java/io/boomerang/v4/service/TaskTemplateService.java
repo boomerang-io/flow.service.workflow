@@ -2,7 +2,7 @@ package io.boomerang.v4.service;
 
 import java.util.List;
 import java.util.Optional;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.http.ResponseEntity;
 import io.boomerang.tekton.TektonTask;
 import io.boomerang.v4.client.TaskTemplateResponsePage;
@@ -12,8 +12,10 @@ public interface TaskTemplateService {
 
   ResponseEntity<TaskTemplate> get(String name, Optional<Integer> version);
 
-  TaskTemplateResponsePage query(int page, int limit, Sort sort, Optional<List<String>> labels,
-      Optional<List<String>> status, Optional<List<String>> names, Optional<List<String>> teams);
+  TaskTemplateResponsePage query(Optional<Integer> queryLimit, Optional<Integer> queryPage,
+      Optional<Direction> querySort, Optional<List<String>> queryLabels,
+      Optional<List<String>> queryStatus, Optional<List<String>> queryNames,
+      Optional<List<String>> queryTeams);
 
   ResponseEntity<TaskTemplate> create(TaskTemplate request, Optional<String> team);
 

@@ -1,4 +1,4 @@
-package io.boomerang.config.opentracing;
+package io.boomerang.config;
 
 import java.util.HashMap;
 import java.util.Map;

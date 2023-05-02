@@ -3,7 +3,7 @@ package io.boomerang.v4.service;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.core.io.InputStreamResource;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.http.ResponseEntity;
 import io.boomerang.v4.client.WorkflowResponsePage;
 import io.boomerang.v4.model.WorkflowCanvas;
@@ -26,8 +26,10 @@ public interface WorkflowService {
   
   ResponseEntity<Void> delete(String workflowId);
 
-  WorkflowResponsePage query(int page, int limit, Sort sort, Optional<List<String>> queryLabels,
-      Optional<List<String>> queryStatus, Optional<List<String>> queryTeams, Optional<List<String>> workflows);
+  WorkflowResponsePage query(Optional<Integer> queryLimit, Optional<Integer> queryPage,
+      Optional<Direction> querySort, Optional<List<String>> queryLabels,
+      Optional<List<String>> queryStatus, Optional<List<String>> queryTeams,
+      Optional<List<String>> queryWorkflows);
 
   ResponseEntity<InputStreamResource> export(String workflowId);
 

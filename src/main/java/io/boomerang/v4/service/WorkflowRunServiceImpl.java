@@ -6,6 +6,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import io.boomerang.error.BoomerangError;
@@ -72,16 +73,23 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
    * 
    * No need to validate params as they are either defaulted or optional
    */
-  public WorkflowRunResponsePage query(int page, int limit, Sort sort, Optional<Long> fromDate, Optional<Long> toDate, Optional<List<String>> queryLabels,
-      Optional<List<String>> queryStatus, Optional<List<String>> queryPhase, Optional<List<String>> queryTeams, Optional<List<String>> queryWorkflowRuns, Optional<List<String>> queryWorkflows) {
+  public WorkflowRunResponsePage query(
+      Optional<Long> fromDate, Optional<Long> toDate, 
+      Optional<Integer> queryLimit, Optional<Integer> queryPage, Optional<Direction> querySort, Optional<List<String>> queryLabels,
+      Optional<List<String>> queryStatus, Optional<List<String>> queryPhase,
+      Optional<List<String>> queryTeams, Optional<List<String>> queryWorkflowRuns,
+      Optional<List<String>> queryWorkflows) {
     // Get Refs that request has access to
-    List<String> workflowRunRefs = relationshipService.getFilteredRefs(Optional.of(RelationshipRef.WORKFLOWRUN),
-        queryWorkflowRuns, Optional.of(RelationshipType.BELONGSTO), Optional.of(RelationshipRef.TEAM), queryTeams);
-    
+    List<String> workflowRunRefs = relationshipService.getFilteredRefs(
+        Optional.of(RelationshipRef.WORKFLOWRUN), queryWorkflowRuns,
+        Optional.of(RelationshipType.BELONGSTO), Optional.of(RelationshipRef.TEAM), queryTeams);
+
     if (!workflowRunRefs.isEmpty()) {
-      return engineClient.queryWorkflowRuns(page, limit, sort, fromDate, toDate, queryLabels, queryStatus, queryPhase, Optional.of(workflowRunRefs), queryWorkflows);
+      return engineClient.queryWorkflowRuns(fromDate,
+          toDate, queryLimit, queryPage, querySort, queryLabels, queryStatus, queryPhase, Optional.of(workflowRunRefs),
+          queryWorkflows);
     } else {
-      //TODO: do we want to return invalid ref or unauthorized
+      // TODO: do we want to return invalid ref or unauthorized
       throw new BoomerangException(BoomerangError.WORKFLOW_RUN_INVALID_REF);
     }
   }

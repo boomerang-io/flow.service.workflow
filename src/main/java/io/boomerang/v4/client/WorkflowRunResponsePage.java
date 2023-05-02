@@ -8,11 +8,11 @@ import org.springframework.data.domain.Pageable;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
-import io.boomerang.v4.data.entity.ref.WorkflowRunEntity;
+import io.boomerang.v4.model.ref.WorkflowRun;
 
-public class WorkflowRunResponsePage extends PageImpl<WorkflowRunEntity> {
+public class WorkflowRunResponsePage extends PageImpl<WorkflowRun> {
   @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-  public WorkflowRunResponsePage(@JsonProperty("content") List<WorkflowRunEntity> content,
+  public WorkflowRunResponsePage(@JsonProperty("content") List<WorkflowRun> content,
                       @JsonProperty("number") int number,
                       @JsonProperty("size") int size,
                       @JsonProperty("totalElements") Long totalElements,
@@ -26,11 +26,11 @@ public class WorkflowRunResponsePage extends PageImpl<WorkflowRunEntity> {
       super(content, PageRequest.of(number, size), totalElements);
   }
 
-  public WorkflowRunResponsePage(List<WorkflowRunEntity> content, Pageable pageable, long total) {
+  public WorkflowRunResponsePage(List<WorkflowRun> content, Pageable pageable, long total) {
       super(content, pageable, total);
   }
 
-  public WorkflowRunResponsePage(List<WorkflowRunEntity> content) {
+  public WorkflowRunResponsePage(List<WorkflowRun> content) {
       super(content);
   }
 

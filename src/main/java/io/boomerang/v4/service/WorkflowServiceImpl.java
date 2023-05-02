@@ -12,7 +12,7 @@ import org.apache.logging.log4j.Logger;
 import org.quartz.SchedulerException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -100,7 +100,7 @@ public class WorkflowServiceImpl implements WorkflowService {
    * Query for Workflows.
    */
   @Override
-  public WorkflowResponsePage query(int page, int limit, Sort sort,
+  public WorkflowResponsePage query(Optional<Integer> queryLimit, Optional<Integer> queryPage, Optional<Direction> querySort, 
       Optional<List<String>> queryLabels, Optional<List<String>> queryStatus,
       Optional<List<String>> queryTeams,
       Optional<List<String>> queryWorkflows) {
@@ -111,7 +111,7 @@ public class WorkflowServiceImpl implements WorkflowService {
         queryTeams);
     LOGGER.debug("Query Ids: ", workflowRefs);
 
-    WorkflowResponsePage response = engineClient.queryWorkflows(page, limit, sort, queryLabels, queryStatus,
+    WorkflowResponsePage response = engineClient.queryWorkflows(queryLimit, queryPage, querySort, queryLabels, queryStatus,
         Optional.of(workflowRefs));
 
     // Filter out sensitive values

@@ -8,7 +8,7 @@ import io.boomerang.v4.data.model.CurrentQuotas;
 public class Team extends TeamEntity {
 
   private List<UserSummary> users;
-  private List<String> workflowRefs;
+  private List<WorkflowSummary> workflowSummary;
   private List<ApproverGroup> approverGroups;
   private CurrentQuotas currentQuotas;
   
@@ -28,12 +28,12 @@ public class Team extends TeamEntity {
     this.users = users;
   }
 
-  public List<String> getWorkflowRefs() {
-    return workflowRefs;
+  public List<WorkflowSummary> getWorkflowSummary() {
+    return workflowSummary;
   }
 
-  public void setWorkflowRefs(List<String> workflowRefs) {
-    this.workflowRefs = workflowRefs;
+  public void setWorkflowSummary(List<WorkflowSummary> workflowSummary) {
+    this.workflowSummary = workflowSummary;
   }
 
   public List<ApproverGroup> getApproverGroups() {

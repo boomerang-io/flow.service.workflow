@@ -86,6 +86,9 @@ public class TeamServiceImpl implements TeamService {
 
   @Autowired
   private WorkflowRunService workflowRunService;
+  
+  @Autowired
+  private WorkflowService workflowService;
 
   /*
    * Creates a new Team - Only available to Global tokens / admins
@@ -881,7 +884,8 @@ public class TeamServiceImpl implements TeamService {
     List<String> teamWorkflowRefs = relationshipService.getFilteredRefs(Optional.of(RelationshipRef.WORKFLOW),
         Optional.empty(), Optional.of(RelationshipType.BELONGSTO),
         Optional.of(RelationshipRef.TEAM), Optional.of(List.of(teamEntity.getId())));
-    team.setWorkflowRefs(teamWorkflowRefs);
+    
+    team.setWorkflowSummary(teamWorkflowRefs);
     
     // Get and Set Users
     team.setUsers(getUsersForTeam(teamEntity.getId()));

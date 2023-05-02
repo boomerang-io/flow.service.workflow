@@ -5,9 +5,7 @@ import java.util.Optional;
 import javax.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
-import org.springframework.data.domain.Sort.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -21,7 +19,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
-import io.boomerang.v4.data.entity.ref.WorkflowRunEntity;
 import io.boomerang.v4.model.ref.WorkflowRun;
 import io.boomerang.v4.model.ref.WorkflowRunRequest;
 import io.boomerang.v4.model.ref.WorkflowRunSubmitRequest;
@@ -49,7 +46,7 @@ public class WorkflowRunV2Controller {
   @Operation(summary = "Search for WorkflowRuns")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
-  public Page<WorkflowRunEntity> queryWorkflowRuns(
+  public Page<WorkflowRun> queryWorkflowRuns(
       @Parameter(name = "labels",
       description = "List of url encoded labels. For example Organization=Boomerang,customKey=test would be encoded as Organization%3DBoomerang,customKey%3Dtest)",
       required = false) @RequestParam(required = false) Optional<List<String>> labels,
@@ -66,15 +63,16 @@ public class WorkflowRunV2Controller {
       @Parameter(name = "workflows", description = "List of Workflow IDs to filter for.", 
       required = false) @RequestParam(required = false) Optional<List<String>> workflows,
       @Parameter(name = "limit", description = "Result Size", example = "10",
-          required = true) @RequestParam(defaultValue = "10") int limit,
-      @Parameter(name = "page", description = "Page Number", example = "0",
-          required = true) @RequestParam(defaultValue = "0") int page,
+      required = true) @RequestParam(required = false) Optional<Integer> limit,
+  @Parameter(name = "page", description = "Page Number", example = "0",
+      required = true) @RequestParam(defaultValue = "0") Optional<Integer> page,
+  @Parameter(name = "sort", description = "Ascending (ASC) or Descending (DESC) sort on creationDate", example = "ASC",
+  required = true) @RequestParam(defaultValue = "ASC") Optional<Direction> sort,
       @Parameter(name = "fromDate", description = "The unix timestamp / date to search from in milliseconds since epoch", example = "1677589200000",
       required = false) @RequestParam Optional<Long> fromDate,
       @Parameter(name = "toDate", description = "The unix timestamp / date to search to in milliseconds since epoch", example = "1680267600000",
       required = false) @RequestParam Optional<Long> toDate) {
-    final Sort sort = Sort.by(new Order(Direction.ASC, "creationDate"));
-    return workflowRunService.query(page, limit, sort, fromDate, toDate, labels, status, phase, teams, workflowruns, workflows);
+    return workflowRunService.query(fromDate, toDate, page, limit, sort, labels, status, phase, teams, workflowruns, workflows);
   }
 
   @PostMapping(value = "/submit")

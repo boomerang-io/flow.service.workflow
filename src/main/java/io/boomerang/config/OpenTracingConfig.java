@@ -1,4 +1,4 @@
-package io.boomerang.config.opentracing;
+package io.boomerang.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -13,7 +13,7 @@ import io.jaegertracing.spi.Sampler;
 import io.opentracing.Tracer;
 
 @org.springframework.context.annotation.Configuration
-public class BoomerangOpenTracingConfig {
+public class OpenTracingConfig {
 
   @Value("${opentracing.jaeger.service-name:boomerang}")
   private String serviceName;

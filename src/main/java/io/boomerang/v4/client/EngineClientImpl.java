@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Primary;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -141,17 +142,23 @@ public class EngineClientImpl implements EngineClient {
   }
 
   @Override
-  public WorkflowRunResponsePage queryWorkflowRuns(int page, int limit, Sort sort, Optional<Long> fromDate, Optional<Long> toDate, Optional<List<String>> queryLabels,
-      Optional<List<String>> queryStatus, Optional<List<String>> queryPhase, Optional<List<String>> queryWorkflowRuns, Optional<List<String>> queryWorkflows) {
+  public WorkflowRunResponsePage queryWorkflowRuns(Optional<Long> fromDate, Optional<Long> toDate,
+      Optional<Integer> queryLimit, Optional<Integer> queryPage, Optional<Direction> querySort,
+      Optional<List<String>> queryLabels, Optional<List<String>> queryStatus,
+      Optional<List<String>> queryPhase, Optional<List<String>> queryWorkflowRuns,
+      Optional<List<String>> queryWorkflows) {
     try {
 
       Map<String, String> requestParams = new HashMap<>();
-      requestParams.put("page", Integer.toString(page));
-      requestParams.put("limit", Integer.toString(limit));
-
-      StringBuilder sb = new StringBuilder();
-      sort.forEach(s -> sb.append(s.getProperty()).append(",").append(s.getDirection()));
-      requestParams.put("sort", sb.toString());
+      if (queryPage.isPresent()) {
+        requestParams.put("page", Integer.toString(queryPage.get()));
+      }
+      if (queryLimit.isPresent()) {
+        requestParams.put("limit", Integer.toString(queryLimit.get()));
+      }
+      if (querySort.isPresent()) {
+        requestParams.put("sort", querySort.get().toString());
+      }
       if (fromDate.isPresent()) {
         requestParams.put("fromDate", fromDate.get().toString());
       }
@@ -376,17 +383,20 @@ public class EngineClientImpl implements EngineClient {
   }
   
   @Override
-  public WorkflowResponsePage queryWorkflows(int page, int limit, Sort sort, Optional<List<String>> queryLabels,
-      Optional<List<String>> queryStatus, Optional<List<String>> queryIds) {
+  public WorkflowResponsePage queryWorkflows(Optional<Integer> queryLimit, Optional<Integer> queryPage,
+      Optional<Direction> querySort, Optional<List<String>> queryLabels, Optional<List<String>> queryStatus,
+      Optional<List<String>> queryIds) {
     try {
-
       Map<String, String> requestParams = new HashMap<>();
-      requestParams.put("page", Integer.toString(page));
-      requestParams.put("limit", Integer.toString(limit));
-
-      StringBuilder sb = new StringBuilder();
-      sort.forEach(s -> sb.append(s.getProperty()).append(",").append(s.getDirection()));
-      requestParams.put("sort", sb.toString());
+      if (queryPage.isPresent()) {
+        requestParams.put("page", Integer.toString(queryPage.get()));
+      }
+      if (queryLimit.isPresent()) {
+        requestParams.put("limit", Integer.toString(queryLimit.get()));
+      }
+      if (querySort.isPresent()) {
+        requestParams.put("sort", querySort.get().toString());
+      }
       if (queryLabels.isPresent()) {
         requestParams.put("labels", queryLabels.get().toString());
       }
@@ -613,17 +623,21 @@ public class EngineClientImpl implements EngineClient {
   }
   
   @Override
-  public TaskTemplateResponsePage queryTaskTemplates(int page, int limit, Sort sort, Optional<List<String>> queryLabels,
+  public TaskTemplateResponsePage queryTaskTemplates(Optional<Integer> queryLimit, Optional<Integer> queryPage,
+      Optional<Direction> querySort, Optional<List<String>> queryLabels,
       Optional<List<String>> queryStatus, Optional<List<String>> queryIds) {
     try {
 
       Map<String, String> requestParams = new HashMap<>();
-      requestParams.put("page", Integer.toString(page));
-      requestParams.put("limit", Integer.toString(limit));
-
-      StringBuilder sb = new StringBuilder();
-      sort.forEach(s -> sb.append(s.getProperty()).append(",").append(s.getDirection()));
-      requestParams.put("sort", sb.toString());
+      if (queryPage.isPresent()) {
+        requestParams.put("page", Integer.toString(queryPage.get()));
+      }
+      if (queryLimit.isPresent()) {
+        requestParams.put("limit", Integer.toString(queryLimit.get()));
+      }
+      if (querySort.isPresent()) {
+        requestParams.put("sort", querySort.get().toString());
+      }
       if (queryLabels.isPresent()) {
         requestParams.put("labels", queryLabels.get().toString());
       }

@@ -65,10 +65,11 @@ public class WorkflowV2Controller {
       @Parameter(name = "teams", description = "List of teams to filter for.", 
       required = false) @RequestParam(required = false) Optional<List<String>> teams,
       @Parameter(name = "limit", description = "Result Size", example = "10",
-          required = true) @RequestParam(defaultValue = "10") int limit,
-      @Parameter(name = "page", description = "Page Number", example = "0",
-          required = true) @RequestParam(defaultValue = "0") int page) {
-    final Sort sort = Sort.by(new Order(Direction.ASC, "creationDate"));
+      required = true) @RequestParam(required = false) Optional<Integer> limit,
+  @Parameter(name = "page", description = "Page Number", example = "0",
+      required = true) @RequestParam(defaultValue = "0") Optional<Integer> page,
+  @Parameter(name = "sort", description = "Ascending (ASC) or Descending (DESC) sort on creationDate", example = "ASC",
+  required = true) @RequestParam(defaultValue = "ASC") Optional<Direction> sort) {
     return workflowService.query(page, limit, sort, labels, status, teams, workflows);
   }
 

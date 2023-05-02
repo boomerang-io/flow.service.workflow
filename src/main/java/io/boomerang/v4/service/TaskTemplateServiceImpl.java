@@ -7,6 +7,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import io.boomerang.error.BoomerangError;
@@ -79,7 +80,7 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
    * Query for Workflows.
    */
   @Override
-  public TaskTemplateResponsePage query(int page, int limit, Sort sort,
+  public TaskTemplateResponsePage query(Optional<Integer> queryLimit, Optional<Integer> queryPage, Optional<Direction> querySort,
       Optional<List<String>> queryLabels, Optional<List<String>> queryStatus,
       Optional<List<String>> queryNames, Optional<List<String>> queryTeams) {
 
@@ -91,7 +92,7 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
             queryTeams);
     LOGGER.debug("Query Ids: ", refs);
 
-    TaskTemplateResponsePage response = engineClient.queryTaskTemplates(page, limit, sort,
+    TaskTemplateResponsePage response = engineClient.queryTaskTemplates(queryLimit, queryPage, querySort,
         queryLabels, queryStatus, Optional.of(refs));
 
     if (!response.getContent().isEmpty()) {
