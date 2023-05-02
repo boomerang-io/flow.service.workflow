@@ -64,32 +64,30 @@ public class SecurityConfiguration {
 //  private void setupNone(HttpSecurity http) throws Exception {
 //    http.csrf().disable().anonymous().authorities(AuthorityUtils.createAuthorityList("ROLE_admin"));
 //  }
-
-  
-  @Bean
-  @Order(1)
-  SecurityFilterChain authFilterChain(HttpSecurity http) throws Exception {
-    return http.csrf().disable().authorizeRequests().antMatchers(HEALTH, API_DOCS, INFO, INTERNAL, WEBJARS, SLACK_INSTALL).permitAll().and().authorizeRequests().anyRequest()
-        .authenticated().and().addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class).build();
-  }
   
 //  @Bean
-//  @Order(2)
+//  @Order(1)
+//  SecurityFilterChain authFilterChain(HttpSecurity http) throws Exception {
+//    return http.csrf().disable().authorizeRequests().antMatchers(HEALTH, API_DOCS, INFO, INTERNAL, WEBJARS, SLACK_INSTALL).permitAll().and().authorizeRequests().anyRequest()
+//        .authenticated().and().addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class).build();
+//  }
+  
+//  @Bean
+//  @Order(1)
 //  SecurityFilterChain internalAuthFilterChain(HttpSecurity http) throws Exception {
-//    return http.csrf().disable().antMatcher(TOKEN_EXCHANGE_PATH).authorizeRequests().anyRequest()
-//        .authenticated().and().addFilterBefore(tokenAuthFilter, UsernamePasswordAuthenticationFilter.class).build();
+//    return http.csrf().disable().authorizeRequests().antMatchers(HEALTH, API_DOCS, INFO, INTERNAL, WEBJARS, SLACK_INSTALL).permitAll();
 //  }
 
 //  @Bean
 //  @Order(1)
 //  SecurityFilterChain tokenFilterChain(HttpSecurity http) throws Exception {
-//    return http.csrf().disable().antMatcher(API_BASE_PATH).authorizeRequests().anyRequest()
-//        .authenticated().and().addFilterBefore(tokenAuthFilter, UsernamePasswordAuthenticationFilter.class).build();
+//    return http.csrf().disable().authorizeRequests().anyRequest()
+//        .authenticated().and().addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class).build();
 //  }
-//
+
   @Bean
   SecurityFilterChain unauthenticatedFilterChain(HttpSecurity http) throws Exception {
-    http.csrf().disable().authorizeHttpRequests((authz) -> authz.anyRequest().permitAll());
+    http.csrf().disable().authorizeHttpRequests((authz) -> authz.antMatchers(HEALTH, API_DOCS, INFO, INTERNAL, WEBJARS, SLACK_INSTALL).permitAll());
     return http.build();
   }
 //  

@@ -1,21 +1,19 @@
 package io.boomerang.security;
 
-import io.boomerang.error.RestErrorResponse;
-
 public class AuthorizationException extends RuntimeException {
 
   /**
    *
    */
   private static final long serialVersionUID = 1L;
-  private final RestErrorResponse error; // NOSONARR
+  private final SecurityErrorResponse error; // NOSONARR
 
-  public AuthorizationException(RestErrorResponse errorResponse) {
+  public AuthorizationException(SecurityErrorResponse errorResponse) {
     super();
     this.error = errorResponse;
   }
 
-  public RestErrorResponse getError() {
+  public SecurityErrorResponse getError() {
     return error;
   }
 }

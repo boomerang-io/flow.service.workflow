@@ -21,7 +21,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 @ControllerAdvice
 public class RestExceptionHandler extends ResponseEntityExceptionHandler {
   
-  private static final Logger LOGGER = LogManager.getLogger(ResponseEntityExceptionHandler.class);
+//  private static final Logger LOGGER = LogManager.getLogger(ResponseEntityExceptionHandler.class);
 
   @Value("${flow.error.include-cause:false}")
   public boolean includeCause;
@@ -50,8 +50,8 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
       errorResponse.setCause(ex.getCause().toString());
     }
 
-    LOGGER.error("Exception["+errorResponse.getCode()+"] " + errorResponse.getReason() + " - " + errorResponse.getMessage());
-    LOGGER.error(ExceptionUtils.getStackTrace(ex));
+//    LOGGER.error("Exception["+errorResponse.getCode()+"] " + errorResponse.getReason() + " - " + errorResponse.getMessage());
+//    LOGGER.error(ExceptionUtils.getStackTrace(ex));
     
     return new ResponseEntity<>(
         errorResponse, new HttpHeaders(), ex.getStatus()); 

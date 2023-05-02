@@ -88,7 +88,7 @@ public class TokenServiceImpl implements TokenService {
     // token.setCreatorName(user.getName());
     // }
 
-    String prefix = TokenTypePrefix.valueOfLabel(request.getType().toString()).toString();
+    String prefix = TokenTypePrefix.valueOf(request.getType().toString()).toString();
     String uniqueToken = prefix + "_" + UUID.randomUUID().toString().toLowerCase();
 
     final String hashToken = hashString(uniqueToken);
@@ -256,7 +256,7 @@ public class TokenServiceImpl implements TokenService {
     tokenEntity.setValid(true);
     tokenEntity.setCreatedBy(user);
 
-    String prefix = TokenTypePrefix.session.label;
+    String prefix = TokenTypePrefix.session.prefix;
     String uniqueToken = prefix + "_" + UUID.randomUUID().toString().toLowerCase();
 
     final String hashToken = hashString(uniqueToken);
