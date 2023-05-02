@@ -15,15 +15,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.WordUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Service;
 import org.springframework.util.StreamUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 import com.slack.api.app_backend.SlackSignature.Generator;
@@ -39,8 +36,9 @@ import io.jsonwebtoken.impl.DefaultJwtParser;
 /*
  * The Filter ensures that the user is Authenticated prior to the Interceptor which validates
  * Authorization
+ * 
+ * Note: This cannot be auto marked as a Service/Component that Spring Boot would auto inject as then it will apply to all routes
  */
-@Service
 @ConditionalOnProperty(name = "flow.authorization.enabled", havingValue = "true", matchIfMissing = true)
 public class AuthenticationFilter extends OncePerRequestFilter {
 
@@ -55,17 +53,21 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 
   private static final Logger LOGGER = LogManager.getLogger();
 
-  @Autowired
   private TokenService tokenService;
 
 //  @Autowired
 //  private UserService userService;
 
-  @Autowired
   private SettingsService settingsService;
   
-  @Value("${flow.debug}")
-  private boolean flowDebug;
+//  @Value("${flow.debug}")
+//  private boolean flowDebug;
+  
+  public AuthenticationFilter(TokenService tokenService, SettingsService settingsService) {
+    super();
+    this.tokenService = tokenService;
+    this.settingsService = settingsService; 
+  }
 
   @Override
   protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res,
@@ -82,8 +84,8 @@ public class AuthenticationFilter extends OncePerRequestFilter {
       } else if (multiReadRequest.getHeader(X_ACCESS_TOKEN) != null
           || req.getParameter(TOKEN_URL_PARAM_NAME) != null) {
         authentication = getTokenBasedAuthentication(req);
-      } else if (flowDebug) {
-        authentication = getDebugToken();
+//      } else if (flowDebug) {
+//        authentication = getDebugToken();
       }
 
       if (multiReadRequest.getHeader(X_SLACK_SIGNATURE) != null) {
