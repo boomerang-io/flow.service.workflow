@@ -113,12 +113,12 @@ public class TokenServiceImpl implements TokenService {
     relationshipService.addRelationshipRef(RelationshipRef.TOKEN, tokenEntity.getId(),
         RelationshipType.AUTHORIZES, to, toRef);
     
-    CreateTokenResponse response = new CreateTokenResponse();
-    response.setValue(uniqueToken);
-    response.setId(tokenEntity.getId());
-    response.setType(request.getType());
-    response.setExpirationDate(request.getExpirationDate());
-    return response;
+    CreateTokenResponse tokenResponse = new CreateTokenResponse();
+    tokenResponse.setValue(uniqueToken);
+    tokenResponse.setId(tokenEntity.getId());
+    tokenResponse.setType(request.getType());
+    tokenResponse.setExpirationDate(request.getExpirationDate());
+    return tokenResponse;
   }
 
   public String hashString(String originalString) {

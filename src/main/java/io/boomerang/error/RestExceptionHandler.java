@@ -31,7 +31,7 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
 
   @ExceptionHandler({ BoomerangException.class })
   public ResponseEntity<Object> handleBoomerangException(
-      BoomerangException ex, WebRequest request) {
+      BoomerangException ex) {
     
     RestErrorResponse errorResponse = new RestErrorResponse();
     errorResponse.setCode(ex.getCode());

@@ -1,6 +1,5 @@
 package io.boomerang.v4.controller;
 
-import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -24,7 +23,7 @@ public class InternalDebugController {
 
   @PostMapping("/token")
   @Operation(summary = "Create Token")
-  public CreateTokenResponse create(@Valid @RequestBody CreateTokenRequest newToken) {
+  public CreateTokenResponse create(@RequestBody CreateTokenRequest newToken) {
     return tokenService.create(newToken);
   }
 

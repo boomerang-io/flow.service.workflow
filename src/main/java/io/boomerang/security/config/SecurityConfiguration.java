@@ -69,15 +69,15 @@ public class SecurityConfiguration {
     return http.build();
   }
 
-  @Bean
-  @Order(1)
-  SecurityFilterChain tokenFilterChain(HttpSecurity http) throws Exception {
-    final AuthenticationFilter authFilter = new AuthenticationFilter(tokenService, settingsService);
-    http.csrf().disable().authorizeRequests().antMatchers(API).authenticated().and()
-        .addFilterBefore(authFilter, BasicAuthenticationFilter.class).sessionManagement()
-        .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
-    return http.build();
-  }
+//  @Bean
+//  @Order(1)
+//  SecurityFilterChain tokenFilterChain(HttpSecurity http) throws Exception {
+//    final AuthenticationFilter authFilter = new AuthenticationFilter(tokenService, settingsService);
+//    http.csrf().disable().authorizeRequests().antMatchers(API).authenticated().and()
+//        .addFilterBefore(authFilter, BasicAuthenticationFilter.class).sessionManagement()
+//        .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+//    return http.build();
+//  }
 
   @Bean
   SecurityFilterChain unauthenticatedFilterChain(HttpSecurity http) throws Exception {

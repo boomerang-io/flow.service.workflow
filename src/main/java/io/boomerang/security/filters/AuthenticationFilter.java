@@ -25,6 +25,7 @@ import org.springframework.util.StreamUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 import com.slack.api.app_backend.SlackSignature.Generator;
 import com.slack.api.app_backend.SlackSignature.Verifier;
+import io.boomerang.security.AuthorizationException;
 import io.boomerang.security.model.Token;
 import io.boomerang.security.service.TokenService;
 import io.boomerang.security.util.MultiReadHttpServletRequest;
@@ -74,35 +75,35 @@ public class AuthenticationFilter extends OncePerRequestFilter {
       FilterChain chain) throws IOException, ServletException {
     LOGGER.debug("In AuthFilter()");
     try {
-      MultiReadHttpServletRequest multiReadRequest = new MultiReadHttpServletRequest(req);
+//      MultiReadHttpServletRequest multiReadRequest = new MultiReadHttpServletRequest(req);
       Authentication authentication = null;
       
-      if (multiReadRequest.getHeader(AUTHORIZATION_HEADER) != null) {
+      if (req.getHeader(AUTHORIZATION_HEADER) != null) {
         authentication = getUserAuthentication(req);
-      } else if (multiReadRequest.getHeader(X_FORWARDED_EMAIL) != null) {
+      } else if (req.getHeader(X_FORWARDED_EMAIL) != null) {
         authentication = getGithubUserAuthentication(req);
-      } else if (multiReadRequest.getHeader(X_ACCESS_TOKEN) != null
+      } else if (req.getHeader(X_ACCESS_TOKEN) != null
           || req.getParameter(TOKEN_URL_PARAM_NAME) != null) {
         authentication = getTokenBasedAuthentication(req);
 //      } else if (flowDebug) {
 //        authentication = getDebugToken();
       }
 
-      if (multiReadRequest.getHeader(X_SLACK_SIGNATURE) != null) {
-        InputStream inputStream = multiReadRequest.getInputStream();
-        byte[] body = StreamUtils.copyToByteArray(inputStream);
-        String signature = multiReadRequest.getHeader(X_SLACK_SIGNATURE);
-        String timestamp = multiReadRequest.getHeader(X_SLACK_TIMESTAMP);
-
-        if (!verifySignature(signature, timestamp, new String(body))) {
-          LOGGER.error("Fail SlackSignatureVerificationFilter()");
-          res.sendError(401);
-          return;
-        }
-      }
+//      if (multiReadRequest.getHeader(X_SLACK_SIGNATURE) != null) {
+//        InputStream inputStream = multiReadRequest.getInputStream();
+//        byte[] body = StreamUtils.copyToByteArray(inputStream);
+//        String signature = multiReadRequest.getHeader(X_SLACK_SIGNATURE);
+//        String timestamp = multiReadRequest.getHeader(X_SLACK_TIMESTAMP);
+//
+//        if (!verifySignature(signature, timestamp, new String(body))) {
+//          LOGGER.error("Fail SlackSignatureVerificationFilter()");
+//          res.sendError(401);
+//          return;
+//        }
+//      }
       SecurityContextHolder.getContext().setAuthentication(authentication);
-      chain.doFilter(multiReadRequest, res);
-    } catch (final AuthenticationException e) {
+      chain.doFilter(req, res);
+    } catch (final AuthorizationException e) {
       LOGGER.error(e);
     }
   }
