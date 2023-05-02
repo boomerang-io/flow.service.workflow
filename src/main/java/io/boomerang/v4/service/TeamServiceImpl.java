@@ -20,6 +20,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -29,6 +30,7 @@ import org.springframework.stereotype.Service;
 import io.boomerang.error.BoomerangError;
 import io.boomerang.error.BoomerangException;
 import io.boomerang.util.DataAdapterUtil.FieldType;
+import io.boomerang.v4.client.WorkflowResponsePage;
 import io.boomerang.v4.data.entity.ApproverGroupEntity;
 import io.boomerang.v4.data.entity.TeamEntity;
 import io.boomerang.v4.data.entity.UserEntity;
@@ -45,9 +47,11 @@ import io.boomerang.v4.model.Team;
 import io.boomerang.v4.model.TeamRequest;
 import io.boomerang.v4.model.TeamResponsePage;
 import io.boomerang.v4.model.UserSummary;
+import io.boomerang.v4.model.WorkflowSummary;
 import io.boomerang.v4.model.enums.RelationshipRef;
 import io.boomerang.v4.model.enums.RelationshipType;
 import io.boomerang.v4.model.enums.TeamStatus;
+import io.boomerang.v4.model.ref.Workflow;
 import io.boomerang.v4.model.ref.WorkflowRunInsight;
 
 @Service
@@ -879,13 +883,14 @@ public class TeamServiceImpl implements TeamService {
    */
   private Team convertTeamEntityToTeam(TeamEntity teamEntity) {
     Team team = new Team(teamEntity);
-
-    // Get and Set WorkflowRefs
-    List<String> teamWorkflowRefs = relationshipService.getFilteredRefs(Optional.of(RelationshipRef.WORKFLOW),
-        Optional.empty(), Optional.of(RelationshipType.BELONGSTO),
-        Optional.of(RelationshipRef.TEAM), Optional.of(List.of(teamEntity.getId())));
     
-    team.setWorkflowSummary(teamWorkflowRefs);
+    WorkflowResponsePage response = workflowService.query(Optional.empty(), Optional.empty(), Optional.of(Direction.ASC), Optional.empty(), Optional.empty(), Optional.of(List.of(teamEntity.getId())), Optional.empty());
+    List<WorkflowSummary> summary = new LinkedList<>();
+    if (response.getContent() != null && !response.getContent().isEmpty()) {
+      List<Workflow> workflows = response.getContent();
+      workflows.forEach(w -> summary.add(new WorkflowSummary(w)));
+    }
+    team.setWorkflowSummary(summary);
     
     // Get and Set Users
     team.setUsers(getUsersForTeam(teamEntity.getId()));
