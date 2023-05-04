@@ -13,11 +13,12 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 import io.boomerang.mongo.model.UserType;
-import io.boomerang.security.model.Token;
 import io.boomerang.security.model.TokenType;
-import io.boomerang.security.service.UserIdentityService;
+import io.boomerang.security.service.IdentityService;
 import io.boomerang.v4.data.entity.RelationshipEntity;
+import io.boomerang.v4.data.entity.TeamEntity;
 import io.boomerang.v4.data.entity.UserEntity;
+import io.boomerang.v4.data.entity.ref.WorkflowEntity;
 import io.boomerang.v4.data.repository.RelationshipRepository;
 import io.boomerang.v4.model.enums.RelationshipRef;
 import io.boomerang.v4.model.enums.RelationshipType;
@@ -28,7 +29,7 @@ public class RelationshipServiceImpl implements RelationshipService {
   private static final Logger LOGGER = LogManager.getLogger();
 
   @Autowired
-  private UserIdentityService userIdentityService;
+  private IdentityService identityService;
 
   @Autowired
   private RelationshipRepository relationshipRepository;
@@ -45,30 +46,32 @@ public class RelationshipServiceImpl implements RelationshipService {
    */
   @Override
   public RelationshipEntity addRelationshipRefForCurrentScope(RelationshipRef fromType, String fromRef) {
-    UserEntity user = null;
     RelationshipRef toType = null;
     String toRef = null;
 
-    LOGGER.info("Current User Scope: " + userIdentityService.getCurrentScope());
-    switch (userIdentityService.getCurrentScope()) {
+    LOGGER.info("Current Access Scope: " + identityService.getCurrentScope());
+    switch (identityService.getCurrentScope()) {
+      case session:
       case user:
-        user = userIdentityService.getCurrentUser();
+        UserEntity user = identityService.getCurrentUser();
         toType = RelationshipRef.USER;
         toRef = user.getId();
         break;
-//      case workflow:
-//        toType = RelationshipRefType.WORKFLOW;
-//        WorkflowToken token = (WorkflowToken) userIdentityService.getRequestIdentity();
-//        toRef = token.getWorkflowId();
-//        break;        
+      case workflow:
+        toType = RelationshipRef.WORKFLOW;
+        WorkflowEntity workflow = identityService.getCurrentWorkflow();
+        toRef = workflow.getId();
+        break;        
       case team:
         toType = RelationshipRef.TEAM;
-        Token token = userIdentityService.getRequestIdentity();
-        String teamId = ""; //TODO retrieve teamId from Token or Authorizes relationship
+        TeamEntity team = identityService.getCurrentTeam();
+        String teamId = team.getId();
         toRef = teamId;
         break;
       case global:
         toType = RelationshipRef.GLOBAL;
+        break;
+      default:
         break;
     }
     
@@ -291,7 +294,7 @@ public class RelationshipServiceImpl implements RelationshipService {
   public List<String> getFilteredRefs(Optional<RelationshipRef> from, Optional<List<String>> fromRefs, Optional<RelationshipType> type, Optional<RelationshipRef> to, 
       Optional<List<String>> toRefs) {
     
-    //TODO: validation that we are not trying to get a relationship between two of the same objects or provide IDs with no context.
+    //TODO Validation that we are not trying to get a relationship between two of the same objects or provide IDs with no context.
 //    if (from.isEmpty() && fromRefs.isPresent()) {
 //      throw new BoomerangException();
 //    } else if (from.isPresent() && to.isPresent() && from.get().equals(to.get())) {
@@ -305,25 +308,23 @@ public class RelationshipServiceImpl implements RelationshipService {
       from = Optional.of(RelationshipRef.USER);
     }
 
-    // TODO rename userIdentifyService to accessService or identityService
-    TokenType accessScope = userIdentityService.getCurrentScope();
-    LOGGER.info("Current Access Scope: " + userIdentityService.getCurrentScope());
+    TokenType accessScope = identityService.getCurrentScope();
+    LOGGER.info("Current Access Scope: " + identityService.getCurrentScope());
     
     // If User is Admin provide global access
-    if (TokenType.user.equals(accessScope) && UserType.admin.equals(userIdentityService.getCurrentUser().getType())) {
+    if ((TokenType.user.equals(accessScope) || TokenType.session.equals(accessScope)) && UserType.admin.equals(identityService.getCurrentUser().getType())) {
       accessScope = TokenType.global;
     }
 
     switch (accessScope) {
+      case session:
       case user:
-        // User is a special case. They could have access to User or Team based Refs
-        UserEntity user = null;
-        user = userIdentityService.getCurrentUser();
+        UserEntity user = identityService.getCurrentUser();
         if (from.isPresent() && RelationshipRef.USER.equals(from.get())) {
           fromRefs = Optional.of(List.of(user.getId()));
-        } else if (RelationshipType.BELONGSTO.equals(type.get()) && to.isPresent() && RelationshipRef.USER.equals(to.get())) {
+        } else if (RelationshipType.AUTHORIZES.equals(type.get()) && to.isPresent() && RelationshipRef.USER.equals(to.get())) {
           toRefs = Optional.of(List.of(user.getId()));
-        } else if (RelationshipType.BELONGSTO.equals(type.get()) && to.isPresent() && RelationshipRef.TEAM.equals(to.get())) {
+        } else if (RelationshipType.MEMBEROF.equals(type.get()) && to.isPresent() && RelationshipRef.TEAM.equals(to.get())) {
          if (toRefs.isPresent()) {
            // If toRefs are provided (i.e. TeamIds) then filter to ones provided that the user has access to
            List<String> filteredTeams = getTeamsRefsByUsers(List.of(user.getId()));
@@ -332,16 +333,25 @@ public class RelationshipServiceImpl implements RelationshipService {
          } else {
            toRefs = Optional.of(getTeamsRefsByUsers(List.of(user.getId())));
          }
-        } else if (RelationshipType.BELONGSTO.equals(type.get()) && !to.isPresent()) {
-          // If no TO is provided then set to both User and TeamRefs user has access to
-          toRefs = Optional.of(List.of(user.getId())); 
-          toRefs.get().addAll(getTeamsRefsByUsers(List.of(user.getId())));
+        } 
+        break;
+      case workflow:
+        // Add refs based on Workflow
+        // Will either set toRef to the WorkflowID or make sure its in the list of provided Refs
+        WorkflowEntity workflow = identityService.getCurrentWorkflow();
+        String workflowId = workflow.getId();
+        if (to.isPresent() && RelationshipRef.WORKFLOW.equals(to.get())) {
+          if (!toRefs.isPresent() || (toRefs.isPresent() && toRefs.get().contains(workflowId))) {
+            toRefs = Optional.of(List.of(workflowId));
+          }
+        } else if (!to.isPresent()) {
+          toRefs = Optional.of(List.of(workflowId)); 
         }
         break;
       case team:
-        // Add refs based on TeamTokens teamId
-        Token token = userIdentityService.getRequestIdentity();
-        String teamId = ""; // TODO retrieve this from Token or special Token relationship retrieval for AUTHORIZES
+        // Add refs based on Tokens Team
+        TeamEntity team = identityService.getCurrentTeam();
+        String teamId = team.getId();
         if (to.isPresent() && RelationshipRef.TEAM.equals(to.get())) {
           if (!toRefs.isPresent() || (toRefs.isPresent() && toRefs.get().contains(teamId))) {
             toRefs = Optional.of(getRefsForTeams(from.get(), fromRefs, List.of(teamId)));
@@ -421,7 +431,7 @@ public class RelationshipServiceImpl implements RelationshipService {
   @Override
   public List<String> getFilteredRefsForUserEmail(Optional<RelationshipRef> from, Optional<List<String>> fromRefs, Optional<RelationshipType> type, Optional<RelationshipRef> to, 
       Optional<List<String>> toRefs, String userEmail) {
-    UserEntity user = userIdentityService.getUserByEmail(userEmail);
+    UserEntity user = identityService.getUserByEmail(userEmail);
     Boolean isAdmin = false;
     if (user != null && user.getType() == UserType.admin) {
       isAdmin = true;

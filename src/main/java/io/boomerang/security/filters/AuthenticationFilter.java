@@ -1,7 +1,6 @@
 package io.boomerang.security.filters;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -18,17 +17,14 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.util.StreamUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 import com.slack.api.app_backend.SlackSignature.Generator;
 import com.slack.api.app_backend.SlackSignature.Verifier;
 import io.boomerang.security.AuthorizationException;
 import io.boomerang.security.model.Token;
 import io.boomerang.security.service.TokenService;
-import io.boomerang.security.util.MultiReadHttpServletRequest;
 import io.boomerang.v4.service.SettingsService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -40,8 +36,10 @@ import io.jsonwebtoken.impl.DefaultJwtParser;
  * 
  * Note: This cannot be auto marked as a Service/Component that Spring Boot would auto inject as then it will apply to all routes
  */
-@ConditionalOnProperty(name = "flow.authorization.enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(name = "flow.authorization.enabled", havingValue = "true")
 public class AuthenticationFilter extends OncePerRequestFilter {
+
+  private static final Logger LOGGER = LogManager.getLogger();
 
   private static final String X_FORWARDED_USER = "x-forwarded-user";
   private static final String X_FORWARDED_EMAIL = "x-forwarded-email";
@@ -50,30 +48,22 @@ public class AuthenticationFilter extends OncePerRequestFilter {
   private static final String AUTHORIZATION_HEADER = "Authorization";
   private static final String X_SLACK_SIGNATURE = "X-Slack-Signature";
   private static final String X_SLACK_TIMESTAMP = "X-Slack-Request-Timestamp";
-  private String basicPassword;
-
-  private static final Logger LOGGER = LogManager.getLogger();
 
   private TokenService tokenService;
-
-//  @Autowired
-//  private UserService userService;
-
   private SettingsService settingsService;
+  private String basicPassword;
   
-//  @Value("${flow.debug}")
-//  private boolean flowDebug;
-  
-  public AuthenticationFilter(TokenService tokenService, SettingsService settingsService) {
+  public AuthenticationFilter(TokenService tokenService, SettingsService settingsService, String basicPassword) {
     super();
     this.tokenService = tokenService;
-    this.settingsService = settingsService; 
+    this.settingsService = settingsService;
+    this.basicPassword = basicPassword;
   }
 
   @Override
   protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res,
       FilterChain chain) throws IOException, ServletException {
-    LOGGER.debug("In AuthFilter()");
+    LOGGER.info("In AuthFilter()");
     try {
 //      MultiReadHttpServletRequest multiReadRequest = new MultiReadHttpServletRequest(req);
       Authentication authentication = null;
@@ -85,9 +75,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
       } else if (req.getHeader(X_ACCESS_TOKEN) != null
           || req.getParameter(TOKEN_URL_PARAM_NAME) != null) {
         authentication = getTokenBasedAuthentication(req);
-//      } else if (flowDebug) {
-//        authentication = getDebugToken();
-      }
+      } 
 
 //      if (multiReadRequest.getHeader(X_SLACK_SIGNATURE) != null) {
 //        InputStream inputStream = multiReadRequest.getInputStream();
@@ -101,26 +89,25 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 //          return;
 //        }
 //      }
-      SecurityContextHolder.getContext().setAuthentication(authentication);
-      chain.doFilter(req, res);
+      if (authentication != null) {
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        chain.doFilter(req, res);
+      }
+      res.sendError(401);
+      return;
     } catch (final AuthorizationException e) {
       LOGGER.error(e);
+      res.sendError(401);
+      return;
     }
-  }
-
-  private UsernamePasswordAuthenticationToken getDebugToken() {
-    final Token userSessionToken = tokenService.createUserSessionToken("boomrng@useboomerang.io", "Boomerang Joe");
-    final List<GrantedAuthority> authorities = new ArrayList<>();
-    final UsernamePasswordAuthenticationToken authToken =
-        new UsernamePasswordAuthenticationToken("boomrng@useboomerang.io", null, authorities);
-    authToken.setDetails(userSessionToken);
-    return authToken;
   }
 
   /*
    * Authorization Header Bearer Token
    * 
    * Populated by the app via OAuth2_Proxy
+   * 
+   * TODO: figure out a way to ensure it comes via the OAuth2_Proxy
    */
   private UsernamePasswordAuthenticationToken getUserAuthentication(HttpServletRequest request) // NOSONAR
   {
@@ -221,7 +208,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
   }
 
   /*
-   * Validate and Bump Token Based Auth
+   * Validate and hoist Token Based Auth
    */
   private Authentication getTokenBasedAuthentication(HttpServletRequest request) {
     String xAccessToken =
@@ -232,7 +219,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
       if (token != null) {
       final List<GrantedAuthority> authorities = new ArrayList<>();
       final UsernamePasswordAuthenticationToken authToken =
-          new UsernamePasswordAuthenticationToken(token.getAuthor(), null, authorities);
+          new UsernamePasswordAuthenticationToken(token.getId(), null, authorities);
       authToken.setDetails(token);
       return authToken;
       }
@@ -304,11 +291,11 @@ public class AuthenticationFilter extends OncePerRequestFilter {
     LOGGER.debug("Slack Signature: " + signature);
     LOGGER.debug("Computed Signature: " + generator.generate(timestamp, body));
     return verifier.isValid(timestamp, body, signature);
-  }  
+  }
 
   @Override
   protected boolean shouldNotFilter(HttpServletRequest request) {
     String path = request.getServletPath();
-    return !path.startsWith("/internal") && !path.startsWith("/error");
+    return path.startsWith("/internal") || path.startsWith("/error") || path.startsWith("/api/docs") ;
   }
 }

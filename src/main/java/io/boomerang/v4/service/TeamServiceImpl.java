@@ -890,7 +890,7 @@ public class TeamServiceImpl implements TeamService {
       List<Workflow> workflows = response.getContent();
       workflows.forEach(w -> summary.add(new WorkflowSummary(w)));
     }
-    team.setWorkflowSummary(summary);
+    team.setWorkflows(summary);
     
     // Get and Set Users
     team.setUsers(getUsersForTeam(teamEntity.getId()));

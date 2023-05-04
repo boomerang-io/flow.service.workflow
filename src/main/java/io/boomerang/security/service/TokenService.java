@@ -10,12 +10,10 @@ import io.boomerang.security.model.CreateTokenRequest;
 import io.boomerang.security.model.CreateTokenResponse;
 import io.boomerang.security.model.Token;
 import io.boomerang.security.model.TokenType;
-import io.boomerang.v4.data.entity.UserEntity;
 
 public interface TokenService {
   public Token get(String value);
-  public Token createUserSessionToken(UserEntity user);
-  Token createUserSessionToken(String email, String name);
+  public Token createUserSessionToken(String email, String name);
   public CreateTokenResponse create(CreateTokenRequest token);
   public boolean validate(String token);
   public boolean delete(@Valid String id);

@@ -14,7 +14,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 import io.boomerang.security.service.ApiTokenService;
-import io.boomerang.security.service.UserIdentityService;
+import io.boomerang.security.service.IdentityService;
 
 @Service
 public class ExternalUserServiceImpl implements ExternalUserService {
@@ -27,7 +27,7 @@ public class ExternalUserServiceImpl implements ExternalUserService {
   private RestTemplate restTemplate;
   
   @Autowired
-  private UserIdentityService userDetailsService;
+  private IdentityService userDetailsService;
 
   private static final String AUTHORIZATION_HEADER = "Authorization";
   private static final String TOKEN_PREFIX = "Bearer ";
@@ -36,12 +36,11 @@ public class ExternalUserServiceImpl implements ExternalUserService {
   private ApiTokenService apiTokenService;
 
   @Override
-  public UserProfile getInternalUserProfile() {
+  public UserProfile getInternalUserProfile(String email) {
     try {
-      String userEmail = userDetailsService.getUserDetails().getEmail();
       UriComponents uriComponents = UriComponentsBuilder.fromHttpUrl(externalUserUrl).
-          queryParam("userEmail", userEmail).build();
-      HttpHeaders headers = buildHeaders(userEmail);
+          queryParam("userEmail", email).build();
+      HttpHeaders headers = buildHeaders(email);
     
       HttpEntity<String> requestUpdate = new HttpEntity<>("", headers);
       ResponseEntity<UserProfile> response =

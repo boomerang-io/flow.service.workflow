@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import io.boomerang.model.FlowUserProfile;
 import io.boomerang.model.UserQueryResult;
 import io.boomerang.model.profile.SortSummary;
-import io.boomerang.security.service.UserIdentityService;
+import io.boomerang.security.service.IdentityService;
 import io.boomerang.v4.data.entity.UserEntity;
 import io.boomerang.v4.model.User;
 
@@ -35,7 +35,7 @@ public class ManagementController {
   private String flowExternalUrlUser;
 
   @Autowired
-  private UserIdentityService userIdentityService;
+  private IdentityService userIdentityService;
 
   @GetMapping(value = "/users/{userId}")
   public FlowUserProfile getUserProfile(@PathVariable String userId) {

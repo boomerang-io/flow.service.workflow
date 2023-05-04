@@ -6,13 +6,12 @@ import java.util.Optional;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import io.boomerang.error.BoomerangError;
 import io.boomerang.error.BoomerangException;
-import io.boomerang.security.service.UserIdentityService;
+import io.boomerang.security.service.IdentityService;
 import io.boomerang.tekton.TektonConverter;
 import io.boomerang.tekton.TektonTask;
 import io.boomerang.util.ParameterUtil;
@@ -44,7 +43,7 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
   private RelationshipService relationshipService;
 
   @Autowired
-  private UserIdentityService userIdentityService;
+  private IdentityService userIdentityService;
 
   /*
    * Get TaskTemplate by name and optional version. If no version specified, will retrieve the latest.

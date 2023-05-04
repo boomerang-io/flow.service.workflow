@@ -21,7 +21,7 @@ import io.boomerang.model.profile.NavigationResponse;
 import io.boomerang.model.profile.Platform;
 import io.boomerang.security.model.UserToken;
 import io.boomerang.security.service.ApiTokenService;
-import io.boomerang.security.service.UserIdentityService;
+import io.boomerang.security.service.IdentityService;
 import io.boomerang.v4.model.AbstractParam;
 import io.boomerang.v4.service.SettingsServiceImpl;
 
@@ -40,13 +40,13 @@ public class LaunchpadNavigationServiceImpl implements LaunchpadNavigationServic
   @Value("${core.platform.name}")
   private String platformName;
 
-  @Value("${boomerang.signOutUrl}")
+  @Value("${flow.signOutUrl}")
   private String platformSignOutUrl;
 
-  @Value("${boomerang.baseUrl}")
+  @Value("${flow.baseUrl}")
   private String platformBaseUrl;
 
-  @Value("${boomerang.version}")
+  @Value("${flow.version}")
   private String platformVersion;
   
   @Autowired
@@ -66,7 +66,7 @@ public class LaunchpadNavigationServiceImpl implements LaunchpadNavigationServic
   private ApiTokenService apiTokenService;
   
   @Autowired
-  private UserIdentityService identityService;
+  private IdentityService identityService;
   
   @Override
   public NavigationResponse getLaunchpadNavigation(boolean isUserAdmin) {

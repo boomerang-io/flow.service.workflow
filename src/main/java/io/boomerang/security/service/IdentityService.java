@@ -9,10 +9,12 @@ import io.boomerang.model.OneTimeCode;
 import io.boomerang.model.UserQueryResult;
 import io.boomerang.security.model.Token;
 import io.boomerang.security.model.TokenType;
+import io.boomerang.v4.data.entity.TeamEntity;
 import io.boomerang.v4.data.entity.UserEntity;
+import io.boomerang.v4.data.entity.ref.WorkflowEntity;
 import io.boomerang.v4.model.User;
 
-public interface UserIdentityService {
+public interface IdentityService {
 
   public UserProfile getOrRegisterCurrentUser();
 
@@ -39,8 +41,12 @@ public interface UserIdentityService {
 
   public TokenType getCurrentScope();
   
-  public Token getRequestIdentity();
+  public Token getCurrentIdentity();
 
   UserEntity getUserByEmail(String userEmail);
+
+  WorkflowEntity getCurrentWorkflow();
+
+  TeamEntity getCurrentTeam();
 
 }

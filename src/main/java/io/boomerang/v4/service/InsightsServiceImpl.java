@@ -13,8 +13,6 @@ import io.boomerang.v4.model.ref.WorkflowRunInsight;
 @Service
 public class InsightsServiceImpl implements InsightsService {
 
-  private static final Logger LOGGER = LogManager.getLogger();
-
   @Autowired
   private WorkflowRunService workflowRunService;
 

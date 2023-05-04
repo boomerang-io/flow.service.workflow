@@ -5,8 +5,10 @@ import java.util.LinkedList;
 import java.util.List;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.mongodb.core.mapping.DocumentReference;
+import io.boomerang.v4.data.entity.TeamEntity;
 import io.boomerang.v4.data.entity.TokenEntity;
 import io.boomerang.v4.data.entity.UserEntity;
+import io.boomerang.v4.data.entity.ref.WorkflowEntity;
 
 public class Token {  
   
@@ -16,9 +18,13 @@ public class Token {
   private String description;
   private Date creationDate = new Date();
   private Date expirationDate;
-  private boolean valid; //Do we need this or do we just expire the token
+  private boolean valid;
   @DocumentReference(lazy = true)
-  private UserEntity author;
+  private UserEntity user;
+  @DocumentReference(lazy = true)
+  private WorkflowEntity workflow;
+  @DocumentReference(lazy = true)
+  private TeamEntity team;
   private List<TokenScope> scopes = new LinkedList<>();
 
   public Token() {
@@ -30,6 +36,30 @@ public class Token {
     this.setType(type);
   }
   
+  public UserEntity getUser() {
+    return user;
+  }
+
+  public void setUser(UserEntity user) {
+    this.user = user;
+  }
+
+  public WorkflowEntity getWorkflow() {
+    return workflow;
+  }
+
+  public void setWorkflow(WorkflowEntity workflow) {
+    this.workflow = workflow;
+  }
+
+  public TeamEntity getTeam() {
+    return team;
+  }
+
+  public void setTeam(TeamEntity team) {
+    this.team = team;
+  }
+
   public Token(TokenEntity entity) {
     BeanUtils.copyProperties(entity, this);
   }
@@ -77,12 +107,6 @@ public class Token {
   }
   public void setValid(boolean valid) {
     this.valid = valid;
-  }
-  public UserEntity getAuthor() {
-    return author;
-  }
-  public void setAuthor(UserEntity author) {
-    this.author = author;
   }
   public String getDescription() {
     return description;

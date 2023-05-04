@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.HttpClientErrorException;
 import io.boomerang.mongo.model.UserType;
-import io.boomerang.security.service.UserIdentityService;
+import io.boomerang.security.service.IdentityService;
 import io.boomerang.v4.data.entity.UserEntity;
 import io.boomerang.v4.model.Setting;
 import io.boomerang.v4.service.SettingsService;
@@ -23,7 +23,7 @@ public class ConfigurationController {
   private SettingsService settingsService;
   
   @Autowired
-  UserIdentityService service;
+  IdentityService service;
 
   @GetMapping(value = "")
   public List<Setting> getAppConfiguration() {

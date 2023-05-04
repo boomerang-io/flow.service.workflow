@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import javax.validation.Valid;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -40,6 +42,8 @@ import io.boomerang.v4.service.UserService;
 
 @Service
 public class TokenServiceImpl implements TokenService {
+
+  private static final Logger LOGGER = LogManager.getLogger();
 
   @Autowired
   private MongoTemplate mongoTemplate;
@@ -72,7 +76,7 @@ public class TokenServiceImpl implements TokenService {
       // TODO make real exception
       throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);   
     }
-
+    LOGGER.debug("Creating {0} token...", request.getType().toString());
     TokenEntity tokenEntity = new TokenEntity();
     tokenEntity.setType(request.getType());
     tokenEntity.setName(request.getName());
@@ -88,10 +92,11 @@ public class TokenServiceImpl implements TokenService {
     // token.setCreatorName(user.getName());
     // }
 
-    String prefix = TokenTypePrefix.valueOf(request.getType().toString()).toString();
+    String prefix = TokenTypePrefix.valueOf(request.getType().toString()).getPrefix();
     String uniqueToken = prefix + "_" + UUID.randomUUID().toString().toLowerCase();
 
     final String hashToken = hashString(uniqueToken);
+    LOGGER.debug("Token: " + uniqueToken);
     tokenEntity.setToken(hashToken);
     tokenRepository.save(tokenEntity);
 
@@ -142,17 +147,21 @@ public class TokenServiceImpl implements TokenService {
 
   @Override
   public boolean validate(String token) {
+    LOGGER.debug("Token Validation - token: " + token);
     String hash = hashString(token);
+    LOGGER.debug("Token Validation - hash: " + hash);
     Optional<TokenEntity> tokenEntityOptional = this.tokenRepository.findByToken(hash);
     if (tokenEntityOptional.isPresent()) {
       TokenEntity tokenEntity = tokenEntityOptional.get();
       Date currentDate = new Date();
       boolean validToken = tokenEntity.isValid();
 
-      if (validToken && tokenEntity.getExpirationDate().after(currentDate)) {
+      if (validToken && (tokenEntity.getExpirationDate() == null || tokenEntity.getExpirationDate().after(currentDate))) {
+        LOGGER.debug("Token Validation - valid");
         return true;
       }
     }
+    LOGGER.debug("Token Validation - not valid");
     return false;
   }
 
@@ -212,7 +221,7 @@ public class TokenServiceImpl implements TokenService {
       Date currentDate = new Date();
       boolean validToken = tokenEntity.isValid();
 
-      if (validToken && tokenEntity.getExpirationDate().after(currentDate)) {
+      if (validToken && (tokenEntity.getExpirationDate() == null || tokenEntity.getExpirationDate().after(currentDate))) {
         Token response = new Token();
         BeanUtils.copyProperties(tokenEntity, response);
         return response;
@@ -222,18 +231,7 @@ public class TokenServiceImpl implements TokenService {
   }
 
   /*
-   * Wraps createUserSessionToken finding the user by Email
-   * 
-   * Used by the AuthenticationFilter when accessed by non Access Token
-   */
-  @Override
-  public Token createUserSessionToken(String email, String name) {
-    UserEntity user = userService.getOrRegisterUser(email, name, UserType.user);
-    return createUserSessionToken(user);
-  }
-
-  /*
-   * Creates a token expiring in MAX SESSION TIME
+   * Creates a token expiring in MAX SESSION TIME. Used by the AuthenticationFilter when accessed by non Access Token
    * 
    * TODO: add scopes that a user session token would have (needs to based on User ... eventually
    * dynamic)
@@ -241,7 +239,8 @@ public class TokenServiceImpl implements TokenService {
    * TODO: is this method declaration ever call besides the wrapper - should they be combined.
    */
   @Override
-  public Token createUserSessionToken(UserEntity user) {
+  public Token createUserSessionToken(String email, String name) {
+    UserEntity user = userService.getOrRegisterUser(email, name, UserType.user);
 
     Calendar cal = Calendar.getInstance();
     cal.setTime(new Date());
@@ -254,7 +253,7 @@ public class TokenServiceImpl implements TokenService {
     tokenEntity.setType(TokenType.session);
     tokenEntity.setExpirationDate(expiryDate);
     tokenEntity.setValid(true);
-    tokenEntity.setCreatedBy(user);
+    tokenEntity.setUser(user);
 
     String prefix = TokenTypePrefix.session.prefix;
     String uniqueToken = prefix + "_" + UUID.randomUUID().toString().toLowerCase();

@@ -11,48 +11,47 @@ import io.boomerang.security.model.TokenAccess;
 import io.boomerang.security.model.TokenObject;
 import io.boomerang.security.model.TokenScope;
 import io.boomerang.security.service.TokenService;
-import io.boomerang.security.service.UserIdentityService;
+import io.boomerang.security.service.IdentityService;
 
+/*
+ * Interceptor for AuthScope protected controller methods
+ * 
+ * Presumes endpoint has been through the AuthFilter and SecurityContext is loaded
+ */
 public class SecurityInterceptor implements HandlerInterceptor {
   
   private static final Logger LOGGER = LogManager.getLogger();
-
-  private TokenService tokenService;
   
-  private UserIdentityService userIDService;
+  private IdentityService identityService;
 
-  public SecurityInterceptor(TokenService tokenService, UserIdentityService userIDService) {
-    this.tokenService = tokenService;
-    this.userIDService = userIDService;
+  public SecurityInterceptor(IdentityService identityService) {
+    this.identityService = identityService;
   }
 
   @Override
   public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
       throws Exception {
-    if (handler instanceof HandlerMethod) {
-
-      LOGGER.debug(userIDService.getCurrentScope());
-      
-      // TODO: shift this to receiving from the Security Context rather than the header
-      
-      String header = request.getHeader("x-access-token");
-
-      if (header == null || header.isBlank()) {
-        response.getWriter().write("");
-        response.setStatus(403);
-        return true;
-      }
-      
+    if (handler instanceof HandlerMethod) {      
       HandlerMethod handlerMethod = (HandlerMethod) handler;
-      AuthScope scope = handlerMethod.getMethod().getAnnotation(AuthScope.class);
-      if (scope == null) {
+      AuthScope authScope = handlerMethod.getMethod().getAnnotation(AuthScope.class);
+      if (authScope == null) {
+        // No annotation found - route does not need authZ
         return true;
       }
 
-      TokenObject tokenObject = scope.object();
-      TokenAccess tokenAccess = scope.access();
+      LOGGER.debug("Current Interceptor Scope: " + identityService.getCurrentScope());
+      if (identityService.getCurrentScope() == null) {
+        // If annotation is found but CurrentScope is not then mismatch must have happened between routes with AuthN and AuthZ
+        // TODO set this to return false
+//        response.getWriter().write("");
+//        response.setStatus(401);
+        return true;
+      }
 
-      Token requestToken = this.tokenService.get(header);
+      TokenObject tokenObject = authScope.object();
+      TokenAccess tokenAccess = authScope.access();
+
+      Token requestToken = this.identityService.getCurrentIdentity();
       boolean validRequest = false;
 
       for (TokenScope s : requestToken.getScopes()) {
@@ -63,8 +62,8 @@ public class SecurityInterceptor implements HandlerInterceptor {
       }
 
       if (!validRequest) {
-        response.getWriter().write("");
-        response.setStatus(401);
+//        response.getWriter().write("");
+//        response.setStatus(401);
         return true;
       }
       return true;

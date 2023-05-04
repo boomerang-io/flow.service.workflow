@@ -22,15 +22,17 @@ import io.boomerang.mongo.model.UserStatus;
 import io.boomerang.mongo.model.UserType;
 import io.boomerang.security.model.Token;
 import io.boomerang.security.model.TokenType;
+import io.boomerang.v4.data.entity.TeamEntity;
 import io.boomerang.v4.data.entity.UserEntity;
+import io.boomerang.v4.data.entity.ref.WorkflowEntity;
 import io.boomerang.v4.model.User;
 import io.boomerang.v4.service.UserService;
 
 @Service
-public class UserIdentityServiceImpl implements UserIdentityService {
+public class IdentityServiceImpl implements IdentityService {
 
   @Value("${flow.externalUrl.user}")
-  private String flowExternalUrlUser;
+  private String externalUserUrl;
 
   @Autowired
   private ExternalUserService extUserService;
@@ -38,7 +40,7 @@ public class UserIdentityServiceImpl implements UserIdentityService {
   @Autowired
   private UserService userService;
 
-  @Value("${boomerang.otc}")
+  @Value("${flow.otc}")
   private String corePlatformOTC;
 
 //  @Autowired
@@ -49,15 +51,12 @@ public class UserIdentityServiceImpl implements UserIdentityService {
 
   @Override
   public UserEntity getCurrentUser() {
-    if (flowExternalUrlUser.isBlank()) {
-//      UserEntity user = this.getUserDetails();
-//      String email = user.getEmail();
-//      UserEntity entity = userService.getUserWithEmail(email);
-      UserEntity entity = this.getUserDetails();
+    UserEntity entity = this.getUserDetails();
+    if (externalUserUrl.isBlank()) {
       entity.setHasConsented(true);
       return entity;
     } else {
-      UserProfile userProfile = extUserService.getInternalUserProfile();
+      UserProfile userProfile = extUserService.getInternalUserProfile(entity.getEmail());
       UserEntity flowUser = new UserEntity();
       if (userProfile == null) {
         return null;
@@ -69,11 +68,27 @@ public class UserIdentityServiceImpl implements UserIdentityService {
       if (dbUser == null) {
         flowUser.setId(null);
         userService.registerUser(flowUser);
-      } else {
-        flowUser.setQuotas(dbUser.getQuotas());
-      }
+      } 
       return flowUser;
     }
+  }
+  
+  @Override
+  public WorkflowEntity getCurrentWorkflow() {
+    Token token = this.getCurrentIdentity();
+    if (token.getWorkflow() != null) {
+      return token.getWorkflow();
+    }
+    return null;
+  }
+  
+  @Override
+  public TeamEntity getCurrentTeam() {
+    Token token = this.getCurrentIdentity();
+    if (token.getTeam() != null) {
+      return token.getTeam();
+    }
+    return null;
   }
 
 //  private UserEntity getOrRegisterUser(UserType userType) {
@@ -91,7 +106,7 @@ public class UserIdentityServiceImpl implements UserIdentityService {
 
   @Override
   public UserEntity getUserByID(String userId) {
-    if (flowExternalUrlUser.isBlank()) {
+    if (externalUserUrl.isBlank()) {
       Optional<UserEntity> flowUser = userService.getUserById(userId);
       if (flowUser.isPresent()) {
         UserEntity profile = new UserEntity();
@@ -176,7 +191,7 @@ public class UserIdentityServiceImpl implements UserIdentityService {
 
   @Override
   public ResponseEntity<Boolean> activateSetup(OneTimeCode otc) {
-    if (flowExternalUrlUser.isBlank()) {
+    if (externalUserUrl.isBlank()) {
       if (corePlatformOTC.equals(otc.getOtc())) {
 //        getOrRegisterUser(UserType.admin);
         return new ResponseEntity<>(HttpStatus.OK);
@@ -187,7 +202,7 @@ public class UserIdentityServiceImpl implements UserIdentityService {
 
   @Override
   public UserProfile getOrRegisterCurrentUser() {
-    if (flowExternalUrlUser.isBlank()) {
+    if (externalUserUrl.isBlank()) {
       if (userService.getUserCount() == 0) {
         throw new HttpClientErrorException(HttpStatus.LOCKED);
       }
@@ -222,7 +237,6 @@ public class UserIdentityServiceImpl implements UserIdentityService {
       String name = flowUser.getName();
       UserType type = flowUser.getType();
       UserEntity flowUserEntity = userService.getOrRegisterUser(email, name, type);
-      flowUserEntity.setQuotas(flowUser.getQuotas());
       flowUserEntity.setHasConsented(true);
       flowUserEntity = userService.save(flowUserEntity);
 
@@ -242,7 +256,7 @@ public class UserIdentityServiceImpl implements UserIdentityService {
         && SecurityContextHolder.getContext().getAuthentication()
             .getDetails() instanceof Token) {
       Token token = (Token) SecurityContextHolder.getContext().getAuthentication().getDetails();
-      return token.getAuthor();
+      return token.getUser();
 //      return (UserToken) SecurityContextHolder.getContext().getAuthentication().getDetails();
 //    } else {
 //      return new UserToken("boomerang@us.ibm.com", "boomerang", "joe");
@@ -274,7 +288,7 @@ public class UserIdentityServiceImpl implements UserIdentityService {
   }
 
   @Override
-  public Token getRequestIdentity() {
+  public Token getCurrentIdentity() {
     if (SecurityContextHolder.getContext() != null
         && SecurityContextHolder.getContext().getAuthentication() != null
         && SecurityContextHolder.getContext().getAuthentication().getDetails() != null) {
@@ -287,7 +301,7 @@ public class UserIdentityServiceImpl implements UserIdentityService {
 
   @Override
   public FlowUserProfile getFullUserProfile(String userId) {
-    if (flowExternalUrlUser.isBlank()) {
+    if (externalUserUrl.isBlank()) {
       Optional<UserEntity> flowUser = userService.getUserById(userId);
       if (flowUser.isPresent()) {
         FlowUserProfile profile = new FlowUserProfile();

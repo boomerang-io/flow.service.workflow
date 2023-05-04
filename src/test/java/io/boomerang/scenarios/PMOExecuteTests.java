@@ -29,7 +29,7 @@ import io.boomerang.model.FlowActivity;
 import io.boomerang.mongo.model.TaskStatus;
 import io.boomerang.mongo.model.TokenScope;
 import io.boomerang.mongo.model.UserType;
-import io.boomerang.security.service.UserIdentityService;
+import io.boomerang.security.service.IdentityService;
 import io.boomerang.tests.IntegrationTests;
 import io.boomerang.v4.data.entity.UserEntity;
 import io.boomerang.v4.model.Action;
@@ -42,7 +42,7 @@ import io.boomerang.v4.model.Action;
 class PMOExecuteTests extends IntegrationTests {
 
   @MockBean
-  private UserIdentityService service;
+  private IdentityService service;
 
   @Test
   void testExecution() throws Exception {

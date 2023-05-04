@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import io.boomerang.model.Navigation;
 import io.boomerang.mongo.model.UserType;
-import io.boomerang.security.service.UserIdentityService;
+import io.boomerang.security.service.IdentityService;
 import io.boomerang.service.NavigationService;
 import io.boomerang.v4.data.entity.UserEntity;
 
@@ -23,7 +23,7 @@ public class NavigationController {
   NavigationService navigationService;
 
   @Autowired
-  private UserIdentityService userService;
+  private IdentityService userService;
 
   @GetMapping(value = "")
   public ResponseEntity<List<Navigation>> getNavigation(@RequestParam(required = false) String teamId) {

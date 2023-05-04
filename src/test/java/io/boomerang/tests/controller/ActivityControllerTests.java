@@ -36,7 +36,7 @@ import io.boomerang.model.ListActivityResponse;
 import io.boomerang.mongo.model.TaskStatus;
 import io.boomerang.mongo.model.TokenScope;
 import io.boomerang.mongo.model.UserType;
-import io.boomerang.security.service.UserIdentityService;
+import io.boomerang.security.service.IdentityService;
 import io.boomerang.v4.data.entity.UserEntity;
 
 @ExtendWith(SpringExtension.class)
@@ -50,7 +50,7 @@ class ActivityControllerTests extends FlowTests {
   private ActivityController activityController;
 
   @MockBean
-  private UserIdentityService service;
+  private IdentityService service;
 
   @Test
   void testGetFlowActivity() {

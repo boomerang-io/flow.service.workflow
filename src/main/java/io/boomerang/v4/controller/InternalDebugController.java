@@ -1,7 +1,6 @@
 package io.boomerang.v4.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -14,7 +13,6 @@ import io.swagger.v3.oas.annotations.Operation;
 
 @RestController
 @RequestMapping("/internal/debug")
-@ConditionalOnProperty(name = "flow.debug", havingValue = "true")
 @Hidden
 public class InternalDebugController {
 

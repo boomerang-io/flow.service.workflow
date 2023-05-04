@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import io.boomerang.model.profile.NavigationResponse;
 import io.boomerang.mongo.model.UserType;
-import io.boomerang.security.service.UserIdentityService;
+import io.boomerang.security.service.IdentityService;
 import io.boomerang.service.LaunchpadNavigationService;
 import io.boomerang.v4.data.entity.UserEntity;
 
@@ -18,7 +18,7 @@ public class PlatformNavigationController {
   private LaunchpadNavigationService launchpadNavigationService;
 
   @Autowired
-  private UserIdentityService userService;
+  private IdentityService userService;
 
   @GetMapping(value = "")
   public NavigationResponse getLaunchpadNavigation() {

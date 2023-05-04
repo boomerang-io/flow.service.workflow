@@ -10,7 +10,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import io.boomerang.mongo.model.UserStatus;
 import io.boomerang.mongo.model.UserType;
-import io.boomerang.v4.data.model.Quotas;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(Include.NON_NULL)
@@ -26,7 +25,6 @@ public class UserEntity {
   private Boolean isShowHelp;
   private Date firstLoginDate;
   private Date lastLoginDate;
-  private Quotas quotas;
   private UserStatus status;
   private Boolean hasConsented;
   private Map<String, String> labels = new HashMap<>();
@@ -101,14 +99,6 @@ public class UserEntity {
 
   public void setIsShowHelp(Boolean isShowHelp) {
     this.isShowHelp = isShowHelp;
-  }
-
-  public Quotas getQuotas() {
-    return quotas;
-  }
-
-  public void setQuotas(Quotas quotas) {
-    this.quotas = quotas;
   }
 
   public Boolean getHasConsented() {

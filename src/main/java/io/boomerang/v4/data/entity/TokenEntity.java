@@ -11,6 +11,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import io.boomerang.security.model.TokenScope;
 import io.boomerang.security.model.TokenType;
+import io.boomerang.v4.data.entity.ref.WorkflowEntity;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(Include.NON_NULL)
@@ -26,9 +27,37 @@ public class TokenEntity {
   private Date expirationDate;
   private boolean valid;
   @DocumentReference(lazy = true)
-  private UserEntity createdBy;
+  private UserEntity user;
+  @DocumentReference(lazy = true)
+  private WorkflowEntity workflow;
+  @DocumentReference(lazy = true)
+  private TeamEntity team;
   private List<TokenScope> scopes = new LinkedList<>();
   private String token;
+
+  public UserEntity getUser() {
+    return user;
+  }
+
+  public void setUser(UserEntity user) {
+    this.user = user;
+  }
+
+  public WorkflowEntity getWorkflow() {
+    return workflow;
+  }
+
+  public void setWorkflow(WorkflowEntity workflow) {
+    this.workflow = workflow;
+  }
+
+  public TeamEntity getTeam() {
+    return team;
+  }
+
+  public void setTeam(TeamEntity team) {
+    this.team = team;
+  }
 
   public String getId() {
     return id;
@@ -76,14 +105,6 @@ public class TokenEntity {
 
   public void setExpirationDate(Date expirationDate) {
     this.expirationDate = expirationDate;
-  }
-
-  public UserEntity getCreatedBy() {
-    return createdBy;
-  }
-
-  public void setCreatedBy(UserEntity createdBy) {
-    this.createdBy = createdBy;
   }
 
   public String getToken() {

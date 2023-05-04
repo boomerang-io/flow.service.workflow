@@ -2,7 +2,7 @@ package io.boomerang.client;
 
 public interface ExternalUserService {
 
-  public UserProfile getInternalUserProfile();
+  UserProfile getInternalUserProfile(String email);
 
   public UserProfile getUserProfileById(String id);
 
