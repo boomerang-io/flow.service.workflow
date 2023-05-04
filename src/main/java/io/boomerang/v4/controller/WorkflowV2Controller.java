@@ -15,6 +15,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import io.boomerang.security.interceptors.AuthScope;
+import io.boomerang.security.model.TokenAccess;
+import io.boomerang.security.model.TokenObject;
+import io.boomerang.security.model.TokenType;
 import io.boomerang.v4.client.WorkflowResponsePage;
 import io.boomerang.v4.model.WorkflowCanvas;
 import io.boomerang.v4.model.WorkflowDuplicateRequest;
@@ -127,6 +131,7 @@ public class WorkflowV2Controller {
   }
 
   @GetMapping(value = "/{workflowId}/compose")
+  @AuthScope(types = {TokenType.global}, access = TokenAccess.read, object = TokenObject.parameter)
   @Operation(summary = "Convert workflow to compose model for UI Designer and detailed Activity screens.")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})

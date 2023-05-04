@@ -25,7 +25,7 @@ public class Token {
   private WorkflowEntity workflow;
   @DocumentReference(lazy = true)
   private TeamEntity team;
-  private List<TokenScope> scopes = new LinkedList<>();
+  private List<TokenPermission> permissions = new LinkedList<>();
 
   public Token() {
 
@@ -70,11 +70,11 @@ public class Token {
   public void setId(String id) {
     this.id = id;
   }
-  public List<TokenScope> getScopes() {
-    return scopes;
+  public List<TokenPermission> getPermissions() {
+    return permissions;
   }
-  public void setScopes(List<TokenScope> scopes) {
-    this.scopes = scopes;
+  public void setPermissions(List<TokenPermission> permissions) {
+    this.permissions = permissions;
   }
   public TokenType getType() {
     return type;

@@ -1,5 +1,6 @@
 package io.boomerang.security.interceptors;
 
+import java.util.Arrays;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.logging.log4j.LogManager;
@@ -9,8 +10,7 @@ import org.springframework.web.servlet.HandlerInterceptor;
 import io.boomerang.security.model.Token;
 import io.boomerang.security.model.TokenAccess;
 import io.boomerang.security.model.TokenObject;
-import io.boomerang.security.model.TokenScope;
-import io.boomerang.security.service.TokenService;
+import io.boomerang.security.model.TokenType;
 import io.boomerang.security.service.IdentityService;
 
 /*
@@ -32,15 +32,18 @@ public class SecurityInterceptor implements HandlerInterceptor {
   public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
       throws Exception {
     if (handler instanceof HandlerMethod) {      
+      LOGGER.debug("In SecurityInterceptor()");
       HandlerMethod handlerMethod = (HandlerMethod) handler;
       AuthScope authScope = handlerMethod.getMethod().getAnnotation(AuthScope.class);
       if (authScope == null) {
+        LOGGER.debug("SecurityInterceptor: Skipping Authorization");
         // No annotation found - route does not need authZ
         return true;
       }
 
-      LOGGER.debug("Current Interceptor Scope: " + identityService.getCurrentScope());
+      LOGGER.debug("SecurityInterceptor Scope: " + identityService.getCurrentScope());
       if (identityService.getCurrentScope() == null) {
+        LOGGER.error("SecurityInterceptor - mismatch between AuthN and AuthZ. A permitAll route has an AuthScope.");
         // If annotation is found but CurrentScope is not then mismatch must have happened between routes with AuthN and AuthZ
         // TODO set this to return false
 //        response.getWriter().write("");
@@ -48,24 +51,32 @@ public class SecurityInterceptor implements HandlerInterceptor {
         return true;
       }
 
-      TokenObject tokenObject = authScope.object();
-      TokenAccess tokenAccess = authScope.access();
-
-      Token requestToken = this.identityService.getCurrentIdentity();
-      boolean validRequest = false;
-
-      for (TokenScope s : requestToken.getScopes()) {
-        if (s.getAccess() == tokenAccess && s.getObject() == tokenObject) {
-          validRequest = true;
-          break;
-        }
-      }
-
-      if (!validRequest) {
-//        response.getWriter().write("");
-//        response.setStatus(401);
+      TokenType[] requiredTypes = authScope.types();
+      Token accessToken = this.identityService.getCurrentIdentity();
+      // Check the required level of token is present
+      if (!Arrays.asList(requiredTypes).contains(accessToken.getType())) {
+        LOGGER.error("SecurityInterceptor - Unauthorized Type / Level. Needed: {}, Provided: {}", requiredTypes.toString(), accessToken.getType().toString());
+     // TODO set this to return false
+//      response.getWriter().write("");
+//      response.setStatus(401);
         return true;
       }
+      TokenObject requiredObject = authScope.object();
+      TokenAccess requiredAccess = authScope.access();
+
+      if (!accessToken.getPermissions().stream().anyMatch(p -> p.access().equals(requiredAccess) && p.object().equals(requiredObject))) {
+        LOGGER.error("SecurityInterceptor - Unauthorized Permission. Needed: {}, Provided: {}", requiredObject.toString().toUpperCase() + "_" + requiredAccess.toString().toUpperCase(), accessToken.getPermissions().toString());
+        // TODO set this to return false
+//      response.getWriter().write("");
+//      response.setStatus(401);
+      return true;
+      }
+//      for (TokenPermission p : accessToken.getPermissions()) {
+//        if (p.access() == requiredAccess && p.Object() == requiredObject) {
+//          validRequest = true;
+//          break;
+//        }
+//      }
       return true;
     } else {
       return true;

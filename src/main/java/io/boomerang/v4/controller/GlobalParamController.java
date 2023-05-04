@@ -10,6 +10,10 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import io.boomerang.security.interceptors.AuthScope;
+import io.boomerang.security.model.TokenAccess;
+import io.boomerang.security.model.TokenObject;
+import io.boomerang.security.model.TokenType;
 import io.boomerang.v4.model.GlobalParam;
 import io.boomerang.v4.service.GlobalParamService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -26,8 +30,8 @@ public class GlobalParamController {
   @Autowired
   private GlobalParamService paramService;
 
-  @GetMapping(value = "/")
-//  @AuthenticationScope(scopes = {TokenPermission.global})
+  @GetMapping(value = "")
+  @AuthScope(types = {TokenType.global}, access = TokenAccess.read, object = TokenObject.parameter)
   @Operation(summary = "Get all global Params")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})

@@ -92,6 +92,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
       if (authentication != null) {
         SecurityContextHolder.getContext().setAuthentication(authentication);
         chain.doFilter(req, res);
+        return;
       }
       res.sendError(401);
       return;
