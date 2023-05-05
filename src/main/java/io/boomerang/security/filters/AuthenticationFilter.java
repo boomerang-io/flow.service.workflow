@@ -295,8 +295,11 @@ public class AuthenticationFilter extends OncePerRequestFilter {
   }
 
   @Override
+  //TODO figure out why these aren't being applied in the SecurityConfig
   protected boolean shouldNotFilter(HttpServletRequest request) {
     String path = request.getServletPath();
-    return path.startsWith("/internal") || path.startsWith("/error") || path.startsWith("/api/docs") ;
+    return path.startsWith("/internal") || path.startsWith("/error") 
+//        || path.startsWith("/health")
+        || path.startsWith("/api/docs");
   }
 }

@@ -5,8 +5,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import io.boomerang.security.filters.AuthenticationFilter;
@@ -43,43 +45,36 @@ public class SecurityConfiguration {
   // private String jwtSecret;
   //
 
-  @Bean
-  SecurityFilterChain authFilterChain(HttpSecurity http) throws Exception {
-    final AuthenticationFilter authFilter =
-        new AuthenticationFilter(tokenService, settingsService, basicPassword);
-    http.csrf().disable().authorizeRequests()
-        .antMatchers(HEALTH, API_DOCS, INFO, INTERNAL, WEBJARS, SLACK_INSTALL).permitAll().and()
-        .authorizeRequests().anyRequest().authenticated().and()
-        .addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class);
-//    .sessionManagement()
-//        .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
-    return http.build();
-  }
-
 //  @Bean
-//  @Order(1)
-//  SecurityFilterChain tokenFilterChain(HttpSecurity http) throws Exception {
+//  SecurityFilterChain authFilterChain(HttpSecurity http) throws Exception {
 //    final AuthenticationFilter authFilter =
 //        new AuthenticationFilter(tokenService, settingsService, basicPassword);
-//    http.csrf().disable().authorizeRequests().anyRequest().authenticated().and()
+//    http.csrf().disable().authorizeRequests()
+//        .antMatchers(HEALTH, API_DOCS, INFO, INTERNAL, WEBJARS, SLACK_INSTALL).permitAll().and()
+//        .authorizeRequests().anyRequest().authenticated().and()
 //        .addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class);
-////        .sessionManagement()
+////    .sessionManagement()
 ////        .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
 //    return http.build();
 //  }
 
-// @Bean
-// @Order(2)
-// SecurityFilterChain internalAuthFilterChain(HttpSecurity http) throws Exception {
-//   http.csrf().disable().authorizeRequests()
-//       .antMatchers(HEALTH, API_DOCS, INFO, INTERNAL, WEBJARS, SLACK_INSTALL).permitAll();
-//   return http.build();
-// }
+  @Bean
+  @Order(2)
+  SecurityFilterChain tokenFilterChain(HttpSecurity http) throws Exception {
+    final AuthenticationFilter authFilter =
+        new AuthenticationFilter(tokenService, settingsService, basicPassword);
+    http.csrf().disable().authorizeRequests().anyRequest().authenticated().and()
+        .addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class);
+//        .sessionManagement()
+//        .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+    return http.build();
+  }
 
-//  @Bean
-//  SecurityFilterChain unauthenticatedFilterChain(HttpSecurity http) throws Exception {
-//    http.csrf().disable().authorizeHttpRequests((authz) -> authz.anyRequest().permitAll());
-//    return http.build();
-//  }
-  //
+ @Bean
+ @Order(1)
+ SecurityFilterChain unauthenticatedFilterChain(HttpSecurity http) throws Exception {
+   http.csrf().disable().authorizeRequests()
+       .antMatchers(HEALTH, API_DOCS, INFO, INTERNAL, WEBJARS, SLACK_INSTALL).permitAll();
+   return http.build();
+ }
 }
