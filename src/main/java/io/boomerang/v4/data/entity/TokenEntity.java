@@ -9,7 +9,7 @@ import org.springframework.data.mongodb.core.mapping.DocumentReference;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import io.boomerang.security.model.TokenScope;
+import io.boomerang.security.model.TokenPermission;
 import io.boomerang.security.model.TokenType;
 import io.boomerang.v4.data.entity.ref.WorkflowEntity;
 
@@ -32,7 +32,7 @@ public class TokenEntity {
   private WorkflowEntity workflow;
   @DocumentReference(lazy = true)
   private TeamEntity team;
-  private List<TokenScope> scopes = new LinkedList<>();
+  private List<TokenPermission> permissions = new LinkedList<>();
   private String token;
 
   public UserEntity getUser() {
@@ -124,12 +124,12 @@ public class TokenEntity {
     this.valid = valid;
   }
 
-  public List<TokenScope> getScopes() {
-    return scopes;
+  public List<TokenPermission> getPermissions() {
+    return permissions;
   }
 
-  public void setScopes(List<TokenScope> scopes) {
-    this.scopes = scopes;
+  public void setPermissions(List<TokenPermission> permissions) {
+    this.permissions = permissions;
   }
 
 }

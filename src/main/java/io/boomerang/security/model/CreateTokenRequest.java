@@ -10,7 +10,7 @@ public class CreateTokenRequest {
   private String owner;
   private String description;
   private Date expirationDate;
-  private List<TokenScope> scopes;
+  private List<TokenPermission> scopes;
   
   public TokenType getType() {
     return type;
@@ -42,10 +42,10 @@ public class CreateTokenRequest {
   public void setExpirationDate(Date expirationDate) {
     this.expirationDate = expirationDate;
   }
-  public List<TokenScope> getScopes() {
+  public List<TokenPermission> getPermissions() {
     return scopes;
   }
-  public void setScopes(List<TokenScope> scopes) {
-    this.scopes = scopes;
+  public void setPermissions(List<TokenPermission> permissions) {
+    this.scopes = permissions;
   }
 }

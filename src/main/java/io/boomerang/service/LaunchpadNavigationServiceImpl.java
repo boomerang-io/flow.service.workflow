@@ -19,7 +19,6 @@ import io.boomerang.model.profile.Features;
 import io.boomerang.model.profile.Navigation;
 import io.boomerang.model.profile.NavigationResponse;
 import io.boomerang.model.profile.Platform;
-import io.boomerang.security.model.UserToken;
 import io.boomerang.security.service.ApiTokenService;
 import io.boomerang.security.service.IdentityService;
 import io.boomerang.v4.model.AbstractParam;
@@ -71,18 +70,19 @@ public class LaunchpadNavigationServiceImpl implements LaunchpadNavigationServic
   @Override
   public NavigationResponse getLaunchpadNavigation(boolean isUserAdmin) {
     
-    UserToken userToken = identityService.getUserDetails();
-    if (userToken == null) {
-      return null;
-    }
-    String email = userToken.getEmail();
-    
-    if (platformNavigationUrl.isBlank()) {
-      return getFlowNavigationResponse();
-    }
-    else {
-      return getExternalNavigationResponse(email);
-    }
+//    UserToken userToken = identityService.getUserDetails();
+//    if (userToken == null) {
+//      return null;
+//    }
+//    String email = userToken.getEmail();
+//    
+//    if (platformNavigationUrl.isBlank()) {
+//      return getFlowNavigationResponse();
+//    }
+//    else {
+//      return getExternalNavigationResponse(email);
+//    }
+    return null;
   }
 
   private NavigationResponse getFlowNavigationResponse() {

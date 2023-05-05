@@ -83,7 +83,7 @@ public class TokenServiceImpl implements TokenService {
     tokenEntity.setDescription(request.getDescription());
     tokenEntity.setExpirationDate(request.getExpirationDate());
     tokenEntity.setValid(true);
-    tokenEntity.setScopes(request.getScopes());
+    tokenEntity.setPermissions(request.getPermissions());
 
     // TODO set Author based on current scope (should be a User Entity via UI)
     // token.setCreatorId(creatorId);
