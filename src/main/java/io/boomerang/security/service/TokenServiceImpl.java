@@ -25,7 +25,6 @@ import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.stereotype.Service;
 import io.boomerang.error.BoomerangError;
 import io.boomerang.error.BoomerangException;
-import io.boomerang.mongo.model.UserType;
 import io.boomerang.security.model.CreateTokenRequest;
 import io.boomerang.security.model.CreateTokenResponse;
 import io.boomerang.security.model.Token;
@@ -35,10 +34,10 @@ import io.boomerang.v4.data.entity.TokenEntity;
 import io.boomerang.v4.data.entity.UserEntity;
 import io.boomerang.v4.data.entity.ref.ActionEntity;
 import io.boomerang.v4.data.repository.TokenRepository;
+import io.boomerang.v4.model.UserType;
 import io.boomerang.v4.model.enums.RelationshipRef;
 import io.boomerang.v4.model.enums.RelationshipType;
 import io.boomerang.v4.service.RelationshipService;
-import io.boomerang.v4.service.UserService;
 
 @Service
 public class TokenServiceImpl implements TokenService {
@@ -52,7 +51,7 @@ public class TokenServiceImpl implements TokenService {
   private TokenRepository tokenRepository;
 
   @Autowired
-  private UserService userService;
+  private IdentityService identityService;
 
   @Autowired
   private RelationshipService relationshipService;
@@ -239,9 +238,13 @@ public class TokenServiceImpl implements TokenService {
    * TODO: is this method declaration ever call besides the wrapper - should they be combined.
    */
   @Override
-  public Token createUserSessionToken(String email, String name) {
-    UserEntity user = userService.getOrRegisterUser(email, name, UserType.user);
+  public Token createUserSessionToken(String email, String firstName, String lastName) {
+    Optional<UserEntity> user = identityService.getOrRegisterUser(email, firstName, lastName, Optional.of(UserType.user));
 
+    if (!user.isPresent()) {
+      //TODO throw exception
+      return null;
+    }
     Calendar cal = Calendar.getInstance();
     cal.setTime(new Date());
     cal.add(Calendar.HOUR, MAX_USER_SESSION_TOKEN_DURATION);
@@ -253,7 +256,7 @@ public class TokenServiceImpl implements TokenService {
     tokenEntity.setType(TokenType.session);
     tokenEntity.setExpirationDate(expiryDate);
     tokenEntity.setValid(true);
-    tokenEntity.setUser(user);
+    tokenEntity.setUser(user.get());
 
     String prefix = TokenTypePrefix.session.prefix;
     String uniqueToken = prefix + "_" + UUID.randomUUID().toString().toLowerCase();
@@ -264,7 +267,7 @@ public class TokenServiceImpl implements TokenService {
     
     // Create Authorization Relationship
     relationshipService.addRelationshipRef(RelationshipRef.TOKEN, tokenEntity.getId(),
-        RelationshipType.AUTHORIZES, RelationshipRef.USER, Optional.of(user.getId()));
+        RelationshipType.AUTHORIZES, RelationshipRef.USER, Optional.of(user.get().getId()));
 
     return new Token(tokenEntity);
   }

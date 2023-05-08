@@ -1,6 +1,6 @@
-package io.boomerang.model.profile;
+package io.boomerang.v4.model;
 
-public class PlatformMessage {
+public class HeaderPlatformMessage {
 
   private String kind;
   private String title;

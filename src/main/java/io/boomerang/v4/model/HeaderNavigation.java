@@ -1,5 +1,5 @@
 
-package io.boomerang.model.profile;
+package io.boomerang.v4.model;
 
 import java.util.HashMap;
 import java.util.List;
@@ -12,14 +12,14 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({"name", "url", "isDropdown", "adminOnly", "options"})
-public class Navigation {
+public class HeaderNavigation {
 
   @JsonIgnore
   private final Map<String, Object> additionalProperties = new HashMap<>();
 
   private Boolean isDropdown;
   private String name;
-  private List<Option> options;
+  private List<HeaderOption> options;
   private String url;
 
   @JsonAnyGetter
@@ -35,7 +35,7 @@ public class Navigation {
     return name;
   }
 
-  public List<Option> getOptions() {
+  public List<HeaderOption> getOptions() {
     return options;
   }
 
@@ -56,7 +56,7 @@ public class Navigation {
     this.name = name;
   }
 
-  public void setOptions(List<Option> options) {
+  public void setOptions(List<HeaderOption> options) {
     this.options = options;
   }
 

@@ -4,9 +4,7 @@ import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
-import org.springframework.data.domain.Sort.Order;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -53,14 +51,15 @@ public class TeamV2Controller {
       @Parameter(name = "status", description = "List of statuses to filter for. Defaults to all.",
           example = "active,inactive",
           required = false) @RequestParam(required = false) Optional<List<String>> status,
-      @Parameter(name = "refs", description = "List of ids to filter for. Combined with scope.", 
-      required = false) @RequestParam(required = false) Optional<List<String>> refs,
+      @Parameter(name = "ids", description = "List of ids to filter for.", 
+      required = false) @RequestParam(required = false) Optional<List<String>> ids,
       @Parameter(name = "limit", description = "Result Size", example = "10",
-          required = true) @RequestParam(defaultValue = "10") int limit,
-      @Parameter(name = "page", description = "Page Number", example = "0",
-          required = true) @RequestParam(defaultValue = "0") int page) {
-    final Sort sort = Sort.by(new Order(Direction.ASC, "creationDate"));
-    return teamService.query(page, limit, sort, labels, status, refs);
+      required = true) @RequestParam(required = false) Optional<Integer> limit,
+  @Parameter(name = "page", description = "Page Number", example = "0",
+      required = true) @RequestParam(defaultValue = "0") Optional<Integer> page,
+  @Parameter(name = "sort", description = "Ascending (ASC) or Descending (DESC) sort on creationDate", example = "ASC",
+  required = true) @RequestParam(defaultValue = "ASC") Optional<Direction> sort) {
+    return teamService.query(page, limit, sort, labels, status, ids);
   }
   
   @GetMapping(value = "/{teamId}")

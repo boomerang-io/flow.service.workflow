@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import io.boomerang.error.BoomerangException;
-import io.boomerang.model.CronValidationResponse;
+import io.boomerang.v4.model.CronValidationResponse;
 import io.boomerang.v4.model.WorkflowSchedule;
 import io.boomerang.v4.model.WorkflowScheduleCalendar;
 import io.boomerang.v4.service.ScheduleService;

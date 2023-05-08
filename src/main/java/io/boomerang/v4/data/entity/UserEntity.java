@@ -8,8 +8,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import io.boomerang.mongo.model.UserStatus;
-import io.boomerang.mongo.model.UserType;
+import io.boomerang.v4.model.UserStatus;
+import io.boomerang.v4.model.UserType;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(Include.NON_NULL)
@@ -20,13 +20,13 @@ public class UserEntity {
   private String id;
   private String email;
   private String name;
-  private UserType type;
-  private Boolean isFirstVisit;
-  private Boolean isShowHelp;
-  private Date firstLoginDate;
+  private UserType type = UserType.user;
+  private Boolean isFirstVisit = true;
+  private Boolean isShowHelp = true;
+  private Date firstLoginDate = new Date();
   private Date lastLoginDate;
-  private UserStatus status;
-  private Boolean hasConsented;
+  private UserStatus status = UserStatus.active;
+  private Boolean hasConsented = false;
   private Map<String, String> labels = new HashMap<>();
 
   public UserStatus getStatus() {

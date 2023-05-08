@@ -1,4 +1,4 @@
-package io.boomerang.controller;
+package io.boomerang.v4.controller;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -9,31 +9,33 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import io.boomerang.model.Navigation;
-import io.boomerang.mongo.model.UserType;
 import io.boomerang.security.service.IdentityService;
-import io.boomerang.service.NavigationService;
-import io.boomerang.v4.data.entity.UserEntity;
+import io.boomerang.service.HeaderNavigationService;
+import io.boomerang.service.MenuNavigationService;
+import io.boomerang.v4.model.HeaderNavigationResponse;
+import io.boomerang.v4.model.Navigation;
 
 @RestController
-@RequestMapping("/workflow/navigation")
+@RequestMapping("/api/v2/navigation")
 public class NavigationController {
 
   @Autowired
-  NavigationService navigationService;
+  MenuNavigationService menuNavigationService;
 
   @Autowired
-  private IdentityService userService;
+  private HeaderNavigationService headerNavigationService;
+
+  @Autowired
+  private IdentityService identityService;
 
   @GetMapping(value = "")
+  public HeaderNavigationResponse getHeaderNavigation() {
+    return this.headerNavigationService.getHeaderNavigation(identityService.isCurrentUserAdmin());
+  }
+
+  @GetMapping(value = "/menu")
   public ResponseEntity<List<Navigation>> getNavigation(@RequestParam(required = false) String teamId) {
-    boolean isUserAdmin = false;
-    final UserEntity userEntity = userService.getCurrentUser();
-    if (userEntity != null
-        && (userEntity.getType() == UserType.admin || userEntity.getType() == UserType.operator)) {
-      isUserAdmin = true;
-    }
-    List<Navigation> response = navigationService.getNavigation(isUserAdmin, teamId);
+    List<Navigation> response = menuNavigationService.getNavigation(identityService.isCurrentUserAdmin(), teamId);
     
     CacheControl cacheControl = CacheControl.maxAge(1, TimeUnit.HOURS);
 

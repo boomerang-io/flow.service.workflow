@@ -21,7 +21,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.client.MockRestServiceServer;
 import io.boomerang.client.ExternalUserService;
-import io.boomerang.client.UserProfile;
+import io.boomerang.client.ExternalUserProfile;
 import io.boomerang.misc.FlowTests;
 
 @ExtendWith(SpringExtension.class)
@@ -36,7 +36,7 @@ class BoomerangUserServiceTests extends FlowTests {
 
   @Test
   void testGetUserProfile() {
-    UserProfile userProfile = userService.getInternalUserProfile();
+    ExternalUserProfile userProfile = userService.getInternalUserProfile();
     assertEquals("trbula@us.ibm.com", userProfile.getEmail());
   }
 

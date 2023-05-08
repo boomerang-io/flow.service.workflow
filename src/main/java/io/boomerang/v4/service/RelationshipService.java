@@ -24,8 +24,4 @@ public interface RelationshipService {
 
   List<String> getFilteredRefs(Optional<RelationshipRef> from, Optional<List<String>> fromRefs,
       Optional<RelationshipType> type, Optional<RelationshipRef> to, Optional<List<String>> toRefs);
-
-  List<String> getFilteredRefsForUserEmail(Optional<RelationshipRef> from,
-      Optional<List<String>> fromRefs, Optional<RelationshipType> type,
-      Optional<RelationshipRef> to, Optional<List<String>> toRefs, String userEmail);
 }

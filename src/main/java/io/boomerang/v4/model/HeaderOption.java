@@ -1,5 +1,5 @@
 
-package io.boomerang.model.profile;
+package io.boomerang.v4.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -7,7 +7,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({"name", "url"})
-public class Option {
+public class HeaderOption {
 
   @JsonProperty("name")
   private String name;

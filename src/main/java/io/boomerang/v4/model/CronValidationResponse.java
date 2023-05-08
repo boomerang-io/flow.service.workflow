@@ -1,4 +1,4 @@
-package io.boomerang.model;
+package io.boomerang.v4.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;

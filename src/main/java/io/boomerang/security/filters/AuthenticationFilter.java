@@ -149,7 +149,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
       lastName = sanitize(lastName);
 
       if (email != null && !email.isBlank()) {
-        final Token userSessionToken = tokenService.createUserSessionToken(email, firstName + " " + lastName);
+        final Token userSessionToken = tokenService.createUserSessionToken(email, firstName, lastName);
         final List<GrantedAuthority> authorities = new ArrayList<>();
         final UsernamePasswordAuthenticationToken authToken =
             new UsernamePasswordAuthenticationToken(email, null, authorities);
@@ -177,7 +177,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
       }
 
       if (email != null && !email.isBlank()) {
-        final Token userSessionToken = tokenService.createUserSessionToken(email, null);
+        final Token userSessionToken = tokenService.createUserSessionToken(email, null, null);
         final List<GrantedAuthority> authorities = new ArrayList<>();
         final UsernamePasswordAuthenticationToken authToken =
             new UsernamePasswordAuthenticationToken(email, password, authorities);
@@ -197,7 +197,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
   private Authentication getGithubUserAuthentication(HttpServletRequest req) {
     String email = req.getHeader(X_FORWARDED_EMAIL);
      String userName = req.getHeader(X_FORWARDED_USER);
-    final Token userSessionToken = tokenService.createUserSessionToken(email, userName);
+    final Token userSessionToken = tokenService.createUserSessionToken(email, userName, null);
     if (email != null && !email.isBlank()) {
       final List<GrantedAuthority> authorities = new ArrayList<>();
       final UsernamePasswordAuthenticationToken authToken =

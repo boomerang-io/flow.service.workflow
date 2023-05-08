@@ -1,4 +1,4 @@
-package io.boomerang.mongo.model;
+package io.boomerang.v4.data.model.ref;
 
 import java.util.Date;
 import com.fasterxml.jackson.annotation.JsonInclude;

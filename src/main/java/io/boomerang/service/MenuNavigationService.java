@@ -1,9 +1,9 @@
 package io.boomerang.service;
 
 import java.util.List;
-import io.boomerang.model.Navigation;
+import io.boomerang.v4.model.Navigation;
 
-public interface NavigationService {
+public interface MenuNavigationService {
 
   List<Navigation> getNavigation(boolean isUserAdmin, String teamId);
 

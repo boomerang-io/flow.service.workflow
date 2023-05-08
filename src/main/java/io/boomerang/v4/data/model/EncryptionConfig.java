@@ -1,4 +1,4 @@
-package io.boomerang.mongo.model;
+package io.boomerang.v4.data.model;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;

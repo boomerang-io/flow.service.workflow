@@ -21,6 +21,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -29,23 +30,23 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import io.boomerang.error.BoomerangError;
 import io.boomerang.error.BoomerangException;
+import io.boomerang.security.service.IdentityService;
 import io.boomerang.util.DataAdapterUtil.FieldType;
 import io.boomerang.v4.client.WorkflowResponsePage;
 import io.boomerang.v4.data.entity.ApproverGroupEntity;
 import io.boomerang.v4.data.entity.TeamEntity;
-import io.boomerang.v4.data.entity.UserEntity;
 import io.boomerang.v4.data.model.CurrentQuotas;
 import io.boomerang.v4.data.model.Quotas;
 import io.boomerang.v4.data.model.TeamSettings;
 import io.boomerang.v4.data.repository.ApproverGroupRepository;
 import io.boomerang.v4.data.repository.TeamRepository;
-import io.boomerang.v4.data.repository.UserRepository;
 import io.boomerang.v4.model.AbstractParam;
 import io.boomerang.v4.model.ApproverGroup;
 import io.boomerang.v4.model.ApproverGroupRequest;
 import io.boomerang.v4.model.Team;
 import io.boomerang.v4.model.TeamRequest;
 import io.boomerang.v4.model.TeamResponsePage;
+import io.boomerang.v4.model.User;
 import io.boomerang.v4.model.UserSummary;
 import io.boomerang.v4.model.WorkflowSummary;
 import io.boomerang.v4.model.enums.RelationshipRef;
@@ -70,8 +71,11 @@ public class TeamServiceImpl implements TeamService {
   @Autowired
   private TeamRepository teamRepository;
 
+//  @Autowired
+//  private UserRepository userRepository;
+
   @Autowired
-  private UserRepository userRepository;
+  private IdentityService identityService;
 
   @Autowired
   private ApproverGroupRepository approverGroupRepository;
@@ -84,9 +88,6 @@ public class TeamServiceImpl implements TeamService {
 
   @Autowired
   private MongoTemplate mongoTemplate;
-
-  @Autowired
-  private UserService userService;
 
   @Autowired
   private WorkflowRunService workflowRunService;
@@ -202,12 +203,17 @@ public class TeamServiceImpl implements TeamService {
    * Returns Teams plus each Teams UserRefs, WorkflowRefs, and Quotas
    */
   @Override
-  public TeamResponsePage query(int page, int limit, Sort sort, Optional<List<String>> queryLabels,
-      Optional<List<String>> queryStatus, Optional<List<String>> queryRefs) {
-    final Pageable pageable = PageRequest.of(page, limit, sort);
+  public TeamResponsePage query(Optional<Integer> queryPage, Optional<Integer> queryLimit, Optional<Direction> querySort, Optional<List<String>> queryLabels,
+      Optional<List<String>> queryStatus, Optional<List<String>> queryIds) {
+    Pageable pageable = Pageable.unpaged();
+    final Sort sort = Sort.by(new Order(querySort.orElse(Direction.ASC), "creationDate"));
+    if (queryLimit.isPresent()) {
+      pageable = PageRequest.of(queryPage.get(), queryLimit.get(), sort);
+    }
+    
     List<Team> teams = new LinkedList<>();
     List<String> teamRefs = relationshipService.getFilteredRefs(Optional.empty(), Optional.empty(),
-        Optional.of(RelationshipType.MEMBEROF), Optional.of(RelationshipRef.TEAM), queryRefs);
+        Optional.of(RelationshipType.MEMBEROF), Optional.of(RelationshipRef.TEAM), queryIds);
 
     List<Criteria> criteriaList = new ArrayList<>();
     if (queryLabels.isPresent()) {
@@ -245,10 +251,14 @@ public class TeamServiceImpl implements TeamService {
       allCriteria.andOperator(criteriaArray);
     }
     Query query = new Query(allCriteria);
-    query.with(pageable);
+    if (queryLimit.isPresent()) {
+      query.with(pageable);
+    } else {
+      query.with(sort);
+    }
 
     Page<TeamEntity> pages =
-        PageableExecutionUtils.getPage(mongoTemplate.find(query.with(pageable), TeamEntity.class),
+        PageableExecutionUtils.getPage(mongoTemplate.find(query, TeamEntity.class),
             pageable, () -> mongoTemplate.count(query, TeamEntity.class));
 
     List<TeamEntity> teamEntities = pages.getContent();
@@ -352,14 +362,14 @@ public class TeamServiceImpl implements TeamService {
 
       List<String> userRefs = Collections.emptyList();
       for (UserSummary userSummary : request.getUsers()) {
-        UserEntity userEntity = null;
+        Optional<User> userEntity = null;
         if (!userSummary.getId().isEmpty()) {
-          userEntity = userService.getUserById(userSummary.getId()).orElseGet(null);
+          userEntity = identityService.getUserByID(userSummary.getId());
         } else if (!userSummary.getEmail().isEmpty()) {
-          userEntity = userService.getUserWithEmail(userSummary.getEmail());
+          userEntity = identityService.getUserByEmail(userSummary.getEmail());
         }
         if (userEntity != null) {
-          userRefs.add(userEntity.getId());
+          userRefs.add(userEntity.get().getId());
         }
       }
       relationshipService.removeRelationships(RelationshipRef.USER, userRefs, RelationshipRef.TEAM,
@@ -1020,7 +1030,7 @@ public class TeamServiceImpl implements TeamService {
     ApproverGroup ag = new ApproverGroup(age);
     if (!age.getApproverRefs().isEmpty()) {
       age.getApproverRefs().forEach(ref -> {
-        Optional<UserEntity> ue = userRepository.findById(ref);
+        Optional<User> ue = identityService.getUserByID(ref);
         if (ue.isPresent()) {
           UserSummary u = new UserSummary(ue.get());
           ag.getApprovers().add(u);
@@ -1040,7 +1050,7 @@ public class TeamServiceImpl implements TeamService {
     List<UserSummary> teamUsers = new LinkedList<>();
     if (!userRefs.isEmpty()) {
       userRefs.forEach(ref -> {
-        Optional<UserEntity> ue = userRepository.findById(ref);
+        Optional<User> ue = identityService.getUserByID(ref);
         if (ue.isPresent()) {
           UserSummary u = new UserSummary(ue.get());
           teamUsers.add(u);
@@ -1059,14 +1069,14 @@ public class TeamServiceImpl implements TeamService {
         Optional.of(RelationshipRef.TEAM), Optional.of(List.of(teamId)));
     if (request.getUsers() != null && !request.getUsers().isEmpty()) {
       for (UserSummary userSummary : request.getUsers()) {
-        UserEntity userEntity = null;
+        Optional<User> userEntity = null;
         if (!userSummary.getId().isEmpty()) {
-          userEntity = userService.getUserById(userSummary.getId()).orElseGet(null);
+          userEntity = identityService.getUserByID(userSummary.getId());
         } else if (!userSummary.getEmail().isEmpty()) {
-          userEntity = userService.getUserWithEmail(userSummary.getEmail());
+          userEntity = identityService.getUserByEmail(userSummary.getEmail());
         }
-        if (userEntity != null && !userRefs.contains(userEntity.getId())) {
-          relationshipService.addRelationshipRef(RelationshipRef.USER, userEntity.getId(),
+        if (userEntity.isPresent() && !userRefs.contains(userEntity.get().getId())) {
+          relationshipService.addRelationshipRef(RelationshipRef.USER, userEntity.get().getId(),
               RelationshipRef.TEAM, Optional.of(teamId));
         }
       }

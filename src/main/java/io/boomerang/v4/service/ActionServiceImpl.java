@@ -15,17 +15,18 @@ import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.stereotype.Service;
 import io.boomerang.error.BoomerangError;
 import io.boomerang.error.BoomerangException;
-import io.boomerang.mongo.model.Audit;
 import io.boomerang.security.service.IdentityService;
 import io.boomerang.v4.client.EngineClient;
 import io.boomerang.v4.data.entity.ApproverGroupEntity;
 import io.boomerang.v4.data.entity.UserEntity;
 import io.boomerang.v4.data.entity.ref.ActionEntity;
+import io.boomerang.v4.data.model.ref.Audit;
 import io.boomerang.v4.data.repository.ApproverGroupRepository;
 import io.boomerang.v4.data.repository.ref.ActionRepository;
 import io.boomerang.v4.model.Action;
 import io.boomerang.v4.model.ActionRequest;
 import io.boomerang.v4.model.ActionSummary;
+import io.boomerang.v4.model.User;
 import io.boomerang.v4.model.enums.RelationshipRef;
 import io.boomerang.v4.model.enums.RelationshipType;
 import io.boomerang.v4.model.enums.ref.ActionStatus;
@@ -151,10 +152,10 @@ public class ActionServiceImpl implements ActionService {
 
       action.setNumberOfApprovals(aprovalCount);
       for (Audit audit : actionEntity.getActioners()) {
-        UserEntity user = this.userIdentityService.getUserByID(audit.getApproverId());
-        if (user != null) {
-          audit.setApproverName(user.getName());
-          audit.setApproverEmail(user.getEmail());
+        Optional<User> user = userIdentityService.getUserByID(audit.getApproverId());
+        if (user.isPresent()) {
+          audit.setApproverName(user.get().getName());
+          audit.setApproverEmail(user.get().getEmail());
         }
       }
       action.setActioners(actionEntity.getActioners());

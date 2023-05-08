@@ -1,76 +1,389 @@
 package io.boomerang.security.service;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
+import org.apache.commons.lang3.EnumUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.domain.Sort.Order;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpClientErrorException;
+import io.boomerang.client.ExternalUserProfile;
 import io.boomerang.client.ExternalUserService;
-import io.boomerang.client.UserProfile;
-import io.boomerang.model.FlowUserProfile;
-import io.boomerang.model.OneTimeCode;
-import io.boomerang.model.UserQueryResult;
-import io.boomerang.mongo.model.UserStatus;
-import io.boomerang.mongo.model.UserType;
+import io.boomerang.error.BoomerangError;
+import io.boomerang.error.BoomerangException;
 import io.boomerang.security.model.Token;
 import io.boomerang.security.model.TokenType;
 import io.boomerang.v4.data.entity.TeamEntity;
 import io.boomerang.v4.data.entity.UserEntity;
 import io.boomerang.v4.data.entity.ref.WorkflowEntity;
+import io.boomerang.v4.data.repository.UserRepository;
+import io.boomerang.v4.model.OneTimeCode;
+import io.boomerang.v4.model.Team;
 import io.boomerang.v4.model.User;
-import io.boomerang.v4.service.UserService;
+import io.boomerang.v4.model.UserProfile;
+import io.boomerang.v4.model.UserRequest;
+import io.boomerang.v4.model.UserResponsePage;
+import io.boomerang.v4.model.UserStatus;
+import io.boomerang.v4.model.UserType;
+import io.boomerang.v4.model.enums.RelationshipRef;
+import io.boomerang.v4.model.enums.RelationshipType;
+import io.boomerang.v4.model.enums.TeamStatus;
+import io.boomerang.v4.service.RelationshipService;
+import io.boomerang.v4.service.TeamService;
 
 @Service
 public class IdentityServiceImpl implements IdentityService {
 
+  private static final Logger LOGGER = LogManager.getLogger();
+
   @Value("${flow.externalUrl.user}")
   private String externalUserUrl;
+  
+  @Value("${flow.otc}")
+  private String corePlatformOTC;  
 
   @Autowired
   private ExternalUserService extUserService;
+  
+  @Autowired
+  private UserRepository userRepository;
+  
+  @Autowired
+  private RelationshipService relationshipService;
+  
+  @Autowired
+  private TeamService teamService;
 
   @Autowired
-  private UserService userService;
-
-  @Value("${flow.otc}")
-  private String corePlatformOTC;
-
-//  @Autowired
-//  private WorkflowService workflowService;
-//
-//  @Autowired
-//  private TeamService flowTeamService;
+  private MongoTemplate mongoTemplate;
 
   @Override
-  public UserEntity getCurrentUser() {
-    UserEntity entity = this.getUserDetails();
+  public ResponseEntity<Boolean> activateSetup(OneTimeCode otc) {
     if (externalUserUrl.isBlank()) {
-      entity.setHasConsented(true);
-      return entity;
-    } else {
-      UserProfile userProfile = extUserService.getInternalUserProfile(entity.getEmail());
-      UserEntity flowUser = new UserEntity();
-      if (userProfile == null) {
-        return null;
+      if (corePlatformOTC.equals(otc.getOtc())) {
+        return new ResponseEntity<>(HttpStatus.OK);
       }
-      BeanUtils.copyProperties(userProfile, flowUser);
-
-      String email = userProfile.getEmail();
-      UserEntity dbUser = userService.getUserWithEmail(email);
-      if (dbUser == null) {
-        flowUser.setId(null);
-        userService.registerUser(flowUser);
-      } 
-      return flowUser;
     }
+    return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+  }
+
+  /*
+   * Used by the AuthenticationFilter to either
+   * - Retrieve the user and store in security context
+   * - Register the user
+   */
+  @Override
+  public Optional<UserEntity> getOrRegisterUser(String email, String firstName, String lastName,
+      Optional<UserType> usertype) {
+    if (email == null || email.isBlank()) {
+      return Optional.empty();
+    }
+
+    if (!externalUserUrl.isBlank()) {
+      // Retrieve user from External URL
+      ExternalUserProfile extUser = extUserService.getUserProfileByEmail(email);
+      UserEntity userEntity = new UserEntity();
+      if (extUser != null && UserStatus.active.toString().equals(extUser.getStatus())) {
+        BeanUtils.copyProperties(extUser, userEntity);
+        // Override external User Types
+        convertExternalUserType(extUser, userEntity);
+        return Optional.of(userEntity);
+      } else {
+        return Optional.empty();
+      }
+    } else {
+      UserEntity userEntity = new UserEntity();
+      if (externalUserUrl.isBlank() && this.userRepository.countByEmailIgnoreCaseAndStatus(email, UserStatus.active) == 1) {
+        // Retrieve User from DB - needs to be email to ensure there is only 1 active user per email (email is the key)
+        userEntity = this.userRepository.findByEmailIgnoreCaseAndStatus(email, UserStatus.active);
+      } else {
+        // Create User (UserEntity is defaulted on new)
+        userEntity.setEmail(email);
+        if (usertype.isPresent()) {
+          userEntity.setType(usertype.get());
+        } else {
+          userEntity.setType(UserType.user);
+        }
+      }
+
+      // Refresh name from provided details
+      String name = String.format("%s %s", Optional.ofNullable(firstName).orElse(""),
+          Optional.ofNullable(lastName).orElse("")).trim();
+      if (firstName == null && lastName == null && email != null) {
+        name = email;
+      }
+      userEntity.setName(name);
+      userEntity.setLastLoginDate(new Date());
+      return Optional.of(userRepository.save(userEntity));
+    }
+  }
+
+  private void convertExternalUserType(ExternalUserProfile extUser, UserEntity userEntity) {
+    if (!UserType.user.equals(extUser.getType()) && !UserType.admin.equals(extUser.getType()) && !UserType.operator.equals(extUser.getType())) {
+      userEntity.setType(UserType.user);
+    }
+  }
+
+  @Override
+  public Optional<User> getUserByID(String userId) {
+    if (externalUserUrl.isBlank()) {
+      Optional<UserEntity> userEntity = userRepository.findById(userId);
+      if (userEntity.isPresent()) {
+        return Optional.of(new User(userEntity.get()));
+      }
+    } else {
+      ExternalUserProfile extUser = extUserService.getUserProfileById(userId);
+      if (extUser != null) {
+        User user = new User();
+        BeanUtils.copyProperties(extUser, user);
+        convertExternalUserType(extUser, user);
+        return Optional.of(user);
+      }
+    }
+    return Optional.empty();
+  }
+  
+  @Override
+  public Optional<User> getUserByEmail(String userEmail) {
+    if (externalUserUrl.isBlank()) {
+    UserEntity extUser = userRepository.findByEmailIgnoreCase(userEmail);
+      if (extUser != null) {
+        User user = new User();
+        BeanUtils.copyProperties(extUser, user);
+        return Optional.of(user);
+      }
+    } else {
+      ExternalUserProfile extUser = extUserService.getUserProfileByEmail(userEmail);
+      if (extUser != null) {
+        User user = new User();
+        BeanUtils.copyProperties(extUser, user);
+        convertExternalUserType(extUser, user);
+        return Optional.of(user);
+      }
+    }
+    return Optional.empty();
+  }
+
+  /*
+   * Retrieves the profile for current user session
+   */
+  @Override
+  public UserProfile getCurrentProfile() {
+    UserEntity user = getCurrentUser();
+    UserProfile profile = new UserProfile(user);
+    List<String> teamRefs = relationshipService.getFilteredRefs(Optional.of(RelationshipRef.USER), Optional.of(List.of(user.getId())), Optional.of(RelationshipType.MEMBEROF), Optional.of(RelationshipRef.TEAM), Optional.empty());
+    List<Team> usersTeams = teamService.query(Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(teamRefs)).getContent();
+    profile.setTeams(usersTeams);
+    return profile;
+  }
+
+  /*
+   * Retrieves the profile for a specified user. Does not use current session.
+   */
+  @Override
+  public UserProfile getProfile(String userId) {
+    if (externalUserUrl.isBlank()) {
+      Optional<UserEntity> flowUser = userRepository.findById(userId);
+      if (flowUser.isPresent()) {
+        UserProfile profile = new UserProfile(flowUser.get());
+        List<String> teamRefs = relationshipService.getFilteredRefs(Optional.of(RelationshipRef.USER), Optional.of(List.of(userId)), Optional.of(RelationshipType.MEMBEROF), Optional.of(RelationshipRef.TEAM), Optional.empty());
+        List<Team> usersTeams = teamService.query(Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(teamRefs)).getContent();
+        profile.setTeams(usersTeams);
+        return profile;
+      }
+    } else {
+      ExternalUserProfile extUserProfile = extUserService.getUserProfileById(userId);
+      if (extUserProfile != null) {
+        UserProfile profile = new UserProfile();
+        BeanUtils.copyProperties(extUserProfile, profile);
+        convertExternalUserType(extUserProfile, profile);
+        List<String> teamRefs = relationshipService.getFilteredRefs(Optional.of(RelationshipRef.USER), Optional.of(List.of(userId)), Optional.of(RelationshipType.MEMBEROF), Optional.of(RelationshipRef.TEAM), Optional.empty());
+        List<Team> usersTeams = teamService.query(Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(teamRefs)).getContent();
+        profile.setTeams(usersTeams);
+        return profile;
+      }
+    }
+    return null;
+  }
+
+  /*
+   * Query for Users
+   */
+  @Override
+  public UserResponsePage query(Optional<Integer> queryPage, Optional<Integer> queryLimit, Optional<Direction> querySort, Optional<List<String>> queryLabels,
+      Optional<List<String>> queryStatus, Optional<List<String>> queryIds) {
+    Pageable pageable = Pageable.unpaged();
+    final Sort sort = Sort.by(new Order(querySort.orElse(Direction.ASC), "creationDate"));
+    if (queryLimit.isPresent()) {
+      pageable = PageRequest.of(queryPage.get(), queryLimit.get(), sort);
+    }
+    
+    //TODO figure out a Ref search for querying users - lock to admin for now.
+//    List<String> userRefs = relationshipService.getFilteredRefs(Optional.empty(), Optional.empty(),
+//        Optional.of(RelationshipType.MEMBEROF), Optional.of(RelationshipRef.TEAM), queryIds);
+
+    List<Criteria> criteriaList = new ArrayList<>();
+    if (queryLabels.isPresent()) {
+      queryLabels.get().stream().forEach(l -> {
+        String decodedLabel = "";
+        try {
+          decodedLabel = URLDecoder.decode(l, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+          throw new BoomerangException(e, BoomerangError.QUERY_INVALID_FILTERS, "labels");
+        }
+        LOGGER.debug(decodedLabel.toString());
+        String[] label = decodedLabel.split("[=]+");
+        Criteria labelsCriteria =
+            Criteria.where("labels." + label[0].replace(".", "#")).is(label[1]);
+        criteriaList.add(labelsCriteria);
+      });
+    }
+
+    if (queryStatus.isPresent()) {
+      if (queryStatus.get().stream()
+          .allMatch(q -> EnumUtils.isValidEnumIgnoreCase(TeamStatus.class, q))) {
+        Criteria criteria = Criteria.where("status").in(queryStatus.get());
+        criteriaList.add(criteria);
+      } else {
+        throw new BoomerangException(BoomerangError.QUERY_INVALID_FILTERS, "status");
+      }
+    }
+
+    Criteria criteria = Criteria.where("id").in(queryIds);
+    criteriaList.add(criteria);
+
+    Criteria[] criteriaArray = criteriaList.toArray(new Criteria[criteriaList.size()]);
+    Criteria allCriteria = new Criteria();
+    if (criteriaArray.length > 0) {
+      allCriteria.andOperator(criteriaArray);
+    }
+    Query query = new Query(allCriteria);
+    if (queryLimit.isPresent()) {
+      query.with(pageable);
+    } else {
+      query.with(sort);
+    }
+
+    Page<UserEntity> pages =
+        PageableExecutionUtils.getPage(mongoTemplate.find(query, UserEntity.class),
+            pageable, () -> mongoTemplate.count(query, UserEntity.class));
+
+    List<UserEntity> entities = pages.getContent();
+    List<User> users = new LinkedList<>();
+
+    if (!entities.isEmpty()) {
+      entities.forEach(e -> users.add(new User(e)));
+    }
+    return new UserResponsePage(users, pageable, pages.getNumberOfElements());
+  }
+  
+  @Override
+  public User create(UserRequest request) {
+    if (externalUserUrl.isBlank() && request != null && request.getEmail() != null && this.userRepository.countByEmailIgnoreCaseAndStatus(request.getEmail(), UserStatus.active) == 0) {
+      //Create User (UserEntity is defaulted on new)
+      UserEntity userEntity = new UserEntity();
+      userEntity.setEmail(request.getEmail());
+      if (request.getName() != null && !request.getName().isBlank()) {
+        userEntity.setName(request.getName());
+      }
+      if (request.getType() != null) {
+        userEntity.setType(request.getType());
+      }
+      if (request.getLabels() != null) {
+        userEntity.setLabels(request.getLabels());
+      }
+      userEntity.setHasConsented(true);
+      userEntity = this.userRepository.save(userEntity);
+
+      return new User(userEntity);
+    } else {
+      //TODO throw exception
+      return null;
+    }
+  }
+
+  @Override
+  //TODO throw exception if externalUserURL is provided
+  public void apply(UserRequest request) {
+    Optional<UserEntity> userOptional = Optional.empty();
+    if (request != null && request.getId() != null && !request.getId().isBlank()) {
+      userOptional = this.userRepository.findByIdAndStatus(request.getId(), UserStatus.active);
+    } else if (request != null && request.getEmail() != null && !request.getEmail().isBlank()) {
+      userOptional = Optional.of(this.userRepository.findByEmailIgnoreCaseAndStatus(request.getEmail(), UserStatus.active));
+    }
+    if (userOptional.isPresent()) {
+      UserEntity user = userOptional.get();
+      if (request.getName() != null && !request.getName().isBlank()) {
+        user.setName(request.getName());
+      }
+      if (request.getType() != null) {
+        user.setType(request.getType());
+      }
+      if (request.getLabels() != null) {
+        user.setLabels(request.getLabels());
+      }
+      this.userRepository.save(user);
+    }
+  }
+
+  @Override
+  public void delete(String userId) {
+    Optional<UserEntity> user = userRepository.findById(userId);
+    if (user.isPresent()) {
+      user.get().setStatus(UserStatus.deleted);
+      userRepository.save(user.get());
+    }
+  }
+
+  @Override
+  @NoLogging
+  public UserEntity getCurrentUser() {
+    if (SecurityContextHolder.getContext() != null
+        && SecurityContextHolder.getContext().getAuthentication() != null
+        && SecurityContextHolder.getContext().getAuthentication().getDetails() != null
+        && SecurityContextHolder.getContext().getAuthentication()
+            .getDetails() instanceof Token) {
+      Token token = (Token) SecurityContextHolder.getContext().getAuthentication().getDetails();
+      return token.getUser();
+//      return (UserToken) SecurityContextHolder.getContext().getAuthentication().getDetails();
+//    } else {
+//      return new UserToken("boomerang@us.ibm.com", "boomerang", "joe");
+    } else {
+      return null;
+    }
+  }
+
+  @Override
+  @NoLogging
+  public boolean isCurrentUserAdmin() {
+    boolean isUserAdmin = false;
+    final UserEntity userEntity = getCurrentUser();
+    if (userEntity != null && (userEntity.getType() == UserType.admin
+        || userEntity.getType() == UserType.operator || userEntity.getType() == UserType.auditor
+        || userEntity.getType() == UserType.author)) {
+      isUserAdmin = true;
+    }
+    return isUserAdmin;
   }
   
   @Override
@@ -90,181 +403,6 @@ public class IdentityServiceImpl implements IdentityService {
     }
     return null;
   }
-
-//  private UserEntity getOrRegisterUser(UserType userType) {
-//    UserEntity userDetails = this.getUserDetails();
-//    String email = userDetails.getEmail();
-//    String firstName = userDetails.getFirstName();
-//    String lastName = userDetails.getLastName();
-//    String name = String.format("%s %s", Optional.ofNullable(firstName).orElse(""),
-//        Optional.ofNullable(lastName).orElse("")).trim();
-//    if (firstName == null && lastName == null && email != null) {
-//      name = email;
-//    }
-//    return userService.getOrRegisterUser(email, name, userType);
-//  }
-
-  @Override
-  public UserEntity getUserByID(String userId) {
-    if (externalUserUrl.isBlank()) {
-      Optional<UserEntity> flowUser = userService.getUserById(userId);
-      if (flowUser.isPresent()) {
-        UserEntity profile = new UserEntity();
-        BeanUtils.copyProperties(flowUser.get(), profile);
-
-        return profile;
-      }
-    } else {
-      UserProfile userProfile = extUserService.getUserProfileById(userId);
-      FlowUserProfile flowUser = new FlowUserProfile();
-      if (userProfile != null) {
-        BeanUtils.copyProperties(userProfile, flowUser);
-        flowUser.setType(userProfile.getType());
-
-        return flowUser;
-      }
-    }
-    return null;
-  }
-  
-  @Override
-  public UserEntity getUserByEmail(String userEmail) {
-    UserEntity flowUser = userService.getUserWithEmail(userEmail);
-    if (flowUser != null) {
-      UserEntity profile = new UserEntity();
-      BeanUtils.copyProperties(flowUser, profile);
-      return profile;
-    }
-    return null;
-  }
-
-  @Override
-  public UserQueryResult getUserViaSearchTerm(String searchTerm, Pageable pageable) {
-    final UserQueryResult result = new UserQueryResult();
-    final Page<UserEntity> users = userService.findBySearchTerm(searchTerm, pageable);
-    final List<UserEntity> userList = new LinkedList<>();
-    for (final UserEntity userEntity : users.getContent()) {
-      userList.add(userEntity);
-    }
-
-    result.setRecords(userList);
-    result.setPageable(users);
-    return result;
-  }
-
-  @Override
-  public UserQueryResult getUsers(Pageable pageable) {
-    final UserQueryResult result = new UserQueryResult();
-
-    final Page<UserEntity> users = userService.findAll(pageable);
-    final List<UserEntity> userList = new LinkedList<>();
-
-    for (final UserEntity userEntity : users.getContent()) {
-
-      userList.add(userEntity);
-    }
-
-    result.setRecords(userList);
-    result.setPageable(users);
-    return result;
-  }
-
-  @Override
-  public List<UserEntity> getUsersForTeams(List<String> teamIds) {
-    return this.userService.getUsersforTeams(teamIds);
-  }
-
-  @Override
-  public void updateFlowUser(String userId, User updatedFlowUser) {
-    Optional<UserEntity> userOptional = this.userService.getUserById(userId);
-    if (userOptional.isPresent()) {
-      UserEntity user = userOptional.get();
-      if (updatedFlowUser.getType() != null) {
-        user.setType(updatedFlowUser.getType());
-      }
-      if (updatedFlowUser.getLabels() != null) {
-        user.setLabels(updatedFlowUser.getLabels());
-      }
-      this.userService.save(user);
-    }
-  }
-
-  @Override
-  public ResponseEntity<Boolean> activateSetup(OneTimeCode otc) {
-    if (externalUserUrl.isBlank()) {
-      if (corePlatformOTC.equals(otc.getOtc())) {
-//        getOrRegisterUser(UserType.admin);
-        return new ResponseEntity<>(HttpStatus.OK);
-      }
-    }
-    return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-  }
-
-  @Override
-  public UserProfile getOrRegisterCurrentUser() {
-    if (externalUserUrl.isBlank()) {
-      if (userService.getUserCount() == 0) {
-        throw new HttpClientErrorException(HttpStatus.LOCKED);
-      }
-//      UserEntity userEntity = getOrRegisterUser(UserType.user);
-      UserEntity userEntity = getUserDetails();
-      UserProfile profile = new UserProfile();
-      BeanUtils.copyProperties(userEntity, profile);
-      return profile;
-    } else {
-      UserEntity userEntity = getCurrentUser();
-      UserProfile profile = new UserProfile();
-      BeanUtils.copyProperties(userEntity, profile);
-      return profile;
-    }
-  }
-
-  @Override
-  public void deleteFlowUser(String userId) {
-    if (userService.getUserById(userId).isPresent()) {
-      UserEntity user = userService.getUserById(userId).get();
-      user.setStatus(UserStatus.deleted);
-      userService.save(user);
-    }
-  }
-
-
-  @Override
-  public User addFlowUser(User flowUser) {
-    if (userService.getUserWithEmail(flowUser.getEmail()) == null) {
-
-      String email = flowUser.getEmail();
-      String name = flowUser.getName();
-      UserType type = flowUser.getType();
-      UserEntity flowUserEntity = userService.getOrRegisterUser(email, name, type);
-      flowUserEntity.setHasConsented(true);
-      flowUserEntity = userService.save(flowUserEntity);
-
-      User newUser = new User();
-      BeanUtils.copyProperties(flowUserEntity, newUser);
-      return newUser;
-    }
-    return new User();
-  }
-
-  @Override
-  @NoLogging
-  public UserEntity getUserDetails() {
-    if (SecurityContextHolder.getContext() != null
-        && SecurityContextHolder.getContext().getAuthentication() != null
-        && SecurityContextHolder.getContext().getAuthentication().getDetails() != null
-        && SecurityContextHolder.getContext().getAuthentication()
-            .getDetails() instanceof Token) {
-      Token token = (Token) SecurityContextHolder.getContext().getAuthentication().getDetails();
-      return token.getUser();
-//      return (UserToken) SecurityContextHolder.getContext().getAuthentication().getDetails();
-//    } else {
-//      return new UserToken("boomerang@us.ibm.com", "boomerang", "joe");
-    } else {
-      return null;
-    }
-  }
-
 
   @Override
   public TokenType getCurrentScope() {
@@ -296,41 +434,6 @@ public class IdentityServiceImpl implements IdentityService {
       return (Token) details;
     } else {
       return null;
-    }
-  }
-
-  @Override
-  public FlowUserProfile getFullUserProfile(String userId) {
-    if (externalUserUrl.isBlank()) {
-      Optional<UserEntity> flowUser = userService.getUserById(userId);
-      if (flowUser.isPresent()) {
-        FlowUserProfile profile = new FlowUserProfile();
-        BeanUtils.copyProperties(flowUser.get(), profile);
-        setUserTeams(profile);
-        return profile;
-      }
-    } else {
-      UserProfile userProfile = extUserService.getUserProfileById(userId);
-      FlowUserProfile flowUser = new FlowUserProfile();
-      if (userProfile != null) {
-        BeanUtils.copyProperties(userProfile, flowUser);
-        flowUser.setType(userProfile.getType());
-        setUserTeams(flowUser);
-
-        return flowUser;
-      }
-    }
-    return null;
-  }
-
-
-  private void setUserTeams(FlowUserProfile flowUser) {
-    if (flowUser.getType() == UserType.admin) {
-//      flowUser.setUserTeams(flowTeamService.getAllTeamsListing());
-//      flowUser.setUserTeams(null);
-    } else {
-//      flowUser.setUserTeams(flowTeamService.getUsersTeamListing(flowUser));
-//      flowUser.setUserTeams(null);
     }
   }
 }

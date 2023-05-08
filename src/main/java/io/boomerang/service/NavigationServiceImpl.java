@@ -14,15 +14,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
-import io.boomerang.model.Navigation;
-import io.boomerang.model.NavigationType;
 import io.boomerang.security.service.ApiTokenService;
 import io.boomerang.security.service.IdentityService;
 import io.boomerang.v4.model.FeaturesAndQuotas;
+import io.boomerang.v4.model.Navigation;
+import io.boomerang.v4.model.NavigationType;
 import io.boomerang.v4.service.FeatureService;
 
 @Service
-public class NavigationServiceImpl implements NavigationService {
+public class NavigationServiceImpl implements MenuNavigationService {
 
   @Value("${flow.externalUrl.navigation}")
   private String flowExternalUrlNavigation;
@@ -202,7 +202,7 @@ public class NavigationServiceImpl implements NavigationService {
 
       HttpHeaders headers = new HttpHeaders();
       headers.add(AUTHORIZATION_HEADER, TOKEN_PREFIX
-          + apiTokenService.createJWTToken(identityService.getUserDetails().getEmail()));
+          + apiTokenService.createJWTToken(identityService.getCurrentUser().getEmail()));
       HttpEntity<String> request = new HttpEntity<>(headers);
       ResponseEntity<List<Navigation>> response = restTemplate.exchange(uriComponents.toUriString(),
           HttpMethod.GET, request, new ParameterizedTypeReference<List<Navigation>>() {});

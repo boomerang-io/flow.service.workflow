@@ -15,17 +15,18 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
-import io.boomerang.model.profile.Features;
-import io.boomerang.model.profile.Navigation;
-import io.boomerang.model.profile.NavigationResponse;
-import io.boomerang.model.profile.Platform;
 import io.boomerang.security.service.ApiTokenService;
 import io.boomerang.security.service.IdentityService;
+import io.boomerang.v4.data.entity.UserEntity;
 import io.boomerang.v4.model.AbstractParam;
+import io.boomerang.v4.model.HeaderFeatures;
+import io.boomerang.v4.model.HeaderNavigation;
+import io.boomerang.v4.model.HeaderNavigationResponse;
+import io.boomerang.v4.model.HeaderPlatform;
 import io.boomerang.v4.service.SettingsServiceImpl;
 
 @Service
-public class LaunchpadNavigationServiceImpl implements LaunchpadNavigationService {
+public class LaunchpadNavigationServiceImpl implements HeaderNavigationService {
 
   @Value("${core.feature.notifications.enable}")
   private Boolean enableFeatureNotification;
@@ -68,29 +69,27 @@ public class LaunchpadNavigationServiceImpl implements LaunchpadNavigationServic
   private IdentityService identityService;
   
   @Override
-  public NavigationResponse getLaunchpadNavigation(boolean isUserAdmin) {
+  public HeaderNavigationResponse getHeaderNavigation(boolean isUserAdmin) {
+    UserEntity user = identityService.getCurrentUser();
+    if (user == null) {
+      return null;
+    }
+    String email = user.getEmail();
     
-//    UserToken userToken = identityService.getUserDetails();
-//    if (userToken == null) {
-//      return null;
-//    }
-//    String email = userToken.getEmail();
-//    
-//    if (platformNavigationUrl.isBlank()) {
-//      return getFlowNavigationResponse();
-//    }
-//    else {
-//      return getExternalNavigationResponse(email);
-//    }
-    return null;
+    if (platformNavigationUrl.isBlank()) {
+      return getFlowNavigationResponse();
+    }
+    else {
+      return getExternalNavigationResponse(email);
+    }
   }
 
-  private NavigationResponse getFlowNavigationResponse() {
-    final List<Navigation> navList = new ArrayList<>();
-    NavigationResponse navigationResponse = new NavigationResponse();
+  private HeaderNavigationResponse getFlowNavigationResponse() {
+    final List<HeaderNavigation> navList = new ArrayList<>();
+    HeaderNavigationResponse navigationResponse = new HeaderNavigationResponse();
     navigationResponse.setNavigation(navList);
 
-    Features features = new Features();
+    HeaderFeatures features = new HeaderFeatures();
     features.setNotificationsEnabled(false);
     features.setDocsEnabled(false);
     features.setSupportEnabled(false);
@@ -103,7 +102,7 @@ public class LaunchpadNavigationServiceImpl implements LaunchpadNavigationServic
     String displayLogo = settingsService.getSetting("customizations", "displayLogo").getValue();
     String logoURL = settingsService.getSetting("customizations", "logoURL").getValue();
     String name = platformName + " " + appName;
-    Platform platform = new Platform();
+    HeaderPlatform platform = new HeaderPlatform();
     platform.setName(name.trim());
     platform.setVersion(platformVersion);
     platform.setSignOutUrl(platformBaseUrl + platformSignOutUrl);
@@ -118,13 +117,13 @@ public class LaunchpadNavigationServiceImpl implements LaunchpadNavigationServic
     return navigationResponse;
   }
   
-  private NavigationResponse getExternalNavigationResponse(String email) {
+  private HeaderNavigationResponse getExternalNavigationResponse(String email) {
     UriComponents uriComponents = UriComponentsBuilder.fromHttpUrl(platformNavigationUrl).build();
     HttpHeaders headers = buildHeaders(email);
     HttpEntity<String> requestUpdate = new HttpEntity<>("", headers);
-    ResponseEntity<NavigationResponse> response =
-        restTemplate.exchange(uriComponents.toUriString(), HttpMethod.GET, requestUpdate, NavigationResponse.class);
-    NavigationResponse result = response.getBody();
+    ResponseEntity<HeaderNavigationResponse> response =
+        restTemplate.exchange(uriComponents.toUriString(), HttpMethod.GET, requestUpdate, HeaderNavigationResponse.class);
+    HeaderNavigationResponse result = response.getBody();
     if (result != null && result.getPlatform() != null) {
       if(Strings.isBlank(result.getPlatform().getAppName())) {
         // set default appName from settings if the external Navigation API does NOT return appName.

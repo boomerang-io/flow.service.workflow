@@ -17,7 +17,7 @@ import io.boomerang.tekton.TektonTask;
 import io.boomerang.util.ParameterUtil;
 import io.boomerang.v4.client.EngineClient;
 import io.boomerang.v4.client.TaskTemplateResponsePage;
-import io.boomerang.v4.data.entity.UserEntity;
+import io.boomerang.v4.model.User;
 import io.boomerang.v4.model.enums.RelationshipRef;
 import io.boomerang.v4.model.enums.RelationshipType;
 import io.boomerang.v4.model.ref.ChangeLog;
@@ -174,9 +174,9 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
   //TODO: update to correct User Service. Used on retrieval of TaskTemplate
   private void switchChangeLogAuthorToUserName(ChangeLog changelog) {
     if (changelog != null && changelog.getAuthor() != null) {
-      UserEntity user = userIdentityService.getUserByID(changelog.getAuthor());
-      if (user != null) {
-        changelog.setAuthor(user.getName());
+      Optional<User> user = userIdentityService.getUserByID(changelog.getAuthor());
+      if (user.isPresent()) {
+        changelog.setAuthor(user.get().getName());
       }
     }
   }

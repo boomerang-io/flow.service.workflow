@@ -14,7 +14,6 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 import io.boomerang.security.service.ApiTokenService;
-import io.boomerang.security.service.IdentityService;
 
 @Service
 public class ExternalUserServiceImpl implements ExternalUserService {
@@ -25,9 +24,6 @@ public class ExternalUserServiceImpl implements ExternalUserService {
   @Autowired
   @Qualifier("internalRestTemplate")
   private RestTemplate restTemplate;
-  
-  @Autowired
-  private IdentityService userDetailsService;
 
   private static final String AUTHORIZATION_HEADER = "Authorization";
   private static final String TOKEN_PREFIX = "Bearer ";
@@ -36,15 +32,15 @@ public class ExternalUserServiceImpl implements ExternalUserService {
   private ApiTokenService apiTokenService;
 
   @Override
-  public UserProfile getInternalUserProfile(String email) {
+  public ExternalUserProfile getUserProfileByEmail(String email) {
     try {
       UriComponents uriComponents = UriComponentsBuilder.fromHttpUrl(externalUserUrl).
           queryParam("userEmail", email).build();
       HttpHeaders headers = buildHeaders(email);
     
       HttpEntity<String> requestUpdate = new HttpEntity<>("", headers);
-      ResponseEntity<UserProfile> response =
-          restTemplate.exchange(uriComponents.toUriString(), HttpMethod.GET, requestUpdate, UserProfile.class);
+      ResponseEntity<ExternalUserProfile> response =
+          restTemplate.exchange(uriComponents.toUriString(), HttpMethod.GET, requestUpdate, ExternalUserProfile.class);
       return response.getBody();
     } catch (RestClientException e) {
       e.printStackTrace();
@@ -53,14 +49,14 @@ public class ExternalUserServiceImpl implements ExternalUserService {
   }
 
   @Override
-  public UserProfile getUserProfileById(String id) {
+  public ExternalUserProfile getUserProfileById(String id) {
     UriComponents uriComponents = UriComponentsBuilder.fromHttpUrl(externalUserUrl).
         queryParam("userId", id).build();
     HttpHeaders headers = buildHeaders(null);
   
     HttpEntity<String> requestUpdate = new HttpEntity<>("", headers);
-    ResponseEntity<UserProfile> response =
-        restTemplate.exchange(uriComponents.toUriString(), HttpMethod.GET, requestUpdate, UserProfile.class);
+    ResponseEntity<ExternalUserProfile> response =
+        restTemplate.exchange(uriComponents.toUriString(), HttpMethod.GET, requestUpdate, ExternalUserProfile.class);
     return response.getBody();
   }
   

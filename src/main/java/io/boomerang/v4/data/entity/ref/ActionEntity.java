@@ -5,7 +5,7 @@ import java.util.List;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import io.boomerang.mongo.model.Audit;
+import io.boomerang.v4.data.model.ref.Audit;
 import io.boomerang.v4.model.enums.ref.ActionStatus;
 import io.boomerang.v4.model.enums.ref.ActionType;
 

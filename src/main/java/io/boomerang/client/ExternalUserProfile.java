@@ -5,13 +5,13 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import io.boomerang.mongo.model.UserType;
+import io.boomerang.v4.model.UserType;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({"id", "email", "name", "isFirstVisit", "type", "isShowHelp", "firstLoginDate",
     "lastLoginDate", "lowerLevelGroupIds", "pinnedToolIds", "favoritePackages", "personalizations",
     "notificationSettings", "status", "teams", "hasConsented"})
-public class UserProfile {
+public class ExternalUserProfile {
 
   @JsonProperty("id")
   private String id;

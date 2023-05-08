@@ -1,8 +1,8 @@
-package io.boomerang.model.profile;
+package io.boomerang.v4.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class Features {
+public class HeaderFeatures {
 
   @JsonProperty("notifications.enabled")
   private Boolean notificationsEnabled;

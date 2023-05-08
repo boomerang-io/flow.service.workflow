@@ -3,7 +3,7 @@ package io.boomerang.v4.service;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.http.ResponseEntity;
 import io.boomerang.v4.data.model.CurrentQuotas;
 import io.boomerang.v4.data.model.Quotas;
@@ -22,7 +22,7 @@ public interface TeamService {
 
   ResponseEntity<Team> get(String teamId);
 
-  Page<Team> query(int page, int limit, Sort sort, Optional<List<String>> labels,
+  Page<Team> query(Optional<Integer> page, Optional<Integer> limit, Optional<Direction> sort, Optional<List<String>> labels,
       Optional<List<String>> status, Optional<List<String>> refs);
 
   ResponseEntity<Void> enable(String teamId);

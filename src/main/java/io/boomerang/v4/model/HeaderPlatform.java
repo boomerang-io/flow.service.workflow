@@ -1,6 +1,6 @@
-package io.boomerang.model.profile;
+package io.boomerang.v4.model;
 
-public class Platform {
+public class HeaderPlatform {
 
   private String version;
   private String name;

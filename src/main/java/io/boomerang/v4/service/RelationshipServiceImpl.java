@@ -1,7 +1,6 @@
 package io.boomerang.v4.service;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -12,7 +11,6 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
-import io.boomerang.mongo.model.UserType;
 import io.boomerang.security.model.TokenType;
 import io.boomerang.security.service.IdentityService;
 import io.boomerang.v4.data.entity.RelationshipEntity;
@@ -20,6 +18,7 @@ import io.boomerang.v4.data.entity.TeamEntity;
 import io.boomerang.v4.data.entity.UserEntity;
 import io.boomerang.v4.data.entity.ref.WorkflowEntity;
 import io.boomerang.v4.data.repository.RelationshipRepository;
+import io.boomerang.v4.model.UserType;
 import io.boomerang.v4.model.enums.RelationshipRef;
 import io.boomerang.v4.model.enums.RelationshipType;
 
@@ -312,7 +311,7 @@ public class RelationshipServiceImpl implements RelationshipService {
     LOGGER.info("Current Access Scope: " + identityService.getCurrentScope());
     
     // If User is Admin provide global access
-    if ((TokenType.user.equals(accessScope) || TokenType.session.equals(accessScope)) && UserType.admin.equals(identityService.getCurrentUser().getType())) {
+    if ((TokenType.user.equals(accessScope) || TokenType.session.equals(accessScope)) && identityService.isCurrentUserAdmin()) {
       accessScope = TokenType.global;
     }
 
@@ -428,18 +427,18 @@ public class RelationshipServiceImpl implements RelationshipService {
    * 
    * TODO: implement this by reusing getFilteredRefs
    */
-  @Override
-  public List<String> getFilteredRefsForUserEmail(Optional<RelationshipRef> from, Optional<List<String>> fromRefs, Optional<RelationshipType> type, Optional<RelationshipRef> to, 
-      Optional<List<String>> toRefs, String userEmail) {
-    UserEntity user = identityService.getUserByEmail(userEmail);
-    Boolean isAdmin = false;
-    if (user != null && user.getType() == UserType.admin) {
-      isAdmin = true;
-    }
-//    return getFilteredRefs(fromRef, fromRefs, type, toRef, toRefs);
-    return new LinkedList<>();
-  }
-  
+//  @Override
+//  public List<String> getFilteredRefsForUserEmail(Optional<RelationshipRef> from, Optional<List<String>> fromRefs, Optional<RelationshipType> type, Optional<RelationshipRef> to, 
+//      Optional<List<String>> toRefs, String userEmail) {
+//    Optional<User> user = identityService.getUserByEmail(userEmail);
+//    Boolean isAdmin = false;
+//    if (user != null && user.getType() == UserType.admin) {
+//      isAdmin = true;
+//    }
+////    return getFilteredRefs(fromRef, fromRefs, type, toRef, toRefs);
+//    return new LinkedList<>();
+//  }
+//  
 //  /*
 //   * Check if a Relationship exists with an object of that ID
 //   * 
