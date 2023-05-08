@@ -39,15 +39,18 @@ import io.boomerang.v4.data.entity.ref.WorkflowEntity;
 import io.boomerang.v4.data.repository.UserRepository;
 import io.boomerang.v4.model.OneTimeCode;
 import io.boomerang.v4.model.Team;
+import io.boomerang.v4.model.TeamRequest;
 import io.boomerang.v4.model.User;
 import io.boomerang.v4.model.UserProfile;
 import io.boomerang.v4.model.UserRequest;
 import io.boomerang.v4.model.UserResponsePage;
 import io.boomerang.v4.model.UserStatus;
+import io.boomerang.v4.model.UserSummary;
 import io.boomerang.v4.model.UserType;
 import io.boomerang.v4.model.enums.RelationshipRef;
 import io.boomerang.v4.model.enums.RelationshipType;
 import io.boomerang.v4.model.enums.TeamStatus;
+import io.boomerang.v4.model.enums.TeamType;
 import io.boomerang.v4.service.RelationshipService;
 import io.boomerang.v4.service.TeamService;
 
@@ -98,6 +101,7 @@ public class IdentityServiceImpl implements IdentityService {
     if (email == null || email.isBlank()) {
       return Optional.empty();
     }
+    boolean createTeam = false;
 
     if (!externalUserUrl.isBlank()) {
       // Retrieve user from External URL
@@ -107,6 +111,8 @@ public class IdentityServiceImpl implements IdentityService {
         BeanUtils.copyProperties(extUser, userEntity);
         // Override external User Types
         convertExternalUserType(extUser, userEntity);
+        
+        // TODO - make sure external user has a team.
         return Optional.of(userEntity);
       } else {
         return Optional.empty();
@@ -124,6 +130,8 @@ public class IdentityServiceImpl implements IdentityService {
         } else {
           userEntity.setType(UserType.user);
         }
+        // Create Users Team
+        createTeam = true;
       }
 
       // Refresh name from provided details
@@ -134,7 +142,15 @@ public class IdentityServiceImpl implements IdentityService {
       }
       userEntity.setName(name);
       userEntity.setLastLoginDate(new Date());
-      return Optional.of(userRepository.save(userEntity));
+      userEntity.getSettings().setIsFirstVisit(false);
+      userEntity = userRepository.save(userEntity);
+      
+      TeamRequest request = new TeamRequest();
+      request.setName(lastName + "'s Team");
+      request.setUsers(List.of(new UserSummary(userEntity)));
+      teamService.create(request, TeamType.personal);
+      
+      return Optional.of(userEntity);
     }
   }
 
@@ -312,7 +328,7 @@ public class IdentityServiceImpl implements IdentityService {
       if (request.getLabels() != null) {
         userEntity.setLabels(request.getLabels());
       }
-      userEntity.setHasConsented(true);
+      userEntity.getSettings().setHasConsented(true);
       userEntity = this.userRepository.save(userEntity);
 
       return new User(userEntity);

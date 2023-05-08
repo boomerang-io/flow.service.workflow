@@ -52,6 +52,7 @@ import io.boomerang.v4.model.WorkflowSummary;
 import io.boomerang.v4.model.enums.RelationshipRef;
 import io.boomerang.v4.model.enums.RelationshipType;
 import io.boomerang.v4.model.enums.TeamStatus;
+import io.boomerang.v4.model.enums.TeamType;
 import io.boomerang.v4.model.ref.Workflow;
 import io.boomerang.v4.model.ref.WorkflowRunInsight;
 
@@ -99,15 +100,18 @@ public class TeamServiceImpl implements TeamService {
    * Creates a new Team - Only available to Global tokens / admins
    * 
    * - Name must not be blank
-   * 
-   * TODO: check user is admin or global token
    */
   @Override
   public ResponseEntity<Team> create(TeamRequest request) {
+    return create(request, TeamType.team);
+  }
+
+  @Override
+  public ResponseEntity<Team> create(TeamRequest request, TeamType type) {
     if (!request.getName().isBlank()) {
       TeamEntity teamEntity = new TeamEntity();
       teamEntity.setName(request.getName());
-
+      teamEntity.setType(type); // Only create TeamType.Team in most cases - User and System are internally created.
       if (request.getExternalRef() != null && !request.getExternalRef().isBlank()) {
         teamEntity.setExternalRef(request.getExternalRef());
       }
@@ -311,9 +315,13 @@ public class TeamServiceImpl implements TeamService {
     if (!entity.isPresent()) {
       throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
     }
-
+    if (!TeamType.team.equals(entity.get().getType())) {
+      // TODO change the exception to be unable to disable teams of Personal or System type
+      throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
+    }
     entity.get().setStatus(TeamStatus.inactive);
     teamRepository.save(entity.get());
+    
     return ResponseEntity.noContent().build();
   }
 

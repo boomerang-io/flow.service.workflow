@@ -32,7 +32,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @RestController
 @RequestMapping("/api/v2/action")
 @Tag(name = "Actions Management",
-description = "Create and Manage the Manual and Approval Actions.")
+description = "Create and manage Manual and Approval Actions.")
 public class ActionV2Controller {
 
   @Autowired
@@ -47,7 +47,7 @@ public class ActionV2Controller {
   }
 
   @GetMapping(value = "/{actionId}")
-  @Operation(summary = "Provide an update for an Action")
+  @Operation(summary = "Retrieve a specific Action by Id")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
   public void get(
@@ -57,7 +57,7 @@ public class ActionV2Controller {
   }
 
   @GetMapping(value = "/")
-  @Operation(summary = "Provide an update for an Action")
+  @Operation(summary = "Retrieve a specifc Action by TaskRun")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
   public void getByTaskRun(

@@ -10,9 +10,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
  * The Slack extension depends on the SlackSecurityVerificationFilter
  */
 @RestController
-@RequestMapping("/apis/v1/extensions")
+@RequestMapping("/apis/v2/integrations")
 @Tag(name = "Extensions Management", description = "Specific use cases via extensions.")
-public class ExtensionsV2Controller {
+public class IntegrationsV2Controller {
 
 //  private static final Logger LOGGER = LogManager.getLogger();
 //  @Autowired

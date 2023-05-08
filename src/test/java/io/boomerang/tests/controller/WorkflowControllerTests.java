@@ -50,7 +50,7 @@ import io.boomerang.mongo.model.WorkflowConfiguration;
 import io.boomerang.mongo.model.WorkflowScope;
 import io.boomerang.mongo.model.WorkflowStatus;
 import io.boomerang.util.DataAdapterUtil.FieldType;
-import io.boomerang.v4.controller.EventV2Controller;
+import io.boomerang.v4.controller.EventAndWebhookV2Controller;
 import io.boomerang.v4.model.ref.WorkflowAbstractParam;
 
 
@@ -65,7 +65,7 @@ public class WorkflowControllerTests extends FlowTests {
   private WorkflowController controller;
 
   @Autowired
-  private EventV2Controller internalController;
+  private EventAndWebhookV2Controller internalController;
 
   @Test
   public void testInternalWorkflowListing() {

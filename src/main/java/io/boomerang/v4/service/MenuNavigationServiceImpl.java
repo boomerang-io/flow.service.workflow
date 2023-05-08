@@ -2,6 +2,7 @@ package io.boomerang.v4.service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -46,7 +47,7 @@ public class MenuNavigationServiceImpl implements MenuNavigationService {
   private IdentityService identityService;
 
   @Override
-  public List<Navigation> getNavigation(boolean isUserAdmin, String teamId) {
+  public List<Navigation> getNavigation(boolean isUserAdmin, Optional<String> teamId) {
 
     FeaturesAndQuotas features = featureService.get();
 
@@ -193,10 +194,10 @@ public class MenuNavigationServiceImpl implements MenuNavigationService {
           UriComponentsBuilder.fromHttpUrl(flowExternalUrlNavigation);
       UriComponents uriComponents = null;
 
-      if (teamId == null || teamId.isBlank()) {
+      if (teamId.isEmpty() || teamId.get().isBlank()) {
         uriComponents = uriComponentsBuilder.build();
       } else {
-        uriComponents = uriComponentsBuilder.queryParam("teamId", teamId).build();
+        uriComponents = uriComponentsBuilder.queryParam("teamId", teamId.get()).build();
       }
 
       HttpHeaders headers = new HttpHeaders();

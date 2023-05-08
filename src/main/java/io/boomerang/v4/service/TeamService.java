@@ -13,10 +13,13 @@ import io.boomerang.v4.model.ApproverGroupRequest;
 import io.boomerang.v4.model.Team;
 import io.boomerang.v4.model.TeamRequest;
 import io.boomerang.v4.model.UserSummary;
+import io.boomerang.v4.model.enums.TeamType;
 
 public interface TeamService {
 
   ResponseEntity<Team> create(TeamRequest createTeamRequest);
+
+  ResponseEntity<Team> create(TeamRequest request, TeamType type);
 
   ResponseEntity<Team> update(TeamRequest createTeamRequest);
 

@@ -24,26 +24,35 @@ import io.boomerang.v4.model.CronValidationResponse;
 import io.boomerang.v4.model.WorkflowSchedule;
 import io.boomerang.v4.model.WorkflowScheduleCalendar;
 import io.boomerang.v4.service.ScheduleService;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping("/api/v2/schedules")
+@Tag(name = "Schedule Management",
+description = "Provide the ability to create and update Schedules.")
 public class SchedulesV2Controller {
 
   @Autowired
   private ScheduleService workflowScheduleService;
   
   @GetMapping(value = "/validate/cron")
-  public CronValidationResponse validateCron(@RequestParam String cron) {
+  @Operation(summary = "Validate a Schedules CRON.")
+  public CronValidationResponse validateCron(@Parameter(name = "cron",
+      description = "A CRON expression to validate",
+      required = true) @RequestParam String cron) {
     return workflowScheduleService.validateCron(cron);
   }
   
   @GetMapping(value = "/{scheduleId}")
+  @Operation(summary = "Retrieve a Schedule.")
   public WorkflowSchedule get(@PathVariable String scheduleId) {
     return workflowScheduleService.get(scheduleId);
   }
   
   @GetMapping(value = "/query")
+  @Operation(summary = "Search for Schedules")
   public Page<WorkflowSchedule> query(
       @Parameter(name = "status", description = "List of statuses to filter for. Defaults to all.",
           example = "active,archived",
@@ -64,6 +73,7 @@ public class SchedulesV2Controller {
   }
   
   @PostMapping(value = "/")
+  @Operation(summary = "Create a Schedule.")
   public WorkflowSchedule createSchedule(
       @Parameter(name = "team", description = "Team as owner reference.", example = "63d3656ca845957db7d25ef0,63a3e732b0496509a7f1d763",
       required = false) @RequestParam(required = false) Optional<String> team,
@@ -72,16 +82,19 @@ public class SchedulesV2Controller {
   }
   
   @PatchMapping(value = "/{scheduleId}")
+  @Operation(summary = "Apply a Schedule.")
   public WorkflowSchedule updateSchedule(@PathVariable String scheduleId, @RequestBody WorkflowSchedule schedule) {
     return workflowScheduleService.update(scheduleId, schedule);
   }
   
   @DeleteMapping(value = "/{scheduleId}")
+  @Operation(summary = "Delete a Schedule.")
   public ResponseEntity<?> deleteSchedule(@PathVariable String scheduleId) {
     return workflowScheduleService.delete(scheduleId);
   }
   
   @GetMapping(value = "/{scheduleId}/calendar")
+  @Operation(summary = "Retrieve a Calendar based on dates.")
   public List<Date> getScheduleForDates(@PathVariable String scheduleId, @RequestParam Long fromDate, @RequestParam Long toDate) {
     if (fromDate != null && toDate != null) {
       Date from = new Date(fromDate * 1000);
@@ -93,6 +106,7 @@ public class SchedulesV2Controller {
   }
   
   @GetMapping(value = "/calendars")
+  @Operation(summary = "Retrieve a Calendar by Schedules.")
   public List<WorkflowScheduleCalendar> getCalendarsForSchedules(@RequestParam List<String> scheduleIds, @RequestParam Long fromDate, @RequestParam Long toDate) {
     if (scheduleIds != null && !scheduleIds.isEmpty() && fromDate != null && toDate != null) {
       Date from = new Date(fromDate * 1000);

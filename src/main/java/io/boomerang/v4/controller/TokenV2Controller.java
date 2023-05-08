@@ -30,10 +30,13 @@ import io.boomerang.security.model.TokenType;
 import io.boomerang.security.service.TokenService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping("/api/v2")
-public class TokenV2Controlelr {
+@Tag(name = "Token Management",
+description = "Create and retrieve Tokens")
+public class TokenV2Controller {
 
   @Autowired
   private TokenService tokenService;

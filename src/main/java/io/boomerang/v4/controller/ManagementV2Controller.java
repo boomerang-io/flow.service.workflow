@@ -3,7 +3,10 @@ package io.boomerang.v4.controller;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -13,8 +16,10 @@ import io.boomerang.security.model.TokenAccess;
 import io.boomerang.security.model.TokenObject;
 import io.boomerang.security.model.TokenType;
 import io.boomerang.security.service.IdentityService;
+import io.boomerang.v4.model.GlobalParam;
 import io.boomerang.v4.model.OneTimeCode;
 import io.boomerang.v4.model.Setting;
+import io.boomerang.v4.service.GlobalParamService;
 import io.boomerang.v4.service.SettingsService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -23,8 +28,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping("/apis/v2")
-@Tag(name = "Boomerang Flow Management",
-    description = "Read and update Boomerang Flow Settings")
+@Tag(name = "Global Management",
+    description = "Register the instance, and Manage Settings and Global Parameters")
 public class ManagementV2Controller {
   
   @Autowired
@@ -32,6 +37,9 @@ public class ManagementV2Controller {
 
   @Autowired
   private IdentityService identityService;
+  
+  @Autowired
+  private GlobalParamService paramService;
   
   @GetMapping(value = "/settings")
 //  @AuthenticationScope(scopes = {TokenPermission.global})
@@ -54,8 +62,43 @@ public class ManagementV2Controller {
   //TODO move this to another location
   @PutMapping(value = "/register")
   @AuthScope(access = TokenAccess.any, object = TokenObject.user, types = {TokenType.session})
+  @Operation(summary = "Register and activate an installation of Flow")
+  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
+      @ApiResponse(responseCode = "400", description = "Bad Request")})
   public ResponseEntity<Boolean> register(@RequestBody(required = false) OneTimeCode otc) {
     return identityService.activateSetup(otc);
+  }
+
+  @GetMapping(value = "/global-params")
+  @AuthScope(types = {TokenType.global}, access = TokenAccess.read, object = TokenObject.parameter)
+  @Operation(summary = "Get all global Params")
+  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
+      @ApiResponse(responseCode = "400", description = "Bad Request")})
+  public List<GlobalParam> getAll() {
+    return paramService.getAll();
+  }
+
+  @PostMapping(value = "/global-params")
+//  @AuthenticationScope(scopes = {TokenPermission.global})
+  @Operation(summary = "Create new global Param")
+  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
+      @ApiResponse(responseCode = "400", description = "Bad Request")})
+  public GlobalParam create(@RequestBody GlobalParam request) {
+    return paramService.create(request);
+  }
+
+  @PutMapping(value = "/global-params")
+  public GlobalParam update(@RequestBody GlobalParam request) {
+    return paramService.update(request);
+  }
+
+  @DeleteMapping(value = "/global-params/{key}")
+//  @AuthenticationScope(scopes = {TokenPermission.global})
+  @Operation(summary = "Delete specific global Param")
+  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
+      @ApiResponse(responseCode = "400", description = "Bad Request")})
+  public void delete(@PathVariable String key) {
+    paramService.delete(key);
   }
 }
 

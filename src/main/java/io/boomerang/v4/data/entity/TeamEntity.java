@@ -14,6 +14,7 @@ import io.boomerang.v4.data.model.Quotas;
 import io.boomerang.v4.data.model.TeamSettings;
 import io.boomerang.v4.model.AbstractParam;
 import io.boomerang.v4.model.enums.TeamStatus;
+import io.boomerang.v4.model.enums.TeamType;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(Include.NON_NULL)
@@ -24,6 +25,7 @@ public class TeamEntity {
   private String id;
   private String name;
   private Date creationDate = new Date();
+  private TeamType type = TeamType.team; 
   private TeamStatus status = TeamStatus.active;
   private String externalRef;
   private Map<String, String> labels = new HashMap<>();
@@ -48,6 +50,12 @@ public class TeamEntity {
   }
   public void setCreationDate(Date creationDate) {
     this.creationDate = creationDate;
+  }
+  public TeamType getType() {
+    return type;
+  }
+  public void setType(TeamType type) {
+    this.type = type;
   }
   public TeamStatus getStatus() {
     return status;

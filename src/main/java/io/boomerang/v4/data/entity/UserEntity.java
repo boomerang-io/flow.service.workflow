@@ -8,6 +8,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import io.boomerang.v4.data.model.UserSettings;
 import io.boomerang.v4.model.UserStatus;
 import io.boomerang.v4.model.UserType;
 
@@ -21,13 +22,11 @@ public class UserEntity {
   private String email;
   private String name;
   private UserType type = UserType.user;
-  private Boolean isFirstVisit = true;
-  private Boolean isShowHelp = true;
-  private Date firstLoginDate = new Date();
+  private Date creationDate = new Date();
   private Date lastLoginDate;
   private UserStatus status = UserStatus.active;
-  private Boolean hasConsented = false;
   private Map<String, String> labels = new HashMap<>();
+  private UserSettings settings = new UserSettings();
 
   public UserStatus getStatus() {
     return status;
@@ -53,14 +52,6 @@ public class UserEntity {
     this.name = name;
   }
 
-  public Boolean getIsFirstVisit() {
-    return isFirstVisit;
-  }
-
-  public void setIsFirstVisit(Boolean isFirstVisit) {
-    this.isFirstVisit = isFirstVisit;
-  }
-
   public String getEmail() {
     return email;
   }
@@ -77,12 +68,12 @@ public class UserEntity {
     this.type = type;
   }
 
-  public Date getFirstLoginDate() {
-    return firstLoginDate;
+  public Date getCreationDate() {
+    return creationDate;
   }
 
-  public void setFirstLoginDate(Date firstLoginDate) {
-    this.firstLoginDate = firstLoginDate;
+  public void setCreationDate(Date creationDate) {
+    this.creationDate = creationDate;
   }
 
   public Date getLastLoginDate() {
@@ -93,27 +84,19 @@ public class UserEntity {
     this.lastLoginDate = lastLoginDate;
   }
 
-  public Boolean getIsShowHelp() {
-    return isShowHelp;
-  }
-
-  public void setIsShowHelp(Boolean isShowHelp) {
-    this.isShowHelp = isShowHelp;
-  }
-
-  public Boolean getHasConsented() {
-    return hasConsented;
-  }
-
-  public void setHasConsented(Boolean hasConsented) {
-    this.hasConsented = hasConsented;
-  }
-
   public Map<String, String> getLabels() {
     return labels;
   }
 
   public void setLabels(Map<String, String> labels) {
     this.labels = labels;
+  }
+
+  public UserSettings getSettings() {
+    return settings;
+  }
+
+  public void setSettings(UserSettings settings) {
+    this.settings = settings;
   }
 }
