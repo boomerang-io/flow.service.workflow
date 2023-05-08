@@ -10,10 +10,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import io.boomerang.security.service.IdentityService;
-import io.boomerang.service.HeaderNavigationService;
-import io.boomerang.service.MenuNavigationService;
 import io.boomerang.v4.model.HeaderNavigationResponse;
 import io.boomerang.v4.model.Navigation;
+import io.boomerang.v4.service.HeaderNavigationService;
+import io.boomerang.v4.service.MenuNavigationService;
 
 @RestController
 @RequestMapping("/api/v2/navigation")

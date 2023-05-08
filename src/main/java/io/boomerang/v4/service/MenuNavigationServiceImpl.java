@@ -1,4 +1,4 @@
-package io.boomerang.service;
+package io.boomerang.v4.service;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,10 +19,9 @@ import io.boomerang.security.service.IdentityService;
 import io.boomerang.v4.model.FeaturesAndQuotas;
 import io.boomerang.v4.model.Navigation;
 import io.boomerang.v4.model.NavigationType;
-import io.boomerang.v4.service.FeatureService;
 
 @Service
-public class NavigationServiceImpl implements MenuNavigationService {
+public class MenuNavigationServiceImpl implements MenuNavigationService {
 
   @Value("${flow.externalUrl.navigation}")
   private String flowExternalUrlNavigation;

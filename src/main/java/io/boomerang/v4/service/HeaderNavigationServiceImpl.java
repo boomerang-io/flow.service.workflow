@@ -1,4 +1,4 @@
-package io.boomerang.service;
+package io.boomerang.v4.service;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,10 +23,9 @@ import io.boomerang.v4.model.HeaderFeatures;
 import io.boomerang.v4.model.HeaderNavigation;
 import io.boomerang.v4.model.HeaderNavigationResponse;
 import io.boomerang.v4.model.HeaderPlatform;
-import io.boomerang.v4.service.SettingsServiceImpl;
 
 @Service
-public class LaunchpadNavigationServiceImpl implements HeaderNavigationService {
+public class HeaderNavigationServiceImpl implements HeaderNavigationService {
 
   @Value("${core.feature.notifications.enable}")
   private Boolean enableFeatureNotification;

@@ -1,4 +1,4 @@
-package io.boomerang.service;
+package io.boomerang.v4.service;
 
 import java.util.List;
 import io.boomerang.v4.model.Navigation;
