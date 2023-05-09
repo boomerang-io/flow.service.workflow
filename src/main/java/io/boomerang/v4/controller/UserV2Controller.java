@@ -48,11 +48,12 @@ public class UserV2Controller {
    */
   @GetMapping(value = "/profile")
   @AuthScope(access = TokenAccess.read, object = TokenObject.user, types = {TokenType.session, TokenType.user})
-  @Operation(summary = "Get a Users Profile")
+  @Operation(summary = "Get your Profile")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
-      @ApiResponse(responseCode = "404", description = "Not Found")})
-  public ResponseEntity<UserProfile> getProfile() {
-    return ResponseEntity.ok(identityService.getCurrentProfile());
+      @ApiResponse(responseCode = "423", description = "OK"),
+      @ApiResponse(responseCode = "404", description = "Instance not activated. Profile locked.")})
+  public UserProfile getProfile() {
+    return identityService.getCurrentProfile();
   }
 
   @GetMapping(value = "/{userId}")

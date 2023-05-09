@@ -27,6 +27,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import io.boomerang.client.ExternalUserProfile;
 import io.boomerang.client.ExternalUserService;
 import io.boomerang.error.BoomerangError;
@@ -94,10 +95,16 @@ public class IdentityServiceImpl implements IdentityService {
    * Used by the AuthenticationFilter to either
    * - Retrieve the user and store in security context
    * - Register the user
+   * - Returns LOCKED(423) status if there are no users yet
    */
   @Override
   public Optional<UserEntity> getOrRegisterUser(String email, String firstName, String lastName,
       Optional<UserType> usertype) {
+    if (externalUserUrl.isBlank()) {
+//    if (userRepository.count() == 0) {
+      throw new HttpClientErrorException(HttpStatus.LOCKED);
+//    }
+  }
     if (email == null || email.isBlank()) {
       return Optional.empty();
     }

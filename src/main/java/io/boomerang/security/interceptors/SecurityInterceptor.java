@@ -46,9 +46,9 @@ public class SecurityInterceptor implements HandlerInterceptor {
         LOGGER.error("SecurityInterceptor - mismatch between AuthN and AuthZ. A permitAll route has an AuthScope.");
         // If annotation is found but CurrentScope is not then mismatch must have happened between routes with AuthN and AuthZ
         // TODO set this to return false
-//        response.getWriter().write("");
-//        response.setStatus(401);
-        return true;
+        response.getWriter().write("");
+        response.setStatus(401);
+        return false;
       }
 
       TokenType[] requiredTypes = authScope.types();

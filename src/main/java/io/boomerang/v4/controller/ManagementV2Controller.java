@@ -1,7 +1,10 @@
 package io.boomerang.v4.controller;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.CacheControl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -10,6 +13,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import io.boomerang.security.interceptors.AuthScope;
 import io.boomerang.security.model.TokenAccess;
@@ -17,11 +21,16 @@ import io.boomerang.security.model.TokenObject;
 import io.boomerang.security.model.TokenType;
 import io.boomerang.security.service.IdentityService;
 import io.boomerang.v4.model.GlobalParam;
+import io.boomerang.v4.model.HeaderNavigationResponse;
+import io.boomerang.v4.model.Navigation;
 import io.boomerang.v4.model.OneTimeCode;
 import io.boomerang.v4.model.Setting;
+import io.boomerang.v4.service.ContextService;
 import io.boomerang.v4.service.GlobalParamService;
+import io.boomerang.v4.service.NavigationService;
 import io.boomerang.v4.service.SettingsService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -29,7 +38,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @RestController
 @RequestMapping("/apis/v2")
 @Tag(name = "Global Management",
-    description = "Register the instance, and Manage Settings and Global Parameters")
+    description = "Register the instance, retrieve context and navigation, and manage Settings and Global Parameters")
 public class ManagementV2Controller {
   
   @Autowired
@@ -40,6 +49,12 @@ public class ManagementV2Controller {
   
   @Autowired
   private GlobalParamService paramService;
+
+  @Autowired
+  NavigationService navigationService;
+
+  @Autowired
+  private ContextService contextService;
   
   @GetMapping(value = "/settings")
 //  @AuthenticationScope(scopes = {TokenPermission.global})
@@ -60,13 +75,30 @@ public class ManagementV2Controller {
   }
   
   //TODO move this to another location
-  @PutMapping(value = "/register")
+  @PutMapping(value = "/activate")
   @AuthScope(access = TokenAccess.any, object = TokenObject.user, types = {TokenType.session})
   @Operation(summary = "Register and activate an installation of Flow")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
   public ResponseEntity<Boolean> register(@RequestBody(required = false) OneTimeCode otc) {
     return identityService.activateSetup(otc);
+  }
+
+  @GetMapping(value = "/context")
+  @Operation(summary = "Retrieve this instances context, features, and navigation.")
+  public HeaderNavigationResponse getHeaderNavigation() {
+    return this.contextService.getHeaderNavigation(identityService.isCurrentUserAdmin());
+  }
+
+  @GetMapping(value = "/navigation")
+  @Operation(summary = "Retrieve navigation.")
+  public ResponseEntity<List<Navigation>> getNavigation(@Parameter(name = "teamId", description = "The id of the Team that the user is currently on", example = "123143412312310",
+      required = false) @RequestParam(required = false) Optional<String> teamId) {
+    List<Navigation> response = navigationService.getNavigation(identityService.isCurrentUserAdmin(), teamId);
+    
+    CacheControl cacheControl = CacheControl.maxAge(1, TimeUnit.HOURS);
+
+    return ResponseEntity.ok().cacheControl(cacheControl).body(response);
   }
 
   @GetMapping(value = "/global-params")

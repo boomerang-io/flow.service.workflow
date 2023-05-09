@@ -25,7 +25,7 @@ import io.boomerang.v4.model.HeaderNavigationResponse;
 import io.boomerang.v4.model.HeaderPlatform;
 
 @Service
-public class HeaderNavigationServiceImpl implements HeaderNavigationService {
+public class ContextServiceImpl implements ContextService {
 
   @Value("${core.feature.notifications.enable}")
   private Boolean enableFeatureNotification;

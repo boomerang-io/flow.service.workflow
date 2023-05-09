@@ -44,37 +44,39 @@ public class SecurityConfiguration {
   // @Value("${jwt.secret:secret}")
   // private String jwtSecret;
   //
-
+  
+  //TODO figure out why the bean order implementation below is not working
+  //TODO figure out why we also have to have the permitAll matches in the doNotFilter of AuthenticationFilter
+    @Bean
+    SecurityFilterChain authFilterChain(HttpSecurity http) throws Exception {
+      final AuthenticationFilter authFilter =
+          new AuthenticationFilter(tokenService, settingsService, basicPassword);
+      http.csrf().disable().authorizeRequests()
+          .antMatchers(HEALTH, API_DOCS, INFO, INTERNAL, WEBJARS, SLACK_INSTALL).permitAll().and()
+          .authorizeRequests().anyRequest().authenticated().and()
+          .addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class)
+          .sessionManagement()
+          .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+      return http.build();
+    }
+//
 //  @Bean
-//  SecurityFilterChain authFilterChain(HttpSecurity http) throws Exception {
+//  @Order(1)
+//  SecurityFilterChain tokenFilterChain(HttpSecurity http) throws Exception {
 //    final AuthenticationFilter authFilter =
 //        new AuthenticationFilter(tokenService, settingsService, basicPassword);
-//    http.csrf().disable().authorizeRequests()
-//        .antMatchers(HEALTH, API_DOCS, INFO, INTERNAL, WEBJARS, SLACK_INSTALL).permitAll().and()
-//        .authorizeRequests().anyRequest().authenticated().and()
-//        .addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class);
-////    .sessionManagement()
-////        .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
-//    return http.build();
-//  }
-
-  @Bean
-  @Order(2)
-  SecurityFilterChain tokenFilterChain(HttpSecurity http) throws Exception {
-    final AuthenticationFilter authFilter =
-        new AuthenticationFilter(tokenService, settingsService, basicPassword);
-    http.csrf().disable().authorizeRequests().anyRequest().authenticated().and()
-        .addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class);
+//    http.csrf().disable().authorizeRequests().anyRequest().authenticated().and()
+//        .addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class)
 //        .sessionManagement()
 //        .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
-    return http.build();
-  }
-
- @Bean
- @Order(1)
- SecurityFilterChain unauthenticatedFilterChain(HttpSecurity http) throws Exception {
-   http.csrf().disable().authorizeRequests()
-       .antMatchers(HEALTH, API_DOCS, INFO, INTERNAL, WEBJARS, SLACK_INSTALL).permitAll();
-   return http.build();
- }
+//    return http.build();
+//  }
+//
+// @Bean
+// @Order(2)
+// SecurityFilterChain unauthenticatedFilterChain(HttpSecurity http) throws Exception {
+//   http.csrf().disable().authorizeRequests()
+//       .antMatchers(HEALTH, API_DOCS, INFO, INTERNAL, WEBJARS, SLACK_INSTALL).permitAll();
+//   return http.build();
+// }
 }

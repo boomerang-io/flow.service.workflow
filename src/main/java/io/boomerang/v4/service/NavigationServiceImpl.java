@@ -22,7 +22,7 @@ import io.boomerang.v4.model.Navigation;
 import io.boomerang.v4.model.NavigationType;
 
 @Service
-public class MenuNavigationServiceImpl implements MenuNavigationService {
+public class NavigationServiceImpl implements NavigationService {
 
   @Value("${flow.externalUrl.navigation}")
   private String flowExternalUrlNavigation;
@@ -47,45 +47,47 @@ public class MenuNavigationServiceImpl implements MenuNavigationService {
   private IdentityService identityService;
 
   @Override
-  public List<Navigation> getNavigation(boolean isUserAdmin, Optional<String> teamId) {
+  public List<Navigation> getNavigation(boolean isUserAdmin, Optional<String> optTeamId) {
 
     FeaturesAndQuotas features = featureService.get();
 
     if (flowExternalUrlNavigation.isBlank()) {
       List<Navigation> response = new ArrayList<>();
+      if (optTeamId.isPresent()) {
+      String teamId = optTeamId.get();
       Navigation workflows = new Navigation();
       workflows.setName("Workflows");
       workflows.setType(NavigationType.link);
       workflows.setIcon("FlowData16");
-      workflows.setLink(flowAppsUrl + "/workflows");
+      workflows.setLink(flowAppsUrl + "/" + teamId + "/workflows");
       response.add(workflows);
 
       Navigation activity = new Navigation();
       activity.setName("Activity");
       activity.setType(NavigationType.link);
       activity.setIcon("Activity16");
-      activity.setLink(flowAppsUrl + "/activity");
+      activity.setLink(flowAppsUrl + "/" + teamId + "/activity");
       response.add(activity);
 
       Navigation actions = new Navigation();
       actions.setName("Actions");
       actions.setType(NavigationType.link);
       actions.setIcon("Stamp16");
-      actions.setLink(flowAppsUrl + "/actions");
+      actions.setLink(flowAppsUrl + "/" + teamId + "/actions");
       response.add(actions);
 
       Navigation insights = new Navigation();
       insights.setName("Insights");
       insights.setType(NavigationType.link);
       insights.setIcon("ChartScatter16");
-      insights.setLink(flowAppsUrl + "/insights");
+      insights.setLink(flowAppsUrl + "/" + teamId + "/insights");
       response.add(insights);
 
       Navigation schedules = new Navigation();
       schedules.setName("Schedules");
       schedules.setType(NavigationType.link);
       schedules.setIcon("CalendarHeatMap16");
-      schedules.setLink(flowAppsUrl + "/schedules");
+      schedules.setLink(flowAppsUrl + "/" + teamId + "/schedules");
       response.add(schedules);
 
       Navigation management = new Navigation();
@@ -96,29 +98,30 @@ public class MenuNavigationServiceImpl implements MenuNavigationService {
 
       Navigation teamApprovers = new Navigation();
       teamApprovers.setName("Team Parameters");
-      teamApprovers.setLink(flowAppsUrl + "/manage/team-parameters");
+      teamApprovers.setLink(flowAppsUrl + "/" + teamId + "/manage/team-parameters");
       teamApprovers.setType(NavigationType.link);
       management.getChildLinks().add(teamApprovers);
 
       Navigation teamProperties = new Navigation();
       teamProperties.setName("Team Approvers");
-      teamProperties.setLink(flowAppsUrl + "/manage/approver-groups");
+      teamProperties.setLink(flowAppsUrl + "/" + teamId + "/manage/approver-groups");
       teamProperties.setType(NavigationType.link);
       management.getChildLinks().add(teamProperties);
 
       Navigation teamTasks = new Navigation();
       teamTasks.setName("Team Tasks");
-      teamTasks.setLink(flowAppsUrl + "/manage/task-templates");
+      teamTasks.setLink(flowAppsUrl + "/" + teamId + "/manage/task-templates");
       teamTasks.setType(NavigationType.link);
       management.getChildLinks().add(teamTasks);
 
       Navigation teamTokens = new Navigation();
       teamTokens.setName("Team Tokens ");
-      teamTokens.setLink(flowAppsUrl + "/manage/team-tokens");
+      teamTokens.setLink(flowAppsUrl + "/" + teamId + "/manage/team-tokens");
       teamTokens.setType(NavigationType.link);
       management.getChildLinks().add(teamTokens);
-
+      
       response.add(management);
+      }
 
       if (isUserAdmin) {
         Navigation admin = new Navigation();
@@ -194,10 +197,10 @@ public class MenuNavigationServiceImpl implements MenuNavigationService {
           UriComponentsBuilder.fromHttpUrl(flowExternalUrlNavigation);
       UriComponents uriComponents = null;
 
-      if (teamId.isEmpty() || teamId.get().isBlank()) {
+      if (optTeamId.isEmpty() || optTeamId.get().isBlank()) {
         uriComponents = uriComponentsBuilder.build();
       } else {
-        uriComponents = uriComponentsBuilder.queryParam("teamId", teamId.get()).build();
+        uriComponents = uriComponentsBuilder.queryParam("teamId", optTeamId.get()).build();
       }
 
       HttpHeaders headers = new HttpHeaders();

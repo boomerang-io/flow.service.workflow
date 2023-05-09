@@ -51,5 +51,4 @@ public interface IdentityService {
   public void delete(String userId);
 
   boolean isCurrentUserAdmin();
-
 }

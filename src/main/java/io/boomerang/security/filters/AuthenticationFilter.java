@@ -63,7 +63,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
   @Override
   protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res,
       FilterChain chain) throws IOException, ServletException {
-    LOGGER.info("In AuthFilter()");
+    LOGGER.debug("In AuthFilter()");
     try {
 //      MultiReadHttpServletRequest multiReadRequest = new MultiReadHttpServletRequest(req);
       Authentication authentication = null;
@@ -90,16 +90,22 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 //        }
 //      }
       if (authentication != null) {
+        LOGGER.debug("AuthFilter() - authorized.");
         SecurityContextHolder.getContext().setAuthentication(authentication);
         chain.doFilter(req, res);
         return;
       }
+      LOGGER.error("AuthFilter() - not authorized.");
       res.sendError(401);
       return;
     } catch (final AuthorizationException e) {
       LOGGER.error(e);
       res.sendError(401);
       return;
+//    } catch (final HttpClientErrorException e2) {
+//      LOGGER.error(e2);
+//      res.sendError(e2.getRawStatusCode());
+//      return;
     }
   }
 
@@ -298,8 +304,8 @@ public class AuthenticationFilter extends OncePerRequestFilter {
   //TODO figure out why these aren't being applied in the SecurityConfig
   protected boolean shouldNotFilter(HttpServletRequest request) {
     String path = request.getServletPath();
-    return path.startsWith("/internal") || path.startsWith("/error") 
-//        || path.startsWith("/health")
+    return path.startsWith("/error") 
+        || path.startsWith("/health")
         || path.startsWith("/api/docs");
   }
 }
