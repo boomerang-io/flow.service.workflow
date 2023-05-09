@@ -37,6 +37,7 @@ import io.boomerang.mongo.model.WorkflowProperty;
 import io.boomerang.mongo.model.WorkflowScope;
 import io.boomerang.mongo.model.WorkflowStatus;
 import io.boomerang.mongo.service.FlowWorkflowService;
+import io.boomerang.security.service.UserValidationService;
 import io.boomerang.service.UserIdentityService;
 import io.boomerang.service.crud.WorkflowScheduleService;
 import io.boomerang.service.crud.WorkflowService;
@@ -60,6 +61,9 @@ public class WorkflowController {
 
   @Autowired
   private WorkflowScheduleService workflowScheduleService;
+
+  @Autowired
+  private UserValidationService userValidationService;
 
   @DeleteMapping(value = "{id}")
   public void deleteWorkflowWithId(@PathVariable String id) {
@@ -112,6 +116,7 @@ public class WorkflowController {
 
   @PostMapping(value = "")
   public WorkflowSummary insertWorkflow(@RequestBody WorkflowSummary workflowSummaryEntity) {
+    userValidationService.validateUserForTeam(workflowSummaryEntity.getFlowTeamId());
     workflowSummaryEntity.setStatus(WorkflowStatus.active);
     return workflowService.saveWorkflow(workflowSummaryEntity);
   }
