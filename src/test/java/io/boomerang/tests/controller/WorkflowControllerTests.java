@@ -105,6 +105,7 @@ public class WorkflowControllerTests extends FlowTests {
   public void testInsertWorkflow() {
     WorkflowSummary entity = new WorkflowSummary();
     entity.setName("TestWorkflow");
+    entity.setFlowTeamId("5d1a1841f6ca2c00014c4309");
     entity.setStatus(WorkflowStatus.deleted);
     WorkflowSummary summary = controller.insertWorkflow(entity);
     assertEquals("TestWorkflow", summary.getName());
