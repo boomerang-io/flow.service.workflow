@@ -91,9 +91,18 @@ public class UserValidationServiceImpl implements UserValidationService {
   }
 
   @Override
-  public void validateUser() {
+  public void validateUserAdminOrOperator() {
     FlowUserEntity user = userIdentityService.getCurrentUser();
     if (user.getType() != UserType.admin && user.getType() != UserType.operator) {
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+    }
+  }
+
+  @Override
+  public void validateUserById(String userId) {
+    FlowUserEntity user = userIdentityService.getCurrentUser();
+    if (user.getType() != UserType.admin && user.getType() != UserType.operator
+        && !userId.equals(user.getId())) {
       throw new ResponseStatusException(HttpStatus.FORBIDDEN);
     }
   }

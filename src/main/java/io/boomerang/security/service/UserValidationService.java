@@ -6,6 +6,8 @@ public interface UserValidationService {
 
   void validateUserForWorkflow(String workflowId);
 
-  void validateUser();
+  void validateUserAdminOrOperator();
+
+  void validateUserById(String userId);
 
 }

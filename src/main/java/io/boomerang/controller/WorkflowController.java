@@ -116,7 +116,11 @@ public class WorkflowController {
 
   @PostMapping(value = "")
   public WorkflowSummary insertWorkflow(@RequestBody WorkflowSummary workflowSummaryEntity) {
-    userValidationService.validateUserForTeam(workflowSummaryEntity.getFlowTeamId());
+    if (workflowSummaryEntity.getFlowTeamId() != null) {
+      userValidationService.validateUserForTeam(workflowSummaryEntity.getFlowTeamId());
+    } else {
+      userValidationService.validateUserById(workflowSummaryEntity.getOwnerUserId());
+    }
     workflowSummaryEntity.setStatus(WorkflowStatus.active);
     return workflowService.saveWorkflow(workflowSummaryEntity);
   }
