@@ -102,10 +102,10 @@ public class AuthenticationFilter extends OncePerRequestFilter {
       LOGGER.error(e);
       res.sendError(401);
       return;
-//    } catch (final HttpClientErrorException e2) {
-//      LOGGER.error(e2);
-//      res.sendError(e2.getRawStatusCode());
-//      return;
+    } catch (final HttpClientErrorException e2) {
+      LOGGER.error(e2);
+      res.sendError(e2.getRawStatusCode());
+      return;
     }
   }
 
