@@ -20,12 +20,14 @@ import io.boomerang.security.model.TokenAccess;
 import io.boomerang.security.model.TokenObject;
 import io.boomerang.security.model.TokenType;
 import io.boomerang.security.service.IdentityService;
+import io.boomerang.v4.model.FeaturesAndQuotas;
 import io.boomerang.v4.model.GlobalParam;
 import io.boomerang.v4.model.HeaderNavigationResponse;
 import io.boomerang.v4.model.Navigation;
 import io.boomerang.v4.model.OneTimeCode;
 import io.boomerang.v4.model.Setting;
 import io.boomerang.v4.service.ContextService;
+import io.boomerang.v4.service.FeatureService;
 import io.boomerang.v4.service.GlobalParamService;
 import io.boomerang.v4.service.NavigationService;
 import io.boomerang.v4.service.SettingsService;
@@ -36,8 +38,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
-@RequestMapping("/apis/v2")
-@Tag(name = "Global Management",
+@RequestMapping("/api/v2")
+@Tag(name = "Instance Management",
     description = "Register the instance, retrieve context and navigation, and manage Settings and Global Parameters")
 public class ManagementV2Controller {
   
@@ -55,6 +57,9 @@ public class ManagementV2Controller {
 
   @Autowired
   private ContextService contextService;
+
+  @Autowired
+  private FeatureService featureService;
   
   @GetMapping(value = "/settings")
 //  @AuthenticationScope(scopes = {TokenPermission.global})
@@ -88,6 +93,15 @@ public class ManagementV2Controller {
   @Operation(summary = "Retrieve this instances context, features, and navigation.")
   public HeaderNavigationResponse getHeaderNavigation() {
     return this.contextService.getHeaderNavigation(identityService.isCurrentUserAdmin());
+  }
+  
+  @GetMapping(value = "/features")
+  @Operation(summary = "Retrieve feature flags.")
+  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
+      @ApiResponse(responseCode = "400", description = "Bad Request")})
+  public ResponseEntity<FeaturesAndQuotas> getFlowFeatures() {
+    CacheControl cacheControl = CacheControl.maxAge(1, TimeUnit.HOURS);
+    return ResponseEntity.ok().cacheControl(cacheControl).body(featureService.get());
   }
 
   @GetMapping(value = "/navigation")
