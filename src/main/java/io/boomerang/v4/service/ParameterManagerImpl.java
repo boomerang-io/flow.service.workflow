@@ -46,11 +46,11 @@ public class ParameterManagerImpl implements ParameterManager {
     Map<String, Object> workflowParams = paramLayers.getWorkflowParams();
     Map<String, Object> contextParams = paramLayers.getContextParams();
     //Set Global Params
-    if (settingsService.getSetting("features", "globalParameters").getBooleanValue()) {
+    if (settingsService.getSettingConfig("features", "globalParameters").getBooleanValue()) {
       buildGlobalParams(globalParams);
     }
     //Set Team Params
-    if (settingsService.getSetting("features", "teamParameters").getBooleanValue()) {
+    if (settingsService.getSettingConfig("features", "teamParameters").getBooleanValue()) {
       buildTeamParams(teamParams, teamId);
     }
     //Set the Keys from the Workflow - ignore values
@@ -72,11 +72,11 @@ public class ParameterManagerImpl implements ParameterManager {
     Map<String, Object> teamParams = paramLayers.getTeamParams();
     Map<String, Object> contextParams = paramLayers.getContextParams();
     //Set Global Params
-    if (settingsService.getSetting("features", "globalParameters").getBooleanValue()) {
+    if (settingsService.getSettingConfig("features", "globalParameters").getBooleanValue()) {
       buildGlobalParams(globalParams);
     }
     //Set Team Params
-    if (settingsService.getSetting("features", "teamParameters").getBooleanValue()) {
+    if (settingsService.getSettingConfig("features", "teamParameters").getBooleanValue()) {
       Optional<RelationshipEntity> rel = relationshipService.getRelationship(RelationshipRef.WORKFLOW, workflowId, RelationshipType.BELONGSTO);
       if (rel.isEmpty()) {
         buildTeamParams(teamParams, rel.get().getToRef());

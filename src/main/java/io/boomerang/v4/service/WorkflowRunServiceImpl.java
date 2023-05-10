@@ -121,7 +121,7 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
       if (request.getDebug() == null) {
         boolean enableDebug = false;
         String setting =
-            this.settingsService.getSetting("controller", "enable.debug").getValue();
+            this.settingsService.getSettingConfig("controller", "enable.debug").getValue();
         if (setting != null) {
           enableDebug = Boolean.parseBoolean(setting);
         }
@@ -130,7 +130,7 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
       // Set Workflow Timeout
       if (request.getTimeout() == null) {
         String setting =
-            this.settingsService.getSetting("controller", "task.timeout.configuration").getValue();
+            this.settingsService.getSettingConfig("controller", "task.timeout.configuration").getValue();
         if (setting != null) {
           request.setTimeout(Long.valueOf(setting));
         }
@@ -231,7 +231,7 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
    * Check if the quotas allow a Workflow to run
    */
   private boolean canRunWithQuotas(String workflowId) {
-    if (!settingsService.getSetting("features", "workflowQuotas").getBooleanValue()) {
+    if (!settingsService.getSettingConfig("features", "workflowQuotas").getBooleanValue()) {
       return true;
     }
 

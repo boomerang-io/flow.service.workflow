@@ -15,7 +15,7 @@ public interface SettingsService {
 
   List<Setting> getAllSettings();
 
-  AbstractParam getSetting(String key, String name);
+  AbstractParam getSettingConfig(String key, String name);
 
   SettingEntity getSettingById(String id);
 

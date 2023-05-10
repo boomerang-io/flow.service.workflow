@@ -22,7 +22,9 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.support.PageableExecutionUtils;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import io.boomerang.error.BoomerangError;
 import io.boomerang.error.BoomerangException;
 import io.boomerang.security.model.CreateTokenRequest;
@@ -238,8 +240,15 @@ public class TokenServiceImpl implements TokenService {
    * TODO: is this method declaration ever call besides the wrapper - should they be combined.
    */
   @Override
-  public Token createUserSessionToken(String email, String firstName, String lastName) {
-    Optional<UserEntity> user = identityService.getOrRegisterUser(email, firstName, lastName, Optional.of(UserType.user));
+  public Token createUserSessionToken(String email, String firstName, String lastName, boolean activateOverride) {
+    Optional<UserEntity> user = Optional.empty();
+    if (activateOverride && !identityService.isActivated()) {
+      user = identityService.getAndRegisterUser(email, firstName, lastName, Optional.of(UserType.admin));
+    } else if (identityService.isActivated()) {
+      user = identityService.getAndRegisterUser(email, firstName, lastName, Optional.of(UserType.user));
+    } else {
+      throw new HttpClientErrorException(HttpStatus.LOCKED);
+    }
 
     if (!user.isPresent()) {
       //TODO throw exception

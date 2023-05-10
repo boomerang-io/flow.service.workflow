@@ -36,7 +36,7 @@ public interface IdentityService {
 
   TeamEntity getCurrentTeam();
 
-  Optional<UserEntity> getOrRegisterUser(String email, String firstName, String lastName,
+  Optional<UserEntity> getAndRegisterUser(String email, String firstName, String lastName,
       Optional<UserType> usertype);
 
   public UserResponsePage query(Optional<Integer> page, Optional<Integer> limit, Optional<Direction> sort,
@@ -51,4 +51,6 @@ public interface IdentityService {
   public void delete(String userId);
 
   boolean isCurrentUserAdmin();
+
+  boolean isActivated();
 }

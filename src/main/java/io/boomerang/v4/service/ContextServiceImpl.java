@@ -96,10 +96,10 @@ public class ContextServiceImpl implements ContextService {
     
     navigationResponse.setFeatures(features);
 
-    String appName = settingsService.getSetting("customizations", "appName").getValue();
-    String platformName = settingsService.getSetting("customizations", "platformName").getValue();
-    String displayLogo = settingsService.getSetting("customizations", "displayLogo").getValue();
-    String logoURL = settingsService.getSetting("customizations", "logoURL").getValue();
+    String appName = settingsService.getSettingConfig("customizations", "appName").getValue();
+    String platformName = settingsService.getSettingConfig("customizations", "platformName").getValue();
+    String displayLogo = settingsService.getSettingConfig("customizations", "displayLogo").getValue();
+    String logoURL = settingsService.getSettingConfig("customizations", "logoURL").getValue();
     String name = platformName + " " + appName;
     HeaderPlatform platform = new HeaderPlatform();
     platform.setName(name.trim());
@@ -142,7 +142,7 @@ public class ContextServiceImpl implements ContextService {
   
   private String getAppNameInSettings() {
     try {
-      AbstractParam config = settingsService.getSetting("customizations", "appName");
+      AbstractParam config = settingsService.getSettingConfig("customizations", "appName");
       return config == null ? null : config.getValue();
     } catch (Exception e) {
     }

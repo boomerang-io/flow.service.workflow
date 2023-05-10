@@ -27,7 +27,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpClientErrorException;
 import io.boomerang.client.ExternalUserProfile;
 import io.boomerang.client.ExternalUserService;
 import io.boomerang.error.BoomerangError;
@@ -40,18 +39,15 @@ import io.boomerang.v4.data.entity.ref.WorkflowEntity;
 import io.boomerang.v4.data.repository.UserRepository;
 import io.boomerang.v4.model.OneTimeCode;
 import io.boomerang.v4.model.Team;
-import io.boomerang.v4.model.TeamRequest;
 import io.boomerang.v4.model.User;
 import io.boomerang.v4.model.UserProfile;
 import io.boomerang.v4.model.UserRequest;
 import io.boomerang.v4.model.UserResponsePage;
 import io.boomerang.v4.model.UserStatus;
-import io.boomerang.v4.model.UserSummary;
 import io.boomerang.v4.model.UserType;
 import io.boomerang.v4.model.enums.RelationshipRef;
 import io.boomerang.v4.model.enums.RelationshipType;
 import io.boomerang.v4.model.enums.TeamStatus;
-import io.boomerang.v4.model.enums.TeamType;
 import io.boomerang.v4.service.RelationshipService;
 import io.boomerang.v4.service.TeamService;
 
@@ -90,75 +86,55 @@ public class IdentityServiceImpl implements IdentityService {
     }
     return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
   }
-
+  
   /*
-   * Used by the AuthenticationFilter to either
-   * - Retrieve the user and store in security context
-   * - Register the user
-   * - Returns LOCKED(423) status if there are no users yet
+   * Used by the CreateUserSession to check if instance is activated
    */
   @Override
-  public Optional<UserEntity> getOrRegisterUser(String email, String firstName, String lastName,
-      Optional<UserType> usertype) {
-    if (externalUserUrl.isBlank()) {
-//    if (userRepository.count() == 0) {
-      throw new HttpClientErrorException(HttpStatus.LOCKED);
-//    }
+  public boolean isActivated() {
+    if (externalUserUrl.isBlank() && userRepository.count() == 0) {
+      return false;
+    }
+    return true;
   }
+
+  /*
+   * Used by the AuthenticationFilter to Retrieve the user and create the Users Team
+   */
+  @Override
+  public Optional<UserEntity> getAndRegisterUser(String email, String firstName, String lastName,
+      Optional<UserType> usertype) {
     if (email == null || email.isBlank()) {
       return Optional.empty();
     }
-    boolean createTeam = false;
 
-    if (!externalUserUrl.isBlank()) {
-      // Retrieve user from External URL
-      ExternalUserProfile extUser = extUserService.getUserProfileByEmail(email);
-      UserEntity userEntity = new UserEntity();
-      if (extUser != null && UserStatus.active.toString().equals(extUser.getStatus())) {
-        BeanUtils.copyProperties(extUser, userEntity);
-        // Override external User Types
-        convertExternalUserType(extUser, userEntity);
-        
-        // TODO - make sure external user has a team.
-        return Optional.of(userEntity);
-      } else {
-        return Optional.empty();
+    Optional<UserEntity> userEntity = getUserEntityByEmail(email);
+    if (externalUserUrl.isBlank()) {
+      if (userEntity.isEmpty()) {
+        // Create new User (UserEntity is defaulted on new)
+        UserEntity newUserEntity = new UserEntity();
+        newUserEntity.setEmail(email);
+        userEntity = Optional.of(newUserEntity);
       }
-    } else {
-      UserEntity userEntity = new UserEntity();
-      if (externalUserUrl.isBlank() && this.userRepository.countByEmailIgnoreCaseAndStatus(email, UserStatus.active) == 1) {
-        // Retrieve User from DB - needs to be email to ensure there is only 1 active user per email (email is the key)
-        userEntity = this.userRepository.findByEmailIgnoreCaseAndStatus(email, UserStatus.active);
-      } else {
-        // Create User (UserEntity is defaulted on new)
-        userEntity.setEmail(email);
-        if (usertype.isPresent()) {
-          userEntity.setType(usertype.get());
-        } else {
-          userEntity.setType(UserType.user);
-        }
-        // Create Users Team
-        createTeam = true;
-      }
-
       // Refresh name from provided details
       String name = String.format("%s %s", Optional.ofNullable(firstName).orElse(""),
           Optional.ofNullable(lastName).orElse("")).trim();
       if (firstName == null && lastName == null && email != null) {
         name = email;
       }
-      userEntity.setName(name);
-      userEntity.setLastLoginDate(new Date());
-      userEntity.getSettings().setIsFirstVisit(false);
-      userEntity = userRepository.save(userEntity);
-      
-      TeamRequest request = new TeamRequest();
-      request.setName(lastName + "'s Team");
-      request.setUsers(List.of(new UserSummary(userEntity)));
-      teamService.create(request, TeamType.personal);
-      
-      return Optional.of(userEntity);
+      userEntity.get().setName(name);
+      userEntity.get().setLastLoginDate(new Date());
+      userEntity.get().getSettings().setIsFirstVisit(false);
+      userEntity = Optional.of(userRepository.save(userEntity.get()));
     }
+
+    // Create Users Personal Team.
+//    TeamRequest request = new TeamRequest();
+//    request.setName(lastName + "'s Team");
+//    request.setUsers(List.of(new UserSummary(userEntity.get())));
+//    teamService.create(request, TeamType.personal);
+
+    return userEntity;
   }
 
   private void convertExternalUserType(ExternalUserProfile extUser, UserEntity userEntity) {
@@ -188,20 +164,28 @@ public class IdentityServiceImpl implements IdentityService {
   
   @Override
   public Optional<User> getUserByEmail(String userEmail) {
+    Optional<UserEntity> userEntity = getUserEntityByEmail(userEmail);
+    if (userEntity.isPresent()) {
+      return Optional.of(new User(userEntity.get()));
+    }
+    return Optional.empty();
+  }
+  
+  private Optional<UserEntity> getUserEntityByEmail(String userEmail) {
     if (externalUserUrl.isBlank()) {
-    UserEntity extUser = userRepository.findByEmailIgnoreCase(userEmail);
+    UserEntity extUser = userRepository.findByEmailIgnoreCaseAndStatus(userEmail, UserStatus.active);
       if (extUser != null) {
-        User user = new User();
-        BeanUtils.copyProperties(extUser, user);
-        return Optional.of(user);
+        UserEntity userEntity = new UserEntity();
+        BeanUtils.copyProperties(extUser, userEntity);
+        return Optional.of(userEntity);
       }
     } else {
       ExternalUserProfile extUser = extUserService.getUserProfileByEmail(userEmail);
-      if (extUser != null) {
-        User user = new User();
-        BeanUtils.copyProperties(extUser, user);
-        convertExternalUserType(extUser, user);
-        return Optional.of(user);
+      if (extUser != null && UserStatus.active.toString().equals(extUser.getStatus())) {
+        UserEntity userEntity = new UserEntity();
+        BeanUtils.copyProperties(extUser, userEntity);
+        convertExternalUserType(extUser, userEntity);
+        return Optional.of(userEntity);
       }
     }
     return Optional.empty();

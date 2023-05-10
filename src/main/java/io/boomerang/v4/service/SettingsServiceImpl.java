@@ -45,8 +45,10 @@ public class SettingsServiceImpl implements SettingsService {
     final List<Setting> settingList = new LinkedList<>();
     final List<SettingEntity> entityList = settingsRepository.findAll();
     for (final SettingEntity entity : entityList) {
-      final Setting newSetting = new Setting(entity);
-      settingList.add(newSetting);
+      if (!entity.getKey().equals("internal")) {
+        final Setting newSetting = new Setting(entity);
+        settingList.add(newSetting);
+      }
     }
 
     return settingList;
@@ -95,7 +97,7 @@ public class SettingsServiceImpl implements SettingsService {
   }
 
   @Override
-  public AbstractParam getSetting(String key, String name) {
+  public AbstractParam getSettingConfig(String key, String name) {
     final SettingEntity settings = this.settingsRepository.findOneByKey(key);
     final List<AbstractParam> configList = settings.getConfig();
     final Optional<AbstractParam> result =

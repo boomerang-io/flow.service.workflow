@@ -49,6 +49,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
   private static final String AUTHORIZATION_HEADER = "Authorization";
   private static final String X_SLACK_SIGNATURE = "X-Slack-Signature";
   private static final String X_SLACK_TIMESTAMP = "X-Slack-Request-Timestamp";
+  private static final String PATH_ACTIVATE = "/api/v2/activate";
 
   private TokenService tokenService;
   private SettingsService settingsService;
@@ -120,6 +121,11 @@ public class AuthenticationFilter extends OncePerRequestFilter {
   private UsernamePasswordAuthenticationToken getUserAuthentication(HttpServletRequest request) // NOSONAR
   {
     final String token = request.getHeader(AUTHORIZATION_HEADER);
+    
+    boolean activateOverride = false;
+    if (request.getServletPath().startsWith(PATH_ACTIVATE)) {
+      activateOverride = true;
+    }
 
     if (token.startsWith("Bearer ")) {
       final String jws = token.replace("Bearer ", "");
@@ -156,7 +162,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
       lastName = sanitize(lastName);
 
       if (email != null && !email.isBlank()) {
-        final Token userSessionToken = tokenService.createUserSessionToken(email, firstName, lastName);
+        final Token userSessionToken = tokenService.createUserSessionToken(email, firstName, lastName, activateOverride);
         final List<GrantedAuthority> authorities = new ArrayList<>();
         final UsernamePasswordAuthenticationToken authToken =
             new UsernamePasswordAuthenticationToken(email, null, authorities);
@@ -184,7 +190,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
       }
 
       if (email != null && !email.isBlank()) {
-        final Token userSessionToken = tokenService.createUserSessionToken(email, null, null);
+        final Token userSessionToken = tokenService.createUserSessionToken(email, null, null, activateOverride);
         final List<GrantedAuthority> authorities = new ArrayList<>();
         final UsernamePasswordAuthenticationToken authToken =
             new UsernamePasswordAuthenticationToken(email, password, authorities);
@@ -201,10 +207,14 @@ public class AuthenticationFilter extends OncePerRequestFilter {
    * 
    * TODO: what is the value for X_FORWARDED_USER
    */
-  private Authentication getGithubUserAuthentication(HttpServletRequest req) {
-    String email = req.getHeader(X_FORWARDED_EMAIL);
-     String userName = req.getHeader(X_FORWARDED_USER);
-    final Token userSessionToken = tokenService.createUserSessionToken(email, userName, null);
+  private Authentication getGithubUserAuthentication(HttpServletRequest request) {
+    boolean activateOverride = false;
+    if (request.getServletPath().startsWith(PATH_ACTIVATE)) {
+      activateOverride = true;
+    }
+    String email = request.getHeader(X_FORWARDED_EMAIL);
+     String userName = request.getHeader(X_FORWARDED_USER);
+    final Token userSessionToken = tokenService.createUserSessionToken(email, userName, null, activateOverride);
     if (email != null && !email.isBlank()) {
       final List<GrantedAuthority> authorities = new ArrayList<>();
       final UsernamePasswordAuthenticationToken authToken =
@@ -290,7 +300,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
    * from Slack</a></li> </ul>
    */
   private Boolean verifySignature(String signature, String timestamp, String body) {
-    String key = this.settingsService.getSetting("extensions", "slack.signingSecret").getValue();
+    String key = this.settingsService.getSettingConfig("extensions", "slack.signingSecret").getValue();
     LOGGER.debug("Key: " + key);
     LOGGER.debug("Slack Timestamp: " + timestamp);
     LOGGER.debug("Slack Body: " + body);
