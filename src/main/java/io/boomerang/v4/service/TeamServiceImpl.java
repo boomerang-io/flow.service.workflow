@@ -218,6 +218,8 @@ public class TeamServiceImpl implements TeamService {
     List<Team> teams = new LinkedList<>();
     List<String> teamRefs = relationshipService.getFilteredRefs(Optional.empty(), Optional.empty(),
         Optional.of(RelationshipType.MEMBEROF), Optional.of(RelationshipRef.TEAM), queryIds);
+    
+    LOGGER.debug("TeamRefs: " + teamRefs.toString());
 
     List<Criteria> criteriaList = new ArrayList<>();
     if (queryLabels.isPresent()) {

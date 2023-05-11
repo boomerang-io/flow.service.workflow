@@ -308,7 +308,7 @@ public class RelationshipServiceImpl implements RelationshipService {
     }
 
     TokenType accessScope = identityService.getCurrentScope();
-    LOGGER.info("Current Access Scope: " + identityService.getCurrentScope());
+    LOGGER.info("RelationshipFilter() - Access Scope: " + identityService.getCurrentScope());
     
     // If User is Admin provide global access
     if ((TokenType.user.equals(accessScope) || TokenType.session.equals(accessScope)) && identityService.isCurrentUserAdmin()) {
@@ -377,7 +377,7 @@ public class RelationshipServiceImpl implements RelationshipService {
       criteriaList.add(criteria);
     }
 
-    if (fromRefs.isPresent()) {
+    if (from.isPresent()) {
       Criteria criteria = Criteria.where("type").is(type.get());
       criteriaList.add(criteria);
     } else {
@@ -407,6 +407,9 @@ public class RelationshipServiceImpl implements RelationshipService {
     
     LOGGER.debug("Relationships Found: " + relEntities.toString());
     
+    if (RelationshipType.MEMBEROF.equals(type.get())) {
+      return relEntities.stream().map(RelationshipEntity::getToRef).collect(Collectors.toList());
+    }
     return relEntities.stream().map(RelationshipEntity::getFromRef).collect(Collectors.toList());
   }
 
