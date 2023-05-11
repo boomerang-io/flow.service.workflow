@@ -22,6 +22,9 @@ public interface RelationshipService {
   Optional<RelationshipEntity> getRelationship(RelationshipRef fromType, String fromRef,
       RelationshipType relationship);
 
-  List<String> getFilteredRefs(Optional<RelationshipRef> from, Optional<List<String>> fromRefs,
+  List<String> getFilteredFromRefs(Optional<RelationshipRef> from, Optional<List<String>> fromRefs,
+      Optional<RelationshipType> type, Optional<RelationshipRef> to, Optional<List<String>> toRefs);
+
+  List<String> getFilteredToRefs(Optional<RelationshipRef> from, Optional<List<String>> fromRefs,
       Optional<RelationshipType> type, Optional<RelationshipRef> to, Optional<List<String>> toRefs);
 }

@@ -198,7 +198,7 @@ public class IdentityServiceImpl implements IdentityService {
   public UserProfile getCurrentProfile() {
     UserEntity user = getCurrentUser();
     UserProfile profile = new UserProfile(user);
-    List<String> teamRefs = relationshipService.getFilteredRefs(Optional.of(RelationshipRef.USER), Optional.of(List.of(user.getId())), Optional.of(RelationshipType.MEMBEROF), Optional.of(RelationshipRef.TEAM), Optional.empty());
+    List<String> teamRefs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.USER), Optional.of(List.of(user.getId())), Optional.of(RelationshipType.MEMBEROF), Optional.of(RelationshipRef.TEAM), Optional.empty());
     List<Team> usersTeams = teamService.query(Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(teamRefs)).getContent();
     profile.setTeams(usersTeams);
     return profile;
@@ -213,7 +213,7 @@ public class IdentityServiceImpl implements IdentityService {
       Optional<UserEntity> flowUser = userRepository.findById(userId);
       if (flowUser.isPresent()) {
         UserProfile profile = new UserProfile(flowUser.get());
-        List<String> teamRefs = relationshipService.getFilteredRefs(Optional.of(RelationshipRef.USER), Optional.of(List.of(userId)), Optional.of(RelationshipType.MEMBEROF), Optional.of(RelationshipRef.TEAM), Optional.empty());
+        List<String> teamRefs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.USER), Optional.of(List.of(userId)), Optional.of(RelationshipType.MEMBEROF), Optional.of(RelationshipRef.TEAM), Optional.empty());
         List<Team> usersTeams = teamService.query(Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(teamRefs)).getContent();
         profile.setTeams(usersTeams);
         return profile;
@@ -224,7 +224,7 @@ public class IdentityServiceImpl implements IdentityService {
         UserProfile profile = new UserProfile();
         BeanUtils.copyProperties(extUserProfile, profile);
         convertExternalUserType(extUserProfile, profile);
-        List<String> teamRefs = relationshipService.getFilteredRefs(Optional.of(RelationshipRef.USER), Optional.of(List.of(userId)), Optional.of(RelationshipType.MEMBEROF), Optional.of(RelationshipRef.TEAM), Optional.empty());
+        List<String> teamRefs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.USER), Optional.of(List.of(userId)), Optional.of(RelationshipType.MEMBEROF), Optional.of(RelationshipRef.TEAM), Optional.empty());
         List<Team> usersTeams = teamService.query(Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(teamRefs)).getContent();
         profile.setTeams(usersTeams);
         return profile;

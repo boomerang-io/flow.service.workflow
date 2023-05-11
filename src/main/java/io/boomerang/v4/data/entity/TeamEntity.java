@@ -30,7 +30,7 @@ public class TeamEntity {
   private String externalRef;
   private Map<String, String> labels = new HashMap<>();
   private List<AbstractParam> parameters = new LinkedList<>();
-  private TeamSettings settings = new TeamSettings();
+  private TeamSettings settings;
   private Quotas quotas;
   
   public String getId() {

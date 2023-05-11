@@ -77,7 +77,7 @@ public class ScheduleServiceImpl implements ScheduleService {
     final Optional<WorkflowScheduleEntity> scheduleEntity = scheduleRepository.findById(scheduleId);
     if (scheduleEntity.isPresent()) {
       // Get Refs that request has access to
-      List<String> refs = relationshipService.getFilteredRefs(Optional.of(RelationshipRef.WORKFLOW),
+      List<String> refs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.WORKFLOW),
           Optional.of(List.of(scheduleEntity.get().getWorkflowRef())), Optional.of(RelationshipType.BELONGSTO), Optional.ofNullable(RelationshipRef.TEAM),
           Optional.empty());
       if (!refs.isEmpty()) {
@@ -97,7 +97,7 @@ public class ScheduleServiceImpl implements ScheduleService {
   public Page<WorkflowSchedule> query(int page, int limit, Sort sort, Optional<List<String>> queryWorkflows,
       Optional<List<String>> queryTeams, Optional<List<String>> queryStatus, Optional<List<String>> queryTypes) {
     // Get Refs that request has access to
-    List<String> refs = relationshipService.getFilteredRefs(Optional.of(RelationshipRef.WORKFLOW),
+    List<String> refs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.WORKFLOW),
         queryWorkflows, Optional.of(RelationshipType.BELONGSTO), Optional.ofNullable(RelationshipRef.TEAM),
         queryTeams);
 
@@ -156,7 +156,7 @@ public class ScheduleServiceImpl implements ScheduleService {
   public WorkflowSchedule create(final WorkflowSchedule schedule, Optional<String> teamId) {
     if (schedule != null && schedule.getWorkflowRef() != null && teamId.isPresent()) {
       // Get Refs that request has access to
-      final List<String> refs = relationshipService.getFilteredRefs(Optional.of(RelationshipRef.WORKFLOW),
+      final List<String> refs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.WORKFLOW),
           Optional.of(List.of(schedule.getWorkflowRef())), Optional.of(RelationshipType.BELONGSTO),
           Optional.ofNullable(RelationshipRef.TEAM), Optional.of(List.of(teamId.get())));
       if (refs.isEmpty()) {

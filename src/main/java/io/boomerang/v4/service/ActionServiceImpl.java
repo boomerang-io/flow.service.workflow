@@ -78,7 +78,7 @@ public class ActionServiceImpl implements ActionService {
 
       // Check if requester has access to the Workflow the Action Entity belongs to
       List<String> workflowRefs =
-          relationshipService.getFilteredRefs(Optional.of(RelationshipRef.WORKFLOW),
+          relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.WORKFLOW),
               Optional.of(List.of(actionEntity.getWorkflowRef())),
               Optional.of(RelationshipType.BELONGSTO), Optional.empty(), Optional.empty());
       if (workflowRefs.isEmpty()) {
@@ -92,7 +92,7 @@ public class ActionServiceImpl implements ActionService {
         canBeActioned = true;
       } else if (actionEntity.getType() == ActionType.approval) {
         if (actionEntity.getApproverGroupRef() != null) {
-          List<String> approverGroupRefs = relationshipService.getFilteredRefs(
+          List<String> approverGroupRefs = relationshipService.getFilteredFromRefs(
               Optional.of(RelationshipRef.APPROVERGROUP), Optional.of(List.of(actionEntity.getApproverGroupRef())),
               Optional.of(RelationshipType.BELONGSTO), Optional.empty(), Optional.empty());
           if (approverGroupRefs.isEmpty()) {
@@ -192,7 +192,7 @@ public class ActionServiceImpl implements ActionService {
       Optional<List<ActionType>> types, Optional<List<ActionStatus>> status,
       Optional<List<String>> workflowIds, Optional<List<String>> teamIds) {
     List<String> workflowRefs =
-        relationshipService.getFilteredRefs(Optional.of(RelationshipRef.WORKFLOW), workflowIds,
+        relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.WORKFLOW), workflowIds,
             Optional.of(RelationshipType.BELONGSTO), Optional.of(RelationshipRef.TEAM), teamIds);
 
     Criteria criteria = buildCriteriaList(from, to, Optional.of(workflowRefs), types, status);
@@ -215,7 +215,7 @@ public class ActionServiceImpl implements ActionService {
   @Override
   public ActionSummary summary(Optional<Date> fromDate, Optional<Date> toDate, Optional<List<String>> workflowIds, Optional<List<String>> teamIds) {
     List<String> workflowRefs =
-        relationshipService.getFilteredRefs(Optional.of(RelationshipRef.WORKFLOW),
+        relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.WORKFLOW),
             workflowIds, Optional.of(RelationshipType.BELONGSTO), Optional.of(RelationshipRef.TEAM), teamIds);
     
     long approvalCount = this.getActionCountForType(ActionType.approval, fromDate,

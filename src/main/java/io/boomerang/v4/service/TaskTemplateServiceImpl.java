@@ -56,7 +56,7 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
 
     // Check if requester has access to refs
     // TODO: determine if all users need to be able to access (READ) but not edit (CREATE, UPDATE, DELETE) 
-    List<String> refs = relationshipService.getFilteredRefs(Optional.of(RelationshipRef.TASKTEMPLATE),
+    List<String> refs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.TASKTEMPLATE),
         Optional.of(List.of(name)), Optional.of(RelationshipType.BELONGSTO), Optional.empty(), Optional.empty());
     if (!refs.isEmpty()) {
       TaskTemplate taskTemplate = engineClient.getTaskTemplate(name, version);
@@ -86,7 +86,7 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
     // Get Refs that request has access to
     // TODO: this doesn't work for Global TaskTemplates
     List<String> refs =
-        relationshipService.getFilteredRefs(Optional.of(RelationshipRef.TASKTEMPLATE), queryNames,
+        relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.TASKTEMPLATE), queryNames,
             Optional.of(RelationshipType.BELONGSTO), Optional.ofNullable(RelationshipRef.TEAM),
             queryTeams);
     LOGGER.debug("Query Ids: ", refs);
@@ -140,7 +140,7 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
   @Override
   public ResponseEntity<TaskTemplate> apply(TaskTemplate request, boolean replace, Optional<String> teamId) {
     String templateName = request.getName();
-    List<String> refs = relationshipService.getFilteredRefs(Optional.of(RelationshipRef.TASKTEMPLATE),
+    List<String> refs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.TASKTEMPLATE),
         Optional.of(List.of(templateName)), Optional.of(RelationshipType.BELONGSTO), Optional.empty(), Optional.empty());
 
     if (templateName != null && !templateName.isBlank() && !refs.isEmpty()) {
@@ -187,7 +187,7 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
       // TODO: do we want to return invalid ref or unauthorized
       throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
     }
-    List<String> refs = relationshipService.getFilteredRefs(Optional.of(RelationshipRef.TASKTEMPLATE),
+    List<String> refs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.TASKTEMPLATE),
         Optional.of(List.of(name)), Optional.of(RelationshipType.BELONGSTO), Optional.empty(), Optional.empty());
 
     if (refs.isEmpty()) {
@@ -203,7 +203,7 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
       // TODO: do we want to return invalid ref or unauthorized
       throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
     }
-    List<String> refs = relationshipService.getFilteredRefs(Optional.of(RelationshipRef.TASKTEMPLATE),
+    List<String> refs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.TASKTEMPLATE),
         Optional.of(List.of(name)), Optional.of(RelationshipType.BELONGSTO), Optional.empty(), Optional.empty());
 
     if (refs.isEmpty()) {

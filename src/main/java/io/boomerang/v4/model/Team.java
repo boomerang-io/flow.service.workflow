@@ -20,7 +20,7 @@ public class Team {
   private String externalRef;
   private Map<String, String> labels = new HashMap<>();
   private List<AbstractParam> parameters = new LinkedList<>();
-  private TeamSettings settings = new TeamSettings();
+  private TeamSettings settings;
   private CurrentQuotas quotas;
   private List<UserSummary> users;
   private List<WorkflowSummary> workflows = new LinkedList<>();

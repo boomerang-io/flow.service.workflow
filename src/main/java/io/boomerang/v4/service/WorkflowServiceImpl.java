@@ -82,7 +82,7 @@ public class WorkflowServiceImpl implements WorkflowService {
       throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
     }
 
-    List<String> workflowRefs = relationshipService.getFilteredRefs(Optional.of(RelationshipRef.WORKFLOW),
+    List<String> workflowRefs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.WORKFLOW),
         Optional.of(List.of(workflowId)), Optional.of(RelationshipType.BELONGSTO), Optional.empty(), Optional.empty());
     if (!workflowRefs.isEmpty()) {
       Workflow workflow = engineClient.getWorkflow(workflowId, version, withTasks);
@@ -106,7 +106,7 @@ public class WorkflowServiceImpl implements WorkflowService {
       Optional<List<String>> queryWorkflows) {
     
     // Get Refs that request has access to
-    List<String> workflowRefs = relationshipService.getFilteredRefs(Optional.of(RelationshipRef.WORKFLOW),
+    List<String> workflowRefs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.WORKFLOW),
         queryWorkflows, Optional.of(RelationshipType.BELONGSTO), Optional.ofNullable(RelationshipRef.TEAM),
         queryTeams);
     LOGGER.debug("Query Ids: ", workflowRefs);
@@ -192,7 +192,7 @@ public class WorkflowServiceImpl implements WorkflowService {
   @Override
   public ResponseEntity<Workflow> apply(Workflow workflow, boolean replace) {
     String workflowId = workflow.getId();
-    List<String> workflowRefs = relationshipService.getFilteredRefs(Optional.of(RelationshipRef.WORKFLOW),
+    List<String> workflowRefs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.WORKFLOW),
         Optional.of(List.of(workflowId)), Optional.of(RelationshipType.BELONGSTO), Optional.of(RelationshipRef.TEAM), Optional.empty());
 
     if (workflowId != null && !workflowId.isBlank() && !workflowRefs.isEmpty()) {
@@ -217,7 +217,7 @@ public class WorkflowServiceImpl implements WorkflowService {
       throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
     }
 
-    List<String> workflowRefs = relationshipService.getFilteredRefs(Optional.of(RelationshipRef.WORKFLOW),
+    List<String> workflowRefs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.WORKFLOW),
         Optional.of(List.of(workflowId)), Optional.of(RelationshipType.BELONGSTO),  Optional.of(RelationshipRef.TEAM), Optional.empty());
     if (!workflowRefs.isEmpty()) {
       engineClient.enableWorkflow(workflowId);
@@ -238,7 +238,7 @@ public class WorkflowServiceImpl implements WorkflowService {
       throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
     }
 
-    List<String> workflowRefs = relationshipService.getFilteredRefs(Optional.of(RelationshipRef.WORKFLOW),
+    List<String> workflowRefs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.WORKFLOW),
         Optional.of(List.of(workflowId)), Optional.of(RelationshipType.BELONGSTO), Optional.of(RelationshipRef.TEAM), Optional.empty());
     if (!workflowRefs.isEmpty()) {
       engineClient.disableWorkflow(workflowId);
@@ -261,7 +261,7 @@ public class WorkflowServiceImpl implements WorkflowService {
       throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
     }
 
-    List<String> workflowRefs = relationshipService.getFilteredRefs(Optional.of(RelationshipRef.WORKFLOW),
+    List<String> workflowRefs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.WORKFLOW),
         Optional.of(List.of(workflowId)), Optional.of(RelationshipType.BELONGSTO), Optional.of(RelationshipRef.TEAM), Optional.empty());
     if (!workflowRefs.isEmpty()) {
       engineClient.deleteWorkflow(workflowId);
@@ -364,7 +364,7 @@ public class WorkflowServiceImpl implements WorkflowService {
       throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
     }
 
-    List<String> workflowRefs = relationshipService.getFilteredRefs(Optional.of(RelationshipRef.WORKFLOW),
+    List<String> workflowRefs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.WORKFLOW),
         Optional.of(List.of(workflowId)), Optional.of(RelationshipType.BELONGSTO),  Optional.of(RelationshipRef.TEAM), Optional.empty());
     if (!workflowRefs.isEmpty()) {
       Workflow workflow = engineClient.getWorkflow(workflowId, version, true);
@@ -380,7 +380,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     if (workflowId == null || workflowId.isBlank()) {
       throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
     }
-    List<String> teamRefs = relationshipService.getFilteredRefs(Optional.of(RelationshipRef.WORKFLOW),
+    List<String> teamRefs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.WORKFLOW),
         Optional.of(List.of(workflowId)), Optional.of(RelationshipType.BELONGSTO),  Optional.of(RelationshipRef.TEAM), Optional.empty());
     if (!teamRefs.isEmpty()) {
       Workflow workflow = engineClient.getWorkflow(workflowId, Optional.empty(), false);

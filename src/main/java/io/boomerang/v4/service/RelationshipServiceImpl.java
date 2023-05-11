@@ -18,7 +18,6 @@ import io.boomerang.v4.data.entity.TeamEntity;
 import io.boomerang.v4.data.entity.UserEntity;
 import io.boomerang.v4.data.entity.ref.WorkflowEntity;
 import io.boomerang.v4.data.repository.RelationshipRepository;
-import io.boomerang.v4.model.UserType;
 import io.boomerang.v4.model.enums.RelationshipRef;
 import io.boomerang.v4.model.enums.RelationshipType;
 
@@ -173,107 +172,9 @@ public class RelationshipServiceImpl implements RelationshipService {
       relationshipRepository.deleteAll(relEntities);
     }
   }
-
-//  /*
-//   * Generates the Refs that the current security scope has access to, based on a specific type and optional lists of typeRefs, scopes, and teamIds 
-//   * 
-//   * @param RelationshipRef fromRef
-//   * 
-//   * @param RelatnshipType type
-//   * 
-//   * @param list of Refs: WorkflowRef, WorkflowRunRef, TaskTemplateRef, TaskRunRef
-//   * 
-//   * @param RelationshipRef toRef
-//   * 
-//   * @param list of Scopes
-//   * 
-//   * @param list of TeamIds
-//   * 
-//   * @return list of filtered Refs
-//   */
-//  @Override
-//  public List<String> getFilteredRefs(RelationshipRef fromRef, Optional<List<String>> fromRefs, Optional<RelationshipType> type, Optional<RelationshipRef> toRef, 
-//      Optional<List<String>> toRefs) {
-//    UserEntity user = null;
-//    List<String> refsList = new LinkedList<>();
-//    if (type.isEmpty()) {
-//      type = Optional.of(RelationshipType.BELONGSTO);
-//    }
-//
-//    // TODO rename userIdentifyService to accessService or identityService
-//    TokenScope scope = userIdentityService.getCurrentScope();
-//    LOGGER.info("Current Access Scope: " + userIdentityService.getCurrentScope());
-//    
-//    // If User is Admin provide global access
-//    if (TokenScope.user.equals(scope) && UserType.admin.equals(userIdentityService.getCurrentUser().getType())) {
-//      scope = TokenScope.global;
-//    }
-//
-//    switch (scope) {
-//      case user:
-//        // User is a special case. They could have access to User or Team based Refs
-//        user = userIdentityService.getCurrentUser();
-//        if (toRef.isPresent() && RelationshipRef.USER.equals(toRef.get())) {
-//          List<String> userRefs = getRefsForUsers(fromRef, fromRefs, List.of(user.getId()));
-//          refsList.addAll(userRefs.stream().filter(r -> toRefs.get().contains(r)).collect(Collectors.toList()));
-//        } else if (!toRef.isPresent()) {
-//          refsList.addAll(getRefsForUsers(fromRef, fromRefs, List.of(user.getId())));
-//        }
-//        //Ignore trying to get a relationship between a Team and a Team
-//        if (!RelationshipRef.TEAM.equals(fromRef)) {
-//          // Add refs based on teams the user is a 'Member Of'
-//          // toRef either needs to be TEAM or not present (i.e. not filtered)
-//          List<String> filteredTeams = new LinkedList<>();
-//          if (toRef.isPresent() && RelationshipRef.TEAM.equals(toRef.get())) {
-//            filteredTeams = getTeamsRefsByUsers(List.of(user.getId()));
-//            filteredTeams = filteredTeams.stream().filter(r -> toRefs.get().contains(r)).collect(Collectors.toList());
-//          } else if (!toRef.isPresent()) {
-//            filteredTeams = getTeamsRefsByUsers(List.of(user.getId()));
-//          }
-//          refsList.addAll(getRefsForTeams(fromRef, fromRefs, filteredTeams));
-//        }
-//        break;
-////      case workflow:
-////        break;
-//      case team:
-//        // Add refs based on TeamTokens teamId
-//        TeamToken token = (TeamToken) userIdentityService.getRequestIdentity();
-//        //Ignore trying to get a relationship between a Team and a Team
-//        if (!RelationshipRef.TEAM.equals(fromRef)) {
-//          if (toRef.isPresent() && RelationshipRef.TEAM.equals(toRef.get())) {
-//            if (toRefs.isPresent() && toRefs.get().contains(token.getTeamId()));
-//            refsList.addAll(getRefsForTeams(fromRef, fromRefs, List.of(token.getTeamId())));
-//          } else if (!toRef.isPresent()) {
-//            refsList.addAll(getRefsForTeams(fromRef, fromRefs, List.of(token.getTeamId())));
-//          } 
-//        } else if (fromRefs.get().contains(token.getTeamId())) {
-//          refsList.add(token.getTeamId());
-//        }
-//        break;
-//      case global:
-//        //Get All Refs unless filtered
-//        if (toRef.isPresent() && RelationshipRef.USER.equals(toRef.get())) {
-//          refsList.addAll(getRefsForUsers(fromRef, fromRefs, toRefs.get()));
-//        } else if (toRef.isPresent() && RelationshipRef.TEAM.equals(toRef.get())) {
-//          refsList.addAll(getRefsForTeams(fromRef, fromRefs, toRefs.get()));
-//        } else if (toRef.isPresent() && RelationshipRef.SYSTEM.equals(toRef.get())) {
-//          refsList.addAll(getRefsForSystem(fromRef));
-//        } else if (toRef.isPresent() && RelationshipRef.TEMPLATE.equals(toRef.get())) {
-//          refsList.addAll(getRefsForTemplate(fromRef));
-//        } else if (!toRef.isPresent()) {
-//          refsList.addAll(getRefsForAllUsers(fromRef));
-//          refsList.addAll(getRefsForAllTeams(fromRef));
-//          refsList.addAll(getRefsForTemplate(fromRef));
-//          refsList.addAll(getRefsForSystem(fromRef));
-//        }
-//        break;
-//    }        
-//    
-//    return refsList;
-//  }
   
   /*
-   * Generates the Refs that the current security scope has access to, based on a specific type and optional lists of typeRefs, scopes, and teamIds 
+   * Generates the FromRefs that the current security scope has access to, based on a specific type and optional lists of typeRefs, scopes, and teamIds 
    * 
    * @param RelationshipRef fromRef
    * 
@@ -287,10 +188,38 @@ public class RelationshipServiceImpl implements RelationshipService {
    * 
    * @param list of TeamIds
    * 
-   * @return list of filtered Refs
+   * @return list of filtered FromRefs
    */
   @Override
-  public List<String> getFilteredRefs(Optional<RelationshipRef> from, Optional<List<String>> fromRefs, Optional<RelationshipType> type, Optional<RelationshipRef> to, 
+  public List<String> getFilteredFromRefs(Optional<RelationshipRef> from, Optional<List<String>> fromRefs, Optional<RelationshipType> type, Optional<RelationshipRef> to, 
+      Optional<List<String>> toRefs) {
+    return getFilteredRefs(from, fromRefs, type, to, toRefs).stream().map(RelationshipEntity::getFromRef).collect(Collectors.toList());
+  }
+  
+  /*
+   * Generates the FromRefs that the current security scope has access to, based on a specific type and optional lists of typeRefs, scopes, and teamIds 
+   * 
+   * @param RelationshipRef fromRef
+   * 
+   * @param RelatnshipType type
+   * 
+   * @param list of Refs: WorkflowRef, WorkflowRunRef, TaskTemplateRef, TaskRunRef
+   * 
+   * @param RelationshipRef toRef
+   * 
+   * @param list of Scopes
+   * 
+   * @param list of TeamIds
+   * 
+   * @return list of filtered FromRefs
+   */
+  @Override
+  public List<String> getFilteredToRefs(Optional<RelationshipRef> from, Optional<List<String>> fromRefs, Optional<RelationshipType> type, Optional<RelationshipRef> to, 
+      Optional<List<String>> toRefs) {
+    return getFilteredRefs(from, fromRefs, type, to, toRefs).stream().map(RelationshipEntity::getToRef).collect(Collectors.toList());
+  }
+  
+  private List<RelationshipEntity> getFilteredRefs(Optional<RelationshipRef> from, Optional<List<String>> fromRefs, Optional<RelationshipType> type, Optional<RelationshipRef> to, 
       Optional<List<String>> toRefs) {
     
     //TODO Validation that we are not trying to get a relationship between two of the same objects or provide IDs with no context.
@@ -407,41 +336,9 @@ public class RelationshipServiceImpl implements RelationshipService {
     
     LOGGER.debug("Relationships Found: " + relEntities.toString());
     
-    if (RelationshipType.MEMBEROF.equals(type.get())) {
-      return relEntities.stream().map(RelationshipEntity::getToRef).collect(Collectors.toList());
-    }
-    return relEntities.stream().map(RelationshipEntity::getFromRef).collect(Collectors.toList());
+    return relEntities;
   }
 
-  /*
-   * Generates the Refs based on a specific type and optional lists of typeRefs, scopes, and teamIds
-   * 
-   * @param RelationshipRefType type
-   * 
-   * @param list of TypeRefs: WorkflowRef, WorkflowRunRef, TaskTemplateRef, TaskRunRef
-   * 
-   * @param list of Scopes
-   * 
-   * @param list of TeamIds
-   * 
-   * @param FlowUserEntity user
-   * 
-   * @return list of filtered Refs
-   * 
-   * TODO: implement this by reusing getFilteredRefs
-   */
-//  @Override
-//  public List<String> getFilteredRefsForUserEmail(Optional<RelationshipRef> from, Optional<List<String>> fromRefs, Optional<RelationshipType> type, Optional<RelationshipRef> to, 
-//      Optional<List<String>> toRefs, String userEmail) {
-//    Optional<User> user = identityService.getUserByEmail(userEmail);
-//    Boolean isAdmin = false;
-//    if (user != null && user.getType() == UserType.admin) {
-//      isAdmin = true;
-//    }
-////    return getFilteredRefs(fromRef, fromRefs, type, toRef, toRefs);
-//    return new LinkedList<>();
-//  }
-//  
 //  /*
 //   * Check if a Relationship exists with an object of that ID
 //   * 
