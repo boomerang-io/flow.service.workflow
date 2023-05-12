@@ -248,8 +248,9 @@ public class RelationshipServiceImpl implements RelationshipService {
     LOGGER.info("RelationshipFilter() - Access Scope: " + identityService.getCurrentScope());
     
     // If User is Admin provide global access
-    if ((TokenScope.user.equals(accessScope) || TokenScope.session.equals(accessScope)) && identityService.isCurrentUserAdmin()) {
-      LOGGER.info("RelationshipFilter() - Admin: " + true);
+    // MEMBEROF requests are ignored as we only want to return that users Teams and as such don't elevat the scope
+    if ((!RelationshipType.MEMBEROF.equals(type.get())) && (TokenScope.user.equals(accessScope) || TokenScope.session.equals(accessScope)) && identityService.isCurrentUserAdmin()) {
+      LOGGER.info("RelationshipFilter() - Identity is Admin - Elevating permissions.");
       accessScope = TokenScope.global;
     }
 

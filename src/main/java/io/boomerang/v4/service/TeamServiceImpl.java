@@ -44,7 +44,6 @@ import io.boomerang.v4.model.ApproverGroup;
 import io.boomerang.v4.model.ApproverGroupRequest;
 import io.boomerang.v4.model.Team;
 import io.boomerang.v4.model.TeamRequest;
-import io.boomerang.v4.model.TeamResponsePage;
 import io.boomerang.v4.model.User;
 import io.boomerang.v4.model.UserSummary;
 import io.boomerang.v4.model.enums.RelationshipRef;
@@ -204,7 +203,7 @@ public class TeamServiceImpl implements TeamService {
    * Returns Teams plus each Teams UserRefs, WorkflowRefs, and Quotas
    */
   @Override
-  public TeamResponsePage query(Optional<Integer> queryPage, Optional<Integer> queryLimit, Optional<Direction> querySort, Optional<List<String>> queryLabels,
+  public Page<Team> query(Optional<Integer> queryPage, Optional<Integer> queryLimit, Optional<Direction> querySort, Optional<List<String>> queryLabels,
       Optional<List<String>> queryStatus, Optional<List<String>> queryIds) {
     Pageable pageable = Pageable.unpaged();
     final Sort sort = Sort.by(new Order(querySort.orElse(Direction.ASC), "creationDate"));
@@ -212,7 +211,6 @@ public class TeamServiceImpl implements TeamService {
       pageable = PageRequest.of(queryPage.get(), queryLimit.get(), sort);
     }
     
-    List<Team> teams = new LinkedList<>();
     List<String> teamRefs = relationshipService.getFilteredToRefs(Optional.empty(), Optional.empty(),
         Optional.of(RelationshipType.MEMBEROF), Optional.of(RelationshipRef.TEAM), queryIds);
     
@@ -260,16 +258,18 @@ public class TeamServiceImpl implements TeamService {
       query.with(sort);
     }
 
-    Page<TeamEntity> pages =
-        PageableExecutionUtils.getPage(mongoTemplate.find(query, TeamEntity.class),
-            pageable, () -> mongoTemplate.count(query, TeamEntity.class));
+    List<TeamEntity> teamEntities = mongoTemplate.find(query, TeamEntity.class);
 
-    List<TeamEntity> teamEntities = pages.getContent();
-
+    List<Team> teams = new LinkedList<>();
     if (!teamEntities.isEmpty()) {
       teamEntities.forEach(teamEntity -> teams.add(convertTeamEntityToTeam(teamEntity)));
     }
-    return new TeamResponsePage(teams, pageable, pages.getNumberOfElements());
+    
+    Page<Team> pages =
+        PageableExecutionUtils.getPage(teams,
+            pageable, () -> mongoTemplate.count(query, TeamEntity.class));
+
+    return pages;
   }
 
   /*
