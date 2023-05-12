@@ -26,6 +26,7 @@ import io.boomerang.model.profile.SortSummary;
 import io.boomerang.mongo.entity.FlowUserEntity;
 import io.boomerang.mongo.entity.TeamEntity;
 import io.boomerang.mongo.model.KeyValuePair;
+import io.boomerang.security.service.UserValidationService;
 import io.boomerang.service.UserIdentityService;
 import io.boomerang.service.crud.TeamService;
 
@@ -45,6 +46,9 @@ public class ManagementController {
 
   @Autowired
   private UserIdentityService userIdentityService;
+
+  @Autowired
+  private UserValidationService userValidationService;
 
   @GetMapping(value = "/users/{userId}")
   public FlowUserProfile getUserProfile(@PathVariable String userId) {
@@ -110,6 +114,7 @@ public class ManagementController {
 
   @PostMapping(value = "/teams")
   public FlowTeam addTeam(@RequestBody FlowTeam flowTeam) {
+    userValidationService.validateUserAdminOrOperator();
     if (isTeamManagementAvaliable()) {
       String teamName = flowTeam.getName();
       return teamService.createStandaloneTeam(teamName, flowTeam.getQuotas());
@@ -144,6 +149,7 @@ public class ManagementController {
 
   @PutMapping(value = "/teams/{teamId}")
   public void updateTeamMembers(@PathVariable String teamId, @RequestBody FlowTeam flow) {
+    userValidationService.validateUserAdminOrOperator();
     if (isTeamManagementAvaliable()) {
       teamService.updateTeam(teamId, flow);
     }

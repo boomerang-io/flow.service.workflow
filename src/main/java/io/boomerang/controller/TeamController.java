@@ -47,16 +47,17 @@ public class TeamController {
 
   @Autowired
   private UserIdentityService userIdentityService;
-  
+
   @Autowired
   private UserValidationService userValidationService;
-  
+
   @Autowired
   private WorkflowService workflowService;
 
   @PostMapping(value = "/teams")
   public void createCiTeam(@RequestBody CreateFlowTeam createCiTeamRequest) {
-    flowTeamService.createFlowTeam(createCiTeamRequest.getCreatedGroupId(), createCiTeamRequest.getName());
+    flowTeamService.createFlowTeam(createCiTeamRequest.getCreatedGroupId(),
+        createCiTeamRequest.getName());
   }
 
   @GetMapping(value = "/teams")
@@ -76,7 +77,7 @@ public class TeamController {
     userValidationService.validateUserForTeam(teamId);
     return flowTeamService.getAllTeamProperties(teamId);
   }
-  
+
   @GetMapping(value = "/teams/{teamId}/members")
   public List<TeamMember> getTeamMembers(@PathVariable String teamId) {
     return flowTeamService.getTeamMembers(teamId);
@@ -131,6 +132,7 @@ public class TeamController {
 
   @GetMapping(value = "/manage/teams/{teamId}")
   public FlowTeam getTeam(@PathVariable String teamId) {
+    userValidationService.validateUserForTeam(teamId);
     return flowTeamService.getTeamByIdDetailed(teamId);
   }
 
@@ -165,33 +167,36 @@ public class TeamController {
   public TeamEntity deactivateTeam(@PathVariable String teamId) {
     return flowTeamService.deactivateTeam(teamId);
   }
- 
+
   @GetMapping(value = "/teams/{teamId}/approvers")
   public List<ApproverGroupResponse> getApproverGroups(@PathVariable String teamId) {
     return flowTeamService.getTeamApproverGroups(teamId);
   }
-  
+
   @PostMapping(value = "/teams/{teamId}/approvers")
-  public ApproverGroupResponse createApproverGroup(@PathVariable String teamId, @RequestBody CreateApproverGroupRequest createApproverGroupRequest) {
+  public ApproverGroupResponse createApproverGroup(@PathVariable String teamId,
+      @RequestBody CreateApproverGroupRequest createApproverGroupRequest) {
     return flowTeamService.createApproverGroup(teamId, createApproverGroupRequest);
   }
-  
+
   @PutMapping(value = "/teams/{teamId}/approvers/{groupId}")
-  public ApproverGroupResponse updateApproverGroup(@PathVariable String teamId, @PathVariable String groupId, @RequestBody CreateApproverGroupRequest updateApproverGroup) {
+  public ApproverGroupResponse updateApproverGroup(@PathVariable String teamId,
+      @PathVariable String groupId, @RequestBody CreateApproverGroupRequest updateApproverGroup) {
     return flowTeamService.updateApproverGroup(teamId, groupId, updateApproverGroup);
   }
-  
+
   @GetMapping(value = "/teams/{teamId}/approvers/{groupId}")
-  public ApproverGroupResponse getSingleAproverGroup(@PathVariable String teamId, @PathVariable String groupId) {
+  public ApproverGroupResponse getSingleAproverGroup(@PathVariable String teamId,
+      @PathVariable String groupId) {
     return flowTeamService.getSingleAproverGroup(teamId, groupId);
   }
- 
-  
+
+
   @DeleteMapping(value = "/teams/{teamId}/approvers/{groupId}")
-  public void deleteApproverGroup(@PathVariable String teamId,@PathVariable String groupId) {
+  public void deleteApproverGroup(@PathVariable String teamId, @PathVariable String groupId) {
     flowTeamService.deleteApproverGroup(teamId, groupId);
   }
-  
+
   @GetMapping(value = "/teams/{teamId}/workflows")
   public List<WorkflowSummary> getTeamWorkflows(@PathVariable String teamId) {
     return workflowService.getWorkflowsForTeam(teamId);
