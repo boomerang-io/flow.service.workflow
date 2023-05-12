@@ -20,7 +20,7 @@ public class FeatureServiceImpl implements FeatureService {
     Map<String, Object> features = new HashMap<>();
     Map<String, Object> quotas = new HashMap<>();
 
-    AbstractParam config = settingsService.getSettingConfig("controller", "enable.tasks");
+    AbstractParam config = settingsService.getSettingConfig("task", "enable.tasks");
 
     if (config != null) {
       features.put(VERIFIED_TASK_EDIT_KEY, config.getBooleanValue());
@@ -49,7 +49,7 @@ public class FeatureServiceImpl implements FeatureService {
         settingsService.getSettingConfig("features", "teamTasks").getBooleanValue());
 
     quotas.put("maxActivityStorageSize", settingsService
-        .getSettingConfig("activity", "max.storage.size").getValue().replace("Gi", ""));
+        .getSettingConfig("workflowrun", "max.storage.size").getValue().replace("Gi", ""));
 
     quotas.put("maxWorkflowStorageSize", settingsService
         .getSettingConfig("workflow", "max.storage.size").getValue().replace("Gi", ""));
