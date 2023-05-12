@@ -10,7 +10,7 @@ import org.springframework.web.servlet.HandlerInterceptor;
 import io.boomerang.security.model.Token;
 import io.boomerang.security.model.TokenAccess;
 import io.boomerang.security.model.TokenObject;
-import io.boomerang.security.model.TokenType;
+import io.boomerang.security.model.TokenScope;
 import io.boomerang.security.service.IdentityService;
 
 /*
@@ -51,7 +51,7 @@ public class SecurityInterceptor implements HandlerInterceptor {
         return false;
       }
 
-      TokenType[] requiredTypes = authScope.types();
+      TokenScope[] requiredTypes = authScope.types();
       Token accessToken = this.identityService.getCurrentIdentity();
       // Check the required level of token is present
       if (!Arrays.asList(requiredTypes).contains(accessToken.getType())) {

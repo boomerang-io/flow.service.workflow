@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import io.boomerang.security.interceptors.AuthScope;
 import io.boomerang.security.model.TokenAccess;
 import io.boomerang.security.model.TokenObject;
-import io.boomerang.security.model.TokenType;
+import io.boomerang.security.model.TokenScope;
 import io.boomerang.v4.client.WorkflowResponsePage;
 import io.boomerang.v4.model.WorkflowCanvas;
 import io.boomerang.v4.model.WorkflowDuplicateRequest;
@@ -72,7 +72,7 @@ public class WorkflowV2Controller {
       required = true) @RequestParam(defaultValue = "0") Optional<Integer> page,
   @Parameter(name = "sort", description = "Ascending (ASC) or Descending (DESC) sort on creationDate", example = "ASC",
   required = true) @RequestParam(defaultValue = "ASC") Optional<Direction> sort) {
-    return workflowService.query(page, limit, sort, labels, status, teams, workflows);
+    return workflowService.query(limit, page, sort, labels, status, teams, workflows);
   }
 
   @PostMapping(value = "/")
@@ -131,7 +131,7 @@ public class WorkflowV2Controller {
   }
 
   @GetMapping(value = "/{workflowId}/compose")
-  @AuthScope(types = {TokenType.global}, access = TokenAccess.read, object = TokenObject.parameter)
+  @AuthScope(types = {TokenScope.global}, access = TokenAccess.read, object = TokenObject.parameter)
   @Operation(summary = "Convert workflow to compose model for UI Designer and detailed Activity screens.")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})

@@ -5,13 +5,11 @@ import java.util.LinkedList;
 import java.util.List;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.DocumentReference;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import io.boomerang.security.model.TokenPermission;
-import io.boomerang.security.model.TokenType;
-import io.boomerang.v4.data.entity.ref.WorkflowEntity;
+import io.boomerang.security.model.TokenScope;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(Include.NON_NULL)
@@ -20,44 +18,15 @@ public class TokenEntity {
 
   @Id
   private String id;
-  private TokenType type;
+  private TokenScope type;
   private String name;
   private String description;
   private Date creationDate = new Date();
   private Date expirationDate;
   private boolean valid;
-  @DocumentReference(lazy = true)
-  private UserEntity user;
-  @DocumentReference(lazy = true)
-  private WorkflowEntity workflow;
-  @DocumentReference(lazy = true)
-  private TeamEntity team;
+  private String principalRef;
   private List<TokenPermission> permissions = new LinkedList<>();
   private String token;
-
-  public UserEntity getUser() {
-    return user;
-  }
-
-  public void setUser(UserEntity user) {
-    this.user = user;
-  }
-
-  public WorkflowEntity getWorkflow() {
-    return workflow;
-  }
-
-  public void setWorkflow(WorkflowEntity workflow) {
-    this.workflow = workflow;
-  }
-
-  public TeamEntity getTeam() {
-    return team;
-  }
-
-  public void setTeam(TeamEntity team) {
-    this.team = team;
-  }
 
   public String getId() {
     return id;
@@ -67,11 +36,11 @@ public class TokenEntity {
     this.id = id;
   }
 
-  public TokenType getType() {
+  public TokenScope getType() {
     return type;
   }
 
-  public void setType(TokenType type) {
+  public void setType(TokenScope type) {
     this.type = type;
   }
 
@@ -132,4 +101,11 @@ public class TokenEntity {
     this.permissions = permissions;
   }
 
+  public String getPrincipalRef() {
+    return principalRef;
+  }
+
+  public void setPrincipalRef(String principalRef) {
+    this.principalRef = principalRef;
+  }
 }

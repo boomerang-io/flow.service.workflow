@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import io.boomerang.security.interceptors.AuthScope;
 import io.boomerang.security.model.TokenAccess;
 import io.boomerang.security.model.TokenObject;
-import io.boomerang.security.model.TokenType;
+import io.boomerang.security.model.TokenScope;
 import io.boomerang.security.service.IdentityService;
 import io.boomerang.v4.model.FeaturesAndQuotas;
 import io.boomerang.v4.model.GlobalParam;
@@ -81,7 +81,7 @@ public class ManagementV2Controller {
   
   //TODO move this to another location
   @PutMapping(value = "/activate")
-  @AuthScope(access = TokenAccess.any, object = TokenObject.user, types = {TokenType.session})
+  @AuthScope(access = TokenAccess.any, object = TokenObject.user, types = {TokenScope.session})
   @Operation(summary = "Register and activate an installation of Flow")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -116,7 +116,7 @@ public class ManagementV2Controller {
   }
 
   @GetMapping(value = "/global-params")
-  @AuthScope(types = {TokenType.global}, access = TokenAccess.read, object = TokenObject.parameter)
+  @AuthScope(types = {TokenScope.global}, access = TokenAccess.read, object = TokenObject.parameter)
   @Operation(summary = "Get all global Params")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})

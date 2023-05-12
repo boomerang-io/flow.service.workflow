@@ -5,17 +5,17 @@ import java.util.List;
 
 public class CreateTokenRequest {
 
-  private TokenType type;
+  private TokenScope type;
   private String name;
-  private String owner;
+  private String principal;
   private String description;
   private Date expirationDate;
   private List<TokenPermission> scopes;
   
-  public TokenType getType() {
+  public TokenScope getType() {
     return type;
   }
-  public void setType(TokenType type) {
+  public void setType(TokenScope type) {
     this.type = type;
   }
   public String getName() {
@@ -27,11 +27,11 @@ public class CreateTokenRequest {
   public String getDescription() {
     return description;
   }
-  public String getOwner() {
-    return owner;
+  public String getPrincipal() {
+    return principal;
   }
-  public void setOwner(String owner) {
-    this.owner = owner;
+  public void setPrincipal(String principal) {
+    this.principal = principal;
   }
   public void setDescription(String description) {
     this.description = description;

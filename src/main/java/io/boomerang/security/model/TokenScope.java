@@ -1,5 +1,5 @@
 package io.boomerang.security.model;
 
-public enum TokenType {
+public enum TokenScope {
   session,user,team,workflow,global
 }

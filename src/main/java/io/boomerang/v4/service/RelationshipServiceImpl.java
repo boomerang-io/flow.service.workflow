@@ -11,12 +11,9 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
-import io.boomerang.security.model.TokenType;
+import io.boomerang.security.model.TokenScope;
 import io.boomerang.security.service.IdentityService;
 import io.boomerang.v4.data.entity.RelationshipEntity;
-import io.boomerang.v4.data.entity.TeamEntity;
-import io.boomerang.v4.data.entity.UserEntity;
-import io.boomerang.v4.data.entity.ref.WorkflowEntity;
 import io.boomerang.v4.data.repository.RelationshipRepository;
 import io.boomerang.v4.model.enums.RelationshipRef;
 import io.boomerang.v4.model.enums.RelationshipType;
@@ -51,20 +48,16 @@ public class RelationshipServiceImpl implements RelationshipService {
     switch (identityService.getCurrentScope()) {
       case session:
       case user:
-        UserEntity user = identityService.getCurrentUser();
         toType = RelationshipRef.USER;
-        toRef = user.getId();
+        toRef = identityService.getCurrentPrincipal();
         break;
       case workflow:
         toType = RelationshipRef.WORKFLOW;
-        WorkflowEntity workflow = identityService.getCurrentWorkflow();
-        toRef = workflow.getId();
+        toRef = identityService.getCurrentPrincipal();
         break;        
       case team:
         toType = RelationshipRef.TEAM;
-        TeamEntity team = identityService.getCurrentTeam();
-        String teamId = team.getId();
-        toRef = teamId;
+        toRef = identityService.getCurrentPrincipal();
         break;
       case global:
         toType = RelationshipRef.GLOBAL;
@@ -139,6 +132,21 @@ public class RelationshipServiceImpl implements RelationshipService {
   @Override
   public Optional<RelationshipEntity> getRelationship(RelationshipRef fromType, String fromRef, RelationshipType relationship) {
     return relationshipRepository.findByFromAndFromRefAndType(fromType, fromRef, relationship);
+  }
+  
+  /*
+   * Retrieve RelationshipEntityRef for the provided inputs
+   *
+   * 
+   * @return RelationshipEntity
+   */
+  @Override
+  public Optional<String> getRelationshipRef(RelationshipRef fromType, String fromRef, RelationshipType relationship) {
+    Optional<RelationshipEntity> rel = getRelationship(fromType, fromRef, relationship);
+    if (rel.isPresent()) {
+      return Optional.of(rel.get().getToRef());
+    }
+    return Optional.empty();
   }
   
 //  /*
@@ -236,38 +244,38 @@ public class RelationshipServiceImpl implements RelationshipService {
       from = Optional.of(RelationshipRef.USER);
     }
 
-    TokenType accessScope = identityService.getCurrentScope();
+    TokenScope accessScope = identityService.getCurrentScope();
     LOGGER.info("RelationshipFilter() - Access Scope: " + identityService.getCurrentScope());
     
     // If User is Admin provide global access
-    if ((TokenType.user.equals(accessScope) || TokenType.session.equals(accessScope)) && identityService.isCurrentUserAdmin()) {
-      accessScope = TokenType.global;
+    if ((TokenScope.user.equals(accessScope) || TokenScope.session.equals(accessScope)) && identityService.isCurrentUserAdmin()) {
+      LOGGER.info("RelationshipFilter() - Admin: " + true);
+      accessScope = TokenScope.global;
     }
 
     switch (accessScope) {
       case session:
       case user:
-        UserEntity user = identityService.getCurrentUser();
+        String userId = identityService.getCurrentPrincipal();
         if (from.isPresent() && RelationshipRef.USER.equals(from.get())) {
-          fromRefs = Optional.of(List.of(user.getId()));
+          fromRefs = Optional.of(List.of(userId));
         } else if (RelationshipType.AUTHORIZES.equals(type.get()) && to.isPresent() && RelationshipRef.USER.equals(to.get())) {
-          toRefs = Optional.of(List.of(user.getId()));
+          toRefs = Optional.of(List.of(userId));
         } else if (RelationshipType.MEMBEROF.equals(type.get()) && to.isPresent() && RelationshipRef.TEAM.equals(to.get())) {
          if (toRefs.isPresent()) {
            // If toRefs are provided (i.e. TeamIds) then filter to ones provided that the user has access to
-           List<String> filteredTeams = getTeamsRefsByUsers(List.of(user.getId()));
+           List<String> filteredTeams = getTeamsRefsByUsers(List.of(userId));
            List<String> tempRefs = toRefs.get();
            toRefs = Optional.of(filteredTeams.stream().filter(r -> tempRefs.contains(r)).collect(Collectors.toList()));
          } else {
-           toRefs = Optional.of(getTeamsRefsByUsers(List.of(user.getId())));
+           toRefs = Optional.of(getTeamsRefsByUsers(List.of(userId)));
          }
         } 
         break;
       case workflow:
         // Add refs based on Workflow
         // Will either set toRef to the WorkflowID or make sure its in the list of provided Refs
-        WorkflowEntity workflow = identityService.getCurrentWorkflow();
-        String workflowId = workflow.getId();
+        String workflowId = identityService.getCurrentPrincipal();
         if (to.isPresent() && RelationshipRef.WORKFLOW.equals(to.get())) {
           if (!toRefs.isPresent() || (toRefs.isPresent() && toRefs.get().contains(workflowId))) {
             toRefs = Optional.of(List.of(workflowId));
@@ -278,8 +286,7 @@ public class RelationshipServiceImpl implements RelationshipService {
         break;
       case team:
         // Add refs based on Tokens Team
-        TeamEntity team = identityService.getCurrentTeam();
-        String teamId = team.getId();
+        String teamId = identityService.getCurrentPrincipal();
         if (to.isPresent() && RelationshipRef.TEAM.equals(to.get())) {
           if (!toRefs.isPresent() || (toRefs.isPresent() && toRefs.get().contains(teamId))) {
             toRefs = Optional.of(getRefsForTeams(from.get(), fromRefs, List.of(teamId)));

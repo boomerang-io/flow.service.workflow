@@ -4,7 +4,7 @@ public class TokenTypeResponse {
 
   private TokenObject object;
   private TokenAccess access;
-  private TokenType[] types;
+  private TokenScope[] types;
 
   public TokenAccess getAccess() {
     return access;
@@ -12,10 +12,10 @@ public class TokenTypeResponse {
   public void setAccess(TokenAccess access) {
     this.access = access;
   }
-  public TokenType[] getTypes() {
+  public TokenScope[] getTypes() {
     return types;
   }
-  public void setTypes(TokenType[] types) {
+  public void setTypes(TokenScope[] types) {
     this.types = types;
   }
   public TokenObject getObject() {

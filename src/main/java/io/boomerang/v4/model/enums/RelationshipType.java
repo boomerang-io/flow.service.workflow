@@ -10,7 +10,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
  * - https://tinkerpop.apache.org/docs/3.6.2/recipes/
  */
 public enum RelationshipType {
-  BELONGSTO("Belongs To"), MEMBEROF("Member Of"), EXECUTIONOF("Execution Of"), AUTHORIZES("Authorizes");//, INITIATEDBY("Initiated By");
+  BELONGSTO("Belongs To"), MEMBEROF("Member Of"), EXECUTIONOF("Execution Of"), AUTHORIZES("Authorizes"), CREATED("Created");//, INITIATEDBY("Initiated By");
 
   private String name;
 

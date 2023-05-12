@@ -4,61 +4,29 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import org.springframework.beans.BeanUtils;
-import org.springframework.data.mongodb.core.mapping.DocumentReference;
-import io.boomerang.v4.data.entity.TeamEntity;
 import io.boomerang.v4.data.entity.TokenEntity;
-import io.boomerang.v4.data.entity.UserEntity;
-import io.boomerang.v4.data.entity.ref.WorkflowEntity;
 
 public class Token {  
   
   private String id;
-  private TokenType type;
+  private TokenScope type;
   private String name;
   private String description;
   private Date creationDate = new Date();
   private Date expirationDate;
   private boolean valid;
-  @DocumentReference(lazy = true)
-  private UserEntity user;
-  @DocumentReference(lazy = true)
-  private WorkflowEntity workflow;
-  @DocumentReference(lazy = true)
-  private TeamEntity team;
+  private String principalRef;
   private List<TokenPermission> permissions = new LinkedList<>();
 
   public Token() {
 
   }
 
-  public Token(TokenType type) {
+  public Token(TokenScope type) {
     super();
     this.setType(type);
   }
-  
-  public UserEntity getUser() {
-    return user;
-  }
 
-  public void setUser(UserEntity user) {
-    this.user = user;
-  }
-
-  public WorkflowEntity getWorkflow() {
-    return workflow;
-  }
-
-  public void setWorkflow(WorkflowEntity workflow) {
-    this.workflow = workflow;
-  }
-
-  public TeamEntity getTeam() {
-    return team;
-  }
-
-  public void setTeam(TeamEntity team) {
-    this.team = team;
-  }
 
   public Token(TokenEntity entity) {
     BeanUtils.copyProperties(entity, this);
@@ -76,10 +44,10 @@ public class Token {
   public void setPermissions(List<TokenPermission> permissions) {
     this.permissions = permissions;
   }
-  public TokenType getType() {
+  public TokenScope getType() {
     return type;
   }
-  public void setType(TokenType type) {
+  public void setType(TokenScope type) {
     this.type = type;
   }
   public String getName() {
@@ -113,5 +81,13 @@ public class Token {
   }
   public void setDescription(String description) {
     this.description = description;
+  }
+
+  public String getPrincipalRef() {
+    return principalRef;
+  }
+
+  public void setPrincipalRef(String principalRef) {
+    this.principalRef = principalRef;
   }
 }

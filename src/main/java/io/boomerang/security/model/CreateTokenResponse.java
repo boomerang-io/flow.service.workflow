@@ -5,7 +5,7 @@ import java.util.Date;
 public class CreateTokenResponse {
 
   private String id;
-  private TokenType type;
+  private TokenScope type;
   private String value;
   private Date expirationDate;
   
@@ -15,10 +15,10 @@ public class CreateTokenResponse {
   public void setId(String id) {
     this.id = id;
   }
-  public TokenType getType() {
+  public TokenScope getType() {
     return type;
   }
-  public void setType(TokenType type) {
+  public void setType(TokenScope type) {
     this.type = type;
   }
   public String getValue() {

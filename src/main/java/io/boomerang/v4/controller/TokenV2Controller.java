@@ -26,7 +26,7 @@ import io.boomerang.security.model.CreateTokenResponse;
 import io.boomerang.security.model.Token;
 import io.boomerang.security.model.TokenAccess;
 import io.boomerang.security.model.TokenObject;
-import io.boomerang.security.model.TokenType;
+import io.boomerang.security.model.TokenScope;
 import io.boomerang.security.service.TokenService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -42,7 +42,7 @@ public class TokenV2Controller {
   private TokenService tokenService;
 
   @PostMapping("/token")
-  @AuthScope(types = {TokenType.global, TokenType.user, TokenType.team, TokenType.workflow},
+  @AuthScope(types = {TokenScope.global, TokenScope.user, TokenScope.team, TokenScope.workflow},
       object = TokenObject.token, access = TokenAccess.write)
   @Operation(summary = "Create Token")
   public CreateTokenResponse createToken(@Valid @RequestBody CreateTokenRequest request) {
@@ -50,12 +50,12 @@ public class TokenV2Controller {
   }
 
   @GetMapping("/token")
-  @AuthScope(types = {TokenType.global, TokenType.user, TokenType.team, TokenType.workflow},
+  @AuthScope(types = {TokenScope.global, TokenScope.user, TokenScope.team, TokenScope.workflow},
       object = TokenObject.token, access = TokenAccess.read)
   @Operation(summary = "Search for Tokens")
   public Page<Token> query(
       @Parameter(name = "types", description = "List of types to filter for. Defaults to all.",
-      required = false) @RequestParam(required = false)  Optional<List<TokenType>> types,
+      required = false) @RequestParam(required = false)  Optional<List<TokenScope>> types,
       @Parameter(name = "limit", description = "Result Size", example = "10",
           required = true) @RequestParam(defaultValue = "10") int limit,
       @Parameter(name = "page", description = "Page Number", example = "0",
@@ -83,7 +83,7 @@ public class TokenV2Controller {
   }
 
   @DeleteMapping("/token/{id}")
-  @AuthScope(types = {TokenType.global, TokenType.user, TokenType.team, TokenType.workflow},
+  @AuthScope(types = {TokenScope.global, TokenScope.user, TokenScope.team, TokenScope.workflow},
       object = TokenObject.token, access = TokenAccess.delete)
   @Operation(summary = "Delete Token")
   public ResponseEntity<?> deleteToken(@Valid @PathParam(value = "id") String id) {

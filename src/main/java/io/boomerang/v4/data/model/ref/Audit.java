@@ -11,8 +11,8 @@ public class Audit {
   private String approverEmail;
   private String approverName;
   private String comments;
-
   private boolean approved;
+  
   public String getApproverEmail() {
     return approverEmail;
   }

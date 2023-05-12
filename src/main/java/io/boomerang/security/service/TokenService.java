@@ -9,7 +9,7 @@ import org.springframework.data.domain.Pageable;
 import io.boomerang.security.model.CreateTokenRequest;
 import io.boomerang.security.model.CreateTokenResponse;
 import io.boomerang.security.model.Token;
-import io.boomerang.security.model.TokenType;
+import io.boomerang.security.model.TokenScope;
 
 public interface TokenService {
   public Token get(String value);
@@ -18,5 +18,5 @@ public interface TokenService {
   public boolean validate(String token);
   public boolean delete(@Valid String id);
   public Page<Token> query(Optional<Date> from, Optional<Date> to, Pageable pageable,
-      Optional<List<TokenType>> queryTypes);
+      Optional<List<TokenScope>> queryTypes);
 }

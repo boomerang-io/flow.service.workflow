@@ -30,7 +30,7 @@ import io.boomerang.error.BoomerangException;
 import io.boomerang.security.model.CreateTokenRequest;
 import io.boomerang.security.model.CreateTokenResponse;
 import io.boomerang.security.model.Token;
-import io.boomerang.security.model.TokenType;
+import io.boomerang.security.model.TokenScope;
 import io.boomerang.security.model.TokenTypePrefix;
 import io.boomerang.v4.data.entity.TokenEntity;
 import io.boomerang.v4.data.entity.UserEntity;
@@ -40,6 +40,8 @@ import io.boomerang.v4.model.UserType;
 import io.boomerang.v4.model.enums.RelationshipRef;
 import io.boomerang.v4.model.enums.RelationshipType;
 import io.boomerang.v4.service.RelationshipService;
+import io.boomerang.v4.service.TeamService;
+import io.boomerang.v4.service.WorkflowService;
 
 @Service
 public class TokenServiceImpl implements TokenService {
@@ -73,7 +75,7 @@ public class TokenServiceImpl implements TokenService {
       throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
     }
     
-    if (TokenType.session.equals(request.getType())) {
+    if (TokenScope.session.equals(request.getType())) {
       // TODO make real exception
       throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);   
     }
@@ -86,35 +88,32 @@ public class TokenServiceImpl implements TokenService {
     tokenEntity.setValid(true);
     tokenEntity.setPermissions(request.getPermissions());
 
-    // TODO set Author based on current scope (should be a User Entity via UI)
-    // token.setCreatorId(creatorId);
-    // UserEntity user = userService.getUserByID(creatorId);
-    // if (user != null) {
-    // token.setCreatorName(user.getName());
-    // }
-
     String prefix = TokenTypePrefix.valueOf(request.getType().toString()).getPrefix();
     String uniqueToken = prefix + "_" + UUID.randomUUID().toString().toLowerCase();
 
     final String hashToken = hashString(uniqueToken);
     LOGGER.debug("Token: " + uniqueToken);
     tokenEntity.setToken(hashToken);
-    tokenRepository.save(tokenEntity);
+    tokenEntity = tokenRepository.save(tokenEntity);
+    
+    // Create an Audit relationship
+//    relationshipService.addRelationshipRef(RelationshipRef.USER, identityService.getCurrentUser().getId(),
+//      RelationshipType.CREATED, RelationshipRef.TOKEN, Optional.of(tokenEntity.getId()));
 
     // Create Authorization Relationship
-    RelationshipRef to = RelationshipRef.USER;
+    RelationshipRef to = null;
     Optional<String> toRef = Optional.empty();
-    if (TokenType.global.equals(request.getType())) {
+    if (TokenScope.global.equals(request.getType())) {
       to = RelationshipRef.GLOBAL;
-    } else if (TokenType.team.equals(request.getType())) {
+    } else if (TokenScope.team.equals(request.getType())) {
       to = RelationshipRef.TEAM;
-      toRef = Optional.of(request.getOwner());
-    } else if (TokenType.workflow.equals(request.getType())) {
+      toRef = Optional.of(request.getPrincipal());
+    } else if (TokenScope.workflow.equals(request.getType())) {
       to = RelationshipRef.WORKFLOW;
-      toRef = Optional.of(request.getOwner());
-    } else if (TokenType.user.equals(request.getType())) {
+      toRef = Optional.of(request.getPrincipal());
+    } else if (TokenScope.user.equals(request.getType())) {
       to = RelationshipRef.USER;
-      toRef = Optional.of(request.getOwner()); // Switch to Current Scope
+      toRef = Optional.of(request.getPrincipal());
     }
     relationshipService.addRelationshipRef(RelationshipRef.TOKEN, tokenEntity.getId(),
         RelationshipType.AUTHORIZES, to, toRef);
@@ -179,7 +178,7 @@ public class TokenServiceImpl implements TokenService {
 
   @Override
   public Page<Token> query(Optional<Date> from, Optional<Date> to, Pageable pageable,
-      Optional<List<TokenType>> queryTypes) {
+      Optional<List<TokenScope>> queryTypes) {
     List<Criteria> criterias = new ArrayList<>();
 
     if (from.isPresent()) {
@@ -262,10 +261,10 @@ public class TokenServiceImpl implements TokenService {
     TokenEntity tokenEntity = new TokenEntity();
     tokenEntity.setCreationDate(new Date());
     tokenEntity.setDescription("Generated User Session Token");
-    tokenEntity.setType(TokenType.session);
+    tokenEntity.setType(TokenScope.session);
     tokenEntity.setExpirationDate(expiryDate);
     tokenEntity.setValid(true);
-    tokenEntity.setUser(user.get());
+    tokenEntity.setPrincipalRef(user.get().getId());
 
     String prefix = TokenTypePrefix.session.prefix;
     String uniqueToken = prefix + "_" + UUID.randomUUID().toString().toLowerCase();

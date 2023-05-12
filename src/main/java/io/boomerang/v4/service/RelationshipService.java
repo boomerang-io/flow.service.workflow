@@ -27,4 +27,7 @@ public interface RelationshipService {
 
   List<String> getFilteredToRefs(Optional<RelationshipRef> from, Optional<List<String>> fromRefs,
       Optional<RelationshipType> type, Optional<RelationshipRef> to, Optional<List<String>> toRefs);
+
+  Optional<String> getRelationshipRef(RelationshipRef fromType, String fromRef,
+      RelationshipType relationship);
 }

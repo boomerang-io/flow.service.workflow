@@ -44,6 +44,7 @@ import io.boomerang.v4.model.ref.TriggerScheduler;
 import io.boomerang.v4.model.ref.Workflow;
 import io.boomerang.v4.model.ref.WorkflowTrigger;
 import io.boomerang.v4.model.ref.WorkflowWorkspace;
+import io.boomerang.v4.model.ref.WorkflowWorkspaceSpec;
 
 /*
  * This service replicates the required calls for Engine WorkflowV1 APIs
@@ -69,6 +70,9 @@ public class WorkflowServiceImpl implements WorkflowService {
   
   @Autowired
   private ParameterManager parameterManager;
+  
+  @Autowired
+  private SettingsService settingsService;
 
   /*
    * Get Worklfow
@@ -110,6 +114,9 @@ public class WorkflowServiceImpl implements WorkflowService {
         queryWorkflows, Optional.of(RelationshipType.BELONGSTO), Optional.ofNullable(RelationshipRef.TEAM),
         queryTeams);
     LOGGER.debug("Query Ids: ", workflowRefs);
+    if (workflowRefs.isEmpty()) {
+      return new WorkflowResponsePage();
+    }
 
     WorkflowResponsePage response = engineClient.queryWorkflows(queryLimit, queryPage, querySort, queryLabels, queryStatus,
         Optional.of(workflowRefs));
@@ -156,33 +163,47 @@ public class WorkflowServiceImpl implements WorkflowService {
   }
 
   private void setUpWorkspaceDefaults(Workflow request) {
-    Boolean addWorkflowWS = true;
-    Boolean addWorkflowRunWS = true;
     if (request.getWorkspaces() != null && !request.getWorkspaces().isEmpty()) {
-      for (WorkflowWorkspace ws : request.getWorkspaces()) {
-        if (ws.getType().equals("workflow")) {
-          addWorkflowWS = false;
-        } else if (ws.getType().equals("workflowRun")) {
-          addWorkflowRunWS = false;
+      String maxSizeQuota =
+          this.settingsService.getSettingConfig("teams", "max.team.workflow.storage").getValue().replace("Gi", "");
+      Integer totalSize = 0;
+      if (request.getWorkspaces().stream().anyMatch(ws -> ws.getType().equals("workflow"))) {
+        WorkflowWorkspace workflowWorkspace = request.getWorkspaces().stream().filter(ws -> ws.getType().equals("workflow")).findFirst().get();
+        Integer index = request.getWorkspaces().indexOf(workflowWorkspace);
+        workflowWorkspace.setName("workflow");
+        workflowWorkspace.setOptional(false);
+        WorkflowWorkspaceSpec workflowWorkspaceSpec = new WorkflowWorkspaceSpec();
+        if (workflowWorkspace.getSpec() != null) {
+          workflowWorkspaceSpec = (WorkflowWorkspaceSpec) workflowWorkspace.getSpec();
+        } 
+        if (workflowWorkspaceSpec.getSize() == null) {
+          workflowWorkspaceSpec.setSize(this.settingsService.getSettingConfig("workflow", "storage.size").getValue().replace("Gi", ""));
         }
+        workflowWorkspace.setSpec(workflowWorkspaceSpec);
+        totalSize += Integer.valueOf(workflowWorkspaceSpec.getSize());
+        request.getWorkspaces().set(index, workflowWorkspace);
       }
-    }
-    if (addWorkflowWS) {
-      WorkflowWorkspace workflowWorkspace = new WorkflowWorkspace();
-      workflowWorkspace.setName("workflow");
-      workflowWorkspace.setType("workflow");
-      workflowWorkspace.setOptional(false);
-      //TODO set the Spec ... i believe this includes size - will need to check against the default in Settings + Quota
-      request.getWorkspaces().add(workflowWorkspace);
-    }
-    if (addWorkflowRunWS) {
-      WorkflowWorkspace workflowRunWorkspace = new WorkflowWorkspace();
-      workflowRunWorkspace.setName("activity");
-      workflowRunWorkspace.setType("workflowRun");
-      workflowRunWorkspace.setOptional(false);
-      //TODO set the Spec ... i believe this includes size - will need to check against the default in Settings + Quota
-      request.getWorkspaces().add(workflowRunWorkspace);
-    }
+      if (request.getWorkspaces().stream().anyMatch(ws -> ws.getType().equals("workflowrun"))) {
+        WorkflowWorkspace workflowWorkspace = request.getWorkspaces().stream().filter(ws -> ws.getType().equals("workflow")).findFirst().get();
+        Integer index = request.getWorkspaces().indexOf(workflowWorkspace);
+        workflowWorkspace.setName("workflowrun");
+        workflowWorkspace.setOptional(false);
+        WorkflowWorkspaceSpec workflowWorkspaceSpec = new WorkflowWorkspaceSpec();
+        if (workflowWorkspace.getSpec() != null) {
+          workflowWorkspaceSpec = (WorkflowWorkspaceSpec) workflowWorkspace.getSpec();
+        } 
+        if (workflowWorkspaceSpec.getSize() == null) {
+          workflowWorkspaceSpec.setSize(this.settingsService.getSettingConfig("workflowrun", "storage.size").getValue().replace("Gi", ""));
+        }
+        workflowWorkspace.setSpec(workflowWorkspaceSpec);
+        totalSize += Integer.valueOf(workflowWorkspaceSpec.getSize());
+        request.getWorkspaces().set(index, workflowWorkspace);
+      }
+      if (totalSize > Integer.valueOf(maxSizeQuota)) {
+        //TODO create a proper quota exceeded error
+        throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
+      }
+    }   
   }
 
   /*

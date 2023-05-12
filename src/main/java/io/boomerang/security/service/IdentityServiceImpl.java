@@ -32,10 +32,8 @@ import io.boomerang.client.ExternalUserService;
 import io.boomerang.error.BoomerangError;
 import io.boomerang.error.BoomerangException;
 import io.boomerang.security.model.Token;
-import io.boomerang.security.model.TokenType;
-import io.boomerang.v4.data.entity.TeamEntity;
+import io.boomerang.security.model.TokenScope;
 import io.boomerang.v4.data.entity.UserEntity;
-import io.boomerang.v4.data.entity.ref.WorkflowEntity;
 import io.boomerang.v4.data.repository.UserRepository;
 import io.boomerang.v4.model.OneTimeCode;
 import io.boomerang.v4.model.Team;
@@ -48,8 +46,10 @@ import io.boomerang.v4.model.UserType;
 import io.boomerang.v4.model.enums.RelationshipRef;
 import io.boomerang.v4.model.enums.RelationshipType;
 import io.boomerang.v4.model.enums.TeamStatus;
+import io.boomerang.v4.model.ref.Workflow;
 import io.boomerang.v4.service.RelationshipService;
 import io.boomerang.v4.service.TeamService;
+import io.boomerang.v4.service.WorkflowService;
 
 @Service
 public class IdentityServiceImpl implements IdentityService {
@@ -73,6 +73,9 @@ public class IdentityServiceImpl implements IdentityService {
   
   @Autowired
   private TeamService teamService;
+  
+  @Autowired
+  private WorkflowService workflowService;
 
   @Autowired
   private MongoTemplate mongoTemplate;
@@ -364,20 +367,13 @@ public class IdentityServiceImpl implements IdentityService {
 
   @Override
   @NoLogging
-  public UserEntity getCurrentUser() {
-    if (SecurityContextHolder.getContext() != null
-        && SecurityContextHolder.getContext().getAuthentication() != null
-        && SecurityContextHolder.getContext().getAuthentication().getDetails() != null
-        && SecurityContextHolder.getContext().getAuthentication()
-            .getDetails() instanceof Token) {
-      Token token = (Token) SecurityContextHolder.getContext().getAuthentication().getDetails();
-      return token.getUser();
-//      return (UserToken) SecurityContextHolder.getContext().getAuthentication().getDetails();
-//    } else {
-//      return new UserToken("boomerang@us.ibm.com", "boomerang", "joe");
-    } else {
-      return null;
+  public User getCurrentUser() {
+    Token token = this.getCurrentIdentity();
+    Optional<String> ref = relationshipService.getRelationshipRef(RelationshipRef.TOKEN, token.getId(), RelationshipType.AUTHORIZES);
+    if (ref.isPresent()) {
+        return getUserByID(ref.get()).get();
     }
+    return null;
   }
 
   @Override
@@ -394,39 +390,43 @@ public class IdentityServiceImpl implements IdentityService {
   }
   
   @Override
-  public WorkflowEntity getCurrentWorkflow() {
+  public Workflow getCurrentWorkflow() {
     Token token = this.getCurrentIdentity();
-    if (token.getWorkflow() != null) {
-      return token.getWorkflow();
-    }
-    return null;
+    Optional<String> ref = relationshipService.getRelationshipRef(RelationshipRef.TOKEN, token.getId(), RelationshipType.AUTHORIZES);
+    if (ref.isPresent()) {
+      return workflowService.get(ref.get(), Optional.empty(), false).getBody();
+  }
+  return null;
   }
   
   @Override
-  public TeamEntity getCurrentTeam() {
+  public Team getCurrentTeam() {
     Token token = this.getCurrentIdentity();
-    if (token.getTeam() != null) {
-      return token.getTeam();
+    Optional<String> ref = relationshipService.getRelationshipRef(RelationshipRef.TOKEN, token.getId(), RelationshipType.AUTHORIZES);
+    if (ref.isPresent()) {
+        return teamService.get(ref.get()).getBody();
     }
     return null;
   }
 
   @Override
-  public TokenType getCurrentScope() {
+  public String getCurrentPrincipal() {
+    Token token = this.getCurrentIdentity();
+    Optional<String> ref = relationshipService.getRelationshipRef(RelationshipRef.TOKEN, token.getId(), RelationshipType.AUTHORIZES);
+    if (ref.isPresent()) {
+        return ref.get();
+    }
+    return null;
+  }
+
+  @Override
+  public TokenScope getCurrentScope() {
     if (SecurityContextHolder.getContext() != null
         && SecurityContextHolder.getContext().getAuthentication() != null
         && SecurityContextHolder.getContext().getAuthentication().getDetails() != null
         && SecurityContextHolder.getContext().getAuthentication()
         .getDetails() instanceof Token) {
-//      Object details = SecurityContextHolder.getContext().getAuthentication().getDetails();
       Token details = (Token) SecurityContextHolder.getContext().getAuthentication().getDetails();
-//      if (details instanceof UserToken) {
-//        return TokenPermission.user;
-//      } else if (details instanceof TeamToken) {
-//        return TokenPermission.team;
-//      } else if (details instanceof GlobalToken) {
-//        return TokenPermission.global;
-//      }
       return details.getType();
     }
     return null;

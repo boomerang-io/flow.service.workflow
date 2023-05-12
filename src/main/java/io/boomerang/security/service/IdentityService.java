@@ -5,16 +5,16 @@ import java.util.Optional;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.http.ResponseEntity;
 import io.boomerang.security.model.Token;
-import io.boomerang.security.model.TokenType;
-import io.boomerang.v4.data.entity.TeamEntity;
+import io.boomerang.security.model.TokenScope;
 import io.boomerang.v4.data.entity.UserEntity;
-import io.boomerang.v4.data.entity.ref.WorkflowEntity;
 import io.boomerang.v4.model.OneTimeCode;
+import io.boomerang.v4.model.Team;
 import io.boomerang.v4.model.User;
 import io.boomerang.v4.model.UserProfile;
 import io.boomerang.v4.model.UserRequest;
 import io.boomerang.v4.model.UserResponsePage;
 import io.boomerang.v4.model.UserType;
+import io.boomerang.v4.model.ref.Workflow;
 
 public interface IdentityService {
 
@@ -28,13 +28,13 @@ public interface IdentityService {
 
   public ResponseEntity<Boolean> activateSetup(OneTimeCode otc);
 
-  public TokenType getCurrentScope();
+  public TokenScope getCurrentScope();
   
   public Token getCurrentIdentity();
 
-  WorkflowEntity getCurrentWorkflow();
+  Workflow getCurrentWorkflow();
 
-  TeamEntity getCurrentTeam();
+  Team getCurrentTeam();
 
   Optional<UserEntity> getAndRegisterUser(String email, String firstName, String lastName,
       Optional<UserType> usertype);
@@ -53,4 +53,6 @@ public interface IdentityService {
   boolean isCurrentUserAdmin();
 
   boolean isActivated();
+
+  String getCurrentPrincipal();
 }
