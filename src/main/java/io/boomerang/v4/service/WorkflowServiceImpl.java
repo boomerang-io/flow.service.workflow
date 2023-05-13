@@ -348,28 +348,14 @@ public class WorkflowServiceImpl implements WorkflowService {
   }
 
   /* 
-   * Export the Workflow as JSON
+   * Duplicate the Workflow and adjust name
    */
   @Override
-  public ResponseEntity<Workflow> duplicate(String workflowId, WorkflowDuplicateRequest request) {
+  public ResponseEntity<Workflow> duplicate(String workflowId) {
     final ResponseEntity<Workflow> response = this.get(workflowId, Optional.empty(), true);
     Workflow workflow = response.getBody();
     workflow.setId(null);
-    if (request != null && request.getName() != null && !request.getName().isEmpty() && workflow.getName().equals(request.getName())) {
-      workflow.setName(request.getName());
-    } else {
-      workflow.setName(workflow.getName() + " (duplicate)");
-    }
-    if (request != null && request.getDescription() != null && !request.getDescription().isEmpty()) {
-      workflow.setDescription(request.getDescription());
-    } 
-    if (request != null && request.getSummary() != null && !request.getSummary().isEmpty()) {
-      workflow.setShortDescription(request.getSummary());
-    } 
-    if (request != null && request.getIcon() != null && !request.getIcon().isEmpty()) {
-      workflow.setIcon(request.getIcon());
-    } 
-    
+    workflow.setName(workflow.getName() + " (duplicate)");
     Optional<RelationshipEntity> relEntity = relationshipService.getRelationship(RelationshipRef.WORKFLOW, workflowId, RelationshipType.BELONGSTO);
     return this.create(workflow, Optional.of(relEntity.get().getToRef()));
   }

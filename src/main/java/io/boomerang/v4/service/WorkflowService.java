@@ -33,7 +33,7 @@ public interface WorkflowService {
 
   ResponseEntity<InputStreamResource> export(String workflowId);
 
-  ResponseEntity<Workflow> duplicate(String workflowId, WorkflowDuplicateRequest request);
+  ResponseEntity<Workflow> duplicate(String workflowId);
 
   List<String> getAvailableParameters(String workflowId);
 }

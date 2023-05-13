@@ -147,9 +147,8 @@ public class WorkflowV2Controller {
   @Operation(summary = "Duplicates the workflow.")
   public ResponseEntity<Workflow> duplicateWorkflow(
       @Parameter(name = "workflowId", description = "ID of Workflow",
-      required = true) @PathVariable String workflowId,
-      @RequestBody WorkflowDuplicateRequest request) {
-    return workflowService.duplicate(workflowId, request);
+      required = true) @PathVariable String workflowId) {
+    return workflowService.duplicate(workflowId);
   }
 
 //  @PostMapping(value = "{id}/token")
