@@ -2,17 +2,38 @@ package io.boomerang.v4.service;
 
 import java.util.List;
 import java.util.Optional;
-import org.springframework.data.domain.Page;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.data.domain.Sort.Direction;
-import io.boomerang.v4.model.WorkflowTemplate;
+import org.springframework.http.ResponseEntity;
+import io.boomerang.v4.client.WorkflowResponsePage;
+import io.boomerang.v4.model.WorkflowCanvas;
+import io.boomerang.v4.model.ref.Workflow;
 
 public interface WorkflowService {
 
-  WorkflowTemplate get(String workflowId, Optional<Integer> version, boolean withTasks);
+  ResponseEntity<Workflow> get(String workflowId, Optional<Integer> version, boolean withTasks);
 
-  Page<WorkflowTemplate> query(Optional<Integer> queryLimit, Optional<Integer> queryPage,
+  WorkflowResponsePage query(Optional<Integer> queryLimit, Optional<Integer> queryPage,
       Optional<Direction> querySort, Optional<List<String>> queryLabels,
-      Optional<List<String>> queryStatus, Optional<List<String>> queryNames);
+      Optional<List<String>> queryStatus, Optional<List<String>> queryTeams,
+      Optional<List<String>> queryWorkflows);
 
-  WorkflowTemplate create(WorkflowTemplate request);
+  ResponseEntity<Workflow> create(Workflow request, Optional<String> team);
+
+  ResponseEntity<Workflow> apply(Workflow workflow, boolean replace);
+
+  ResponseEntity<Void> enable(String workflowId);
+
+  ResponseEntity<Void> disable(String workflowId);
+
+  ResponseEntity<Void> delete(String workflowId);
+
+  ResponseEntity<InputStreamResource> export(String workflowId);
+
+  ResponseEntity<Workflow> duplicate(String workflowId);
+
+  ResponseEntity<WorkflowCanvas> compose(String workflowId, Optional<Integer> version);
+
+  List<String> getAvailableParameters(String workflowId);
+  
 }

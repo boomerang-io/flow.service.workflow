@@ -3,7 +3,6 @@ package io.boomerang.v4.controller;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.InputStreamResource;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -21,8 +20,6 @@ import io.boomerang.security.model.TokenObject;
 import io.boomerang.security.model.TokenScope;
 import io.boomerang.v4.client.EngineClient;
 import io.boomerang.v4.client.WorkflowTemplateResponsePage;
-import io.boomerang.v4.model.WorkflowCanvas;
-import io.boomerang.v4.model.ref.Workflow;
 import io.boomerang.v4.model.ref.WorkflowTemplate;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -61,9 +58,6 @@ public class WorkflowTemplateV2Controller {
   public WorkflowTemplateResponsePage query(@Parameter(name = "labels",
       description = "List of url encoded labels. For example Organization=Boomerang,customKey=test would be encoded as Organization%3DBoomerang,customKey%3Dtest)",
       required = false) @RequestParam(required = false) Optional<List<String>> labels,
-      @Parameter(name = "status", description = "List of statuses to filter for. Defaults to all.",
-          example = "active,archived",
-          required = false) @RequestParam(required = false) Optional<List<String>> status,
       @Parameter(name = "names",
       description = "List of WorkflowTemplate names to filter for. Defaults to all.", example = "mongodb-email-query-results",
       required = false) @RequestParam(required = false)  Optional<List<String>> names,
@@ -73,7 +67,7 @@ public class WorkflowTemplateV2Controller {
       required = true) @RequestParam(defaultValue = "0") Optional<Integer> page,
   @Parameter(name = "sort", description = "Ascending (ASC) or Descending (DESC) sort on creationDate", example = "ASC",
   required = true) @RequestParam(defaultValue = "ASC") Optional<Direction> sort) {
-    return engineClient.queryWorkflowTemplates(limit, page, sort, labels, status, names);
+    return engineClient.queryWorkflowTemplates(limit, page, sort, labels, names);
   }
 
   @PostMapping(value = "/")

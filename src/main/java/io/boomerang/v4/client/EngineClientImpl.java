@@ -829,7 +829,7 @@ public class EngineClientImpl implements EngineClient {
   @Override
   public WorkflowTemplateResponsePage queryWorkflowTemplates(Optional<Integer> queryLimit,
       Optional<Integer> queryPage, Optional<Direction> querySort,
-      Optional<List<String>> queryLabels, Optional<List<String>> queryStatus,
+      Optional<List<String>> queryLabels,
       Optional<List<String>> queryNames) {
     try {
       UriComponentsBuilder urlBuilder = UriComponentsBuilder.fromHttpUrl(queryWorkflowTemplateURL);
@@ -844,9 +844,6 @@ public class EngineClientImpl implements EngineClient {
       }
       if (queryLabels.isPresent()) {
         urlBuilder.queryParam("labels", queryLabels.get());
-      }
-      if (queryStatus.isPresent()) {
-        urlBuilder.queryParam("status", queryStatus.get());
       }
       if (queryNames.isPresent() && !queryNames.get().isEmpty()) {
         urlBuilder.queryParam("names", queryNames.get());

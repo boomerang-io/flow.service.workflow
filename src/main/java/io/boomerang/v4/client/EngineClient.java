@@ -77,8 +77,7 @@ public interface EngineClient {
 
   WorkflowTemplateResponsePage queryWorkflowTemplates(Optional<Integer> queryLimit,
       Optional<Integer> queryPage, Optional<Direction> querySort,
-      Optional<List<String>> queryLabels, Optional<List<String>> queryStatus,
-      Optional<List<String>> queryNames);
+      Optional<List<String>> queryLabels, Optional<List<String>> queryNames);
 
   WorkflowTemplate createWorkflowTemplate(WorkflowTemplate workflow);
 

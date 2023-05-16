@@ -31,7 +31,6 @@ import io.boomerang.v4.model.CanvasNode;
 import io.boomerang.v4.model.CanvasNodeData;
 import io.boomerang.v4.model.CanvasNodePosition;
 import io.boomerang.v4.model.WorkflowCanvas;
-import io.boomerang.v4.model.WorkflowDuplicateRequest;
 import io.boomerang.v4.model.enums.RelationshipRef;
 import io.boomerang.v4.model.enums.RelationshipType;
 import io.boomerang.v4.model.enums.TriggerEnum;
@@ -512,8 +511,7 @@ public class WorkflowServiceImpl implements WorkflowService {
    * 
    * TODO: move this code to a private method or a Convertor class
    */
-  private WorkflowCanvas convertToCanvasModel(Workflow workflow) {
-    List<Task> wfTasks = workflow.getTasks();
+  private WorkflowCanvas convertToCanvasModel(List<Task> wfTasks) {
     WorkflowCanvas wfCanvas = new WorkflowCanvas();
     List<CanvasNode> nodes = new ArrayList<>();
     List<CanvasEdge> edges = new ArrayList<>();
