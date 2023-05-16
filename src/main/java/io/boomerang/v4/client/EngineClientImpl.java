@@ -32,6 +32,7 @@ import io.boomerang.v4.model.ref.WorkflowRun;
 import io.boomerang.v4.model.ref.WorkflowRunInsight;
 import io.boomerang.v4.model.ref.WorkflowRunRequest;
 import io.boomerang.v4.model.ref.WorkflowRunSubmitRequest;
+import io.boomerang.v4.model.ref.WorkflowTemplate;
 
 @Service
 @Primary
@@ -107,6 +108,21 @@ public class EngineClientImpl implements EngineClient {
 
   @Value("${flow.engine.tasktemplate.disable.url}")
   public String disableTaskTemplateURL;
+
+  @Value("${flow.engine.workflowtemplate.get.url}")
+  public String getWorkflowTemplateURL;
+
+  @Value("${flow.engine.workflowtemplate.query.url}")
+  public String queryWorkflowTemplateURL;
+
+  @Value("${flow.engine.workflowtemplate.create.url}")
+  public String createWorkflowTemplateURL;
+
+  @Value("${flow.engine.workflowtemplate.apply.url}")
+  public String applyWorkflowTemplateURL;
+  
+  @Value("${flow.engine.workflowtemplate.delete.url}")
+  public String deleteWorkflowTemplateURL;
 
   @Autowired
   @Qualifier("internalRestTemplate")
@@ -775,4 +791,156 @@ public class EngineClientImpl implements EngineClient {
     }
   }
 
+  /*
+   * ************************************** 
+   * WorkflowTemplate endpoints
+   * **************************************
+   */
+  @Override
+  public WorkflowTemplate getWorkflowTemplate(String name, Optional<Integer> version, boolean withTasks) {
+    try {
+      String url = getWorkflowTemplateURL.replace("{name}", name);
+      Map<String, String> requestParams = new HashMap<>();
+      if (version.isPresent()) {
+        requestParams.put("version", version.toString());
+      }
+      requestParams.put("withTasks", Boolean.toString(withTasks));
+
+      String encodedURL =
+          requestParams.keySet().stream().map(key -> key + "=" + requestParams.get(key))
+              .collect(Collectors.joining("&", url + "?", ""));
+
+      LOGGER.info("URL: " + encodedURL);
+
+      ResponseEntity<WorkflowTemplate> response = restTemplate.getForEntity(encodedURL, WorkflowTemplate.class);
+
+      LOGGER.info("Status Response: " + response.getStatusCode());
+      LOGGER.info("Content Response: " + response.getBody().toString());
+
+      return response.getBody();
+    } catch (RestClientException ex) {
+      LOGGER.error(ex.toString());
+      throw new BoomerangException(ex, HttpStatus.INTERNAL_SERVER_ERROR.value(),
+          ex.getClass().getSimpleName(), "Exception in communicating with internal services.",
+          HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @Override
+  public WorkflowTemplateResponsePage queryWorkflowTemplates(Optional<Integer> queryLimit,
+      Optional<Integer> queryPage, Optional<Direction> querySort,
+      Optional<List<String>> queryLabels, Optional<List<String>> queryStatus,
+      Optional<List<String>> queryNames) {
+    try {
+      UriComponentsBuilder urlBuilder = UriComponentsBuilder.fromHttpUrl(queryWorkflowTemplateURL);
+      if (queryPage.isPresent()) {
+        urlBuilder.queryParam("page", Integer.toString(queryPage.get()));
+      }
+      if (queryLimit.isPresent()) {
+        urlBuilder.queryParam("limit", Integer.toString(queryLimit.get()));
+      }
+      if (querySort.isPresent()) {
+        urlBuilder.queryParam("sort", querySort.get());
+      }
+      if (queryLabels.isPresent()) {
+        urlBuilder.queryParam("labels", queryLabels.get());
+      }
+      if (queryStatus.isPresent()) {
+        urlBuilder.queryParam("status", queryStatus.get());
+      }
+      if (queryNames.isPresent() && !queryNames.get().isEmpty()) {
+        urlBuilder.queryParam("names", queryNames.get());
+      }
+      URI encodedURI = urlBuilder.build().encode().toUri();
+
+      LOGGER.info("Query URL: " + encodedURI);
+
+      ResponseEntity<WorkflowTemplateResponsePage> response =
+          restTemplate.getForEntity(encodedURI, WorkflowTemplateResponsePage.class);
+
+      LOGGER.info("Status Response: " + response.getStatusCode());
+      LOGGER.info("Content Response: " + response.getBody().getContent().toString());
+
+      return response.getBody();
+    } catch (RestClientException ex) {
+      LOGGER.error(ex.toString());
+      throw new BoomerangException(ex, HttpStatus.INTERNAL_SERVER_ERROR.value(),
+          ex.getClass().getSimpleName(), "Exception in communicating with internal services.",
+          HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @Override
+  public WorkflowTemplate createWorkflowTemplate(WorkflowTemplate workflow) {
+    try {
+      LOGGER.info("URL: " + createWorkflowTemplateURL);
+
+      ResponseEntity<WorkflowTemplate> response =
+          restTemplate.postForEntity(createWorkflowURL, workflow, WorkflowTemplate.class);
+
+      LOGGER.info("Status Response: " + response.getStatusCode());
+      LOGGER.info("Content Response: " + response.getBody().toString());
+
+      return response.getBody();
+    } catch (RestClientException ex) {
+      LOGGER.error(ex.toString());
+      throw new BoomerangException(ex, HttpStatus.INTERNAL_SERVER_ERROR.value(),
+          ex.getClass().getSimpleName(), "Exception in communicating with internal services.",
+          HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @Override
+  public WorkflowTemplate applyWorkflowTemplate(WorkflowTemplate workflow, boolean replace) {
+    try {
+      String url = applyWorkflowTemplateURL;
+      Map<String, String> requestParams = new HashMap<>();
+      requestParams.put("replace", Boolean.toString(replace));
+
+      String encodedURL =
+          requestParams.keySet().stream().map(key -> key + "=" + requestParams.get(key))
+              .collect(Collectors.joining("&", url + "?", ""));
+
+      LOGGER.info("URL: " + encodedURL);
+
+      final HttpHeaders headers = new HttpHeaders();
+      headers.setContentType(MediaType.APPLICATION_JSON);
+      HttpEntity<WorkflowTemplate> entity = new HttpEntity<WorkflowTemplate>(workflow, headers);
+      ResponseEntity<WorkflowTemplate> response =
+          restTemplate.exchange(encodedURL, HttpMethod.PUT, entity, WorkflowTemplate.class);
+
+      LOGGER.info("Status Response: " + response.getStatusCode());
+      LOGGER.info("Content Response: " + response.getBody().toString());
+
+      return response.getBody();
+    } catch (RestClientException ex) {
+      LOGGER.error(ex.toString());
+      throw new BoomerangException(ex, HttpStatus.INTERNAL_SERVER_ERROR.value(),
+          ex.getClass().getSimpleName(), "Exception in communicating with internal services.",
+          HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @Override
+  public ResponseEntity<Void> deleteWorkflowTemplate(String name) {
+    try {
+      String url = deleteWorkflowTemplateURL.replace("{name}", name);
+
+      LOGGER.info("URL: " + url);
+      ResponseEntity<Void> response =
+          restTemplate.exchange(url, HttpMethod.DELETE, null, Void.class);
+
+      LOGGER.info("Status Response: " + response.getStatusCode());
+
+      if (!HttpStatus.NO_CONTENT.equals(response.getStatusCode())) {
+        throw new RestClientException("Unable to delete Workflow");
+      }
+      return response;
+    } catch (RestClientException ex) {
+      LOGGER.error(ex.toString());
+      throw new BoomerangException(ex, HttpStatus.INTERNAL_SERVER_ERROR.value(),
+          ex.getClass().getSimpleName(), "Exception in communicating with internal services.",
+          HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
 }

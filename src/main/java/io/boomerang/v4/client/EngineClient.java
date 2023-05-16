@@ -2,8 +2,8 @@ package io.boomerang.v4.client;
 
 import java.util.List;
 import java.util.Optional;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
+import org.springframework.http.ResponseEntity;
 import io.boomerang.v4.model.ref.TaskRun;
 import io.boomerang.v4.model.ref.TaskRunEndRequest;
 import io.boomerang.v4.model.ref.TaskTemplate;
@@ -12,6 +12,7 @@ import io.boomerang.v4.model.ref.WorkflowRun;
 import io.boomerang.v4.model.ref.WorkflowRunInsight;
 import io.boomerang.v4.model.ref.WorkflowRunRequest;
 import io.boomerang.v4.model.ref.WorkflowRunSubmitRequest;
+import io.boomerang.v4.model.ref.WorkflowTemplate;
 
 public interface EngineClient {
 
@@ -71,4 +72,17 @@ public interface EngineClient {
   void enableTaskTemplate(String name);
 
   void disableTaskTemplate(String name);
+
+  WorkflowTemplate getWorkflowTemplate(String name, Optional<Integer> version, boolean withTasks);
+
+  WorkflowTemplateResponsePage queryWorkflowTemplates(Optional<Integer> queryLimit,
+      Optional<Integer> queryPage, Optional<Direction> querySort,
+      Optional<List<String>> queryLabels, Optional<List<String>> queryStatus,
+      Optional<List<String>> queryNames);
+
+  WorkflowTemplate createWorkflowTemplate(WorkflowTemplate workflow);
+
+  WorkflowTemplate applyWorkflowTemplate(WorkflowTemplate workflow, boolean replace);
+
+  ResponseEntity<Void> deleteWorkflowTemplate(String name);
 }

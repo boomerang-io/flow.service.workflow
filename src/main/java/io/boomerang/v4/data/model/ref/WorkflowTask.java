@@ -7,6 +7,6 @@ import io.boomerang.v4.model.ref.Task;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class WorkflowRevisionTask extends Task {
+public class WorkflowTask extends Task {
   
 }
