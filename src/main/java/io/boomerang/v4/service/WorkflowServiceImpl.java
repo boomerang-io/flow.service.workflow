@@ -90,6 +90,9 @@ public class WorkflowServiceImpl implements WorkflowService {
     if (!workflowRefs.isEmpty()) {
       Workflow workflow = engineClient.getWorkflow(workflowId, version, withTasks);
       
+      if (WorkflowStatus.deleted.equals(workflow.getStatus())) {
+        ResponseEntity.notFound();
+      }
       // Filter out sensitive values
       DataAdapterUtil.filterParamSpecValueByFieldType(workflow.getConfig(), workflow.getParams(), FieldType.PASSWORD.value());
       return ResponseEntity.ok(workflow);
@@ -115,6 +118,11 @@ public class WorkflowServiceImpl implements WorkflowService {
     LOGGER.debug("Query Ids: ", workflowRefs);
     if (workflowRefs.isEmpty()) {
       return new WorkflowResponsePage();
+    }
+    
+    //Filter out deleted Workflows
+    if (queryStatus.isPresent() && queryStatus.get().contains("deleted")) {
+      queryStatus.get().remove("deleted");
     }
 
     WorkflowResponsePage response = engineClient.queryWorkflows(queryLimit, queryPage, querySort, queryLabels, queryStatus,
@@ -218,6 +226,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     if (workflowId != null && !workflowId.isBlank() && !workflowRefs.isEmpty()) {
       updateScheduleTriggers(workflow, this.get(workflowId, Optional.empty(), false).getBody().getTriggers());
       setupTriggerDefaults(workflow);
+      //TODO check Workflow status before applying change
       Workflow appliedWorkflow = engineClient.applyWorkflow(workflow, replace);
       // Filter out sensitive values
       DataAdapterUtil.filterParamSpecValueByFieldType(appliedWorkflow.getConfig(), appliedWorkflow.getParams(), FieldType.PASSWORD.value());
