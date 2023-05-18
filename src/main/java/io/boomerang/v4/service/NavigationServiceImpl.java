@@ -50,21 +50,24 @@ public class NavigationServiceImpl implements NavigationService {
   public List<Navigation> getNavigation(boolean isUserAdmin, Optional<String> optTeamId) {
 
     FeaturesAndQuotas features = featureService.get();
+    
+    boolean disabled = optTeamId.isPresent() ? false : true;
 
     if (flowExternalUrlNavigation.isBlank()) {
       List<Navigation> response = new ArrayList<>();
       Navigation home = new Navigation();
       home.setName("Home");
       home.setType(NavigationType.link);
+      home.setDisabled(false);
       home.setIcon("Home");
       home.setLink(flowAppsUrl + "/home");
       response.add(home);
       
-      if (optTeamId.isPresent()) {
       String teamId = optTeamId.get();
       Navigation workflows = new Navigation();
       workflows.setName("Workflows");
       workflows.setType(NavigationType.link);
+      workflows.setDisabled(disabled);
       workflows.setIcon("FlowData");
       workflows.setLink(flowAppsUrl + "/" + teamId + "/workflows");
       response.add(workflows);
@@ -72,6 +75,7 @@ public class NavigationServiceImpl implements NavigationService {
       Navigation activity = new Navigation();
       activity.setName("Activity");
       activity.setType(NavigationType.link);
+      activity.setDisabled(disabled);
       activity.setIcon("Activity");
       activity.setLink(flowAppsUrl + "/" + teamId + "/activity");
       response.add(activity);
@@ -79,6 +83,7 @@ public class NavigationServiceImpl implements NavigationService {
       Navigation actions = new Navigation();
       actions.setName("Actions");
       actions.setType(NavigationType.link);
+      actions.setDisabled(disabled);
       actions.setIcon("Stamp");
       actions.setLink(flowAppsUrl + "/" + teamId + "/actions");
       response.add(actions);
@@ -86,6 +91,7 @@ public class NavigationServiceImpl implements NavigationService {
       Navigation insights = new Navigation();
       insights.setName("Insights");
       insights.setType(NavigationType.link);
+      insights.setDisabled(disabled);
       insights.setIcon("ChartScatter");
       insights.setLink(flowAppsUrl + "/" + teamId + "/insights");
       response.add(insights);
@@ -93,42 +99,47 @@ public class NavigationServiceImpl implements NavigationService {
       Navigation schedules = new Navigation();
       schedules.setName("Schedules");
       schedules.setType(NavigationType.link);
+      schedules.setDisabled(disabled);
       schedules.setIcon("CalendarHeatMap");
       schedules.setLink(flowAppsUrl + "/" + teamId + "/schedules");
       response.add(schedules);
 
       Navigation management = new Navigation();
       management.setName("Manage");
+      management.setType(NavigationType.category);
+      management.setDisabled(false);
       management.setIcon("SettingsAdjust");
       management.setChildLinks(new ArrayList<>());
-      management.setType(NavigationType.category);
 
       Navigation teamApprovers = new Navigation();
       teamApprovers.setName("Team Parameters");
-      teamApprovers.setLink(flowAppsUrl + "/" + teamId + "/manage/team-parameters");
       teamApprovers.setType(NavigationType.link);
+      teamApprovers.setDisabled(disabled);
+      teamApprovers.setLink(flowAppsUrl + "/" + teamId + "/manage/team-parameters");
       management.getChildLinks().add(teamApprovers);
 
       Navigation teamProperties = new Navigation();
       teamProperties.setName("Team Approvers");
-      teamProperties.setLink(flowAppsUrl + "/" + teamId + "/manage/approver-groups");
       teamProperties.setType(NavigationType.link);
+      teamProperties.setDisabled(disabled);
+      teamProperties.setLink(flowAppsUrl + "/" + teamId + "/manage/approver-groups");
       management.getChildLinks().add(teamProperties);
 
       Navigation teamTasks = new Navigation();
       teamTasks.setName("Team Tasks");
-      teamTasks.setLink(flowAppsUrl + "/" + teamId + "/manage/task-templates");
       teamTasks.setType(NavigationType.link);
+      teamTasks.setDisabled(disabled);
+      teamTasks.setLink(flowAppsUrl + "/" + teamId + "/manage/task-templates");
       management.getChildLinks().add(teamTasks);
 
       Navigation teamTokens = new Navigation();
       teamTokens.setName("Team Tokens ");
-      teamTokens.setLink(flowAppsUrl + "/" + teamId + "/manage/team-tokens");
       teamTokens.setType(NavigationType.link);
+      teamTokens.setDisabled(disabled);
+      teamTokens.setLink(flowAppsUrl + "/" + teamId + "/manage/team-tokens");
       management.getChildLinks().add(teamTokens);
       
       response.add(management);
-      }
 
       if (isUserAdmin) {
         Navigation admin = new Navigation();

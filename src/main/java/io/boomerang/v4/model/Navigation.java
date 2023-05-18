@@ -5,12 +5,13 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({"name", "type", "icon", "link", "childLinks"})
+@JsonPropertyOrder({"name", "type", "icon", "link", "disabled", "childLinks"})
 public class Navigation {
 
   private String name;
   private String icon;
   private NavigationType type;
+  private boolean disabled;
   private String link;
   private List<Navigation> childLinks;
 
@@ -36,6 +37,14 @@ public class Navigation {
 
   public void setType(NavigationType type) {
     this.type = type;
+  }
+
+  public boolean isDisabled() {
+    return disabled;
+  }
+
+  public void setDisabled(boolean disabled) {
+    this.disabled = disabled;
   }
 
   public String getLink() {
