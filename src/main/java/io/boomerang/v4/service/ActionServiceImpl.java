@@ -268,6 +268,11 @@ public class ActionServiceImpl implements ActionService {
       criterias.add(dynamicCriteria);
     }
     
+    if (workflowRefs.isPresent()) {
+      Criteria workflowIdsCriteria = Criteria.where("workflowRef").in(workflowRefs.get());
+      criterias.add(workflowIdsCriteria);
+    }
+    
     if (type.isPresent()) {
       Criteria dynamicCriteria = Criteria.where("type").in(type.get());
       criterias.add(dynamicCriteria);
@@ -278,10 +283,6 @@ public class ActionServiceImpl implements ActionService {
       criterias.add(dynamicCriteria);
     }
     
-    if (workflowRefs.isPresent()) {
-      Criteria workflowIdsCriteria = Criteria.where("workflowRef").in(workflowRefs);
-      criterias.add(workflowIdsCriteria);
-    }
     return new Criteria().andOperator(criterias.toArray(new Criteria[criterias.size()]));
   }
 
