@@ -21,7 +21,6 @@ import io.boomerang.security.model.TokenObject;
 import io.boomerang.security.model.TokenScope;
 import io.boomerang.v4.client.WorkflowResponsePage;
 import io.boomerang.v4.model.WorkflowCanvas;
-import io.boomerang.v4.model.WorkflowDuplicateRequest;
 import io.boomerang.v4.model.ref.Workflow;
 import io.boomerang.v4.service.WorkflowService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -59,9 +58,9 @@ public class WorkflowV2Controller {
   public WorkflowResponsePage queryWorkflows(@Parameter(name = "labels",
       description = "List of url encoded labels. For example Organization=Boomerang,customKey=test would be encoded as Organization%3DBoomerang,customKey%3Dtest)",
       required = false) @RequestParam(required = false) Optional<List<String>> labels,
-      @Parameter(name = "status", description = "List of statuses to filter for. Defaults to all.",
+      @Parameter(name = "statuses", description = "List of statuses to filter for. Defaults to all.",
           example = "active,archived",
-          required = false) @RequestParam(required = false) Optional<List<String>> status,
+          required = false) @RequestParam(required = false) Optional<List<String>> statuses,
       @Parameter(name = "workflows", description = "List of workflows to filter for.", 
       required = false) @RequestParam(required = false) Optional<List<String>> workflows,
       @Parameter(name = "teams", description = "List of teams to filter for.", 
@@ -72,7 +71,7 @@ public class WorkflowV2Controller {
       required = true) @RequestParam(defaultValue = "0") Optional<Integer> page,
   @Parameter(name = "sort", description = "Ascending (ASC) or Descending (DESC) sort on creationDate", example = "ASC",
   required = true) @RequestParam(defaultValue = "ASC") Optional<Direction> sort) {
-    return workflowService.query(limit, page, sort, labels, status, teams, workflows);
+    return workflowService.query(limit, page, sort, labels, statuses, teams, workflows);
   }
 
   @PostMapping(value = "/")

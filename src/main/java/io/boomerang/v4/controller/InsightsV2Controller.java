@@ -39,8 +39,8 @@ public class InsightsV2Controller {
   public WorkflowRunInsight getTeamInsights(
       @RequestParam(defaultValue = "ASC") Optional<Direction> order,
       @RequestParam Optional<String> sort,
-      @RequestParam Optional<List<String>> workflowIds,
-      @RequestParam Optional<List<String>> teamIds, 
+      @RequestParam Optional<List<String>> workflows,
+      @RequestParam Optional<List<String>> teams, 
       @RequestParam(defaultValue = "0") int page,
       @RequestParam(defaultValue = "10") int size, 
       @RequestParam Optional<Long> fromDate,
@@ -68,6 +68,6 @@ public class InsightsV2Controller {
     }
     final Pageable pageable = PageRequest.of(page, size, pagingSort);
 
-    return insightsService.getInsights(from, to, pageable, workflowIds, teamIds, statuses, triggers);
+    return insightsService.getInsights(from, to, pageable, workflows, teams, statuses, triggers);
   }
 }

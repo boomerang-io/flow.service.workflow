@@ -23,7 +23,6 @@ public class WorkflowSummary {
   private Date creationDate = new Date();
   private String icon;
   private String description;
-  private String shortDescription;
   
   public WorkflowSummary() {
     
@@ -78,11 +77,5 @@ public class WorkflowSummary {
   }
   public void setDescription(String description) {
     this.description = description;
-  }
-  public String getShortDescription() {
-    return shortDescription;
-  }
-  public void setShortDescription(String shortDescription) {
-    this.shortDescription = shortDescription;
   }
 }

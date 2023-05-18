@@ -53,46 +53,53 @@ public class NavigationServiceImpl implements NavigationService {
 
     if (flowExternalUrlNavigation.isBlank()) {
       List<Navigation> response = new ArrayList<>();
+      Navigation home = new Navigation();
+      home.setName("Home");
+      home.setType(NavigationType.link);
+      home.setIcon("Home");
+      home.setLink(flowAppsUrl + "/home");
+      response.add(home);
+      
       if (optTeamId.isPresent()) {
       String teamId = optTeamId.get();
       Navigation workflows = new Navigation();
       workflows.setName("Workflows");
       workflows.setType(NavigationType.link);
-      workflows.setIcon("FlowData16");
+      workflows.setIcon("FlowData");
       workflows.setLink(flowAppsUrl + "/" + teamId + "/workflows");
       response.add(workflows);
 
       Navigation activity = new Navigation();
       activity.setName("Activity");
       activity.setType(NavigationType.link);
-      activity.setIcon("Activity16");
+      activity.setIcon("Activity");
       activity.setLink(flowAppsUrl + "/" + teamId + "/activity");
       response.add(activity);
 
       Navigation actions = new Navigation();
       actions.setName("Actions");
       actions.setType(NavigationType.link);
-      actions.setIcon("Stamp16");
+      actions.setIcon("Stamp");
       actions.setLink(flowAppsUrl + "/" + teamId + "/actions");
       response.add(actions);
 
       Navigation insights = new Navigation();
       insights.setName("Insights");
       insights.setType(NavigationType.link);
-      insights.setIcon("ChartScatter16");
+      insights.setIcon("ChartScatter");
       insights.setLink(flowAppsUrl + "/" + teamId + "/insights");
       response.add(insights);
 
       Navigation schedules = new Navigation();
       schedules.setName("Schedules");
       schedules.setType(NavigationType.link);
-      schedules.setIcon("CalendarHeatMap16");
+      schedules.setIcon("CalendarHeatMap");
       schedules.setLink(flowAppsUrl + "/" + teamId + "/schedules");
       response.add(schedules);
 
       Navigation management = new Navigation();
       management.setName("Manage");
-      management.setIcon("SettingsAdjust16");
+      management.setIcon("SettingsAdjust");
       management.setChildLinks(new ArrayList<>());
       management.setType(NavigationType.category);
 
@@ -127,7 +134,7 @@ public class NavigationServiceImpl implements NavigationService {
         Navigation admin = new Navigation();
         admin.setName("Administer");
         admin.setType(NavigationType.category);
-        admin.setIcon("Settings16");
+        admin.setIcon("Settings");
         admin.setChildLinks(new ArrayList<>());
 
         if (((Boolean) features.getFeatures().get("team.management"))) {

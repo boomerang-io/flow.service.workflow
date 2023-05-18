@@ -50,9 +50,9 @@ public class WorkflowRunV2Controller {
       @Parameter(name = "labels",
       description = "List of url encoded labels. For example Organization=Boomerang,customKey=test would be encoded as Organization%3DBoomerang,customKey%3Dtest)",
       required = false) @RequestParam(required = false) Optional<List<String>> labels,
-      @Parameter(name = "status",
+      @Parameter(name = "statuses",
       description = "List of statuses to filter for. Defaults to all.", example = "succeeded,skipped",
-      required = false) @RequestParam(required = false)  Optional<List<String>> status,
+      required = false) @RequestParam(required = false)  Optional<List<String>> statuses,
       @Parameter(name = "phase",
       description = "List of phases to filter for. Defaults to all.", example = "completed,finalized",
       required = false) @RequestParam(required = false)  Optional<List<String>> phase,
@@ -72,7 +72,7 @@ public class WorkflowRunV2Controller {
       required = false) @RequestParam Optional<Long> fromDate,
       @Parameter(name = "toDate", description = "The unix timestamp / date to search to in milliseconds since epoch", example = "1680267600000",
       required = false) @RequestParam Optional<Long> toDate) {
-    return workflowRunService.query(fromDate, toDate, page, limit, sort, labels, status, phase, teams, workflowruns, workflows);
+    return workflowRunService.query(fromDate, toDate, page, limit, sort, labels, statuses, phase, teams, workflowruns, workflows);
   }
 
   @PostMapping(value = "/submit")

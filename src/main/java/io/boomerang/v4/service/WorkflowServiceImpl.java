@@ -374,7 +374,7 @@ public class WorkflowServiceImpl implements WorkflowService {
         Optional.of(List.of(workflowId)), Optional.of(RelationshipType.BELONGSTO),  Optional.of(RelationshipRef.TEAM), Optional.empty());
     if (!workflowRefs.isEmpty()) {
       Workflow workflow = engineClient.getWorkflow(workflowId, version, true);
-      return ResponseEntity.ok(convertToCanvasModel(workflow));
+      return ResponseEntity.ok(convertToCanvasModel(workflow.getTasks()));
     } else {
       // TODO: do we want to return invalid ref or unauthorized
       throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
@@ -511,7 +511,7 @@ public class WorkflowServiceImpl implements WorkflowService {
    * 
    * TODO: move this code to a private method or a Convertor class
    */
-  private WorkflowCanvas convertToCanvasModel(List<Task> wfTasks) {
+  protected WorkflowCanvas convertToCanvasModel(List<Task> wfTasks) {
     WorkflowCanvas wfCanvas = new WorkflowCanvas();
     List<CanvasNode> nodes = new ArrayList<>();
     List<CanvasEdge> edges = new ArrayList<>();

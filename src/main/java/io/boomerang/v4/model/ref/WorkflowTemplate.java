@@ -18,7 +18,7 @@ import io.boomerang.v4.data.entity.ref.WorkflowTemplateEntity;
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(Include.NON_NULL)
-@JsonPropertyOrder({"id", "name", "displayName", "version", "creationDate", "timeout", "retries", "description", "shortDescription", "labels", "annotations", "params", "tasks" })
+@JsonPropertyOrder({"id", "name", "displayName", "version", "creationDate", "timeout", "retries", "description", "labels", "annotations", "params", "tasks" })
 public class WorkflowTemplate extends WorkflowTemplateEntity {
   
   private boolean upgradesAvailable = false;

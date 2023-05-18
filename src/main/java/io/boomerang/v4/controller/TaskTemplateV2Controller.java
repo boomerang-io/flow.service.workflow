@@ -54,9 +54,9 @@ public class TaskTemplateV2Controller {
       @Parameter(name = "labels",
       description = "List of url encoded labels. For example Organization=Boomerang,customKey=test would be encoded as Organization%3DBoomerang,customKey%3Dtest)",
       required = false) @RequestParam(required = false) Optional<List<String>> labels,
-      @Parameter(name = "status",
+      @Parameter(name = "statuses",
       description = "List of statuses to filter for.", example = "active,inactive",
-      required = false) @RequestParam(required = false, defaultValue = "active")  Optional<List<String>> status,
+      required = false) @RequestParam(required = false, defaultValue = "active")  Optional<List<String>> statuses,
       @Parameter(name = "names",
       description = "List of TaskTemplate Names  to filter for. Defaults to all.", example = "switch,event-wait",
       required = false) @RequestParam(required = false)  Optional<List<String>> names,
@@ -68,7 +68,7 @@ public class TaskTemplateV2Controller {
       required = true) @RequestParam(defaultValue = "0") Optional<Integer> page,
   @Parameter(name = "sort", description = "Ascending (ASC) or Descending (DESC) sort on creationDate", example = "ASC",
   required = true) @RequestParam(defaultValue = "ASC") Optional<Direction> sort) {
-    return taskTemplateService.query(limit, page, sort, labels, status, names, teams);
+    return taskTemplateService.query(limit, page, sort, labels, statuses, names, teams);
   }
 
   @PostMapping(value = "/")

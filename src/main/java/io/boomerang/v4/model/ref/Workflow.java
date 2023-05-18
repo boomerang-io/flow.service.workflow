@@ -24,7 +24,7 @@ import io.boomerang.v4.model.enums.ref.WorkflowStatus;
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(Include.NON_EMPTY)
-@JsonPropertyOrder({"id", "name", "status", "version", "creationDate", "timeout", "retries", "description", "shortDescription", "labels", "annotations", "params", "tasks" })
+@JsonPropertyOrder({"id", "name", "status", "version", "creationDate", "timeout", "retries", "description", "labels", "annotations", "params", "tasks" })
 public class Workflow {
   
   private String id;
@@ -35,7 +35,6 @@ public class Workflow {
   private ChangeLog changelog;
   private String icon;
   private String description;
-  private String shortDescription;
   private String markdown;
   private Map<String, String> labels = new HashMap<>();
   private Map<String, Object> annotations = new HashMap<>();
@@ -147,14 +146,6 @@ public class Workflow {
 
   public void setDescription(String description) {
     this.description = description;
-  }
-
-  public String getShortDescription() {
-    return shortDescription;
-  }
-
-  public void setShortDescription(String shortDescription) {
-    this.shortDescription = shortDescription;
   }
   
   public String getMarkdown() {

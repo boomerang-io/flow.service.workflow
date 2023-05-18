@@ -74,9 +74,9 @@ public class ActionV2Controller {
       @Parameter(name = "types",
       description = "List of types to filter for. Defaults to all.", example = "manual,approval",
       required = false) @RequestParam(required = false)  Optional<List<ActionType>> types,
-      @Parameter(name = "status",
+      @Parameter(name = "statuses",
       description = "List of statuses to filter for. Defaults to all.", example = "approved,rejected,submitted",
-      required = false) @RequestParam(required = false)  Optional<List<ActionStatus>> status,
+      required = false) @RequestParam(required = false)  Optional<List<ActionStatus>> statuses,
       @Parameter(name = "workflows", description = "List of workflows to filter for.", 
       required = false) @RequestParam(required = false) Optional<List<String>> workflows,
       @Parameter(name = "teams", description = "List of teams to filter for.", 
@@ -104,7 +104,7 @@ public class ActionV2Controller {
     if (toDate.isPresent()) {
       to = Optional.of(new Date(toDate.get()));
     }
-    return actionService.query(from, to, pageable, types, status, workflows, teams);
+    return actionService.query(from, to, pageable, types, statuses, workflows, teams);
   }
   
   @GetMapping(value = "/summary")

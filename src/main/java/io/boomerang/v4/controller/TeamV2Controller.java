@@ -48,9 +48,9 @@ public class TeamV2Controller {
   public Page<Team> getTeams(@Parameter(name = "labels",
       description = "List of url encoded labels. For example Organization=Boomerang,customKey=test would be encoded as Organization%3DBoomerang,customKey%3Dtest)",
       required = false) @RequestParam(required = false) Optional<List<String>> labels,
-      @Parameter(name = "status", description = "List of statuses to filter for. Defaults to all.",
+      @Parameter(name = "statuses", description = "List of statuses to filter for. Defaults to all.",
           example = "active,inactive",
-          required = false) @RequestParam(required = false) Optional<List<String>> status,
+          required = false) @RequestParam(required = false) Optional<List<String>> statuses,
       @Parameter(name = "ids", description = "List of ids to filter for.", 
       required = false) @RequestParam(required = false) Optional<List<String>> ids,
       @Parameter(name = "limit", description = "Result Size", example = "10",
@@ -59,7 +59,7 @@ public class TeamV2Controller {
       required = true) @RequestParam(defaultValue = "0") Optional<Integer> page,
   @Parameter(name = "sort", description = "Ascending (ASC) or Descending (DESC) sort on creationDate", example = "ASC",
   required = true) @RequestParam(defaultValue = "ASC") Optional<Direction> sort) {
-    return teamService.query(page, limit, sort, labels, status, ids);
+    return teamService.query(page, limit, sort, labels, statuses, ids);
   }
   
   @GetMapping(value = "/{teamId}")

@@ -54,9 +54,9 @@ public class SchedulesV2Controller {
   @GetMapping(value = "/query")
   @Operation(summary = "Search for Schedules")
   public Page<WorkflowSchedule> query(
-      @Parameter(name = "status", description = "List of statuses to filter for. Defaults to all.",
+      @Parameter(name = "statuses", description = "List of statuses to filter for. Defaults to all.",
           example = "active,archived",
-          required = false) @RequestParam(required = false) Optional<List<String>> status,
+          required = false) @RequestParam(required = false) Optional<List<String>> statuses,
       @Parameter(name = "types", description = "List of types to filter for. Defaults to all.",
       example = "cron,advancedCron",
       required = false) @RequestParam(required = false) Optional<List<String>> types,
@@ -69,7 +69,7 @@ public class SchedulesV2Controller {
       @Parameter(name = "page", description = "Page Number", example = "0",
           required = true) @RequestParam(defaultValue = "0") int page) {
     final Sort sort = Sort.by(new Order(Direction.ASC, "creationDate"));
-      return workflowScheduleService.query(page, limit, sort, status, types, workflows, teams);
+      return workflowScheduleService.query(page, limit, sort, statuses, types, workflows, teams);
   }
   
   @PostMapping(value = "/")

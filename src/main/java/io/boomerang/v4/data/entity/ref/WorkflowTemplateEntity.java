@@ -34,7 +34,6 @@ public class WorkflowTemplateEntity {
   private Integer version;
   private String icon;
   private String description;
-  private String shortDescription;
   private String markdown;
   private Map<String, String> labels = new HashMap<>();
   private Map<String, Object> annotations = new HashMap<>();
@@ -87,12 +86,6 @@ public class WorkflowTemplateEntity {
   }
   public void setDescription(String description) {
     this.description = description;
-  }
-  public String getShortDescription() {
-    return shortDescription;
-  }
-  public void setShortDescription(String shortDescription) {
-    this.shortDescription = shortDescription;
   }
   public String getMarkdown() {
     return markdown;

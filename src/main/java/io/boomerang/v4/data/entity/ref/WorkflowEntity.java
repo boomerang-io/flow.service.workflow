@@ -23,7 +23,6 @@ public class WorkflowEntity {
   private Date creationDate = new Date();
   private String icon;
   private String description;
-  private String shortDescription;
   private Map<String, String> labels = new HashMap<>();
   private Map<String, Object> annotations = new HashMap<>();
   private WorkflowTrigger triggers;
@@ -74,14 +73,6 @@ public class WorkflowEntity {
 
   public void setDescription(String description) {
     this.description = description;
-  }
-
-  public String getShortDescription() {
-    return shortDescription;
-  }
-
-  public void setShortDescription(String shortDescription) {
-    this.shortDescription = shortDescription;
   }
 
   public Map<String, String> getLabels() {

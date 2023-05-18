@@ -80,7 +80,7 @@ public class UserV2Controller {
       required = false) @RequestParam(required = false) Optional<List<String>> labels,
       @Parameter(name = "status", description = "List of statuses to filter for. Defaults to all.",
           example = "active,inactive",
-          required = false) @RequestParam(required = false) Optional<List<String>> status,
+          required = false) @RequestParam(required = false) Optional<List<String>> statuses,
       @Parameter(name = "ids", description = "List of ids to filter for.", 
       required = false) @RequestParam(required = false) Optional<List<String>> ids,
       @Parameter(name = "limit", description = "Result Size", example = "10",
@@ -89,7 +89,7 @@ public class UserV2Controller {
       required = true) @RequestParam(defaultValue = "0") Optional<Integer> page,
   @Parameter(name = "sort", description = "Ascending (ASC) or Descending (DESC) sort on creationDate", example = "ASC",
   required = true) @RequestParam(defaultValue = "ASC") Optional<Direction> sort) {
-    return identityService.query(page, limit, sort, labels, status, ids);
+    return identityService.query(page, limit, sort, labels, statuses, ids);
   }
 
   @PostMapping(value = "/")
