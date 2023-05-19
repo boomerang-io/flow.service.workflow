@@ -13,6 +13,7 @@ public class WorkflowRunSummary {
   private long duration;
   private RunStatus status;
   private String workflowRef;
+  private String workflowName;
   
   public WorkflowRunSummary() {
     
@@ -75,5 +76,13 @@ public class WorkflowRunSummary {
 
   public void setWorkflowRef(String workflowRef) {
     this.workflowRef = workflowRef;
+  }
+
+  public String getWorkflowName() {
+    return workflowName;
+  }
+
+  public void setWorkflowName(String workflowName) {
+    this.workflowName = workflowName;
   }
 }
