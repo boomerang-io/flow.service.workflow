@@ -5,6 +5,8 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -38,6 +40,8 @@ import io.boomerang.v4.model.ref.Workflow;
 
 @Service
 public class ActionServiceImpl implements ActionService {
+
+  private static final Logger LOGGER = LogManager.getLogger();
 
   @Autowired
   private ActionRepository actionRepository;
@@ -163,8 +167,12 @@ public class ActionServiceImpl implements ActionService {
 
     Workflow workflow = engineClient.getWorkflow(actionEntity.getWorkflowRef(), Optional.empty(), false);
     action.setWorkflowName(workflow.getName());
-    TaskRun taskRun = engineClient.getTaskRun(actionEntity.getTaskRunRef());
-    action.setTaskName(taskRun.getName());
+    try {
+      TaskRun taskRun = engineClient.getTaskRun(actionEntity.getTaskRunRef());
+      action.setTaskName(taskRun.getName());
+    } catch (BoomerangException e) {
+      LOGGER.error("convertToAction() - Skipping specific TaskRun as not available. Most likely bad data");
+    }
 
     return action;
   }
