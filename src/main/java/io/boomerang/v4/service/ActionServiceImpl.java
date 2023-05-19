@@ -22,7 +22,7 @@ import io.boomerang.v4.client.EngineClient;
 import io.boomerang.v4.data.entity.ApproverGroupEntity;
 import io.boomerang.v4.data.entity.UserEntity;
 import io.boomerang.v4.data.entity.ref.ActionEntity;
-import io.boomerang.v4.data.model.ref.Audit;
+import io.boomerang.v4.data.model.ref.Actioner;
 import io.boomerang.v4.data.repository.ApproverGroupRepository;
 import io.boomerang.v4.data.repository.ref.ActionRepository;
 import io.boomerang.v4.model.Action;
@@ -118,7 +118,7 @@ public class ActionServiceImpl implements ActionService {
       }
 
       if (canBeActioned) {
-        Audit audit = new Audit();
+        Actioner audit = new Actioner();
         audit.setActionDate(new Date());
         audit.setApproverId(userEntity.getId());
         audit.setComments(request.getComments());
@@ -155,7 +155,7 @@ public class ActionServiceImpl implements ActionService {
           actionEntity.getActioners().stream().filter(x -> x.isApproved()).count();
 
       action.setNumberOfApprovals(aprovalCount);
-      for (Audit audit : actionEntity.getActioners()) {
+      for (Actioner audit : actionEntity.getActioners()) {
         Optional<User> user = userIdentityService.getUserByID(audit.getApproverId());
         if (user.isPresent()) {
           audit.setApproverName(user.get().getName());

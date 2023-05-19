@@ -5,12 +5,13 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 @JsonInclude(Include.NON_NULL)
-public class Audit {
+public class Actioner {
 
   private String approverId;
   private String approverEmail;
   private String approverName;
   private String comments;
+  private Date date;
   private boolean approved;
   
   public String getApproverEmail() {
@@ -61,5 +62,13 @@ public class Audit {
 
   public void setApproved(boolean approved) {
     this.approved = approved;
+  }
+
+  public Date getDate() {
+    return date;
+  }
+
+  public void setDate(Date date) {
+    this.date = date;
   }
 }
