@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import io.boomerang.v4.model.ref.WorkflowRun;
+import io.boomerang.v4.model.ref.WorkflowRunCount;
 import io.boomerang.v4.model.ref.WorkflowRunRequest;
 import io.boomerang.v4.model.ref.WorkflowRunSubmitRequest;
 import io.boomerang.v4.service.TaskRunService;
@@ -46,7 +47,7 @@ public class WorkflowRunV2Controller {
   @Operation(summary = "Search for WorkflowRuns")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
-  public Page<WorkflowRun> queryWorkflowRuns(
+  public Page<WorkflowRun> query(
       @Parameter(name = "labels",
       description = "List of url encoded labels. For example Organization=Boomerang,customKey=test would be encoded as Organization%3DBoomerang,customKey%3Dtest)",
       required = false) @RequestParam(required = false) Optional<List<String>> labels,
@@ -73,6 +74,26 @@ public class WorkflowRunV2Controller {
       @Parameter(name = "toDate", description = "The unix timestamp / date to search to in milliseconds since epoch", example = "1680267600000",
       required = false) @RequestParam Optional<Long> toDate) {
     return workflowRunService.query(fromDate, toDate, page, limit, sort, labels, statuses, phase, teams, workflowruns, workflows);
+  }  
+
+  @GetMapping(value = "/count")
+  @Operation(summary = "Retrieve a summary of WorkflowRuns by Status.")
+  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
+      @ApiResponse(responseCode = "400", description = "Bad Request")})
+  public WorkflowRunCount count(
+      @Parameter(name = "labels",
+      description = "List of url encoded labels. For example Organization=Boomerang,customKey=test would be encoded as Organization%3DBoomerang,customKey%3Dtest)",
+      required = false) @RequestParam(required = false) Optional<List<String>> labels,
+      @Parameter(name = "teams", description = "List of teams to filter for.", 
+      required = false) @RequestParam(required = false) Optional<List<String>> teams,
+      @Parameter(name = "workflows",
+      description = "List of Workflow IDs  to filter for. Does not validate the IDs provided. Defaults to all.", example = "63d3656ca845957db7d25ef0,63a3e732b0496509a7f1d763",
+      required = false) @RequestParam(required = false)  Optional<List<String>> workflows,
+      @Parameter(name = "fromDate", description = "The unix timestamp / date to search from in milliseconds since epoch", example = "1677589200000",
+      required = false) @RequestParam Optional<Long> fromDate,
+      @Parameter(name = "toDate", description = "The unix timestamp / date to search to in milliseconds since epoch", example = "1680267600000",
+      required = false) @RequestParam Optional<Long> toDate) {
+    return workflowRunService.count(fromDate, toDate, labels, teams, workflows);
   }
 
   @PostMapping(value = "/submit")

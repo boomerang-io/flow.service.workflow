@@ -17,6 +17,7 @@ import io.boomerang.v4.data.model.CurrentQuotas;
 import io.boomerang.v4.model.enums.RelationshipRef;
 import io.boomerang.v4.model.enums.RelationshipType;
 import io.boomerang.v4.model.ref.WorkflowRun;
+import io.boomerang.v4.model.ref.WorkflowRunCount;
 import io.boomerang.v4.model.ref.WorkflowRunInsight;
 import io.boomerang.v4.model.ref.WorkflowRunRequest;
 import io.boomerang.v4.model.ref.WorkflowRunSubmitRequest;
@@ -102,6 +103,17 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
     LOGGER.debug("Query Ids: ", workflowRunRefs);
     
     return engineClient.insightWorkflowRuns(queryLabels, Optional.of(workflowRunRefs), queryWorkflows, from, to);
+  }
+  
+  /*
+   * Retrieve the insights / statistics for a specific period of time and filters
+   */
+  @Override
+  public WorkflowRunCount count(Optional<Long> from, Optional<Long> to,  Optional<List<String>> queryLabels, Optional<List<String>> queryTeams, Optional<List<String>> queryWorkflows) {
+    List<String> refs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.WORKFLOW), queryWorkflows, Optional.of(RelationshipType.BELONGSTO), Optional.of(RelationshipRef.TEAM), queryTeams);
+    LOGGER.debug("Query Ids: ", refs);
+    
+    return engineClient.countWorkflowRuns(queryLabels, Optional.of(refs), from, to);
   }
 
   /*

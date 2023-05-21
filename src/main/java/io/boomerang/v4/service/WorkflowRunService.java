@@ -6,6 +6,7 @@ import org.springframework.data.domain.Sort.Direction;
 import org.springframework.http.ResponseEntity;
 import io.boomerang.v4.client.WorkflowRunResponsePage;
 import io.boomerang.v4.model.ref.WorkflowRun;
+import io.boomerang.v4.model.ref.WorkflowRunCount;
 import io.boomerang.v4.model.ref.WorkflowRunInsight;
 import io.boomerang.v4.model.ref.WorkflowRunRequest;
 import io.boomerang.v4.model.ref.WorkflowRunSubmitRequest;
@@ -32,6 +33,10 @@ public interface WorkflowRunService {
   ResponseEntity<WorkflowRun> retry(String workflowRunId);
 
   WorkflowRunInsight insight(Optional<Long> from, Optional<Long> to,
+      Optional<List<String>> queryLabels, Optional<List<String>> queryWorkflows,
+      Optional<List<String>> queryTeams);
+
+  WorkflowRunCount count(Optional<Long> from, Optional<Long> to,
       Optional<List<String>> queryLabels, Optional<List<String>> queryWorkflows,
       Optional<List<String>> queryTeams);
   
