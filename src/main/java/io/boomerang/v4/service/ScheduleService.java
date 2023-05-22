@@ -19,7 +19,7 @@ public interface ScheduleService {
       Optional<List<String>> queryWorkflows, Optional<List<String>> queryTeams,
       Optional<List<String>> queryStatus, Optional<List<String>> queryTypes);
 
-  WorkflowSchedule create(WorkflowSchedule schedule, Optional<String> team);
+  WorkflowSchedule create(WorkflowSchedule schedule, String teamId);
 
   ResponseEntity<?> delete(String scheduleId);
 

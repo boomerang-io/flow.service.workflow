@@ -72,11 +72,11 @@ public class SchedulesV2Controller {
       return workflowScheduleService.query(page, limit, sort, statuses, types, workflows, teams);
   }
   
-  @PostMapping(value = "/")
+  @PostMapping(value = "")
   @Operation(summary = "Create a Schedule.")
   public WorkflowSchedule createSchedule(
       @Parameter(name = "team", description = "Team as owner reference.", example = "63d3656ca845957db7d25ef0,63a3e732b0496509a7f1d763",
-      required = false) @RequestParam(required = false) Optional<String> team,
+      required = true) @RequestParam(required = true) String team,
       @RequestBody WorkflowSchedule schedule) {
     return workflowScheduleService.create(schedule, team);
   }
