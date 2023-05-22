@@ -94,8 +94,8 @@ public class ScheduleServiceImpl implements ScheduleService {
    * @return list of Workflow Schedules
    */
   @Override
-  public Page<WorkflowSchedule> query(int page, int limit, Sort sort, Optional<List<String>> queryWorkflows,
-      Optional<List<String>> queryTeams, Optional<List<String>> queryStatus, Optional<List<String>> queryTypes) {
+  public Page<WorkflowSchedule> query(int page, int limit, Sort sort, Optional<List<String>> queryStatus, Optional<List<String>> queryTypes, Optional<List<String>> queryWorkflows,
+      Optional<List<String>> queryTeams) {
     // Get Refs that request has access to
     List<String> refs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.WORKFLOW),
         queryWorkflows, Optional.of(RelationshipType.BELONGSTO), Optional.ofNullable(RelationshipRef.TEAM),
