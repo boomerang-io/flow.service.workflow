@@ -727,7 +727,7 @@ public class TaskServiceImpl implements TaskService {
           }
         }
         newTask.setInputs(properties);
-        if (newTask.getResults() == null) {
+        if (newTask.getResults() == null || newTask.getResults().size() == 0) {
           newTask.setResults(dagTask.getResults());
         }
       } else if (dagTask.getType() == TaskType.decision) {
