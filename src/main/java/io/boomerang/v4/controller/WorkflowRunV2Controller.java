@@ -67,13 +67,13 @@ public class WorkflowRunV2Controller {
       required = true) @RequestParam(required = false) Optional<Integer> limit,
   @Parameter(name = "page", description = "Page Number", example = "0",
       required = true) @RequestParam(defaultValue = "0") Optional<Integer> page,
-  @Parameter(name = "sort", description = "Ascending (ASC) or Descending (DESC) sort on creationDate", example = "ASC",
-  required = true) @RequestParam(defaultValue = "ASC") Optional<Direction> sort,
+  @Parameter(name = "order", description = "Ascending (ASC) or Descending (DESC) sort order on creationDate", example = "ASC",
+  required = true) @RequestParam(defaultValue = "ASC") Optional<Direction> order,
       @Parameter(name = "fromDate", description = "The unix timestamp / date to search from in milliseconds since epoch", example = "1677589200000",
       required = false) @RequestParam Optional<Long> fromDate,
       @Parameter(name = "toDate", description = "The unix timestamp / date to search to in milliseconds since epoch", example = "1680267600000",
       required = false) @RequestParam Optional<Long> toDate) {
-    return workflowRunService.query(fromDate, toDate, page, limit, sort, labels, statuses, phase, teams, workflowruns, workflows);
+    return workflowRunService.query(fromDate, toDate, limit, page, order, labels, statuses, phase, teams, workflowruns, workflows);
   }  
 
   @GetMapping(value = "/count")

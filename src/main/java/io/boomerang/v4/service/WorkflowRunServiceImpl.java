@@ -75,7 +75,7 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
    */
   public WorkflowRunResponsePage query(
       Optional<Long> fromDate, Optional<Long> toDate, 
-      Optional<Integer> queryLimit, Optional<Integer> queryPage, Optional<Direction> querySort, Optional<List<String>> queryLabels,
+      Optional<Integer> queryLimit, Optional<Integer> queryPage, Optional<Direction> queryOrder, Optional<List<String>> queryLabels,
       Optional<List<String>> queryStatus, Optional<List<String>> queryPhase,
       Optional<List<String>> queryTeams, Optional<List<String>> queryWorkflowRuns,
       Optional<List<String>> queryWorkflows) {
@@ -83,10 +83,12 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
     List<String> workflowRunRefs = relationshipService.getFilteredFromRefs(
         Optional.of(RelationshipRef.WORKFLOWRUN), queryWorkflowRuns,
         Optional.of(RelationshipType.BELONGSTO), Optional.of(RelationshipRef.TEAM), queryTeams);
+    
+    LOGGER.debug("Refs: " + workflowRunRefs);
 
     if (!workflowRunRefs.isEmpty()) {
       return engineClient.queryWorkflowRuns(fromDate,
-          toDate, queryLimit, queryPage, querySort, queryLabels, queryStatus, queryPhase, Optional.of(workflowRunRefs),
+          toDate, queryLimit, queryPage, queryOrder, queryLabels, queryStatus, queryPhase, Optional.of(workflowRunRefs),
           queryWorkflows);
     } else {
       // TODO: do we want to return invalid ref or unauthorized
