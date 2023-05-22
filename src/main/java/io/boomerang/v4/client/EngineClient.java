@@ -23,7 +23,7 @@ public interface EngineClient {
       Optional<Integer> queryLimit, Optional<Integer> queryPage, Optional<Direction> querySort,
       Optional<List<String>> queryLabels, Optional<List<String>> queryStatus,
       Optional<List<String>> queryPhase, Optional<List<String>> queryWorkflowRuns,
-      Optional<List<String>> queryWorkflows);
+      Optional<List<String>> queryWorkflows, Optional<List<String>> queryTriggers);
 
   WorkflowRunInsight insightWorkflowRuns(Optional<List<String>> queryLabels,
       Optional<List<String>> queryWorkflowRuns, Optional<List<String>> queryWorkflows,

@@ -78,7 +78,7 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
       Optional<Integer> queryLimit, Optional<Integer> queryPage, Optional<Direction> queryOrder, Optional<List<String>> queryLabels,
       Optional<List<String>> queryStatus, Optional<List<String>> queryPhase,
       Optional<List<String>> queryTeams, Optional<List<String>> queryWorkflowRuns,
-      Optional<List<String>> queryWorkflows) {
+      Optional<List<String>> queryWorkflows, Optional<List<String>> queryTriggers) {
     // Get Refs that request has access to
     List<String> workflowRunRefs = relationshipService.getFilteredFromRefs(
         Optional.of(RelationshipRef.WORKFLOWRUN), queryWorkflowRuns,
@@ -89,7 +89,7 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
     if (!workflowRunRefs.isEmpty()) {
       return engineClient.queryWorkflowRuns(fromDate,
           toDate, queryLimit, queryPage, queryOrder, queryLabels, queryStatus, queryPhase, Optional.of(workflowRunRefs),
-          queryWorkflows);
+          queryWorkflows, queryTriggers);
     } else {
       // TODO: do we want to return invalid ref or unauthorized
       throw new BoomerangException(BoomerangError.WORKFLOW_RUN_INVALID_REF);
@@ -149,6 +149,7 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
           request.setTimeout(Long.valueOf(setting));
         }
       }
+      //TODO: figure out the storing of initiated by. Is that just a relationship?
       
       WorkflowRun wfRun = engineClient.submitWorkflowRun(request, start);
        // TODO: FUTURE - Creates the relationship with the Workflow

@@ -14,10 +14,11 @@ import io.boomerang.v4.model.ref.WorkflowRunSubmitRequest;
 public interface WorkflowRunService {
 
   WorkflowRunResponsePage query(Optional<Long> fromDate, Optional<Long> toDate,
-      Optional<Integer> queryLimit, Optional<Integer> queryPage, Optional<Direction> querySort,
+      Optional<Integer> queryLimit, Optional<Integer> queryPage, Optional<Direction> queryOrder,
       Optional<List<String>> queryLabels, Optional<List<String>> queryStatus,
       Optional<List<String>> queryPhase, Optional<List<String>> queryTeams,
-      Optional<List<String>> queryWorkflowRuns, Optional<List<String>> queryWorkflows);
+      Optional<List<String>> queryWorkflowRuns, Optional<List<String>> queryWorkflows,
+      Optional<List<String>> queryTriggers);
 
   ResponseEntity<WorkflowRun> submit(WorkflowRunSubmitRequest request, boolean start);
 

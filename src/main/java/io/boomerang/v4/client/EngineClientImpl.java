@@ -169,7 +169,7 @@ public class EngineClientImpl implements EngineClient {
       Optional<Integer> queryLimit, Optional<Integer> queryPage, Optional<Direction> querySort,
       Optional<List<String>> queryLabels, Optional<List<String>> queryStatus,
       Optional<List<String>> queryPhase, Optional<List<String>> queryWorkflowRuns,
-      Optional<List<String>> queryWorkflows) {
+      Optional<List<String>> queryWorkflows, Optional<List<String>> queryTriggers) {
     try {
       UriComponentsBuilder urlBuilder = UriComponentsBuilder.fromHttpUrl(queryWorkflowRunURL);
       if (queryPage.isPresent()) {
@@ -201,6 +201,9 @@ public class EngineClientImpl implements EngineClient {
       }
       if (queryWorkflows.isPresent() && !queryWorkflows.get().isEmpty()) {
         urlBuilder.queryParam("workflows", queryWorkflows.get());
+      }
+      if (queryTriggers.isPresent() && !queryTriggers.get().isEmpty()) {
+        urlBuilder.queryParam("triggers", queryTriggers.get());
       }
       URI encodedURI = urlBuilder.build().encode().toUri();
 

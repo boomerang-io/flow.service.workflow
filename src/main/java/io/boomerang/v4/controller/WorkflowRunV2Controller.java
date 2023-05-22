@@ -63,6 +63,8 @@ public class WorkflowRunV2Controller {
       required = false) @RequestParam(required = false) Optional<List<String>> workflowruns,
       @Parameter(name = "workflows", description = "List of Workflow IDs to filter for.", 
       required = false) @RequestParam(required = false) Optional<List<String>> workflows,
+      @Parameter(name = "triggers", description = "List of Triggers to filter for.", 
+      required = false) @RequestParam(required = false) Optional<List<String>> triggers,
       @Parameter(name = "limit", description = "Result Size", example = "10",
       required = true) @RequestParam(required = false) Optional<Integer> limit,
   @Parameter(name = "page", description = "Page Number", example = "0",
@@ -73,7 +75,7 @@ public class WorkflowRunV2Controller {
       required = false) @RequestParam Optional<Long> fromDate,
       @Parameter(name = "toDate", description = "The unix timestamp / date to search to in milliseconds since epoch", example = "1680267600000",
       required = false) @RequestParam Optional<Long> toDate) {
-    return workflowRunService.query(fromDate, toDate, limit, page, order, labels, statuses, phase, teams, workflowruns, workflows);
+    return workflowRunService.query(fromDate, toDate, limit, page, order, labels, statuses, phase, teams, workflowruns, workflows, triggers);
   }  
 
   @GetMapping(value = "/count")

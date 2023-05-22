@@ -10,6 +10,8 @@ public class WorkflowRun extends WorkflowRunEntity {
 
   private List<TaskRun> tasks;
   
+  private String workflowName;
+  
   public WorkflowRun() {
     
   }
@@ -29,5 +31,13 @@ public class WorkflowRun extends WorkflowRunEntity {
 
   public void setTasks(List<TaskRun> taskRuns) {
     this.tasks = taskRuns;
+  }
+
+  public String getWorkflowName() {
+    return workflowName;
+  }
+
+  public void setWorkflowName(String workflowName) {
+    this.workflowName = workflowName;
   }
 }
