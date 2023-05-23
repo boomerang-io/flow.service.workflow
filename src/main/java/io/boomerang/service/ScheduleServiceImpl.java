@@ -93,7 +93,7 @@ public class ScheduleServiceImpl implements ScheduleService {
    * 
    * Used by ExecuteScheduleJob
    */
-  protected WorkflowSchedule internalGet(String scheduleId) {
+  public WorkflowSchedule internalGet(String scheduleId) {
     final Optional<WorkflowScheduleEntity> scheduleEntity = scheduleRepository.findById(scheduleId);
     if (scheduleEntity.isPresent()) {
         return convertScheduleEntityToModel(scheduleEntity.get());
@@ -227,10 +227,10 @@ public class ScheduleServiceImpl implements ScheduleService {
    * @return list of Schedule Calendars
    */
   @Override
-  public List<WorkflowScheduleCalendar> getCalendarsForSchedules(final List<String> scheduleIds, Date fromDate, Date toDate) {
+  public List<WorkflowScheduleCalendar> calendars(final List<String> scheduleIds, Date fromDate, Date toDate) {
     
     List<WorkflowScheduleCalendar> scheduleCalendars = new LinkedList<>();
-    final Optional<List<WorkflowScheduleEntity>> scheduleEntities = scheduleRepository.findByWorkflowRefInAndStatusIn(scheduleIds, getStatusesNotCompletedOrDeleted());
+    final Optional<List<WorkflowScheduleEntity>> scheduleEntities = scheduleRepository.findByIdInAndStatusIn(scheduleIds, getStatusesNotCompletedOrDeleted());
     if (scheduleEntities.isPresent()) {
       scheduleEntities.get().forEach(e -> {
         WorkflowScheduleCalendar scheduleCalendar = new WorkflowScheduleCalendar();
@@ -290,8 +290,11 @@ public class ScheduleServiceImpl implements ScheduleService {
    * TODO: update this to match the /apply design
    */
   @Override
-  public WorkflowSchedule update(final String scheduleId, final WorkflowSchedule patchSchedule) {
-    if (patchSchedule != null) {
+  public WorkflowSchedule apply(final WorkflowSchedule request) {
+    if (request != null) {
+      if (request.getId() == null || request.getId().isEmpty()) {
+        this.create(request, null)
+      }
       final Optional<WorkflowScheduleEntity> optScheduleEntity = scheduleRepository.findById(scheduleId);
       if (optScheduleEntity.isPresent()) {
         WorkflowScheduleEntity scheduleEntity = optScheduleEntity.get();
@@ -299,7 +302,7 @@ public class ScheduleServiceImpl implements ScheduleService {
          * The copy ignores ID and creationDate to ensure data integrity
          */
         WorkflowScheduleStatus previousStatus = scheduleEntity.getStatus();
-        BeanUtils.copyProperties(patchSchedule, scheduleEntity, "id", "creationDate");
+        BeanUtils.copyProperties(request, scheduleEntity, "id", "creationDate");
         
         /*
          * Complex Status checking to determine what can and can't be enabled
@@ -454,7 +457,7 @@ public class ScheduleServiceImpl implements ScheduleService {
    * 
    * Used by ExecuteScheduleJob
    */
-  protected ResponseEntity<?> complete(String scheduleId) {
+  public ResponseEntity<?> complete(String scheduleId) {
     Optional<WorkflowScheduleEntity> schedule = scheduleRepository.findById(scheduleId);
     if (schedule.isPresent() && !WorkflowScheduleStatus.deleted.equals(schedule.get().getStatus())) {
       schedule.get().setStatus(WorkflowScheduleStatus.completed);

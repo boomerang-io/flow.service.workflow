@@ -12,9 +12,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -72,6 +72,18 @@ public class SchedulesV2Controller {
       return workflowScheduleService.query(page, limit, sort, statuses, types, workflows, teams);
   }
   
+  @GetMapping(value = "/calendars")
+  @Operation(summary = "Retrieve Calendars for Schedules by Dates.")
+  public List<WorkflowScheduleCalendar> getCalendarsForSchedules(@RequestParam List<String> schedules, @RequestParam Long fromDate, @RequestParam Long toDate) {
+    if (schedules != null && !schedules.isEmpty() && fromDate != null && toDate != null) {
+      Date from = new Date(fromDate * 1000);
+      Date to = new Date(toDate * 1000);
+      return workflowScheduleService.calendars(schedules, from, to);
+    } else {
+      throw new BoomerangException(0, "Invalid fromDate or toDate", HttpStatus.BAD_REQUEST);
+    }
+  }
+  
   @PostMapping(value = "")
   @Operation(summary = "Create a Schedule.")
   public WorkflowSchedule createSchedule(
@@ -81,10 +93,10 @@ public class SchedulesV2Controller {
     return workflowScheduleService.create(schedule, team);
   }
   
-  @PatchMapping(value = "/{scheduleId}")
+  @PutMapping(value = "/")
   @Operation(summary = "Apply a Schedule.")
-  public WorkflowSchedule updateSchedule(@PathVariable String scheduleId, @RequestBody WorkflowSchedule schedule) {
-    return workflowScheduleService.update(scheduleId, schedule);
+  public WorkflowSchedule updateSchedule(@RequestBody WorkflowSchedule schedule) {
+    return workflowScheduleService.apply(schedule);
   }
   
   @DeleteMapping(value = "/{scheduleId}")
@@ -93,27 +105,16 @@ public class SchedulesV2Controller {
     return workflowScheduleService.delete(scheduleId);
   }
   
-  @GetMapping(value = "/{scheduleId}/calendar")
-  @Operation(summary = "Retrieve a Calendar based on dates.")
-  public List<Date> getScheduleForDates(@PathVariable String scheduleId, @RequestParam Long fromDate, @RequestParam Long toDate) {
-    if (fromDate != null && toDate != null) {
-      Date from = new Date(fromDate * 1000);
-      Date to = new Date(toDate * 1000);
-      return workflowScheduleService.getCalendarForDates(scheduleId, from, to);
-    } else {
-      throw new BoomerangException(0, "Invalid fromDate or toDate", HttpStatus.BAD_REQUEST);
-    }
-  }
-  
-  @GetMapping(value = "/calendars")
-  @Operation(summary = "Retrieve a Calendar by Schedules.")
-  public List<WorkflowScheduleCalendar> getCalendarsForSchedules(@RequestParam List<String> scheduleIds, @RequestParam Long fromDate, @RequestParam Long toDate) {
-    if (scheduleIds != null && !scheduleIds.isEmpty() && fromDate != null && toDate != null) {
-      Date from = new Date(fromDate * 1000);
-      Date to = new Date(toDate * 1000);
-      return workflowScheduleService.getCalendarsForSchedules(scheduleIds, from, to);
-    } else {
-      throw new BoomerangException(0, "Invalid fromDate or toDate", HttpStatus.BAD_REQUEST);
-    }
-  }
+  //TODO: commented out in Web - is this useful?
+//  @GetMapping(value = "/{scheduleId}/calendar")
+//  @Operation(summary = "Retrieve a Calendar based on dates.")
+//  public List<Date> getScheduleForDates(@PathVariable String scheduleId, @RequestParam Long fromDate, @RequestParam Long toDate) {
+//    if (fromDate != null && toDate != null) {
+//      Date from = new Date(fromDate * 1000);
+//      Date to = new Date(toDate * 1000);
+//      return workflowScheduleService.getCalendarForDates(scheduleId, from, to);
+//    } else {
+//      throw new BoomerangException(0, "Invalid fromDate or toDate", HttpStatus.BAD_REQUEST);
+//    }
+//  }
 }

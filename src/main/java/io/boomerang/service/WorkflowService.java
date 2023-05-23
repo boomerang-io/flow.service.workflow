@@ -18,9 +18,9 @@ public interface WorkflowService {
       Optional<List<String>> queryStatus, Optional<List<String>> queryTeams,
       Optional<List<String>> queryWorkflows);
 
-  ResponseEntity<Workflow> create(Workflow request, Optional<String> team);
+  ResponseEntity<Workflow> create(Workflow request, String team);
 
-  ResponseEntity<Workflow> apply(Workflow workflow, boolean replace);
+  ResponseEntity<Workflow> apply(Workflow workflow, boolean replace, Optional<String> team);
 
   ResponseEntity<Void> enable(String workflowId);
 

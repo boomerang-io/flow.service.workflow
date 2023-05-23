@@ -19,16 +19,18 @@ public interface ScheduleService {
       Optional<List<String>> queryWorkflows, Optional<List<String>> queryTeams,
       Optional<List<String>> queryStatus, Optional<List<String>> queryTypes);
 
+  List<WorkflowScheduleCalendar> calendars(List<String> scheduleIds, Date fromDate,
+      Date toDate);
+
   WorkflowSchedule create(WorkflowSchedule schedule, String teamId);
 
   ResponseEntity<?> delete(String scheduleId);
-
-  WorkflowSchedule update(String scheduleId,
-      WorkflowSchedule patchSchedule);
+  
+  WorkflowSchedule apply(WorkflowSchedule request);
 
   CronValidationResponse validateCron(String cronString);
 
-  List<Date> getCalendarForDates(String scheduleId, Date fromDate, Date toDate);
+//  List<Date> getCalendarForDates(String scheduleId, Date fromDate, Date toDate);
 
   void enableAllTriggerSchedules(String workflowId);
 
@@ -39,6 +41,4 @@ public interface ScheduleService {
   List<WorkflowScheduleCalendar> getCalendarsForWorkflow(String workflowId, Date fromDate,
       Date toDate);
 
-  List<WorkflowScheduleCalendar> getCalendarsForSchedules(List<String> scheduleIds, Date fromDate,
-      Date toDate);
 }

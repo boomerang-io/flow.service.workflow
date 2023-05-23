@@ -1,4 +1,4 @@
-package io.boomerang.service;
+package io.boomerang.quartz;
 
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
@@ -9,7 +9,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.scheduling.quartz.QuartzJobBean;
 import org.springframework.scheduling.quartz.SchedulerFactoryBean;
-import io.boomerang.quartz.QuartzConfiguration;
+import io.boomerang.service.ScheduleServiceImpl;
+import io.boomerang.service.WorkflowRunServiceImpl;
 import io.boomerang.v4.model.WorkflowSchedule;
 import io.boomerang.v4.model.enums.WorkflowScheduleType;
 import io.boomerang.v4.model.ref.WorkflowRunSubmitRequest;
@@ -20,9 +21,9 @@ import io.boomerang.v4.model.ref.WorkflowRunSubmitRequest;
  * Caution: if this is renamed or moved packages then all the jobs in the DB will need to have the jobClass reference updated.
  */
 @PersistJobDataAfterExecution
-public class ScheduleExecuteJob extends QuartzJobBean {
+public class QuartzSchedulerJob extends QuartzJobBean {
 
-  private static final Logger logger = LoggerFactory.getLogger(ScheduleExecuteJob.class);
+  private static final Logger logger = LoggerFactory.getLogger(QuartzSchedulerJob.class);
 
   private ApplicationContext applicationContext;
 

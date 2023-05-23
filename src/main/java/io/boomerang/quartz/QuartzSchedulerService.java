@@ -1,6 +1,7 @@
 package io.boomerang.quartz;
 
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.TimeZone;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -23,7 +24,6 @@ import org.quartz.spi.OperableTrigger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.quartz.SchedulerFactoryBean;
 import org.springframework.stereotype.Component;
-import io.boomerang.service.ScheduleExecuteJob;
 import io.boomerang.service.ScheduleService;
 import io.boomerang.v4.data.entity.WorkflowScheduleEntity;
 import io.boomerang.v4.model.CronValidationResponse;
@@ -60,7 +60,7 @@ public class QuartzSchedulerService {
       String workflowId = schedule.getWorkflowRef();
       Scheduler scheduler = schedulerFactoryBean.getScheduler();
       JobDetail jobDetail =
-          JobBuilder.newJob(ScheduleExecuteJob.class).withIdentity(scheduleId, workflowId).build();         
+          JobBuilder.newJob(QuartzSchedulerJob.class).withIdentity(scheduleId, workflowId).build();         
 //    TODO: determine if we add a calendar entry for excluded dates
     CronScheduleBuilder cronScheduleBuilder =
         CronScheduleBuilder.cronSchedule(cronString).inTimeZone(timeZone);
@@ -86,7 +86,7 @@ public class QuartzSchedulerService {
     String scheduleId = schedule.getId();
     String workflowId = schedule.getWorkflowRef();
     Scheduler scheduler = schedulerFactoryBean.getScheduler();
-    JobDetail jobDetail = JobBuilder.newJob(ScheduleExecuteJob.class).withIdentity(scheduleId, workflowId).build();
+    JobDetail jobDetail = JobBuilder.newJob(QuartzSchedulerJob.class).withIdentity(scheduleId, workflowId).build();
     SimpleScheduleBuilder simpleScheduleBuilder = SimpleScheduleBuilder.simpleSchedule().withRepeatCount(0);
     SimpleTrigger trigger = TriggerBuilder.newTrigger().withIdentity(scheduleId, workflowId).startAt(schedule.getDateSchedule())
         .withSchedule(simpleScheduleBuilder).build();
@@ -122,8 +122,12 @@ public class QuartzSchedulerService {
   public List<Date> getJobTriggerDates(WorkflowScheduleEntity schedule, Date fromDate, Date toDate) throws SchedulerException {
     Scheduler scheduler = schedulerFactoryBean.getScheduler();
     Trigger trigger = scheduler.getTrigger(new TriggerKey(schedule.getId(), schedule.getWorkflowRef()));
-    logger.info("Retrieving Dates from: " + fromDate.toString() + ", to: " + toDate.toString() + ", for Schedule: " + schedule.getId());
-    return org.quartz.TriggerUtils.computeFireTimesBetween((OperableTrigger) trigger, new BaseCalendar(), fromDate, toDate);
+    if (trigger != null) {
+      logger.info("Retrieving Dates from: " + fromDate.toString() + ", to: " + toDate.toString() + ", for Schedule: " + schedule.getId());
+      return org.quartz.TriggerUtils.computeFireTimesBetween((OperableTrigger) trigger, new BaseCalendar(), fromDate, toDate);
+    }
+    logger.error("Unable to retrieve calendar for Schedule: {}, skipping.", schedule.getId());
+    return new LinkedList<Date>();
   }
   
   public Date getNextTriggerDate(WorkflowScheduleEntity schedule) throws SchedulerException {

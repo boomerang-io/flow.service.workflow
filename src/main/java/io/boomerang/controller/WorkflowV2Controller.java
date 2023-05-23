@@ -80,7 +80,7 @@ public class WorkflowV2Controller {
       @ApiResponse(responseCode = "400", description = "Bad Request")})
   public ResponseEntity<Workflow> createWorkflow(
     @Parameter(name = "team", description = "Team as owner reference.", example = "63d3656ca845957db7d25ef0,63a3e732b0496509a7f1d763",
-        required = false) @RequestParam(required = false) Optional<String> team,
+    required = true) @RequestParam(required = true) String team,
     @RequestBody Workflow workflow) {
     return workflowService.create(workflow, team);
   }
@@ -91,9 +91,11 @@ public class WorkflowV2Controller {
       @ApiResponse(responseCode = "400", description = "Bad Request")})
   public ResponseEntity<Workflow> applyWorkflow(@RequestBody Workflow workflow,
       @Parameter(name = "replace", description = "Replace existing version",
-          required = false) @RequestParam(required = false,
-              defaultValue = "false") boolean replace) {
-    return workflowService.apply(workflow, replace);
+          required = false) @RequestParam(required = false, defaultValue = "false") boolean replace,
+      @Parameter(name = "team", description = "Team as owner reference. Required if using apply to create new.",
+          example = "63d3656ca845957db7d25ef0,63a3e732b0496509a7f1d763",
+          required = false) @RequestParam(required = false) Optional<String> team) {
+    return workflowService.apply(workflow, replace, team);
   }
 
   @PutMapping(value = "/{workflowId}/enable")

@@ -145,7 +145,7 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
    * 
    * Used by ExecuteScheduleJob
    */
-  protected ResponseEntity<WorkflowRun> internalSubmit(WorkflowRunSubmitRequest request,
+  public ResponseEntity<WorkflowRun> internalSubmit(WorkflowRunSubmitRequest request,
       boolean start) {
     Optional<RelationshipEntity> teamRelationship = relationshipService.getRelationship(
         RelationshipRef.WORKFLOW, request.getWorkflowRef(), RelationshipType.BELONGSTO);

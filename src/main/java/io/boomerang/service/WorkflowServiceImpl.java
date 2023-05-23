@@ -144,7 +144,7 @@ public class WorkflowServiceImpl implements WorkflowService {
    */
   @Override
   public ResponseEntity<Workflow> create(Workflow request,
-      Optional<String> team) {
+      String team) {
     //Default Triggers
     setupTriggerDefaults(request);
     
@@ -154,15 +154,9 @@ public class WorkflowServiceImpl implements WorkflowService {
     // TODO: add a check that they are prefixed with the current team scope OR are a valid Global TaskTemplate
     
     Workflow workflow = engineClient.createWorkflow(request);
-    if (team.isPresent()) {
     // Create BELONGSTO relationship for mapping Workflow to Owner
       relationshipService.addRelationshipRef(RelationshipRef.WORKFLOW, workflow.getId(), RelationshipRef.TEAM,
-          team);
-    } else {
-      // Creates a relationship based on current used Security Scope
-      relationshipService.addRelationshipRefForCurrentScope(RelationshipRef.WORKFLOW,
-          workflow.getId());
-    }
+          Optional.of(team));
 
     // Filter out sensitive values
     DataAdapterUtil.filterParamSpecValueByFieldType(workflow.getConfig(), workflow.getParams(), FieldType.PASSWORD.value());
@@ -218,12 +212,12 @@ public class WorkflowServiceImpl implements WorkflowService {
    * Workflow with supplied ID
    */
   @Override
-  public ResponseEntity<Workflow> apply(Workflow workflow, boolean replace) {
+  public ResponseEntity<Workflow> apply(Workflow workflow, boolean replace, Optional<String> team) {
     String workflowId = workflow.getId();
     List<String> workflowRefs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.WORKFLOW),
         Optional.of(List.of(workflowId)), Optional.of(RelationshipType.BELONGSTO), Optional.of(RelationshipRef.TEAM), Optional.empty());
 
-    if (workflowId != null && !workflowId.isBlank() && !workflowRefs.isEmpty()) {
+    if (workflow != null && workflowId != null && !workflowId.isBlank() && !workflowRefs.isEmpty()) {
       updateScheduleTriggers(workflow, this.get(workflowId, Optional.empty(), false).getBody().getTriggers());
       setupTriggerDefaults(workflow);
       //TODO check Workflow status before applying change
@@ -231,9 +225,12 @@ public class WorkflowServiceImpl implements WorkflowService {
       // Filter out sensitive values
       DataAdapterUtil.filterParamSpecValueByFieldType(appliedWorkflow.getConfig(), appliedWorkflow.getParams(), FieldType.PASSWORD.value());
       return ResponseEntity.ok(appliedWorkflow);
-    } else {
+    } else if (workflow != null && team.isPresent()){
       workflow.setId(null);
-      return this.create(workflow, Optional.empty());
+      return this.create(workflow, team.get());
+    } else {
+      // TODO: make this valid to apply creating without TeamID
+      throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
     }
   }
 
@@ -365,7 +362,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     workflow.setId(null);
     workflow.setName(workflow.getName() + " (duplicate)");
     Optional<RelationshipEntity> relEntity = relationshipService.getRelationship(RelationshipRef.WORKFLOW, workflowId, RelationshipType.BELONGSTO);
-    return this.create(workflow, Optional.of(relEntity.get().getToRef()));
+    return this.create(workflow, relEntity.get().getToRef());
   }
 
   /*
