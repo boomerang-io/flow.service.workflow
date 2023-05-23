@@ -147,37 +147,40 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
    */
   protected ResponseEntity<WorkflowRun> internalSubmit(WorkflowRunSubmitRequest request,
       boolean start) {
-    if (canRunWithQuotas(request.getWorkflowRef())) {
-    // Set Workflow & Task Debug
-    if (request.getDebug() == null) {
-      boolean enableDebug = false;
-      String setting =
-          this.settingsService.getSettingConfig("controller", "enable.debug").getValue();
-      if (setting != null) {
-        enableDebug = Boolean.parseBoolean(setting);
+    Optional<RelationshipEntity> teamRelationship = relationshipService.getRelationship(
+        RelationshipRef.WORKFLOW, request.getWorkflowRef(), RelationshipType.BELONGSTO);
+    if (teamRelationship.isPresent() && canRunWithQuotas(teamRelationship.get().getToRef(), request.getWorkflowRef())) {
+      // Set Workflow & Task Debug
+      if (request.getDebug() == null) {
+        boolean enableDebug = false;
+        String setting =
+            this.settingsService.getSettingConfig("controller", "enable.debug").getValue();
+        if (setting != null) {
+          enableDebug = Boolean.parseBoolean(setting);
+        }
+        request.setDebug(Boolean.valueOf(enableDebug));
       }
-      request.setDebug(Boolean.valueOf(enableDebug));
-    }
-    // Set Workflow Timeout
-    if (request.getTimeout() == null) {
-      String setting =
-          this.settingsService.getSettingConfig("controller", "task.timeout.configuration").getValue();
-      if (setting != null) {
-        request.setTimeout(Long.valueOf(setting));
+      // Set Workflow Timeout
+      if (request.getTimeout() == null) {
+        String setting = this.settingsService
+            .getSettingConfig("controller", "task.timeout.configuration").getValue();
+        if (setting != null) {
+          request.setTimeout(Long.valueOf(setting));
+        }
       }
-    }
-    //TODO: figure out the storing of initiated by. Is that just a relationship?
-    
-    WorkflowRun wfRun = engineClient.submitWorkflowRun(request, start);
-     // TODO: FUTURE - Creates the relationship with the Workflow
-//       relationshipService.addRelationshipRef(RelationshipRef.WORKFLOWRUN, wfRun.getId(), RelationshipType.EXECUTIONOF, RelationshipRef.WORKFLOW, Optional.of(workflowId));
-    
-    // Creates the owning relationship with the team that owns the Workflow
-    Optional<RelationshipEntity> relEntity = relationshipService.getRelationship(RelationshipRef.WORKFLOW, wfRun.getWorkflowRef(), RelationshipType.BELONGSTO);
-    relationshipService.addRelationshipRef(RelationshipRef.WORKFLOWRUN, wfRun.getId(), relEntity.get().getTo(), Optional.of(relEntity.get().getToRef()));
-    return ResponseEntity.ok(wfRun);
+      // TODO: figure out the storing of initiated by. Is that just a relationship?
+
+      WorkflowRun wfRun = engineClient.submitWorkflowRun(request, start);
+      // TODO: FUTURE - Creates the relationship with the Workflow
+      // relationshipService.addRelationshipRef(RelationshipRef.WORKFLOWRUN, wfRun.getId(),
+      // RelationshipType.EXECUTIONOF, RelationshipRef.WORKFLOW, Optional.of(workflowId));
+
+      // Creates the owning relationship with the team that owns the Workflow
+      relationshipService.addRelationshipRef(RelationshipRef.WORKFLOWRUN, wfRun.getId(),
+          teamRelationship.get().getTo(), Optional.of(teamRelationship.get().getToRef()));
+      return ResponseEntity.ok(wfRun);
     } else {
-      //TODO: make this better around exceeding quotas
+      // TODO: make this better around exceeding quotas
       throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
     }
   }
@@ -260,22 +263,17 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
   }
 
   /*
-   * Check if the quotas allow a Workflow to run
+   * Check if the Team Quotas allow a Workflow to run
    */
-  private boolean canRunWithQuotas(String workflowId) {
+  private boolean canRunWithQuotas(String teamId, String workflowId) {
     if (!settingsService.getSettingConfig("features", "workflowQuotas").getBooleanValue()) {
       return true;
     }
-
-    Optional<RelationshipEntity> relEntities = relationshipService.getRelationship(RelationshipRef.WORKFLOWRUN,
-        workflowId, RelationshipType.BELONGSTO);
-    if (relEntities.isPresent() && relEntities.get().getTo().equals(RelationshipRef.TEAM)) {
-      CurrentQuotas quotas = teamService.getQuotas(relEntities.get().getToRef()).getBody();
-      if (quotas.getCurrentConcurrentWorkflows() <= quotas.getMaxConcurrentWorkflows()
-          || quotas.getCurrentWorkflowExecutionMonthly() <= quotas
-              .getMaxWorkflowExecutionMonthly()) {
-        return true;
-      }
+    CurrentQuotas quotas = teamService.getQuotas(teamId).getBody();
+    if (quotas.getCurrentConcurrentWorkflows() <= quotas.getMaxConcurrentWorkflows()
+        || quotas.getCurrentWorkflowExecutionMonthly() <= quotas
+            .getMaxWorkflowExecutionMonthly()) {
+      return true;
     }
     return false;
   }
