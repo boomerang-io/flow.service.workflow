@@ -26,7 +26,7 @@ import com.slack.api.app_backend.SlackSignature.Verifier;
 import io.boomerang.security.AuthorizationException;
 import io.boomerang.security.model.Token;
 import io.boomerang.security.service.TokenService;
-import io.boomerang.v4.service.SettingsService;
+import io.boomerang.service.SettingsService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.impl.DefaultJwtParser;

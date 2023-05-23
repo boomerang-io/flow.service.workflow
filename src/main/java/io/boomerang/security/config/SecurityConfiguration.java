@@ -14,7 +14,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import io.boomerang.security.filters.AuthenticationFilter;
 import io.boomerang.security.service.TokenService;
-import io.boomerang.v4.service.SettingsService;
+import io.boomerang.service.SettingsService;
 
 @Configuration
 @EnableGlobalMethodSecurity(prePostEnabled = true, securedEnabled = true, proxyTargetClass = true)

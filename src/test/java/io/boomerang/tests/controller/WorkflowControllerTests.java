@@ -29,6 +29,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import io.boomerang.controller.EventAndWebhookV2Controller;
 import io.boomerang.controller.WorkflowController;
 import io.boomerang.misc.FlowTests;
 import io.boomerang.model.FlowWorkflowRevision;
@@ -50,7 +51,6 @@ import io.boomerang.mongo.model.WorkflowConfiguration;
 import io.boomerang.mongo.model.WorkflowScope;
 import io.boomerang.mongo.model.WorkflowStatus;
 import io.boomerang.util.DataAdapterUtil.FieldType;
-import io.boomerang.v4.controller.EventAndWebhookV2Controller;
 import io.boomerang.v4.model.ref.WorkflowAbstractParam;
 
 

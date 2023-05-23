@@ -23,10 +23,10 @@ import org.quartz.spi.OperableTrigger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.quartz.SchedulerFactoryBean;
 import org.springframework.stereotype.Component;
+import io.boomerang.service.ScheduleExecuteJob;
+import io.boomerang.service.ScheduleService;
 import io.boomerang.v4.data.entity.WorkflowScheduleEntity;
 import io.boomerang.v4.model.CronValidationResponse;
-import io.boomerang.v4.service.ExecuteScheduleJob;
-import io.boomerang.v4.service.ScheduleService;
 
 @Component
 public class QuartzSchedulerService {
@@ -60,7 +60,7 @@ public class QuartzSchedulerService {
       String workflowId = schedule.getWorkflowRef();
       Scheduler scheduler = schedulerFactoryBean.getScheduler();
       JobDetail jobDetail =
-          JobBuilder.newJob(ExecuteScheduleJob.class).withIdentity(scheduleId, workflowId).build();         
+          JobBuilder.newJob(ScheduleExecuteJob.class).withIdentity(scheduleId, workflowId).build();         
 //    TODO: determine if we add a calendar entry for excluded dates
     CronScheduleBuilder cronScheduleBuilder =
         CronScheduleBuilder.cronSchedule(cronString).inTimeZone(timeZone);
@@ -86,7 +86,7 @@ public class QuartzSchedulerService {
     String scheduleId = schedule.getId();
     String workflowId = schedule.getWorkflowRef();
     Scheduler scheduler = schedulerFactoryBean.getScheduler();
-    JobDetail jobDetail = JobBuilder.newJob(ExecuteScheduleJob.class).withIdentity(scheduleId, workflowId).build();
+    JobDetail jobDetail = JobBuilder.newJob(ScheduleExecuteJob.class).withIdentity(scheduleId, workflowId).build();
     SimpleScheduleBuilder simpleScheduleBuilder = SimpleScheduleBuilder.simpleSchedule().withRepeatCount(0);
     SimpleTrigger trigger = TriggerBuilder.newTrigger().withIdentity(scheduleId, workflowId).startAt(schedule.getDateSchedule())
         .withSchedule(simpleScheduleBuilder).build();

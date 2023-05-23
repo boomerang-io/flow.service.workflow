@@ -33,6 +33,9 @@ import io.boomerang.error.BoomerangError;
 import io.boomerang.error.BoomerangException;
 import io.boomerang.security.model.Token;
 import io.boomerang.security.model.TokenScope;
+import io.boomerang.service.RelationshipService;
+import io.boomerang.service.TeamService;
+import io.boomerang.service.WorkflowService;
 import io.boomerang.v4.data.entity.UserEntity;
 import io.boomerang.v4.data.repository.UserRepository;
 import io.boomerang.v4.model.OneTimeCode;
@@ -47,9 +50,6 @@ import io.boomerang.v4.model.enums.RelationshipRef;
 import io.boomerang.v4.model.enums.RelationshipType;
 import io.boomerang.v4.model.enums.TeamStatus;
 import io.boomerang.v4.model.ref.Workflow;
-import io.boomerang.v4.service.RelationshipService;
-import io.boomerang.v4.service.TeamService;
-import io.boomerang.v4.service.WorkflowService;
 
 @Service
 public class IdentityServiceImpl implements IdentityService {

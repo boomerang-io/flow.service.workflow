@@ -32,6 +32,9 @@ import io.boomerang.security.model.CreateTokenResponse;
 import io.boomerang.security.model.Token;
 import io.boomerang.security.model.TokenScope;
 import io.boomerang.security.model.TokenTypePrefix;
+import io.boomerang.service.RelationshipService;
+import io.boomerang.service.TeamService;
+import io.boomerang.service.WorkflowService;
 import io.boomerang.v4.data.entity.TokenEntity;
 import io.boomerang.v4.data.entity.UserEntity;
 import io.boomerang.v4.data.entity.ref.ActionEntity;
@@ -39,9 +42,6 @@ import io.boomerang.v4.data.repository.TokenRepository;
 import io.boomerang.v4.model.UserType;
 import io.boomerang.v4.model.enums.RelationshipRef;
 import io.boomerang.v4.model.enums.RelationshipType;
-import io.boomerang.v4.service.RelationshipService;
-import io.boomerang.v4.service.TeamService;
-import io.boomerang.v4.service.WorkflowService;
 
 @Service
 public class TokenServiceImpl implements TokenService {
