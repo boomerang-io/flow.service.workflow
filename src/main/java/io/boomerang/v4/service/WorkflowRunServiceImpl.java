@@ -142,6 +142,8 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
    * Submit WorkflowRun Internally
    * 
    * Caution: bypasses the authN and authZ and Relationship checks
+   * 
+   * Used by ExecuteScheduleJob
    */
   protected ResponseEntity<WorkflowRun> internalSubmit(WorkflowRunSubmitRequest request,
       boolean start) {

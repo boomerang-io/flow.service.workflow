@@ -46,9 +46,9 @@ public class ExecuteScheduleJob extends QuartzJobBean {
     }
 
     WorkflowRunServiceImpl workflowRunService = applicationContext.getBean(WorkflowRunServiceImpl.class);
-    ScheduleService workflowScheduleService = applicationContext.getBean(ScheduleService.class);
+    ScheduleServiceImpl workflowScheduleService = applicationContext.getBean(ScheduleServiceImpl.class);
     
-    WorkflowSchedule schedule = workflowScheduleService.get(jobDetail.getKey().getName());
+    WorkflowSchedule schedule = workflowScheduleService.internalGet(jobDetail.getKey().getName());
     if (schedule != null) {
       if (schedule.getType().equals(WorkflowScheduleType.runOnce)) {
         logger.info("Executing runOnce schedule: {}, and marking as completed.", schedule.getId());

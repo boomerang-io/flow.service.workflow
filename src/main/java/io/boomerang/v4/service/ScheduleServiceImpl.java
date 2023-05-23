@@ -89,6 +89,21 @@ public class ScheduleServiceImpl implements ScheduleService {
   }
   
   /*
+   * Internal Get
+   * 
+   * Used by ExecuteScheduleJob
+   */
+  protected WorkflowSchedule internalGet(String scheduleId) {
+    final Optional<WorkflowScheduleEntity> scheduleEntity = scheduleRepository.findById(scheduleId);
+    if (scheduleEntity.isPresent()) {
+        return convertScheduleEntityToModel(scheduleEntity.get());
+    }
+    //TODO change error
+    throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
+  }
+  
+  
+  /*
    * Provides an all encompassing schedule retrieval method with optional filters. Ignores deleted schedules.
    * 
    * @return list of Workflow Schedules
@@ -197,7 +212,7 @@ public class ScheduleServiceImpl implements ScheduleService {
    * 
    * @return the single returnable schedule.
    */
-  private WorkflowSchedule convertScheduleEntityToModel(WorkflowScheduleEntity entity) {
+  protected WorkflowSchedule convertScheduleEntityToModel(WorkflowScheduleEntity entity) {
     try {
       return new WorkflowSchedule(entity, this.taskScheduler.getNextTriggerDate(entity));
     } catch (Exception e) {
@@ -436,9 +451,10 @@ public class ScheduleServiceImpl implements ScheduleService {
   
   /*
    * Disable a specific schedule
+   * 
+   * Used by ExecuteScheduleJob
    */
-  @Override
-  public ResponseEntity<?> complete(String scheduleId) {
+  protected ResponseEntity<?> complete(String scheduleId) {
     Optional<WorkflowScheduleEntity> schedule = scheduleRepository.findById(scheduleId);
     if (schedule.isPresent() && !WorkflowScheduleStatus.deleted.equals(schedule.get().getStatus())) {
       schedule.get().setStatus(WorkflowScheduleStatus.completed);

@@ -26,8 +26,6 @@ public interface ScheduleService {
   WorkflowSchedule update(String scheduleId,
       WorkflowSchedule patchSchedule);
 
-  ResponseEntity<?> complete(String scheduleId);
-
   CronValidationResponse validateCron(String cronString);
 
   List<Date> getCalendarForDates(String scheduleId, Date fromDate, Date toDate);
