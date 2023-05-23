@@ -25,8 +25,8 @@ public interface ScheduleService {
   WorkflowSchedule create(WorkflowSchedule schedule, String teamId);
 
   ResponseEntity<?> delete(String scheduleId);
-  
-  WorkflowSchedule apply(WorkflowSchedule request);
+
+  WorkflowSchedule apply(WorkflowSchedule request, Optional<String> team);
 
   CronValidationResponse validateCron(String cronString);
 

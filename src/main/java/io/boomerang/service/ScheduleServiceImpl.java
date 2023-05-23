@@ -267,8 +267,7 @@ public class ScheduleServiceImpl implements ScheduleService {
    * 
    * @return a list of dates for a single Schedule Calendar
    */
-  @Override
-  public List<Date> getCalendarForDates(final String scheduleId, Date fromDate, Date toDate) {
+  private List<Date> getCalendarForDates(final String scheduleId, Date fromDate, Date toDate) {
     final WorkflowScheduleEntity scheduleEntity = scheduleRepository.findById(scheduleId).orElse(null);
     if (scheduleEntity != null) {
       try {
@@ -290,12 +289,11 @@ public class ScheduleServiceImpl implements ScheduleService {
    * TODO: update this to match the /apply design
    */
   @Override
-  public WorkflowSchedule apply(final WorkflowSchedule request) {
-    if (request != null) {
-      if (request.getId() == null || request.getId().isEmpty()) {
-        this.create(request, null)
-      }
-      final Optional<WorkflowScheduleEntity> optScheduleEntity = scheduleRepository.findById(scheduleId);
+  public WorkflowSchedule apply(final WorkflowSchedule request, Optional<String> team) {
+    if (request != null && request.getId() != null && !request.getId().isBlank()
+        && !request.getId().isEmpty()) {
+      final Optional<WorkflowScheduleEntity> optScheduleEntity =
+          scheduleRepository.findById(request.getId());
       if (optScheduleEntity.isPresent()) {
         WorkflowScheduleEntity scheduleEntity = optScheduleEntity.get();
         /*
@@ -303,19 +301,22 @@ public class ScheduleServiceImpl implements ScheduleService {
          */
         WorkflowScheduleStatus previousStatus = scheduleEntity.getStatus();
         BeanUtils.copyProperties(request, scheduleEntity, "id", "creationDate");
-        
+
         /*
          * Complex Status checking to determine what can and can't be enabled
          */
-        //Check if job is trying to be enabled with date in the past
+        // Check if job is trying to be enabled with date in the past
         WorkflowScheduleStatus newStatus = scheduleEntity.getStatus();
-        Workflow workflow = workflowService.get(scheduleEntity.getWorkflowRef(), Optional.empty(), false).getBody();
+        Workflow workflow =
+            workflowService.get(scheduleEntity.getWorkflowRef(), Optional.empty(), false).getBody();
         Boolean enableJob = true;
         if (!previousStatus.equals(newStatus)) {
-          if (WorkflowScheduleStatus.active.equals(previousStatus) && WorkflowScheduleStatus.inactive.equals(newStatus)) {
+          if (WorkflowScheduleStatus.active.equals(previousStatus)
+              && WorkflowScheduleStatus.inactive.equals(newStatus)) {
             scheduleEntity.setStatus(WorkflowScheduleStatus.inactive);
             enableJob = false;
-          } else if (WorkflowScheduleStatus.inactive.equals(previousStatus) && WorkflowScheduleStatus.active.equals(newStatus)) {
+          } else if (WorkflowScheduleStatus.inactive.equals(previousStatus)
+              && WorkflowScheduleStatus.active.equals(newStatus)) {
             if (workflow != null && !workflow.getTriggers().getScheduler().getEnable()) {
               scheduleEntity.setStatus(WorkflowScheduleStatus.trigger_disabled);
               enableJob = false;
@@ -323,7 +324,8 @@ public class ScheduleServiceImpl implements ScheduleService {
             if (WorkflowScheduleType.runOnce.equals(scheduleEntity.getType())) {
               Date currentDate = new Date();
               if (scheduleEntity.getDateSchedule().getTime() < currentDate.getTime()) {
-                logger.info("Cannot enable schedule (" + scheduleEntity.getId() + ") as it is in the past.");
+                logger.info("Cannot enable schedule (" + scheduleEntity.getId()
+                    + ") as it is in the past.");
                 scheduleEntity.setStatus(WorkflowScheduleStatus.error);
                 scheduleRepository.save(scheduleEntity);
                 try {
@@ -335,6 +337,7 @@ public class ScheduleServiceImpl implements ScheduleService {
               }
             }
           }
+
         } else {
           if (WorkflowScheduleStatus.inactive.equals(newStatus)) {
             enableJob = false;
@@ -343,9 +346,17 @@ public class ScheduleServiceImpl implements ScheduleService {
         scheduleRepository.save(scheduleEntity);
         createOrUpdateSchedule(scheduleEntity, enableJob);
         return convertScheduleEntityToModel(scheduleEntity);
+      } else {
+        // TODO: make this valid to apply creating without TeamID
+        throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
       }
+    } else if (request != null && team.isPresent()) {
+      request.setId(null);
+      return this.create(request, team.get());
+    } else {
+      // TODO: make this valid to apply creating without TeamID
+      throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
     }
-    return null;
   }
 
   /*

@@ -95,8 +95,11 @@ public class SchedulesV2Controller {
   
   @PutMapping(value = "/")
   @Operation(summary = "Apply a Schedule.")
-  public WorkflowSchedule updateSchedule(@RequestBody WorkflowSchedule schedule) {
-    return workflowScheduleService.apply(schedule);
+  public WorkflowSchedule updateSchedule(@RequestBody WorkflowSchedule schedule,
+      @Parameter(name = "team", description = "Team as owner reference. Required if using apply to create new.",
+      example = "63d3656ca845957db7d25ef0,63a3e732b0496509a7f1d763",
+      required = false) @RequestParam(required = false) Optional<String> team) {
+    return workflowScheduleService.apply(schedule, team);
   }
   
   @DeleteMapping(value = "/{scheduleId}")
