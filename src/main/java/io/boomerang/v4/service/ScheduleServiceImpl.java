@@ -271,6 +271,8 @@ public class ScheduleServiceImpl implements ScheduleService {
    * Update a schedule based on the payload and the Schedules Id.
    * 
    * @return echos the updated schedule
+   * 
+   * TODO: update this to match the /apply design
    */
   @Override
   public WorkflowSchedule update(final String scheduleId, final WorkflowSchedule patchSchedule) {

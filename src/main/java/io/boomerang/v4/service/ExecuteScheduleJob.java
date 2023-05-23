@@ -1,4 +1,4 @@
-package io.boomerang.quartz;
+package io.boomerang.v4.service;
 
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
@@ -9,16 +9,15 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.scheduling.quartz.QuartzJobBean;
 import org.springframework.scheduling.quartz.SchedulerFactoryBean;
+import io.boomerang.quartz.QuartzConfiguration;
 import io.boomerang.v4.model.WorkflowSchedule;
 import io.boomerang.v4.model.enums.WorkflowScheduleType;
 import io.boomerang.v4.model.ref.WorkflowRunSubmitRequest;
-import io.boomerang.v4.service.ScheduleService;
-import io.boomerang.v4.service.WorkflowRunService;
 
 @PersistJobDataAfterExecution
-public class WorkflowExecuteJob extends QuartzJobBean {
+public class ExecuteScheduleJob extends QuartzJobBean {
 
-  private static final Logger logger = LoggerFactory.getLogger(WorkflowExecuteJob.class);
+  private static final Logger logger = LoggerFactory.getLogger(ExecuteScheduleJob.class);
 
   private ApplicationContext applicationContext;
 
@@ -46,7 +45,7 @@ public class WorkflowExecuteJob extends QuartzJobBean {
       logger.info("applicationContext is null");
     }
 
-    WorkflowRunService workflowRunService = applicationContext.getBean(WorkflowRunService.class);
+    WorkflowRunServiceImpl workflowRunService = applicationContext.getBean(WorkflowRunServiceImpl.class);
     ScheduleService workflowScheduleService = applicationContext.getBean(ScheduleService.class);
     
     WorkflowSchedule schedule = workflowScheduleService.get(jobDetail.getKey().getName());
@@ -62,7 +61,7 @@ public class WorkflowExecuteJob extends QuartzJobBean {
       request.setParams(request.getParams());
       request.setTrigger("schedule");
       
-      workflowRunService.submit(request, true);
+      workflowRunService.internalSubmit(request, true);
     }
     }
 }

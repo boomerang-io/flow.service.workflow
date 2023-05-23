@@ -130,37 +130,52 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
         Optional.of(List.of(request.getWorkflowRef())), Optional.of(RelationshipType.BELONGSTO), Optional.empty(), Optional.empty());
     // Check if Workflow can run (Quotas & Triggers)
     // TODO: check triggers allow submission
-    if (!workflowRefs.isEmpty() && canRunWithQuotas(request.getWorkflowRef())) {
-      // Set Workflow & Task Debug
-      if (request.getDebug() == null) {
-        boolean enableDebug = false;
-        String setting =
-            this.settingsService.getSettingConfig("controller", "enable.debug").getValue();
-        if (setting != null) {
-          enableDebug = Boolean.parseBoolean(setting);
-        }
-        request.setDebug(Boolean.valueOf(enableDebug));
-      }
-      // Set Workflow Timeout
-      if (request.getTimeout() == null) {
-        String setting =
-            this.settingsService.getSettingConfig("controller", "task.timeout.configuration").getValue();
-        if (setting != null) {
-          request.setTimeout(Long.valueOf(setting));
-        }
-      }
-      //TODO: figure out the storing of initiated by. Is that just a relationship?
-      
-      WorkflowRun wfRun = engineClient.submitWorkflowRun(request, start);
-       // TODO: FUTURE - Creates the relationship with the Workflow
-//       relationshipService.addRelationshipRef(RelationshipRef.WORKFLOWRUN, wfRun.getId(), RelationshipType.EXECUTIONOF, RelationshipRef.WORKFLOW, Optional.of(workflowId));
-      
-      // Creates the owning relationship with the team that owns the Workflow
-      Optional<RelationshipEntity> relEntity = relationshipService.getRelationship(RelationshipRef.WORKFLOW, wfRun.getWorkflowRef(), RelationshipType.BELONGSTO);
-      relationshipService.addRelationshipRef(RelationshipRef.WORKFLOWRUN, wfRun.getId(), relEntity.get().getTo(), Optional.of(relEntity.get().getToRef()));
-      return ResponseEntity.ok(wfRun);
+    if (!workflowRefs.isEmpty()) {
+      return this.internalSubmit(request, start);
     } else {
       //TODO: do we want to return invalid ref or unauthorized
+      throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
+    }
+  }
+  
+  /*
+   * Submit WorkflowRun Internally
+   * 
+   * Caution: bypasses the authN and authZ and Relationship checks
+   */
+  protected ResponseEntity<WorkflowRun> internalSubmit(WorkflowRunSubmitRequest request,
+      boolean start) {
+    if (canRunWithQuotas(request.getWorkflowRef())) {
+    // Set Workflow & Task Debug
+    if (request.getDebug() == null) {
+      boolean enableDebug = false;
+      String setting =
+          this.settingsService.getSettingConfig("controller", "enable.debug").getValue();
+      if (setting != null) {
+        enableDebug = Boolean.parseBoolean(setting);
+      }
+      request.setDebug(Boolean.valueOf(enableDebug));
+    }
+    // Set Workflow Timeout
+    if (request.getTimeout() == null) {
+      String setting =
+          this.settingsService.getSettingConfig("controller", "task.timeout.configuration").getValue();
+      if (setting != null) {
+        request.setTimeout(Long.valueOf(setting));
+      }
+    }
+    //TODO: figure out the storing of initiated by. Is that just a relationship?
+    
+    WorkflowRun wfRun = engineClient.submitWorkflowRun(request, start);
+     // TODO: FUTURE - Creates the relationship with the Workflow
+//       relationshipService.addRelationshipRef(RelationshipRef.WORKFLOWRUN, wfRun.getId(), RelationshipType.EXECUTIONOF, RelationshipRef.WORKFLOW, Optional.of(workflowId));
+    
+    // Creates the owning relationship with the team that owns the Workflow
+    Optional<RelationshipEntity> relEntity = relationshipService.getRelationship(RelationshipRef.WORKFLOW, wfRun.getWorkflowRef(), RelationshipType.BELONGSTO);
+    relationshipService.addRelationshipRef(RelationshipRef.WORKFLOWRUN, wfRun.getId(), relEntity.get().getTo(), Optional.of(relEntity.get().getToRef()));
+    return ResponseEntity.ok(wfRun);
+    } else {
+      //TODO: make this better around exceeding quotas
       throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
     }
   }
