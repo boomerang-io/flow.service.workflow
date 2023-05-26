@@ -182,6 +182,16 @@ public class RelationshipServiceImpl implements RelationshipService {
   }
   
   /*
+   * Generates the TeamRefs for the current security scope with no elevated permissions.
+   * 
+   * This is used to return the /mine used by the web to load the Teams selection.
+   */
+  @Override
+  public List<String> getMyTeamRefs() {
+    return getFilteredRefs(Optional.empty(), Optional.empty(), Optional.of(RelationshipType.MEMBEROF), Optional.of(RelationshipRef.TEAM), Optional.empty(), false).stream().map(RelationshipEntity::getToRef).collect(Collectors.toList());
+  }
+  
+  /*
    * Generates the FromRefs that the current security scope has access to, based on a specific type and optional lists of typeRefs, scopes, and teamIds 
    * 
    * @param RelationshipRef fromRef
@@ -201,7 +211,7 @@ public class RelationshipServiceImpl implements RelationshipService {
   @Override
   public List<String> getFilteredFromRefs(Optional<RelationshipRef> from, Optional<List<String>> fromRefs, Optional<RelationshipType> type, Optional<RelationshipRef> to, 
       Optional<List<String>> toRefs) {
-    return getFilteredRefs(from, fromRefs, type, to, toRefs).stream().map(RelationshipEntity::getFromRef).collect(Collectors.toList());
+    return getFilteredRefs(from, fromRefs, type, to, toRefs, true).stream().map(RelationshipEntity::getFromRef).collect(Collectors.toList());
   }
   
   /*
@@ -224,11 +234,11 @@ public class RelationshipServiceImpl implements RelationshipService {
   @Override
   public List<String> getFilteredToRefs(Optional<RelationshipRef> from, Optional<List<String>> fromRefs, Optional<RelationshipType> type, Optional<RelationshipRef> to, 
       Optional<List<String>> toRefs) {
-    return getFilteredRefs(from, fromRefs, type, to, toRefs).stream().map(RelationshipEntity::getToRef).collect(Collectors.toList());
+    return getFilteredRefs(from, fromRefs, type, to, toRefs, true).stream().map(RelationshipEntity::getToRef).collect(Collectors.toList());
   }
   
   private List<RelationshipEntity> getFilteredRefs(Optional<RelationshipRef> from, Optional<List<String>> fromRefs, Optional<RelationshipType> type, Optional<RelationshipRef> to, 
-      Optional<List<String>> toRefs) {
+      Optional<List<String>> toRefs, boolean elevate) {
     
     //TODO Validation that we are not trying to get a relationship between two of the same objects or provide IDs with no context.
 //    if (from.isEmpty() && fromRefs.isPresent()) {
@@ -249,7 +259,7 @@ public class RelationshipServiceImpl implements RelationshipService {
     
     // If User is Admin provide global access
     // MEMBEROF requests are ignored as we only want to return that users Teams and as such don't elevat the scope
-    if ((!RelationshipType.MEMBEROF.equals(type.get())) && (TokenScope.user.equals(accessScope) || TokenScope.session.equals(accessScope)) && identityService.isCurrentUserAdmin()) {
+    if (elevate && identityService.isCurrentUserAdmin()) {
       LOGGER.info("RelationshipFilter() - Identity is Admin - Elevating permissions.");
       accessScope = TokenScope.global;
     }

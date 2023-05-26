@@ -16,6 +16,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import io.boomerang.security.interceptors.AuthScope;
+import io.boomerang.security.model.TokenAccess;
+import io.boomerang.security.model.TokenObject;
+import io.boomerang.security.model.TokenScope;
 import io.boomerang.service.TeamService;
 import io.boomerang.v4.data.model.CurrentQuotas;
 import io.boomerang.v4.data.model.Quotas;
@@ -38,7 +42,27 @@ description = "Manage Teams, Team Members, Quotas, ApprovalGroups and Parameters
 public class TeamV2Controller {
 
   @Autowired
-  private TeamService teamService;  
+  private TeamService teamService;
+
+  @GetMapping(value = "/mine")
+//  @AuthScope(types = {TokenScope.session, TokenScope.user}, access = TokenAccess.read, object = TokenObject.team)
+  @Operation(summary = "Return all my teams")
+  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
+      @ApiResponse(responseCode = "400", description = "Bad Request")})
+  public Page<Team> getMyTeams(@Parameter(name = "labels",
+      description = "List of url encoded labels. For example Organization=Boomerang,customKey=test would be encoded as Organization%3DBoomerang,customKey%3Dtest)",
+      required = false) @RequestParam(required = false) Optional<List<String>> labels,
+      @Parameter(name = "statuses", description = "List of statuses to filter for. Defaults to all.",
+          example = "active,inactive",
+          required = false) @RequestParam(required = false) Optional<List<String>> statuses,
+      @Parameter(name = "limit", description = "Result Size", example = "10",
+      required = true) @RequestParam(required = false) Optional<Integer> limit,
+  @Parameter(name = "page", description = "Page Number", example = "0",
+      required = true) @RequestParam(defaultValue = "0") Optional<Integer> page,
+  @Parameter(name = "sort", description = "Ascending (ASC) or Descending (DESC) sort on creationDate", example = "ASC",
+  required = true) @RequestParam(defaultValue = "ASC") Optional<Direction> sort) {
+    return teamService.mine(page, limit, sort, labels, statuses);
+  }
 
   @GetMapping(value = "/query")
 //  @AuthenticationScope(scopes = {TokenPermission.global})

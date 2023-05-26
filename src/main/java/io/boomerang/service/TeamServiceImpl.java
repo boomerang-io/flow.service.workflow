@@ -196,6 +196,21 @@ public class TeamServiceImpl implements TeamService {
 
     return ResponseEntity.ok(convertTeamEntityToTeam(entity.get()));
   }
+  
+  /*
+   * Query for Teams
+   * 
+   * Returns Teams plus each Teams UserRefs, WorkflowRefs, and Quotas
+   */
+  @Override
+  public Page<Team> mine(Optional<Integer> queryPage, Optional<Integer> queryLimit, Optional<Direction> querySort, Optional<List<String>> queryLabels,
+      Optional<List<String>> queryStatus) {    
+    List<String> teamRefs = relationshipService.getMyTeamRefs();
+    
+    LOGGER.debug("TeamRefs: " + teamRefs.toString());
+
+    return findByCriteria(queryPage, queryLimit, querySort, queryLabels, queryStatus, teamRefs);
+  }
 
   /*
    * Query for Teams
@@ -204,18 +219,23 @@ public class TeamServiceImpl implements TeamService {
    */
   @Override
   public Page<Team> query(Optional<Integer> queryPage, Optional<Integer> queryLimit, Optional<Direction> querySort, Optional<List<String>> queryLabels,
-      Optional<List<String>> queryStatus, Optional<List<String>> queryIds) {
+      Optional<List<String>> queryStatus, Optional<List<String>> queryIds) {    
+    List<String> teamRefs = relationshipService.getFilteredToRefs(Optional.empty(), Optional.empty(),
+        Optional.of(RelationshipType.MEMBEROF), Optional.of(RelationshipRef.TEAM), queryIds);
+    
+    LOGGER.debug("TeamRefs: " + teamRefs.toString());
+
+    return findByCriteria(queryPage, queryLimit, querySort, queryLabels, queryStatus, teamRefs);
+  }
+
+  private Page<Team> findByCriteria(Optional<Integer> queryPage, Optional<Integer> queryLimit, Optional<Direction> querySort, 
+      Optional<List<String>> queryLabels, Optional<List<String>> queryStatus, List<String> teamRefs) {
     Pageable pageable = Pageable.unpaged();
     final Sort sort = Sort.by(new Order(querySort.orElse(Direction.ASC), "creationDate"));
     if (queryLimit.isPresent()) {
       pageable = PageRequest.of(queryPage.get(), queryLimit.get(), sort);
     }
     
-    List<String> teamRefs = relationshipService.getFilteredToRefs(Optional.empty(), Optional.empty(),
-        Optional.of(RelationshipType.MEMBEROF), Optional.of(RelationshipRef.TEAM), queryIds);
-    
-    LOGGER.debug("TeamRefs: " + teamRefs.toString());
-
     List<Criteria> criteriaList = new ArrayList<>();
     if (queryLabels.isPresent()) {
       queryLabels.get().stream().forEach(l -> {
@@ -260,6 +280,7 @@ public class TeamServiceImpl implements TeamService {
 
     List<TeamEntity> teamEntities = mongoTemplate.find(query, TeamEntity.class);
 
+    LOGGER.debug("Found " + teamEntities.size() + " teams.");
     List<Team> teams = new LinkedList<>();
     if (!teamEntities.isEmpty()) {
       teamEntities.forEach(teamEntity -> teams.add(convertTeamEntityToTeam(teamEntity)));

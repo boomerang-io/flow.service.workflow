@@ -30,4 +30,6 @@ public interface RelationshipService {
 
   Optional<String> getRelationshipRef(RelationshipRef fromType, String fromRef,
       RelationshipType relationship);
+
+  List<String> getMyTeamRefs();
 }

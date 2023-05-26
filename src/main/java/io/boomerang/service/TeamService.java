@@ -60,4 +60,8 @@ public interface TeamService {
       ApproverGroupRequest createApproverGroupRequest);
 
   ResponseEntity<ApproverGroup> updateApproverGroup(String teamId, ApproverGroupRequest request);
+
+  Page<Team> mine(Optional<Integer> queryPage, Optional<Integer> queryLimit,
+      Optional<Direction> querySort, Optional<List<String>> queryLabels,
+      Optional<List<String>> queryStatus);
 }
