@@ -271,7 +271,7 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
     }
     CurrentQuotas quotas = teamService.getQuotas(teamId).getBody();
     if (quotas.getCurrentConcurrentWorkflows() <= quotas.getMaxConcurrentWorkflows()
-        || quotas.getCurrentWorkflowExecutionMonthly() <= quotas
+        || quotas.getCurrentRunTotalDuration() <= quotas
             .getMaxWorkflowExecutionMonthly()) {
       return true;
     }

@@ -25,8 +25,14 @@ public interface TeamService {
 
   ResponseEntity<Team> get(String teamId);
 
-  Page<Team> query(Optional<Integer> page, Optional<Integer> limit, Optional<Direction> sort, Optional<List<String>> labels,
-      Optional<List<String>> status, Optional<List<String>> refs);
+  Page<Team> mine(Optional<Integer> queryPage, Optional<Integer> queryLimit,
+      Optional<Direction> queryOrder, Optional<String> querySort,
+      Optional<List<String>> queryLabels, Optional<List<String>> queryStatus);
+
+  Page<Team> query(Optional<Integer> queryPage, Optional<Integer> queryLimit,
+      Optional<Direction> queryOrder, Optional<String> querySort,
+      Optional<List<String>> queryLabels, Optional<List<String>> queryStatus,
+      Optional<List<String>> queryIds);
 
   ResponseEntity<Void> enable(String teamId);
 
@@ -37,11 +43,11 @@ public interface TeamService {
   ResponseEntity<List<UserSummary>> removeMembers(String teamId, TeamRequest request);
 
   ResponseEntity<AbstractParam> createParameter(String teamId, AbstractParam parameter);
-  
+
   ResponseEntity<Void> deleteParameter(String teamId, String key);
 
   ResponseEntity<List<AbstractParam>> getParameters(String teamId);
-  
+
   ResponseEntity<AbstractParam> updateParameter(String teamId, AbstractParam parameter);
 
   ResponseEntity<CurrentQuotas> getQuotas(String teamId);
@@ -60,8 +66,4 @@ public interface TeamService {
       ApproverGroupRequest createApproverGroupRequest);
 
   ResponseEntity<ApproverGroup> updateApproverGroup(String teamId, ApproverGroupRequest request);
-
-  Page<Team> mine(Optional<Integer> queryPage, Optional<Integer> queryLimit,
-      Optional<Direction> querySort, Optional<List<String>> queryLabels,
-      Optional<List<String>> queryStatus);
 }

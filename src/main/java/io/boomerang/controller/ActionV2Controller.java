@@ -87,7 +87,7 @@ public class ActionV2Controller {
           required = true) @RequestParam(defaultValue = "0") int page,
       @Parameter(name = "order", description = "Ascending or Descending (default) order", example = "0",
       required = false) @RequestParam(defaultValue = "DESC") Optional<Direction> order,
-      @Parameter(name = "sort", description = "The element to sort onr", example = "0",
+      @Parameter(name = "sort", description = "The element to sort on", example = "0",
       required = false) @RequestParam(defaultValue = "creationDate") Optional<String> sort,
       @Parameter(name = "fromDate", description = "The unix timestamp / date to search from in milliseconds since epoch", example = "1677589200000",
       required = false) @RequestParam Optional<Long> fromDate,

@@ -6,8 +6,9 @@ import org.springframework.beans.BeanUtils;
 public class CurrentQuotas extends Quotas {
   
   private Integer currentWorkflowCount;
+  private Integer currentRuns;
   private Integer currentConcurrentRuns;
-  private Integer currentRunDuration;
+  private Integer currentRunTotalDuration;
   private Integer currentPersistentStorage;
   private Date monthlyResetDate;
   
@@ -23,23 +24,29 @@ public class CurrentQuotas extends Quotas {
   public void setCurrentWorkflowCount(Integer currentWorkflowCount) {
     this.currentWorkflowCount = currentWorkflowCount;
   }
+  public Integer getCurrentRuns() {
+    return currentRuns;
+  }
+  public void setCurrentRuns(Integer currentRuns) {
+    this.currentRuns = currentRuns;
+  }
   public Integer getCurrentConcurrentWorkflows() {
     return currentConcurrentRuns;
   }
   public void setCurrentConcurrentWorkflows(Integer currentConcurrentWorkflows) {
     this.currentConcurrentRuns = currentConcurrentWorkflows;
   }
-  public Integer getCurrentWorkflowExecutionMonthly() {
-    return currentRunDuration;
+  public Integer getCurrentRunTotalDuration() {
+    return currentRunTotalDuration;
   }
-  public void setCurrentWorkflowExecutionMonthly(Integer currentWorkflowExecutionMonthly) {
-    this.currentRunDuration = currentWorkflowExecutionMonthly;
+  public void setCurrentRunTotalDuration(Integer currentRunDuration) {
+    this.currentRunTotalDuration = currentRunDuration;
   }
-  public Integer getCurrentWorkflowsPersistentStorage() {
+  public Integer getCurrentPersistentStorage() {
     return currentPersistentStorage;
   }
-  public void setCurrentWorkflowsPersistentStorage(Integer currentWorkflowsPersistentStorage) {
-    this.currentPersistentStorage = currentWorkflowsPersistentStorage;
+  public void setCurrentPersistentStorage(Integer currentPersistentStorage) {
+    this.currentPersistentStorage = currentPersistentStorage;
   }
   public Date getMonthlyResetDate() {
     return monthlyResetDate;

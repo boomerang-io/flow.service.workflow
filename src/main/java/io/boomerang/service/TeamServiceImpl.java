@@ -203,13 +203,13 @@ public class TeamServiceImpl implements TeamService {
    * Returns Teams plus each Teams UserRefs, WorkflowRefs, and Quotas
    */
   @Override
-  public Page<Team> mine(Optional<Integer> queryPage, Optional<Integer> queryLimit, Optional<Direction> querySort, Optional<List<String>> queryLabels,
+  public Page<Team> mine(Optional<Integer> queryPage, Optional<Integer> queryLimit, Optional<Direction> queryOrder, Optional<String> querySort, Optional<List<String>> queryLabels,
       Optional<List<String>> queryStatus) {    
     List<String> teamRefs = relationshipService.getMyTeamRefs();
     
     LOGGER.debug("TeamRefs: " + teamRefs.toString());
 
-    return findByCriteria(queryPage, queryLimit, querySort, queryLabels, queryStatus, teamRefs);
+    return findByCriteria(queryPage, queryLimit, queryOrder, querySort, queryLabels, queryStatus, teamRefs);
   }
 
   /*
@@ -218,20 +218,20 @@ public class TeamServiceImpl implements TeamService {
    * Returns Teams plus each Teams UserRefs, WorkflowRefs, and Quotas
    */
   @Override
-  public Page<Team> query(Optional<Integer> queryPage, Optional<Integer> queryLimit, Optional<Direction> querySort, Optional<List<String>> queryLabels,
+  public Page<Team> query(Optional<Integer> queryPage, Optional<Integer> queryLimit, Optional<Direction> queryOrder, Optional<String> querySort, Optional<List<String>> queryLabels,
       Optional<List<String>> queryStatus, Optional<List<String>> queryIds) {    
     List<String> teamRefs = relationshipService.getFilteredToRefs(Optional.empty(), Optional.empty(),
         Optional.of(RelationshipType.MEMBEROF), Optional.of(RelationshipRef.TEAM), queryIds);
     
     LOGGER.debug("TeamRefs: " + teamRefs.toString());
 
-    return findByCriteria(queryPage, queryLimit, querySort, queryLabels, queryStatus, teamRefs);
+    return findByCriteria(queryPage, queryLimit, queryOrder, querySort, queryLabels, queryStatus, teamRefs);
   }
 
-  private Page<Team> findByCriteria(Optional<Integer> queryPage, Optional<Integer> queryLimit, Optional<Direction> querySort, 
+  private Page<Team> findByCriteria(Optional<Integer> queryPage, Optional<Integer> queryLimit, Optional<Direction> queryOrder, Optional<String> querySort, 
       Optional<List<String>> queryLabels, Optional<List<String>> queryStatus, List<String> teamRefs) {
     Pageable pageable = Pageable.unpaged();
-    final Sort sort = Sort.by(new Order(querySort.orElse(Direction.ASC), "creationDate"));
+    final Sort sort = Sort.by(new Order(queryOrder.orElse(Direction.ASC), querySort.orElse("name")));
     if (queryLimit.isPresent()) {
       pageable = PageRequest.of(queryPage.get(), queryLimit.get(), sort);
     }
@@ -1042,7 +1042,8 @@ public class TeamServiceImpl implements TeamService {
             Optional.of(currentMonthEnd.getTimeInMillis()), Optional.empty(), Optional.empty(),
             Optional.of(List.of(teamId)));
     currentQuotas.setCurrentConcurrentWorkflows(insight.getConcurrentRuns().intValue());
-    currentQuotas.setCurrentWorkflowExecutionMonthly(insight.getTotalDuration().intValue());
+    currentQuotas.setCurrentRunTotalDuration(insight.getTotalDuration().intValue());
+    currentQuotas.setCurrentRuns(insight.getTotalRuns().intValue());
 
     // TODO update to only be active workflows
     List<String> workflowRefs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.WORKFLOW),
@@ -1051,7 +1052,7 @@ public class TeamServiceImpl implements TeamService {
     currentQuotas.setCurrentWorkflowCount(workflowRefs.size());
 
     // TODO look into this one
-    currentQuotas.setCurrentWorkflowsPersistentStorage(null);
+    currentQuotas.setCurrentPersistentStorage(null);
     return currentQuotas;
   }
 

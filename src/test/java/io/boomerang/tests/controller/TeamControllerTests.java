@@ -56,9 +56,9 @@ public class TeamControllerTests extends FlowTests {
     Assertions.assertEquals(Integer.valueOf(3),
         controller.getTeams().get(0).getWorkflowQuotas().getCurrentConcurrentWorkflows());
     Assertions.assertEquals(Integer.valueOf(0),
-        controller.getTeams().get(0).getWorkflowQuotas().getCurrentWorkflowExecutionMonthly());
+        controller.getTeams().get(0).getWorkflowQuotas().getCurrentRunTotalDuration());
     Assertions.assertEquals(Integer.valueOf(0),
-        controller.getTeams().get(0).getWorkflowQuotas().getCurrentWorkflowsPersistentStorage());
+        controller.getTeams().get(0).getWorkflowQuotas().getCurrentPersistentStorage());
     Assertions.assertEquals(firstOfNextMonth(),
         controller.getTeams().get(0).getWorkflowQuotas().getMonthlyResetDate());
   }
@@ -89,9 +89,9 @@ public class TeamControllerTests extends FlowTests {
     Assertions.assertEquals(Integer.valueOf(0),
         controller.getTeams().get(3).getWorkflowQuotas().getCurrentWorkflowCount());
     Assertions.assertEquals(Integer.valueOf(0),
-        controller.getTeams().get(3).getWorkflowQuotas().getCurrentWorkflowExecutionMonthly());
+        controller.getTeams().get(3).getWorkflowQuotas().getCurrentRunTotalDuration());
     Assertions.assertEquals(Integer.valueOf(0),
-        controller.getTeams().get(3).getWorkflowQuotas().getCurrentWorkflowsPersistentStorage());
+        controller.getTeams().get(3).getWorkflowQuotas().getCurrentPersistentStorage());
     Assertions.assertEquals(firstOfNextMonth(),
         controller.getTeams().get(3).getWorkflowQuotas().getMonthlyResetDate());
   }
@@ -170,8 +170,8 @@ public class TeamControllerTests extends FlowTests {
 
     Assertions.assertEquals(Integer.valueOf(9), quotas.getCurrentWorkflowCount());
     Assertions.assertEquals(Integer.valueOf(3), quotas.getCurrentConcurrentWorkflows());
-    Assertions.assertEquals(Integer.valueOf(0), quotas.getCurrentWorkflowExecutionMonthly());
-    Assertions.assertEquals(Integer.valueOf(0), quotas.getCurrentWorkflowsPersistentStorage());
+    Assertions.assertEquals(Integer.valueOf(0), quotas.getCurrentRunTotalDuration());
+    Assertions.assertEquals(Integer.valueOf(0), quotas.getCurrentPersistentStorage());
     Assertions.assertEquals(firstOfNextMonth(), quotas.getMonthlyResetDate());
 
     Assertions.assertEquals("5d1a1841f6ca2c00014c4309", controller.getTeams().get(0).getId());
@@ -210,9 +210,9 @@ public class TeamControllerTests extends FlowTests {
 
     Assertions.assertEquals(Integer.valueOf(9), updatedQuotas.getCurrentWorkflowCount());
     Assertions.assertEquals(Integer.valueOf(3), updatedQuotas.getCurrentConcurrentWorkflows());
-    Assertions.assertEquals(Integer.valueOf(0), updatedQuotas.getCurrentWorkflowExecutionMonthly());
+    Assertions.assertEquals(Integer.valueOf(0), updatedQuotas.getCurrentRunTotalDuration());
     Assertions.assertEquals(Integer.valueOf(0),
-        updatedQuotas.getCurrentWorkflowsPersistentStorage());
+        updatedQuotas.getCurrentPersistentStorage());
     Assertions.assertEquals(firstOfNextMonth(), updatedQuotas.getMonthlyResetDate());
   }
 

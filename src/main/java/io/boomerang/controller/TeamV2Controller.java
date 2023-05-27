@@ -16,10 +16,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import io.boomerang.security.interceptors.AuthScope;
-import io.boomerang.security.model.TokenAccess;
-import io.boomerang.security.model.TokenObject;
-import io.boomerang.security.model.TokenScope;
 import io.boomerang.service.TeamService;
 import io.boomerang.v4.data.model.CurrentQuotas;
 import io.boomerang.v4.data.model.Quotas;
@@ -59,9 +55,11 @@ public class TeamV2Controller {
       required = true) @RequestParam(required = false) Optional<Integer> limit,
   @Parameter(name = "page", description = "Page Number", example = "0",
       required = true) @RequestParam(defaultValue = "0") Optional<Integer> page,
-  @Parameter(name = "sort", description = "Ascending (ASC) or Descending (DESC) sort on creationDate", example = "ASC",
-  required = true) @RequestParam(defaultValue = "ASC") Optional<Direction> sort) {
-    return teamService.mine(page, limit, sort, labels, statuses);
+  @Parameter(name = "order", description = "Ascending or Descending (default) order", example = "0",
+  required = false) @RequestParam(defaultValue = "DESC") Optional<Direction> order,
+  @Parameter(name = "sort", description = "The element to sort on", example = "0",
+  required = false) @RequestParam(defaultValue = "name") Optional<String> sort) {
+    return teamService.mine(page, limit, order, sort, labels, statuses);
   }
 
   @GetMapping(value = "/query")
@@ -81,9 +79,11 @@ public class TeamV2Controller {
       required = true) @RequestParam(required = false) Optional<Integer> limit,
   @Parameter(name = "page", description = "Page Number", example = "0",
       required = true) @RequestParam(defaultValue = "0") Optional<Integer> page,
-  @Parameter(name = "sort", description = "Ascending (ASC) or Descending (DESC) sort on creationDate", example = "ASC",
-  required = true) @RequestParam(defaultValue = "ASC") Optional<Direction> sort) {
-    return teamService.query(page, limit, sort, labels, statuses, ids);
+  @Parameter(name = "order", description = "Ascending or Descending (default) order", example = "0",
+  required = false) @RequestParam(defaultValue = "DESC") Optional<Direction> order,
+  @Parameter(name = "sort", description = "The element to sort on", example = "0",
+  required = false) @RequestParam(defaultValue = "name") Optional<String> sort) {
+    return teamService.query(page, limit, order, sort, labels, statuses, ids);
   }
   
   @GetMapping(value = "/{teamId}")
