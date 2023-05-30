@@ -23,6 +23,7 @@ import io.boomerang.v4.model.AbstractParam;
 import io.boomerang.v4.model.ApproverGroup;
 import io.boomerang.v4.model.ApproverGroupRequest;
 import io.boomerang.v4.model.Team;
+import io.boomerang.v4.model.TeamNameCheckRequest;
 import io.boomerang.v4.model.TeamRequest;
 import io.boomerang.v4.model.UserSummary;
 import io.swagger.v3.oas.annotations.Operation;
@@ -39,6 +40,16 @@ public class TeamV2Controller {
 
   @Autowired
   private TeamService teamService;
+  
+  @PostMapping(value = "/validate-name")
+//@AuthenticationScope(scopes = {TokenPermission.global})
+  @Operation(summary = "Check team name")
+  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
+      @ApiResponse(responseCode = "422", description = "Name is already taken"),
+      @ApiResponse(responseCode = "400", description = "Bad Request")})
+  public ResponseEntity<?> validateTeamName(@RequestBody TeamNameCheckRequest request) {
+    return teamService.validateName(request);
+  }
 
   @GetMapping(value = "/mine")
 //  @AuthScope(types = {TokenScope.session, TokenScope.user}, access = TokenAccess.read, object = TokenObject.team)

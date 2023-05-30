@@ -9,6 +9,7 @@ public class CurrentQuotas extends Quotas {
   private Integer currentRuns;
   private Integer currentConcurrentRuns;
   private Integer currentRunTotalDuration;
+  private Integer currentRunMedianDuration;
   private Integer currentPersistentStorage;
   private Date monthlyResetDate;
   
@@ -53,5 +54,11 @@ public class CurrentQuotas extends Quotas {
   }
   public void setMonthlyResetDate(Date monthlyResetDate) {
     this.monthlyResetDate = monthlyResetDate;
+  }
+  public Integer getCurrentRunMedianDuration() {
+    return currentRunMedianDuration;
+  }
+  public void setCurrentRunMedianDuration(Integer currentRunMedianDuration) {
+    this.currentRunMedianDuration = currentRunMedianDuration;
   }
 }

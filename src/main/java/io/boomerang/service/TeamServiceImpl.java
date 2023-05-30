@@ -43,6 +43,7 @@ import io.boomerang.v4.model.AbstractParam;
 import io.boomerang.v4.model.ApproverGroup;
 import io.boomerang.v4.model.ApproverGroupRequest;
 import io.boomerang.v4.model.Team;
+import io.boomerang.v4.model.TeamNameCheckRequest;
 import io.boomerang.v4.model.TeamRequest;
 import io.boomerang.v4.model.User;
 import io.boomerang.v4.model.UserSummary;
@@ -91,6 +92,21 @@ public class TeamServiceImpl implements TeamService {
   
   @Autowired
   private WorkflowService workflowService;
+
+  /*
+   * Validate the team name - used by the UI to determine if a team can be created
+   */
+  @Override
+  public ResponseEntity<?> validateName(TeamNameCheckRequest request) {
+    if (request.getName() != null && !request.getName().isBlank()) {
+      if (teamRepository.countByNameIgnoreCase(request.getName()) > 0) {
+        return ResponseEntity.unprocessableEntity().build();
+      }
+      return ResponseEntity.ok().build();
+    }
+    // TODO: make this a better error for unable to verify team name i.e. name is mandatory
+    throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
+  }
 
   /*
    * Creates a new Team - Only available to Global tokens / admins
@@ -1043,6 +1059,7 @@ public class TeamServiceImpl implements TeamService {
             Optional.of(List.of(teamId)));
     currentQuotas.setCurrentConcurrentWorkflows(insight.getConcurrentRuns().intValue());
     currentQuotas.setCurrentRunTotalDuration(insight.getTotalDuration().intValue());
+    currentQuotas.setCurrentRunMedianDuration(insight.getMedianDuration().intValue());
     currentQuotas.setCurrentRuns(insight.getTotalRuns().intValue());
 
     // TODO update to only be active workflows

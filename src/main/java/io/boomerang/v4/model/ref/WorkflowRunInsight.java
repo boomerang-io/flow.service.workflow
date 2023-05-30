@@ -34,7 +34,7 @@ public class WorkflowRunInsight {
     this.totalDuration = totalDuration;
   }
 
-  public long getMedianDuration() {
+  public Long getMedianDuration() {
     return medianDuration;
   }
 

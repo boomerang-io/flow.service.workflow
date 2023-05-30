@@ -11,6 +11,7 @@ import io.boomerang.v4.model.AbstractParam;
 import io.boomerang.v4.model.ApproverGroup;
 import io.boomerang.v4.model.ApproverGroupRequest;
 import io.boomerang.v4.model.Team;
+import io.boomerang.v4.model.TeamNameCheckRequest;
 import io.boomerang.v4.model.TeamRequest;
 import io.boomerang.v4.model.UserSummary;
 import io.boomerang.v4.model.enums.TeamType;
@@ -66,4 +67,6 @@ public interface TeamService {
       ApproverGroupRequest createApproverGroupRequest);
 
   ResponseEntity<ApproverGroup> updateApproverGroup(String teamId, ApproverGroupRequest request);
+
+  ResponseEntity<?> validateName(TeamNameCheckRequest request);
 }
