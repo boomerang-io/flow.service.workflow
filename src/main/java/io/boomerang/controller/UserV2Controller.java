@@ -87,9 +87,11 @@ public class UserV2Controller {
       required = true) @RequestParam(required = false) Optional<Integer> limit,
   @Parameter(name = "page", description = "Page Number", example = "0",
       required = true) @RequestParam(defaultValue = "0") Optional<Integer> page,
-  @Parameter(name = "sort", description = "Ascending (ASC) or Descending (DESC) sort on creationDate", example = "ASC",
-  required = true) @RequestParam(defaultValue = "ASC") Optional<Direction> sort) {
-    return identityService.query(page, limit, sort, labels, statuses, ids);
+  @Parameter(name = "order", description = "Ascending or Descending (default) order", example = "0",
+  required = false) @RequestParam(defaultValue = "DESC") Optional<Direction> order,
+  @Parameter(name = "sort", description = "The element to sort on", example = "0",
+  required = false) @RequestParam(defaultValue = "name") Optional<String> sort) {
+    return identityService.query(page, limit, order, sort, labels, statuses, ids);
   }
 
   @PostMapping(value = "/")

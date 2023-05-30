@@ -2,6 +2,7 @@ package io.boomerang.security.service;
 
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.http.ResponseEntity;
 import io.boomerang.security.model.Token;
@@ -39,8 +40,10 @@ public interface IdentityService {
   Optional<UserEntity> getAndRegisterUser(String email, String firstName, String lastName,
       Optional<UserType> usertype);
 
-  public UserResponsePage query(Optional<Integer> page, Optional<Integer> limit, Optional<Direction> sort,
-      Optional<List<String>> labels, Optional<List<String>> status, Optional<List<String>> ids);
+  Page<User> query(Optional<Integer> queryPage, Optional<Integer> queryLimit,
+      Optional<Direction> queryOrder, Optional<String> querySort,
+      Optional<List<String>> queryLabels, Optional<List<String>> queryStatus,
+      Optional<List<String>> queryIds);
 
   UserProfile getCurrentProfile();
 

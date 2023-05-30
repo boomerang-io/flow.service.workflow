@@ -43,7 +43,6 @@ import io.boomerang.v4.model.Team;
 import io.boomerang.v4.model.User;
 import io.boomerang.v4.model.UserProfile;
 import io.boomerang.v4.model.UserRequest;
-import io.boomerang.v4.model.UserResponsePage;
 import io.boomerang.v4.model.UserStatus;
 import io.boomerang.v4.model.UserType;
 import io.boomerang.v4.model.enums.RelationshipRef;
@@ -202,7 +201,7 @@ public class IdentityServiceImpl implements IdentityService {
     UserEntity user = getCurrentUser();
     UserProfile profile = new UserProfile(user);
     List<String> teamRefs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.USER), Optional.of(List.of(user.getId())), Optional.of(RelationshipType.MEMBEROF), Optional.of(RelationshipRef.TEAM), Optional.empty());
-    List<Team> usersTeams = teamService.query(Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(teamRefs)).getContent();
+    List<Team> usersTeams = teamService.query(Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(teamRefs)).getContent();
     profile.setTeams(usersTeams);
     return profile;
   }
@@ -217,7 +216,7 @@ public class IdentityServiceImpl implements IdentityService {
       if (flowUser.isPresent()) {
         UserProfile profile = new UserProfile(flowUser.get());
         List<String> teamRefs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.USER), Optional.of(List.of(userId)), Optional.of(RelationshipType.MEMBEROF), Optional.of(RelationshipRef.TEAM), Optional.empty());
-        List<Team> usersTeams = teamService.query(Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(teamRefs)).getContent();
+        List<Team> usersTeams = teamService.query(Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(teamRefs)).getContent();
         profile.setTeams(usersTeams);
         return profile;
       }
@@ -228,7 +227,7 @@ public class IdentityServiceImpl implements IdentityService {
         BeanUtils.copyProperties(extUserProfile, profile);
         convertExternalUserType(extUserProfile, profile);
         List<String> teamRefs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.USER), Optional.of(List.of(userId)), Optional.of(RelationshipType.MEMBEROF), Optional.of(RelationshipRef.TEAM), Optional.empty());
-        List<Team> usersTeams = teamService.query(Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(teamRefs)).getContent();
+        List<Team> usersTeams = teamService.query(Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(teamRefs)).getContent();
         profile.setTeams(usersTeams);
         return profile;
       }
@@ -240,10 +239,12 @@ public class IdentityServiceImpl implements IdentityService {
    * Query for Users
    */
   @Override
-  public UserResponsePage query(Optional<Integer> queryPage, Optional<Integer> queryLimit, Optional<Direction> querySort, Optional<List<String>> queryLabels,
-      Optional<List<String>> queryStatus, Optional<List<String>> queryIds) {
+  public Page<User> query(Optional<Integer> queryPage, Optional<Integer> queryLimit,
+      Optional<Direction> queryOrder, Optional<String> querySort,
+      Optional<List<String>> queryLabels, Optional<List<String>> queryStatus,
+      Optional<List<String>> queryIds) {
     Pageable pageable = Pageable.unpaged();
-    final Sort sort = Sort.by(new Order(querySort.orElse(Direction.ASC), "creationDate"));
+    final Sort sort = Sort.by(new Order(queryOrder.orElse(Direction.ASC), querySort.orElse("name")));
     if (queryLimit.isPresent()) {
       pageable = PageRequest.of(queryPage.get(), queryLimit.get(), sort);
     }
@@ -279,8 +280,10 @@ public class IdentityServiceImpl implements IdentityService {
       }
     }
 
-    Criteria criteria = Criteria.where("id").in(queryIds);
-    criteriaList.add(criteria);
+    if (queryIds.isPresent()) {
+      Criteria criteria = Criteria.where("id").in(queryIds);
+      criteriaList.add(criteria);
+    }
 
     Criteria[] criteriaArray = criteriaList.toArray(new Criteria[criteriaList.size()]);
     Criteria allCriteria = new Criteria();
@@ -294,17 +297,18 @@ public class IdentityServiceImpl implements IdentityService {
       query.with(sort);
     }
 
-    Page<UserEntity> pages =
-        PageableExecutionUtils.getPage(mongoTemplate.find(query, UserEntity.class),
-            pageable, () -> mongoTemplate.count(query, UserEntity.class));
-
-    List<UserEntity> entities = pages.getContent();
+    List<UserEntity> entities = mongoTemplate.find(query, UserEntity.class);
+    LOGGER.debug("Found " + entities.size() + " users.");
+    
     List<User> users = new LinkedList<>();
-
     if (!entities.isEmpty()) {
       entities.forEach(e -> users.add(new User(e)));
     }
-    return new UserResponsePage(users, pageable, pages.getNumberOfElements());
+    Page<User> pages =
+        PageableExecutionUtils.getPage(users,
+            pageable, () -> mongoTemplate.count(query, UserEntity.class));
+
+    return pages;
   }
   
   @Override
