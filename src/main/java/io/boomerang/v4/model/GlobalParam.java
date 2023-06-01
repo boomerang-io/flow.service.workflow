@@ -8,7 +8,7 @@ import io.boomerang.v4.data.entity.GlobalParamEntity;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(Include.NON_NULL)
-public class GlobalParam extends AbstractParam {
+public class GlobalParam extends GlobalParamEntity {
   
 
   public GlobalParam() {
@@ -16,7 +16,7 @@ public class GlobalParam extends AbstractParam {
   }
 
   /*
-   * Creates a GlobalParam from GlobalParamwEntity
+   * Creates a GlobalParam from GlobalParamEntity
    */
   public GlobalParam(GlobalParamEntity entity) {
     BeanUtils.copyProperties(entity, this);
