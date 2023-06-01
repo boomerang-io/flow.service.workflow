@@ -8,7 +8,6 @@ import java.util.Map;
 import org.springframework.beans.BeanUtils;
 import io.boomerang.v4.data.entity.TeamEntity;
 import io.boomerang.v4.data.model.CurrentQuotas;
-import io.boomerang.v4.data.model.TeamSettings;
 import io.boomerang.v4.model.enums.TeamStatus;
 
 public class Team {
@@ -20,7 +19,7 @@ public class Team {
   private String externalRef;
   private Map<String, String> labels = new HashMap<>();
   private List<AbstractParam> parameters = new LinkedList<>();
-  private TeamSettings settings;
+//  private TeamSettings settings;
   private CurrentQuotas quotas;
   private List<UserSummary> users;
   private List<WorkflowSummary> workflows = new LinkedList<>();
@@ -90,13 +89,13 @@ public class Team {
     this.parameters = parameters;
   }
 
-  public TeamSettings getSettings() {
-    return settings;
-  }
-
-  public void setSettings(TeamSettings settings) {
-    this.settings = settings;
-  }
+//  public TeamSettings getSettings() {
+//    return settings;
+//  }
+//
+//  public void setSettings(TeamSettings settings) {
+//    this.settings = settings;
+//  }
 
   public CurrentQuotas getQuotas() {
     return quotas;

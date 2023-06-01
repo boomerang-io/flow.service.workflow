@@ -36,7 +36,6 @@ import io.boomerang.v4.data.entity.ApproverGroupEntity;
 import io.boomerang.v4.data.entity.TeamEntity;
 import io.boomerang.v4.data.model.CurrentQuotas;
 import io.boomerang.v4.data.model.Quotas;
-import io.boomerang.v4.data.model.TeamSettings;
 import io.boomerang.v4.data.repository.ApproverGroupRepository;
 import io.boomerang.v4.data.repository.TeamRepository;
 import io.boomerang.v4.model.AbstractParam;
@@ -442,10 +441,6 @@ public class TeamServiceImpl implements TeamService {
       throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
     }
     TeamEntity teamEntity = optTeamEntity.get();
-    if (teamEntity.getSettings() == null) {
-      teamEntity.setSettings(new TeamSettings());
-    }
-
     List<AbstractParam> parameters = teamEntity.getParameters();
     AbstractParam existingParameter = parameters.stream()
         .filter(p -> p.getKey().equals(parameter.getKey())).findAny().orElse(null);
@@ -482,10 +477,6 @@ public class TeamServiceImpl implements TeamService {
       throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
     }
     TeamEntity teamEntity = optTeamEntity.get();
-    if (teamEntity.getSettings() == null) {
-      teamEntity.setSettings(new TeamSettings());
-    }
-
     List<AbstractParam> parameters = teamEntity.getParameters();
     AbstractParam existingParameter = parameters.stream()
         .filter(p -> p.getKey().equals(parameter.getKey())).findAny().orElse(null);
@@ -524,7 +515,7 @@ public class TeamServiceImpl implements TeamService {
     }
     TeamEntity teamEntity = optTeamEntity.get();
 
-    if (teamEntity.getSettings() != null && teamEntity.getParameters() != null) {
+    if (teamEntity.getParameters() != null) {
       List<AbstractParam> parameters = teamEntity.getParameters();
       AbstractParam parameter =
           parameters.stream().filter(p -> p.getKey().equals(key)).findAny().orElse(null);
@@ -562,7 +553,7 @@ public class TeamServiceImpl implements TeamService {
     }
     TeamEntity teamEntity = optTeamEntity.get();
     List<AbstractParam> parameters = Collections.emptyList();
-    if (teamEntity.getSettings() != null && teamEntity.getParameters() != null) {
+    if (teamEntity.getParameters() != null) {
       parameters = teamEntity.getParameters();
 
       filterValueByFieldType(parameters, false, FieldType.PASSWORD.value());

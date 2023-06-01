@@ -30,7 +30,7 @@ public class TeamEntity {
   private String externalRef;
   private Map<String, String> labels = new HashMap<>();
   private List<AbstractParam> parameters = new LinkedList<>();
-  private TeamSettings settings;
+//  private TeamSettings settings;
   private Quotas quotas;
   
   public String getId() {
@@ -69,12 +69,12 @@ public class TeamEntity {
   public void setExternalRef(String externalRef) {
     this.externalRef = externalRef;
   }
-  public TeamSettings getSettings() {
-    return settings;
-  }
-  public void setSettings(TeamSettings settings) {
-    this.settings = settings;
-  }
+//  public TeamSettings getSettings() {
+//    return settings;
+//  }
+//  public void setSettings(TeamSettings settings) {
+//    this.settings = settings;
+//  }
   public Map<String, String> getLabels() {
     return labels;
   }
