@@ -58,7 +58,7 @@ public class GlobalParamServiceImpl implements GlobalParamService {
   @Override
   public GlobalParam create(GlobalParam param) {
     //Check mandatory elements
-    if (param.getKey() != null) {
+    if (param.getKey() == null || param.getKey().isEmpty()) {
       //TODO Better exception related to Params
       throw new BoomerangException(BoomerangError.REQUEST_INVALID_PARAMS);
     }
