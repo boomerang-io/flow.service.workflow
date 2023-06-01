@@ -17,9 +17,11 @@ public class GlobalParam extends GlobalParamEntity {
 
   /*
    * Creates a GlobalParam from GlobalParamEntity
+   * 
+   * Ignore id as the end user does not need to use it
    */
   public GlobalParam(GlobalParamEntity entity) {
-    BeanUtils.copyProperties(entity, this);
+    BeanUtils.copyProperties(entity, this, "id");
   }
 
 }
