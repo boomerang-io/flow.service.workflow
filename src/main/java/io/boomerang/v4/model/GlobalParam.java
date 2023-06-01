@@ -17,11 +17,9 @@ public class GlobalParam extends AbstractParam {
 
   /*
    * Creates a GlobalParam from GlobalParamwEntity
-   * 
-   * Ignores ID as requester only deals with key
    */
   public GlobalParam(GlobalParamEntity entity) {
-    BeanUtils.copyProperties(entity, this, "id");
+    BeanUtils.copyProperties(entity, this);
   }
 
 }
