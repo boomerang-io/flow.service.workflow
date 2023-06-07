@@ -7,11 +7,14 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.stereotype.Service;
+
 import io.boomerang.model.ActionSummary;
 import io.boomerang.model.ApprovalRequest;
 import io.boomerang.model.ApprovalStatus;
@@ -56,6 +59,7 @@ public class ActionServiceImpl implements ActionService {
   private TaskClient taskClient;
 
   @Autowired
+  @Lazy
   private TaskService taskService;
 
   @Autowired
