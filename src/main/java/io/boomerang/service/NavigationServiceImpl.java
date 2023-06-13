@@ -145,7 +145,7 @@ public class NavigationServiceImpl implements NavigationService {
       if (isUserAdmin) {
         Navigation admin = new Navigation();
         admin.setName("Administer");
-        admin.setType(NavigationType.category);
+        admin.setType(NavigationType.menu);
         admin.setIcon("Settings");
         admin.setChildLinks(new ArrayList<>());
 
