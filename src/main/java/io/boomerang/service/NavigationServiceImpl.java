@@ -66,6 +66,7 @@ public class NavigationServiceImpl implements NavigationService {
       
       Navigation divider = new Navigation();
       divider.setType(NavigationType.divider);
+      response.add(divider);
       
       Navigation workflows = new Navigation();
       workflows.setName("Workflows");
@@ -106,8 +107,8 @@ public class NavigationServiceImpl implements NavigationService {
       schedules.setIcon("CalendarHeatMap");
       schedules.setLink(flowAppsUrl + teamIdURLContext + "/schedules");
       response.add(schedules);
-      
-      divider.setType(NavigationType.divider);
+
+      response.add(divider);
 
       Navigation teamTasks = new Navigation();
       teamTasks.setName("Task Manager");
@@ -121,7 +122,7 @@ public class NavigationServiceImpl implements NavigationService {
       teamParameters.setName("Parameters");
       teamParameters.setType(NavigationType.link);
       teamParameters.setDisabled(disabled);
-      teamParameters.setIcon("Parameters");
+      teamParameters.setIcon("Parameter");
       teamParameters.setLink(flowAppsUrl + teamIdURLContext + "/parameters");
       response.add(teamParameters);
 
