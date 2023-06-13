@@ -136,7 +136,7 @@ public class NavigationServiceImpl implements NavigationService {
       Navigation management = new Navigation();
       management.setName("Manage Team");
       management.setType(NavigationType.link);
-      management.setDisabled(false);
+      management.setDisabled(disabled);
       management.setIcon("SettingsAdjust");
       management.setChildLinks(new ArrayList<>());
       response.add(management);
