@@ -139,7 +139,7 @@ public class NavigationServiceImpl implements NavigationService {
       management.setType(NavigationType.link);
       management.setDisabled(disabled);
       management.setIcon("SettingsAdjust");
-      management.setChildLinks(new ArrayList<>());
+      teamTokens.setLink(flowAppsUrl + teamIdURLContext + "/manage");
       response.add(management);
 
       if (isUserAdmin) {
