@@ -60,7 +60,7 @@ public class TaskTemplateV2Controller {
       @Parameter(name = "names",
       description = "List of TaskTemplate Names  to filter for. Defaults to all.", example = "switch,event-wait",
       required = false) @RequestParam(required = false)  Optional<List<String>> names,
-      @Parameter(name = "teams", description = "List of teams to filter for.", 
+      @Parameter(name = "teams", description = "List of teams to filter for. If no team is specified then Global task templates will be retrieved.", 
       required = false) @RequestParam(required = false) Optional<List<String>> teams,
       @Parameter(name = "limit", description = "Result Size", example = "10",
       required = true) @RequestParam(required = false) Optional<Integer> limit,
