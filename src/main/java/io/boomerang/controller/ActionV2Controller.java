@@ -38,7 +38,7 @@ public class ActionV2Controller {
   @Autowired
   private ActionService actionService;
 
-  @PutMapping(value = "/")
+  @PutMapping(value = "")
   @Operation(summary = "Provide an update for an Action")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -56,7 +56,7 @@ public class ActionV2Controller {
       actionService.get(actionId);
   }
 
-  @GetMapping(value = "/")
+  @GetMapping(value = "")
   @Operation(summary = "Retrieve a specifc Action by TaskRun")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})

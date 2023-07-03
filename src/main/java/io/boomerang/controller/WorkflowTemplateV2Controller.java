@@ -70,7 +70,7 @@ public class WorkflowTemplateV2Controller {
     return engineClient.queryWorkflowTemplates(limit, page, sort, labels, names);
   }
 
-  @PostMapping(value = "/")
+  @PostMapping(value = "")
   @AuthScope(types = {TokenScope.global}, access = TokenAccess.write, object = TokenObject.workflowtemplate)
   @Operation(summary = "Create a new Workflow Template")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
@@ -80,7 +80,7 @@ public class WorkflowTemplateV2Controller {
     return engineClient.createWorkflowTemplate(request);
   }
 
-  @PutMapping(value = "/")
+  @PutMapping(value = "")
   @AuthScope(types = {TokenScope.global}, access = TokenAccess.write, object = TokenObject.workflowtemplate)
   @Operation(summary = "Update, replace, or create new, Workflow Template")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),

@@ -85,7 +85,7 @@ public class WorkflowV2Controller {
     return workflowService.create(workflow, team);
   }
 
-  @PutMapping(value = "/")
+  @PutMapping(value = "")
   @Operation(summary = "Update, replace, or create new, Workflow")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})

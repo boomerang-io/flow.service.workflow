@@ -71,7 +71,7 @@ public class TaskTemplateV2Controller {
     return taskTemplateService.query(limit, page, sort, labels, statuses, names, teams);
   }
 
-  @PostMapping(value = "/")
+  @PostMapping(value = "")
   @Operation(summary = "Create a new Task Template",
             description = "The name needs to be unique and must only contain alphanumeric and - characeters.")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
@@ -83,7 +83,7 @@ public class TaskTemplateV2Controller {
     return taskTemplateService.create(taskTemplate, team);
   }
 
-  @PutMapping(value = "/")
+  @PutMapping(value = "")
   @Operation(summary = "Update, replace, or create new, Task Template",
             description = "The name must only contain alphanumeric and - characeters. If the name exists, apply will create a new version.")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
@@ -134,7 +134,7 @@ public class TaskTemplateV2Controller {
   }
 
   //TODO determine if the consumes is enough to direct it here.
-  @PostMapping(value = "/", consumes = "application/x-yaml", produces = "application/x-yaml")
+  @PostMapping(value = "", consumes = "application/x-yaml", produces = "application/x-yaml")
   @Operation(summary = "Create a new Task Template using Tekton Task YAML",
             description = "The name needs to be unique and must only contain alphanumeric and - characeters.")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
@@ -147,7 +147,7 @@ public class TaskTemplateV2Controller {
   }
 
 //TODO determine if the consumes is enough to direct it here.
-  @PutMapping(value = "/", consumes = "application/x-yaml", produces = "application/x-yaml")
+  @PutMapping(value = "", consumes = "application/x-yaml", produces = "application/x-yaml")
   @Operation(summary = "Update, replace, or create new, Task Template",
             description = "The name must only contain alphanumeric and - characeters. If the name exists, apply will create a new version.")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),

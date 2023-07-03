@@ -93,7 +93,7 @@ public class SchedulesV2Controller {
     return workflowScheduleService.create(schedule, team);
   }
   
-  @PutMapping(value = "/")
+  @PutMapping(value = "")
   @Operation(summary = "Apply a Schedule.")
   public WorkflowSchedule updateSchedule(@RequestBody WorkflowSchedule schedule,
       @Parameter(name = "team", description = "Team as owner reference. Required if using apply to create new.",

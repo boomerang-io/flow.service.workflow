@@ -109,7 +109,7 @@ public class TeamV2Controller {
     return teamService.get(teamId);
   }
   
-  @PostMapping(value = "/")
+  @PostMapping(value = "")
 //  @AuthenticationScope(scopes = {TokenPermission.global})
   @Operation(summary = "Create new team")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
@@ -118,7 +118,7 @@ public class TeamV2Controller {
     return teamService.create(request);
   }
   
-  @PatchMapping(value = "/")
+  @PatchMapping(value = "")
 //  @AuthenticationScope(scopes = {TokenPermission.global})
   @Operation(summary = "Patch or update a team")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),

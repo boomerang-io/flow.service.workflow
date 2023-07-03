@@ -94,7 +94,7 @@ public class UserV2Controller {
     return identityService.query(page, limit, order, sort, labels, statuses, ids);
   }
 
-  @PostMapping(value = "/")
+  @PostMapping(value = "")
   @AuthScope(access = TokenAccess.write, object = TokenObject.user, types = {TokenScope.global})
   @Operation(summary = "Create a new Boomerang Flow user")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
@@ -108,7 +108,7 @@ public class UserV2Controller {
     }
   }
 
-  @PatchMapping(value = "/")
+  @PatchMapping(value = "")
   @AuthScope(access = TokenAccess.write, object = TokenObject.user, types = {TokenScope.global})
   @Operation(summary = "Update a Boomerang Flow Users details")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
