@@ -33,8 +33,6 @@ import io.boomerang.security.model.Token;
 import io.boomerang.security.model.TokenScope;
 import io.boomerang.security.model.TokenTypePrefix;
 import io.boomerang.service.RelationshipService;
-import io.boomerang.service.TeamService;
-import io.boomerang.service.WorkflowService;
 import io.boomerang.v4.data.entity.TokenEntity;
 import io.boomerang.v4.data.entity.UserEntity;
 import io.boomerang.v4.data.entity.ref.ActionEntity;
@@ -67,6 +65,8 @@ public class TokenServiceImpl implements TokenService {
    * Creates an Access Token
    * 
    * Limited to creation by a User on behalf of a User, Workflow, Team, Global scope
+   * 
+   * TODO: make sure requesting principal has access to create for the provided principal
    */
   @Override
   public CreateTokenResponse create(CreateTokenRequest request) {
@@ -75,12 +75,22 @@ public class TokenServiceImpl implements TokenService {
       throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
     }
     
+    //Disallow creation of session tokens except via internal AuthenticationFilter
     if (TokenScope.session.equals(request.getType())) {
       // TODO make real exception
       throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);   
     }
+
     LOGGER.debug("Creating {0} token...", request.getType().toString());
     TokenEntity tokenEntity = new TokenEntity();
+    //Ensure Principal is provided for all types but global
+    if (!TokenScope.global.equals(request.getType()) && (request.getPrincipal() == null || request.getPrincipal().isEmpty())) {
+      // TODO make real exception
+      throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF); 
+    }
+    if (!TokenScope.global.equals(request.getType())) {
+      tokenEntity.setPrincipalRef(request.getPrincipal());
+    }
     tokenEntity.setType(request.getType());
     tokenEntity.setName(request.getName());
     tokenEntity.setDescription(request.getDescription());

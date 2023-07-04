@@ -43,7 +43,7 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
   private RelationshipService relationshipService;
 
   @Autowired
-  private IdentityService userIdentityService;
+  private IdentityService identityService;
 
   /*
    * Get TaskTemplate by name and optional version. If no version specified, will retrieve the latest.
@@ -111,10 +111,9 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
     // Set verfied to false - this is only able to be set via Engine or Loader
     request.setVerified(false);
     
-    // Process Parameters - if no Params are set but Config is then create ParamSpecs
-    if (request.getConfig() != null && !request.getConfig().isEmpty() && request.getSpec() != null) {
-      ParameterUtil.abstractParamToParamSpec(request.getConfig(), request.getSpec().getParams());
-    }
+    // Process Parameters - ensure Param and Config share the same params
+    ParameterUtil.abstractParamsToParamSpecs(request.getConfig(), request.getSpec().getParams());
+    ParameterUtil.paramSpecToAbstractParam(request.getSpec().getParams(), request.getConfig());
     
     // Update Changelog
     updateChangeLog(request.getChangelog());
@@ -123,14 +122,24 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
     
     TaskTemplate taskTemplate = engineClient.createTaskTemplate(request);
     if (team.isPresent()) {
-    // Create BELONGSTO relationship for mapping Workflow to Owner
+      //Check user has access to team
+
+      List<String> refs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.USER),
+          Optional.empty(), Optional.of(RelationshipType.MEMBEROF), Optional.of(RelationshipRef.TEAM), Optional.of(List.of(team.get())));
+      if (refs.isEmpty()) {
+        // TODO: do we want to return invalid ref or unauthorized
+        throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
+      }
+      // Create BELONGSTO relationship for mapping Workflow to Owner
       relationshipService.addRelationshipRef(RelationshipRef.TASKTEMPLATE, taskTemplate.getName(), RelationshipRef.TEAM,
           team);
     } else {
-      // Creates a relationship based on current used Security Scope
-      relationshipService.addRelationshipRefForCurrentScope(RelationshipRef.TASKTEMPLATE,
-          taskTemplate.getName());
+      // Creates a relationship to GLOBAL
+      //TODO: check user is ADMIN
+      relationshipService.addRelationshipRef(RelationshipRef.TASKTEMPLATE,
+          taskTemplate.getName(), RelationshipRef.GLOBAL, Optional.empty());
     }
+    switchChangeLogAuthorToUserName(taskTemplate.getChangelog());
     return ResponseEntity.ok(taskTemplate);
   }
 
@@ -140,21 +149,36 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
   @Override
   public ResponseEntity<TaskTemplate> apply(TaskTemplate request, boolean replace, Optional<String> teamId) {
     String templateName = request.getName();
+    //Refs check is different to normal as we are checking the users access to the team and not the template
+    //The engine will check if the template exists or not
+    // TODO: figure out what to do with name collisions between teams
+    if (teamId.isPresent()) {
     List<String> refs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.TASKTEMPLATE),
-        Optional.of(List.of(templateName)), Optional.of(RelationshipType.BELONGSTO), Optional.empty(), Optional.empty());
+        Optional.of(List.of(templateName)), Optional.of(RelationshipType.BELONGSTO), Optional.of(RelationshipRef.TEAM), Optional.of(List.of(teamId.get())));
+      if (refs.isEmpty()) {
+        return this.create(request, teamId);
+      }
+    } else {
+      List<String> refs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.TASKTEMPLATE),
+          Optional.of(List.of(templateName)), Optional.of(RelationshipType.BELONGSTO), Optional.of(RelationshipRef.GLOBAL), Optional.empty());
+      if (refs.isEmpty()) {
+        return this.create(request, teamId);
+      }
+    }
 
-    if (templateName != null && !templateName.isBlank() && !refs.isEmpty()) {
+    if (templateName != null && !templateName.isBlank()) {
       // Set verfied to false - this is only able to be set via Engine or Loader
       request.setVerified(false);
       
       // Update Changelog
       updateChangeLog(request.getChangelog());
       
-      // Process Parameters - if no Params are set but Config is then create ParamSpecs
-      if (request.getConfig() != null && !request.getConfig().isEmpty() && request.getSpec() != null) {
-        ParameterUtil.abstractParamToParamSpec(request.getConfig(), request.getSpec().getParams());
-      }
+      // Process Parameters - ensure Param and Config share the same params
+      ParameterUtil.abstractParamsToParamSpecs(request.getConfig(), request.getSpec().getParams());
+      ParameterUtil.paramSpecToAbstractParam(request.getSpec().getParams(), request.getConfig());
+      
       TaskTemplate template = engineClient.applyTaskTemplate(request, replace);
+      switchChangeLogAuthorToUserName(template.getChangelog());
       return ResponseEntity.ok(template);
     } else {
       // TODO: do we want to return invalid ref or unauthorized
@@ -168,13 +192,15 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
       changelog = new ChangeLog();
     }
     changelog.setDate(new Date());
-    //TODO: update Author ID
+    if (identityService.getCurrentIdentity().getPrincipalRef() != null) {
+      changelog.setAuthor(identityService.getCurrentIdentity().getPrincipalRef());
+    }
   }
 
-  //TODO: update to correct User Service. Used on retrieval of TaskTemplate
   private void switchChangeLogAuthorToUserName(ChangeLog changelog) {
+    //TODO: needs to handle Principal's of team / global
     if (changelog != null && changelog.getAuthor() != null) {
-      Optional<User> user = userIdentityService.getUserByID(changelog.getAuthor());
+      Optional<User> user = identityService.getUserByID(changelog.getAuthor());
       if (user.isPresent()) {
         changelog.setAuthor(user.get().getName());
       }

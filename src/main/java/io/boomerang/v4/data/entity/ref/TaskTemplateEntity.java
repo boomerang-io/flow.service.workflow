@@ -4,6 +4,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -19,6 +20,7 @@ import nonapi.io.github.classgraph.json.Id;
 public class TaskTemplateEntity {
 
   @Id
+  @JsonIgnore
   private String id;
   private String name;
   private String displayName;

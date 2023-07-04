@@ -202,18 +202,16 @@ public class ParameterUtil {
    * 
    * TODO: what is the mapping of ConfigType to ParamType
    */
-  public static List<ParamSpec> abstractParamToParamSpec(List<AbstractParam> abstractParams,
+  public static List<ParamSpec> abstractParamsToParamSpecs(List<AbstractParam> abstractParams,
       List<ParamSpec> paramSpecs) {
     List<ParamSpec> params = new LinkedList<>();
-    if (paramSpecs != null && !paramSpecs.isEmpty()) {
-      params = paramSpecs;
-    }
     if (abstractParams != null && !abstractParams.isEmpty()) {
       for (AbstractParam ap : abstractParams) {
         ParamSpec param = new ParamSpec();
         if (paramSpecs.stream().filter(p -> p.getName().equals(ap.getKey())).count() > 0) {
           param =
               paramSpecs.stream().filter(p -> p.getName().equals(ap.getKey())).findFirst().get();
+          paramSpecs.remove(param);
         } else {
           param.setName(ap.getKey());
         }
@@ -221,7 +219,11 @@ public class ParameterUtil {
         param.setDescription(ap.getDescription());
         param.setType(ParamType.string);
         params.add(param);
-      } ;
+      };
+    }
+    // If any paramSpecs are remaining, return them
+    if (paramSpecs != null && !paramSpecs.isEmpty()) {
+      params.addAll(paramSpecs);
     }
     return params;
   }
@@ -235,9 +237,6 @@ public class ParameterUtil {
   public static List<AbstractParam> paramSpecToAbstractParam(List<ParamSpec> paramSpecs,
       List<AbstractParam> abstractParams) {
     List<AbstractParam> params = new LinkedList<>();
-    if (abstractParams != null && !abstractParams.isEmpty()) {
-      params = abstractParams;
-    }
     if (paramSpecs != null && !paramSpecs.isEmpty()) {
       for (ParamSpec ps : paramSpecs) {
         AbstractParam param = new AbstractParam();
@@ -252,6 +251,10 @@ public class ParameterUtil {
         param.setType("string");
         params.add(param);
       } ;
+    }
+    // If any abstractParams are remaining, return them
+    if (abstractParams != null && !abstractParams.isEmpty()) {
+      params.addAll(abstractParams);
     }
     return params;
   }
