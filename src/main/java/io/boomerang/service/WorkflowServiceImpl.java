@@ -526,9 +526,9 @@ public class WorkflowServiceImpl implements WorkflowService {
       CanvasNode node = new CanvasNode();
       node.setId(task.getName()); // TODO does the ID need to just be random
       node.setType(task.getType());
-      if (task.getAnnotations().containsKey("io.boomerang/position")) {
+      if (task.getAnnotations().containsKey("boomerang.io/position")) {
         Map<String, Number> position =
-            (Map<String, Number>) task.getAnnotations().get("io.boomerang/position");
+            (Map<String, Number>) task.getAnnotations().get("boomerang.io/position");
         CanvasNodePosition nodePosition = new CanvasNodePosition();
         nodePosition.setX(position.get("x"));
         nodePosition.setY(position.get("y"));

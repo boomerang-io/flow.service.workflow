@@ -57,8 +57,9 @@ public class TektonConverter {
     steps.add(step);
     spec.setSteps(steps);
 
+    // Assumes that on creation - the web client config is transformed to Params
     List<Param> params = new LinkedList<>();
-    if (configList != null) {
+    if (taskTemplate.getSpec().getParams() != null) {
       for (ParamSpec templateParam : taskTemplate.getSpec().getParams()) {
         Param param = new Param();
         param.setName(templateParam.getName());
