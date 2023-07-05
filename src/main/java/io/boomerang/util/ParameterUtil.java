@@ -246,7 +246,9 @@ public class ParameterUtil {
         } else {
           param.setKey(ps.getName());
         }
-        param.setDefaultValue(ps.getDefaultValue().toString());
+        if (ps.getDefaultValue() != null) {          
+          param.setDefaultValue(ps.getDefaultValue().toString());
+        }
         param.setDescription(ps.getDescription());
         param.setType("string");
         params.add(param);

@@ -46,6 +46,20 @@ public class TaskTemplateV2Controller {
     return taskTemplateService.get(name, version);
   }
   
+  @GetMapping(value = "{name}", produces = "application/x-yaml")
+  @Operation(summary = "Retrieve a specific task template as Tekton Task YAML. If no version specified, the latest version is returned.")
+  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
+      @ApiResponse(responseCode = "400", description = "Bad Request")})
+  public TektonTask getTaskTemplateYAML(
+      @Parameter(name = "name",
+      description = "Name of Task Template",
+      required = true) @PathVariable String name,
+      @Parameter(name = "version",
+      description = "Task Template Version",
+      required = false) @RequestParam(required = false) Optional<Integer> version) {
+    return taskTemplateService.getAsTekton(name, version);
+  }
+  
   @GetMapping(value = "/query")
   @Operation(summary = "Search for Task Templates")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
@@ -117,20 +131,6 @@ public class TaskTemplateV2Controller {
       description = "Name of Task Template",
       required = true) @PathVariable String name) {
     taskTemplateService.disable(name);
-  }
-  
-  @GetMapping(value = "{name}/yaml", produces = "application/x-yaml")
-  @Operation(summary = "Retrieve a specific task template as Tekton Task YAML. If no version specified, the latest version is returned.")
-  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
-      @ApiResponse(responseCode = "400", description = "Bad Request")})
-  public TektonTask getTaskTemplateYAML(
-      @Parameter(name = "name",
-      description = "Name of Task Template",
-      required = true) @PathVariable String name,
-      @Parameter(name = "version",
-      description = "Task Template Version",
-      required = false) @RequestParam(required = false) Optional<Integer> version) {
-    return taskTemplateService.getAsTekton(name, version);
   }
 
   //TODO determine if the consumes is enough to direct it here.

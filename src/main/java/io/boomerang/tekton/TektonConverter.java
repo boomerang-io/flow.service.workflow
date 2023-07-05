@@ -6,7 +6,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import io.boomerang.v4.data.entity.ref.TaskTemplateEntity;
 import io.boomerang.v4.model.AbstractParam;
 import io.boomerang.v4.model.ref.ChangeLog;
 import io.boomerang.v4.model.ref.ParamSpec;
@@ -64,7 +63,9 @@ public class TektonConverter {
         Param param = new Param();
         param.setName(templateParam.getName());
         param.setDescription(templateParam.getDescription());
-        param.setDefaultValue(templateParam.getDefaultValue());
+        if (templateParam.getDefaultValue() != null) { 
+          param.setDefaultValue(templateParam.getDefaultValue());
+        }
         param.setType(templateParam.getType());
         params.add(param);
       }
