@@ -17,7 +17,11 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -187,29 +191,44 @@ public class TokenServiceImpl implements TokenService {
   }
 
   @Override
-  public Page<Token> query(Optional<Date> from, Optional<Date> to, Pageable pageable,
-      Optional<List<TokenScope>> queryTypes) {
-    List<Criteria> criterias = new ArrayList<>();
-
-    if (from.isPresent()) {
-      Criteria dynamicCriteria = Criteria.where("creationDate").gte(from.get());
-      criterias.add(dynamicCriteria);
+  public Page<Token> query(Optional<Date> from, Optional<Date> to,
+      Optional<Integer> queryLimit, Optional<Integer> queryPage, Optional<Direction> queryOrder,
+      Optional<String> querySort, Optional<List<TokenScope>> queryTypes) {
+    Pageable pageable = Pageable.unpaged();
+    final Sort sort = Sort.by(new Order(queryOrder.orElse(Direction.ASC), querySort.orElse("creationDate")));
+    if (queryLimit.isPresent()) {
+      pageable = PageRequest.of(queryPage.get(), queryLimit.get(), sort);
     }
+    List<Criteria> criteriaList = new ArrayList<>();
 
-    if (to.isPresent()) {
-      Criteria dynamicCriteria = Criteria.where("creationDate").lte(to.get());
-      criterias.add(dynamicCriteria);
+    if (from.isPresent() && !to.isPresent()) {
+      Criteria criteria = Criteria.where("creationDate").gte(from.get());
+      criteriaList.add(criteria);
+    } else if (!from.isPresent() && to.isPresent()) {
+      Criteria criteria = Criteria.where("creationDate").lt(to.get());
+      criteriaList.add(criteria);
+    } else if (from.isPresent() && to.isPresent()) {
+      Criteria criteria = Criteria.where("creationDate").gte(from.get()).lt(to.get());
+      criteriaList.add(criteria);
     }
-
     if (queryTypes.isPresent()) {
       Criteria dynamicCriteria = Criteria.where("type").in(queryTypes.get());
-      criterias.add(dynamicCriteria);
+      criteriaList.add(dynamicCriteria);
     }
-    Criteria criteria =
-        new Criteria().andOperator(criterias.toArray(new Criteria[criterias.size()]));
-    Query query = new Query(criteria).with(pageable);
 
-    List<TokenEntity> entities = mongoTemplate.find(query.with(pageable), TokenEntity.class);
+    Criteria[] criteriaArray = criteriaList.toArray(new Criteria[criteriaList.size()]);
+    Criteria allCriteria = new Criteria();
+    if (criteriaArray.length > 0) {
+      allCriteria.andOperator(criteriaArray);
+    }
+    Query query = new Query(allCriteria);
+    if (queryLimit.isPresent()) {
+      query.with(pageable);
+    } else {
+      query.with(sort);
+    }
+
+    List<TokenEntity> entities = mongoTemplate.find(query, TokenEntity.class);
 
     List<Token> response = new LinkedList<>();
     entities.forEach(t -> {

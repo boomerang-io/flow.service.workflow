@@ -49,7 +49,7 @@ public class TokenV2Controller {
     return tokenService.create(request);
   }
 
-  @GetMapping("/token")
+  @GetMapping("/token/query")
   @AuthScope(types = {TokenScope.global, TokenScope.user, TokenScope.team, TokenScope.workflow},
       object = TokenObject.token, access = TokenAccess.read)
   @Operation(summary = "Search for Tokens")
@@ -57,20 +57,17 @@ public class TokenV2Controller {
       @Parameter(name = "types", description = "List of types to filter for. Defaults to all.",
       required = false) @RequestParam(required = false)  Optional<List<TokenScope>> types,
       @Parameter(name = "limit", description = "Result Size", example = "10",
-          required = true) @RequestParam(defaultValue = "10") int limit,
-      @Parameter(name = "page", description = "Page Number", example = "0",
-          required = true) @RequestParam(defaultValue = "0") int page,
-      @Parameter(name = "order", description = "Ascending or Descending (default) order", example = "0",
-      required = false) @RequestParam(defaultValue = "DESC") Optional<Direction> order,
+      required = true) @RequestParam(required = false) Optional<Integer> limit,
+  @Parameter(name = "page", description = "Page Number", example = "0",
+      required = true) @RequestParam(defaultValue = "0") Optional<Integer> page,
+  @Parameter(name = "order", description = "Ascending (ASC) or Descending (DESC) sort order on creationDate", example = "ASC",
+  required = true) @RequestParam(defaultValue = "ASC") Optional<Direction> order,
       @Parameter(name = "sort", description = "The element to sort onr", example = "0",
       required = false) @RequestParam(defaultValue = "creationDate") Optional<String> sort,
       @Parameter(name = "fromDate", description = "The unix timestamp / date to search from in milliseconds since epoch", example = "1677589200000",
       required = false) @RequestParam Optional<Long> fromDate,
       @Parameter(name = "toDate", description = "The unix timestamp / date to search to in milliseconds since epoch", example = "1680267600000",
       required = false) @RequestParam Optional<Long> toDate) {
-    final Sort pageingSort = Sort.by(new Order(order.get(), sort.get()));
-    final Pageable pageable = PageRequest.of(page, limit, pageingSort);
-    
     Optional<Date> from = Optional.empty();
     Optional<Date> to = Optional.empty();
     if (fromDate.isPresent()) {
@@ -79,7 +76,7 @@ public class TokenV2Controller {
     if (toDate.isPresent()) {
       to = Optional.of(new Date(toDate.get()));
     }
-    return tokenService.query(from, to, pageable, types);
+    return tokenService.query(from, to, limit, page, order, sort, types);
   }
 
   @DeleteMapping("/token/{id}")
