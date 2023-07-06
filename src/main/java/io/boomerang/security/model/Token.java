@@ -4,10 +4,12 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import org.springframework.beans.BeanUtils;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.boomerang.v4.data.entity.TokenEntity;
 
 public class Token {  
   
+//  @JsonIgnore
   private String id;
   private TokenScope type;
   private String name;
@@ -15,7 +17,7 @@ public class Token {
   private Date creationDate = new Date();
   private Date expirationDate;
   private boolean valid;
-  private String principalRef;
+  private String principal;
   private List<TokenPermission> permissions = new LinkedList<>();
 
   public Token() {
@@ -83,11 +85,11 @@ public class Token {
     this.description = description;
   }
 
-  public String getPrincipalRef() {
-    return principalRef;
+  public String getPrincipal() {
+    return principal;
   }
 
-  public void setPrincipalRef(String principalRef) {
-    this.principalRef = principalRef;
+  public void setPrincipal(String principal) {
+    this.principal = principal;
   }
 }

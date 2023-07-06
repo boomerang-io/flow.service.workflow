@@ -24,7 +24,7 @@ public class TokenEntity {
   private Date creationDate = new Date();
   private Date expirationDate;
   private boolean valid;
-  private String principalRef;
+  private String principal;
   private List<TokenPermission> permissions = new LinkedList<>();
   private String token;
 
@@ -101,11 +101,11 @@ public class TokenEntity {
     this.permissions = permissions;
   }
 
-  public String getPrincipalRef() {
-    return principalRef;
+  public String getPrincipal() {
+    return principal;
   }
 
-  public void setPrincipalRef(String principalRef) {
-    this.principalRef = principalRef;
+  public void setPrincipal(String principal) {
+    this.principal = principal;
   }
 }

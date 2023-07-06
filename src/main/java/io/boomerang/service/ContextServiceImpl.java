@@ -15,7 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
-import io.boomerang.security.service.ApiTokenService;
+import io.boomerang.security.service.ExternalTokenService;
 import io.boomerang.security.service.IdentityService;
 import io.boomerang.v4.data.entity.UserEntity;
 import io.boomerang.v4.model.AbstractParam;
@@ -62,7 +62,7 @@ public class ContextServiceImpl implements ContextService {
   private static final String TOKEN_PREFIX = "Bearer ";
   
   @Autowired
-  private ApiTokenService apiTokenService;
+  private ExternalTokenService apiTokenService;
   
   @Autowired
   private IdentityService identityService;

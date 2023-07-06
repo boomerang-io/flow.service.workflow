@@ -15,7 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
-import io.boomerang.security.service.ApiTokenService;
+import io.boomerang.security.service.ExternalTokenService;
 import io.boomerang.security.service.IdentityService;
 import io.boomerang.v4.model.FeaturesAndQuotas;
 import io.boomerang.v4.model.Navigation;
@@ -28,7 +28,7 @@ public class NavigationServiceImpl implements NavigationService {
   private String flowExternalUrlNavigation;
 
   @Autowired
-  private ApiTokenService apiTokenService;
+  private ExternalTokenService apiTokenService;
 
   private static final String AUTHORIZATION_HEADER = "Authorization";
   private static final String TOKEN_PREFIX = "Bearer ";

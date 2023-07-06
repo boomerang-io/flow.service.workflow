@@ -7,11 +7,7 @@ import javax.validation.Valid;
 import javax.websocket.server.PathParam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
-import org.springframework.data.domain.Sort.Order;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -56,6 +52,8 @@ public class TokenV2Controller {
   public Page<Token> query(
       @Parameter(name = "types", description = "List of types to filter for. Defaults to all.",
       required = false) @RequestParam(required = false)  Optional<List<TokenScope>> types,
+      @Parameter(name = "principals", description = "List of principals to filter for. Based on the types you are querying for.",
+      required = false) @RequestParam(required = false)  Optional<List<String>> principals,
       @Parameter(name = "limit", description = "Result Size", example = "10",
       required = true) @RequestParam(required = false) Optional<Integer> limit,
   @Parameter(name = "page", description = "Page Number", example = "0",
@@ -76,7 +74,7 @@ public class TokenV2Controller {
     if (toDate.isPresent()) {
       to = Optional.of(new Date(toDate.get()));
     }
-    return tokenService.query(from, to, limit, page, order, sort, types);
+    return tokenService.query(from, to, limit, page, order, sort, types, principals);
   }
 
   @DeleteMapping("/token/{id}")

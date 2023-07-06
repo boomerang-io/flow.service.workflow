@@ -1,6 +1,6 @@
 package io.boomerang.security.service;
 
-public interface ApiTokenService {
+public interface ExternalTokenService {
   String getToken(boolean encoded);
 
   String createJWTToken();

@@ -15,7 +15,7 @@ import io.jsonwebtoken.security.InvalidKeyException;
 import io.jsonwebtoken.security.Keys;
 
 @Service
-public class ApiTokenServiceImpl implements ApiTokenService {
+public class ExternalTokenServiceImpl implements ExternalTokenService {
 
   @Value("${api.token:boomerangsecuritytokenvalid12345}")
   private String apiToken;

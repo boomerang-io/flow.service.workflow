@@ -93,7 +93,7 @@ public class TokenServiceImpl implements TokenService {
       throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF); 
     }
     if (!TokenScope.global.equals(request.getType())) {
-      tokenEntity.setPrincipalRef(request.getPrincipal());
+      tokenEntity.setPrincipal(request.getPrincipal());
     }
     tokenEntity.setType(request.getType());
     tokenEntity.setName(request.getName());
@@ -193,7 +193,7 @@ public class TokenServiceImpl implements TokenService {
   @Override
   public Page<Token> query(Optional<Date> from, Optional<Date> to,
       Optional<Integer> queryLimit, Optional<Integer> queryPage, Optional<Direction> queryOrder,
-      Optional<String> querySort, Optional<List<TokenScope>> queryTypes) {
+      Optional<String> querySort, Optional<List<TokenScope>> queryTypes, Optional<List<String>> queryPrincipals) {
     Pageable pageable = Pageable.unpaged();
     final Sort sort = Sort.by(new Order(queryOrder.orElse(Direction.ASC), querySort.orElse("creationDate")));
     if (queryLimit.isPresent()) {
@@ -213,6 +213,10 @@ public class TokenServiceImpl implements TokenService {
     }
     if (queryTypes.isPresent()) {
       Criteria dynamicCriteria = Criteria.where("type").in(queryTypes.get());
+      criteriaList.add(dynamicCriteria);
+    }
+    if (queryPrincipals.isPresent()) {
+      Criteria dynamicCriteria = Criteria.where("principal").in(queryPrincipals.get());
       criteriaList.add(dynamicCriteria);
     }
 
@@ -267,7 +271,6 @@ public class TokenServiceImpl implements TokenService {
    * 
    * TODO: is this method declaration ever call besides the wrapper - should they be combined.
    */
-  @Override
   public Token createUserSessionToken(String email, String firstName, String lastName, boolean activateOverride) {
     Optional<UserEntity> user = Optional.empty();
     if (activateOverride && !identityService.isActivated()) {
@@ -293,7 +296,7 @@ public class TokenServiceImpl implements TokenService {
     tokenEntity.setType(TokenScope.session);
     tokenEntity.setExpirationDate(expiryDate);
     tokenEntity.setValid(true);
-    tokenEntity.setPrincipalRef(user.get().getId());
+    tokenEntity.setPrincipal(user.get().getId());
 
     String prefix = TokenTypePrefix.session.prefix;
     String uniqueToken = prefix + "_" + UUID.randomUUID().toString().toLowerCase();

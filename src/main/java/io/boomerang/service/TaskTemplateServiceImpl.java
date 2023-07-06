@@ -192,8 +192,8 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
       changelog = new ChangeLog();
     }
     changelog.setDate(new Date());
-    if (identityService.getCurrentIdentity().getPrincipalRef() != null) {
-      changelog.setAuthor(identityService.getCurrentIdentity().getPrincipalRef());
+    if (identityService.getCurrentIdentity().getPrincipal() != null) {
+      changelog.setAuthor(identityService.getCurrentIdentity().getPrincipal());
     }
   }
 

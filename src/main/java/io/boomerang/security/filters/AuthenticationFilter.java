@@ -214,12 +214,12 @@ public class AuthenticationFilter extends OncePerRequestFilter {
     }
     String email = request.getHeader(X_FORWARDED_EMAIL);
      String userName = request.getHeader(X_FORWARDED_USER);
-    final Token userSessionToken = tokenService.createUserSessionToken(email, userName, null, activateOverride);
+    final Token token = tokenService.createUserSessionToken(email, userName, null, activateOverride);
     if (email != null && !email.isBlank()) {
       final List<GrantedAuthority> authorities = new ArrayList<>();
       final UsernamePasswordAuthenticationToken authToken =
-          new UsernamePasswordAuthenticationToken(email, null, authorities);
-      authToken.setDetails(userSessionToken);
+          new UsernamePasswordAuthenticationToken(token.getPrincipal(), null, authorities);
+      authToken.setDetails(token);
       return authToken;
     }
     return null;
@@ -237,7 +237,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
       if (token != null) {
       final List<GrantedAuthority> authorities = new ArrayList<>();
       final UsernamePasswordAuthenticationToken authToken =
-          new UsernamePasswordAuthenticationToken(token.getId(), null, authorities);
+          new UsernamePasswordAuthenticationToken(token.getPrincipal(), null, authorities);
       authToken.setDetails(token);
       return authToken;
       }

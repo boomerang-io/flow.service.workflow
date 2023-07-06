@@ -1,9 +1,11 @@
 package io.boomerang.security.model;
 
 import java.util.Date;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 public class CreateTokenResponse {
 
+//  @JsonIgnore
   private String id;
   private TokenScope type;
   private String value;
