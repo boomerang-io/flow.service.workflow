@@ -115,22 +115,22 @@ public class TaskTemplateV2Controller {
   @Operation(summary = "Enable a TaskTemplate")
   @ApiResponses(value = {@ApiResponse(responseCode = "204", description = "No Content"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
-  public void enableWorkflow(
+  public TaskTemplate enableWorkflow(
       @Parameter(name = "name",
       description = "Name of Task Template",
       required = true) @PathVariable String name) {
-    taskTemplateService.enable(name);
+    return taskTemplateService.enable(name);
   }
 
   @PutMapping(value = "/{name}/disable")
   @Operation(summary = "Disable a TaskTemplate")
   @ApiResponses(value = {@ApiResponse(responseCode = "204", description = "No Content"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
-  public void disableWorkflow(
+  public TaskTemplate disableWorkflow(
       @Parameter(name = "name",
       description = "Name of Task Template",
       required = true) @PathVariable String name) {
-    taskTemplateService.disable(name);
+    return taskTemplateService.disable(name);
   }
 
   //TODO determine if the consumes is enough to direct it here.

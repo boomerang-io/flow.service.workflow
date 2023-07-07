@@ -208,7 +208,7 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
   }
 
   @Override
-  public void enable(String name) {
+  public TaskTemplate enable(String name) {
     if (name == null || name.isBlank()) {
       // TODO: do we want to return invalid ref or unauthorized
       throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
@@ -220,11 +220,14 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
       // TODO: do we want to return invalid ref or unauthorized
       throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
     }
-    engineClient.enableTaskTemplate(name);
+    TaskTemplate taskTemplate = engineClient.enableTaskTemplate(name);
+
+    switchChangeLogAuthorToUserName(taskTemplate.getChangelog());
+    return taskTemplate;
   }
 
   @Override
-  public void disable(String name) {
+  public TaskTemplate disable(String name) {
     if (name == null || name.isBlank()) {
       // TODO: do we want to return invalid ref or unauthorized
       throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
@@ -236,7 +239,10 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
       // TODO: do we want to return invalid ref or unauthorized
       throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
     }
-    engineClient.disableTaskTemplate(name);
+    TaskTemplate taskTemplate = engineClient.disableTaskTemplate(name);
+
+    switchChangeLogAuthorToUserName(taskTemplate.getChangelog());
+    return taskTemplate;
   }
 
   @Override

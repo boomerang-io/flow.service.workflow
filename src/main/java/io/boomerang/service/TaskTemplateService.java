@@ -22,9 +22,9 @@ public interface TaskTemplateService {
   ResponseEntity<TaskTemplate> apply(TaskTemplate request, boolean replace,
       Optional<String> teamId);
 
-  void enable(String name);
+  TaskTemplate enable(String name);
 
-  void disable(String name);
+  TaskTemplate disable(String name);
 
   TektonTask getAsTekton(String name, Optional<Integer> version);
 

@@ -794,18 +794,17 @@ public class EngineClientImpl implements EngineClient {
   }
 
   @Override
-  public void enableTaskTemplate(String name) {
+  public TaskTemplate enableTaskTemplate(String name) {
     try {
       String url = enableTaskTemplateURL.replace("{name}", name);
 
       LOGGER.info("URL: " + url);
-      ResponseEntity<Void> response = restTemplate.exchange(url, HttpMethod.PUT, null, Void.class);
+      ResponseEntity<TaskTemplate> response = restTemplate.exchange(url, HttpMethod.PUT, null, TaskTemplate.class);
 
       LOGGER.info("Status Response: " + response.getStatusCode());
+      LOGGER.info("Content Response: " + response.getBody().toString());
 
-      if (!HttpStatus.NO_CONTENT.equals(response.getStatusCode())) {
-        throw new RestClientException("Unable to enable TaskTemplate");
-      }
+      return response.getBody();
     } catch (RestClientException ex) {
       LOGGER.error(ex.toString());
       throw new BoomerangException(ex, HttpStatus.INTERNAL_SERVER_ERROR.value(),
@@ -815,18 +814,17 @@ public class EngineClientImpl implements EngineClient {
   }
 
   @Override
-  public void disableTaskTemplate(String name) {
+  public TaskTemplate disableTaskTemplate(String name) {
     try {
       String url = disableTaskTemplateURL.replace("{name}", name);
 
       LOGGER.info("URL: " + url);
-      ResponseEntity<Void> response = restTemplate.exchange(url, HttpMethod.PUT, null, Void.class);
+      ResponseEntity<TaskTemplate> response = restTemplate.exchange(url, HttpMethod.PUT, null, TaskTemplate.class);
 
       LOGGER.info("Status Response: " + response.getStatusCode());
+      LOGGER.info("Content Response: " + response.getBody().toString());
 
-      if (!HttpStatus.NO_CONTENT.equals(response.getStatusCode())) {
-        throw new RestClientException("Unable to disable TaskTemplate");
-      }
+      return response.getBody();
     } catch (RestClientException ex) {
       LOGGER.error(ex.toString());
       throw new BoomerangException(ex, HttpStatus.INTERNAL_SERVER_ERROR.value(),
