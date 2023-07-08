@@ -61,7 +61,7 @@ public class TaskTemplateV2Controller {
   }
   
   @GetMapping(value = "/query")
-  @Operation(summary = "Search for Task Templates")
+  @Operation(summary = "Search for Task Templates. If teams are provided it will query the teams. If no teams are provided it will query Global Task Templates")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
   public TaskTemplateResponsePage queryTaskTemplates(
@@ -112,7 +112,7 @@ public class TaskTemplateV2Controller {
   }
 
   @PutMapping(value = "/{name}/enable")
-  @Operation(summary = "Enable a TaskTemplate")
+  @Operation(summary = "Enable or Disable a TaskTemplate")
   @ApiResponses(value = {@ApiResponse(responseCode = "204", description = "No Content"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
   public TaskTemplate enableWorkflow(

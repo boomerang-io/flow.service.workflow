@@ -215,7 +215,7 @@ public class RelationshipServiceImpl implements RelationshipService {
   }
   
   /*
-   * Generates the FromRefs that the current security scope has access to, based on a specific type and optional lists of typeRefs, scopes, and teamIds 
+   * Generates the ToRefs that the current security scope has access to, based on a specific type and optional lists of typeRefs, scopes, and teamIds 
    * 
    * @param RelationshipRef fromRef
    * 
@@ -258,7 +258,7 @@ public class RelationshipServiceImpl implements RelationshipService {
     LOGGER.info("RelationshipFilter() - Access Scope: " + identityService.getCurrentScope());
     
     // If User is Admin provide global access
-    // MEMBEROF requests are ignored as we only want to return that users Teams and as such don't elevat the scope
+    // MEMBEROF requests are ignored as we only want to return that users Teams and as such don't elevate the scope
     if (elevate && identityService.isCurrentUserAdmin()) {
       LOGGER.info("RelationshipFilter() - Identity is Admin - Elevating permissions.");
       accessScope = TokenScope.global;

@@ -702,7 +702,7 @@ public class EngineClientImpl implements EngineClient {
   public TaskTemplateResponsePage queryTaskTemplates(Optional<Integer> queryLimit,
       Optional<Integer> queryPage, Optional<Direction> querySort,
       Optional<List<String>> queryLabels, Optional<List<String>> queryStatus,
-      Optional<List<String>> queryIds) {
+      Optional<List<String>> queryNames) {
     try {
       UriComponentsBuilder urlBuilder = UriComponentsBuilder.fromHttpUrl(queryTaskTemplateURL);
       if (queryPage.isPresent()) {
@@ -720,8 +720,8 @@ public class EngineClientImpl implements EngineClient {
       if (queryStatus.isPresent()) {
         urlBuilder.queryParam("status", queryStatus.get());
       }
-      if (queryIds.isPresent() && !queryIds.get().isEmpty()) {
-        urlBuilder.queryParam("ids", queryIds.get());
+      if (queryNames.isPresent() && !queryNames.get().isEmpty()) {
+        urlBuilder.queryParam("names", queryNames.get());
       }
       URI encodedURI = urlBuilder.build().encode().toUri();
 

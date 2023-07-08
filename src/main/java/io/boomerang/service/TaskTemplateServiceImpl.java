@@ -82,14 +82,21 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
   public TaskTemplateResponsePage query(Optional<Integer> queryLimit, Optional<Integer> queryPage, Optional<Direction> querySort,
       Optional<List<String>> queryLabels, Optional<List<String>> queryStatus,
       Optional<List<String>> queryNames, Optional<List<String>> queryTeams) {
-
+    
     // Get Refs that request has access to
-    // TODO: this doesn't work for Global TaskTemplates
-    List<String> refs =
-        relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.TASKTEMPLATE), queryNames,
-            Optional.of(RelationshipType.BELONGSTO), Optional.ofNullable(RelationshipRef.TEAM),
-            queryTeams);
-    LOGGER.debug("Query Ids: ", refs);
+    List<String> refs = null;
+    if (queryTeams.isPresent()) {
+      refs =
+          relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.TASKTEMPLATE), queryNames,
+              Optional.of(RelationshipType.BELONGSTO), Optional.of(RelationshipRef.TEAM),
+              queryTeams);
+    } else {
+      refs =
+          relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.TASKTEMPLATE), queryNames,
+              Optional.of(RelationshipType.BELONGSTO), Optional.of(RelationshipRef.GLOBAL),
+              Optional.empty());
+    }
+    LOGGER.debug("Query Refs: {}", refs.toString());
 
     TaskTemplateResponsePage response = engineClient.queryTaskTemplates(queryLimit, queryPage, querySort,
         queryLabels, queryStatus, Optional.of(refs));
@@ -178,6 +185,7 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
       ParameterUtil.paramSpecToAbstractParam(request.getSpec().getParams(), request.getConfig());
       
       TaskTemplate template = engineClient.applyTaskTemplate(request, replace);
+      LOGGER.info("I got down here");
       switchChangeLogAuthorToUserName(template.getChangelog());
       return ResponseEntity.ok(template);
     } else {
