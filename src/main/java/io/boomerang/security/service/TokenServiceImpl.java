@@ -133,7 +133,7 @@ public class TokenServiceImpl implements TokenService {
         RelationshipType.AUTHORIZES, to, toRef);
     
     CreateTokenResponse tokenResponse = new CreateTokenResponse();
-    tokenResponse.setValue(uniqueToken);
+    tokenResponse.setToken(uniqueToken);
     tokenResponse.setId(tokenEntity.getId());
     tokenResponse.setType(request.getType());
     tokenResponse.setExpirationDate(request.getExpirationDate());

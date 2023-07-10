@@ -1,14 +1,13 @@
 package io.boomerang.security.model;
 
 import java.util.Date;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 
 public class CreateTokenResponse {
 
 //  @JsonIgnore
   private String id;
   private TokenScope type;
-  private String value;
+  private String token;
   private Date expirationDate;
   
   public String getId() {
@@ -23,11 +22,11 @@ public class CreateTokenResponse {
   public void setType(TokenScope type) {
     this.type = type;
   }
-  public String getValue() {
-    return value;
+  public String getToken() {
+    return token;
   }
-  public void setValue(String value) {
-    this.value = value;
+  public void setToken(String token) {
+    this.token = token;
   }
   public Date getExpirationDate() {
     return expirationDate;

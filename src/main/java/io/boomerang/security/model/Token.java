@@ -4,7 +4,6 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import org.springframework.beans.BeanUtils;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.boomerang.v4.data.entity.TokenEntity;
 
 public class Token {  
