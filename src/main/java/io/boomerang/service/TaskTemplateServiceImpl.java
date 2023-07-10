@@ -55,9 +55,14 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
     }
 
     // Check if requester has access to refs
-    // TODO: determine if all users need to be able to access (READ) but not edit (CREATE, UPDATE, DELETE) 
+    // TODO: determine if all users need to be able to access (READ) but not edit (CREATE, UPDATE, DELETE)
     List<String> refs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.TASKTEMPLATE),
-        Optional.of(List.of(name)), Optional.of(RelationshipType.BELONGSTO), Optional.empty(), Optional.empty());
+        Optional.of(List.of(name)), Optional.of(RelationshipType.BELONGSTO), Optional.of(RelationshipRef.GLOBAL), Optional.empty());
+    if (refs.isEmpty()) {
+      refs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.TASKTEMPLATE),
+          Optional.of(List.of(name)), Optional.of(RelationshipType.BELONGSTO), Optional.of(RelationshipRef.TEAM), Optional.empty());
+    }
+    
     if (!refs.isEmpty()) {
       TaskTemplate taskTemplate = engineClient.getTaskTemplate(name, version);
       

@@ -259,7 +259,7 @@ public class RelationshipServiceImpl implements RelationshipService {
     
     // If User is Admin provide global access
     // MEMBEROF requests are ignored as we only want to return that users Teams and as such don't elevate the scope
-    if (elevate && identityService.isCurrentUserAdmin()) {
+    if (elevate && (TokenScope.session.equals(accessScope) || TokenScope.user.equals(accessScope)) && identityService.isCurrentUserAdmin()) {
       LOGGER.info("RelationshipFilter() - Identity is Admin - Elevating permissions.");
       accessScope = TokenScope.global;
     }
@@ -272,14 +272,14 @@ public class RelationshipServiceImpl implements RelationshipService {
           fromRefs = Optional.of(List.of(userId));
         } else if (RelationshipType.AUTHORIZES.equals(type.get()) && to.isPresent() && RelationshipRef.USER.equals(to.get())) {
           toRefs = Optional.of(List.of(userId));
-        } else if (RelationshipType.MEMBEROF.equals(type.get()) && to.isPresent() && RelationshipRef.TEAM.equals(to.get())) {
+        } else if (to.isPresent() && RelationshipRef.TEAM.equals(to.get())) {
+          List<String> filteredTeams = getTeamsRefsByUsers(List.of(userId));
          if (toRefs.isPresent()) {
            // If toRefs are provided (i.e. TeamIds) then filter to ones provided that the user has access to
-           List<String> filteredTeams = getTeamsRefsByUsers(List.of(userId));
            List<String> tempRefs = toRefs.get();
            toRefs = Optional.of(filteredTeams.stream().filter(r -> tempRefs.contains(r)).collect(Collectors.toList()));
          } else {
-           toRefs = Optional.of(getTeamsRefsByUsers(List.of(userId)));
+           toRefs = Optional.of(filteredTeams);
          }
         } 
         break;
@@ -300,7 +300,7 @@ public class RelationshipServiceImpl implements RelationshipService {
         String teamId = identityService.getCurrentPrincipal();
         if (to.isPresent() && RelationshipRef.TEAM.equals(to.get())) {
           if (!toRefs.isPresent() || (toRefs.isPresent() && toRefs.get().contains(teamId))) {
-            toRefs = Optional.of(getRefsForTeams(from.get(), fromRefs, List.of(teamId)));
+            toRefs = Optional.of(List.of(teamId)); 
           }
         } else if (!to.isPresent()) {
           toRefs = Optional.of(List.of(teamId)); 

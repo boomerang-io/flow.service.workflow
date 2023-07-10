@@ -33,7 +33,7 @@ public class TaskTemplateEntity {
   private ChangeLog changelog;
   private String category;
   private TaskType type;
-  private TaskTemplateSpec spec;
+  private TaskTemplateSpec spec = new TaskTemplateSpec();
   private List<AbstractParam> config;
   private String icon;
   private boolean verified;

@@ -135,19 +135,27 @@ public class TektonConverter {
       taskTemplate.setDescription(spec.getDescription());
     }
     Step step = spec.getSteps().get(0);
-    taskTemplate.getSpec().setImage(step.getImage());
-    taskTemplate.getSpec().setScript(step.getScript());
-    taskTemplate.getSpec().setWorkingDir(step.getWorkingDir());
-    if (step.getEnv() != null) {
+    if (step.getImage() != null && !step.getImage().isBlank()) {     
+      taskTemplate.getSpec().setImage(step.getImage());
+    }
+    if (step.getScript() != null && !step.getScript().isBlank()) {  
+      taskTemplate.getSpec().setScript(step.getScript());
+    }
+    if (step.getWorkingDir() != null && !step.getWorkingDir().isBlank()) {
+      taskTemplate.getSpec().setWorkingDir(step.getWorkingDir());
+    }
+    if (step.getEnv() != null && !step.getEnv().isEmpty()) {
       taskTemplate.getSpec().setEnvs(step.getEnv());
     }
-    if (step.getCommand() != null) {
+    if (step.getCommand() != null && !step.getCommand().isEmpty()) {
       taskTemplate.getSpec().setCommand(step.getCommand());
     }
-    taskTemplate.getSpec().setArguments(step.getArgs());
+    if (step.getArgs() != null && !step.getArgs().isEmpty()) {
+      taskTemplate.getSpec().setArguments(step.getArgs());
+    }
 
-    List<ParamSpec> paramSpecs = new LinkedList<>();
-    if (spec.getParams() != null) {
+    if (spec.getParams() != null && !spec.getParams().isEmpty()) {
+      List<ParamSpec> paramSpecs = new LinkedList<>();
       for (Param param : spec.getParams()) {
         ParamSpec paramSpec = new ParamSpec();
         paramSpec.setName(param.getName());
@@ -182,8 +190,8 @@ public class TektonConverter {
           taskTemplate.getConfig().add(newAbstractParam);
         }
       }
+      taskTemplate.getSpec().setParams(paramSpecs);
     }
-    taskTemplate.getSpec().setParams(paramSpecs);
     
     if (spec.getResults() != null && !spec.getResults().isEmpty()) {
       spec.setResults(spec.getResults());
