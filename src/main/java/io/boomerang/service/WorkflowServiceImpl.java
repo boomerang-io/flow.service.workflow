@@ -7,6 +7,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.quartz.SchedulerException;
@@ -521,6 +522,8 @@ public class WorkflowServiceImpl implements WorkflowService {
     WorkflowCanvas wfCanvas = new WorkflowCanvas();
     List<CanvasNode> nodes = new ArrayList<>();
     List<CanvasEdge> edges = new ArrayList<>();
+    
+    Map<String, TaskType> taskNamesToType = wfTasks.stream().collect(Collectors.toMap(Task::getName, Task::getType));
 
     wfTasks.forEach(task -> {
       CanvasNode node = new CanvasNode();
@@ -538,6 +541,7 @@ public class WorkflowServiceImpl implements WorkflowService {
       CanvasNodeData nodeData = new CanvasNodeData();
       nodeData.setLabel(task.getName());
       nodeData.setParams(task.getParams());
+      nodeData.setTemplateRef(task.getTemplateRef());
       node.setData(nodeData);
       nodes.add(node);
 
@@ -545,7 +549,8 @@ public class WorkflowServiceImpl implements WorkflowService {
         CanvasEdge edge = new CanvasEdge();
         edge.setTarget(task.getName());
         edge.setSource(dep.getTaskRef());
-        edge.setType(TaskType.decision.equals(task.getType()) ? "decision" : "let me know");
+        edge.setType(taskNamesToType.get(dep.getTaskRef()) != null ? taskNamesToType.get(dep.getTaskRef()).toString() : "");
+//        edge.setType(TaskType.decision.equals(task.getType()) ? "decision" : "let me know");
         CanvasEdgeData edgeData = new CanvasEdgeData();
         edgeData.setExecutionCondition(dep.getExecutionCondition());
         edgeData.setDecisionCondition(dep.getDecisionCondition());

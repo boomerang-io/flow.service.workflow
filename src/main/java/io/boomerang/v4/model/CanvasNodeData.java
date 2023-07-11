@@ -14,6 +14,8 @@ public class CanvasNodeData {
   
   List<RunParam> params;
   
+  String templateRef;
+  
   @JsonIgnore
   private Map<String, Object> additionalProperties = new HashMap<>();
   
@@ -31,6 +33,14 @@ public class CanvasNodeData {
 
   public void setParams(List<RunParam> params) {
     this.params = params;
+  }
+  
+  public String getTemplateRef() {
+    return templateRef;
+  }
+
+  public void setTemplateRef(String templateRef) {
+    this.templateRef = templateRef;
   }
 
   @JsonAnyGetter
