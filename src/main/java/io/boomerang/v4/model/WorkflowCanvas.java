@@ -1,11 +1,21 @@
 package io.boomerang.v4.model;
 
 import java.util.List;
+import org.springframework.beans.BeanUtils;
+import io.boomerang.v4.model.ref.Workflow;
 
-public class WorkflowCanvas {
+public class WorkflowCanvas extends Workflow {
 
   List<CanvasNode> nodes;
   List<CanvasEdge> edges;
+  
+  public WorkflowCanvas() {
+    
+  }
+  
+  public WorkflowCanvas(Workflow workflow) {
+    BeanUtils.copyProperties(workflow, this, "tasks");
+  }
   
   public List<CanvasNode> getNodes() {
     return nodes;

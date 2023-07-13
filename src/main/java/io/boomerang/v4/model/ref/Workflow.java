@@ -15,6 +15,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import io.boomerang.v4.data.entity.ref.WorkflowEntity;
 import io.boomerang.v4.data.entity.ref.WorkflowRevisionEntity;
 import io.boomerang.v4.model.AbstractParam;
+import io.boomerang.v4.model.WorkflowCanvas;
 import io.boomerang.v4.model.enums.ref.WorkflowStatus;
 
 /*
@@ -82,6 +83,16 @@ public class Workflow {
   public Workflow(WorkflowEntity wfEntity, WorkflowRevisionEntity wfRevisionEntity) {
     BeanUtils.copyProperties(wfEntity, this);
     BeanUtils.copyProperties(wfRevisionEntity, this, "id", "tasks");
+  }
+
+  /*
+   * Creates a Workflow from WorkflowCanvas
+   * 
+   * Does not copy / convert the stored Tasks onto the Workflow. If you want the Tasks you need to run
+   * workflow.setTasks(TaskMapper.revisionTasksToListOfTasks(wfRevisionEntity.getTasks()));
+   */
+  public Workflow(WorkflowCanvas wfCanvas) {
+    BeanUtils.copyProperties(wfCanvas, this);
   }
 
   public String getId() {

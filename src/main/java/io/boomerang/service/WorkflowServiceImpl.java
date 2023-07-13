@@ -3,6 +3,7 @@ package io.boomerang.service;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -372,7 +373,7 @@ public class WorkflowServiceImpl implements WorkflowService {
    * TODO: add a type to handle canvas or Tekton YAML etc etc
    */
   @Override
-  public ResponseEntity<WorkflowCanvas> compose(String workflowId, Optional<Integer> version) {
+  public ResponseEntity<WorkflowCanvas> composeGet(String workflowId, Optional<Integer> version) {
     if (workflowId == null || workflowId.isBlank()) {
       throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
     }
@@ -381,11 +382,28 @@ public class WorkflowServiceImpl implements WorkflowService {
         Optional.of(List.of(workflowId)), Optional.of(RelationshipType.BELONGSTO),  Optional.of(RelationshipRef.TEAM), Optional.empty());
     if (!workflowRefs.isEmpty()) {
       Workflow workflow = engineClient.getWorkflow(workflowId, version, true);
-      return ResponseEntity.ok(convertToCanvasModel(workflow.getTasks()));
+      return ResponseEntity.ok(convertWorkflowToCanvas(workflow));
     } else {
       // TODO: do we want to return invalid ref or unauthorized
       throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
     }
+  }  
+  
+  /*
+   * Retrieves Workflow with Tasks and converts / composes it to the appropriate model.
+   * 
+   * TODO: add a type to handle canvas or Tekton YAML etc etc
+   */
+  @Override
+  public ResponseEntity<WorkflowCanvas> composeApply(WorkflowCanvas canvas, boolean replace, Optional<String> team) {
+    if (canvas == null) {
+      //TODO - better error
+      throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
+    }
+    
+    Workflow workflow = convertCanvasToWorkflow(canvas);
+    this.apply(workflow, replace, team);
+    return ResponseEntity.ok(canvas);
   }  
 
   @Override
@@ -518,8 +536,9 @@ public class WorkflowServiceImpl implements WorkflowService {
    * 
    * TODO: move this code to a private method or a Convertor class
    */
-  protected WorkflowCanvas convertToCanvasModel(List<Task> wfTasks) {
-    WorkflowCanvas wfCanvas = new WorkflowCanvas();
+  protected WorkflowCanvas convertWorkflowToCanvas(Workflow workflow) {
+    List<Task> wfTasks = workflow.getTasks();
+    WorkflowCanvas wfCanvas = new WorkflowCanvas(workflow);
     List<CanvasNode> nodes = new ArrayList<>();
     List<CanvasEdge> edges = new ArrayList<>();
     
@@ -562,5 +581,44 @@ public class WorkflowServiceImpl implements WorkflowService {
     wfCanvas.setEdges(edges);
 
     return wfCanvas;
+  }
+  
+  /*
+   * Converts from standard Workflow to Canvas Model
+   * 
+   * TODO: move this code to a private method or a Convertor class
+   */
+  protected Workflow convertCanvasToWorkflow(WorkflowCanvas canvas) {
+    Workflow workflow = new Workflow(canvas);
+    List<CanvasNode> nodes = canvas.getNodes();
+    List<CanvasEdge> edges = canvas.getEdges();
+
+    nodes.forEach(node -> {
+      Task task = new Task();
+      task.setName(node.getId());
+      task.setType(node.getType());
+      Map<String, Number> position = new HashMap<>();
+      position.put("x", node.getPosition().getX());
+      position.put("y", node.getPosition().getY());
+      task.getAnnotations().put("boomerang.io/position", position);
+      task.setParams(node.getData().getParams());
+      task.setTemplateRef(node.getData().getTemplateRef());
+      //TODO figure out task version
+
+//      task.getDependencies().forEach(dep -> {
+//        CanvasEdge edge = new CanvasEdge();
+//        edge.setTarget(task.getName());
+//        edge.setSource(dep.getTaskRef());
+//        edge.setType(taskNamesToType.get(dep.getTaskRef()) != null ? taskNamesToType.get(dep.getTaskRef()).toString() : "");
+////        edge.setType(TaskType.decision.equals(task.getType()) ? "decision" : "let me know");
+//        CanvasEdgeData edgeData = new CanvasEdgeData();
+//        edgeData.setExecutionCondition(dep.getExecutionCondition());
+//        edgeData.setDecisionCondition(dep.getDecisionCondition());
+//        edges.add(edge);
+//      });
+      workflow.getTasks().add(task);
+    });
+
+    return workflow;
   }
 }

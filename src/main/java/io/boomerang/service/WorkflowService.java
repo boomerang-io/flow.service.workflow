@@ -32,7 +32,10 @@ public interface WorkflowService {
 
   ResponseEntity<Workflow> duplicate(String workflowId);
 
-  ResponseEntity<WorkflowCanvas> compose(String workflowId, Optional<Integer> version);
+  ResponseEntity<WorkflowCanvas> composeGet(String workflowId, Optional<Integer> version);
+
+  ResponseEntity<WorkflowCanvas> composeApply(WorkflowCanvas canvas, boolean replace,
+      Optional<String> team);
 
   List<String> getAvailableParameters(String workflowId);
   

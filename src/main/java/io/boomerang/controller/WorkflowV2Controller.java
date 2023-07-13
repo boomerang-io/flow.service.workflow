@@ -141,7 +141,20 @@ public class WorkflowV2Controller {
           required = true) @PathVariable String workflowId,
       @Parameter(name = "version", description = "Workflow Version",
           required = false) @RequestParam(required = false) Optional<Integer> version) {
-    return workflowService.compose(workflowId, version);
+    return workflowService.composeGet(workflowId, version);
+  }
+
+  @PutMapping(value = "/{workflowId}/compose")
+  @Operation(summary = "Update, replace, or create new, Workflow for Canvas")
+  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
+      @ApiResponse(responseCode = "400", description = "Bad Request")})
+  public ResponseEntity<WorkflowCanvas> applyCanvas(@RequestBody WorkflowCanvas canvas,
+      @Parameter(name = "replace", description = "Replace existing version",
+          required = false) @RequestParam(required = false, defaultValue = "false") boolean replace,
+      @Parameter(name = "team", description = "Team as owner reference. Required if using apply to create new.",
+          example = "63d3656ca845957db7d25ef0,63a3e732b0496509a7f1d763",
+          required = false) @RequestParam(required = false) Optional<String> team) {
+    return workflowService.composeApply(canvas, replace, team);
   }
 
   @PostMapping(value = "/{workflowId}/duplicate")
