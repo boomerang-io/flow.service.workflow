@@ -8,6 +8,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -413,7 +414,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     if (workflowId == null || workflowId.isBlank()) {
       throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
     }
-    List<String> teamRefs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.WORKFLOW),
+    List<String> teamRefs = relationshipService.getFilteredToRefs(Optional.of(RelationshipRef.WORKFLOW),
         Optional.of(List.of(workflowId)), Optional.of(RelationshipType.BELONGSTO),  Optional.of(RelationshipRef.TEAM), Optional.empty());
     if (!teamRefs.isEmpty()) {
       Workflow workflow = engineClient.getWorkflow(workflowId, Optional.empty(), false);
@@ -546,7 +547,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
     wfTasks.forEach(task -> {
       CanvasNode node = new CanvasNode();
-      node.setId(new BsonObjectId().toString());
+      node.setId(UUID.randomUUID().toString());
       node.setType(task.getType());
       if (task.getAnnotations().containsKey("boomerang.io/position")) {
         Map<String, Number> position =
