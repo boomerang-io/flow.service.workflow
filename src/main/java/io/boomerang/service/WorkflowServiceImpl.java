@@ -547,7 +547,6 @@ public class WorkflowServiceImpl implements WorkflowService {
 
     wfTasks.forEach(task -> {
       CanvasNode node = new CanvasNode();
-      node.setId(UUID.randomUUID().toString());
       node.setType(task.getType());
       if (task.getAnnotations().containsKey("boomerang.io/position")) {
         Map<String, Number> position =

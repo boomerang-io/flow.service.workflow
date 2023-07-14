@@ -1,5 +1,6 @@
 package io.boomerang.v4.model;
 
+import org.bson.types.ObjectId;
 import io.boomerang.v4.model.enums.ref.TaskType;
 
 /*
@@ -26,7 +27,7 @@ import io.boomerang.v4.model.enums.ref.TaskType;
  */
 public class CanvasNode {
   
-  String id;
+  String id = new ObjectId().toString();
   
   CanvasNodePosition position;
   
