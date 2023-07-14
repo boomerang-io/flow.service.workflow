@@ -10,21 +10,21 @@ import io.boomerang.v4.model.ref.RunParam;
 
 public class CanvasNodeData {
   
-  String label;
-  
+  String name;
   List<RunParam> params;
-  
   String templateRef;
+  Integer templateVersion;
+  boolean templateUpgradesAvailable;
   
   @JsonIgnore
   private Map<String, Object> additionalProperties = new HashMap<>();
   
-  public String getLabel() {
-    return label;
+  public String getName() {
+    return name;
   }
 
-  public void setLabel(String label) {
-    this.label = label;
+  public void setName(String label) {
+    this.name = label;
   }
 
   public List<RunParam> getParams() {
@@ -41,6 +41,22 @@ public class CanvasNodeData {
 
   public void setTemplateRef(String templateRef) {
     this.templateRef = templateRef;
+  }
+  
+  public Integer getTemplateVersion() {
+    return templateVersion;
+  }
+
+  public void setTemplateVersion(Integer templateVersion) {
+    this.templateVersion = templateVersion;
+  }
+
+  public boolean getTemplateUpgradesAvailable() {
+    return templateUpgradesAvailable;
+  }
+
+  public void setTemplateUpgradesAvailable(boolean templateUpgradesAvailable) {
+    this.templateUpgradesAvailable = templateUpgradesAvailable;
   }
 
   @JsonAnyGetter

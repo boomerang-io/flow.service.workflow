@@ -11,6 +11,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.bson.BsonObjectId;
 import org.quartz.SchedulerException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
@@ -39,6 +40,7 @@ import io.boomerang.v4.model.enums.TriggerEnum;
 import io.boomerang.v4.model.enums.ref.TaskType;
 import io.boomerang.v4.model.enums.ref.WorkflowStatus;
 import io.boomerang.v4.model.ref.Task;
+import io.boomerang.v4.model.ref.TaskDependency;
 import io.boomerang.v4.model.ref.Trigger;
 import io.boomerang.v4.model.ref.TriggerEvent;
 import io.boomerang.v4.model.ref.TriggerScheduler;
@@ -532,9 +534,7 @@ public class WorkflowServiceImpl implements WorkflowService {
   }
 
   /*
-   * Converts from standard Workflow to Canvas Model
-   * 
-   * TODO: move this code to a private method or a Convertor class
+   * Converts from Workflow to Workflow Canvas
    */
   protected WorkflowCanvas convertWorkflowToCanvas(Workflow workflow) {
     List<Task> wfTasks = workflow.getTasks();
@@ -546,7 +546,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
     wfTasks.forEach(task -> {
       CanvasNode node = new CanvasNode();
-      node.setId(task.getName()); // TODO does the ID need to just be random
+      node.setId(new BsonObjectId().toString());
       node.setType(task.getType());
       if (task.getAnnotations().containsKey("boomerang.io/position")) {
         Map<String, Number> position =
@@ -558,9 +558,12 @@ public class WorkflowServiceImpl implements WorkflowService {
         node.setPosition(nodePosition);
       }
       CanvasNodeData nodeData = new CanvasNodeData();
-      nodeData.setLabel(task.getName());
+      nodeData.setName(task.getName());
       nodeData.setParams(task.getParams());
       nodeData.setTemplateRef(task.getTemplateRef());
+      nodeData.setTemplateVersion(task.getTemplateVersion());
+      //TODO figure out template upgrades
+      nodeData.setTemplateUpgradesAvailable(false);
       node.setData(nodeData);
       nodes.add(node);
 
@@ -569,10 +572,10 @@ public class WorkflowServiceImpl implements WorkflowService {
         edge.setTarget(task.getName());
         edge.setSource(dep.getTaskRef());
         edge.setType(taskNamesToType.get(dep.getTaskRef()) != null ? taskNamesToType.get(dep.getTaskRef()).toString() : "");
-//        edge.setType(TaskType.decision.equals(task.getType()) ? "decision" : "let me know");
         CanvasEdgeData edgeData = new CanvasEdgeData();
         edgeData.setExecutionCondition(dep.getExecutionCondition());
         edgeData.setDecisionCondition(dep.getDecisionCondition());
+        edge.setData(edgeData);
         edges.add(edge);
       });
     });
@@ -584,9 +587,7 @@ public class WorkflowServiceImpl implements WorkflowService {
   }
   
   /*
-   * Converts from standard Workflow to Canvas Model
-   * 
-   * TODO: move this code to a private method or a Convertor class
+   * Converts from Canvas Workflow to Workflow
    */
   protected Workflow convertCanvasToWorkflow(WorkflowCanvas canvas) {
     Workflow workflow = new Workflow(canvas);
@@ -595,7 +596,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
     nodes.forEach(node -> {
       Task task = new Task();
-      task.setName(node.getId());
+      task.setName(node.getData().getName());
       task.setType(node.getType());
       Map<String, Number> position = new HashMap<>();
       position.put("x", node.getPosition().getX());
@@ -603,19 +604,15 @@ public class WorkflowServiceImpl implements WorkflowService {
       task.getAnnotations().put("boomerang.io/position", position);
       task.setParams(node.getData().getParams());
       task.setTemplateRef(node.getData().getTemplateRef());
-      //TODO figure out task version
+      task.setTemplateVersion(node.getData().getTemplateVersion());
 
-//      task.getDependencies().forEach(dep -> {
-//        CanvasEdge edge = new CanvasEdge();
-//        edge.setTarget(task.getName());
-//        edge.setSource(dep.getTaskRef());
-//        edge.setType(taskNamesToType.get(dep.getTaskRef()) != null ? taskNamesToType.get(dep.getTaskRef()).toString() : "");
-////        edge.setType(TaskType.decision.equals(task.getType()) ? "decision" : "let me know");
-//        CanvasEdgeData edgeData = new CanvasEdgeData();
-//        edgeData.setExecutionCondition(dep.getExecutionCondition());
-//        edgeData.setDecisionCondition(dep.getDecisionCondition());
-//        edges.add(edge);
-//      });
+      edges.stream().filter(e -> e.getTarget().equals(task.getName())).forEach(e -> {
+        TaskDependency dep = new TaskDependency();
+        dep.setTaskRef(e.getSource());
+        dep.setDecisionCondition(e.getData().getDecisionCondition());
+        dep.setExecutionCondition(e.getData().getExecutionCondition());
+        task.getDependencies().add(dep);
+      });
       workflow.getTasks().add(task);
     });
 
