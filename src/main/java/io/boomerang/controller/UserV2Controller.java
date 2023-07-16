@@ -108,12 +108,13 @@ public class UserV2Controller {
     }
   }
 
-  @PatchMapping(value = "")
+  @PatchMapping(value = "/{userId}")
   @AuthScope(access = TokenAccess.write, object = TokenObject.user, types = {TokenScope.global})
   @Operation(summary = "Update a Boomerang Flow Users details")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
-  public ResponseEntity<Void> apply(@RequestBody UserRequest user) {
+  public ResponseEntity<Void> apply(@PathVariable String userId, @RequestBody UserRequest user) {
+    user.setId(userId);
     if (isUserManagementAvaliable()) {
       identityService.apply(user);
       return ResponseEntity.ok().build();
