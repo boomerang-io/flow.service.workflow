@@ -29,7 +29,7 @@ public class GlobalConfigControllerTests extends FlowTests {
   public void testGlobalConfigUpdate() {
     GlobalConfig newConfig = new GlobalConfig();
     newConfig.setKey("test");
-    newConfig.setLabel("Test");
+    newConfig.setName("Test");
     newConfig.setDescription("Test Description");
     newConfig.setDefaultValue("test");
 

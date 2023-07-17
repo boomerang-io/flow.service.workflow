@@ -117,22 +117,22 @@ public class TeamControllerTests extends FlowTests {
   @Test
   public void testUpdateTeamProperty() {
     Assertions.assertEquals(null,
-        controller.getAllTeamProperties("5d1a1841f6ca2c00014c4302").get(0).getValue());
+        controller.getAllTeamProperties("5d1a1841f6ca2c00014c4302").get(0).getToken());
 
     TeamParameter property = new TeamParameter();
     property.setId("df5f5749-4d30-41c3-803e-56b54b768407");
-    property.setValue("Updated Value");
+    property.setToken("Updated Value");
 
     List<TeamParameter> updatedConfigs = controller.updateTeamProperty(
         "5d1a1841f6ca2c00014c4302", property, "df5f5749-4d30-41c3-803e-56b54b768407");
-    Assertions.assertEquals("Updated Value", updatedConfigs.get(0).getValue());
+    Assertions.assertEquals("Updated Value", updatedConfigs.get(0).getToken());
   }
 
   @Test
   public void testCreateNewTeamProperty() {
     TeamParameter property = new TeamParameter();
     property.setKey("dylan.new.key");
-    property.setValue("Dylan's New Value");
+    property.setToken("Dylan's New Value");
 
     TeamParameter newConfig =
         controller.createNewTeamProperty("5d1a1841f6ca2c00014c4309", property);
@@ -140,23 +140,23 @@ public class TeamControllerTests extends FlowTests {
         controller.createNewTeamProperty("5d1a1841f6ca2c00014c4302", property);
 
     Assertions.assertEquals("dylan.new.key", newConfig.getKey());
-    Assertions.assertEquals("Dylan's New Value", newConfig.getValue());
+    Assertions.assertEquals("Dylan's New Value", newConfig.getToken());
 
     Assertions.assertEquals("dylan.new.key", newConfig2.getKey());
-    Assertions.assertEquals("Dylan's New Value", newConfig2.getValue());
+    Assertions.assertEquals("Dylan's New Value", newConfig2.getToken());
   }
   
   @Test
   public void testCreateNewTeamPropertyPassword() {
     TeamParameter property = new TeamParameter();
     property.setKey("dylan.new.key");
-    property.setValue("Sensitive data");
+    property.setToken("Sensitive data");
     property.setType("password");
 
     TeamParameter newConfig =
         controller.createNewTeamProperty("5d1a1841f6ca2c00014c4309", property);
     
-    Assertions.assertNull(newConfig.getValue());
+    Assertions.assertNull(newConfig.getToken());
    }
 
   @Test
