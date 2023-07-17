@@ -363,6 +363,10 @@ public class IdentityServiceImpl implements IdentityService {
   @Override
   public void delete(String userId) {
     Optional<UserEntity> user = userRepository.findById(userId);
+    List<String> teamRefs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.USER), Optional.of(List.of(userId)), Optional.of(RelationshipType.MEMBEROF), Optional.of(RelationshipRef.TEAM), Optional.empty());
+    if (!teamRefs.isEmpty()) {
+        throw new BoomerangException(BoomerangError.USER_UNABLE_TO_DELETE);
+    }
     if (user.isPresent()) {
       user.get().setStatus(UserStatus.deleted);
       userRepository.save(user.get());
