@@ -185,6 +185,7 @@ public class TokenServiceImpl implements TokenService {
     if (tokenEntityOptional.isPresent()) {
       TokenEntity tokenEntity = tokenEntityOptional.get();
       tokenEntity.setValid(false);
+      this.tokenRepository.save(tokenEntity);
       return true;
     }
     return false;

@@ -126,14 +126,6 @@ public class NavigationServiceImpl implements NavigationService {
       teamParameters.setLink(flowAppsUrl + teamIdURLContext + "/parameters");
       response.add(teamParameters);
 
-      Navigation teamTokens = new Navigation();
-      teamTokens.setName("Tokens");
-      teamTokens.setType(NavigationType.link);
-      teamTokens.setDisabled(disabled);
-      teamTokens.setIcon("Password");
-      teamTokens.setLink(flowAppsUrl + teamIdURLContext + "/tokens");
-      response.add(teamTokens);
-
       Navigation management = new Navigation();
       management.setName("Manage Team");
       management.setType(NavigationType.link);

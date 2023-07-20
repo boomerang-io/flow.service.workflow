@@ -234,7 +234,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
             : request.getParameter(TOKEN_URL_PARAM_NAME);
     if (tokenService.validate(xAccessToken)) {
       Token token = tokenService.get(xAccessToken);
-      if (token != null) {
+      if (token != null && token.isValid()) {
       final List<GrantedAuthority> authorities = new ArrayList<>();
       final UsernamePasswordAuthenticationToken authToken =
           new UsernamePasswordAuthenticationToken(token.getPrincipal(), null, authorities);
@@ -242,38 +242,6 @@ public class AuthenticationFilter extends OncePerRequestFilter {
       return authToken;
       }
     }
-//    if (token != null) {
-//      final List<GrantedAuthority> authorities = new ArrayList<>();
-//      if (token.getScope() == TokenPermission.global) {
-//        Token t = new GlobalToken();
-//        final FlowAuthenticationToken authToken = new FlowAuthenticationToken(authorities);
-//        authToken.setDetails(t);
-//        return authToken;
-//      } else if (token.getScope() == TokenPermission.team) {
-//        TeamToken t = new TeamToken();
-//        String teamId = token.getTeamId();
-//        t.setTeamId(teamId);
-//
-//        final FlowAuthenticationToken authToken = new FlowAuthenticationToken(authorities);
-//        authToken.setDetails(t);
-//        return authToken;
-//      } else if (token.getScope() == TokenPermission.user) {
-//        String userId = token.getUserId();
-//        Optional<UserEntity> user = userService.getUserById(userId);
-//        if (user.isPresent()) {
-//          UserEntity flowUser = user.get();
-//          String name = flowUser.getName();
-//          String email = flowUser.getEmail();
-//          final UserToken userDetails = new UserToken(userId, name, "");
-//          if (userId != null) {
-//            final UsernamePasswordAuthenticationToken authToken =
-//                new UsernamePasswordAuthenticationToken(email, null, authorities);
-//            authToken.setDetails(userDetails);
-//            return authToken;
-//          }
-//        }
-//      }
-//    }
     return null;
   }
 
