@@ -11,6 +11,7 @@ import org.springframework.data.domain.Sort.Direction;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -81,7 +82,8 @@ public class TokenV2Controller {
   @AuthScope(types = {TokenScope.global, TokenScope.user, TokenScope.team, TokenScope.workflow},
       object = TokenObject.token, access = TokenAccess.delete)
   @Operation(summary = "Delete Token")
-  public ResponseEntity<?> deleteToken(@Valid @PathParam(value = "id") String id) {
+  public ResponseEntity<?> deleteToken(@Parameter(name = "id",
+      description = "ID of the Token", required = true) @PathVariable String id) {
     boolean result = tokenService.delete(id);
     if (result) {
       return ResponseEntity.ok().build();

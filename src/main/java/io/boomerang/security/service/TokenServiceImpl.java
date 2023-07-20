@@ -85,7 +85,7 @@ public class TokenServiceImpl implements TokenService {
       throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);   
     }
 
-    LOGGER.debug("Creating {0} token...", request.getType().toString());
+    LOGGER.debug("Creating {} token...", request.getType().toString());
     TokenEntity tokenEntity = new TokenEntity();
     //Ensure Principal is provided for all types but global
     if (!TokenScope.global.equals(request.getType()) && (request.getPrincipal() == null || request.getPrincipal().isEmpty())) {
