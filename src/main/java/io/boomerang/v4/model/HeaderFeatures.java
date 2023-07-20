@@ -12,6 +12,9 @@ public class HeaderFeatures {
 
   @JsonProperty("docs.enabled")
   private Boolean docsEnabled;
+
+  @JsonProperty("internal.enabled")
+  private Boolean internalEnabled;
   
   @JsonProperty("consent.enabled")
   private Boolean consentEnabled;
@@ -46,6 +49,14 @@ public class HeaderFeatures {
 
   public void setDocsEnabled(Boolean docsEnabled) {
     this.docsEnabled = docsEnabled;
+  }
+
+  public Boolean getInternalEnabled() {
+    return internalEnabled;
+  }
+
+  public void setInternalEnabled(Boolean internalEnabled) {
+    this.internalEnabled = internalEnabled;
   }
 
 }

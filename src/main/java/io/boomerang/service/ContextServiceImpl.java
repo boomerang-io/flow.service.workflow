@@ -93,6 +93,7 @@ public class ContextServiceImpl implements ContextService {
     features.setDocsEnabled(false);
     features.setSupportEnabled(false);
     features.setConsentEnabled(false);
+    features.setInternalEnabled(platformNavigationUrl.isBlank() ? true : false);
     
     navigationResponse.setFeatures(features);
 
