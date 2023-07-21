@@ -23,7 +23,6 @@ public class TokenEntity {
   private String description;
   private Date creationDate = new Date();
   private Date expirationDate;
-  private boolean valid;
   private String principal;
   private List<TokenPermission> permissions = new LinkedList<>();
   private String token;
@@ -82,15 +81,6 @@ public class TokenEntity {
 
   public void setToken(String token) {
     this.token = token;
-  }
-
-
-  public boolean isValid() {
-    return valid;
-  }
-
-  public void setValid(boolean valid) {
-    this.valid = valid;
   }
 
   public List<TokenPermission> getPermissions() {

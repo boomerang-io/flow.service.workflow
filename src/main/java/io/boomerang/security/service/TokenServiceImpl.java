@@ -78,19 +78,20 @@ public class TokenServiceImpl implements TokenService {
       // TODO make real exception
       throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
     }
-    
-    //Disallow creation of session tokens except via internal AuthenticationFilter
+
+    // Disallow creation of session tokens except via internal AuthenticationFilter
     if (TokenScope.session.equals(request.getType())) {
       // TODO make real exception
-      throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);   
+      throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
     }
 
     LOGGER.debug("Creating {} token...", request.getType().toString());
     TokenEntity tokenEntity = new TokenEntity();
-    //Ensure Principal is provided for all types but global
-    if (!TokenScope.global.equals(request.getType()) && (request.getPrincipal() == null || request.getPrincipal().isEmpty())) {
+    // Ensure Principal is provided for all types but global
+    if (!TokenScope.global.equals(request.getType())
+        && (request.getPrincipal() == null || request.getPrincipal().isEmpty())) {
       // TODO make real exception
-      throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF); 
+      throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
     }
     if (!TokenScope.global.equals(request.getType())) {
       tokenEntity.setPrincipal(request.getPrincipal());
@@ -99,7 +100,6 @@ public class TokenServiceImpl implements TokenService {
     tokenEntity.setName(request.getName());
     tokenEntity.setDescription(request.getDescription());
     tokenEntity.setExpirationDate(request.getExpirationDate());
-    tokenEntity.setValid(true);
     tokenEntity.setPermissions(request.getPermissions());
 
     String prefix = TokenTypePrefix.valueOf(request.getType().toString()).getPrefix();
@@ -109,10 +109,11 @@ public class TokenServiceImpl implements TokenService {
     LOGGER.debug("Token: " + uniqueToken);
     tokenEntity.setToken(hashToken);
     tokenEntity = tokenRepository.save(tokenEntity);
-    
+
     // Create an Audit relationship
-//    relationshipService.addRelationshipRef(RelationshipRef.USER, identityService.getCurrentUser().getId(),
-//      RelationshipType.CREATED, RelationshipRef.TOKEN, Optional.of(tokenEntity.getId()));
+    // relationshipService.addRelationshipRef(RelationshipRef.USER,
+    // identityService.getCurrentUser().getId(),
+    // RelationshipType.CREATED, RelationshipRef.TOKEN, Optional.of(tokenEntity.getId()));
 
     // Create Authorization Relationship
     RelationshipRef to = null;
@@ -131,7 +132,7 @@ public class TokenServiceImpl implements TokenService {
     }
     relationshipService.addRelationshipRef(RelationshipRef.TOKEN, tokenEntity.getId(),
         RelationshipType.AUTHORIZES, to, toRef);
-    
+
     CreateTokenResponse tokenResponse = new CreateTokenResponse();
     tokenResponse.setToken(uniqueToken);
     tokenResponse.setId(tokenEntity.getId());
@@ -167,10 +168,7 @@ public class TokenServiceImpl implements TokenService {
     Optional<TokenEntity> tokenEntityOptional = this.tokenRepository.findByToken(hash);
     if (tokenEntityOptional.isPresent()) {
       TokenEntity tokenEntity = tokenEntityOptional.get();
-      Date currentDate = new Date();
-      boolean validToken = tokenEntity.isValid();
-
-      if (validToken && (tokenEntity.getExpirationDate() == null || tokenEntity.getExpirationDate().after(currentDate))) {
+      if (isValid(tokenEntity.getExpirationDate())) {
         LOGGER.debug("Token Validation - valid");
         return true;
       }
@@ -184,19 +182,19 @@ public class TokenServiceImpl implements TokenService {
     Optional<TokenEntity> tokenEntityOptional = this.tokenRepository.findById(id);
     if (tokenEntityOptional.isPresent()) {
       TokenEntity tokenEntity = tokenEntityOptional.get();
-      tokenEntity.setValid(false);
-      this.tokenRepository.save(tokenEntity);
+      this.tokenRepository.delete(tokenEntity);
       return true;
     }
     return false;
   }
 
   @Override
-  public Page<Token> query(Optional<Date> from, Optional<Date> to,
-      Optional<Integer> queryLimit, Optional<Integer> queryPage, Optional<Direction> queryOrder,
-      Optional<String> querySort, Optional<List<TokenScope>> queryTypes, Optional<List<String>> queryPrincipals) {
+  public Page<Token> query(Optional<Date> from, Optional<Date> to, Optional<Integer> queryLimit,
+      Optional<Integer> queryPage, Optional<Direction> queryOrder, Optional<String> querySort,
+      Optional<List<TokenScope>> queryTypes, Optional<List<String>> queryPrincipals) {
     Pageable pageable = Pageable.unpaged();
-    final Sort sort = Sort.by(new Order(queryOrder.orElse(Direction.ASC), querySort.orElse("creationDate")));
+    final Sort sort =
+        Sort.by(new Order(queryOrder.orElse(Direction.ASC), querySort.orElse("creationDate")));
     if (queryLimit.isPresent()) {
       pageable = PageRequest.of(queryPage.get(), queryLimit.get(), sort);
     }
@@ -236,8 +234,10 @@ public class TokenServiceImpl implements TokenService {
     List<TokenEntity> entities = mongoTemplate.find(query, TokenEntity.class);
 
     List<Token> response = new LinkedList<>();
-    entities.forEach(t -> {
-      response.add(new Token(t));
+    entities.forEach(te -> {
+      Token token = new Token(te);
+      token.setValid(isValid(te.getExpirationDate()));
+      response.add(token);
     });
 
     Page<Token> pages = PageableExecutionUtils.getPage(response, pageable,
@@ -252,38 +252,50 @@ public class TokenServiceImpl implements TokenService {
     Optional<TokenEntity> tokenEntityOptional = this.tokenRepository.findByToken(hash);
     if (tokenEntityOptional.isPresent()) {
       TokenEntity tokenEntity = tokenEntityOptional.get();
-      Date currentDate = new Date();
-      boolean validToken = tokenEntity.isValid();
-
-      if (validToken && (tokenEntity.getExpirationDate() == null || tokenEntity.getExpirationDate().after(currentDate))) {
-        Token response = new Token();
-        BeanUtils.copyProperties(tokenEntity, response);
-        return response;
-      }
+      Token response = new Token();
+      response.setValid(isValid(tokenEntity.getExpirationDate()));
+      BeanUtils.copyProperties(tokenEntity, response);
+      return response;
     }
     return null;
   }
 
   /*
-   * Creates a token expiring in MAX SESSION TIME. Used by the AuthenticationFilter when accessed by non Access Token
+   * Token.valid element is only on the Model and not the Data Entity It is a derived element based
+   * on expiration date
+   */
+  private boolean isValid(Date expirationDate) {
+    Date currentDate = new Date();
+    if (expirationDate == null || expirationDate.after(currentDate)) {
+      return true;
+    }
+    return false;
+  }
+
+  /*
+   * Creates a token expiring in MAX SESSION TIME. Used by the AuthenticationFilter when accessed by
+   * non Access Token
    * 
    * TODO: add scopes that a user session token would have (needs to based on User ... eventually
    * dynamic)
    * 
    * TODO: is this method declaration ever call besides the wrapper - should they be combined.
    */
-  public Token createUserSessionToken(String email, String firstName, String lastName, boolean activateOverride) {
+  public Token createUserSessionToken(String email, String firstName, String lastName,
+      boolean activateOverride) {
     Optional<UserEntity> user = Optional.empty();
     if (activateOverride && !identityService.isActivated()) {
-      user = identityService.getAndRegisterUser(email, firstName, lastName, Optional.of(UserType.admin));
+      user = identityService.getAndRegisterUser(email, firstName, lastName,
+          Optional.of(UserType.admin));
     } else if (identityService.isActivated()) {
-      user = identityService.getAndRegisterUser(email, firstName, lastName, Optional.of(UserType.user));
+      user = identityService.getAndRegisterUser(email, firstName, lastName,
+          Optional.of(UserType.user));
     } else {
       throw new HttpClientErrorException(HttpStatus.LOCKED);
     }
 
     if (!user.isPresent()) {
-      //TODO throw exception
+      // TODO throw exception
       return null;
     }
     Calendar cal = Calendar.getInstance();
@@ -296,7 +308,6 @@ public class TokenServiceImpl implements TokenService {
     tokenEntity.setDescription("Generated User Session Token");
     tokenEntity.setType(TokenScope.session);
     tokenEntity.setExpirationDate(expiryDate);
-    tokenEntity.setValid(true);
     tokenEntity.setPrincipal(user.get().getId());
 
     String prefix = TokenTypePrefix.session.prefix;
@@ -305,7 +316,7 @@ public class TokenServiceImpl implements TokenService {
     final String hashToken = hashString(uniqueToken);
     tokenEntity.setToken(hashToken);
     tokenEntity = tokenRepository.save(tokenEntity);
-    
+
     // Create Authorization Relationship
     relationshipService.addRelationshipRef(RelationshipRef.TOKEN, tokenEntity.getId(),
         RelationshipType.AUTHORIZES, RelationshipRef.USER, Optional.of(user.get().getId()));

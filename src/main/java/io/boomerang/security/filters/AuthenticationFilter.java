@@ -6,6 +6,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
+import java.util.regex.Pattern;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -25,6 +26,7 @@ import com.slack.api.app_backend.SlackSignature.Generator;
 import com.slack.api.app_backend.SlackSignature.Verifier;
 import io.boomerang.security.AuthorizationException;
 import io.boomerang.security.model.Token;
+import io.boomerang.security.model.TokenTypePrefix;
 import io.boomerang.security.service.TokenService;
 import io.boomerang.service.SettingsService;
 import io.jsonwebtoken.Claims;
@@ -35,7 +37,8 @@ import io.jsonwebtoken.impl.DefaultJwtParser;
  * The Filter ensures that the user is Authenticated prior to the Interceptor which validates
  * Authorization
  * 
- * Note: This cannot be auto marked as a Service/Component that Spring Boot would auto inject as then it will apply to all routes
+ * Note: This cannot be auto marked as a Service/Component that Spring Boot would auto inject as
+ * then it will apply to all routes
  */
 @ConditionalOnProperty(name = "flow.authorization.enabled", havingValue = "true")
 public class AuthenticationFilter extends OncePerRequestFilter {
@@ -50,12 +53,14 @@ public class AuthenticationFilter extends OncePerRequestFilter {
   private static final String X_SLACK_SIGNATURE = "X-Slack-Signature";
   private static final String X_SLACK_TIMESTAMP = "X-Slack-Request-Timestamp";
   private static final String PATH_ACTIVATE = "/api/v2/activate";
+  private static final String TOKEN_PATTERN = "Bearer\\sbf._(.)+";
 
   private TokenService tokenService;
   private SettingsService settingsService;
   private String basicPassword;
-  
-  public AuthenticationFilter(TokenService tokenService, SettingsService settingsService, String basicPassword) {
+
+  public AuthenticationFilter(TokenService tokenService, SettingsService settingsService,
+      String basicPassword) {
     super();
     this.tokenService = tokenService;
     this.settingsService = settingsService;
@@ -67,30 +72,36 @@ public class AuthenticationFilter extends OncePerRequestFilter {
       FilterChain chain) throws IOException, ServletException {
     LOGGER.debug("In AuthFilter()");
     try {
-//      MultiReadHttpServletRequest multiReadRequest = new MultiReadHttpServletRequest(req);
+      // MultiReadHttpServletRequest multiReadRequest = new MultiReadHttpServletRequest(req);
       Authentication authentication = null;
-      
+
       if (req.getHeader(AUTHORIZATION_HEADER) != null) {
-        authentication = getUserAuthentication(req);
+        if (req.getHeader(AUTHORIZATION_HEADER).matches(TOKEN_PATTERN)) {
+          authentication = getTokenAuthentication(req.getHeader(AUTHORIZATION_HEADER));
+        } else {
+          authentication = getUserSessionAuthentication(req);
+        }
+      } else if (req.getHeader(X_ACCESS_TOKEN) != null) {
+        //TODO - deprecate this form of header an only rely on AUTHORIZATION_HEADER
+        authentication = getTokenAuthentication(req.getHeader(X_ACCESS_TOKEN));
+      } else if (req.getParameter(TOKEN_URL_PARAM_NAME) != null) {
+        authentication = getTokenAuthentication(req.getHeader(TOKEN_URL_PARAM_NAME));
       } else if (req.getHeader(X_FORWARDED_EMAIL) != null) {
         authentication = getGithubUserAuthentication(req);
-      } else if (req.getHeader(X_ACCESS_TOKEN) != null
-          || req.getParameter(TOKEN_URL_PARAM_NAME) != null) {
-        authentication = getTokenBasedAuthentication(req);
       } 
 
-//      if (multiReadRequest.getHeader(X_SLACK_SIGNATURE) != null) {
-//        InputStream inputStream = multiReadRequest.getInputStream();
-//        byte[] body = StreamUtils.copyToByteArray(inputStream);
-//        String signature = multiReadRequest.getHeader(X_SLACK_SIGNATURE);
-//        String timestamp = multiReadRequest.getHeader(X_SLACK_TIMESTAMP);
-//
-//        if (!verifySignature(signature, timestamp, new String(body))) {
-//          LOGGER.error("Fail SlackSignatureVerificationFilter()");
-//          res.sendError(401);
-//          return;
-//        }
-//      }
+      // if (multiReadRequest.getHeader(X_SLACK_SIGNATURE) != null) {
+      // InputStream inputStream = multiReadRequest.getInputStream();
+      // byte[] body = StreamUtils.copyToByteArray(inputStream);
+      // String signature = multiReadRequest.getHeader(X_SLACK_SIGNATURE);
+      // String timestamp = multiReadRequest.getHeader(X_SLACK_TIMESTAMP);
+      //
+      // if (!verifySignature(signature, timestamp, new String(body))) {
+      // LOGGER.error("Fail SlackSignatureVerificationFilter()");
+      // res.sendError(401);
+      // return;
+      // }
+      // }
       if (authentication != null) {
         LOGGER.debug("AuthFilter() - authorized.");
         SecurityContextHolder.getContext().setAuthentication(authentication);
@@ -118,10 +129,10 @@ public class AuthenticationFilter extends OncePerRequestFilter {
    * 
    * TODO: figure out a way to ensure it comes via the OAuth2_Proxy
    */
-  private UsernamePasswordAuthenticationToken getUserAuthentication(HttpServletRequest request) // NOSONAR
+  private UsernamePasswordAuthenticationToken getUserSessionAuthentication(HttpServletRequest request) // NOSONAR
   {
     final String token = request.getHeader(AUTHORIZATION_HEADER);
-    
+
     boolean activateOverride = false;
     if (request.getServletPath().startsWith(PATH_ACTIVATE)) {
       activateOverride = true;
@@ -135,7 +146,6 @@ public class AuthenticationFilter extends OncePerRequestFilter {
         claims = (Claims) new DefaultJwtParser().parse(withoutSignature).getBody();
       } catch (ExpiredJwtException e) {
         claims = e.getClaims();
-
       }
       String email = null;
       if (claims.get("emailAddress") != null) {
@@ -162,7 +172,8 @@ public class AuthenticationFilter extends OncePerRequestFilter {
       lastName = sanitize(lastName);
 
       if (email != null && !email.isBlank()) {
-        final Token userSessionToken = tokenService.createUserSessionToken(email, firstName, lastName, activateOverride);
+        final Token userSessionToken =
+            tokenService.createUserSessionToken(email, firstName, lastName, activateOverride);
         final List<GrantedAuthority> authorities = new ArrayList<>();
         final UsernamePasswordAuthenticationToken authToken =
             new UsernamePasswordAuthenticationToken(email, null, authorities);
@@ -190,7 +201,8 @@ public class AuthenticationFilter extends OncePerRequestFilter {
       }
 
       if (email != null && !email.isBlank()) {
-        final Token userSessionToken = tokenService.createUserSessionToken(email, null, null, activateOverride);
+        final Token userSessionToken =
+            tokenService.createUserSessionToken(email, null, null, activateOverride);
         final List<GrantedAuthority> authorities = new ArrayList<>();
         final UsernamePasswordAuthenticationToken authToken =
             new UsernamePasswordAuthenticationToken(email, password, authorities);
@@ -213,8 +225,9 @@ public class AuthenticationFilter extends OncePerRequestFilter {
       activateOverride = true;
     }
     String email = request.getHeader(X_FORWARDED_EMAIL);
-     String userName = request.getHeader(X_FORWARDED_USER);
-    final Token token = tokenService.createUserSessionToken(email, userName, null, activateOverride);
+    String userName = request.getHeader(X_FORWARDED_USER);
+    final Token token =
+        tokenService.createUserSessionToken(email, userName, null, activateOverride);
     if (email != null && !email.isBlank()) {
       final List<GrantedAuthority> authorities = new ArrayList<>();
       final UsernamePasswordAuthenticationToken authToken =
@@ -227,19 +240,22 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 
   /*
    * Validate and hoist Token Based Auth
+   * 
+   * Handles the token coming from AUTHORIZATION_HEADER, X_ACCESS_TOKEN, or TOKEN_URL_PARAM_NAME in
+   * that order
    */
-  private Authentication getTokenBasedAuthentication(HttpServletRequest request) {
-    String xAccessToken =
-        request.getHeader(X_ACCESS_TOKEN) != null ? request.getHeader(X_ACCESS_TOKEN)
-            : request.getParameter(TOKEN_URL_PARAM_NAME);
-    if (tokenService.validate(xAccessToken)) {
-      Token token = tokenService.get(xAccessToken);
-      if (token != null && token.isValid()) {
-      final List<GrantedAuthority> authorities = new ArrayList<>();
-      final UsernamePasswordAuthenticationToken authToken =
-          new UsernamePasswordAuthenticationToken(token.getPrincipal(), null, authorities);
-      authToken.setDetails(token);
-      return authToken;
+  private Authentication getTokenAuthentication(String accessToken) {
+    if (accessToken.startsWith("Bearer ")) {
+      accessToken = accessToken.replace("Bearer ", "");
+    }
+    if (tokenService.validate(accessToken)) {
+      Token token = tokenService.get(accessToken);
+      if (token != null) {
+        final List<GrantedAuthority> authorities = new ArrayList<>();
+        final UsernamePasswordAuthenticationToken authToken =
+            new UsernamePasswordAuthenticationToken(token.getPrincipal(), null, authorities);
+        authToken.setDetails(token);
+        return authToken;
       }
     }
     return null;
@@ -268,7 +284,8 @@ public class AuthenticationFilter extends OncePerRequestFilter {
    * from Slack</a></li> </ul>
    */
   private Boolean verifySignature(String signature, String timestamp, String body) {
-    String key = this.settingsService.getSettingConfig("extensions", "slack.signingSecret").getValue();
+    String key =
+        this.settingsService.getSettingConfig("extensions", "slack.signingSecret").getValue();
     LOGGER.debug("Key: " + key);
     LOGGER.debug("Slack Timestamp: " + timestamp);
     LOGGER.debug("Slack Body: " + body);
@@ -280,12 +297,10 @@ public class AuthenticationFilter extends OncePerRequestFilter {
   }
 
   @Override
-  //TODO figure out why these aren't being applied in the SecurityConfig
+  // TODO figure out why these aren't being applied in the SecurityConfig
   protected boolean shouldNotFilter(HttpServletRequest request) {
     String path = request.getServletPath();
-    return path.startsWith("/error") 
-        || path.startsWith("/health")
-        || path.startsWith("/api/docs")
+    return path.startsWith("/error") || path.startsWith("/health") || path.startsWith("/api/docs")
         || path.startsWith("/internal");
   }
 }
