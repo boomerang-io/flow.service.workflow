@@ -81,7 +81,7 @@ public class ManagementV2Controller {
   
   //TODO move this to another location
   @PutMapping(value = "/activate")
-  @AuthScope(access = TokenAccess.any, object = TokenObject.user, types = {TokenScope.session})
+  @AuthScope(access = TokenAccess.action, object = TokenObject.instance, types = {TokenScope.session, TokenScope.global})
   @Operation(summary = "Register and activate an installation of Flow")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -91,21 +91,24 @@ public class ManagementV2Controller {
 
   @GetMapping(value = "/context")
   @Operation(summary = "Retrieve this instances context, features, and navigation.")
+  @AuthScope(access = TokenAccess.read, object = TokenObject.instance, types = {TokenScope.session, TokenScope.global})
   public HeaderNavigationResponse getHeaderNavigation() {
     return this.contextService.getHeaderNavigation(identityService.isCurrentUserAdmin());
   }
   
   @GetMapping(value = "/features")
   @Operation(summary = "Retrieve feature flags.")
+  @AuthScope(access = TokenAccess.read, object = TokenObject.instance, types = {TokenScope.session, TokenScope.global})
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
   public ResponseEntity<FeaturesAndQuotas> getFlowFeatures() {
-    CacheControl cacheControl = CacheControl.maxAge(1, TimeUnit.HOURS);
+    CacheControl cacheControl = CacheControl.maxAge(5, TimeUnit.MINUTES);
     return ResponseEntity.ok().cacheControl(cacheControl).body(featureService.get());
   }
 
   @GetMapping(value = "/navigation")
   @Operation(summary = "Retrieve navigation.")
+  @AuthScope(access = TokenAccess.read, object = TokenObject.instance, types = {TokenScope.session, TokenScope.global})
   public ResponseEntity<List<Navigation>> getNavigation(@Parameter(name = "teamId", description = "The id of the Team that the user is currently on", example = "123143412312310",
       required = false) @RequestParam(required = false) Optional<String> teamId) {
     List<Navigation> response = navigationService.getNavigation(identityService.isCurrentUserAdmin(), teamId);

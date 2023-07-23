@@ -64,7 +64,7 @@ public class SecurityInterceptor implements HandlerInterceptor {
       TokenObject requiredObject = authScope.object();
       TokenAccess requiredAccess = authScope.access();
 
-      if (!accessToken.getPermissions().stream().anyMatch(p -> p.access().equals(requiredAccess) && p.object().equals(requiredObject))) {
+      if (!accessToken.getPermissions().stream().anyMatch(p -> (p.access().equals(requiredAccess))&& (p.object().equals(requiredObject) || p.object().equals(TokenObject.any)))) {
         LOGGER.error("SecurityInterceptor - Unauthorized Permission. Needed: {}, Provided: {}", requiredObject.toString().toUpperCase() + "_" + requiredAccess.toString().toUpperCase(), accessToken.getPermissions().toString());
         // TODO set this to return false
 //      response.getWriter().write("");

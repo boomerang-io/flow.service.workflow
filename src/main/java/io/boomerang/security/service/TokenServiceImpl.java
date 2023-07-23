@@ -34,6 +34,7 @@ import io.boomerang.error.BoomerangException;
 import io.boomerang.security.model.CreateTokenRequest;
 import io.boomerang.security.model.CreateTokenResponse;
 import io.boomerang.security.model.Token;
+import io.boomerang.security.model.TokenPermission;
 import io.boomerang.security.model.TokenScope;
 import io.boomerang.security.model.TokenTypePrefix;
 import io.boomerang.service.RelationshipService;
@@ -76,6 +77,7 @@ public class TokenServiceImpl implements TokenService {
   public CreateTokenResponse create(CreateTokenRequest request) {
     if (request.getType() == null || request.getName() == null || request.getName().isEmpty()) {
       // TODO make real exception
+      // TODO add permissions empty array check
       throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
     }
 
@@ -309,6 +311,7 @@ public class TokenServiceImpl implements TokenService {
     tokenEntity.setType(TokenScope.session);
     tokenEntity.setExpirationDate(expiryDate);
     tokenEntity.setPrincipal(user.get().getId());
+    tokenEntity.setPermissions(List.of(TokenPermission.ANY_READ, TokenPermission.ANY_WRITE, TokenPermission.ANY_DELETE, TokenPermission.ANY_ACTION));
 
     String prefix = TokenTypePrefix.session.prefix;
     String uniqueToken = prefix + "_" + UUID.randomUUID().toString().toLowerCase();
