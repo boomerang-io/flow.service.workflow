@@ -42,6 +42,7 @@ import io.boomerang.v4.model.AbstractParam;
 import io.boomerang.v4.model.ApproverGroup;
 import io.boomerang.v4.model.ApproverGroupRequest;
 import io.boomerang.v4.model.Team;
+import io.boomerang.v4.model.TeamMemberRequest;
 import io.boomerang.v4.model.TeamNameCheckRequest;
 import io.boomerang.v4.model.TeamRequest;
 import io.boomerang.v4.model.User;
@@ -361,7 +362,7 @@ public class TeamServiceImpl implements TeamService {
   }
 
   @Override
-  public ResponseEntity<List<UserSummary>> addMembers(String teamId, TeamRequest request) {
+  public ResponseEntity<List<UserSummary>> addMembers(String teamId, TeamMemberRequest request) {
     if (request != null && request.getUsers() != null && !request.getUsers().isEmpty()) {
       if (request.getId() == null || request.getId().isBlank()) {
         throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
@@ -387,7 +388,7 @@ public class TeamServiceImpl implements TeamService {
   }
 
   @Override
-  public ResponseEntity<List<UserSummary>> removeMembers(String teamId, TeamRequest request) {
+  public ResponseEntity<List<UserSummary>> removeMembers(String teamId, TeamMemberRequest request) {
     if (request != null && request.getUsers() != null && !request.getUsers().isEmpty()) {
       if (request.getId() == null || request.getId().isBlank()) {
         throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
@@ -942,7 +943,7 @@ public class TeamServiceImpl implements TeamService {
 //    team.setWorkflows(summary);
     
     // Get and Set Users
-    team.setUsers(getUsersForTeam(teamEntity.getId()));
+    team.setMembers(getUsersForTeam(teamEntity.getId()));
 
     // Set default & custom stored Quotas
     Quotas quotas = setDefaultQuotas();

@@ -11,6 +11,7 @@ import io.boomerang.v4.model.AbstractParam;
 import io.boomerang.v4.model.ApproverGroup;
 import io.boomerang.v4.model.ApproverGroupRequest;
 import io.boomerang.v4.model.Team;
+import io.boomerang.v4.model.TeamMemberRequest;
 import io.boomerang.v4.model.TeamNameCheckRequest;
 import io.boomerang.v4.model.TeamRequest;
 import io.boomerang.v4.model.UserSummary;
@@ -39,9 +40,9 @@ public interface TeamService {
 
   ResponseEntity<Void> disable(String teamId);
 
-  ResponseEntity<List<UserSummary>> addMembers(String teamId, TeamRequest createTeamRequest);
+  ResponseEntity<List<UserSummary>> addMembers(String teamId, TeamMemberRequest createTeamRequest);
 
-  ResponseEntity<List<UserSummary>> removeMembers(String teamId, TeamRequest request);
+  ResponseEntity<List<UserSummary>> removeMembers(String teamId, TeamMemberRequest request);
 
   ResponseEntity<AbstractParam> createParameter(String teamId, AbstractParam parameter);
 

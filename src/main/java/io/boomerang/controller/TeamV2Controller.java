@@ -23,6 +23,7 @@ import io.boomerang.v4.model.AbstractParam;
 import io.boomerang.v4.model.ApproverGroup;
 import io.boomerang.v4.model.ApproverGroupRequest;
 import io.boomerang.v4.model.Team;
+import io.boomerang.v4.model.TeamMemberRequest;
 import io.boomerang.v4.model.TeamNameCheckRequest;
 import io.boomerang.v4.model.TeamRequest;
 import io.boomerang.v4.model.UserSummary;
@@ -149,13 +150,13 @@ public class TeamV2Controller {
   
   @PutMapping(value = "/{teamId}/members")
   public ResponseEntity<List<UserSummary>> addMembers(@Parameter(name = "teamId",
-      description = "ID of Team", required = true) @PathVariable String teamId, @RequestBody TeamRequest request) {
+      description = "ID of Team", required = true) @PathVariable String teamId, @RequestBody TeamMemberRequest request) {
     return teamService.addMembers(teamId, request);
   }
   
   @DeleteMapping(value = "/{teamId}/members")
   public ResponseEntity<List<UserSummary>> removeMembers(@Parameter(name = "teamId",
-      description = "ID of Team", required = true) @PathVariable String teamId, @RequestBody TeamRequest request) {
+      description = "ID of Team", required = true) @PathVariable String teamId, @RequestBody TeamMemberRequest request) {
     return teamService.removeMembers(teamId, request);
   }
 
