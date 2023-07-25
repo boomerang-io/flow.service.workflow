@@ -34,6 +34,7 @@ import io.boomerang.security.service.IdentityService;
 import io.boomerang.util.DataAdapterUtil.FieldType;
 import io.boomerang.v4.data.entity.ApproverGroupEntity;
 import io.boomerang.v4.data.entity.TeamEntity;
+import io.boomerang.v4.data.entity.UserEntity;
 import io.boomerang.v4.data.model.CurrentQuotas;
 import io.boomerang.v4.data.model.Quotas;
 import io.boomerang.v4.data.repository.ApproverGroupRepository;
@@ -1127,7 +1128,12 @@ public class TeamServiceImpl implements TeamService {
               RelationshipRef.TEAM, Optional.of(teamId));
         } else {
           //Create new user record & relationship
-          identityService.getAndRegisterUser(userSummary.getEmail(), null, null, Optional.of(UserType.user));
+          Optional<UserEntity> newUser = identityService.getAndRegisterUser(userSummary.getEmail(), null, null, Optional.of(UserType.user));
+          if (newUser.isPresent()) {
+            relationshipService.addRelationshipRef(RelationshipRef.USER, newUser.get().getId(),
+                RelationshipRef.TEAM, Optional.of(teamId));
+          }
+          //TODO - throw error for user that can't be created?
         } 
       }
     }
