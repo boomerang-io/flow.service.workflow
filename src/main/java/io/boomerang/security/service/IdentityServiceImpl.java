@@ -118,15 +118,22 @@ public class IdentityServiceImpl implements IdentityService {
         newUserEntity.setEmail(email);
         userEntity = Optional.of(newUserEntity);
       }
+      if (usertype.isPresent()) {
+        userEntity.get().setType(usertype.get());
+      }
       // Refresh name from provided details
-      String name = String.format("%s %s", Optional.ofNullable(firstName).orElse(""),
-          Optional.ofNullable(lastName).orElse("")).trim();
+      String name; 
       if (firstName == null && lastName == null && email != null) {
         name = email;
+      } else {
+        name = String.format("%s %s", Optional.ofNullable(firstName).orElse(""),
+            Optional.ofNullable(lastName).orElse("")).trim();
       }
       userEntity.get().setName(name);
       userEntity.get().setLastLoginDate(new Date());
-      userEntity.get().getSettings().setIsFirstVisit(false);
+      if (userEntity.get().getSettings().getIsFirstVisit()) {
+        userEntity.get().getSettings().setIsFirstVisit(false);
+      }
       userEntity = Optional.of(userRepository.save(userEntity.get()));
     }
 

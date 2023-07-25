@@ -47,6 +47,7 @@ import io.boomerang.v4.model.TeamNameCheckRequest;
 import io.boomerang.v4.model.TeamRequest;
 import io.boomerang.v4.model.User;
 import io.boomerang.v4.model.UserSummary;
+import io.boomerang.v4.model.UserType;
 import io.boomerang.v4.model.enums.RelationshipRef;
 import io.boomerang.v4.model.enums.RelationshipType;
 import io.boomerang.v4.model.enums.TeamStatus;
@@ -379,7 +380,8 @@ public class TeamServiceImpl implements TeamService {
       }
 
       // Create Relationships for Users
-      // If user does not exist, no relationship will be created
+      // If user does not exist, a user record will be created with a relationship to the team
+      // TODO - invite the user rather than create a relationship
       // If Relationship already exists, don't create a new one.
       createUserRelationships(teamId, request.getUsers());
     }
@@ -1112,15 +1114,21 @@ public class TeamServiceImpl implements TeamService {
     if (users != null && !users.isEmpty()) {
       for (UserSummary userSummary : users) {
         Optional<User> userEntity = null;
+        //Find user by ID or Email - UI allows adding from existing or new (email)
         if (!userSummary.getId().isEmpty()) {
           userEntity = identityService.getUserByID(userSummary.getId());
         } else if (!userSummary.getEmail().isEmpty()) {
           userEntity = identityService.getUserByEmail(userSummary.getEmail());
         }
+        
         if (userEntity.isPresent() && !userRefs.contains(userEntity.get().getId())) {
+          //Create team relationship for existing user
           relationshipService.addRelationshipRef(RelationshipRef.USER, userEntity.get().getId(),
               RelationshipRef.TEAM, Optional.of(teamId));
-        }
+        } else {
+          //Create new user record & relationship
+          identityService.getAndRegisterUser(userSummary.getEmail(), null, null, Optional.of(UserType.user));
+        } 
       }
     }
   }

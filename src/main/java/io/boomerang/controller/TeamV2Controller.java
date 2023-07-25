@@ -148,7 +148,7 @@ public class TeamV2Controller {
     return teamService.disable(teamId);
   }
   
-  @PutMapping(value = "/{teamId}/members")
+  @PatchMapping(value = "/{teamId}/members")
   public ResponseEntity<List<UserSummary>> addMembers(@Parameter(name = "teamId",
       description = "ID of Team", required = true) @PathVariable String teamId, @RequestBody TeamMemberRequest request) {
     return teamService.addMembers(teamId, request);
