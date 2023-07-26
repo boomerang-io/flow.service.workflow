@@ -40,9 +40,9 @@ public interface TeamService {
 
   ResponseEntity<Void> disable(String teamId);
 
-  ResponseEntity<List<UserSummary>> addMembers(String teamId, TeamMemberRequest createTeamRequest);
+  ResponseEntity<List<UserSummary>> addMembers(String teamId, List<UserSummary> createTeamRequest);
 
-  ResponseEntity<List<UserSummary>> removeMembers(String teamId, TeamMemberRequest request);
+  ResponseEntity<List<UserSummary>> removeMembers(String teamId, List<UserSummary> request);
 
   ResponseEntity<AbstractParam> createParameter(String teamId, AbstractParam parameter);
 

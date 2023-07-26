@@ -150,13 +150,13 @@ public class TeamV2Controller {
   
   @PatchMapping(value = "/{teamId}/members")
   public ResponseEntity<List<UserSummary>> addMembers(@Parameter(name = "teamId",
-      description = "ID of Team", required = true) @PathVariable String teamId, @RequestBody TeamMemberRequest request) {
+      description = "ID of Team", required = true) @PathVariable String teamId, @RequestBody List<UserSummary> request) {
     return teamService.addMembers(teamId, request);
   }
   
   @DeleteMapping(value = "/{teamId}/members")
   public ResponseEntity<List<UserSummary>> removeMembers(@Parameter(name = "teamId",
-      description = "ID of Team", required = true) @PathVariable String teamId, @RequestBody TeamMemberRequest request) {
+      description = "ID of Team", required = true) @PathVariable String teamId, @RequestBody List<UserSummary> request) {
     return teamService.removeMembers(teamId, request);
   }
 

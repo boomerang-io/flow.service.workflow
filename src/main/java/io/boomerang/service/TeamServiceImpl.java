@@ -364,8 +364,8 @@ public class TeamServiceImpl implements TeamService {
   }
 
   @Override
-  public ResponseEntity<List<UserSummary>> addMembers(String teamId, TeamMemberRequest request) {
-    if (request != null && request.getUsers() != null && !request.getUsers().isEmpty()) {
+  public ResponseEntity<List<UserSummary>> addMembers(String teamId, List<UserSummary> request) {
+    if (request != null && !request.isEmpty()) {
       if (teamId == null || teamId.isBlank()) {
         throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
       }
@@ -375,6 +375,7 @@ public class TeamServiceImpl implements TeamService {
       if (teamRefs.isEmpty()) {
         throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
       }
+      LOGGER.info("Team Valid");     
       Optional<TeamEntity> optTeamEntity = teamRepository.findById(teamId);
       if (!optTeamEntity.isPresent()) {
         throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
@@ -384,15 +385,18 @@ public class TeamServiceImpl implements TeamService {
       // If user does not exist, a user record will be created with a relationship to the team
       // TODO - invite the user rather than create a relationship
       // If Relationship already exists, don't create a new one.
-      createUserRelationships(teamId, request.getUsers());
+      createUserRelationships(teamId, request);
+    } else {
+      //TODO make this invalid request
+      throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
     }
 
     return ResponseEntity.ok(getUsersForTeam(teamId));
   }
 
   @Override
-  public ResponseEntity<List<UserSummary>> removeMembers(String teamId, TeamMemberRequest request) {
-    if (request != null && request.getUsers() != null && !request.getUsers().isEmpty()) {
+  public ResponseEntity<List<UserSummary>> removeMembers(String teamId, List<UserSummary> request) {
+    if (request != null && !request.isEmpty()) {
       if (teamId == null || teamId.isBlank()) {
         throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
       }
@@ -408,7 +412,7 @@ public class TeamServiceImpl implements TeamService {
       }
 
       List<String> userRefs = Collections.emptyList();
-      for (UserSummary userSummary : request.getUsers()) {
+      for (UserSummary userSummary : request) {
         Optional<User> userEntity = null;
         if (!userSummary.getId().isEmpty()) {
           userEntity = identityService.getUserByID(userSummary.getId());
@@ -1114,6 +1118,7 @@ public class TeamServiceImpl implements TeamService {
         Optional.of(RelationshipRef.TEAM), Optional.of(List.of(teamId)));
     if (users != null && !users.isEmpty()) {
       for (UserSummary userSummary : users) {
+        LOGGER.debug("Requested User: " + userSummary.getId() + " - " + userSummary.getEmail());
         Optional<User> userEntity = null;
         //Find user by ID or Email - UI allows adding from existing or new (email)
         if (!userSummary.getId().isEmpty()) {
