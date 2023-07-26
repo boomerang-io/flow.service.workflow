@@ -116,10 +116,10 @@ public class IdentityServiceImpl implements IdentityService {
         // Create new User (UserEntity is defaulted on new)
         UserEntity newUserEntity = new UserEntity();
         newUserEntity.setEmail(email);
+        if (usertype.isPresent()) {
+          userEntity.get().setType(usertype.get());
+        }
         userEntity = Optional.of(newUserEntity);
-      }
-      if (usertype.isPresent()) {
-        userEntity.get().setType(usertype.get());
       }
       // Refresh name from provided details
       String name; 
