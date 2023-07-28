@@ -29,7 +29,7 @@ public class RelationshipEntity {
   @Override
   public String toString() {
     return "RelationshipEntity [id=" + id + ", type=" + type + ", from="
-        + from + ", fromRef=" + fromRef + ", to=" + to + ", toRef=" + toRef + ", date=" + creationDate + "]";
+        + from + ", fromRef=" + fromRef + ", to=" + to + ", toRef=" + toRef + ", date=" + creationDate + ", data=" + data + "]";
   }
   public String getId() {
     return id;

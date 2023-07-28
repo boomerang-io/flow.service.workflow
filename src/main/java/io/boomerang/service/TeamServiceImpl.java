@@ -1061,9 +1061,9 @@ public class TeamServiceImpl implements TeamService {
       userRels.forEach(rel -> {
         Optional<User> ue = identityService.getUserByID(rel.getFromRef());
         if (ue.isPresent()) {
-          TeamRoleEnum role = TeamRoleEnum.EDITOR;
+          String role = TeamRoleEnum.READER.getLabel();
           if (rel.getData() != null && rel.getData().get("role") != null) {
-            role = TeamRoleEnum.valueOf(rel.getData().get("role").toString());
+            role = rel.getData().get("role").toString();
           }
           UserSummary u = new UserSummary(ue.get(), role);
           teamUsers.add(u);

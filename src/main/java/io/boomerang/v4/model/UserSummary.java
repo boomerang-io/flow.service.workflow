@@ -11,7 +11,7 @@ public class UserSummary {
   private String id;
   private String email;
   private String name;
-  private TeamRoleEnum role;
+  private String role;
    
   public UserSummary() {
   }
@@ -20,7 +20,7 @@ public class UserSummary {
     BeanUtils.copyProperties(entity, this);
   }
   
-  public UserSummary(UserEntity entity, TeamRoleEnum role) {
+  public UserSummary(UserEntity entity, String role) {
     BeanUtils.copyProperties(entity, this);
     this.role = role;
   }
@@ -44,11 +44,11 @@ public class UserSummary {
     this.name = name;
   }
 
-  public TeamRoleEnum getRole() {
+  public String getRole() {
     return role;
   }
 
-  public void setRole(TeamRoleEnum role) {
+  public void setRole(String role) {
     this.role = role;
   }
 }

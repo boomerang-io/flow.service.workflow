@@ -25,7 +25,7 @@ public interface IdentityService {
 
   public Optional<User> getUserByEmail(String userEmail);
   
-  public UserProfile getProfile(String userId);
+//  public UserProfile getProfile(String userId);
 
   public ResponseEntity<Boolean> activateSetup(OneTimeCode otc);
 

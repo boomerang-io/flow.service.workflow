@@ -11,7 +11,7 @@ import io.boomerang.v4.data.entity.UserEntity;
  */
 public class UserProfile extends UserEntity {
   
-  List<Team> teams;
+  List<TeamSummary> teams;
 
   public UserProfile() {
     
@@ -21,11 +21,11 @@ public class UserProfile extends UserEntity {
     BeanUtils.copyProperties(entity, this);
   }
 
-  public List<Team> getTeams() {
+  public List<TeamSummary> getTeams() {
     return teams;
   }
 
-  public void setTeams(List<Team> teams) {
+  public void setTeams(List<TeamSummary> teams) {
     this.teams = teams;
   }
 }

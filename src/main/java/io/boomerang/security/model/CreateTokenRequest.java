@@ -11,6 +11,7 @@ public class CreateTokenRequest {
   private String description;
   private Date expirationDate;
   private List<String> permissions;
+  private List<String> teams;
   
   public AuthType getType() {
     return type;
@@ -47,5 +48,11 @@ public class CreateTokenRequest {
   }
   public void setPermissions(List<String> permissions) {
     this.permissions = permissions;
+  }
+  public List<String> getTeams() {
+    return teams;
+  }
+  public void setTeams(List<String> teams) {
+    this.teams = teams;
   }
 }

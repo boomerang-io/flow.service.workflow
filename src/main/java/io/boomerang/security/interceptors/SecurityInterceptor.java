@@ -63,20 +63,21 @@ public class SecurityInterceptor implements HandlerInterceptor {
       }
       PermissionScope requiredScope = authScope.scope();
       PermissionAction requiredAccess = authScope.action();
-      LOGGER.error("SecurityInterceptor - Permission. Needed: {}, Provided: {}", requiredScope.toString().toUpperCase() + "_" + requiredAccess.toString().toUpperCase(), accessToken.getPermissions().toString());
-//      if (!accessToken.getPermissions().stream().anyMatch(p -> (p.action().equals(requiredAccess))&& (p.scope().equals(requiredScope) || p.scope().equals(PermissionScope.any)))) {
-//        LOGGER.error("SecurityInterceptor - Unauthorized Permission. Needed: {}, Provided: {}", requiredScope.toString().toUpperCase() + "_" + requiredAccess.toString().toUpperCase(), accessToken.getPermissions().toString());
+      String requiredRegex = "(\\*{2}|" + requiredScope.toString().toLowerCase() + ")\\/(\\*{2})\\/(\\*{2}|" + requiredAccess.toString().toLowerCase() + "){1}";
+      LOGGER.debug("SecurityInterceptor - Permission needed: {}, Provided: {}", requiredScope.toString().toLowerCase() + "/**/" + requiredAccess.toString().toLowerCase(), accessToken.getPermissions().toString());
+      if (!accessToken.getPermissions().stream().anyMatch(p -> (p.matches(requiredRegex)))) {
+        LOGGER.error("SecurityInterceptor - Unauthorized Permission.");
         // TODO set this to return false
 //      response.getWriter().write("");
 //      response.setStatus(401);
-//      return true;
+      return true;
 //      }
 //      for (TokenPermission p : accessToken.getPermissions()) {
 //        if (p.access() == requiredAccess && p.Object() == requiredObject) {
 //          validRequest = true;
 //          break;
 //        }
-//      }
+      }
       return true;
     } else {
       return true;

@@ -6,16 +6,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import org.springframework.beans.BeanUtils;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import io.boomerang.v4.data.entity.TeamEntity;
-import io.boomerang.v4.data.model.CurrentQuotas;
 import io.boomerang.v4.model.enums.TeamStatus;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-@JsonInclude(Include.NON_EMPTY)
-public class Team {
+public class TeamSummary {
 
   private String id;
   private String name;
@@ -23,18 +17,19 @@ public class Team {
   private TeamStatus status = TeamStatus.active;
   private String externalRef;
   private Map<String, String> labels = new HashMap<>();
-  private List<AbstractParam> parameters = new LinkedList<>();
-//  private TeamSettings settings;
-  private CurrentQuotas quotas;
   private List<UserSummary> members;
-  private List<WorkflowSummary> workflows = new LinkedList<>();
-  private List<ApproverGroup> approverGroups;
+  private List<String> workflows = new LinkedList<>();
   
-  public Team() {
+  public TeamSummary() {
     
   }
   
-  public Team(TeamEntity entity) {
+  public TeamSummary(Team entity) {
+    BeanUtils.copyProperties(entity, this);
+  }
+
+  
+  public TeamSummary(TeamEntity entity) {
     BeanUtils.copyProperties(entity, this);
   }
 
@@ -86,35 +81,11 @@ public class Team {
     this.labels = labels;
   }
 
-  public List<AbstractParam> getParameters() {
-    return parameters;
-  }
-
-  public void setParameters(List<AbstractParam> parameters) {
-    this.parameters = parameters;
-  }
-
-//  public TeamSettings getSettings() {
-//    return settings;
-//  }
-//
-//  public void setSettings(TeamSettings settings) {
-//    this.settings = settings;
-//  }
-
-  public CurrentQuotas getQuotas() {
-    return quotas;
-  }
-
-  public void setQuotas(CurrentQuotas quotas) {
-    this.quotas = quotas;
-  }
-
-  public List<WorkflowSummary> getWorkflows() {
+  public List<String> getWorkflows() {
     return workflows;
   }
 
-  public void setWorkflows(List<WorkflowSummary> workflows) {
+  public void setWorkflows(List<String> workflows) {
     this.workflows = workflows;
   }
 
@@ -124,13 +95,5 @@ public class Team {
 
   public void setMembers(List<UserSummary> members) {
     this.members = members;
-  }
-
-  public List<ApproverGroup> getApproverGroups() {
-    return approverGroups;
-  }
-
-  public void setApproverGroups(List<ApproverGroup> approverGroups) {
-    this.approverGroups = approverGroups;
   }
 }

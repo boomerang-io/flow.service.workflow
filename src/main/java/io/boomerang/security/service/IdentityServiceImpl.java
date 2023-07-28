@@ -31,8 +31,8 @@ import io.boomerang.client.ExternalUserProfile;
 import io.boomerang.client.ExternalUserService;
 import io.boomerang.error.BoomerangError;
 import io.boomerang.error.BoomerangException;
-import io.boomerang.security.model.Token;
 import io.boomerang.security.model.AuthType;
+import io.boomerang.security.model.Token;
 import io.boomerang.service.RelationshipService;
 import io.boomerang.service.TeamService;
 import io.boomerang.service.WorkflowService;
@@ -40,6 +40,7 @@ import io.boomerang.v4.data.entity.UserEntity;
 import io.boomerang.v4.data.repository.UserRepository;
 import io.boomerang.v4.model.OneTimeCode;
 import io.boomerang.v4.model.Team;
+import io.boomerang.v4.model.TeamSummary;
 import io.boomerang.v4.model.User;
 import io.boomerang.v4.model.UserProfile;
 import io.boomerang.v4.model.UserRequest;
@@ -205,42 +206,57 @@ public class IdentityServiceImpl implements IdentityService {
    */
   @Override
   public UserProfile getCurrentProfile() {
-    UserEntity user = getCurrentUser();
-    UserProfile profile = new UserProfile(user);
-    List<String> teamRefs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.USER), Optional.of(List.of(user.getId())), Optional.of(RelationshipType.MEMBEROF), Optional.of(RelationshipRef.TEAM), Optional.empty());
-    List<Team> usersTeams = teamService.query(Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(teamRefs)).getContent();
-    profile.setTeams(usersTeams);
+    UserProfile profile = new UserProfile();
+    if (externalUserUrl.isBlank()) {
+      UserEntity user = getCurrentUser();
+      profile = new UserProfile(user);
+    } else {
+      String userId = getCurrentPrincipal();
+      ExternalUserProfile extUserProfile = extUserService.getUserProfileById(userId);
+      if (extUserProfile != null) {
+        BeanUtils.copyProperties(extUserProfile, profile);
+        convertExternalUserType(extUserProfile, profile);
+      }
+    }
+    Page<Team> teams =
+        teamService.mine(Optional.of(0), Optional.empty(), Optional.of(Direction.DESC),
+            Optional.of("name"), Optional.empty(), Optional.of(List.of("active")));
+    List<TeamSummary> teamSummaries = new LinkedList<>();
+    teams.getContent().forEach(t -> {
+      teamSummaries.add(new TeamSummary(t));
+    });
+    profile.setTeams(teamSummaries);
     return profile;
   }
 
-  /*
-   * Retrieves the profile for a specified user. Does not use current session.
-   */
-  @Override
-  public UserProfile getProfile(String userId) {
-    if (externalUserUrl.isBlank()) {
-      Optional<UserEntity> flowUser = userRepository.findById(userId);
-      if (flowUser.isPresent()) {
-        UserProfile profile = new UserProfile(flowUser.get());
-        List<String> teamRefs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.USER), Optional.of(List.of(userId)), Optional.of(RelationshipType.MEMBEROF), Optional.of(RelationshipRef.TEAM), Optional.empty());
-        List<Team> usersTeams = teamService.query(Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(teamRefs)).getContent();
-        profile.setTeams(usersTeams);
-        return profile;
-      }
-    } else {
-      ExternalUserProfile extUserProfile = extUserService.getUserProfileById(userId);
-      if (extUserProfile != null) {
-        UserProfile profile = new UserProfile();
-        BeanUtils.copyProperties(extUserProfile, profile);
-        convertExternalUserType(extUserProfile, profile);
-        List<String> teamRefs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.USER), Optional.of(List.of(userId)), Optional.of(RelationshipType.MEMBEROF), Optional.of(RelationshipRef.TEAM), Optional.empty());
-        List<Team> usersTeams = teamService.query(Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(teamRefs)).getContent();
-        profile.setTeams(usersTeams);
-        return profile;
-      }
-    }
-    return null;
-  }
+//  /*
+//   * Retrieves the profile for a specified user. Does not use current session.
+//   */
+//  @Override
+//  public UserProfile getProfile(String userId) {
+//    if (externalUserUrl.isBlank()) {
+//      Optional<UserEntity> flowUser = userRepository.findById(userId);
+//      if (flowUser.isPresent()) {
+//        UserProfile profile = new UserProfile(flowUser.get());
+//        List<String> teamRefs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.USER), Optional.of(List.of(userId)), Optional.of(RelationshipType.MEMBEROF), Optional.of(RelationshipRef.TEAM), Optional.empty());
+//        List<Team> usersTeams = teamService.query(Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(teamRefs)).getContent();
+//        profile.setTeams(usersTeams);
+//        return profile;
+//      }
+//    } else {
+//      ExternalUserProfile extUserProfile = extUserService.getUserProfileById(userId);
+//      if (extUserProfile != null) {
+//        UserProfile profile = new UserProfile();
+//        BeanUtils.copyProperties(extUserProfile, profile);
+//        convertExternalUserType(extUserProfile, profile);
+//        List<String> teamRefs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.USER), Optional.of(List.of(userId)), Optional.of(RelationshipType.MEMBEROF), Optional.of(RelationshipRef.TEAM), Optional.empty());
+//        List<Team> usersTeams = teamService.query(Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(teamRefs)).getContent();
+//        profile.setTeams(usersTeams);
+//        return profile;
+//      }
+//    }
+//    return null;
+//  }
 
   /*
    * Query for Users
@@ -384,11 +400,7 @@ public class IdentityServiceImpl implements IdentityService {
   @NoLogging
   public User getCurrentUser() {
     Token token = this.getCurrentIdentity();
-    Optional<String> ref = relationshipService.getRelationshipRef(RelationshipRef.TOKEN, token.getId(), RelationshipType.AUTHORIZES);
-    if (ref.isPresent()) {
-        return getUserByID(ref.get()).get();
-    }
-    return null;
+    return getUserByID(token.getPrincipal()).get();
   }
 
   @Override
@@ -427,11 +439,7 @@ public class IdentityServiceImpl implements IdentityService {
   @Override
   public String getCurrentPrincipal() {
     Token token = this.getCurrentIdentity();
-    Optional<String> ref = relationshipService.getRelationshipRef(RelationshipRef.TOKEN, token.getId(), RelationshipType.AUTHORIZES);
-    if (ref.isPresent()) {
-        return ref.get();
-    }
-    return null;
+    return token.getPrincipal();
   }
 
   @Override
