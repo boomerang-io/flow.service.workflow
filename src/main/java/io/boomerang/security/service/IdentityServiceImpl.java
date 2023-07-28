@@ -419,21 +419,13 @@ public class IdentityServiceImpl implements IdentityService {
   @Override
   public Workflow getCurrentWorkflow() {
     Token token = this.getCurrentIdentity();
-    Optional<String> ref = relationshipService.getRelationshipRef(RelationshipRef.TOKEN, token.getId(), RelationshipType.AUTHORIZES);
-    if (ref.isPresent()) {
-      return workflowService.get(ref.get(), Optional.empty(), false).getBody();
-  }
-  return null;
+    return workflowService.get(token.getPrincipal(), Optional.empty(), false).getBody();
   }
   
   @Override
   public Team getCurrentTeam() {
     Token token = this.getCurrentIdentity();
-    Optional<String> ref = relationshipService.getRelationshipRef(RelationshipRef.TOKEN, token.getId(), RelationshipType.AUTHORIZES);
-    if (ref.isPresent()) {
-        return teamService.get(ref.get()).getBody();
-    }
-    return null;
+    return teamService.get(token.getPrincipal()).getBody();
   }
 
   @Override

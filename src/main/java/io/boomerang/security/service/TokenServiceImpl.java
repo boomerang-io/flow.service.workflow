@@ -181,24 +181,6 @@ public class TokenServiceImpl implements TokenService {
     // identityService.getCurrentUser().getId(),
     // RelationshipType.CREATED, RelationshipRef.TOKEN, Optional.of(tokenEntity.getId()));
 
-    // Create Authorization Relationship
-    RelationshipRef to = null;
-    Optional<String> toRef = Optional.empty();
-    if (AuthType.global.equals(request.getType())) {
-      to = RelationshipRef.GLOBAL;
-    } else if (AuthType.team.equals(request.getType())) {
-      to = RelationshipRef.TEAM;
-      toRef = Optional.of(request.getPrincipal());
-    } else if (AuthType.workflow.equals(request.getType())) {
-      to = RelationshipRef.WORKFLOW;
-      toRef = Optional.of(request.getPrincipal());
-    } else if (AuthType.user.equals(request.getType())) {
-      to = RelationshipRef.USER;
-      toRef = Optional.of(request.getPrincipal());
-    }
-    relationshipService.addRelationshipRef(RelationshipRef.TOKEN, tokenEntity.getId(),
-        RelationshipType.AUTHORIZES, to, toRef, Optional.empty());
-
     CreateTokenResponse tokenResponse = new CreateTokenResponse();
     tokenResponse.setToken(uniqueToken);
     tokenResponse.setId(tokenEntity.getId());
@@ -396,11 +378,6 @@ public class TokenServiceImpl implements TokenService {
     final String hashToken = hashString(uniqueToken);
     tokenEntity.setToken(hashToken);
     tokenEntity = tokenRepository.save(tokenEntity);
-
-    // Create Authorization Relationship
-    relationshipService.addRelationshipRef(RelationshipRef.TOKEN, tokenEntity.getId(),
-        RelationshipType.AUTHORIZES, RelationshipRef.USER, Optional.of(user.get().getId()),
-        Optional.empty());
 
     return new Token(tokenEntity);
   }

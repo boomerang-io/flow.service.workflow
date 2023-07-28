@@ -272,8 +272,6 @@ public class RelationshipServiceImpl implements RelationshipService {
         String userId = identityService.getCurrentPrincipal();
         if (from.isPresent() && RelationshipRef.USER.equals(from.get())) {
           fromRefs = Optional.of(List.of(userId));
-        } else if (RelationshipType.AUTHORIZES.equals(type.get()) && to.isPresent() && RelationshipRef.USER.equals(to.get())) {
-          toRefs = Optional.of(List.of(userId));
         } else if (to.isPresent() && RelationshipRef.TEAM.equals(to.get())) {
           List<String> filteredTeams = getTeamsRefsByUsers(List.of(userId));
          if (toRefs.isPresent()) {
