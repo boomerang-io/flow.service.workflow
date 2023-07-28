@@ -1,6 +1,7 @@
 package io.boomerang.client;
 
 import java.net.URI;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +25,7 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 import io.boomerang.error.BoomerangException;
+import io.boomerang.v4.model.ref.ChangeLogVersion;
 import io.boomerang.v4.model.ref.TaskRun;
 import io.boomerang.v4.model.ref.TaskRunEndRequest;
 import io.boomerang.v4.model.ref.TaskTemplate;
@@ -79,6 +81,9 @@ public class EngineClientImpl implements EngineClient {
 
   @Value("${flow.engine.workflow.apply.url}")
   public String applyWorkflowURL;
+
+  @Value("${flow.engine.workflow.changelog.url}")
+  public String changelogWorkflowURL;
 
   @Value("${flow.engine.workflow.enable.url}")
   public String enableWorkflowURL;
@@ -545,6 +550,27 @@ public class EngineClientImpl implements EngineClient {
       LOGGER.info("Content Response: " + response.getBody().toString());
 
       return response.getBody();
+    } catch (RestClientException ex) {
+      LOGGER.error(ex.toString());
+      throw new BoomerangException(ex, HttpStatus.INTERNAL_SERVER_ERROR.value(),
+          ex.getClass().getSimpleName(), "Exception in communicating with internal services.",
+          HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+  
+  @Override
+  public List<ChangeLogVersion> getWorkflowChangeLog(String workflowId) {
+    try {
+      String url = changelogWorkflowURL.replace("{workflowId}", workflowId);
+
+      LOGGER.info("URL: " + url);
+
+      ResponseEntity<ChangeLogVersion[]> response = restTemplate.getForEntity(url, ChangeLogVersion[].class);
+
+      LOGGER.info("Status Response: " + response.getStatusCode());
+      LOGGER.info("Content Response: " + response.getBody().toString());
+
+      return Arrays.asList(response.getBody());
     } catch (RestClientException ex) {
       LOGGER.error(ex.toString());
       throw new BoomerangException(ex, HttpStatus.INTERNAL_SERVER_ERROR.value(),

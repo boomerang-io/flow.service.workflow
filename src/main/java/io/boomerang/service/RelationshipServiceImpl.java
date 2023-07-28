@@ -2,6 +2,7 @@ package io.boomerang.service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
@@ -11,7 +12,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
-import io.boomerang.security.model.TokenScope;
+import io.boomerang.security.model.AuthType;
 import io.boomerang.security.service.IdentityService;
 import io.boomerang.v4.data.entity.RelationshipEntity;
 import io.boomerang.v4.data.repository.RelationshipRepository;
@@ -41,6 +42,7 @@ public class RelationshipServiceImpl implements RelationshipService {
    */
   @Override
   public RelationshipEntity addRelationshipRefForCurrentScope(RelationshipRef fromType, String fromRef) {
+    RelationshipType relationship = RelationshipType.BELONGSTO;
     RelationshipRef toType = null;
     String toRef = null;
 
@@ -58,6 +60,9 @@ public class RelationshipServiceImpl implements RelationshipService {
       case team:
         toType = RelationshipRef.TEAM;
         toRef = identityService.getCurrentPrincipal();
+        if (RelationshipRef.USER.equals(fromType)) {
+          relationship = RelationshipType.MEMBEROF;
+        }
         break;
       case global:
         toType = RelationshipRef.GLOBAL;
@@ -66,31 +71,7 @@ public class RelationshipServiceImpl implements RelationshipService {
         break;
     }
     
-    return this.addRelationshipRef(fromType, fromRef, toType, Optional.of(toRef));
-  }
-  
-  /*
-   * Creates a new RelationshipEntity for the provided inputs
-   * 
-   * This method will map the RelationshipType based on the from and to
-   * 
-   * @return RelationshipEntity
-   */
-  @Override
-  public RelationshipEntity addRelationshipRef(RelationshipRef fromType, String fromRef, RelationshipRef toType, Optional<String> toRef) {
-    RelationshipType relationship = RelationshipType.BELONGSTO;
-    if (RelationshipRef.USER.equals(fromType) && RelationshipRef.TEAM.equals(toType)) {
-      relationship = RelationshipType.MEMBEROF;
-      //TODO: future mapping
-//    } else if (RelationshipRef.WORKFLOWRUN.equals(fromType) && RelationshipRef.WORKFLOW.equals(toType)) {
-//      relationship = RelationshipType.EXECUTIONOF;
-      //TODO: future with logging how it was initiated.
-//    } else if (RelationshipRefType.WORKFLOWRUN.equals(fromType) && (RelationshipRefType.USER.equals(toType) || RelationshipRefType.TEAM.equals(toType) || RelationshipRefType.GLOBAL.equals(toType))) {
-//      relationship = RelationshipType.initiatedBy;
-    }
-    
-    RelationshipEntity relEntity = this.addRelationshipRef(fromType, fromRef, relationship, toType, toRef);
-    return relationshipRepository.save(relEntity);
+    return this.addRelationshipRef(fromType, fromRef, relationship, toType, Optional.of(toRef), Optional.empty());
   }
   
   /*
@@ -99,7 +80,7 @@ public class RelationshipServiceImpl implements RelationshipService {
    * @return RelationshipEntity
    */
   @Override
-  public RelationshipEntity addRelationshipRef(RelationshipRef fromType, String fromRef, RelationshipType relationship, RelationshipRef toType, Optional<String> toRef) {   
+  public RelationshipEntity addRelationshipRef(RelationshipRef fromType, String fromRef, RelationshipType relationship, RelationshipRef toType, Optional<String> toRef, Optional<Map<String, Object>> data) {   
     RelationshipEntity relEntity = new RelationshipEntity();
     relEntity.setFrom(fromType);
     relEntity.setFromRef(fromRef);
@@ -107,6 +88,9 @@ public class RelationshipServiceImpl implements RelationshipService {
     relEntity.setTo(toType);
     if (toRef.isPresent()) {
       relEntity.setToRef(toRef.get());
+    }
+    if (data.isPresent()) {
+      relEntity.setData(data.get());
     }
     LOGGER.info("Relationship: " + relEntity.toString());
     return relationshipRepository.save(relEntity);
@@ -188,7 +172,7 @@ public class RelationshipServiceImpl implements RelationshipService {
    */
   @Override
   public List<String> getMyTeamRefs() {
-    return getFilteredRefs(Optional.empty(), Optional.empty(), Optional.of(RelationshipType.MEMBEROF), Optional.of(RelationshipRef.TEAM), Optional.empty(), false).stream().map(RelationshipEntity::getToRef).collect(Collectors.toList());
+    return getFilteredRels(Optional.empty(), Optional.empty(), Optional.of(RelationshipType.MEMBEROF), Optional.of(RelationshipRef.TEAM), Optional.empty(), false).stream().map(RelationshipEntity::getToRef).collect(Collectors.toList());
   }
   
   /*
@@ -211,7 +195,7 @@ public class RelationshipServiceImpl implements RelationshipService {
   @Override
   public List<String> getFilteredFromRefs(Optional<RelationshipRef> from, Optional<List<String>> fromRefs, Optional<RelationshipType> type, Optional<RelationshipRef> to, 
       Optional<List<String>> toRefs) {
-    return getFilteredRefs(from, fromRefs, type, to, toRefs, true).stream().map(RelationshipEntity::getFromRef).collect(Collectors.toList());
+    return getFilteredRels(from, fromRefs, type, to, toRefs, true).stream().map(RelationshipEntity::getFromRef).collect(Collectors.toList());
   }
   
   /*
@@ -234,10 +218,28 @@ public class RelationshipServiceImpl implements RelationshipService {
   @Override
   public List<String> getFilteredToRefs(Optional<RelationshipRef> from, Optional<List<String>> fromRefs, Optional<RelationshipType> type, Optional<RelationshipRef> to, 
       Optional<List<String>> toRefs) {
-    return getFilteredRefs(from, fromRefs, type, to, toRefs, true).stream().map(RelationshipEntity::getToRef).collect(Collectors.toList());
+    return getFilteredRels(from, fromRefs, type, to, toRefs, true).stream().map(RelationshipEntity::getToRef).collect(Collectors.toList());
   }
   
-  private List<RelationshipEntity> getFilteredRefs(Optional<RelationshipRef> from, Optional<List<String>> fromRefs, Optional<RelationshipType> type, Optional<RelationshipRef> to, 
+  /*
+   * Retrieves RelationshipEntities that the current security scope has access to, based on a specific type and optional lists of typeRefs, scopes, and teamIds 
+   * 
+   * @param RelationshipRef fromRef
+   * 
+   * @param RelatnshipType type
+   * 
+   * @param list of Refs: WorkflowRef, WorkflowRunRef, TaskTemplateRef, TaskRunRef
+   * 
+   * @param RelationshipRef toRef
+   * 
+   * @param list of Scopes
+   * 
+   * @param list of TeamIds
+   * 
+   * @return filtered RelationshipEntities
+   */
+  @Override
+  public List<RelationshipEntity> getFilteredRels(Optional<RelationshipRef> from, Optional<List<String>> fromRefs, Optional<RelationshipType> type, Optional<RelationshipRef> to, 
       Optional<List<String>> toRefs, boolean elevate) {
     
     //TODO Validation that we are not trying to get a relationship between two of the same objects or provide IDs with no context.
@@ -254,14 +256,14 @@ public class RelationshipServiceImpl implements RelationshipService {
       from = Optional.of(RelationshipRef.USER);
     }
 
-    TokenScope accessScope = identityService.getCurrentScope();
+    AuthType accessScope = identityService.getCurrentScope();
     LOGGER.info("RelationshipFilter() - Access Scope: " + identityService.getCurrentScope());
     
     // If User is Admin provide global access
     // MEMBEROF requests are ignored as we only want to return that users Teams and as such don't elevate the scope
-    if (elevate && (TokenScope.session.equals(accessScope) || TokenScope.user.equals(accessScope)) && identityService.isCurrentUserAdmin()) {
+    if (elevate && (AuthType.session.equals(accessScope) || AuthType.user.equals(accessScope)) && identityService.isCurrentUserAdmin()) {
       LOGGER.info("RelationshipFilter() - Identity is Admin - Elevating permissions.");
-      accessScope = TokenScope.global;
+      accessScope = AuthType.global;
     }
 
     switch (accessScope) {

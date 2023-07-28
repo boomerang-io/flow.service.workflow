@@ -6,7 +6,7 @@ public class CreateTokenResponse {
 
 //  @JsonIgnore
   private String id;
-  private TokenScope type;
+  private AuthType type;
   private String token;
   private Date expirationDate;
   
@@ -16,10 +16,10 @@ public class CreateTokenResponse {
   public void setId(String id) {
     this.id = id;
   }
-  public TokenScope getType() {
+  public AuthType getType() {
     return type;
   }
-  public void setType(TokenScope type) {
+  public void setType(AuthType type) {
     this.type = type;
   }
   public String getToken() {

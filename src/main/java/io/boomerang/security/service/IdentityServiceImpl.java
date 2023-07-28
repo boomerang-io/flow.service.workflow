@@ -32,7 +32,7 @@ import io.boomerang.client.ExternalUserService;
 import io.boomerang.error.BoomerangError;
 import io.boomerang.error.BoomerangException;
 import io.boomerang.security.model.Token;
-import io.boomerang.security.model.TokenScope;
+import io.boomerang.security.model.AuthType;
 import io.boomerang.service.RelationshipService;
 import io.boomerang.service.TeamService;
 import io.boomerang.service.WorkflowService;
@@ -44,10 +44,10 @@ import io.boomerang.v4.model.User;
 import io.boomerang.v4.model.UserProfile;
 import io.boomerang.v4.model.UserRequest;
 import io.boomerang.v4.model.UserStatus;
-import io.boomerang.v4.model.UserType;
 import io.boomerang.v4.model.enums.RelationshipRef;
 import io.boomerang.v4.model.enums.RelationshipType;
 import io.boomerang.v4.model.enums.TeamStatus;
+import io.boomerang.v4.model.enums.UserType;
 import io.boomerang.v4.model.ref.Workflow;
 
 @Service
@@ -117,7 +117,7 @@ public class IdentityServiceImpl implements IdentityService {
         UserEntity newUserEntity = new UserEntity();
         newUserEntity.setEmail(email);
         if (usertype.isPresent()) {
-          userEntity.get().setType(usertype.get());
+          newUserEntity.setType(usertype.get());
         }
         userEntity = Optional.of(newUserEntity);
       }
@@ -435,7 +435,7 @@ public class IdentityServiceImpl implements IdentityService {
   }
 
   @Override
-  public TokenScope getCurrentScope() {
+  public AuthType getCurrentScope() {
     if (SecurityContextHolder.getContext() != null
         && SecurityContextHolder.getContext().getAuthentication() != null
         && SecurityContextHolder.getContext().getAuthentication().getDetails() != null

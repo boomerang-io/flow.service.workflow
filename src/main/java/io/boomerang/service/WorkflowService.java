@@ -7,6 +7,7 @@ import org.springframework.data.domain.Sort.Direction;
 import org.springframework.http.ResponseEntity;
 import io.boomerang.client.WorkflowResponsePage;
 import io.boomerang.v4.model.WorkflowCanvas;
+import io.boomerang.v4.model.ref.ChangeLogVersion;
 import io.boomerang.v4.model.ref.Workflow;
 
 public interface WorkflowService {
@@ -38,5 +39,7 @@ public interface WorkflowService {
       Optional<String> team);
 
   List<String> getAvailableParameters(String workflowId);
+
+  ResponseEntity<List<ChangeLogVersion>> changelog(String workflowId);
   
 }

@@ -10,7 +10,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import io.boomerang.v4.data.model.UserSettings;
 import io.boomerang.v4.model.UserStatus;
-import io.boomerang.v4.model.UserType;
+import io.boomerang.v4.model.enums.UserType;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(Include.NON_NULL)

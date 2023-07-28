@@ -5,6 +5,7 @@ import java.util.Map;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.annotation.Id;
 import io.boomerang.v4.data.entity.UserEntity;
+import io.boomerang.v4.model.enums.UserType;
 
 /*
  * The external model for a User

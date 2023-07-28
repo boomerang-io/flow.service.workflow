@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.http.ResponseEntity;
+import io.boomerang.v4.model.ref.ChangeLogVersion;
 import io.boomerang.v4.model.ref.TaskRun;
 import io.boomerang.v4.model.ref.TaskRunEndRequest;
 import io.boomerang.v4.model.ref.TaskTemplate;
@@ -88,4 +89,6 @@ public interface EngineClient {
   WorkflowTemplate applyWorkflowTemplate(WorkflowTemplate workflow, boolean replace);
 
   ResponseEntity<Void> deleteWorkflowTemplate(String name);
+
+  List<ChangeLogVersion> getWorkflowChangeLog(String workflowId);
 }

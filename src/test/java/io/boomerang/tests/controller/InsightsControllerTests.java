@@ -22,7 +22,7 @@ import io.boomerang.model.InsightsSummary;
 import io.boomerang.mongo.model.TokenScope;
 import io.boomerang.security.service.IdentityService;
 import io.boomerang.v4.data.entity.UserEntity;
-import io.boomerang.v4.model.UserType;
+import io.boomerang.v4.model.enums.UserType;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
@@ -45,7 +45,7 @@ class InsightsControllerTests extends FlowTests {
     user.setName("Adrienne Hudson");
     user.setType(UserType.admin);
 
-    when(service.getCurrentScope()).thenReturn(TokenPermission.user);
+    when(service.getCurrentScope()).thenReturn(PermissionAccess.user);
     when(service.getCurrentUser()).thenReturn(user);
 
     List<String> workflowIds = new ArrayList<>();
@@ -80,7 +80,7 @@ class InsightsControllerTests extends FlowTests {
     user.setName("Adrienne Hudson");
     user.setType(UserType.admin);
 
-    when(service.getCurrentScope()).thenReturn(TokenPermission.user);
+    when(service.getCurrentScope()).thenReturn(PermissionAccess.user);
     when(service.getCurrentUser()).thenReturn(user);
 
 
@@ -110,7 +110,7 @@ class InsightsControllerTests extends FlowTests {
     user.setName("Adrienne Hudson");
     user.setType(UserType.admin);
 
-    when(service.getCurrentScope()).thenReturn(TokenPermission.user);
+    when(service.getCurrentScope()).thenReturn(PermissionAccess.user);
     when(service.getCurrentUser()).thenReturn(user);
 
     InsightsSummary summary = insightsController.getInsights(getOptionalOrder(Direction.ASC),

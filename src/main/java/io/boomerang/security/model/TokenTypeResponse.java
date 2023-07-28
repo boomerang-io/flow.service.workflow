@@ -2,26 +2,26 @@ package io.boomerang.security.model;
 
 public class TokenTypeResponse {
 
-  private TokenObject object;
-  private TokenAccess access;
-  private TokenScope[] types;
+  private PermissionScope object;
+  private PermissionAction access;
+  private AuthType[] types;
 
-  public TokenAccess getAccess() {
+  public PermissionAction getAccess() {
     return access;
   }
-  public void setAccess(TokenAccess access) {
+  public void setAccess(PermissionAction access) {
     this.access = access;
   }
-  public TokenScope[] getTypes() {
+  public AuthType[] getTypes() {
     return types;
   }
-  public void setTypes(TokenScope[] types) {
+  public void setTypes(AuthType[] types) {
     this.types = types;
   }
-  public TokenObject getObject() {
+  public PermissionScope getObject() {
     return object;
   }
-  public void setObject(TokenObject object) {
+  public void setObject(PermissionScope object) {
     this.object = object;
   }
 

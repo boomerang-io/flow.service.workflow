@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import io.boomerang.security.model.Role;
 import io.boomerang.service.TeamService;
 import io.boomerang.v4.data.model.CurrentQuotas;
 import io.boomerang.v4.data.model.Quotas;
@@ -23,7 +24,6 @@ import io.boomerang.v4.model.AbstractParam;
 import io.boomerang.v4.model.ApproverGroup;
 import io.boomerang.v4.model.ApproverGroupRequest;
 import io.boomerang.v4.model.Team;
-import io.boomerang.v4.model.TeamMemberRequest;
 import io.boomerang.v4.model.TeamNameCheckRequest;
 import io.boomerang.v4.model.TeamRequest;
 import io.boomerang.v4.model.UserSummary;
@@ -125,27 +125,7 @@ public class TeamV2Controller {
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
   public ResponseEntity<Team> updateTeam(@RequestBody TeamRequest request) {
-    return teamService.update(request);
-  }
-  
-  @PutMapping(value = "/{teamId}/enable")
-  @Operation(summary = "Enable a Team")
-  @ApiResponses(value = {@ApiResponse(responseCode = "204", description = "OK"),
-      @ApiResponse(responseCode = "400", description = "Bad Request")})
-  public ResponseEntity<Void> enableWorkflow(
-      @Parameter(name = "teamId",
-      description = "ID of Team",
-      required = true) @PathVariable String teamId) {
-    return teamService.enable(teamId);
-  }
-
-  @PutMapping(value = "/{teamId}/disable")
-  @Operation(summary = "Disable a Team")
-  @ApiResponses(value = {@ApiResponse(responseCode = "204", description = "OK"),
-      @ApiResponse(responseCode = "400", description = "Bad Request")})
-  public ResponseEntity<Void> disableWorkflow(@Parameter(name = "teamId",
-      description = "ID of Team", required = true) @PathVariable String teamId) {
-    return teamService.disable(teamId);
+    return teamService.patch(request);
   }
   
   @PatchMapping(value = "/{teamId}/members")
@@ -243,4 +223,9 @@ public class TeamV2Controller {
   public void deleteApproverGroup(@PathVariable String teamId,@PathVariable String name) {
     teamService.deleteApproverGroup(teamId, name);
   }  
+
+  @GetMapping(value = "/roles")
+  public ResponseEntity<List<Role>> getRoles() {
+    return teamService.getRoles();
+  }
 }

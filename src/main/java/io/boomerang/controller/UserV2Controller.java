@@ -17,9 +17,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import io.boomerang.security.interceptors.AuthScope;
-import io.boomerang.security.model.TokenAccess;
-import io.boomerang.security.model.TokenObject;
-import io.boomerang.security.model.TokenScope;
+import io.boomerang.security.model.PermissionAction;
+import io.boomerang.security.model.PermissionScope;
+import io.boomerang.security.model.AuthType;
 import io.boomerang.security.service.IdentityService;
 import io.boomerang.v4.model.User;
 import io.boomerang.v4.model.UserProfile;
@@ -47,7 +47,7 @@ public class UserV2Controller {
    * The authentication handler ensures they are already a registered user
    */
   @GetMapping(value = "/profile")
-  @AuthScope(access = TokenAccess.read, object = TokenObject.user, types = {TokenScope.session, TokenScope.user})
+  @AuthScope(action = PermissionAction.read, scope = PermissionScope.USER, types = {AuthType.session, AuthType.user})
   @Operation(summary = "Get your Profile")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "423", description = "OK"),
@@ -57,7 +57,7 @@ public class UserV2Controller {
   }
 
   @GetMapping(value = "/{userId}")
-  @AuthScope(access = TokenAccess.read, object = TokenObject.user, types = {TokenScope.session, TokenScope.user, TokenScope.team, TokenScope.global})
+  @AuthScope(action = PermissionAction.read, scope = PermissionScope.USER, types = {AuthType.session, AuthType.user, AuthType.team, AuthType.global})
   @Operation(summary = "Get a Users details")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "404", description = "Not Found")})
@@ -71,7 +71,7 @@ public class UserV2Controller {
   }
 
   @GetMapping(value = "/query")
-  @AuthScope(access = TokenAccess.read, object = TokenObject.user, types = {TokenScope.session, TokenScope.user, TokenScope.team, TokenScope.global})
+  @AuthScope(action = PermissionAction.read, scope = PermissionScope.USER, types = {AuthType.session, AuthType.user, AuthType.team, AuthType.global})
   @Operation(summary = "Search for Users")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -95,7 +95,7 @@ public class UserV2Controller {
   }
 
   @PostMapping(value = "")
-  @AuthScope(access = TokenAccess.write, object = TokenObject.user, types = {TokenScope.global})
+  @AuthScope(action = PermissionAction.write, scope = PermissionScope.USER, types = {AuthType.global})
   @Operation(summary = "Create a new Boomerang Flow user")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -109,7 +109,7 @@ public class UserV2Controller {
   }
 
   @PatchMapping(value = "/{userId}")
-  @AuthScope(access = TokenAccess.write, object = TokenObject.user, types = {TokenScope.global})
+  @AuthScope(action = PermissionAction.write, scope = PermissionScope.USER, types = {AuthType.global})
   @Operation(summary = "Update a Boomerang Flow Users details")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -124,7 +124,7 @@ public class UserV2Controller {
   }
 
   @DeleteMapping(value = "/{userId}")
-  @AuthScope(access = TokenAccess.delete, object = TokenObject.user, types = {TokenScope.global})
+  @AuthScope(action = PermissionAction.delete, scope = PermissionScope.USER, types = {AuthType.global})
   @Operation(summary = "Delete a Boomerang Flow user")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})

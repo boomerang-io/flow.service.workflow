@@ -4,26 +4,26 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import org.springframework.beans.BeanUtils;
-import io.boomerang.v4.data.entity.TokenEntity;
+import io.boomerang.security.entity.TokenEntity;
 
 public class Token {  
   
 //  @JsonIgnore
   private String id;
-  private TokenScope type;
+  private AuthType type;
   private String name;
   private String description;
   private Date creationDate = new Date();
   private Date expirationDate;
   private boolean valid;
   private String principal;
-  private List<TokenPermission> permissions = new LinkedList<>();
+  private List<String> permissions = new LinkedList<>();
 
   public Token() {
 
   }
 
-  public Token(TokenScope type) {
+  public Token(AuthType type) {
     super();
     this.setType(type);
   }
@@ -39,16 +39,16 @@ public class Token {
   public void setId(String id) {
     this.id = id;
   }
-  public List<TokenPermission> getPermissions() {
+  public List<String> getPermissions() {
     return permissions;
   }
-  public void setPermissions(List<TokenPermission> permissions) {
+  public void setPermissions(List<String> permissions) {
     this.permissions = permissions;
   }
-  public TokenScope getType() {
+  public AuthType getType() {
     return type;
   }
-  public void setType(TokenScope type) {
+  public void setType(AuthType type) {
     this.type = type;
   }
   public String getName() {
@@ -61,9 +61,6 @@ public class Token {
 
   public Date getCreationDate() {
     return creationDate;
-  }
-  public void setCreationDate(Date creationDate) {
-    this.creationDate = creationDate;
   }
   public Date getExpirationDate() {
     return expirationDate;

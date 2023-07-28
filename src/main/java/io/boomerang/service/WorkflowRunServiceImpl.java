@@ -176,8 +176,8 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
       // RelationshipType.EXECUTIONOF, RelationshipRef.WORKFLOW, Optional.of(workflowId));
 
       // Creates the owning relationship with the team that owns the Workflow
-      relationshipService.addRelationshipRef(RelationshipRef.WORKFLOWRUN, wfRun.getId(),
-          teamRelationship.get().getTo(), Optional.of(teamRelationship.get().getToRef()));
+      relationshipService.addRelationshipRef(RelationshipRef.WORKFLOWRUN, wfRun.getId(), RelationshipType.BELONGSTO,
+          teamRelationship.get().getTo(), Optional.of(teamRelationship.get().getToRef()), Optional.empty());
       return ResponseEntity.ok(wfRun);
     } else {
       // TODO: make this better around exceeding quotas

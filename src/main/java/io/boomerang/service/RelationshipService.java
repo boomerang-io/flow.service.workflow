@@ -1,6 +1,7 @@
 package io.boomerang.service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import io.boomerang.v4.data.entity.RelationshipEntity;
 import io.boomerang.v4.model.enums.RelationshipRef;
@@ -11,10 +12,8 @@ public interface RelationshipService {
   RelationshipEntity addRelationshipRefForCurrentScope(RelationshipRef fromType, String fromRef);
 
   RelationshipEntity addRelationshipRef(RelationshipRef fromType, String fromRef,
-      RelationshipRef toType, Optional<String> toRef);
-
-  RelationshipEntity addRelationshipRef(RelationshipRef fromType, String fromRef,
-      RelationshipType relationship, RelationshipRef toType, Optional<String> toRef);
+      RelationshipType relationship, RelationshipRef toType, Optional<String> toRef,
+      Optional<Map<String, Object>> data);
 
   void removeRelationships(RelationshipRef fromType, List<String> fromRefs, RelationshipRef toType,
       List<String> toRefs);
@@ -32,4 +31,8 @@ public interface RelationshipService {
       RelationshipType relationship);
 
   List<String> getMyTeamRefs();
+
+  List<RelationshipEntity> getFilteredRels(Optional<RelationshipRef> from,
+      Optional<List<String>> fromRefs, Optional<RelationshipType> type,
+      Optional<RelationshipRef> to, Optional<List<String>> toRefs, boolean elevate);
 }

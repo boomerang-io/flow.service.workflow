@@ -143,13 +143,13 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
         throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
       }
       // Create BELONGSTO relationship for mapping Workflow to Owner
-      relationshipService.addRelationshipRef(RelationshipRef.TASKTEMPLATE, taskTemplate.getName(), RelationshipRef.TEAM,
-          team);
+      relationshipService.addRelationshipRef(RelationshipRef.TASKTEMPLATE, taskTemplate.getName(), RelationshipType.BELONGSTO, RelationshipRef.TEAM,
+          team, Optional.empty());
     } else {
       // Creates a relationship to GLOBAL
       //TODO: check user is ADMIN
       relationshipService.addRelationshipRef(RelationshipRef.TASKTEMPLATE,
-          taskTemplate.getName(), RelationshipRef.GLOBAL, Optional.empty());
+          taskTemplate.getName(), RelationshipType.BELONGSTO ,RelationshipRef.GLOBAL, Optional.empty(), Optional.empty());
     }
     switchChangeLogAuthorToUserName(taskTemplate.getChangelog());
     return ResponseEntity.ok(taskTemplate);

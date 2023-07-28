@@ -31,31 +31,38 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import io.boomerang.error.BoomerangError;
 import io.boomerang.error.BoomerangException;
+import io.boomerang.security.entity.TokenEntity;
+import io.boomerang.security.model.AuthType;
 import io.boomerang.security.model.CreateTokenRequest;
 import io.boomerang.security.model.CreateTokenResponse;
+import io.boomerang.security.model.PermissionScope;
 import io.boomerang.security.model.Token;
-import io.boomerang.security.model.TokenPermission;
-import io.boomerang.security.model.TokenScope;
 import io.boomerang.security.model.TokenTypePrefix;
+import io.boomerang.security.repository.RoleRepository;
+import io.boomerang.security.repository.TokenRepository;
 import io.boomerang.service.RelationshipService;
-import io.boomerang.v4.data.entity.TokenEntity;
+import io.boomerang.v4.data.entity.RelationshipEntity;
 import io.boomerang.v4.data.entity.UserEntity;
 import io.boomerang.v4.data.entity.ref.ActionEntity;
-import io.boomerang.v4.data.repository.TokenRepository;
-import io.boomerang.v4.model.UserType;
 import io.boomerang.v4.model.enums.RelationshipRef;
 import io.boomerang.v4.model.enums.RelationshipType;
+import io.boomerang.v4.model.enums.UserType;
 
 @Service
 public class TokenServiceImpl implements TokenService {
 
   private static final Logger LOGGER = LogManager.getLogger();
+  
+  private static final String TOKEN_PERMISSION_REGEX = "(\\*{2}|[0-9a-zA-Z\\-]+)\\/(\\*{2}|[0-9a-zA-Z\\-]+)\\/(\\*{2}|READ|WRITE|ACTION|DELETE){1}";
 
   @Autowired
   private MongoTemplate mongoTemplate;
 
   @Autowired
   private TokenRepository tokenRepository;
+
+  @Autowired
+  private RoleRepository roleRepository;
 
   @Autowired
   private IdentityService identityService;
@@ -75,34 +82,59 @@ public class TokenServiceImpl implements TokenService {
    */
   @Override
   public CreateTokenResponse create(CreateTokenRequest request) {
-    if (request.getType() == null || request.getName() == null || request.getName().isEmpty()) {
-      // TODO make real exception
-      // TODO add permissions empty array check
-      throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
-    }
-
     // Disallow creation of session tokens except via internal AuthenticationFilter
-    if (TokenScope.session.equals(request.getType())) {
-      // TODO make real exception
-      throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
+    if (AuthType.session.equals(request.getType())) {
+      throw new BoomerangException(BoomerangError.TOKEN_INVALID_SESSION_REQ);
     }
+    
+    // Required field checks
+    // - Type and name: required for all tokens
+    // - Principal: required if type!=global
+    // - Permissions: required for all
+    if (request.getType() == null || request.getName() == null || request.getName().isEmpty()
+        || (!AuthType.global.equals(request.getType()) && (request.getPrincipal() == null || request.getPrincipal().isBlank()))
+        || (request.getPermissions() == null || request.getPermissions().isEmpty())) {
+      throw new BoomerangException(BoomerangError.TOKEN_INVALID_REQ);
+    }
+    
+    // Validate permissions matches the REGEX
+    // Validate permissions are valid for the user
+    request.getPermissions().forEach(p -> {
+      if (!p.matches(TOKEN_PERMISSION_REGEX)) {
+        throw new BoomerangException(BoomerangError.TOKEN_INVALID_PERMISSION);
+      } 
+      String[] pSplit = p.split("/");
+      LOGGER.debug("Scope: " + PermissionScope.valueOfLabel(pSplit[0].toLowerCase()));
+      if (PermissionScope.valueOfLabel(pSplit[0].toLowerCase()) == null) {
+        throw new BoomerangException(BoomerangError.TOKEN_INVALID_PERMISSION);
+      }
+      LOGGER.debug("Principal: " + pSplit[1].toLowerCase());
+      if (!"**".equals(pSplit[1].toLowerCase())) {
+        if (AuthType.user.equals(request.getType())) {
+          //Validate principal against all the team permissions the user has
+          List<RelationshipEntity> userRels = relationshipService.getFilteredRels(Optional.of(RelationshipRef.USER),
+              Optional.of(List.of(request.getPrincipal())), Optional.of(RelationshipType.MEMBEROF),
+              Optional.of(RelationshipRef.TEAM), Optional.empty(), false);
+          LOGGER.debug(userRels.toString());
+        }
+      } else {
+        throw new BoomerangException(BoomerangError.TOKEN_INVALID_PERMISSION);
+      }
+      LOGGER.debug("Action: " + pSplit[2].toLowerCase());
+      //ACTION is already checked as part of the regex
+    });
 
-    LOGGER.debug("Creating {} token...", request.getType().toString());
+    // Create TokenEntity
     TokenEntity tokenEntity = new TokenEntity();
-    // Ensure Principal is provided for all types but global
-    if (!TokenScope.global.equals(request.getType())
-        && (request.getPrincipal() == null || request.getPrincipal().isEmpty())) {
-      // TODO make real exception
-      throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
-    }
-    if (!TokenScope.global.equals(request.getType())) {
-      tokenEntity.setPrincipal(request.getPrincipal());
-    }
     tokenEntity.setType(request.getType());
     tokenEntity.setName(request.getName());
     tokenEntity.setDescription(request.getDescription());
     tokenEntity.setExpirationDate(request.getExpirationDate());
+    if (!AuthType.global.equals(request.getType())) {
+      tokenEntity.setPrincipal(request.getPrincipal());
+    }
     tokenEntity.setPermissions(request.getPermissions());
+    
 
     String prefix = TokenTypePrefix.valueOf(request.getType().toString()).getPrefix();
     String uniqueToken = prefix + "_" + UUID.randomUUID().toString().toLowerCase();
@@ -120,20 +152,20 @@ public class TokenServiceImpl implements TokenService {
     // Create Authorization Relationship
     RelationshipRef to = null;
     Optional<String> toRef = Optional.empty();
-    if (TokenScope.global.equals(request.getType())) {
+    if (AuthType.global.equals(request.getType())) {
       to = RelationshipRef.GLOBAL;
-    } else if (TokenScope.team.equals(request.getType())) {
+    } else if (AuthType.team.equals(request.getType())) {
       to = RelationshipRef.TEAM;
       toRef = Optional.of(request.getPrincipal());
-    } else if (TokenScope.workflow.equals(request.getType())) {
+    } else if (AuthType.workflow.equals(request.getType())) {
       to = RelationshipRef.WORKFLOW;
       toRef = Optional.of(request.getPrincipal());
-    } else if (TokenScope.user.equals(request.getType())) {
+    } else if (AuthType.user.equals(request.getType())) {
       to = RelationshipRef.USER;
       toRef = Optional.of(request.getPrincipal());
     }
     relationshipService.addRelationshipRef(RelationshipRef.TOKEN, tokenEntity.getId(),
-        RelationshipType.AUTHORIZES, to, toRef);
+        RelationshipType.AUTHORIZES, to, toRef, Optional.empty());
 
     CreateTokenResponse tokenResponse = new CreateTokenResponse();
     tokenResponse.setToken(uniqueToken);
@@ -193,7 +225,7 @@ public class TokenServiceImpl implements TokenService {
   @Override
   public Page<Token> query(Optional<Date> from, Optional<Date> to, Optional<Integer> queryLimit,
       Optional<Integer> queryPage, Optional<Direction> queryOrder, Optional<String> querySort,
-      Optional<List<TokenScope>> queryTypes, Optional<List<String>> queryPrincipals) {
+      Optional<List<AuthType>> queryTypes, Optional<List<String>> queryPrincipals) {
     Pageable pageable = Pageable.unpaged();
     final Sort sort =
         Sort.by(new Order(queryOrder.orElse(Direction.ASC), querySort.orElse("creationDate")));
@@ -308,11 +340,23 @@ public class TokenServiceImpl implements TokenService {
     TokenEntity tokenEntity = new TokenEntity();
     tokenEntity.setCreationDate(new Date());
     tokenEntity.setDescription("Generated User Session Token");
-    tokenEntity.setType(TokenScope.session);
+    tokenEntity.setType(AuthType.session);
     tokenEntity.setExpirationDate(expiryDate);
     tokenEntity.setPrincipal(user.get().getId());
-    tokenEntity.setPermissions(List.of(TokenPermission.ANY_READ, TokenPermission.ANY_WRITE, TokenPermission.ANY_DELETE, TokenPermission.ANY_ACTION));
-
+    List<String> permissions = new LinkedList<>();
+    if (UserType.admin.equals(user.get().getType())) {
+      permissions.addAll(roleRepository.findByTypeAndName("global", "admin").getPermissions());
+    } else if (UserType.operator.equals(user.get().getType())) {
+      permissions.addAll(roleRepository.findByTypeAndName("global", "operator").getPermissions());
+    } else {
+      //Collect all team permissions the user has
+      List<RelationshipEntity> userRels = relationshipService.getFilteredRels(Optional.of(RelationshipRef.USER),
+          Optional.of(List.of(user.get().getId())), Optional.of(RelationshipType.MEMBEROF),
+          Optional.of(RelationshipRef.TEAM), Optional.empty(), false);
+      LOGGER.debug(userRels.toString());
+      permissions.addAll(roleRepository.findByTypeAndName("team", "owner").getPermissions());
+    }
+    tokenEntity.setPermissions(permissions);
     String prefix = TokenTypePrefix.session.prefix;
     String uniqueToken = prefix + "_" + UUID.randomUUID().toString().toLowerCase();
 
@@ -322,7 +366,7 @@ public class TokenServiceImpl implements TokenService {
 
     // Create Authorization Relationship
     relationshipService.addRelationshipRef(RelationshipRef.TOKEN, tokenEntity.getId(),
-        RelationshipType.AUTHORIZES, RelationshipRef.USER, Optional.of(user.get().getId()));
+        RelationshipType.AUTHORIZES, RelationshipRef.USER, Optional.of(user.get().getId()), Optional.empty());
 
     return new Token(tokenEntity);
   }

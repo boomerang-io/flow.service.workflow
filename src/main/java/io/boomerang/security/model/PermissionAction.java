@@ -1,5 +1,5 @@
 package io.boomerang.security.model;
 
-public enum TokenAccess {
+public enum PermissionAction {
   read, write, delete, action
 }

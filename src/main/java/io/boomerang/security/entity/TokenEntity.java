@@ -1,4 +1,4 @@
-package io.boomerang.v4.data.entity;
+package io.boomerang.security.entity;
 
 import java.util.Date;
 import java.util.LinkedList;
@@ -8,8 +8,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import io.boomerang.security.model.TokenPermission;
-import io.boomerang.security.model.TokenScope;
+import io.boomerang.security.model.AuthType;
+import io.boomerang.security.model.Permission;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(Include.NON_NULL)
@@ -18,13 +18,13 @@ public class TokenEntity {
 
   @Id
   private String id;
-  private TokenScope type;
+  private AuthType type;
   private String name;
   private String description;
   private Date creationDate = new Date();
   private Date expirationDate;
   private String principal;
-  private List<TokenPermission> permissions = new LinkedList<>();
+  private List<String> permissions = new LinkedList<>();
   private String token;
 
   public String getId() {
@@ -35,11 +35,11 @@ public class TokenEntity {
     this.id = id;
   }
 
-  public TokenScope getType() {
+  public AuthType getType() {
     return type;
   }
 
-  public void setType(TokenScope type) {
+  public void setType(AuthType type) {
     this.type = type;
   }
 
@@ -83,11 +83,11 @@ public class TokenEntity {
     this.token = token;
   }
 
-  public List<TokenPermission> getPermissions() {
+  public List<String> getPermissions() {
     return permissions;
   }
 
-  public void setPermissions(List<TokenPermission> permissions) {
+  public void setPermissions(List<String> permissions) {
     this.permissions = permissions;
   }
 

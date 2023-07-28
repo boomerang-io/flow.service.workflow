@@ -8,11 +8,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.bson.BsonObjectId;
 import org.quartz.SchedulerException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
@@ -40,6 +38,7 @@ import io.boomerang.v4.model.enums.RelationshipType;
 import io.boomerang.v4.model.enums.TriggerEnum;
 import io.boomerang.v4.model.enums.ref.TaskType;
 import io.boomerang.v4.model.enums.ref.WorkflowStatus;
+import io.boomerang.v4.model.ref.ChangeLogVersion;
 import io.boomerang.v4.model.ref.Task;
 import io.boomerang.v4.model.ref.TaskDependency;
 import io.boomerang.v4.model.ref.Trigger;
@@ -160,8 +159,8 @@ public class WorkflowServiceImpl implements WorkflowService {
     
     Workflow workflow = engineClient.createWorkflow(request);
     // Create BELONGSTO relationship for mapping Workflow to Owner
-      relationshipService.addRelationshipRef(RelationshipRef.WORKFLOW, workflow.getId(), RelationshipRef.TEAM,
-          Optional.of(team));
+      relationshipService.addRelationshipRef(RelationshipRef.WORKFLOW, workflow.getId(), RelationshipType.BELONGSTO, RelationshipRef.TEAM,
+          Optional.of(team), Optional.empty());
 
     // Filter out sensitive values
     DataAdapterUtil.filterParamSpecValueByFieldType(workflow.getConfig(), workflow.getParams(), FieldType.PASSWORD.value());
@@ -235,6 +234,26 @@ public class WorkflowServiceImpl implements WorkflowService {
       return this.create(workflow, team.get());
     } else {
       // TODO: make this valid to apply creating without TeamID
+      throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
+    }
+  }
+  
+  /*
+   * Retrieve a workflows changelog from all versions
+   */
+
+  @Override
+  public ResponseEntity<List<ChangeLogVersion>> changelog(String workflowId) {
+    if (workflowId == null || workflowId.isBlank()) {
+      throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
+    }
+
+    List<String> workflowRefs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.WORKFLOW),
+        Optional.of(List.of(workflowId)), Optional.of(RelationshipType.BELONGSTO), Optional.empty(), Optional.empty());
+    if (!workflowRefs.isEmpty()) {
+      return ResponseEntity.ok(engineClient.getWorkflowChangeLog(workflowId));
+    } else {
+      // TODO: do we want to return invalid ref or unauthorized
       throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
     }
   }

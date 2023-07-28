@@ -5,13 +5,13 @@ import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.http.ResponseEntity;
+import io.boomerang.security.model.Role;
 import io.boomerang.v4.data.model.CurrentQuotas;
 import io.boomerang.v4.data.model.Quotas;
 import io.boomerang.v4.model.AbstractParam;
 import io.boomerang.v4.model.ApproverGroup;
 import io.boomerang.v4.model.ApproverGroupRequest;
 import io.boomerang.v4.model.Team;
-import io.boomerang.v4.model.TeamMemberRequest;
 import io.boomerang.v4.model.TeamNameCheckRequest;
 import io.boomerang.v4.model.TeamRequest;
 import io.boomerang.v4.model.UserSummary;
@@ -23,7 +23,7 @@ public interface TeamService {
 
   ResponseEntity<Team> create(TeamRequest request, TeamType type);
 
-  ResponseEntity<Team> update(TeamRequest createTeamRequest);
+  ResponseEntity<Team> patch(TeamRequest createTeamRequest);
 
   ResponseEntity<Team> get(String teamId);
 
@@ -35,10 +35,6 @@ public interface TeamService {
       Optional<Direction> queryOrder, Optional<String> querySort,
       Optional<List<String>> queryLabels, Optional<List<String>> queryStatus,
       Optional<List<String>> queryIds);
-
-  ResponseEntity<Void> enable(String teamId);
-
-  ResponseEntity<Void> disable(String teamId);
 
   ResponseEntity<List<UserSummary>> addMembers(String teamId, List<UserSummary> createTeamRequest);
 
@@ -70,4 +66,6 @@ public interface TeamService {
   ResponseEntity<ApproverGroup> updateApproverGroup(String teamId, ApproverGroupRequest request);
 
   ResponseEntity<?> validateName(TeamNameCheckRequest request);
+
+  ResponseEntity<List<Role>> getRoles();
 }

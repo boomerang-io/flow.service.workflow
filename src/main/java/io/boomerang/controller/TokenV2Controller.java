@@ -21,9 +21,9 @@ import io.boomerang.security.interceptors.AuthScope;
 import io.boomerang.security.model.CreateTokenRequest;
 import io.boomerang.security.model.CreateTokenResponse;
 import io.boomerang.security.model.Token;
-import io.boomerang.security.model.TokenAccess;
-import io.boomerang.security.model.TokenObject;
-import io.boomerang.security.model.TokenScope;
+import io.boomerang.security.model.PermissionAction;
+import io.boomerang.security.model.PermissionScope;
+import io.boomerang.security.model.AuthType;
 import io.boomerang.security.service.TokenService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -39,20 +39,20 @@ public class TokenV2Controller {
   private TokenService tokenService;
 
   @PostMapping("/token")
-  @AuthScope(types = {TokenScope.global, TokenScope.user, TokenScope.team, TokenScope.workflow},
-      object = TokenObject.token, access = TokenAccess.write)
+  @AuthScope(types = {AuthType.global, AuthType.user, AuthType.team, AuthType.workflow},
+      scope = PermissionScope.TOKEN, action = PermissionAction.write)
   @Operation(summary = "Create Token")
   public CreateTokenResponse createToken(@Valid @RequestBody CreateTokenRequest request) {
     return tokenService.create(request);
   }
 
   @GetMapping("/token/query")
-  @AuthScope(types = {TokenScope.global, TokenScope.user, TokenScope.team, TokenScope.workflow},
-      object = TokenObject.token, access = TokenAccess.read)
+  @AuthScope(types = {AuthType.global, AuthType.user, AuthType.team, AuthType.workflow},
+      scope = PermissionScope.TOKEN, action = PermissionAction.read)
   @Operation(summary = "Search for Tokens")
   public Page<Token> query(
       @Parameter(name = "types", description = "List of types to filter for. Defaults to all.",
-      required = false) @RequestParam(required = false)  Optional<List<TokenScope>> types,
+      required = false) @RequestParam(required = false)  Optional<List<AuthType>> types,
       @Parameter(name = "principals", description = "List of principals to filter for. Based on the types you are querying for.",
       required = false) @RequestParam(required = false)  Optional<List<String>> principals,
       @Parameter(name = "limit", description = "Result Size", example = "10",
@@ -79,8 +79,8 @@ public class TokenV2Controller {
   }
 
   @DeleteMapping("/token/{id}")
-  @AuthScope(types = {TokenScope.global, TokenScope.user, TokenScope.team, TokenScope.workflow},
-      object = TokenObject.token, access = TokenAccess.delete)
+  @AuthScope(types = {AuthType.global, AuthType.user, AuthType.team, AuthType.workflow},
+      scope = PermissionScope.TOKEN, action = PermissionAction.delete)
   @Operation(summary = "Delete Token")
   public ResponseEntity<?> deleteToken(@Parameter(name = "id",
       description = "ID of the Token", required = true) @PathVariable String id) {

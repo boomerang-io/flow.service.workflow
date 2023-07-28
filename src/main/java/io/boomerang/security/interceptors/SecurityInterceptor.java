@@ -8,9 +8,9 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
 import io.boomerang.security.model.Token;
-import io.boomerang.security.model.TokenAccess;
-import io.boomerang.security.model.TokenObject;
-import io.boomerang.security.model.TokenScope;
+import io.boomerang.security.model.PermissionAction;
+import io.boomerang.security.model.PermissionScope;
+import io.boomerang.security.model.AuthType;
 import io.boomerang.security.service.IdentityService;
 
 /*
@@ -51,7 +51,7 @@ public class SecurityInterceptor implements HandlerInterceptor {
         return false;
       }
 
-      TokenScope[] requiredTypes = authScope.types();
+      AuthType[] requiredTypes = authScope.types();
       Token accessToken = this.identityService.getCurrentIdentity();
       // Check the required level of token is present
       if (!Arrays.asList(requiredTypes).contains(accessToken.getType())) {
@@ -61,16 +61,16 @@ public class SecurityInterceptor implements HandlerInterceptor {
 //      response.setStatus(401);
         return true;
       }
-      TokenObject requiredObject = authScope.object();
-      TokenAccess requiredAccess = authScope.access();
-
-      if (!accessToken.getPermissions().stream().anyMatch(p -> (p.access().equals(requiredAccess))&& (p.object().equals(requiredObject) || p.object().equals(TokenObject.any)))) {
-        LOGGER.error("SecurityInterceptor - Unauthorized Permission. Needed: {}, Provided: {}", requiredObject.toString().toUpperCase() + "_" + requiredAccess.toString().toUpperCase(), accessToken.getPermissions().toString());
+      PermissionScope requiredScope = authScope.scope();
+      PermissionAction requiredAccess = authScope.action();
+      LOGGER.error("SecurityInterceptor - Permission. Needed: {}, Provided: {}", requiredScope.toString().toUpperCase() + "_" + requiredAccess.toString().toUpperCase(), accessToken.getPermissions().toString());
+//      if (!accessToken.getPermissions().stream().anyMatch(p -> (p.action().equals(requiredAccess))&& (p.scope().equals(requiredScope) || p.scope().equals(PermissionScope.any)))) {
+//        LOGGER.error("SecurityInterceptor - Unauthorized Permission. Needed: {}, Provided: {}", requiredScope.toString().toUpperCase() + "_" + requiredAccess.toString().toUpperCase(), accessToken.getPermissions().toString());
         // TODO set this to return false
 //      response.getWriter().write("");
 //      response.setStatus(401);
-      return true;
-      }
+//      return true;
+//      }
 //      for (TokenPermission p : accessToken.getPermissions()) {
 //        if (p.access() == requiredAccess && p.Object() == requiredObject) {
 //          validRequest = true;

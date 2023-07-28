@@ -1,17 +1,33 @@
 package io.boomerang.security.model;
 
-import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
+import org.springframework.beans.BeanUtils;
+import io.boomerang.security.entity.RoleEntity;
 
-public class CreateTokenRequest {
-
+public class Role {
+  
+//  @JsonIgnore
+  private String id;
   private AuthType type;
   private String name;
-  private String principal;
   private String description;
-  private Date expirationDate;
-  private List<String> permissions;
+  private List<String> permissions = new LinkedList<>();
   
+  public Role() {
+
+  }
+
+  public Role(RoleEntity entity) {
+    BeanUtils.copyProperties(entity, this);
+  }
+  
+  public String getId() {
+    return id;
+  }
+  public void setId(String id) {
+    this.id = id;
+  }
   public AuthType getType() {
     return type;
   }
@@ -27,20 +43,8 @@ public class CreateTokenRequest {
   public String getDescription() {
     return description;
   }
-  public String getPrincipal() {
-    return principal;
-  }
-  public void setPrincipal(String principal) {
-    this.principal = principal;
-  }
   public void setDescription(String description) {
     this.description = description;
-  }
-  public Date getExpirationDate() {
-    return expirationDate;
-  }
-  public void setExpirationDate(Date expirationDate) {
-    this.expirationDate = expirationDate;
   }
   public List<String> getPermissions() {
     return permissions;

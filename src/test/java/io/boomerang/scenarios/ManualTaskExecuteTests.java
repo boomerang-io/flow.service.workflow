@@ -31,7 +31,7 @@ import io.boomerang.security.service.IdentityService;
 import io.boomerang.tests.IntegrationTests;
 import io.boomerang.v4.data.entity.UserEntity;
 import io.boomerang.v4.model.Action;
-import io.boomerang.v4.model.UserType;
+import io.boomerang.v4.model.enums.UserType;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
@@ -51,7 +51,7 @@ class ManualTaskExecuteTests extends IntegrationTests {
     user.setName("Adrienne Hudson");
     user.setType(UserType.admin);
 
-    when(service.getCurrentScope()).thenReturn(TokenPermission.user);
+    when(service.getCurrentScope()).thenReturn(PermissionAccess.user);
     when(service.getCurrentUser()).thenReturn(user);
 
     String workflowId = "5f4fc9e95683833cf0b1335b";

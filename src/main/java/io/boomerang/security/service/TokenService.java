@@ -9,7 +9,7 @@ import org.springframework.data.domain.Sort.Direction;
 import io.boomerang.security.model.CreateTokenRequest;
 import io.boomerang.security.model.CreateTokenResponse;
 import io.boomerang.security.model.Token;
-import io.boomerang.security.model.TokenScope;
+import io.boomerang.security.model.AuthType;
 
 public interface TokenService {
   public Token get(String value);
@@ -19,5 +19,5 @@ public interface TokenService {
   public boolean delete(@Valid String id);
   Page<Token> query(Optional<Date> from, Optional<Date> to, Optional<Integer> queryLimit,
       Optional<Integer> queryPage, Optional<Direction> queryOrder, Optional<String> querySort,
-      Optional<List<TokenScope>> queryTypes, Optional<List<String>> queryPrincipals);
+      Optional<List<AuthType>> queryTypes, Optional<List<String>> queryPrincipals);
 }
