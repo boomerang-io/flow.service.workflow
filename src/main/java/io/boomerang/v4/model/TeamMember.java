@@ -2,10 +2,9 @@ package io.boomerang.v4.model;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.annotation.Id;
-import io.boomerang.security.model.TeamRoleEnum;
 import io.boomerang.v4.data.entity.UserEntity;
 
-public class UserSummary {
+public class TeamMember {
    
   @Id
   private String id;
@@ -13,14 +12,14 @@ public class UserSummary {
   private String name;
   private String role;
    
-  public UserSummary() {
+  public TeamMember() {
   }
   
-  public UserSummary(UserEntity entity) {
+  public TeamMember(UserEntity entity) {
     BeanUtils.copyProperties(entity, this);
   }
   
-  public UserSummary(UserEntity entity, String role) {
+  public TeamMember(UserEntity entity, String role) {
     BeanUtils.copyProperties(entity, this);
     this.role = role;
   }

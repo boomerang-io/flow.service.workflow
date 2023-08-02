@@ -4,14 +4,14 @@ import java.util.HashMap;
 import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-public enum TeamRoleEnum {
+public enum RoleEnum {
   OWNER("owner"), EDITOR("editor"), READER("reader");
 
   private String label;
 
-  private static final Map<String, TeamRoleEnum> BY_LABEL = new HashMap<>();
+  private static final Map<String, RoleEnum> BY_LABEL = new HashMap<>();
 
-  TeamRoleEnum(String label) {
+  RoleEnum(String label) {
     this.label = label;
   }
 
@@ -20,12 +20,12 @@ public enum TeamRoleEnum {
   }
   
   static {
-      for (TeamRoleEnum e: values()) {
+      for (RoleEnum e: values()) {
         BY_LABEL.put(e.label, e);
       }
   }
 
-  public static TeamRoleEnum valueOfLabel(String label) {
+  public static RoleEnum valueOfLabel(String label) {
     return BY_LABEL.get(label);
   }
   

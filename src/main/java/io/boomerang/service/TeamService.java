@@ -8,45 +8,32 @@ import org.springframework.http.ResponseEntity;
 import io.boomerang.security.model.Role;
 import io.boomerang.v4.data.model.CurrentQuotas;
 import io.boomerang.v4.data.model.Quotas;
-import io.boomerang.v4.model.AbstractParam;
 import io.boomerang.v4.model.ApproverGroup;
 import io.boomerang.v4.model.ApproverGroupRequest;
 import io.boomerang.v4.model.Team;
+import io.boomerang.v4.model.TeamMember;
 import io.boomerang.v4.model.TeamNameCheckRequest;
 import io.boomerang.v4.model.TeamRequest;
-import io.boomerang.v4.model.UserSummary;
 import io.boomerang.v4.model.enums.TeamType;
 
 public interface TeamService {
 
-  ResponseEntity<Team> create(TeamRequest createTeamRequest);
+  ResponseEntity<?> validateName(TeamNameCheckRequest request);
 
-  ResponseEntity<Team> create(TeamRequest request, TeamType type);
-
-  ResponseEntity<Team> patch(TeamRequest createTeamRequest);
-
-  ResponseEntity<Team> get(String teamId);
-
-  Page<Team> mine(Optional<Integer> queryPage, Optional<Integer> queryLimit,
-      Optional<Direction> queryOrder, Optional<String> querySort,
-      Optional<List<String>> queryLabels, Optional<List<String>> queryStatus);
+  Team get(String teamId);
 
   Page<Team> query(Optional<Integer> queryPage, Optional<Integer> queryLimit,
       Optional<Direction> queryOrder, Optional<String> querySort,
       Optional<List<String>> queryLabels, Optional<List<String>> queryStatus,
       Optional<List<String>> queryIds);
 
-  ResponseEntity<List<UserSummary>> addMembers(String teamId, List<UserSummary> createTeamRequest);
+  Team create(TeamRequest request, TeamType type);
 
-  void removeMembers(String teamId, List<UserSummary> request);
+  Team patch(String teamId, TeamRequest request);
 
-  ResponseEntity<AbstractParam> createParameter(String teamId, AbstractParam parameter);
+  void removeMembers(String teamId, List<TeamMember> request);
 
-  ResponseEntity<Void> deleteParameter(String teamId, String key);
-
-  ResponseEntity<List<AbstractParam>> getParameters(String teamId);
-
-  ResponseEntity<AbstractParam> updateParameter(String teamId, AbstractParam parameter);
+  void deleteParameters(String teamId, List<String> request);
 
   ResponseEntity<CurrentQuotas> getQuotas(String teamId);
 
@@ -56,16 +43,14 @@ public interface TeamService {
 
   ResponseEntity<Quotas> getDefaultQuotas();
 
-  ResponseEntity<List<ApproverGroup>> getApproverGroups(String teamId);
+  List<ApproverGroup> getApproverGroups(String teamId);
 
-  ResponseEntity<Void> deleteApproverGroup(String teamId, String name);
+  void deleteApproverGroup(String teamId, String name);
 
-  ResponseEntity<ApproverGroup> createApproverGroup(String teamId,
+  ApproverGroup createApproverGroup(String teamId,
       ApproverGroupRequest createApproverGroupRequest);
 
-  ResponseEntity<ApproverGroup> updateApproverGroup(String teamId, ApproverGroupRequest request);
-
-  ResponseEntity<?> validateName(TeamNameCheckRequest request);
+  ApproverGroup updateApproverGroup(String teamId, ApproverGroupRequest request);
 
   ResponseEntity<List<Role>> getRoles();
 }

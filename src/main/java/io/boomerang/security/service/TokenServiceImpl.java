@@ -37,7 +37,7 @@ import io.boomerang.security.model.AuthType;
 import io.boomerang.security.model.CreateTokenRequest;
 import io.boomerang.security.model.CreateTokenResponse;
 import io.boomerang.security.model.PermissionScope;
-import io.boomerang.security.model.TeamRoleEnum;
+import io.boomerang.security.model.RoleEnum;
 import io.boomerang.security.model.Token;
 import io.boomerang.security.model.TokenTypePrefix;
 import io.boomerang.security.repository.RoleRepository;
@@ -151,7 +151,7 @@ public class TokenServiceImpl implements TokenService {
           Optional.of(RelationshipRef.USER), Optional.of(List.of(request.getPrincipal())),
           Optional.of(RelationshipType.MEMBEROF), Optional.of(RelationshipRef.TEAM), teams, false);
       for (RelationshipEntity rel : userRels) {
-        String role = TeamRoleEnum.READER.getLabel();
+        String role = RoleEnum.READER.getLabel();
         if (rel.getData() != null && rel.getData().get("role") != null) {
           role = rel.getData().get("role").toString();
         }

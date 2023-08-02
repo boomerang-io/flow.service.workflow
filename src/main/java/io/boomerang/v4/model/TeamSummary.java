@@ -2,8 +2,6 @@ package io.boomerang.v4.model;
 
 import java.util.Date;
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import org.springframework.beans.BeanUtils;
 import io.boomerang.v4.data.entity.TeamEntity;
@@ -17,8 +15,6 @@ public class TeamSummary {
   private TeamStatus status = TeamStatus.active;
   private String externalRef;
   private Map<String, String> labels = new HashMap<>();
-  private List<UserSummary> members;
-  private List<String> workflows = new LinkedList<>();
   
   public TeamSummary() {
     
@@ -79,21 +75,5 @@ public class TeamSummary {
 
   public void setLabels(Map<String, String> labels) {
     this.labels = labels;
-  }
-
-  public List<String> getWorkflows() {
-    return workflows;
-  }
-
-  public void setWorkflows(List<String> workflows) {
-    this.workflows = workflows;
-  }
-
-  public List<UserSummary> getMembers() {
-    return members;
-  }
-
-  public void setMembers(List<UserSummary> members) {
-    this.members = members;
   }
 }
