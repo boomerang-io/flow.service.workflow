@@ -22,5 +22,14 @@ public class User extends UserEntity {
     this.getSettings().setHasConsented(entity.getHasConsented());
     this.getSettings().setIsFirstVisit(entity.getIsFirstVisit());
   }
+
+  @Override
+  public String toString() {
+    return "User [getStatus()=" + getStatus() + ", getId()=" + getId() + ", getName()=" + getName()
+        + ", getEmail()=" + getEmail() + ", getType()=" + getType() + ", getCreationDate()="
+        + getCreationDate() + ", getLastLoginDate()=" + getLastLoginDate() + ", getLabels()="
+        + getLabels() + ", getSettings()=" + getSettings() + ", getClass()=" + getClass()
+        + ", hashCode()=" + hashCode() + ", toString()=" + super.toString() + "]";
+  }
   
 }

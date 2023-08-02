@@ -52,6 +52,7 @@ public class TeamV2Controller {
     return teamService.validateName(request);
   }
 
+  //TODO - merge back in the profile.
   @GetMapping(value = "/mine")
 //  @AuthScope(types = {TokenScope.session, TokenScope.user}, access = TokenAccess.read, object = TokenObject.team)
   @Operation(summary = "Return all my teams")
@@ -135,9 +136,9 @@ public class TeamV2Controller {
   }
   
   @DeleteMapping(value = "/{teamId}/members")
-  public ResponseEntity<List<UserSummary>> removeMembers(@Parameter(name = "teamId",
+  public void removeMembers(@Parameter(name = "teamId",
       description = "ID of Team", required = true) @PathVariable String teamId, @RequestBody List<UserSummary> request) {
-    return teamService.removeMembers(teamId, request);
+      teamService.removeMembers(teamId, request);
   }
 
   @GetMapping(value = "/{teamId}/parameters")

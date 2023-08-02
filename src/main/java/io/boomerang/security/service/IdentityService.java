@@ -5,15 +5,14 @@ import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.http.ResponseEntity;
-import io.boomerang.security.model.Token;
 import io.boomerang.security.model.AuthType;
+import io.boomerang.security.model.Token;
 import io.boomerang.v4.data.entity.UserEntity;
 import io.boomerang.v4.model.OneTimeCode;
 import io.boomerang.v4.model.Team;
 import io.boomerang.v4.model.User;
 import io.boomerang.v4.model.UserProfile;
 import io.boomerang.v4.model.UserRequest;
-import io.boomerang.v4.model.UserResponsePage;
 import io.boomerang.v4.model.enums.UserType;
 import io.boomerang.v4.model.ref.Workflow;
 

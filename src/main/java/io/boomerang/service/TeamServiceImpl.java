@@ -343,7 +343,7 @@ public class TeamServiceImpl implements TeamService {
   }
 
   @Override
-  public ResponseEntity<List<UserSummary>> removeMembers(String teamId, List<UserSummary> request) {
+  public void removeMembers(String teamId, List<UserSummary> request) {
     if (request != null && !request.isEmpty()) {
       if (teamId == null || teamId.isBlank()) {
         throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
@@ -358,8 +358,7 @@ public class TeamServiceImpl implements TeamService {
       if (!optTeamEntity.isPresent()) {
         throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
       }
-
-      List<String> userRefs = Collections.emptyList();
+      List<String> userRefs = new LinkedList<>();
       for (UserSummary userSummary : request) {
         Optional<User> userEntity = null;
         if (!userSummary.getId().isEmpty()) {
@@ -367,15 +366,15 @@ public class TeamServiceImpl implements TeamService {
         } else if (!userSummary.getEmail().isEmpty()) {
           userEntity = identityService.getUserByEmail(userSummary.getEmail());
         }
-        if (userEntity != null) {
+        if (userEntity.isPresent()) {
           userRefs.add(userEntity.get().getId());
         }
       }
-      relationshipService.removeRelationships(RelationshipRef.USER, userRefs, RelationshipRef.TEAM,
-          List.of(teamId));
+      if (!userRefs.isEmpty()) {
+        relationshipService.removeRelationships(RelationshipRef.USER, userRefs, RelationshipRef.TEAM,
+            List.of(teamId));
+      }
     }
-
-    return ResponseEntity.ok(getUsersForTeam(teamId));
   }
 
   /*
@@ -769,13 +768,15 @@ public class TeamServiceImpl implements TeamService {
 
     ApproverGroupEntity approverGroupEntity = new ApproverGroupEntity();
     approverGroupEntity.setName(request.getName());
-
     if (request.getApprovers() != null) {
       List<String> userRefs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.USER),
           Optional.empty(), Optional.of(RelationshipType.MEMBEROF),
           Optional.of(RelationshipRef.TEAM), Optional.of(List.of(teamEntity.getId())));
-      approverGroupEntity.getApproverRefs().addAll(request.getApprovers().stream()
-          .filter(a -> userRefs.contains(a)).collect(Collectors.toList()));
+      LOGGER.debug("User Refs: " + userRefs.toString());
+      List<String> validApproverRefs = request.getApprovers().stream()
+          .filter(a -> userRefs.contains(a)).collect(Collectors.toList());
+      LOGGER.debug("Valid Approver Refs: " + validApproverRefs.toString());
+      approverGroupEntity.setApproverRefs(validApproverRefs);
     }
     approverGroupEntity = approverGroupRepository.save(approverGroupEntity);
     relationshipService.addRelationshipRef(RelationshipRef.APPROVERGROUP,
@@ -926,7 +927,7 @@ public class TeamServiceImpl implements TeamService {
             Optional.of(RelationshipRef.TEAM), Optional.of(List.of(teamEntity.getId())));
     List<ApproverGroupEntity> approverGroupEntities =
         approverGroupRepository.findByIdIn(approverGroupRefs);
-    List<ApproverGroup> approverGroups = Collections.emptyList();
+    List<ApproverGroup> approverGroups = new LinkedList<>();
     approverGroupEntities.forEach(age -> {
       approverGroups.add(convertEntityToApproverGroup(age));
     });

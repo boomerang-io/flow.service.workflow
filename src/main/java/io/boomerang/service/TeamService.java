@@ -38,7 +38,7 @@ public interface TeamService {
 
   ResponseEntity<List<UserSummary>> addMembers(String teamId, List<UserSummary> createTeamRequest);
 
-  ResponseEntity<List<UserSummary>> removeMembers(String teamId, List<UserSummary> request);
+  void removeMembers(String teamId, List<UserSummary> request);
 
   ResponseEntity<AbstractParam> createParameter(String teamId, AbstractParam parameter);
 

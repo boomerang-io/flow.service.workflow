@@ -1,7 +1,7 @@
 package io.boomerang.v4.model;
 
-import java.util.Collections;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
 import org.springframework.beans.BeanUtils;
 import io.boomerang.v4.data.entity.ApproverGroupEntity;
@@ -11,7 +11,7 @@ public class ApproverGroup {
   private String id;
   private String name;
   private Date creationDate = new Date();
-  private List<UserSummary> approvers = Collections.emptyList();  
+  private List<UserSummary> approvers = new LinkedList<>();  
 
   public ApproverGroup() {
     
