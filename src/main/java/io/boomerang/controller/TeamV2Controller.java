@@ -20,13 +20,13 @@ import io.boomerang.security.model.Role;
 import io.boomerang.service.TeamService;
 import io.boomerang.v4.data.model.CurrentQuotas;
 import io.boomerang.v4.data.model.Quotas;
-import io.boomerang.v4.model.AbstractParam;
 import io.boomerang.v4.model.ApproverGroup;
 import io.boomerang.v4.model.ApproverGroupRequest;
 import io.boomerang.v4.model.Team;
+import io.boomerang.v4.model.TeamMember;
 import io.boomerang.v4.model.TeamNameCheckRequest;
 import io.boomerang.v4.model.TeamRequest;
-import io.boomerang.v4.model.UserSummary;
+import io.boomerang.v4.model.enums.TeamType;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -51,28 +51,17 @@ public class TeamV2Controller {
   public ResponseEntity<?> validateTeamName(@RequestBody TeamNameCheckRequest request) {
     return teamService.validateName(request);
   }
-
-  //TODO - merge back in the profile.
-  @GetMapping(value = "/mine")
-//  @AuthScope(types = {TokenScope.session, TokenScope.user}, access = TokenAccess.read, object = TokenObject.team)
-  @Operation(summary = "Return all my teams")
+  
+  @GetMapping(value = "/{teamId}")
+//  @AuthenticationScope(scopes = {TokenPermission.global, TokenPermission.team, TokenPermission.user})
+  @Operation(summary = "Get team")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
-  public Page<Team> getMyTeams(@Parameter(name = "labels",
-      description = "List of url encoded labels. For example Organization=Boomerang,customKey=test would be encoded as Organization%3DBoomerang,customKey%3Dtest)",
-      required = false) @RequestParam(required = false) Optional<List<String>> labels,
-      @Parameter(name = "statuses", description = "List of statuses to filter for. Defaults to all.",
-          example = "active,inactive",
-          required = false) @RequestParam(required = false) Optional<List<String>> statuses,
-      @Parameter(name = "limit", description = "Result Size", example = "10",
-      required = true) @RequestParam(required = false) Optional<Integer> limit,
-  @Parameter(name = "page", description = "Page Number", example = "0",
-      required = true) @RequestParam(defaultValue = "0") Optional<Integer> page,
-  @Parameter(name = "order", description = "Ascending or Descending (default) order", example = "0",
-  required = false) @RequestParam(defaultValue = "DESC") Optional<Direction> order,
-  @Parameter(name = "sort", description = "The element to sort on", example = "0",
-  required = false) @RequestParam(defaultValue = "name") Optional<String> sort) {
-    return teamService.mine(page, limit, order, sort, labels, statuses);
+  public Team getTeam(
+      @Parameter(name = "teamId",
+      description = "ID of Team",
+      required = true) @PathVariable String teamId) {
+    return teamService.get(teamId);
   }
 
   @GetMapping(value = "/query")
@@ -99,82 +88,44 @@ public class TeamV2Controller {
     return teamService.query(page, limit, order, sort, labels, statuses, ids);
   }
   
-  @GetMapping(value = "/{teamId}")
-//  @AuthenticationScope(scopes = {TokenPermission.global, TokenPermission.team, TokenPermission.user})
-  @Operation(summary = "Get teams")
-  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
-      @ApiResponse(responseCode = "400", description = "Bad Request")})
-  public ResponseEntity<Team> getTeam(
-      @Parameter(name = "teamId",
-      description = "ID of Team",
-      required = true) @PathVariable String teamId) {
-    return teamService.get(teamId);
-  }
-  
   @PostMapping(value = "")
 //  @AuthenticationScope(scopes = {TokenPermission.global})
   @Operation(summary = "Create new team")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
-  public ResponseEntity<Team> createTeam(@RequestBody TeamRequest request) {
-    return teamService.create(request);
+  public Team createTeam(@RequestBody TeamRequest request) {
+    return teamService.create(request, TeamType.team);
   }
   
-  @PatchMapping(value = "")
+  @PatchMapping(value = "/{teamId}")
 //  @AuthenticationScope(scopes = {TokenPermission.global})
   @Operation(summary = "Patch or update a team")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
-  public ResponseEntity<Team> updateTeam(@RequestBody TeamRequest request) {
-    return teamService.patch(request);
-  }
-  
-  @PatchMapping(value = "/{teamId}/members")
-  public ResponseEntity<List<UserSummary>> addMembers(@Parameter(name = "teamId",
-      description = "ID of Team", required = true) @PathVariable String teamId, @RequestBody List<UserSummary> request) {
-    return teamService.addMembers(teamId, request);
+  public Team updateTeam(@Parameter(name = "teamId",
+      description = "ID of Team", required = true) @PathVariable String teamId, @RequestBody TeamRequest request) {
+    return teamService.patch(teamId, request);
   }
   
   @DeleteMapping(value = "/{teamId}/members")
   public void removeMembers(@Parameter(name = "teamId",
-      description = "ID of Team", required = true) @PathVariable String teamId, @RequestBody List<UserSummary> request) {
+      description = "ID of Team", required = true) @PathVariable String teamId, @RequestBody List<TeamMember> request) {
       teamService.removeMembers(teamId, request);
   }
 
-  @GetMapping(value = "/{teamId}/parameters")
-  public ResponseEntity<List<AbstractParam>> getParameters(
-      @Parameter(name = "teamId",
-      description = "ID of Team",
-      required = true) @PathVariable String teamId) {
-    return teamService.getParameters(teamId);
-  }
-
-  @DeleteMapping(value = "/{teamId}/parameters/{key}")
+  @DeleteMapping(value = "/{teamId}/parameters")
   public void deleteTeamProperty(
       @Parameter(name = "teamId",
       description = "ID of Team",
       required = true) @PathVariable String teamId,
-      @Parameter(name = "key", description = "The parameters unique key.",
-      example = "my-parameter",
-      required = true) @PathVariable String key) {
-    teamService.deleteParameter(teamId, key);
+      @RequestBody List<String> keys) {
+    teamService.deleteParameters(teamId, keys);
   }
-
-  @PatchMapping(value = "/{teamId}/parameters")
-  public ResponseEntity<AbstractParam> patchParameter(
-      @Parameter(name = "teamId", description = "ID of Team",
-          required = true) @PathVariable String teamId,
-      @RequestBody AbstractParam parameter) {
-    return teamService.updateParameter(teamId, parameter);
-  }
-
-  @PostMapping(value = "/{teamId}/parameters")
-  public ResponseEntity<AbstractParam> createNewTeamProperty(
-      @Parameter(name = "teamId", description = "ID of Team",
-      required = true) @PathVariable String teamId,
-  @RequestBody AbstractParam parameter) {
-    return teamService.createParameter(teamId, parameter);
-  }
+  
+  @DeleteMapping(value = "/{teamId}/approvers/{name}")
+  public void deleteApproverGroup(@PathVariable String teamId,@PathVariable String name) {
+    teamService.deleteApproverGroup(teamId, name);
+  }  
 
   @GetMapping(value = "/{teamId}/quotas")
   public ResponseEntity<CurrentQuotas> getQuotas(
@@ -203,27 +154,22 @@ public class TeamV2Controller {
 
   @GetMapping(value = "/{teamId}/approvers")
   public ResponseEntity<List<ApproverGroup>> getApproverGroups(@PathVariable String teamId) {
-    return teamService.getApproverGroups(teamId);
+    return ResponseEntity.ok(teamService.getApproverGroups(teamId));
   }
   
   @PostMapping(value = "/{teamId}/approvers")
   public ResponseEntity<ApproverGroup> createApproverGroup(@Parameter(name = "teamId", description = "ID of Team",
       required = true) @PathVariable String teamId,
       @RequestBody ApproverGroupRequest request) {
-    return teamService.createApproverGroup(teamId, request);
+    return ResponseEntity.ok(teamService.createApproverGroup(teamId, request));
   }
   
   @PutMapping(value = "/{teamId}/approvers")
   public ResponseEntity<ApproverGroup> updateApproverGroup(@Parameter(name = "teamId", description = "ID of Team",
       required = true) @PathVariable String teamId,
       @RequestBody ApproverGroupRequest request) {
-    return teamService.updateApproverGroup(teamId, request);
+    return ResponseEntity.ok(teamService.updateApproverGroup(teamId, request));
   }
-  
-  @DeleteMapping(value = "/{teamId}/approvers/{name}")
-  public void deleteApproverGroup(@PathVariable String teamId,@PathVariable String name) {
-    teamService.deleteApproverGroup(teamId, name);
-  }  
 
   @GetMapping(value = "/roles")
   public ResponseEntity<List<Role>> getRoles() {

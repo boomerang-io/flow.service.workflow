@@ -34,12 +34,11 @@ import io.boomerang.error.BoomerangException;
 import io.boomerang.security.model.AuthType;
 import io.boomerang.security.model.Token;
 import io.boomerang.service.RelationshipService;
-import io.boomerang.service.TeamService;
-import io.boomerang.service.WorkflowService;
+import io.boomerang.v4.data.entity.TeamEntity;
 import io.boomerang.v4.data.entity.UserEntity;
+import io.boomerang.v4.data.repository.TeamRepository;
 import io.boomerang.v4.data.repository.UserRepository;
 import io.boomerang.v4.model.OneTimeCode;
-import io.boomerang.v4.model.Team;
 import io.boomerang.v4.model.TeamSummary;
 import io.boomerang.v4.model.User;
 import io.boomerang.v4.model.UserProfile;
@@ -49,7 +48,6 @@ import io.boomerang.v4.model.enums.RelationshipRef;
 import io.boomerang.v4.model.enums.RelationshipType;
 import io.boomerang.v4.model.enums.TeamStatus;
 import io.boomerang.v4.model.enums.UserType;
-import io.boomerang.v4.model.ref.Workflow;
 
 @Service
 public class IdentityServiceImpl implements IdentityService {
@@ -70,12 +68,9 @@ public class IdentityServiceImpl implements IdentityService {
   
   @Autowired
   private RelationshipService relationshipService;
-  
+
   @Autowired
-  private TeamService teamService;
-  
-  @Autowired
-  private WorkflowService workflowService;
+  private TeamRepository teamRepository;
 
   @Autowired
   private MongoTemplate mongoTemplate;
@@ -138,7 +133,7 @@ public class IdentityServiceImpl implements IdentityService {
       userEntity = Optional.of(userRepository.save(userEntity.get()));
     }
 
-    // Create Users Personal Team.
+    // TODO - Create Users Personal Team.
 //    TeamRequest request = new TeamRequest();
 //    request.setName(lastName + "'s Team");
 //    request.setUsers(List.of(new UserSummary(userEntity.get())));
@@ -218,11 +213,11 @@ public class IdentityServiceImpl implements IdentityService {
         convertExternalUserType(extUserProfile, profile);
       }
     }
-    Page<Team> teams =
-        teamService.mine(Optional.of(0), Optional.empty(), Optional.of(Direction.DESC),
-            Optional.of("name"), Optional.empty(), Optional.of(List.of("active")));
+    // Add TeamSummaries
+    List<String> teamRefs = relationshipService.getMyTeamRefs();
+    List<TeamEntity> teamEntities = teamRepository.findByIdIn(teamRefs);
     List<TeamSummary> teamSummaries = new LinkedList<>();
-    teams.getContent().forEach(t -> {
+    teamEntities.forEach(t -> {
       teamSummaries.add(new TeamSummary(t));
     });
     profile.setTeams(teamSummaries);
@@ -414,18 +409,6 @@ public class IdentityServiceImpl implements IdentityService {
       isUserAdmin = true;
     }
     return isUserAdmin;
-  }
-  
-  @Override
-  public Workflow getCurrentWorkflow() {
-    Token token = this.getCurrentIdentity();
-    return workflowService.get(token.getPrincipal(), Optional.empty(), false).getBody();
-  }
-  
-  @Override
-  public Team getCurrentTeam() {
-    Token token = this.getCurrentIdentity();
-    return teamService.get(token.getPrincipal()).getBody();
   }
 
   @Override

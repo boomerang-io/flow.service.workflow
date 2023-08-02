@@ -11,7 +11,7 @@ public class ApproverGroup {
   private String id;
   private String name;
   private Date creationDate = new Date();
-  private List<UserSummary> approvers = new LinkedList<>();  
+  private List<TeamMember> approvers = new LinkedList<>();  
 
   public ApproverGroup() {
     
@@ -45,11 +45,11 @@ public class ApproverGroup {
     this.creationDate = creationDate;
   }
 
-  public List<UserSummary> getApprovers() {
+  public List<TeamMember> getApprovers() {
     return approvers;
   }
 
-  public void setApprovers(List<UserSummary> approvers) {
+  public void setApprovers(List<TeamMember> approvers) {
     this.approvers = approvers;
   }
 }

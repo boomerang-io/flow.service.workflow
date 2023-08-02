@@ -26,7 +26,7 @@ public class Team {
   private List<AbstractParam> parameters = new LinkedList<>();
 //  private TeamSettings settings;
   private CurrentQuotas quotas;
-  private List<UserSummary> members;
+  private List<TeamMember> members;
   private List<WorkflowSummary> workflows = new LinkedList<>();
   private List<ApproverGroup> approverGroups;
   
@@ -118,11 +118,11 @@ public class Team {
     this.workflows = workflows;
   }
 
-  public List<UserSummary> getMembers() {
+  public List<TeamMember> getMembers() {
     return members;
   }
 
-  public void setMembers(List<UserSummary> members) {
+  public void setMembers(List<TeamMember> members) {
     this.members = members;
   }
 

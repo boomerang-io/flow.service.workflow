@@ -1,12 +1,16 @@
 package io.boomerang.service;
 
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import io.boomerang.error.BoomerangError;
+import io.boomerang.error.BoomerangException;
 import io.boomerang.v4.data.entity.RelationshipEntity;
+import io.boomerang.v4.data.entity.TeamEntity;
+import io.boomerang.v4.data.repository.TeamRepository;
 import io.boomerang.v4.model.AbstractParam;
 import io.boomerang.v4.model.GlobalParam;
 import io.boomerang.v4.model.enums.RelationshipRef;
@@ -28,7 +32,7 @@ public class ParameterManagerImpl implements ParameterManager {
   private SettingsService settingsService;
 
   @Autowired
-  private TeamService teamService;
+  private TeamRepository teamRepository;
 
   @Autowired
   private GlobalParamService globalParamService;
@@ -103,9 +107,13 @@ public class ParameterManagerImpl implements ParameterManager {
    * Build up the Team Params - defaultValue is not used with Team Params and can be ignored.
    */
   private void buildTeamParams(Map<String, Object> teamParams, String teamId) {
-    ResponseEntity<List<AbstractParam>> params = this.teamService.getParameters(teamId);
-    if (params.getBody() != null) {
-      for (AbstractParam param : params.getBody()) {
+      Optional<TeamEntity> optTeamEntity = teamRepository.findById(teamId);
+      if (!optTeamEntity.isPresent()) {
+        throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
+      }
+      TeamEntity teamEntity = optTeamEntity.get();
+    if (teamEntity.getParameters() != null && !teamEntity.getParameters().isEmpty()) {
+      for (AbstractParam param : teamEntity.getParameters()) {
         teamParams.put(param.getKey(), param.getValue());
       }
     }

@@ -32,9 +32,9 @@ public interface IdentityService {
   
   public Token getCurrentIdentity();
 
-  Workflow getCurrentWorkflow();
-
-  Team getCurrentTeam();
+//  Workflow getCurrentWorkflow();
+//
+//  Team getCurrentTeam();
 
   Optional<UserEntity> getAndRegisterUser(String email, String firstName, String lastName,
       Optional<UserType> usertype);

@@ -15,6 +15,9 @@ public interface RelationshipService {
       RelationshipType relationship, RelationshipRef toType, Optional<String> toRef,
       Optional<Map<String, Object>> data);
 
+  RelationshipEntity patchRelationshipData(RelationshipRef fromType, String fromRef,
+      RelationshipType relationship, Map<String, Object> data);
+
   void removeRelationships(RelationshipRef fromType, List<String> fromRefs, RelationshipRef toType,
       List<String> toRefs);
 

@@ -7,11 +7,14 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
+import io.boomerang.error.BoomerangError;
+import io.boomerang.error.BoomerangException;
 import io.boomerang.security.model.AuthType;
 import io.boomerang.security.service.IdentityService;
 import io.boomerang.v4.data.entity.RelationshipEntity;
@@ -94,6 +97,24 @@ public class RelationshipServiceImpl implements RelationshipService {
     }
     LOGGER.info("Relationship: " + relEntity.toString());
     return relationshipRepository.save(relEntity);
+  }
+  
+  /*
+   * Patch a RelationshipEntity
+   * 
+   * @return RelationshipEntity
+   */
+  @Override
+  public RelationshipEntity patchRelationshipData(RelationshipRef fromType, String fromRef, RelationshipType relationship, Map<String, Object> data) {
+    Optional<RelationshipEntity> entity = getRelationship(fromType, fromRef, relationship);
+
+    if (entity.isPresent()) {
+        entity.get().getData().putAll(data);
+      LOGGER.info("Relationship: " + entity.get().toString());
+      return relationshipRepository.save(entity.get());
+    } 
+    // TODO: make this a better error for unable to create team i.e. name is mandatory
+    throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
   }
   
 //  /*
