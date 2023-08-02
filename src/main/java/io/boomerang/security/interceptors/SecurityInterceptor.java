@@ -63,8 +63,8 @@ public class SecurityInterceptor implements HandlerInterceptor {
       }
       PermissionScope requiredScope = authScope.scope();
       PermissionAction requiredAccess = authScope.action();
-      String requiredRegex = "(\\*{2}|" + requiredScope.toString().toLowerCase() + ")\\/(\\*{2})\\/(\\*{2}|" + requiredAccess.toString().toLowerCase() + "){1}";
-      LOGGER.debug("SecurityInterceptor - Permission needed: {}, Provided: {}", requiredScope.toString().toLowerCase() + "/**/" + requiredAccess.toString().toLowerCase(), accessToken.getPermissions().toString());
+      String requiredRegex = "(\\*{2}|" + requiredScope.getLabel() + ")\\/(\\*{2})\\/(\\*{2}|" + requiredAccess.getLabel() + "){1}";
+      LOGGER.debug("SecurityInterceptor - Permission needed: {}, Provided: {}", requiredScope.getLabel() + "/**/" + requiredAccess.getLabel(), accessToken.getPermissions().toString());
       if (!accessToken.getPermissions().stream().anyMatch(p -> (p.matches(requiredRegex)))) {
         LOGGER.error("SecurityInterceptor - Unauthorized Permission.");
         // TODO set this to return false

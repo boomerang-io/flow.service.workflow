@@ -36,7 +36,7 @@ public class WorkflowTemplateV2Controller {
   EngineClient engineClient;
 
   @GetMapping(value = "/{name}")
-  @AuthScope(types = {AuthType.global}, action = PermissionAction.read, scope = PermissionScope.WORKFLOWTEMPLATE)
+  @AuthScope(types = {AuthType.global}, action = PermissionAction.READ, scope = PermissionScope.WORKFLOWTEMPLATE)
   @Operation(summary = "Retrieve a Workflow Template", description = "Retrieve a version of the Workflow Template. Defaults to latest. Optionally without Tasks")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -51,7 +51,7 @@ public class WorkflowTemplateV2Controller {
   }
 
   @GetMapping(value = "/query")
-  @AuthScope(types = {AuthType.global}, action = PermissionAction.read, scope = PermissionScope.WORKFLOWTEMPLATE)
+  @AuthScope(types = {AuthType.global}, action = PermissionAction.READ, scope = PermissionScope.WORKFLOWTEMPLATE)
   @Operation(summary = "Search for Workflow Templates")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -71,7 +71,7 @@ public class WorkflowTemplateV2Controller {
   }
 
   @PostMapping(value = "")
-  @AuthScope(types = {AuthType.global}, action = PermissionAction.write, scope = PermissionScope.WORKFLOWTEMPLATE)
+  @AuthScope(types = {AuthType.global}, action = PermissionAction.WRITE, scope = PermissionScope.WORKFLOWTEMPLATE)
   @Operation(summary = "Create a new Workflow Template")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -81,7 +81,7 @@ public class WorkflowTemplateV2Controller {
   }
 
   @PutMapping(value = "")
-  @AuthScope(types = {AuthType.global}, action = PermissionAction.write, scope = PermissionScope.WORKFLOWTEMPLATE)
+  @AuthScope(types = {AuthType.global}, action = PermissionAction.WRITE, scope = PermissionScope.WORKFLOWTEMPLATE)
   @Operation(summary = "Update, replace, or create new, Workflow Template")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -93,7 +93,7 @@ public class WorkflowTemplateV2Controller {
   }
 
   @DeleteMapping(value = "/{name}")
-  @AuthScope(types = {AuthType.global}, action = PermissionAction.delete, scope = PermissionScope.WORKFLOWTEMPLATE)
+  @AuthScope(types = {AuthType.global}, action = PermissionAction.DELETE, scope = PermissionScope.WORKFLOWTEMPLATE)
   @Operation(summary = "Delete a Workflow Template")
   @ApiResponses(value = {@ApiResponse(responseCode = "204", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})

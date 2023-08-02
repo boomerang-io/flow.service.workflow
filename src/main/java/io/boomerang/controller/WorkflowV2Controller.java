@@ -143,7 +143,7 @@ public class WorkflowV2Controller {
   }
 
   @GetMapping(value = "/{workflowId}/compose")
-  @AuthScope(types = {AuthType.global}, action = PermissionAction.read, scope = PermissionScope.PARAMETER)
+  @AuthScope(types = {AuthType.global}, action = PermissionAction.READ, scope = PermissionScope.PARAMETER)
   @Operation(summary = "Convert workflow to compose model for UI Designer and detailed Activity screens.")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
