@@ -39,7 +39,7 @@ public class TokenV2Controller {
 
   @PostMapping("/token")
   @AuthScope(types = {AuthType.global, AuthType.user, AuthType.team, AuthType.workflow},
-      scope = PermissionScope.TOKEN, action = PermissionAction.write)
+      scope = PermissionScope.TOKEN, action = PermissionAction.WRITE)
   @Operation(summary = "Create Token")
   public CreateTokenResponse createToken(@Valid @RequestBody CreateTokenRequest request) {
     return tokenService.create(request);
@@ -47,7 +47,7 @@ public class TokenV2Controller {
 
   @GetMapping("/token/query")
   @AuthScope(types = {AuthType.global, AuthType.user, AuthType.team, AuthType.workflow},
-      scope = PermissionScope.TOKEN, action = PermissionAction.read)
+      scope = PermissionScope.TOKEN, action = PermissionAction.READ)
   @Operation(summary = "Search for Tokens")
   public Page<Token> query(
       @Parameter(name = "types", description = "List of types to filter for. Defaults to all.",
@@ -79,7 +79,7 @@ public class TokenV2Controller {
 
   @DeleteMapping("/token/{id}")
   @AuthScope(types = {AuthType.global, AuthType.user, AuthType.team, AuthType.workflow},
-      scope = PermissionScope.TOKEN, action = PermissionAction.delete)
+      scope = PermissionScope.TOKEN, action = PermissionAction.DELETE)
   @Operation(summary = "Delete Token")
   public ResponseEntity<?> deleteToken(@Parameter(name = "id",
       description = "ID of the Token", required = true) @PathVariable String id) {

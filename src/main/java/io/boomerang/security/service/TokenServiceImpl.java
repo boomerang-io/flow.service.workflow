@@ -56,7 +56,7 @@ public class TokenServiceImpl implements TokenService {
   private static final Logger LOGGER = LogManager.getLogger();
 
   private static final String TOKEN_PERMISSION_REGEX =
-      "(\\*{2}|[0-9a-zA-Z\\-]+)\\/(\\*{2}|[0-9a-zA-Z\\-]+)\\/(\\*{2}|READ|WRITE|ACTION|DELETE){1}";
+      "(\\*{2}|[0-9a-zA-Z\\-]+)\\/(\\*{2}|[0-9a-zA-Z\\-]+)\\/(\\*{2}|Read|Write|Action|Delete){1}";
 
   @Autowired
   private MongoTemplate mongoTemplate;
@@ -110,8 +110,8 @@ public class TokenServiceImpl implements TokenService {
           throw new BoomerangException(BoomerangError.TOKEN_INVALID_PERMISSION);
         }
         String[] pSplit = p.split("/");
-        LOGGER.debug("Scope: " + PermissionScope.valueOfLabel(pSplit[0].toLowerCase()));
-        if (PermissionScope.valueOfLabel(pSplit[0].toLowerCase()) == null) {
+        LOGGER.debug("Scope: " + PermissionScope.valueOfLabel(pSplit[0]));
+        if (PermissionScope.valueOfLabel(pSplit[0]) == null) {
           throw new BoomerangException(BoomerangError.TOKEN_INVALID_PERMISSION);
         }
         LOGGER.debug("Principal: " + pSplit[1].toLowerCase());
@@ -124,7 +124,7 @@ public class TokenServiceImpl implements TokenService {
             throw new BoomerangException(BoomerangError.TOKEN_INVALID_PERMISSION);
           }
         }
-        LOGGER.debug("Action: " + pSplit[2].toLowerCase());
+        LOGGER.debug("Action: " + pSplit[2]);
         // ACTION is already checked as part of the regex
       });
     }

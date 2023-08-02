@@ -62,7 +62,7 @@ public class SystemV2Controller {
   private FeatureService featureService;
   
   @GetMapping(value = "/settings")
-  @AuthScope(action = PermissionAction.read, scope = PermissionScope.SYSTEM, types = {AuthType.session, AuthType.global})
+  @AuthScope(action = PermissionAction.READ, scope = PermissionScope.SYSTEM, types = {AuthType.session, AuthType.global})
   @Operation(summary = "Retrieve Boomerang Flow Settings")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -71,7 +71,7 @@ public class SystemV2Controller {
   }
 
   @PutMapping(value = "/settings")
-  @AuthScope(action = PermissionAction.write, scope = PermissionScope.SYSTEM, types = {AuthType.session, AuthType.global})
+  @AuthScope(action = PermissionAction.WRITE, scope = PermissionScope.SYSTEM, types = {AuthType.session, AuthType.global})
   @Operation(summary = "Update Boomerang Flow Settings")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -80,7 +80,7 @@ public class SystemV2Controller {
   }
   
   @PutMapping(value = "/activate")
-  @AuthScope(action = PermissionAction.action, scope = PermissionScope.SYSTEM, types = {AuthType.session, AuthType.global})
+  @AuthScope(action = PermissionAction.ACTION, scope = PermissionScope.SYSTEM, types = {AuthType.session, AuthType.global})
   @Operation(summary = "Register and activate an installation of Flow")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -89,14 +89,14 @@ public class SystemV2Controller {
   }
 
   @GetMapping(value = "/context")
-  @AuthScope(action = PermissionAction.read, scope = PermissionScope.SYSTEM, types = {AuthType.session, AuthType.global})
+  @AuthScope(action = PermissionAction.READ, scope = PermissionScope.SYSTEM, types = {AuthType.session, AuthType.global})
   @Operation(summary = "Retrieve this instances context, features, and navigation.")
   public HeaderNavigationResponse getHeaderNavigation() {
     return this.contextService.getHeaderNavigation(identityService.isCurrentUserAdmin());
   }
   
   @GetMapping(value = "/features")
-  @AuthScope(action = PermissionAction.read, scope = PermissionScope.SYSTEM, types = {AuthType.session, AuthType.global})
+  @AuthScope(action = PermissionAction.READ, scope = PermissionScope.SYSTEM, types = {AuthType.session, AuthType.global})
   @Operation(summary = "Retrieve feature flags.")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -106,7 +106,7 @@ public class SystemV2Controller {
   }
 
   @GetMapping(value = "/navigation")
-  @AuthScope(action = PermissionAction.read, scope = PermissionScope.SYSTEM, types = {AuthType.session, AuthType.global})
+  @AuthScope(action = PermissionAction.READ, scope = PermissionScope.SYSTEM, types = {AuthType.session, AuthType.global})
   @Operation(summary = "Retrieve navigation.")
   public ResponseEntity<List<Navigation>> getNavigation(@Parameter(name = "teamId", description = "The id of the Team that the user is currently on", example = "123143412312310",
       required = false) @RequestParam(required = false) Optional<String> teamId) {
@@ -118,7 +118,7 @@ public class SystemV2Controller {
   }
 
   @GetMapping(value = "/global-params")
-  @AuthScope(action = PermissionAction.read, scope = PermissionScope.SYSTEM, types = {AuthType.session, AuthType.global})
+  @AuthScope(action = PermissionAction.READ, scope = PermissionScope.SYSTEM, types = {AuthType.session, AuthType.global})
   @Operation(summary = "Get all global Params")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -127,7 +127,7 @@ public class SystemV2Controller {
   }
 
   @PostMapping(value = "/global-params")
-  @AuthScope(action = PermissionAction.write, scope = PermissionScope.SYSTEM, types = {AuthType.session, AuthType.global})
+  @AuthScope(action = PermissionAction.WRITE, scope = PermissionScope.SYSTEM, types = {AuthType.session, AuthType.global})
   @Operation(summary = "Create new global Param")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -136,13 +136,13 @@ public class SystemV2Controller {
   }
 
   @PutMapping(value = "/global-params")
-  @AuthScope(action = PermissionAction.write, scope = PermissionScope.SYSTEM, types = {AuthType.session, AuthType.global})
+  @AuthScope(action = PermissionAction.WRITE, scope = PermissionScope.SYSTEM, types = {AuthType.session, AuthType.global})
   public GlobalParam update(@RequestBody GlobalParam request) {
     return paramService.update(request);
   }
 
   @DeleteMapping(value = "/global-params/{key}")
-  @AuthScope(action = PermissionAction.delete, scope = PermissionScope.SYSTEM, types = {AuthType.session, AuthType.global})
+  @AuthScope(action = PermissionAction.DELETE, scope = PermissionScope.SYSTEM, types = {AuthType.session, AuthType.global})
   @Operation(summary = "Delete specific global Param")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
