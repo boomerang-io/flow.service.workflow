@@ -161,7 +161,7 @@ public class TeamServiceImpl implements TeamService {
   @Override
   public Team patch(String teamId, TeamRequest request) {
     if (request != null) {
-      if (request.getId() == null || request.getId().isBlank()) {
+      if (teamId == null || teamId.isBlank()) {
         throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
       }
       List<String> teamRefs = relationshipService.getFilteredToRefs(Optional.empty(),
