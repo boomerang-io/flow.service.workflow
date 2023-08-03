@@ -439,7 +439,7 @@ public class EngineClientImpl implements EngineClient {
       String url = getWorkflowURL.replace("{workflowId}", workflowId);
       Map<String, String> requestParams = new HashMap<>();
       if (version.isPresent()) {
-        requestParams.put("version", version.toString());
+        requestParams.put("version", version.get().toString());
       }
       requestParams.put("withTasks", Boolean.toString(withTasks));
 
