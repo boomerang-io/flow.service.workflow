@@ -4,8 +4,13 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import org.springframework.beans.BeanUtils;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import io.boomerang.v4.data.entity.ApproverGroupEntity;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonInclude(Include.NON_EMPTY)
 public class ApproverGroup {
 
   private String id;

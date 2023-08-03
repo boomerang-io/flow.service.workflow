@@ -433,9 +433,10 @@ public class TeamServiceImpl implements TeamService {
           .filter(e -> e.getName().equalsIgnoreCase(r.getName())).findFirst().orElse(null);
       
       if (age != null) {
+        LOGGER.debug("Existing ApproverGroup: " + age.toString());
         // ApproverGroup already exists - update
         approverGroupEntities.remove(age);
-        BeanUtils.copyProperties(r, age, "approvers");
+        age.setName(r.getName());
 
         //Ensure each approver is a valid team member
         if (r.getApprovers() != null) {
@@ -446,7 +447,7 @@ public class TeamServiceImpl implements TeamService {
           List<String> validApproverRefs = r.getApprovers().stream()
               .filter(a -> userRefs.contains(a)).collect(Collectors.toList());
           LOGGER.debug("Valid Approver Refs: " + validApproverRefs.toString());
-          age.getApprovers().addAll(validApproverRefs);
+          age.setApprovers(validApproverRefs);
 
           age = approverGroupRepository.save(age);
         }

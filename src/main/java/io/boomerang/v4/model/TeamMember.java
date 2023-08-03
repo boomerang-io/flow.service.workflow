@@ -2,8 +2,13 @@ package io.boomerang.v4.model;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.annotation.Id;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import io.boomerang.v4.data.entity.UserEntity;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonInclude(Include.NON_EMPTY)
 public class TeamMember {
    
   @Id
