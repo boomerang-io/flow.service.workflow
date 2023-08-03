@@ -155,7 +155,7 @@ public class TeamServiceImpl implements TeamService {
        * - Members and quotas need further logic
        */
       
-      BeanUtils.copyProperties(request, teamEntity, "status", "members", "quotas", "parameters", "approverGroups");
+      BeanUtils.copyProperties(request, teamEntity, "id", "status", "members", "quotas", "parameters", "approverGroups");
 
       // Set custom quotas
       // Don't set default quotas as they can change over time and should be dynamic
@@ -177,7 +177,7 @@ public class TeamServiceImpl implements TeamService {
       teamEntity = teamRepository.save(teamEntity);
 
       // Create Relationships for Users
-      createUserRelationships(teamEntity.getId(), request.getMembers());
+      createOrUpdateUserRelationships(teamEntity.getId(), request.getMembers());
 
       return convertTeamEntityToTeam(teamEntity);
     } else {
@@ -206,7 +206,7 @@ public class TeamServiceImpl implements TeamService {
         throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
       }
       TeamEntity teamEntity = optTeamEntity.get();
-      BeanUtils.copyProperties(request, teamEntity, "members", "quotas", "parameters", "approverGroups");
+      BeanUtils.copyProperties(request, teamEntity, "id", "members", "quotas", "parameters", "approverGroups");
 
       // Set custom quotas
       // Don't set default quotas as they can change over time and should be dynamic
@@ -228,7 +228,7 @@ public class TeamServiceImpl implements TeamService {
       teamRepository.save(teamEntity);
 
       // Create / Update Relationships for Users
-      createUserRelationships(teamEntity.getId(), request.getMembers());
+      createOrUpdateUserRelationships(teamEntity.getId(), request.getMembers());
       return convertTeamEntityToTeam(teamEntity);
     }
     throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
@@ -821,7 +821,7 @@ public class TeamServiceImpl implements TeamService {
    * If user does not exist, a user record will be created with a relationship to the team
    * TODO - invite the user rather than create a relationship
    */
-  private void createUserRelationships(String teamId, List<TeamMember> users) {
+  private void createOrUpdateUserRelationships(String teamId, List<TeamMember> users) {
     List<String> userRefs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.USER),
         Optional.empty(), Optional.of(RelationshipType.MEMBEROF),
         Optional.of(RelationshipRef.TEAM), Optional.of(List.of(teamId)));
