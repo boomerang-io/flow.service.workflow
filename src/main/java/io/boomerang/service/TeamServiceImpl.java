@@ -152,7 +152,7 @@ public class TeamServiceImpl implements TeamService {
       /*
        * Copy majority of fields. 
        * - Status is ignored - can only be active
-       * - Members and quotas need further logic
+       * - Members, quotas, parameters, and approverGroups need further logic
        */
       
       BeanUtils.copyProperties(request, teamEntity, "id", "status", "members", "quotas", "parameters", "approverGroups");
@@ -178,7 +178,7 @@ public class TeamServiceImpl implements TeamService {
 
       // Create Relationships for Users
       createOrUpdateUserRelationships(teamEntity.getId(), request.getMembers());
-
+      
       return convertTeamEntityToTeam(teamEntity);
     } else {
       // TODO: make this a better error for unable to create team i.e. name is mandatory
@@ -206,7 +206,18 @@ public class TeamServiceImpl implements TeamService {
         throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
       }
       TeamEntity teamEntity = optTeamEntity.get();
-      BeanUtils.copyProperties(request, teamEntity, "id", "members", "quotas", "parameters", "approverGroups");
+      if (request.getName() != null && !request.getName().isBlank()) {
+        teamEntity.setName(request.getName());
+      }
+      if (request.getStatus() != null) {
+        teamEntity.setStatus(request.getStatus());
+      }
+      if (request.getExternalRef() != null && !request.getExternalRef().isBlank()) {
+        teamEntity.setExternalRef(request.getExternalRef());
+      }
+      if (request.getLabels() != null && !request.getLabels().isEmpty()) {
+        teamEntity.getLabels().putAll(request.getLabels());
+      }
 
       // Set custom quotas
       // Don't set default quotas as they can change over time and should be dynamic
@@ -656,11 +667,11 @@ public class TeamServiceImpl implements TeamService {
     team.setMembers(getUsersForTeam(teamEntity.getId()));
 
     // Get default & custom stored Quotas
-    Quotas quotas = setDefaultQuotas();
-    setCustomQuotas(quotas, teamEntity.getQuotas());
-    CurrentQuotas currentQuotas = new CurrentQuotas(quotas);
-    setCurrentQuotas(currentQuotas, teamEntity.getId());
-    team.setQuotas(currentQuotas);
+//    Quotas quotas = setDefaultQuotas();
+//    setCustomQuotas(quotas, teamEntity.getQuotas());
+//    CurrentQuotas currentQuotas = new CurrentQuotas(quotas);
+//    setCurrentQuotas(currentQuotas, teamEntity.getId());
+//    team.setQuotas(currentQuotas);
 
     // Get Approver Groups
     List<String> approverGroupRefs =
@@ -828,7 +839,6 @@ public class TeamServiceImpl implements TeamService {
         Optional.of(RelationshipRef.TEAM), Optional.of(List.of(teamId)));
     if (users != null && !users.isEmpty()) {
       for (TeamMember userSummary : users) {
-        LOGGER.debug("Requested User: " + userSummary.getId() + " - " + userSummary.getEmail());
         Optional<User> userEntity = null;
         //Find user by ID or Email - UI allows adding from existing or new (email)
         if (userSummary.getId() != null && !userSummary.getId().isEmpty()) {
@@ -841,7 +851,8 @@ public class TeamServiceImpl implements TeamService {
           //Create team relationship for existing user
           relationshipService.addRelationshipRef(RelationshipRef.USER, userEntity.get().getId(), RelationshipType.MEMBEROF,
               RelationshipRef.TEAM, Optional.of(teamId), Optional.of(Map.of("role",userSummary.getRole())));
-        } else if (userEntity.isPresent() && !userRefs.contains(userEntity.get().getId())) {
+        } else if (userEntity.isPresent() && userRefs.contains(userEntity.get().getId())) {
+          //Patch team relationship for existing team member
           relationshipService.patchRelationshipData(RelationshipRef.USER, userEntity.get().getId(), RelationshipType.MEMBEROF, Map.of("role",userSummary.getRole()));
         } else {
           //Create new user record & relationship
