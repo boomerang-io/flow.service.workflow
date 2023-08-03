@@ -8,8 +8,6 @@ import org.springframework.http.ResponseEntity;
 import io.boomerang.security.model.Role;
 import io.boomerang.v4.data.model.CurrentQuotas;
 import io.boomerang.v4.data.model.Quotas;
-import io.boomerang.v4.model.ApproverGroup;
-import io.boomerang.v4.model.ApproverGroupRequest;
 import io.boomerang.v4.model.Team;
 import io.boomerang.v4.model.TeamMember;
 import io.boomerang.v4.model.TeamNameCheckRequest;
@@ -35,6 +33,8 @@ public interface TeamService {
 
   void deleteParameters(String teamId, List<String> request);
 
+  void deleteApproverGroups(String teamId, List<String> names);
+
   ResponseEntity<CurrentQuotas> getQuotas(String teamId);
 
   ResponseEntity<Quotas> resetQuotas(String teamId);
@@ -42,15 +42,6 @@ public interface TeamService {
   ResponseEntity<Quotas> patchQuotas(String teamId, Quotas quotas);
 
   ResponseEntity<Quotas> getDefaultQuotas();
-
-  List<ApproverGroup> getApproverGroups(String teamId);
-
-  void deleteApproverGroups(String teamId, List<String> names);
-
-  ApproverGroup createApproverGroup(String teamId,
-      ApproverGroupRequest createApproverGroupRequest);
-
-  ApproverGroup updateApproverGroup(String teamId, ApproverGroupRequest request);
 
   ResponseEntity<List<Role>> getRoles();
 }
