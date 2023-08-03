@@ -667,11 +667,11 @@ public class TeamServiceImpl implements TeamService {
     team.setMembers(getUsersForTeam(teamEntity.getId()));
 
     // Get default & custom stored Quotas
-//    Quotas quotas = setDefaultQuotas();
-//    setCustomQuotas(quotas, teamEntity.getQuotas());
-//    CurrentQuotas currentQuotas = new CurrentQuotas(quotas);
-//    setCurrentQuotas(currentQuotas, teamEntity.getId());
-//    team.setQuotas(currentQuotas);
+    Quotas quotas = setDefaultQuotas();
+    setCustomQuotas(quotas, teamEntity.getQuotas());
+    CurrentQuotas currentQuotas = new CurrentQuotas(quotas);
+    setCurrentQuotas(currentQuotas, teamEntity.getId());
+    team.setQuotas(currentQuotas);
 
     // Get Approver Groups
     List<String> approverGroupRefs =
