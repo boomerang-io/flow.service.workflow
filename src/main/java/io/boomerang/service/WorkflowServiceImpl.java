@@ -563,7 +563,9 @@ public class WorkflowServiceImpl implements WorkflowService {
     List<CanvasEdge> edges = new ArrayList<>();
     
     Map<String, TaskType> taskNamesToType = wfTasks.stream().collect(Collectors.toMap(Task::getName, Task::getType));
-
+    Map<String, String> taskNameToNodeId = new HashMap<>();
+    
+    // Create Nodes
     wfTasks.forEach(task -> {
       CanvasNode node = new CanvasNode();
       node.setType(task.getType());
@@ -585,11 +587,16 @@ public class WorkflowServiceImpl implements WorkflowService {
       nodeData.setTemplateUpgradesAvailable(false);
       node.setData(nodeData);
       nodes.add(node);
-
+      taskNameToNodeId.put(task.getName(), node.getId());
+    });
+    wfCanvas.setNodes(nodes);
+    
+    // Creates Edges - depends on nodes as the IDs for each node are used in the edge mapping
+    wfTasks.forEach(task -> {
       task.getDependencies().forEach(dep -> {
         CanvasEdge edge = new CanvasEdge();
-        edge.setTarget(task.getName());
-        edge.setSource(dep.getTaskRef());
+        edge.setTarget(taskNameToNodeId.get(task.getName()));
+        edge.setSource(taskNameToNodeId.get(dep.getTaskRef()));
         edge.setType(taskNamesToType.get(dep.getTaskRef()) != null ? taskNamesToType.get(dep.getTaskRef()).toString() : "");
         CanvasEdgeData edgeData = new CanvasEdgeData();
         edgeData.setExecutionCondition(dep.getExecutionCondition());
@@ -599,7 +606,6 @@ public class WorkflowServiceImpl implements WorkflowService {
       });
     });
 
-    wfCanvas.setNodes(nodes);
     wfCanvas.setEdges(edges);
 
     return wfCanvas;
@@ -612,6 +618,8 @@ public class WorkflowServiceImpl implements WorkflowService {
     Workflow workflow = new Workflow(canvas);
     List<CanvasNode> nodes = canvas.getNodes();
     List<CanvasEdge> edges = canvas.getEdges();
+    
+    Map<String, String> nodeIdToTaskName = nodes.stream().collect(Collectors.toMap(n -> n.getId(), n -> n.getData().getName()));
 
     nodes.forEach(node -> {
       Task task = new Task();
@@ -624,14 +632,16 @@ public class WorkflowServiceImpl implements WorkflowService {
       task.setParams(node.getData().getParams());
       task.setTemplateRef(node.getData().getTemplateRef());
       task.setTemplateVersion(node.getData().getTemplateVersion());
-
-      edges.stream().filter(e -> e.getTarget().equals(task.getName())).forEach(e -> {
+      
+      List<TaskDependency> dependencies = new LinkedList<>();
+      edges.stream().filter(e -> e.getTarget().equals(node.getId())).forEach(e -> {
         TaskDependency dep = new TaskDependency();
-        dep.setTaskRef(e.getSource());
+        dep.setTaskRef(nodeIdToTaskName.get(e.getSource()));
         dep.setDecisionCondition(e.getData().getDecisionCondition());
         dep.setExecutionCondition(e.getData().getExecutionCondition());
-        task.getDependencies().add(dep);
+        dependencies.add(dep);
       });
+      task.setDependencies(dependencies);
       workflow.getTasks().add(task);
     });
 
