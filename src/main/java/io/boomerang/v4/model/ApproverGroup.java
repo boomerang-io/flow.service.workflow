@@ -18,7 +18,7 @@ public class ApproverGroup {
   }
   
   public ApproverGroup(ApproverGroupEntity entity) {
-    BeanUtils.copyProperties(entity, this, "approverRefs");
+    BeanUtils.copyProperties(entity, this, "approvers");
   }
 
   public String getId() {

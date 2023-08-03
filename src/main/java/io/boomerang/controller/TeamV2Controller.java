@@ -122,9 +122,10 @@ public class TeamV2Controller {
     teamService.deleteParameters(teamId, keys);
   }
   
-  @DeleteMapping(value = "/{teamId}/approvers/{name}")
-  public void deleteApproverGroup(@PathVariable String teamId,@PathVariable String name) {
-    teamService.deleteApproverGroup(teamId, name);
+  @DeleteMapping(value = "/{teamId}/approvers")
+  public void deleteApproverGroup(@PathVariable String teamId,
+      @RequestBody List<String> names) {
+    teamService.deleteApproverGroups(teamId, names);
   }  
 
   @GetMapping(value = "/{teamId}/quotas")
@@ -150,25 +151,6 @@ public class TeamV2Controller {
   @GetMapping(value = "/quotas/default")
   public ResponseEntity<Quotas> getDefaultQuotas() {
     return teamService.getDefaultQuotas();
-  }
-
-  @GetMapping(value = "/{teamId}/approvers")
-  public ResponseEntity<List<ApproverGroup>> getApproverGroups(@PathVariable String teamId) {
-    return ResponseEntity.ok(teamService.getApproverGroups(teamId));
-  }
-  
-  @PostMapping(value = "/{teamId}/approvers")
-  public ResponseEntity<ApproverGroup> createApproverGroup(@Parameter(name = "teamId", description = "ID of Team",
-      required = true) @PathVariable String teamId,
-      @RequestBody ApproverGroupRequest request) {
-    return ResponseEntity.ok(teamService.createApproverGroup(teamId, request));
-  }
-  
-  @PutMapping(value = "/{teamId}/approvers")
-  public ResponseEntity<ApproverGroup> updateApproverGroup(@Parameter(name = "teamId", description = "ID of Team",
-      required = true) @PathVariable String teamId,
-      @RequestBody ApproverGroupRequest request) {
-    return ResponseEntity.ok(teamService.updateApproverGroup(teamId, request));
   }
 
   @GetMapping(value = "/roles")

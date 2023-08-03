@@ -17,6 +17,7 @@ public class TeamRequest {
   private List<AbstractParam> parameters = new LinkedList<>();
   private Quotas quotas;
   private List<TeamMember> members;
+  private List<ApproverGroupRequest> approverGroups;
   
   public String getId() {
     return id;
@@ -65,5 +66,11 @@ public class TeamRequest {
   }
   public void setMembers(List<TeamMember> members) {
     this.members = members;
+  }
+  public List<ApproverGroupRequest> getApproverGroups() {
+    return approverGroups;
+  }
+  public void setApproverGroups(List<ApproverGroupRequest> approverGroups) {
+    this.approverGroups = approverGroups;
   }
 }

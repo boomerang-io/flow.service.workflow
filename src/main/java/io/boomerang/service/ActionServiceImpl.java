@@ -108,7 +108,7 @@ public class ActionServiceImpl implements ActionService {
             //TODO better error around INVALID APPROVER GROUP REF
             throw new BoomerangException(BoomerangError.ACTION_INVALID_REF);
           }
-          boolean partOfGroup = approverGroupEntity.get().getApproverRefs().contains(userEntity.getId());
+          boolean partOfGroup = approverGroupEntity.get().getApprovers().contains(userEntity.getId());
           if (partOfGroup) {
             canBeActioned = true;
           }

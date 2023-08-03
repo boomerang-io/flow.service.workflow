@@ -45,7 +45,7 @@ public interface TeamService {
 
   List<ApproverGroup> getApproverGroups(String teamId);
 
-  void deleteApproverGroup(String teamId, String name);
+  void deleteApproverGroups(String teamId, List<String> names);
 
   ApproverGroup createApproverGroup(String teamId,
       ApproverGroupRequest createApproverGroupRequest);

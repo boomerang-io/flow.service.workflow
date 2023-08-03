@@ -5,7 +5,6 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -119,6 +118,28 @@ public class TeamServiceImpl implements TeamService {
   }
 
   /*
+   * Retrieve a single team by ID
+   */
+  @Override
+  public Team get(String teamId) {
+    if (teamId == null || teamId.isBlank()) {
+      throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
+    }
+    List<String> teamRefs = relationshipService.getFilteredToRefs(Optional.empty(),
+        Optional.empty(), Optional.of(RelationshipType.MEMBEROF),
+        Optional.of(RelationshipRef.TEAM), Optional.of(List.of(teamId)));
+    if (teamRefs.isEmpty()) {
+      throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
+    }
+    Optional<TeamEntity> entity = teamRepository.findById(teamId);
+    if (!entity.isPresent()) {
+      throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
+    }
+
+    return convertTeamEntityToTeam(entity.get());
+  }
+
+  /*
    * Creates a new Team
    * 
    * - Name must not be blank
@@ -134,7 +155,7 @@ public class TeamServiceImpl implements TeamService {
        * - Members and quotas need further logic
        */
       
-      BeanUtils.copyProperties(request, teamEntity, "status", "members", "quotas");
+      BeanUtils.copyProperties(request, teamEntity, "status", "members", "quotas", "parameters", "approverGroups");
 
       // Set custom quotas
       // Don't set default quotas as they can change over time and should be dynamic
@@ -142,6 +163,16 @@ public class TeamServiceImpl implements TeamService {
       // Override quotas based on creation request
       setCustomQuotas(quotas, request.getQuotas());
       teamEntity.setQuotas(quotas);
+      
+      // Create / Update Parameters
+      if (request.getParameters() != null && !request.getParameters().isEmpty()) {
+        createOrUpdateParameters(teamEntity, request.getParameters());
+      }
+      
+      // Create / Update ApproverGroups
+      if (request.getApproverGroups() != null && !request.getApproverGroups().isEmpty()) {
+        createOrUpdateApproverGroups(teamEntity, request.getApproverGroups());
+      }
 
       teamEntity = teamRepository.save(teamEntity);
 
@@ -175,7 +206,7 @@ public class TeamServiceImpl implements TeamService {
         throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
       }
       TeamEntity teamEntity = optTeamEntity.get();
-      BeanUtils.copyProperties(request, teamEntity, "members", "quotas", "parameters");
+      BeanUtils.copyProperties(request, teamEntity, "members", "quotas", "parameters", "approverGroups");
 
       // Set custom quotas
       // Don't set default quotas as they can change over time and should be dynamic
@@ -188,6 +219,11 @@ public class TeamServiceImpl implements TeamService {
       if (request.getParameters() != null && !request.getParameters().isEmpty()) {
         createOrUpdateParameters(teamEntity, request.getParameters());
       }
+      
+      // Create / Update ApproverGroups
+      if (request.getApproverGroups() != null && !request.getApproverGroups().isEmpty()) {
+        createOrUpdateApproverGroups(teamEntity, request.getApproverGroups());
+      }
 
       teamRepository.save(teamEntity);
 
@@ -196,28 +232,6 @@ public class TeamServiceImpl implements TeamService {
       return convertTeamEntityToTeam(teamEntity);
     }
     throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
-  }
-
-  /*
-   * Retrieve a single team by ID
-   */
-  @Override
-  public Team get(String teamId) {
-    if (teamId == null || teamId.isBlank()) {
-      throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
-    }
-    List<String> teamRefs = relationshipService.getFilteredToRefs(Optional.empty(),
-        Optional.empty(), Optional.of(RelationshipType.MEMBEROF),
-        Optional.of(RelationshipRef.TEAM), Optional.of(List.of(teamId)));
-    if (teamRefs.isEmpty()) {
-      throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
-    }
-    Optional<TeamEntity> entity = teamRepository.findById(teamId);
-    if (!entity.isPresent()) {
-      throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
-    }
-
-    return convertTeamEntityToTeam(entity.get());
   }
 
   /*
@@ -392,6 +406,101 @@ public class TeamServiceImpl implements TeamService {
     // TODO better exception for unable find key
     throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
   }
+  /*
+   * Create & Update Approver Group
+   * 
+   * - Creates a relationship against a team
+   * - ApproverGroup name must be unique per team
+   */
+  private void createOrUpdateApproverGroups(TeamEntity teamEntity, List<ApproverGroupRequest> request) {
+    //Retrieve ApproverGroups by relationship as they are stored separately to the TeamEntity
+    List<String> approverGroupRefs =
+        relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.APPROVERGROUP),
+            Optional.empty(), Optional.of(RelationshipType.BELONGSTO),
+            Optional.of(RelationshipRef.TEAM), Optional.of(List.of(teamEntity.getId())));
+    
+    List<ApproverGroupEntity> approverGroupEntities =
+        approverGroupRepository.findByIdIn(approverGroupRefs);
+    
+    for (ApproverGroupRequest r : request) {
+      //Ensure ApproverGroupName is not blank or null
+      if (r.getName() == null || r.getName().isBlank()) {
+        // TODO better exception for invalid Team Parameter Name
+        throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
+      }
+
+      ApproverGroupEntity age = approverGroupEntities.stream()
+          .filter(e -> e.getName().equalsIgnoreCase(r.getName())).findFirst().orElse(null);
+      
+      if (age != null) {
+        // ApproverGroup already exists - update
+        approverGroupEntities.remove(age);
+        BeanUtils.copyProperties(r, age, "approvers");
+
+        //Ensure each approver is a valid team member
+        if (r.getApprovers() != null) {
+          List<String> userRefs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.USER),
+              Optional.empty(), Optional.of(RelationshipType.MEMBEROF),
+              Optional.of(RelationshipRef.TEAM), Optional.of(List.of(teamEntity.getId())));
+          LOGGER.debug("User Refs: " + userRefs.toString());
+          List<String> validApproverRefs = r.getApprovers().stream()
+              .filter(a -> userRefs.contains(a)).collect(Collectors.toList());
+          LOGGER.debug("Valid Approver Refs: " + validApproverRefs.toString());
+          age.getApprovers().addAll(validApproverRefs);
+
+          age = approverGroupRepository.save(age);
+        }
+      } else {
+        // ApproverGroup + Relationship needs creating
+        ApproverGroupEntity approverGroupEntity = new ApproverGroupEntity();
+        approverGroupEntity.setName(r.getName());
+        if (r.getApprovers() != null) {
+          List<String> userRefs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.USER),
+              Optional.empty(), Optional.of(RelationshipType.MEMBEROF),
+              Optional.of(RelationshipRef.TEAM), Optional.of(List.of(teamEntity.getId())));
+          LOGGER.debug("User Refs: " + userRefs.toString());
+          List<String> validApproverRefs = r.getApprovers().stream()
+              .filter(a -> userRefs.contains(a)).collect(Collectors.toList());
+          LOGGER.debug("Valid Approver Refs: " + validApproverRefs.toString());
+          approverGroupEntity.setApprovers(validApproverRefs);
+        }
+        approverGroupEntity = approverGroupRepository.save(approverGroupEntity);
+        relationshipService.addRelationshipRef(RelationshipRef.APPROVERGROUP,
+            approverGroupEntity.getId(), RelationshipType.BELONGSTO, RelationshipRef.TEAM, Optional.of(teamEntity.getId()), Optional.empty());
+      }
+    }
+  }
+
+  /*
+   * Delete an Approver Group
+   * 
+   * - Removes relationship as well
+   */
+  @Override
+  public void deleteApproverGroups(String teamId, List<String> request) {
+    if (teamId == null || teamId.isBlank()) {
+      throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
+    }
+    List<String> teamRefs = relationshipService.getFilteredToRefs(Optional.empty(),
+        Optional.empty(), Optional.of(RelationshipType.MEMBEROF),
+        Optional.of(RelationshipRef.TEAM), Optional.of(List.of(teamId)));
+    if (teamRefs.isEmpty()) {
+      throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
+    }
+    Optional<TeamEntity> optTeamEntity = teamRepository.findById(teamId);
+    if (!optTeamEntity.isPresent()) {
+      throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
+    }
+    
+    for (String r : request) {
+      Optional<ApproverGroupEntity> ag = approverGroupRepository.findById(r);
+      if (ag.isPresent()) {
+        approverGroupRepository.deleteById(r);
+        relationshipService.removeRelationships(RelationshipRef.APPROVERGROUP,
+          List.of(r), RelationshipRef.TEAM, List.of(teamId));
+      }
+    }
+  }
 
   /*
    * Get Current and Default Quotas for a Team
@@ -510,43 +619,6 @@ public class TeamServiceImpl implements TeamService {
   // workflowQuotas.setCurrentWorkflowsPersistentStorage(currentWorkflowsPersistentStorage);
   // }
   //
-
-  /*
-   * Retrieve the ApproverGroups for a team
-   */
-  @Override
-  public List<ApproverGroup> getApproverGroups(String teamId) {
-    if (teamId == null || teamId.isBlank()) {
-      throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
-    }
-    List<String> teamRefs = relationshipService.getFilteredToRefs(Optional.empty(),
-        Optional.empty(), Optional.of(RelationshipType.MEMBEROF),
-        Optional.of(RelationshipRef.TEAM), Optional.of(List.of(teamId)));
-    if (teamRefs.isEmpty()) {
-      throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
-    }
-    Optional<TeamEntity> optTeamEntity = teamRepository.findById(teamId);
-    if (!optTeamEntity.isPresent()) {
-      throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
-    }
-    TeamEntity teamEntity = optTeamEntity.get();
-
-    // Get and Set WorkflowRefs
-    List<String> approverGroupRefs =
-        relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.APPROVERGROUP),
-            Optional.empty(), Optional.of(RelationshipType.BELONGSTO),
-            Optional.of(RelationshipRef.TEAM), Optional.of(List.of(teamEntity.getId())));
-
-    List<ApproverGroupEntity> approverGroupEntities =
-        approverGroupRepository.findByIdIn(approverGroupRefs);
-    List<ApproverGroup> approverGroups = Collections.emptyList();
-    approverGroupEntities.forEach(age -> {
-      ApproverGroup ag = convertEntityToApproverGroup(age);
-      approverGroups.add(ag);
-    });
-
-    return approverGroups;
-  }
   
   /*
    * Return all team level roles
@@ -558,171 +630,6 @@ public class TeamServiceImpl implements TeamService {
       roles.add(new Role(re));
     });
     return ResponseEntity.ok(roles);
-  }
-
-  /*
-   * Create Approver Group
-   * 
-   * - Creates a relationship against a team
-   * - ApproverGroup name must be unique per team
-   */
-  @Override
-  public ApproverGroup createApproverGroup(String teamId,
-      ApproverGroupRequest request) {
-    if (teamId == null || teamId.isBlank()) {
-      throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
-    }
-    List<String> teamRefs = relationshipService.getFilteredToRefs(Optional.empty(),
-        Optional.empty(), Optional.of(RelationshipType.MEMBEROF),
-        Optional.of(RelationshipRef.TEAM), Optional.of(List.of(teamId)));
-    if (teamRefs.isEmpty()) {
-      throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
-    }
-    Optional<TeamEntity> optTeamEntity = teamRepository.findById(teamId);
-    if (!optTeamEntity.isPresent()) {
-      throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
-    }
-    TeamEntity teamEntity = optTeamEntity.get();
-
-    if (request == null || request.getName().isBlank()) {
-      // TODO better exception for invalid Team Parameter Name
-      throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
-    }
-
-    List<String> approverGroupRefs =
-        relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.APPROVERGROUP),
-            Optional.empty(), Optional.of(RelationshipType.BELONGSTO),
-            Optional.of(RelationshipRef.TEAM), Optional.of(List.of(teamId)));
-    List<ApproverGroupEntity> approverGroupEntities =
-        approverGroupRepository.findByIdIn(approverGroupRefs);
-
-    if (approverGroupEntities.stream()
-        .anyMatch(ag -> ag.getName().equalsIgnoreCase(request.getName()))) {
-      // TODO better exception for non unique team name
-      throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
-    }
-
-    ApproverGroupEntity approverGroupEntity = new ApproverGroupEntity();
-    approverGroupEntity.setName(request.getName());
-    if (request.getApprovers() != null) {
-      List<String> userRefs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.USER),
-          Optional.empty(), Optional.of(RelationshipType.MEMBEROF),
-          Optional.of(RelationshipRef.TEAM), Optional.of(List.of(teamEntity.getId())));
-      LOGGER.debug("User Refs: " + userRefs.toString());
-      List<String> validApproverRefs = request.getApprovers().stream()
-          .filter(a -> userRefs.contains(a)).collect(Collectors.toList());
-      LOGGER.debug("Valid Approver Refs: " + validApproverRefs.toString());
-      approverGroupEntity.setApproverRefs(validApproverRefs);
-    }
-    approverGroupEntity = approverGroupRepository.save(approverGroupEntity);
-    relationshipService.addRelationshipRef(RelationshipRef.APPROVERGROUP,
-        approverGroupEntity.getId(), RelationshipType.BELONGSTO, RelationshipRef.TEAM, Optional.of(teamId), Optional.empty());
-
-    return convertEntityToApproverGroup(approverGroupEntity);
-  }
-
-  /*
-   * Update Approver Group
-   * 
-   * - Checks if the new name is unique per team
-   */
-  @Override
-  public ApproverGroup updateApproverGroup(String teamId,
-      ApproverGroupRequest request) {
-    if (teamId == null || teamId.isBlank()) {
-      throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
-    }
-    List<String> teamRefs = relationshipService.getFilteredToRefs(Optional.empty(),
-        Optional.empty(), Optional.of(RelationshipType.MEMBEROF),
-        Optional.of(RelationshipRef.TEAM), Optional.of(List.of(teamId)));
-    if (teamRefs.isEmpty()) {
-      throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
-    }
-    Optional<TeamEntity> optTeamEntity = teamRepository.findById(teamId);
-    if (!optTeamEntity.isPresent()) {
-      throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
-    }
-    TeamEntity teamEntity = optTeamEntity.get();
-
-    if (request == null || request.getName().isBlank()) {
-      // TODO better exception for invalid Team Parameter Name
-      throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
-    }
-
-    List<String> approverGroupRefs =
-        relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.APPROVERGROUP),
-            Optional.empty(), Optional.of(RelationshipType.BELONGSTO),
-            Optional.of(RelationshipRef.TEAM), Optional.of(List.of(teamEntity.getId())));
-    List<ApproverGroupEntity> approverGroupEntities =
-        approverGroupRepository.findByIdIn(approverGroupRefs);
-
-    if (approverGroupEntities.stream().filter(ag -> !ag.getId().equals(request.getId()))
-        .anyMatch(ag -> ag.getName().equalsIgnoreCase(request.getName()))) {
-      // TODO better exception for non unique team name
-      throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
-    }
-
-    Optional<ApproverGroupEntity> optEntity =
-        approverGroupEntities.stream().filter(ag -> ag.getId().equals(request.getId())).findFirst();
-    if (!optEntity.isPresent()) {
-      // TODO better exception for approver group invalid ref
-      throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
-    }
-    optEntity.get().setName(request.getName());
-
-    List<String> approverRefs = Collections.emptyList();
-    if (request.getApprovers() != null) {
-      List<String> userRefs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.USER),
-          Optional.empty(), Optional.of(RelationshipType.MEMBEROF),
-          Optional.of(RelationshipRef.TEAM), Optional.of(List.of(teamEntity.getId())));
-      request.getApprovers().forEach(a -> {
-        if (userRefs.contains(a)) {
-          approverRefs.add(a);
-        }
-      });
-    }
-    optEntity.get().setApproverRefs(approverRefs);
-    approverGroupRepository.save(optEntity.get());
-    return convertEntityToApproverGroup(optEntity.get());
-  }
-
-  /*
-   * Delete an Approver Group
-   * 
-   * - Removes relationship as well
-   */
-  @Override
-  public void deleteApproverGroup(String teamId, String id) {
-    if (teamId == null || teamId.isBlank()) {
-      throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
-    }
-    List<String> teamRefs = relationshipService.getFilteredToRefs(Optional.empty(),
-        Optional.empty(), Optional.of(RelationshipType.MEMBEROF),
-        Optional.of(RelationshipRef.TEAM), Optional.of(List.of(teamId)));
-    if (teamRefs.isEmpty()) {
-      throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
-    }
-    Optional<TeamEntity> optTeamEntity = teamRepository.findById(teamId);
-    if (!optTeamEntity.isPresent()) {
-      throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
-    }
-    TeamEntity teamEntity = optTeamEntity.get();
-
-    List<String> approverGroupRefs =
-        relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.APPROVERGROUP),
-            Optional.empty(), Optional.of(RelationshipType.BELONGSTO),
-            Optional.of(RelationshipRef.TEAM), Optional.of(List.of(teamEntity.getId())));
-
-    if (approverGroupRefs.isEmpty()) {
-      // TODO better exception for not the right Approver Group Ref
-      throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
-    }
-    Optional<ApproverGroupEntity> ag = approverGroupRepository.findById(id);
-    if (ag.isPresent()) {
-      relationshipService.removeRelationships(RelationshipRef.APPROVERGROUP, List.of(id),
-          RelationshipRef.TEAM, List.of(teamId));
-    }
-    approverGroupRepository.deleteById(id);
   }
 
   /*
@@ -872,8 +779,8 @@ public class TeamServiceImpl implements TeamService {
    */
   private ApproverGroup convertEntityToApproverGroup(ApproverGroupEntity age) {
     ApproverGroup ag = new ApproverGroup(age);
-    if (!age.getApproverRefs().isEmpty()) {
-      age.getApproverRefs().forEach(ref -> {
+    if (!age.getApprovers().isEmpty()) {
+      age.getApprovers().forEach(ref -> {
         Optional<User> ue = identityService.getUserByID(ref);
         if (ue.isPresent()) {
           TeamMember u = new TeamMember(ue.get());

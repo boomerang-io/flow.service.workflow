@@ -15,7 +15,7 @@ public class ApproverGroupEntity {
   private String id;
   private String name;
   private Date creationDate = new Date();
-  private List<String> approverRefs;
+  private List<String> approvers;
 
   public String getId() {
     return id;
@@ -41,11 +41,11 @@ public class ApproverGroupEntity {
     this.creationDate = creationDate;
   }
   
-  public List<String> getApproverRefs() {
-    return approverRefs;
+  public List<String> getApprovers() {
+    return approvers;
   }
   
-  public void setApproverRefs(List<String> approverRefs) {
-    this.approverRefs = approverRefs;
+  public void setApprovers(List<String> approvers) {
+    this.approvers = approvers;
   }
 }
