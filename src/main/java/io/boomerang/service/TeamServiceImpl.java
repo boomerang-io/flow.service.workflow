@@ -361,6 +361,24 @@ public class TeamServiceImpl implements TeamService {
     }
   }
 
+  @Override
+  public void leave(String teamId) {
+      if (teamId == null || teamId.isBlank()) {
+        throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
+      }
+      List<String> teamRefs = relationshipService.getFilteredToRefs(Optional.empty(),
+          Optional.empty(), Optional.of(RelationshipType.MEMBEROF),
+          Optional.of(RelationshipRef.TEAM), Optional.of(List.of(teamId)));
+      if (teamRefs.isEmpty()) {
+        throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
+      }
+      Optional<TeamEntity> optTeamEntity = teamRepository.findById(teamId);
+      if (!optTeamEntity.isPresent()) {
+        throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
+      }
+      relationshipService.removeUserTeamRelationship(teamId);
+  }
+
   /*
    * Creates or Updates Team Parameters
    */

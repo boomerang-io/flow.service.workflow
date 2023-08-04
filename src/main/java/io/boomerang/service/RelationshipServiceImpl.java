@@ -187,6 +187,20 @@ public class RelationshipServiceImpl implements RelationshipService {
   }
   
   /*
+   * Removes User Team relationship
+   */
+  @Override
+  public void removeUserTeamRelationship(String toRef) {
+    String userId = identityService.getCurrentPrincipal();
+    List<RelationshipEntity> relEntities = relationshipRepository.findByFromAndFromRefInAndToAndToRefIn(RelationshipRef.USER, List.of(userId), RelationshipRef.TEAM, List.of(toRef));
+    if (!relEntities.isEmpty()) {
+      relationshipRepository.deleteAll(relEntities);
+    }
+  }
+  
+
+  
+  /*
    * Generates the TeamRefs for the current security scope with no elevated permissions.
    * 
    * This is used to return the /mine used by the web to load the Teams selection.

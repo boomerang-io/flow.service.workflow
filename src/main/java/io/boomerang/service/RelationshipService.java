@@ -21,6 +21,8 @@ public interface RelationshipService {
   void removeRelationships(RelationshipRef fromType, List<String> fromRefs, RelationshipRef toType,
       List<String> toRefs);
 
+  void removeUserTeamRelationship(String toRef);
+
   Optional<RelationshipEntity> getRelationship(RelationshipRef fromType, String fromRef,
       RelationshipType relationship);
 

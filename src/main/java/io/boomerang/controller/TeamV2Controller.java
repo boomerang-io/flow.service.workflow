@@ -112,6 +112,13 @@ public class TeamV2Controller {
       description = "ID of Team", required = true) @PathVariable String teamId, @RequestBody List<TeamMember> request) {
       teamService.removeMembers(teamId, request);
   }
+  
+  @DeleteMapping(value = "/{teamId}/leave")
+  //Auth scope to user and session
+  public void leave(@Parameter(name = "teamId",
+      description = "ID of Team", required = true) @PathVariable String teamId) {
+      teamService.leave(teamId);
+  }
 
   @DeleteMapping(value = "/{teamId}/parameters")
   public void deleteTeamProperty(

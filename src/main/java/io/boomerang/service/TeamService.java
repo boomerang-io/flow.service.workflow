@@ -31,6 +31,8 @@ public interface TeamService {
 
   void removeMembers(String teamId, List<TeamMember> request);
 
+  void leave(String teamId);
+
   void deleteParameters(String teamId, List<String> request);
 
   void deleteApproverGroups(String teamId, List<String> names);
