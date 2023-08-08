@@ -37,7 +37,7 @@ public interface TeamService {
 
   void deleteApproverGroups(String teamId, List<String> names);
 
-  ResponseEntity<Quotas> resetQuotas(String teamId);
+  ResponseEntity<Quotas> deleteCustomQuotas(String teamId);
 
   ResponseEntity<Quotas> getDefaultQuotas();
 

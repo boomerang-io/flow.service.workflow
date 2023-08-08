@@ -138,7 +138,7 @@ public class TeamV2Controller {
   @DeleteMapping(value = "/{teamId}/quotas")
   public ResponseEntity<Quotas> resetQuotas(@Parameter(name = "teamId", description = "ID of Team",
       required = true) @PathVariable String teamId) {
-    return teamService.resetQuotas(teamId);
+    return teamService.deleteCustomQuotas(teamId);
   }
 
   @GetMapping(value = "/quotas/default")

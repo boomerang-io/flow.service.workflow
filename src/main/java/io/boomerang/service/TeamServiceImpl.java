@@ -533,10 +533,10 @@ public class TeamServiceImpl implements TeamService {
   }
 
   /*
-   * Reset quotas to default (i.e. delete custom quotas on the team)
+   * Delete custom quotas on the team and reset back to default
    */
   @Override
-  public ResponseEntity<Quotas> resetQuotas(String teamId) {
+  public ResponseEntity<Quotas> deleteCustomQuotas(String teamId) {
     if (teamId == null || teamId.isBlank()) {
       throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
     }
@@ -566,6 +566,21 @@ public class TeamServiceImpl implements TeamService {
   @Override
   public ResponseEntity<Quotas> getDefaultQuotas() {
     return ResponseEntity.ok(setDefaultQuotas());
+  }
+  
+  /*
+   * Used by WorkflowRun Service to ensure Workflow can run
+   */
+  public CurrentQuotas getQuotas(String teamId) {
+    Optional<TeamEntity> optTeamEntity = teamRepository.findById(teamId);
+    if (optTeamEntity.isPresent()) {
+      Quotas quotas = setDefaultQuotas();
+      setCustomQuotas(quotas, optTeamEntity.get().getQuotas());
+      CurrentQuotas currentQuotas = new CurrentQuotas(quotas);
+      setCurrentQuotas(currentQuotas, optTeamEntity.get().getId());
+      return currentQuotas;
+    }
+    return null;
   }
 
   //

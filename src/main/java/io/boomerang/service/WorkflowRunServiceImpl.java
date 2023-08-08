@@ -41,7 +41,7 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
   private RelationshipService relationshipService;
   
   @Autowired
-  private TeamService teamService;
+  private TeamServiceImpl teamService;
   
   @Autowired
   private SettingsService settingsService;
@@ -269,7 +269,7 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
     if (!settingsService.getSettingConfig("features", "workflowQuotas").getBooleanValue()) {
       return true;
     }
-    CurrentQuotas quotas = teamService.getQuotas(teamId).getBody();
+    CurrentQuotas quotas = teamService.getQuotas(teamId);
     if (quotas.getCurrentConcurrentWorkflows() <= quotas.getMaxConcurrentWorkflows()
         || quotas.getCurrentRunTotalDuration() <= quotas
             .getMaxWorkflowExecutionMonthly()) {
