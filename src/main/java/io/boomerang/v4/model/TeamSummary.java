@@ -15,6 +15,7 @@ public class TeamSummary {
   private TeamStatus status = TeamStatus.active;
   private String externalRef;
   private Map<String, String> labels = new HashMap<>();
+  private TeamSummaryInsights insights;
   
   public TeamSummary() {
     
@@ -75,5 +76,13 @@ public class TeamSummary {
 
   public void setLabels(Map<String, String> labels) {
     this.labels = labels;
+  }
+
+  public TeamSummaryInsights getInsights() {
+    return insights;
+  }
+
+  public void setInsights(TeamSummaryInsights insights) {
+    this.insights = insights;
   }
 }

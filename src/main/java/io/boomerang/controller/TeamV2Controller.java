@@ -133,26 +133,12 @@ public class TeamV2Controller {
   public void deleteApproverGroup(@PathVariable String teamId,
       @RequestBody List<String> names) {
     teamService.deleteApproverGroups(teamId, names);
-  }  
-
-  @GetMapping(value = "/{teamId}/quotas")
-  public ResponseEntity<CurrentQuotas> getQuotas(
-      @Parameter(name = "teamId", description = "ID of Team",
-      required = true) @PathVariable String teamId) {
-    return teamService.getQuotas(teamId);
   }
 
   @PutMapping(value = "/{teamId}/quotas/reset")
   public ResponseEntity<Quotas> resetQuotas(@Parameter(name = "teamId", description = "ID of Team",
       required = true) @PathVariable String teamId) {
     return teamService.resetQuotas(teamId);
-  }
-
-  @PatchMapping(value = "/{teamId}/quotas")
-  public ResponseEntity<Quotas> updateTeamQuotas(@Parameter(name = "teamId", description = "ID of Team",
-      required = true) @PathVariable String teamId,
-      @RequestBody Quotas quotas) {
-    return teamService.patchQuotas(teamId, quotas);
   }
 
   @GetMapping(value = "/quotas/default")

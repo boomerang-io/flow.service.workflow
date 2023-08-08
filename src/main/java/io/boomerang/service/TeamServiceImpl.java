@@ -533,66 +533,6 @@ public class TeamServiceImpl implements TeamService {
   }
 
   /*
-   * Get Current and Default Quotas for a Team
-   */
-  @Override
-  public ResponseEntity<CurrentQuotas> getQuotas(String teamId) {
-    if (teamId == null || teamId.isBlank()) {
-      throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
-    }
-    List<String> teamRefs = relationshipService.getFilteredToRefs(Optional.empty(),
-        Optional.empty(), Optional.of(RelationshipType.MEMBEROF),
-        Optional.of(RelationshipRef.TEAM), Optional.of(List.of(teamId)));
-    if (teamRefs.isEmpty()) {
-      throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
-    }
-    Optional<TeamEntity> optTeamEntity = teamRepository.findById(teamId);
-    if (!optTeamEntity.isPresent()) {
-      throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
-    }
-    TeamEntity teamEntity = optTeamEntity.get();
-
-    // Set default & custom stored Quotas
-    Quotas quotas = setDefaultQuotas();
-    setCustomQuotas(quotas, teamEntity.getQuotas());
-    CurrentQuotas currentQuotas = new CurrentQuotas(quotas);
-    setCurrentQuotas(currentQuotas, teamId);
-
-    return ResponseEntity.ok(currentQuotas);
-  }
-
-  /*
-   * Patch the quotas on a team.
-   */
-  @Override
-  public ResponseEntity<Quotas> patchQuotas(String teamId, Quotas patchQuotas) {
-    if (teamId == null || teamId.isBlank()) {
-      throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
-    }
-    List<String> teamRefs = relationshipService.getFilteredToRefs(Optional.empty(),
-        Optional.empty(), Optional.of(RelationshipType.MEMBEROF),
-        Optional.of(RelationshipRef.TEAM), Optional.of(List.of(teamId)));
-    if (teamRefs.isEmpty()) {
-      throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
-    }
-    Optional<TeamEntity> optTeamEntity = teamRepository.findById(teamId);
-    if (!optTeamEntity.isPresent()) {
-      throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
-    }
-    TeamEntity teamEntity = optTeamEntity.get();
-
-    // Update and save the patched quotas
-    setCustomQuotas(teamEntity.getQuotas(), patchQuotas);
-    teamRepository.save(teamEntity);
-
-    // Return with a full set of quotas (default + what is set)
-    Quotas returnQuotas = setDefaultQuotas();
-    setCustomQuotas(returnQuotas, teamEntity.getQuotas());
-
-    return ResponseEntity.ok(returnQuotas);
-  }
-
-  /*
    * Reset quotas to default (i.e. delete custom quotas on the team)
    */
   @Override

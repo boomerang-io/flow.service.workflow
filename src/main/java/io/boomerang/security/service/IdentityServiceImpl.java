@@ -40,6 +40,7 @@ import io.boomerang.v4.data.repository.TeamRepository;
 import io.boomerang.v4.data.repository.UserRepository;
 import io.boomerang.v4.model.OneTimeCode;
 import io.boomerang.v4.model.TeamSummary;
+import io.boomerang.v4.model.TeamSummaryInsights;
 import io.boomerang.v4.model.User;
 import io.boomerang.v4.model.UserProfile;
 import io.boomerang.v4.model.UserRequest;
@@ -218,7 +219,14 @@ public class IdentityServiceImpl implements IdentityService {
     List<TeamEntity> teamEntities = teamRepository.findByIdIn(teamRefs);
     List<TeamSummary> teamSummaries = new LinkedList<>();
     teamEntities.forEach(t -> {
-      teamSummaries.add(new TeamSummary(t));
+      TeamSummary ts = new TeamSummary(t);
+      TeamSummaryInsights tsi = new TeamSummaryInsights();
+      List<String> memberRefs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.USER), Optional.empty(), Optional.of(RelationshipType.MEMBEROF), Optional.of(RelationshipRef.TEAM), Optional.of(List.of(t.getId())));
+      tsi.setMembers(Long.valueOf(memberRefs.size()));
+      List<String> workflowRefs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.WORKFLOW), Optional.empty(), Optional.of(RelationshipType.BELONGSTO), Optional.of(RelationshipRef.TEAM), Optional.of(List.of(t.getId())));
+      tsi.setWorkflows(Long.valueOf(workflowRefs.size()));
+      ts.setInsights(tsi);
+      teamSummaries.add(ts);
     });
     profile.setTeams(teamSummaries);
     return profile;
