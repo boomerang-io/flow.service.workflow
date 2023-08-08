@@ -135,7 +135,7 @@ public class TeamV2Controller {
     teamService.deleteApproverGroups(teamId, names);
   }
 
-  @PutMapping(value = "/{teamId}/quotas/reset")
+  @DeleteMapping(value = "/{teamId}/quotas")
   public ResponseEntity<Quotas> resetQuotas(@Parameter(name = "teamId", description = "ID of Team",
       required = true) @PathVariable String teamId) {
     return teamService.resetQuotas(teamId);
