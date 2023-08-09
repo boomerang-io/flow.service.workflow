@@ -132,12 +132,6 @@ public class TeamV2Controller {
     teamService.deleteApproverGroups(teamId, names);
   }
 
-  @DeleteMapping(value = "/{teamId}/labels")
-  public void removeLabels(@PathVariable String teamId,
-      @RequestBody Map<String, String> labels) {
-    teamService.removeLabels(teamId, labels);
-  }
-
   @DeleteMapping(value = "/{teamId}/quotas")
   public void resetQuotas(@Parameter(name = "teamId", description = "ID of Team",
       required = true) @PathVariable String teamId) {

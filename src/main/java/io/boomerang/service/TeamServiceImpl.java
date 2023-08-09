@@ -531,11 +531,6 @@ public class TeamServiceImpl implements TeamService {
       }
     }
   }
-  
-  @Override
-  public void deleteLabels(String teamId, Map<String, String> labels) {
-    
-  }
 
   /*
    * Delete custom quotas on the team and reset back to default

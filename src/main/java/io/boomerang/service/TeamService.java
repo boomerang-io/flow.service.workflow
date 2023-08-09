@@ -38,8 +38,6 @@ public interface TeamService {
 
   void deleteApproverGroups(String teamId, List<String> names);
 
-  void removeLabels(String teamId, Map<String, String> labels);
-
   void deleteCustomQuotas(String teamId);
 
   ResponseEntity<Quotas> getDefaultQuotas();
