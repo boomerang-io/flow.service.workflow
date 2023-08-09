@@ -1,6 +1,7 @@
 package io.boomerang.service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort.Direction;
@@ -37,7 +38,9 @@ public interface TeamService {
 
   void deleteApproverGroups(String teamId, List<String> names);
 
-  ResponseEntity<Quotas> deleteCustomQuotas(String teamId);
+  void removeLabels(String teamId, Map<String, String> labels);
+
+  void deleteCustomQuotas(String teamId);
 
   ResponseEntity<Quotas> getDefaultQuotas();
 

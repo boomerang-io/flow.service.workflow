@@ -531,12 +531,17 @@ public class TeamServiceImpl implements TeamService {
       }
     }
   }
+  
+  @Override
+  public void deleteLabels(String teamId, Map<String, String> labels) {
+    
+  }
 
   /*
    * Delete custom quotas on the team and reset back to default
    */
   @Override
-  public ResponseEntity<Quotas> deleteCustomQuotas(String teamId) {
+  public void deleteCustomQuotas(String teamId) {
     if (teamId == null || teamId.isBlank()) {
       throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
     }
@@ -556,8 +561,6 @@ public class TeamServiceImpl implements TeamService {
     // This will then reset and default to the Team Quotas set in Settings
     teamEntity.setQuotas(new Quotas());
     teamRepository.save(teamEntity);
-
-    return ResponseEntity.ok(setDefaultQuotas());
   }
 
   /*

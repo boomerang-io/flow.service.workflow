@@ -1,6 +1,7 @@
 package io.boomerang.controller;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -11,17 +12,13 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import io.boomerang.security.model.Role;
 import io.boomerang.service.TeamService;
-import io.boomerang.v4.data.model.CurrentQuotas;
 import io.boomerang.v4.data.model.Quotas;
-import io.boomerang.v4.model.ApproverGroup;
-import io.boomerang.v4.model.ApproverGroupRequest;
 import io.boomerang.v4.model.Team;
 import io.boomerang.v4.model.TeamMember;
 import io.boomerang.v4.model.TeamNameCheckRequest;
@@ -121,7 +118,7 @@ public class TeamV2Controller {
   }
 
   @DeleteMapping(value = "/{teamId}/parameters")
-  public void deleteTeamProperty(
+  public void deleteParameters(
       @Parameter(name = "teamId",
       description = "ID of Team",
       required = true) @PathVariable String teamId,
@@ -135,10 +132,16 @@ public class TeamV2Controller {
     teamService.deleteApproverGroups(teamId, names);
   }
 
+  @DeleteMapping(value = "/{teamId}/labels")
+  public void removeLabels(@PathVariable String teamId,
+      @RequestBody Map<String, String> labels) {
+    teamService.removeLabels(teamId, labels);
+  }
+
   @DeleteMapping(value = "/{teamId}/quotas")
-  public ResponseEntity<Quotas> resetQuotas(@Parameter(name = "teamId", description = "ID of Team",
+  public void resetQuotas(@Parameter(name = "teamId", description = "ID of Team",
       required = true) @PathVariable String teamId) {
-    return teamService.deleteCustomQuotas(teamId);
+    teamService.deleteCustomQuotas(teamId);
   }
 
   @GetMapping(value = "/quotas/default")

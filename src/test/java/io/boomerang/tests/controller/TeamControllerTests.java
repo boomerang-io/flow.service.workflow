@@ -109,7 +109,7 @@ public class TeamControllerTests extends FlowTests {
 
   @Test
   public void testDeleteTeamProperty() {
-    controller.deleteTeamProperty("5d1a1841f6ca2c00014c4302",
+    controller.deleteParameters("5d1a1841f6ca2c00014c4302",
         "df5f5749-4d30-41c3-803e-56b54b768407");
     Assertions.assertEquals(0, controller.getAllTeamProperties("5d1a1841f6ca2c00014c4302").size());
   }
