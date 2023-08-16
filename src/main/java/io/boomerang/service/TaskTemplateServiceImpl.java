@@ -96,6 +96,10 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
           relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.TASKTEMPLATE), queryNames,
               Optional.of(RelationshipType.BELONGSTO), Optional.of(RelationshipRef.TEAM),
               queryTeams);
+      //Return empty with no teams, otherwise when sending to the engine, the refs is empty and all task-templates will be returned.
+      if (refs == null || refs.size() == 0) {
+        return new TaskTemplateResponsePage();
+      }
     } else {
       refs =
           relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.TASKTEMPLATE), queryNames,
