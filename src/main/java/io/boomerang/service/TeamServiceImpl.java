@@ -362,6 +362,11 @@ public class TeamServiceImpl implements TeamService {
   }
 
   @Override
+  /*
+   *  Allows only the requesting user to leave the team
+   *  
+   *  TODO: ensure the remaining owner cannot leave the team
+   */
   public void leave(String teamId) {
       if (teamId == null || teamId.isBlank()) {
         throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);

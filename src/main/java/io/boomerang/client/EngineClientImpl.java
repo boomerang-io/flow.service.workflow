@@ -112,11 +112,8 @@ public class EngineClientImpl implements EngineClient {
   @Value("${flow.engine.tasktemplate.apply.url}")
   public String applyTaskTemplateURL;
 
-  @Value("${flow.engine.tasktemplate.enable.url}")
-  public String enableTaskTemplateURL;
-
-  @Value("${flow.engine.tasktemplate.disable.url}")
-  public String disableTaskTemplateURL;
+  @Value("${flow.engine.tasktemplate.changelog.url}")
+  public String changelogTaskTemplateURL;
 
   @Value("${flow.engine.workflowtemplate.get.url}")
   public String getWorkflowTemplateURL;
@@ -818,39 +815,20 @@ public class EngineClientImpl implements EngineClient {
           HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
-
+  
   @Override
-  public TaskTemplate enableTaskTemplate(String name) {
+  public List<ChangeLogVersion> getTaskTemplateChangeLog(String name) {
     try {
-      String url = enableTaskTemplateURL.replace("{name}", name);
+      String url = changelogTaskTemplateURL.replace("{name}", name);
 
       LOGGER.info("URL: " + url);
-      ResponseEntity<TaskTemplate> response = restTemplate.exchange(url, HttpMethod.PUT, null, TaskTemplate.class);
+
+      ResponseEntity<ChangeLogVersion[]> response = restTemplate.getForEntity(url, ChangeLogVersion[].class);
 
       LOGGER.info("Status Response: " + response.getStatusCode());
       LOGGER.info("Content Response: " + response.getBody().toString());
 
-      return response.getBody();
-    } catch (RestClientException ex) {
-      LOGGER.error(ex.toString());
-      throw new BoomerangException(ex, HttpStatus.INTERNAL_SERVER_ERROR.value(),
-          ex.getClass().getSimpleName(), "Exception in communicating with internal services.",
-          HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-  }
-
-  @Override
-  public TaskTemplate disableTaskTemplate(String name) {
-    try {
-      String url = disableTaskTemplateURL.replace("{name}", name);
-
-      LOGGER.info("URL: " + url);
-      ResponseEntity<TaskTemplate> response = restTemplate.exchange(url, HttpMethod.PUT, null, TaskTemplate.class);
-
-      LOGGER.info("Status Response: " + response.getStatusCode());
-      LOGGER.info("Content Response: " + response.getBody().toString());
-
-      return response.getBody();
+      return Arrays.asList(response.getBody());
     } catch (RestClientException ex) {
       LOGGER.error(ex.toString());
       throw new BoomerangException(ex, HttpStatus.INTERNAL_SERVER_ERROR.value(),

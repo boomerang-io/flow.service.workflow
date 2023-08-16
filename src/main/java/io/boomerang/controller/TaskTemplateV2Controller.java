@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import io.boomerang.client.TaskTemplateResponsePage;
 import io.boomerang.service.TaskTemplateService;
 import io.boomerang.tekton.TektonTask;
+import io.boomerang.v4.model.ref.ChangeLogVersion;
 import io.boomerang.v4.model.ref.TaskTemplate;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -36,7 +37,7 @@ public class TaskTemplateV2Controller {
   @Operation(summary = "Retrieve a specific task template. If no version specified, the latest version is returned.")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
-  public ResponseEntity<TaskTemplate> getTaskTemplateWithId(
+  public TaskTemplate getTaskTemplateWithId(
       @Parameter(name = "name",
       description = "Name of Task Template",
       required = true) @PathVariable String name,
@@ -90,7 +91,7 @@ public class TaskTemplateV2Controller {
             description = "The name needs to be unique and must only contain alphanumeric and - characeters.")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
-  public ResponseEntity<TaskTemplate> createTaskTemplate(
+  public TaskTemplate createTaskTemplate(
       @Parameter(name = "team", description = "Team as owner reference.", example = "63d3656ca845957db7d25ef0,63a3e732b0496509a7f1d763",
       required = false) @RequestParam(required = false) Optional<String> team,
       @RequestBody TaskTemplate taskTemplate) {
@@ -114,7 +115,7 @@ public class TaskTemplateV2Controller {
             description = "The name must only contain alphanumeric and - characeters. If the name exists, apply will create a new version.")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
-  public ResponseEntity<TaskTemplate> applyTaskTemplate(@RequestBody TaskTemplate taskTemplate,
+  public TaskTemplate applyTaskTemplate(@RequestBody TaskTemplate taskTemplate,
       @Parameter(name = "replace",
       description = "Replace existing version",
       required = false) @RequestParam(required = false, defaultValue = "false") boolean replace,
@@ -136,30 +137,18 @@ public class TaskTemplateV2Controller {
       required = false) @RequestParam(required = false) Optional<String> team) {
     return taskTemplateService.applyAsTekton(taskTemplate, replace, team);
   }
-
-  @PutMapping(value = "/{name}/enable")
-  @Operation(summary = "Enable or Disable a TaskTemplate")
-  @ApiResponses(value = {@ApiResponse(responseCode = "204", description = "No Content"),
+  
+  @GetMapping(value = "/{name}/changelog")
+  @Operation(summary = "Retrieve the changlog", description = "Retrieves each versions changelog and returns them all as a list.")
+  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
-  public TaskTemplate enableWorkflow(
+  public List<ChangeLogVersion> getChangelog(
       @Parameter(name = "name",
       description = "Name of Task Template",
       required = true) @PathVariable String name) {
-    return taskTemplateService.enable(name);
+    return taskTemplateService.changelog(name);
   }
 
-  @PutMapping(value = "/{name}/disable")
-  @Operation(summary = "Disable a TaskTemplate")
-  @ApiResponses(value = {@ApiResponse(responseCode = "204", description = "No Content"),
-      @ApiResponse(responseCode = "400", description = "Bad Request")})
-  public TaskTemplate disableWorkflow(
-      @Parameter(name = "name",
-      description = "Name of Task Template",
-      required = true) @PathVariable String name) {
-    return taskTemplateService.disable(name);
-  }
-
-  //TODO determine what these endpoint is used for
   @PostMapping(value = "validate", consumes = "application/x-yaml", produces = "application/x-yaml")
   public void validateYaml(@RequestBody TektonTask tektonTask) {
     taskTemplateService.validateAsTekton(tektonTask);

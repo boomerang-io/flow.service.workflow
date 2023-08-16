@@ -3,28 +3,24 @@ package io.boomerang.service;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Sort.Direction;
-import org.springframework.http.ResponseEntity;
 import io.boomerang.client.TaskTemplateResponsePage;
 import io.boomerang.tekton.TektonTask;
+import io.boomerang.v4.model.ref.ChangeLogVersion;
 import io.boomerang.v4.model.ref.TaskTemplate;
 
 public interface TaskTemplateService {
 
-  ResponseEntity<TaskTemplate> get(String name, Optional<Integer> version);
+  TaskTemplate get(String name, Optional<Integer> version);
 
   TaskTemplateResponsePage query(Optional<Integer> queryLimit, Optional<Integer> queryPage,
       Optional<Direction> querySort, Optional<List<String>> queryLabels,
       Optional<List<String>> queryStatus, Optional<List<String>> queryNames,
       Optional<List<String>> queryTeams);
 
-  ResponseEntity<TaskTemplate> create(TaskTemplate request, Optional<String> team);
+  TaskTemplate create(TaskTemplate request, Optional<String> team);
 
-  ResponseEntity<TaskTemplate> apply(TaskTemplate request, boolean replace,
+  TaskTemplate apply(TaskTemplate request, boolean replace,
       Optional<String> teamId);
-
-  TaskTemplate enable(String name);
-
-  TaskTemplate disable(String name);
 
   TektonTask getAsTekton(String name, Optional<Integer> version);
 
@@ -33,4 +29,6 @@ public interface TaskTemplateService {
   TektonTask applyAsTekton(TektonTask tektonTask, boolean replace, Optional<String> teamId);
 
   void validateAsTekton(TektonTask tektonTask);
+
+  List<ChangeLogVersion> changelog(String name);
 }

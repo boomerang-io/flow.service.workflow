@@ -74,9 +74,7 @@ public interface EngineClient {
 
   TaskTemplate applyTaskTemplate(TaskTemplate workflow, boolean replace);
 
-  TaskTemplate enableTaskTemplate(String name);
-
-  TaskTemplate disableTaskTemplate(String name);
+  List<ChangeLogVersion> getTaskTemplateChangeLog(String name);
 
   WorkflowTemplate getWorkflowTemplate(String name, Optional<Integer> version, boolean withTasks);
 

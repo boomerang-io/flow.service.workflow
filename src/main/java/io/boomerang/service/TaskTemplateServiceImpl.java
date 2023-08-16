@@ -21,6 +21,7 @@ import io.boomerang.v4.model.User;
 import io.boomerang.v4.model.enums.RelationshipRef;
 import io.boomerang.v4.model.enums.RelationshipType;
 import io.boomerang.v4.model.ref.ChangeLog;
+import io.boomerang.v4.model.ref.ChangeLogVersion;
 import io.boomerang.v4.model.ref.TaskTemplate;
 
 /*
@@ -49,7 +50,7 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
    * Get TaskTemplate by name and optional version. If no version specified, will retrieve the latest.
    */
   @Override
-  public ResponseEntity<TaskTemplate> get(String name, Optional<Integer> version) {
+  public TaskTemplate get(String name, Optional<Integer> version) {
     if (name == null || name.isBlank()) {
       throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
     }
@@ -73,7 +74,7 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
       
       // Switch from UserId to Users Name
       switchChangeLogAuthorToUserName(taskTemplate.getChangelog());
-      return ResponseEntity.ok(taskTemplate);
+      return taskTemplate;
     } else {
       // TODO: do we want to return invalid ref or unauthorized
       throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
@@ -118,7 +119,7 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
    * The Engine checks for unique names so this method does not have to, however it does need to add the 
    */
   @Override
-  public ResponseEntity<TaskTemplate> create(TaskTemplate request,
+  public TaskTemplate create(TaskTemplate request,
       Optional<String> team) {
     // Set verfied to false - this is only able to be set via Engine or Loader
     request.setVerified(false);
@@ -152,14 +153,14 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
           taskTemplate.getName(), RelationshipType.BELONGSTO ,RelationshipRef.GLOBAL, Optional.empty(), Optional.empty());
     }
     switchChangeLogAuthorToUserName(taskTemplate.getChangelog());
-    return ResponseEntity.ok(taskTemplate);
+    return taskTemplate;
   }
 
   /*
    * Apply allows you to create a new version as well as create new
    */
   @Override
-  public ResponseEntity<TaskTemplate> apply(TaskTemplate request, boolean replace, Optional<String> teamId) {
+  public TaskTemplate apply(TaskTemplate request, boolean replace, Optional<String> teamId) {
     String templateName = request.getName();
     //Refs check is different to normal as we are checking the users access to the team and not the template
     //The engine will check if the template exists or not
@@ -192,7 +193,7 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
       TaskTemplate template = engineClient.applyTaskTemplate(request, replace);
       LOGGER.info("I got down here");
       switchChangeLogAuthorToUserName(template.getChangelog());
-      return ResponseEntity.ok(template);
+      return template;
     } else {
       // TODO: do we want to return invalid ref or unauthorized
       throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
@@ -221,48 +222,10 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
   }
 
   @Override
-  public TaskTemplate enable(String name) {
-    if (name == null || name.isBlank()) {
-      // TODO: do we want to return invalid ref or unauthorized
-      throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
-    }
-    List<String> refs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.TASKTEMPLATE),
-        Optional.of(List.of(name)), Optional.of(RelationshipType.BELONGSTO), Optional.empty(), Optional.empty());
-
-    if (refs.isEmpty()) {
-      // TODO: do we want to return invalid ref or unauthorized
-      throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
-    }
-    TaskTemplate taskTemplate = engineClient.enableTaskTemplate(name);
-
-    switchChangeLogAuthorToUserName(taskTemplate.getChangelog());
-    return taskTemplate;
-  }
-
-  @Override
-  public TaskTemplate disable(String name) {
-    if (name == null || name.isBlank()) {
-      // TODO: do we want to return invalid ref or unauthorized
-      throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
-    }
-    List<String> refs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.TASKTEMPLATE),
-        Optional.of(List.of(name)), Optional.of(RelationshipType.BELONGSTO), Optional.empty(), Optional.empty());
-
-    if (refs.isEmpty()) {
-      // TODO: do we want to return invalid ref or unauthorized
-      throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
-    }
-    TaskTemplate taskTemplate = engineClient.disableTaskTemplate(name);
-
-    switchChangeLogAuthorToUserName(taskTemplate.getChangelog());
-    return taskTemplate;
-  }
-
-  @Override
   public TektonTask getAsTekton(String name, Optional<Integer> version) {
-    ResponseEntity<TaskTemplate> template = this.get(name, version);
-    if (template.getBody()!= null) {
-      return TektonConverter.convertTaskTemplateToTektonTask(template.getBody());
+    TaskTemplate template = this.get(name, version);
+    if (template != null) {
+      return TektonConverter.convertTaskTemplateToTektonTask(template);
     } else {
       // TODO: do we want to return invalid ref or unauthorized
       throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
@@ -286,5 +249,25 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
   @Override
   public void validateAsTekton(TektonTask tektonTask) {
     TektonConverter.convertTektonTaskToTaskTemplate(tektonTask);
+  }
+
+  @Override
+  public List<ChangeLogVersion> changelog(String name) {
+    if (name == null || name.isBlank()) {
+      throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
+    }
+
+    List<String> refs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.TASKTEMPLATE),
+        Optional.of(List.of(name)), Optional.of(RelationshipType.BELONGSTO), Optional.of(RelationshipRef.GLOBAL), Optional.empty());
+    if (refs.isEmpty()) {
+      refs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.TASKTEMPLATE),
+          Optional.of(List.of(name)), Optional.of(RelationshipType.BELONGSTO), Optional.of(RelationshipRef.TEAM), Optional.empty());
+    }
+    if (!refs.isEmpty()) {
+      return engineClient.getTaskTemplateChangeLog(name);
+    } else {
+      // TODO: do we want to return invalid ref or unauthorized
+      throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
+    }
   }
 }
