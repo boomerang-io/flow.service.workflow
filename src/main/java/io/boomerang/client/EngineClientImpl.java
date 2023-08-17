@@ -698,7 +698,7 @@ public class EngineClientImpl implements EngineClient {
       String url = getTaskTemplateURL.replace("{name}", name);
       Map<String, String> requestParams = new HashMap<>();
       if (version.isPresent()) {
-        requestParams.put("version", version.toString());
+        requestParams.put("version", version.get().toString());
       }
 
       String encodedURL =
@@ -707,7 +707,7 @@ public class EngineClientImpl implements EngineClient {
 
       LOGGER.info("URL: " + encodedURL);
 
-      ResponseEntity<TaskTemplate> response = restTemplate.getForEntity(url, TaskTemplate.class);
+      ResponseEntity<TaskTemplate> response = restTemplate.getForEntity(encodedURL, TaskTemplate.class);
 
       LOGGER.info("Status Response: " + response.getStatusCode());
       LOGGER.info("Content Response: " + response.getBody().toString());
