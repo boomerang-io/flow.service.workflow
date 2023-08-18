@@ -250,7 +250,7 @@ public class ParameterUtil {
           param.setDefaultValue(ps.getDefaultValue().toString());
         }
         param.setDescription(ps.getDescription());
-        param.setType("string");
+        param.setType("text");
         params.add(param);
       } ;
     }
