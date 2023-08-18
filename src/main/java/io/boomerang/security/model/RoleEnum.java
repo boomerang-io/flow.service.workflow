@@ -2,7 +2,6 @@ package io.boomerang.security.model;
 
 import java.util.HashMap;
 import java.util.Map;
-import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum RoleEnum {
   OWNER("owner"), EDITOR("editor"), READER("reader");

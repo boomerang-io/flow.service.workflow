@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.apache.commons.lang3.EnumUtils;
 import org.apache.logging.log4j.LogManager;
@@ -33,6 +34,7 @@ import io.boomerang.error.BoomerangError;
 import io.boomerang.error.BoomerangException;
 import io.boomerang.security.model.AuthType;
 import io.boomerang.security.model.Token;
+import io.boomerang.security.repository.RoleRepository;
 import io.boomerang.service.RelationshipService;
 import io.boomerang.v4.data.entity.TeamEntity;
 import io.boomerang.v4.data.entity.UserEntity;
@@ -72,6 +74,9 @@ public class IdentityServiceImpl implements IdentityService {
 
   @Autowired
   private TeamRepository teamRepository;
+
+  @Autowired
+  private RoleRepository roleRepository;
 
   @Autowired
   private MongoTemplate mongoTemplate;
@@ -215,20 +220,28 @@ public class IdentityServiceImpl implements IdentityService {
       }
     }
     // Add TeamSummaries
-    List<String> teamRefs = relationshipService.getMyTeamRefs();
-    List<TeamEntity> teamEntities = teamRepository.findByIdIn(teamRefs);
+    Map<String, String> teamRefs = relationshipService.getMyTeamRefsAndRoles();
     List<TeamSummary> teamSummaries = new LinkedList<>();
-    teamEntities.forEach(t -> {
-      TeamSummary ts = new TeamSummary(t);
-      TeamSummaryInsights tsi = new TeamSummaryInsights();
-      List<String> memberRefs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.USER), Optional.empty(), Optional.of(RelationshipType.MEMBEROF), Optional.of(RelationshipRef.TEAM), Optional.of(List.of(t.getId())));
-      tsi.setMembers(Long.valueOf(memberRefs.size()));
-      List<String> workflowRefs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.WORKFLOW), Optional.empty(), Optional.of(RelationshipType.BELONGSTO), Optional.of(RelationshipRef.TEAM), Optional.of(List.of(t.getId())));
-      tsi.setWorkflows(Long.valueOf(workflowRefs.size()));
-      ts.setInsights(tsi);
-      teamSummaries.add(ts);
+    List<String> permissions = new LinkedList<>();
+    teamRefs.forEach((k, v) -> {
+      Optional<TeamEntity> teamEntity = teamRepository.findById(k);
+      if (teamEntity.isPresent()) {
+        //Generate TeamSummary + Insight
+        TeamSummary ts = new TeamSummary(teamEntity.get());
+        TeamSummaryInsights tsi = new TeamSummaryInsights();
+        List<String> memberRefs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.USER), Optional.empty(), Optional.of(RelationshipType.MEMBEROF), Optional.of(RelationshipRef.TEAM), Optional.of(List.of(k)));
+        tsi.setMembers(Long.valueOf(memberRefs.size()));
+        List<String> workflowRefs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.WORKFLOW), Optional.empty(), Optional.of(RelationshipType.BELONGSTO), Optional.of(RelationshipRef.TEAM), Optional.of(List.of(k)));
+        tsi.setWorkflows(Long.valueOf(workflowRefs.size()));
+        ts.setInsights(tsi);
+        teamSummaries.add(ts);
+        
+        //Generate Permissions
+        roleRepository.findByTypeAndName("team", v).getPermissions().stream().forEach(p -> permissions.add(p.replace("{principal}", k)));
+      }
     });
     profile.setTeams(teamSummaries);
+    profile.setPermissions(permissions);
     return profile;
   }
 

@@ -8,6 +8,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -359,17 +360,15 @@ public class TokenServiceImpl implements TokenService {
     tokenEntity.setPrincipal(user.get().getId());
     List<String> permissions = new LinkedList<>();
     if (UserType.admin.equals(user.get().getType())) {
-      permissions.addAll(roleRepository.findByTypeAndName("global", "admin").getPermissions());
+      permissions.addAll(roleRepository.findByTypeAndName("global", UserType.admin.toString()).getPermissions());
     } else if (UserType.operator.equals(user.get().getType())) {
-      permissions.addAll(roleRepository.findByTypeAndName("global", "operator").getPermissions());
+      permissions.addAll(roleRepository.findByTypeAndName("global", UserType.operator.toString()).getPermissions());
     } else {
       // Collect all team permissions the user has
-      List<RelationshipEntity> userRels =
-          relationshipService.getFilteredRels(Optional.of(RelationshipRef.USER),
-              Optional.of(List.of(user.get().getId())), Optional.of(RelationshipType.MEMBEROF),
-              Optional.of(RelationshipRef.TEAM), Optional.empty(), false);
-      LOGGER.debug(userRels.toString());
-      permissions.addAll(roleRepository.findByTypeAndName("team", "owner").getPermissions());
+      Map<String, String> teamRefs = relationshipService.getMyTeamRefsAndRoles();
+      teamRefs.forEach((k, v) -> {
+        roleRepository.findByTypeAndName("team", v).getPermissions().stream().forEach(p -> permissions.add(p.replace("{principal}", k)));
+      });
     }
     tokenEntity.setPermissions(permissions);
     String prefix = TokenTypePrefix.session.prefix;

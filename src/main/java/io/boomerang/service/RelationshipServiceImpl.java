@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import io.boomerang.error.BoomerangError;
 import io.boomerang.error.BoomerangException;
 import io.boomerang.security.model.AuthType;
+import io.boomerang.security.model.RoleEnum;
 import io.boomerang.security.service.IdentityService;
 import io.boomerang.v4.data.entity.RelationshipEntity;
 import io.boomerang.v4.data.repository.RelationshipRepository;
@@ -205,8 +206,11 @@ public class RelationshipServiceImpl implements RelationshipService {
    * This is used to return the /mine used by the web to load the Teams selection.
    */
   @Override
-  public List<String> getMyTeamRefs() {
-    return getFilteredRels(Optional.empty(), Optional.empty(), Optional.of(RelationshipType.MEMBEROF), Optional.of(RelationshipRef.TEAM), Optional.empty(), false).stream().map(RelationshipEntity::getToRef).collect(Collectors.toList());
+  public Map<String, String> getMyTeamRefsAndRoles() {
+    return getFilteredRels(Optional.empty(), Optional.empty(),
+        Optional.of(RelationshipType.MEMBEROF), Optional.of(RelationshipRef.TEAM), Optional.empty(),
+        false).stream()
+            .collect(Collectors.toMap(r -> r.getToRef(), r -> r.getData().get("role") != null ? r.getData().get("role").toString() : RoleEnum.READER.getLabel()));
   }
   
   /*
