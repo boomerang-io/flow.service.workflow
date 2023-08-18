@@ -147,6 +147,21 @@ public class TeamServiceImpl implements TeamService {
   @Override
   public Team create(TeamRequest request, TeamType type) {
     if (!request.getName().isBlank()) {
+      //Validate name - future when Name is Slug
+//        String teamName = firstName + "'s Team";
+//        TeamNameCheckRequest checkRequest = new TeamNameCheckRequest(teamName);
+//        boolean validName = false;
+//        Integer teamNumber = 1;
+//        while (!validName) {
+//          try {
+//            teamService.validateName(checkRequest);
+//            validName = true;
+//          } catch (Exception e) {
+//            teamName = teamName + " " + teamNumber;
+//          }
+//        }
+      }
+      
       TeamEntity teamEntity = new TeamEntity();
       teamEntity.setType(type); // Only create TeamType.Team in most cases - User and System are internally created.
       /*

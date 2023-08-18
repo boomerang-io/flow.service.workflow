@@ -33,6 +33,7 @@ import io.boomerang.client.ExternalUserService;
 import io.boomerang.error.BoomerangError;
 import io.boomerang.error.BoomerangException;
 import io.boomerang.security.model.AuthType;
+import io.boomerang.security.model.RoleEnum;
 import io.boomerang.security.model.Token;
 import io.boomerang.security.repository.RoleRepository;
 import io.boomerang.service.RelationshipService;
@@ -43,6 +44,7 @@ import io.boomerang.v4.data.repository.TeamRepository;
 import io.boomerang.v4.data.repository.UserRepository;
 import io.boomerang.v4.model.OneTimeCode;
 import io.boomerang.v4.model.TeamMember;
+import io.boomerang.v4.model.TeamNameCheckRequest;
 import io.boomerang.v4.model.TeamRequest;
 import io.boomerang.v4.model.TeamSummary;
 import io.boomerang.v4.model.TeamSummaryInsights;
@@ -145,12 +147,6 @@ public class IdentityServiceImpl implements IdentityService {
       }
       userEntity = Optional.of(userRepository.save(userEntity.get()));
     }
-
-    // Create Users Personal Team.
-    TeamRequest request = new TeamRequest();
-    request.setName(firstName + "'s Team");
-    request.setMembers(List.of(new TeamMember(userEntity.get())));
-    teamService.create(request, TeamType.personal);
 
     return userEntity;
   }

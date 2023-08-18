@@ -4,6 +4,14 @@ public class TeamNameCheckRequest {
 
   private String name;
 
+  public TeamNameCheckRequest() {
+    // Empty
+  }
+
+  public TeamNameCheckRequest(String name) {
+    this.name = name;
+  }
+
   public String getName() {
     return name;
   }
