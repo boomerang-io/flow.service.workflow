@@ -134,8 +134,11 @@ public class WorkflowServiceImpl implements WorkflowService {
 
     // Filter out sensitive values
     if (!response.getContent().isEmpty()) {
-      response.getContent().forEach(w -> 
-      DataAdapterUtil.filterParamSpecValueByFieldType(w.getConfig(), w.getParams(), FieldType.PASSWORD.value()));
+      response.getContent().forEach(w -> {
+        if (w.getConfig() != null) {
+          DataAdapterUtil.filterParamSpecValueByFieldType(w.getConfig(), w.getParams(), FieldType.PASSWORD.value());
+        }
+      });
     }
     
     return response;
