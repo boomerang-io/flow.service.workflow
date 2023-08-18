@@ -160,7 +160,6 @@ public class TeamServiceImpl implements TeamService {
 //            teamName = teamName + " " + teamNumber;
 //          }
 //        }
-      }
       
       TeamEntity teamEntity = new TeamEntity();
       teamEntity.setType(type); // Only create TeamType.Team in most cases - User and System are internally created.
