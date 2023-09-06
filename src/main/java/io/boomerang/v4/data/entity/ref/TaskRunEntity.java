@@ -42,6 +42,10 @@ public class TaskRunEntity {
 
   private long duration;
   
+  private Long timeout;
+  
+//  private Long retries;
+  
   private List<RunParam> params = new LinkedList<>();
 
   private List<RunResult> results = new LinkedList<>();
@@ -83,8 +87,12 @@ public class TaskRunEntity {
   @Override
   public String toString() {
     return "TaskRunEntity [id=" + id + ", type=" + type + ", name=" + name + ", labels=" + labels
-        + ", annotations=" + annotations + ", creationDate=" + creationDate + ", startTime="
-        + startTime + ", params=" + params + ", status=" + status + ", phase=" + phase + "]";
+        + ", creationDate=" + creationDate + ", startTime=" + startTime + ", duration=" + duration
+        + ", timeout=" + timeout + ", params=" + params + ", results=" + results + ", workspaces="
+        + workspaces + ", status=" + status + ", phase=" + phase + ", templateRef=" + templateRef
+        + ", templateVersion=" + templateVersion + ", workflowRef=" + workflowRef
+        + ", workflowRevisionRef=" + workflowRevisionRef + ", workflowRunRef=" + workflowRunRef
+        + "]";
   }
 
   public String getId() {
@@ -157,6 +165,14 @@ public class TaskRunEntity {
 
   public void setDuration(long duration) {
     this.duration = duration;
+  }
+
+  public Long getTimeout() {
+    return timeout;
+  }
+
+  public void setTimeout(Long timeout) {
+    this.timeout = timeout;
   }
 
   public List<RunParam> getParams() {

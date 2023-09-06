@@ -5,7 +5,8 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum RunStatus {
   notstarted("notstarted"), ready("ready"), running("running"), waiting("waiting"),  // NOSONAR
-  succeeded("succeeded"), failed("failed"), invalid("invalid"), skipped("skipped"), cancelled("cancelled"); // NOSONAR
+  succeeded("succeeded"), failed("failed"), invalid("invalid"), skipped("skipped"), // NOSONAR 
+  cancelled("cancelled"), timedout("timedout"); // NOSONAR
 
   private String status;
 
