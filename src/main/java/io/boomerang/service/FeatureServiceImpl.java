@@ -20,7 +20,7 @@ public class FeatureServiceImpl implements FeatureService {
     Map<String, Object> features = new HashMap<>();
     Map<String, Object> quotas = new HashMap<>();
 
-    AbstractParam config = settingsService.getSettingConfig("task", "enable.tasks");
+    AbstractParam config = settingsService.getSettingConfig("task", "edit.verified");
 
     if (config != null) {
       features.put(VERIFIED_TASK_EDIT_KEY, config.getBooleanValue());
