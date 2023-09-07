@@ -1,6 +1,8 @@
 package io.boomerang.service;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import org.apache.logging.log4j.LogManager;
@@ -169,7 +171,10 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
           request.setTimeout(Long.valueOf(setting));
         }
       }
-      request.getAnnotations().put("boomerang.io/task-deletion", this.settingsService.getSettingConfig("task", "deletion.policy").getValue());
+      Map<String, Object> executionAnnotations = new HashMap<>();
+      executionAnnotations.put("boomerang.io/task-deletion", this.settingsService.getSettingConfig("task", "deletion.policy").getValue());
+      executionAnnotations.put("boomerang.io/default-image", this.settingsService.getSettingConfig("task", "image").getValue());
+      request.getAnnotations().putAll(executionAnnotations);
       // TODO: figure out the storing of initiated by. Is that just a relationship?
       WorkflowRun wfRun = engineClient.submitWorkflowRun(request, start);
       // TODO: FUTURE - Creates the relationship with the Workflow
