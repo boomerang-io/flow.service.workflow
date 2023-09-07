@@ -1,6 +1,7 @@
 package io.boomerang.service;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -151,7 +152,7 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
         RelationshipRef.WORKFLOW, request.getWorkflowRef(), RelationshipType.BELONGSTO);
     if (teamRelationship.isPresent() && canRunWithQuotas(teamRelationship.get().getToRef(), request.getWorkflowRef())) {
       // Set Workflow & Task Debug
-      if (request.getDebug() == null) {
+      if (!Objects.isNull(request.getDebug())) {
         boolean enableDebug = false;
         String setting =
             this.settingsService.getSettingConfig("task", "debug").getValue();
@@ -161,15 +162,15 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
         request.setDebug(Boolean.valueOf(enableDebug));
       }
       // Set Workflow Timeout
-      if (request.getTimeout() == null) {
+      if (!Objects.isNull(request.getTimeout())) {
         String setting = this.settingsService
             .getSettingConfig("task", "default.timeout").getValue();
         if (setting != null) {
           request.setTimeout(Long.valueOf(setting));
         }
       }
+      request.getAnnotations().put("boomerang.io/task-deletion", this.settingsService.getSettingConfig("task", "deletion.policy").getValue());
       // TODO: figure out the storing of initiated by. Is that just a relationship?
-
       WorkflowRun wfRun = engineClient.submitWorkflowRun(request, start);
       // TODO: FUTURE - Creates the relationship with the Workflow
       // relationshipService.addRelationshipRef(RelationshipRef.WORKFLOWRUN, wfRun.getId(),

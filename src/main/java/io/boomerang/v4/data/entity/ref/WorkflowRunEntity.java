@@ -42,8 +42,6 @@ public class WorkflowRunEntity   {
 
   private Boolean debug;
 
-  private TaskDeletion taskDeletion;
-
   private RunStatus status = RunStatus.notstarted;
   
   private RunPhase phase = RunPhase.pending;
@@ -140,14 +138,6 @@ public class WorkflowRunEntity   {
 
   public void setDebug(Boolean debug) {
     this.debug = debug;
-  }
-
-  public TaskDeletion getTaskDeletion() {
-    return taskDeletion;
-  }
-
-  public void setTaskDeletion(TaskDeletion deletion) {
-    this.taskDeletion = deletion;
   }
 
   public String getId() {
