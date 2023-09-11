@@ -24,7 +24,7 @@ import io.boomerang.v4.model.enums.ref.WorkflowStatus;
  * A number of the Workflow Revision elements are put under metadata
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonInclude(Include.NON_EMPTY)
+@JsonInclude(Include.NON_NULL)
 @JsonPropertyOrder({"id", "name", "status", "version", "creationDate", "timeout", "retries", "description", "labels", "annotations", "params", "tasks" })
 public class Workflow {
   
