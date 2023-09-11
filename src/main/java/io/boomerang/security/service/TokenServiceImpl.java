@@ -380,4 +380,26 @@ public class TokenServiceImpl implements TokenService {
 
     return new Token(tokenEntity);
   }
+  
+  /*
+   * Creates a Workflow / System token for use by the scheduled task
+   */
+  public Token createWorkflowSessionToken(String workflowRef) {
+    CreateTokenRequest tokenRequest = new CreateTokenRequest();
+    tokenRequest.setName("Scheduled Job Token");
+    tokenRequest.setType(AuthType.workflow);
+    tokenRequest.setPrincipal(workflowRef);
+    tokenRequest.setPermissions(List.of("workflow/" + workflowRef + "/**"));
+    
+    Calendar cal = Calendar.getInstance();
+    cal.setTime(new Date());
+    cal.add(Calendar.HOUR, 12);
+    Date expiryDate = cal.getTime();
+    tokenRequest.setExpirationDate(expiryDate);
+    
+    final CreateTokenResponse tokenResponse =
+        this.create(tokenRequest);
+    
+    return this.get(tokenResponse.getToken());
+  }
 }

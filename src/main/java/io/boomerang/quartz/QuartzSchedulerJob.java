@@ -1,5 +1,7 @@
 package io.boomerang.quartz;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -9,6 +11,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.scheduling.quartz.QuartzJobBean;
 import org.springframework.scheduling.quartz.SchedulerFactoryBean;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import io.boomerang.security.model.Token;
+import io.boomerang.security.service.TokenServiceImpl;
 import io.boomerang.service.ScheduleServiceImpl;
 import io.boomerang.service.WorkflowRunServiceImpl;
 import io.boomerang.v4.model.WorkflowSchedule;
@@ -18,7 +25,8 @@ import io.boomerang.v4.model.ref.WorkflowRunSubmitRequest;
 /*
  * This is used by the Quartz Trigger to execute the Scheduled Job
  * 
- * Caution: if this is renamed or moved packages then all the jobs in the DB will need to have the jobClass reference updated.
+ * Caution: if this is renamed or moved packages then all the jobs in the DB will need to have the
+ * jobClass reference updated.
  */
 @PersistJobDataAfterExecution
 public class QuartzSchedulerJob extends QuartzJobBean {
@@ -46,14 +54,17 @@ public class QuartzSchedulerJob extends QuartzJobBean {
     JobDetail jobDetail = context.getJobDetail();
     logger.info("This is the Quartz Execute Job, executed for {} with JobDetails = {}",
         jobDetail.getKey().getName(), jobDetail.getJobDataMap());
-    
+
     if (applicationContext == null) {
       logger.info("applicationContext is null");
     }
 
-    WorkflowRunServiceImpl workflowRunService = applicationContext.getBean(WorkflowRunServiceImpl.class);
-    ScheduleServiceImpl workflowScheduleService = applicationContext.getBean(ScheduleServiceImpl.class);
-    
+    WorkflowRunServiceImpl workflowRunService =
+        applicationContext.getBean(WorkflowRunServiceImpl.class);
+    ScheduleServiceImpl workflowScheduleService =
+        applicationContext.getBean(ScheduleServiceImpl.class);
+    TokenServiceImpl tokenService = applicationContext.getBean(TokenServiceImpl.class);
+
     WorkflowSchedule schedule = workflowScheduleService.internalGet(jobDetail.getKey().getName());
     if (schedule != null) {
       if (schedule.getType().equals(WorkflowScheduleType.runOnce)) {
@@ -66,8 +77,16 @@ public class QuartzSchedulerJob extends QuartzJobBean {
       request.setLabels(schedule.getLabels());
       request.setParams(request.getParams());
       request.setTrigger("schedule");
-      
+
+      //Hoist token to ThreadLocal context
+      Token token = tokenService.createWorkflowSessionToken(jobDetail.getKey().getGroup());
+      final List<GrantedAuthority> authorities = new ArrayList<>();
+      final UsernamePasswordAuthenticationToken authToken =
+          new UsernamePasswordAuthenticationToken(jobDetail.getKey().getGroup(), null, authorities);
+      authToken.setDetails(token);
+      SecurityContextHolder.getContext().setAuthentication(authToken);
+
       workflowRunService.internalSubmit(request, true);
     }
-    }
+  }
 }
