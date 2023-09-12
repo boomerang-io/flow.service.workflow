@@ -6,9 +6,9 @@ import org.springframework.core.io.InputStreamResource;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.http.ResponseEntity;
 import io.boomerang.client.WorkflowResponsePage;
-import io.boomerang.v4.model.WorkflowCanvas;
-import io.boomerang.v4.model.ref.ChangeLogVersion;
-import io.boomerang.v4.model.ref.Workflow;
+import io.boomerang.model.WorkflowCanvas;
+import io.boomerang.model.ref.ChangeLogVersion;
+import io.boomerang.model.ref.Workflow;
 
 public interface WorkflowService {
 

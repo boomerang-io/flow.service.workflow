@@ -22,32 +22,32 @@ import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.boomerang.client.EngineClient;
 import io.boomerang.client.WorkflowResponsePage;
+import io.boomerang.data.entity.RelationshipEntity;
 import io.boomerang.error.BoomerangError;
 import io.boomerang.error.BoomerangException;
+import io.boomerang.model.CanvasEdge;
+import io.boomerang.model.CanvasEdgeData;
+import io.boomerang.model.CanvasNode;
+import io.boomerang.model.CanvasNodeData;
+import io.boomerang.model.CanvasNodePosition;
+import io.boomerang.model.WorkflowCanvas;
+import io.boomerang.model.enums.RelationshipRef;
+import io.boomerang.model.enums.RelationshipType;
+import io.boomerang.model.enums.TriggerEnum;
+import io.boomerang.model.enums.ref.TaskType;
+import io.boomerang.model.enums.ref.WorkflowStatus;
+import io.boomerang.model.ref.ChangeLogVersion;
+import io.boomerang.model.ref.Task;
+import io.boomerang.model.ref.TaskDependency;
+import io.boomerang.model.ref.Trigger;
+import io.boomerang.model.ref.TriggerEvent;
+import io.boomerang.model.ref.TriggerScheduler;
+import io.boomerang.model.ref.Workflow;
+import io.boomerang.model.ref.WorkflowTrigger;
+import io.boomerang.model.ref.WorkflowWorkspace;
+import io.boomerang.model.ref.WorkflowWorkspaceSpec;
 import io.boomerang.util.DataAdapterUtil;
 import io.boomerang.util.DataAdapterUtil.FieldType;
-import io.boomerang.v4.data.entity.RelationshipEntity;
-import io.boomerang.v4.model.CanvasEdge;
-import io.boomerang.v4.model.CanvasEdgeData;
-import io.boomerang.v4.model.CanvasNode;
-import io.boomerang.v4.model.CanvasNodeData;
-import io.boomerang.v4.model.CanvasNodePosition;
-import io.boomerang.v4.model.WorkflowCanvas;
-import io.boomerang.v4.model.enums.RelationshipRef;
-import io.boomerang.v4.model.enums.RelationshipType;
-import io.boomerang.v4.model.enums.TriggerEnum;
-import io.boomerang.v4.model.enums.ref.TaskType;
-import io.boomerang.v4.model.enums.ref.WorkflowStatus;
-import io.boomerang.v4.model.ref.ChangeLogVersion;
-import io.boomerang.v4.model.ref.Task;
-import io.boomerang.v4.model.ref.TaskDependency;
-import io.boomerang.v4.model.ref.Trigger;
-import io.boomerang.v4.model.ref.TriggerEvent;
-import io.boomerang.v4.model.ref.TriggerScheduler;
-import io.boomerang.v4.model.ref.Workflow;
-import io.boomerang.v4.model.ref.WorkflowTrigger;
-import io.boomerang.v4.model.ref.WorkflowWorkspace;
-import io.boomerang.v4.model.ref.WorkflowWorkspaceSpec;
 
 /*
  * This service replicates the required calls for Engine WorkflowV1 APIs
@@ -439,14 +439,15 @@ public class WorkflowServiceImpl implements WorkflowService {
     List<String> teamRefs = relationshipService.getFilteredToRefs(Optional.of(RelationshipRef.WORKFLOW),
         Optional.of(List.of(workflowId)), Optional.of(RelationshipType.BELONGSTO),  Optional.of(RelationshipRef.TEAM), Optional.empty());
     if (!teamRefs.isEmpty()) {
-      Workflow workflow = engineClient.getWorkflow(workflowId, Optional.empty(), false);
+      Workflow workflow = engineClient.getWorkflow(workflowId, Optional.empty(), true);
       List<String> paramKeys = parameterManager.buildParamKeys(teamRefs.get(0), workflow.getParams());
       workflow.getTasks().forEach(t -> {
-        t.getResults().forEach(r -> {
-          String key = "tasks." + t.getName() + ".results." + r.getName();
-          paramKeys.add(key);
-        });
-        //TODO get Results defined on Template
+        if (t.getResults() != null && !t.getResults().isEmpty()) {
+          t.getResults().forEach(r -> {
+            String key = "tasks." + t.getName() + ".results." + r.getName();
+            paramKeys.add(key);
+          });
+        }
       });
     return paramKeys;
     } else {

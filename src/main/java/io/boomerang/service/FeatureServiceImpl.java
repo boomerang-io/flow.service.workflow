@@ -4,8 +4,8 @@ import java.util.HashMap;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import io.boomerang.v4.model.AbstractParam;
-import io.boomerang.v4.model.FeaturesAndQuotas;
+import io.boomerang.model.AbstractParam;
+import io.boomerang.model.FeaturesAndQuotas;
 
 @Service
 public class FeatureServiceImpl implements FeatureService {

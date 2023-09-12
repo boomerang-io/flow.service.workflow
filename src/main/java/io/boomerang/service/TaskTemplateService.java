@@ -4,9 +4,9 @@ import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Sort.Direction;
 import io.boomerang.client.TaskTemplateResponsePage;
+import io.boomerang.model.ref.ChangeLogVersion;
+import io.boomerang.model.ref.TaskTemplate;
 import io.boomerang.tekton.TektonTask;
-import io.boomerang.v4.model.ref.ChangeLogVersion;
-import io.boomerang.v4.model.ref.TaskTemplate;
 
 public interface TaskTemplateService {
 

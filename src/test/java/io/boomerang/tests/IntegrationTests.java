@@ -31,13 +31,13 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.boomerang.model.Action;
+import io.boomerang.model.ActionRequest;
 import io.boomerang.model.FlowActivity;
 import io.boomerang.model.FlowExecutionRequest;
 import io.boomerang.model.FlowWebhookResponse;
 import io.boomerang.model.ListActionResponse;
 import io.boomerang.model.RequestFlowExecution;
-import io.boomerang.v4.model.Action;
-import io.boomerang.v4.model.ActionRequest;
 
 
 public abstract class IntegrationTests extends AbstractFlowTests {

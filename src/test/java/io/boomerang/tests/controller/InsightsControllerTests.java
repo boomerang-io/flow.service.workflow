@@ -17,12 +17,12 @@ import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import io.boomerang.controller.InsightsController;
+import io.boomerang.data.entity.UserEntity;
 import io.boomerang.misc.FlowTests;
 import io.boomerang.model.InsightsSummary;
-import io.boomerang.mongo.model.TokenScope;
+import io.boomerang.model.enums.UserType;
 import io.boomerang.security.service.IdentityService;
-import io.boomerang.v4.data.entity.UserEntity;
-import io.boomerang.v4.model.enums.UserType;
+import io.boomerang.v3.mongo.model.TokenScope;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)

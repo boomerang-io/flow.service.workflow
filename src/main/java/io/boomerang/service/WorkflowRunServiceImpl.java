@@ -13,17 +13,17 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import io.boomerang.client.EngineClient;
 import io.boomerang.client.WorkflowRunResponsePage;
+import io.boomerang.data.entity.RelationshipEntity;
+import io.boomerang.data.model.CurrentQuotas;
 import io.boomerang.error.BoomerangError;
 import io.boomerang.error.BoomerangException;
-import io.boomerang.v4.data.entity.RelationshipEntity;
-import io.boomerang.v4.data.model.CurrentQuotas;
-import io.boomerang.v4.model.enums.RelationshipRef;
-import io.boomerang.v4.model.enums.RelationshipType;
-import io.boomerang.v4.model.ref.WorkflowRun;
-import io.boomerang.v4.model.ref.WorkflowRunCount;
-import io.boomerang.v4.model.ref.WorkflowRunInsight;
-import io.boomerang.v4.model.ref.WorkflowRunRequest;
-import io.boomerang.v4.model.ref.WorkflowRunSubmitRequest;
+import io.boomerang.model.enums.RelationshipRef;
+import io.boomerang.model.enums.RelationshipType;
+import io.boomerang.model.ref.WorkflowRun;
+import io.boomerang.model.ref.WorkflowRunCount;
+import io.boomerang.model.ref.WorkflowRunInsight;
+import io.boomerang.model.ref.WorkflowRunRequest;
+import io.boomerang.model.ref.WorkflowRunSubmitRequest;
 
 /*
  * This service replicates the required calls for Engine WorkflowRunV1 APIs

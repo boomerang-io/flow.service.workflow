@@ -8,11 +8,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import io.boomerang.data.entity.SettingEntity;
+import io.boomerang.model.AbstractParam;
+import io.boomerang.model.ref.ParamLayers;
 import io.boomerang.service.ParameterManager;
 import io.boomerang.service.SettingsService;
-import io.boomerang.v4.data.entity.SettingEntity;
-import io.boomerang.v4.model.AbstractParam;
-import io.boomerang.v4.model.ref.ParamLayers;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Parameter;
 

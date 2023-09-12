@@ -18,13 +18,13 @@ import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import io.boomerang.controller.TeamController;
+import io.boomerang.data.entity.TeamEntity;
+import io.boomerang.data.model.CurrentQuotas;
+import io.boomerang.data.model.Quotas;
+import io.boomerang.data.model.TeamParameter;
 import io.boomerang.misc.FlowTests;
+import io.boomerang.model.TeamRequest;
 import io.boomerang.model.WorkflowSummary;
-import io.boomerang.v4.data.entity.TeamEntity;
-import io.boomerang.v4.data.model.CurrentQuotas;
-import io.boomerang.v4.data.model.Quotas;
-import io.boomerang.v4.data.model.TeamParameter;
-import io.boomerang.v4.model.TeamRequest;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)

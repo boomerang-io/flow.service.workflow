@@ -6,10 +6,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import io.boomerang.v4.model.AbstractParam;
-import io.boomerang.v4.model.ref.ChangeLog;
-import io.boomerang.v4.model.ref.ParamSpec;
-import io.boomerang.v4.model.ref.TaskTemplate;
+import io.boomerang.model.AbstractParam;
+import io.boomerang.model.ref.ChangeLog;
+import io.boomerang.model.ref.ParamSpec;
+import io.boomerang.model.ref.TaskTemplate;
 
 public class TektonConverter {
   

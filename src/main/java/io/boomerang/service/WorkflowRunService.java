@@ -5,11 +5,11 @@ import java.util.Optional;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.http.ResponseEntity;
 import io.boomerang.client.WorkflowRunResponsePage;
-import io.boomerang.v4.model.ref.WorkflowRun;
-import io.boomerang.v4.model.ref.WorkflowRunCount;
-import io.boomerang.v4.model.ref.WorkflowRunInsight;
-import io.boomerang.v4.model.ref.WorkflowRunRequest;
-import io.boomerang.v4.model.ref.WorkflowRunSubmitRequest;
+import io.boomerang.model.ref.WorkflowRun;
+import io.boomerang.model.ref.WorkflowRunCount;
+import io.boomerang.model.ref.WorkflowRunInsight;
+import io.boomerang.model.ref.WorkflowRunRequest;
+import io.boomerang.model.ref.WorkflowRunSubmitRequest;
 
 public interface WorkflowRunService {
 

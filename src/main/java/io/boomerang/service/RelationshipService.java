@@ -3,9 +3,9 @@ package io.boomerang.service;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import io.boomerang.v4.data.entity.RelationshipEntity;
-import io.boomerang.v4.model.enums.RelationshipRef;
-import io.boomerang.v4.model.enums.RelationshipType;
+import io.boomerang.data.entity.RelationshipEntity;
+import io.boomerang.model.enums.RelationshipRef;
+import io.boomerang.model.enums.RelationshipType;
 
 public interface RelationshipService {
 

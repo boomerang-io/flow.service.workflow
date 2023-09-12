@@ -1,7 +1,7 @@
 package io.boomerang.service;
 
 import java.util.List;
-import io.boomerang.v4.model.GlobalParam;
+import io.boomerang.model.GlobalParam;
 
 public interface GlobalParamService {
 

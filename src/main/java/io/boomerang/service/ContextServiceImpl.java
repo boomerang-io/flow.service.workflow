@@ -15,14 +15,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
+import io.boomerang.data.entity.UserEntity;
+import io.boomerang.model.AbstractParam;
+import io.boomerang.model.HeaderFeatures;
+import io.boomerang.model.HeaderNavigation;
+import io.boomerang.model.HeaderNavigationResponse;
+import io.boomerang.model.HeaderPlatform;
 import io.boomerang.security.service.ExternalTokenService;
 import io.boomerang.security.service.IdentityService;
-import io.boomerang.v4.data.entity.UserEntity;
-import io.boomerang.v4.model.AbstractParam;
-import io.boomerang.v4.model.HeaderFeatures;
-import io.boomerang.v4.model.HeaderNavigation;
-import io.boomerang.v4.model.HeaderNavigationResponse;
-import io.boomerang.v4.model.HeaderPlatform;
 
 @Service
 public class ContextServiceImpl implements ContextService {

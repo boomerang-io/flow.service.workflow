@@ -1,6 +1,6 @@
 package io.boomerang.service;
 
-import io.boomerang.v4.model.HeaderNavigationResponse;
+import io.boomerang.model.HeaderNavigationResponse;
 
 public interface ContextService {
 

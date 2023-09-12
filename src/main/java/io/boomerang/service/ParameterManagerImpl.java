@@ -6,17 +6,17 @@ import java.util.Map;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import io.boomerang.data.entity.RelationshipEntity;
+import io.boomerang.data.entity.TeamEntity;
+import io.boomerang.data.repository.TeamRepository;
 import io.boomerang.error.BoomerangError;
 import io.boomerang.error.BoomerangException;
-import io.boomerang.v4.data.entity.RelationshipEntity;
-import io.boomerang.v4.data.entity.TeamEntity;
-import io.boomerang.v4.data.repository.TeamRepository;
-import io.boomerang.v4.model.AbstractParam;
-import io.boomerang.v4.model.GlobalParam;
-import io.boomerang.v4.model.enums.RelationshipRef;
-import io.boomerang.v4.model.enums.RelationshipType;
-import io.boomerang.v4.model.ref.ParamLayers;
-import io.boomerang.v4.model.ref.ParamSpec;
+import io.boomerang.model.AbstractParam;
+import io.boomerang.model.GlobalParam;
+import io.boomerang.model.enums.RelationshipRef;
+import io.boomerang.model.enums.RelationshipType;
+import io.boomerang.model.ref.ParamLayers;
+import io.boomerang.model.ref.ParamSpec;
 
 /*
  * This is one half of the Param Layers. It collects the Global, Team, and Context Layers.
@@ -59,7 +59,7 @@ public class ParameterManagerImpl implements ParameterManager {
     }
     //Set the Keys from the Workflow - ignore values
     for (ParamSpec wfParam : workflowParamSpecs) {
-      workflowParams.put("workflow.params." + wfParam.getName(), "");
+      workflowParams.put(wfParam.getName(), "");
     }
     buildContextParams(contextParams);
 

@@ -27,19 +27,19 @@ import com.cronutils.model.Cron;
 import com.cronutils.model.CronType;
 import com.cronutils.model.definition.CronDefinitionBuilder;
 import com.cronutils.parser.CronParser;
+import io.boomerang.data.entity.WorkflowScheduleEntity;
+import io.boomerang.data.repository.WorkflowScheduleRepository;
 import io.boomerang.error.BoomerangError;
 import io.boomerang.error.BoomerangException;
+import io.boomerang.model.CronValidationResponse;
+import io.boomerang.model.WorkflowSchedule;
+import io.boomerang.model.WorkflowScheduleCalendar;
+import io.boomerang.model.enums.RelationshipRef;
+import io.boomerang.model.enums.RelationshipType;
+import io.boomerang.model.enums.WorkflowScheduleStatus;
+import io.boomerang.model.enums.WorkflowScheduleType;
+import io.boomerang.model.ref.Workflow;
 import io.boomerang.quartz.QuartzSchedulerService;
-import io.boomerang.v4.data.entity.WorkflowScheduleEntity;
-import io.boomerang.v4.data.repository.WorkflowScheduleRepository;
-import io.boomerang.v4.model.CronValidationResponse;
-import io.boomerang.v4.model.WorkflowSchedule;
-import io.boomerang.v4.model.WorkflowScheduleCalendar;
-import io.boomerang.v4.model.enums.RelationshipRef;
-import io.boomerang.v4.model.enums.RelationshipType;
-import io.boomerang.v4.model.enums.WorkflowScheduleStatus;
-import io.boomerang.v4.model.enums.WorkflowScheduleType;
-import io.boomerang.v4.model.ref.Workflow;
 
 /*
  * Workflow Schedule Service provides all the methods for both the Schedules page and the individual Workflow Schedule

@@ -6,7 +6,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import io.boomerang.v4.model.ref.WorkflowRunInsight;
+import io.boomerang.model.ref.WorkflowRunInsight;
 
 @Service
 public class InsightsServiceImpl implements InsightsService {

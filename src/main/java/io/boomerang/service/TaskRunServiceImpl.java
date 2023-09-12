@@ -27,9 +27,9 @@ import org.springframework.web.client.ResponseExtractor;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import io.boomerang.client.EngineClient;
-import io.boomerang.v4.model.ref.ParamLayers;
-import io.boomerang.v4.model.ref.RunParam;
-import io.boomerang.v4.model.ref.TaskRun;
+import io.boomerang.model.ref.ParamLayers;
+import io.boomerang.model.ref.RunParam;
+import io.boomerang.model.ref.TaskRun;
 
 @Service
 public class TaskRunServiceImpl implements TaskRunService {

@@ -17,10 +17,10 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import io.boomerang.controller.TaskTemplateV2Controller;
 import io.boomerang.misc.FlowTests;
 import io.boomerang.model.FlowTaskTemplate;
-import io.boomerang.mongo.model.ChangeLog;
-import io.boomerang.mongo.model.FlowTaskTemplateStatus;
-import io.boomerang.mongo.model.Revision;
 import io.boomerang.tekton.TektonTask;
+import io.boomerang.v3.mongo.model.ChangeLog;
+import io.boomerang.v3.mongo.model.FlowTaskTemplateStatus;
+import io.boomerang.v3.mongo.model.Revision;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)

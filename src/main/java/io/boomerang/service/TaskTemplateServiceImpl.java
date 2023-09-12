@@ -13,16 +13,16 @@ import io.boomerang.client.EngineClient;
 import io.boomerang.client.TaskTemplateResponsePage;
 import io.boomerang.error.BoomerangError;
 import io.boomerang.error.BoomerangException;
+import io.boomerang.model.User;
+import io.boomerang.model.enums.RelationshipRef;
+import io.boomerang.model.enums.RelationshipType;
+import io.boomerang.model.ref.ChangeLog;
+import io.boomerang.model.ref.ChangeLogVersion;
+import io.boomerang.model.ref.TaskTemplate;
 import io.boomerang.security.service.IdentityService;
 import io.boomerang.tekton.TektonConverter;
 import io.boomerang.tekton.TektonTask;
 import io.boomerang.util.ParameterUtil;
-import io.boomerang.v4.model.User;
-import io.boomerang.v4.model.enums.RelationshipRef;
-import io.boomerang.v4.model.enums.RelationshipType;
-import io.boomerang.v4.model.ref.ChangeLog;
-import io.boomerang.v4.model.ref.ChangeLogVersion;
-import io.boomerang.v4.model.ref.TaskTemplate;
 
 /*
  * This service replicates the required calls for Engine TaskTemplateV1 APIs

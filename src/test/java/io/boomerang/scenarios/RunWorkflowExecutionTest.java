@@ -34,9 +34,9 @@ import org.springframework.test.web.client.MockRestServiceServer;
 import io.boomerang.model.FlowActivity;
 import io.boomerang.model.FlowWebhookResponse;
 import io.boomerang.model.RequestFlowExecution;
-import io.boomerang.mongo.model.TaskStatus;
 import io.boomerang.service.refactor.TaskClient;
 import io.boomerang.tests.IntegrationTests;
+import io.boomerang.v3.mongo.model.TaskStatus;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)

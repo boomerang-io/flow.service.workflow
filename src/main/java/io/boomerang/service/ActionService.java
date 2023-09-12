@@ -5,11 +5,11 @@ import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import io.boomerang.v4.model.Action;
-import io.boomerang.v4.model.ActionRequest;
-import io.boomerang.v4.model.ActionSummary;
-import io.boomerang.v4.model.enums.ref.ActionStatus;
-import io.boomerang.v4.model.enums.ref.ActionType;
+import io.boomerang.model.Action;
+import io.boomerang.model.ActionRequest;
+import io.boomerang.model.ActionSummary;
+import io.boomerang.model.enums.ref.ActionStatus;
+import io.boomerang.model.enums.ref.ActionType;
 
 public interface ActionService {
   

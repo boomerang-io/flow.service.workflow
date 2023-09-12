@@ -2,7 +2,7 @@ package io.boomerang.service;
 
 import java.util.List;
 import java.util.Optional;
-import io.boomerang.v4.model.Navigation;
+import io.boomerang.model.Navigation;
 
 public interface NavigationService {
 

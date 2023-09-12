@@ -31,8 +31,14 @@ import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
+import io.boomerang.data.entity.RelationshipEntity;
+import io.boomerang.data.entity.UserEntity;
+import io.boomerang.data.entity.ref.ActionEntity;
 import io.boomerang.error.BoomerangError;
 import io.boomerang.error.BoomerangException;
+import io.boomerang.model.enums.RelationshipRef;
+import io.boomerang.model.enums.RelationshipType;
+import io.boomerang.model.enums.UserType;
 import io.boomerang.security.entity.TokenEntity;
 import io.boomerang.security.model.AuthType;
 import io.boomerang.security.model.CreateTokenRequest;
@@ -44,12 +50,6 @@ import io.boomerang.security.model.TokenTypePrefix;
 import io.boomerang.security.repository.RoleRepository;
 import io.boomerang.security.repository.TokenRepository;
 import io.boomerang.service.RelationshipService;
-import io.boomerang.v4.data.entity.RelationshipEntity;
-import io.boomerang.v4.data.entity.UserEntity;
-import io.boomerang.v4.data.entity.ref.ActionEntity;
-import io.boomerang.v4.model.enums.RelationshipRef;
-import io.boomerang.v4.model.enums.RelationshipType;
-import io.boomerang.v4.model.enums.UserType;
 
 @Service
 public class TokenServiceImpl implements TokenService {

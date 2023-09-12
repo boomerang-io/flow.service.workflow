@@ -7,9 +7,9 @@ import org.quartz.SchedulerException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
-import io.boomerang.v4.model.CronValidationResponse;
-import io.boomerang.v4.model.WorkflowSchedule;
-import io.boomerang.v4.model.WorkflowScheduleCalendar;
+import io.boomerang.model.CronValidationResponse;
+import io.boomerang.model.WorkflowSchedule;
+import io.boomerang.model.WorkflowScheduleCalendar;
 
 public interface ScheduleService {
 

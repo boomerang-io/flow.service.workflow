@@ -39,19 +39,19 @@ import io.boomerang.model.WorkflowExport;
 import io.boomerang.model.WorkflowShortSummary;
 import io.boomerang.model.WorkflowSummary;
 import io.boomerang.model.projectstormv5.RestConfig;
-import io.boomerang.mongo.entity.RevisionEntity;
-import io.boomerang.mongo.entity.WorkflowEntity;
-import io.boomerang.mongo.model.ActivityStorage;
-import io.boomerang.mongo.model.Storage;
-import io.boomerang.mongo.model.TaskConfigurationNode;
-import io.boomerang.mongo.model.TriggerEvent;
-import io.boomerang.mongo.model.TriggerScheduler;
-import io.boomerang.mongo.model.Triggers;
-import io.boomerang.mongo.model.WorkflowConfiguration;
-import io.boomerang.mongo.model.WorkflowScope;
-import io.boomerang.mongo.model.WorkflowStatus;
+import io.boomerang.model.ref.WorkflowAbstractParam;
 import io.boomerang.util.DataAdapterUtil.FieldType;
-import io.boomerang.v4.model.ref.WorkflowAbstractParam;
+import io.boomerang.v3.mongo.entity.RevisionEntity;
+import io.boomerang.v3.mongo.entity.WorkflowEntity;
+import io.boomerang.v3.mongo.model.ActivityStorage;
+import io.boomerang.v3.mongo.model.Storage;
+import io.boomerang.v3.mongo.model.TaskConfigurationNode;
+import io.boomerang.v3.mongo.model.TriggerEvent;
+import io.boomerang.v3.mongo.model.TriggerScheduler;
+import io.boomerang.v3.mongo.model.Triggers;
+import io.boomerang.v3.mongo.model.WorkflowConfiguration;
+import io.boomerang.v3.mongo.model.WorkflowScope;
+import io.boomerang.v3.mongo.model.WorkflowStatus;
 
 
 @ExtendWith(SpringExtension.class)

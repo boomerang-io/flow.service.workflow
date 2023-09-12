@@ -14,13 +14,13 @@ import org.springframework.scheduling.quartz.SchedulerFactoryBean;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import io.boomerang.model.WorkflowSchedule;
+import io.boomerang.model.enums.WorkflowScheduleType;
+import io.boomerang.model.ref.WorkflowRunSubmitRequest;
 import io.boomerang.security.model.Token;
 import io.boomerang.security.service.TokenServiceImpl;
 import io.boomerang.service.ScheduleServiceImpl;
 import io.boomerang.service.WorkflowRunServiceImpl;
-import io.boomerang.v4.model.WorkflowSchedule;
-import io.boomerang.v4.model.enums.WorkflowScheduleType;
-import io.boomerang.v4.model.ref.WorkflowRunSubmitRequest;
 
 /*
  * This is used by the Quartz Trigger to execute the Scheduled Job
@@ -78,7 +78,7 @@ public class QuartzSchedulerJob extends QuartzJobBean {
       request.setParams(request.getParams());
       request.setTrigger("schedule");
 
-      //Hoist token to ThreadLocal context
+      //Hoist token to ThreadLocal SecurityContext - this AuthN/AuthZ the WorkflowRun to be triggered
       Token token = tokenService.createWorkflowSessionToken(jobDetail.getKey().getGroup());
       final List<GrantedAuthority> authorities = new ArrayList<>();
       final UsernamePasswordAuthenticationToken authToken =
@@ -86,7 +86,7 @@ public class QuartzSchedulerJob extends QuartzJobBean {
       authToken.setDetails(token);
       SecurityContextHolder.getContext().setAuthentication(authToken);
 
-      workflowRunService.internalSubmit(request, true);
+      workflowRunService.submit(request, true);
     }
   }
 }

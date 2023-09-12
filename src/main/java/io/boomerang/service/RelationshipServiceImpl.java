@@ -12,15 +12,15 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
+import io.boomerang.data.entity.RelationshipEntity;
+import io.boomerang.data.repository.RelationshipRepository;
 import io.boomerang.error.BoomerangError;
 import io.boomerang.error.BoomerangException;
+import io.boomerang.model.enums.RelationshipRef;
+import io.boomerang.model.enums.RelationshipType;
 import io.boomerang.security.model.AuthType;
 import io.boomerang.security.model.RoleEnum;
 import io.boomerang.security.service.IdentityService;
-import io.boomerang.v4.data.entity.RelationshipEntity;
-import io.boomerang.v4.data.repository.RelationshipRepository;
-import io.boomerang.v4.model.enums.RelationshipRef;
-import io.boomerang.v4.model.enums.RelationshipType;
 
 @Service
 public class RelationshipServiceImpl implements RelationshipService {

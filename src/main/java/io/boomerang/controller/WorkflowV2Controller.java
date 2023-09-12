@@ -16,14 +16,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import io.boomerang.client.WorkflowResponsePage;
+import io.boomerang.model.WorkflowCanvas;
+import io.boomerang.model.ref.ChangeLogVersion;
+import io.boomerang.model.ref.Workflow;
 import io.boomerang.security.interceptors.AuthScope;
 import io.boomerang.security.model.PermissionAction;
 import io.boomerang.security.model.PermissionScope;
 import io.boomerang.security.model.AuthType;
 import io.boomerang.service.WorkflowService;
-import io.boomerang.v4.model.WorkflowCanvas;
-import io.boomerang.v4.model.ref.ChangeLogVersion;
-import io.boomerang.v4.model.ref.Workflow;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -190,12 +190,6 @@ public class WorkflowV2Controller {
 //  public ResponseEntity<HttpStatus> validateToken(@PathVariable String id,
 //      @RequestBody GenerateTokenResponse tokenPayload) {
 //    return workflowService.validateWorkflowToken(id, tokenPayload);
-//  }
-
-//  @PatchMapping(value = "/{workflowId}/parameters")
-//  public WorkflowSummary updateWorkflowProperties(@PathVariable String workFlowId,
-//      @RequestBody List<WorkflowProperty> properties) {
-//    return workflowService.updateWorkflowProperties(workFlowId, properties);
 //  }
 
   @GetMapping(value = "/{workflowId}/available-parameters")

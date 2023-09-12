@@ -6,11 +6,11 @@ import java.util.Optional;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import io.boomerang.data.entity.GlobalParamEntity;
+import io.boomerang.data.repository.GlobalParamRepository;
 import io.boomerang.error.BoomerangError;
 import io.boomerang.error.BoomerangException;
-import io.boomerang.v4.data.entity.GlobalParamEntity;
-import io.boomerang.v4.data.repository.GlobalParamRepository;
-import io.boomerang.v4.model.GlobalParam;
+import io.boomerang.model.GlobalParam;
 
 /*
  * CRUD for Global Params

@@ -1,9 +1,9 @@
 package io.boomerang.service;
 
 import java.util.List;
-import io.boomerang.v4.data.entity.SettingEntity;
-import io.boomerang.v4.model.AbstractParam;
-import io.boomerang.v4.model.Setting;
+import io.boomerang.data.entity.SettingEntity;
+import io.boomerang.model.AbstractParam;
+import io.boomerang.model.Setting;
 
 public interface SettingsService {
 

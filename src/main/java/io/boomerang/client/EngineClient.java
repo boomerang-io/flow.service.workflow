@@ -4,17 +4,17 @@ import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.http.ResponseEntity;
-import io.boomerang.v4.model.ref.ChangeLogVersion;
-import io.boomerang.v4.model.ref.TaskRun;
-import io.boomerang.v4.model.ref.TaskRunEndRequest;
-import io.boomerang.v4.model.ref.TaskTemplate;
-import io.boomerang.v4.model.ref.Workflow;
-import io.boomerang.v4.model.ref.WorkflowRun;
-import io.boomerang.v4.model.ref.WorkflowRunCount;
-import io.boomerang.v4.model.ref.WorkflowRunInsight;
-import io.boomerang.v4.model.ref.WorkflowRunRequest;
-import io.boomerang.v4.model.ref.WorkflowRunSubmitRequest;
-import io.boomerang.v4.model.ref.WorkflowTemplate;
+import io.boomerang.model.ref.ChangeLogVersion;
+import io.boomerang.model.ref.TaskRun;
+import io.boomerang.model.ref.TaskRunEndRequest;
+import io.boomerang.model.ref.TaskTemplate;
+import io.boomerang.model.ref.Workflow;
+import io.boomerang.model.ref.WorkflowRun;
+import io.boomerang.model.ref.WorkflowRunCount;
+import io.boomerang.model.ref.WorkflowRunInsight;
+import io.boomerang.model.ref.WorkflowRunRequest;
+import io.boomerang.model.ref.WorkflowRunSubmitRequest;
+import io.boomerang.model.ref.WorkflowTemplate;
 
 public interface EngineClient {
 

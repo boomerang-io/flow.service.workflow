@@ -15,11 +15,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
+import io.boomerang.model.FeaturesAndQuotas;
+import io.boomerang.model.Navigation;
+import io.boomerang.model.NavigationType;
 import io.boomerang.security.service.ExternalTokenService;
 import io.boomerang.security.service.IdentityService;
-import io.boomerang.v4.model.FeaturesAndQuotas;
-import io.boomerang.v4.model.Navigation;
-import io.boomerang.v4.model.NavigationType;
 
 @Service
 public class NavigationServiceImpl implements NavigationService {

@@ -8,14 +8,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import io.boomerang.data.entity.SettingEntity;
+import io.boomerang.data.model.EncryptionConfig;
+import io.boomerang.data.repository.SettingsRepository;
+import io.boomerang.model.AESAlgorithm;
+import io.boomerang.model.AbstractParam;
+import io.boomerang.model.Setting;
+import io.boomerang.model.enums.ConfigurationType;
 import io.boomerang.util.DateUtil;
-import io.boomerang.v4.data.entity.SettingEntity;
-import io.boomerang.v4.data.model.EncryptionConfig;
-import io.boomerang.v4.data.repository.SettingsRepository;
-import io.boomerang.v4.model.AESAlgorithm;
-import io.boomerang.v4.model.AbstractParam;
-import io.boomerang.v4.model.Setting;
-import io.boomerang.v4.model.enums.ConfigurationType;
 
 
 @Service

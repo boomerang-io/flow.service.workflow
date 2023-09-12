@@ -9,10 +9,10 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import io.boomerang.error.BoomerangError;
 import io.boomerang.error.BoomerangException;
-import io.boomerang.v4.model.AbstractParam;
-import io.boomerang.v4.model.enums.ref.ParamType;
-import io.boomerang.v4.model.ref.ParamSpec;
-import io.boomerang.v4.model.ref.RunParam;
+import io.boomerang.model.AbstractParam;
+import io.boomerang.model.enums.ref.ParamType;
+import io.boomerang.model.ref.ParamSpec;
+import io.boomerang.model.ref.RunParam;
 
 public class ParameterUtil {
 

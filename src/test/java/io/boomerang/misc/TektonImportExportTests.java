@@ -14,7 +14,6 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
-import io.boomerang.mongo.entity.FlowTaskTemplateEntity;
 import io.boomerang.tekton.Annotations;
 import io.boomerang.tekton.Labels;
 import io.boomerang.tekton.Metadata;
@@ -23,6 +22,7 @@ import io.boomerang.tekton.Spec;
 import io.boomerang.tekton.Step;
 import io.boomerang.tekton.TektonConverter;
 import io.boomerang.tekton.TektonTask;
+import io.boomerang.v3.mongo.entity.FlowTaskTemplateEntity;
 
 public class TektonImportExportTests {
 

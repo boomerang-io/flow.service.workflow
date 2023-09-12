@@ -5,16 +5,16 @@ import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.http.ResponseEntity;
+import io.boomerang.data.entity.UserEntity;
+import io.boomerang.model.OneTimeCode;
+import io.boomerang.model.Team;
+import io.boomerang.model.User;
+import io.boomerang.model.UserProfile;
+import io.boomerang.model.UserRequest;
+import io.boomerang.model.enums.UserType;
+import io.boomerang.model.ref.Workflow;
 import io.boomerang.security.model.AuthType;
 import io.boomerang.security.model.Token;
-import io.boomerang.v4.data.entity.UserEntity;
-import io.boomerang.v4.model.OneTimeCode;
-import io.boomerang.v4.model.Team;
-import io.boomerang.v4.model.User;
-import io.boomerang.v4.model.UserProfile;
-import io.boomerang.v4.model.UserRequest;
-import io.boomerang.v4.model.enums.UserType;
-import io.boomerang.v4.model.ref.Workflow;
 
 public interface IdentityService {
 

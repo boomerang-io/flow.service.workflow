@@ -24,9 +24,9 @@ import org.quartz.spi.OperableTrigger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.quartz.SchedulerFactoryBean;
 import org.springframework.stereotype.Component;
+import io.boomerang.data.entity.WorkflowScheduleEntity;
+import io.boomerang.model.CronValidationResponse;
 import io.boomerang.service.ScheduleService;
-import io.boomerang.v4.data.entity.WorkflowScheduleEntity;
-import io.boomerang.v4.model.CronValidationResponse;
 
 @Component
 public class QuartzSchedulerService {

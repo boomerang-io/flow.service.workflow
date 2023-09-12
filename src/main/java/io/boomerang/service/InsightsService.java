@@ -4,7 +4,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Pageable;
-import io.boomerang.v4.model.ref.WorkflowRunInsight;
+import io.boomerang.model.ref.WorkflowRunInsight;
 
 public interface InsightsService {
 

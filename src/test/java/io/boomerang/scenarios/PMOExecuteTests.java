@@ -25,14 +25,14 @@ import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.client.MockRestServiceServer;
+import io.boomerang.data.entity.UserEntity;
+import io.boomerang.model.Action;
 import io.boomerang.model.FlowActivity;
-import io.boomerang.mongo.model.TaskStatus;
-import io.boomerang.mongo.model.TokenScope;
+import io.boomerang.model.enums.UserType;
 import io.boomerang.security.service.IdentityService;
 import io.boomerang.tests.IntegrationTests;
-import io.boomerang.v4.data.entity.UserEntity;
-import io.boomerang.v4.model.Action;
-import io.boomerang.v4.model.enums.UserType;
+import io.boomerang.v3.mongo.model.TaskStatus;
+import io.boomerang.v3.mongo.model.TokenScope;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)

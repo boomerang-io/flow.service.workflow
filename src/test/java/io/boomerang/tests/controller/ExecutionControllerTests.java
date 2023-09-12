@@ -19,7 +19,7 @@ import io.boomerang.error.BoomerangException;
 import io.boomerang.misc.FlowTests;
 import io.boomerang.model.FlowActivity;
 import io.boomerang.model.FlowExecutionRequest;
-import io.boomerang.v4.model.enums.TriggerEnum;
+import io.boomerang.model.enums.TriggerEnum;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
