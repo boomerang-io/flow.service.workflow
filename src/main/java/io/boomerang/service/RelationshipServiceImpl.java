@@ -329,9 +329,11 @@ public class RelationshipServiceImpl implements RelationshipService {
           if (!toRefs.isPresent() || (toRefs.isPresent() && toRefs.get().contains(workflowId))) {
             toRefs = Optional.of(List.of(workflowId));
           }
-        } else if (!to.isPresent()) {
-          toRefs = Optional.of(List.of(workflowId)); 
-        }
+        } else if (from.isPresent() && RelationshipRef.WORKFLOW.equals(from.get())) {
+          if (!fromRefs.isPresent() || (fromRefs.isPresent() && fromRefs.get().contains(workflowId))) {
+            fromRefs = Optional.of(List.of(workflowId));
+          }
+        } 
         break;
       case team:
         // Add refs based on Tokens Team

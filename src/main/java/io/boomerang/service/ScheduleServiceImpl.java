@@ -178,33 +178,38 @@ public class ScheduleServiceImpl implements ScheduleService {
         // TODO: better error
         throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
       }
-      // Validate required fields are present
-      if ((WorkflowScheduleType.runOnce.equals(schedule.getType())
-          && schedule.getDateSchedule() == null)
-          || (!WorkflowScheduleType.runOnce.equals(schedule.getType())
-              && schedule.getCronSchedule() == null)
-          || schedule.getTimezone() == null || schedule.getTimezone().isBlank()) {
-        // TODO: better accurate error
-        throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
-      }
-      Workflow workflow =
-          workflowService.get(schedule.getWorkflowRef(), Optional.empty(), false).getBody();
-      WorkflowScheduleEntity scheduleEntity = new WorkflowScheduleEntity();
-      BeanUtils.copyProperties(schedule, scheduleEntity);
-      Boolean enableJob = false;
-      if (WorkflowScheduleStatus.active.equals(scheduleEntity.getStatus())
-          && workflow.getTriggers().getScheduler().getEnable()) {
-        enableJob = true;
-      } else if (WorkflowScheduleStatus.active.equals(scheduleEntity.getStatus())
-          && !workflow.getTriggers().getScheduler().getEnable()) {
-        scheduleEntity.setStatus(WorkflowScheduleStatus.trigger_disabled);
-      }
-      scheduleRepository.save(scheduleEntity);
-      createOrUpdateSchedule(scheduleEntity, enableJob);
+      WorkflowScheduleEntity scheduleEntity = internalCreate(schedule);
       return convertScheduleEntityToModel(scheduleEntity);
     }
     // TODO: better return error
     throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
+  }
+
+  public WorkflowScheduleEntity internalCreate(final WorkflowSchedule schedule) {
+    // Validate required fields are present
+    if ((WorkflowScheduleType.runOnce.equals(schedule.getType())
+        && schedule.getDateSchedule() == null)
+        || (!WorkflowScheduleType.runOnce.equals(schedule.getType())
+            && schedule.getCronSchedule() == null)
+        || schedule.getTimezone() == null || schedule.getTimezone().isBlank()) {
+      // TODO: better accurate error
+      throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
+    }
+    Workflow workflow =
+        workflowService.get(schedule.getWorkflowRef(), Optional.empty(), false).getBody();
+    WorkflowScheduleEntity scheduleEntity = new WorkflowScheduleEntity();
+    BeanUtils.copyProperties(schedule, scheduleEntity);
+    Boolean enableJob = false;
+    if (WorkflowScheduleStatus.active.equals(scheduleEntity.getStatus())
+        && workflow.getTriggers().getScheduler().getEnable()) {
+      enableJob = true;
+    } else if (WorkflowScheduleStatus.active.equals(scheduleEntity.getStatus())
+        && !workflow.getTriggers().getScheduler().getEnable()) {
+      scheduleEntity.setStatus(WorkflowScheduleStatus.trigger_disabled);
+    }
+    scheduleRepository.save(scheduleEntity);
+    createOrUpdateSchedule(scheduleEntity, enableJob);
+    return scheduleEntity;
   }
   
   /*
