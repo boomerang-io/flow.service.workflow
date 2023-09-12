@@ -1,11 +1,10 @@
-FROM eclipse-temurin:11.0.17_8-jdk-alpine
-ARG BMRG_TAG
+FROM eclipse-temurin:18-jre-alpine
 ENV JAVA_OPTS=""
 ENV BMRG_HOME=/opt/boomerang
 ENV BMRG_SVC=service-flow
 
 WORKDIR $BMRG_HOME
-ADD target/$BMRG_SVC.jar service.jar
+ADD ./target/$BMRG_SVC.jar service.jar
 RUN sh -c 'touch /service.jar'
 
 # Create user, chown, and chmod. 
