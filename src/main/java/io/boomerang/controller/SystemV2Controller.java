@@ -109,8 +109,8 @@ public class SystemV2Controller {
   @AuthScope(action = PermissionAction.READ, scope = PermissionScope.SYSTEM, types = {AuthType.session, AuthType.global})
   @Operation(summary = "Retrieve navigation.")
   public ResponseEntity<List<Navigation>> getNavigation(@Parameter(name = "team", description = "Team as owner reference", example = "my-amazing-team",
-      required = false) @RequestParam(required = false) Optional<String> teamId) {
-    List<Navigation> response = navigationService.getNavigation(identityService.isCurrentUserAdmin(), teamId);
+      required = false) @RequestParam(required = false) Optional<String> team) {
+    List<Navigation> response = navigationService.getNavigation(identityService.isCurrentUserAdmin(), team);
     
     CacheControl cacheControl = CacheControl.maxAge(1, TimeUnit.HOURS);
 

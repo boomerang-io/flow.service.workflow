@@ -9,8 +9,8 @@ import io.boomerang.model.enums.TeamStatus;
 
 public class TeamSummary {
 
-  private String id;
   private String name;
+  private String displayName;
   private Date creationDate = new Date();
   private TeamStatus status = TeamStatus.active;
   private String externalRef;
@@ -30,20 +30,20 @@ public class TeamSummary {
     BeanUtils.copyProperties(entity, this);
   }
 
-  public String getId() {
-    return id;
-  }
-
-  public void setId(String id) {
-    this.id = id;
-  }
-
   public String getName() {
     return name;
   }
 
   public void setName(String name) {
     this.name = name;
+  }
+
+  public String getDisplayName() {
+    return displayName;
+  }
+
+  public void setDisplayName(String displayName) {
+    this.displayName = displayName;
   }
 
   public Date getCreationDate() {
