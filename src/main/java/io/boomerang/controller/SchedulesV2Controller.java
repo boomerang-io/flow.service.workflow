@@ -87,7 +87,7 @@ public class SchedulesV2Controller {
   @PostMapping(value = "")
   @Operation(summary = "Create a Schedule.")
   public WorkflowSchedule createSchedule(
-      @Parameter(name = "team", description = "Team as owner reference.", example = "63d3656ca845957db7d25ef0,63a3e732b0496509a7f1d763",
+      @Parameter(name = "team", description = "Team as owner reference.", example = "my-amazing-team",
       required = true) @RequestParam(required = true) String team,
       @RequestBody WorkflowSchedule schedule) {
     return workflowScheduleService.create(schedule, team);
@@ -97,7 +97,7 @@ public class SchedulesV2Controller {
   @Operation(summary = "Apply a Schedule.")
   public WorkflowSchedule updateSchedule(@RequestBody WorkflowSchedule schedule,
       @Parameter(name = "team", description = "Team as owner reference. Required if using apply to create new.",
-      example = "63d3656ca845957db7d25ef0,63a3e732b0496509a7f1d763",
+      example = "my-amazing-team",
       required = false) @RequestParam(required = false) Optional<String> team) {
     return workflowScheduleService.apply(schedule, team);
   }

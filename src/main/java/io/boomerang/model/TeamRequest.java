@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import io.boomerang.data.model.Quotas;
 import io.boomerang.model.enums.TeamStatus;
+import io.boomerang.model.enums.TeamType;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(Include.NON_EMPTY)
@@ -16,7 +17,9 @@ public class TeamRequest {
 
   private String id;
   private String name;
+  private String displayName;
   private TeamStatus status;
+  private TeamType type;
   private String externalRef;
   private Map<String, String> labels = new HashMap<>();
   private List<AbstractParam> parameters = new LinkedList<>();
@@ -36,11 +39,23 @@ public class TeamRequest {
   public void setName(String name) {
     this.name = name;
   }
+  public String getDisplayName() {
+    return displayName;
+  }
+  public void setDisplayName(String displayName) {
+    this.displayName = displayName;
+  }
   public TeamStatus getStatus() {
     return status;
   }
   public void setStatus(TeamStatus status) {
     this.status = status;
+  }
+  public TeamType getType() {
+    return type;
+  }
+  public void setType(TeamType type) {
+    this.type = type;
   }
   public String getExternalRef() {
     return externalRef;

@@ -164,22 +164,22 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
    * Apply allows you to create a new version as well as create new
    */
   @Override
-  public TaskTemplate apply(TaskTemplate request, boolean replace, Optional<String> teamId) {
+  public TaskTemplate apply(TaskTemplate request, boolean replace, Optional<String> team) {
     String templateName = request.getName();
     //Refs check is different to normal as we are checking the users access to the team and not the template
     //The engine will check if the template exists or not
     // TODO: figure out what to do with name collisions between teams
-    if (teamId.isPresent()) {
+    if (team.isPresent()) {
     List<String> refs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.TASKTEMPLATE),
-        Optional.of(List.of(templateName)), Optional.of(RelationshipType.BELONGSTO), Optional.of(RelationshipRef.TEAM), Optional.of(List.of(teamId.get())));
+        Optional.of(List.of(templateName)), Optional.of(RelationshipType.BELONGSTO), Optional.of(RelationshipRef.TEAM), Optional.of(List.of(team.get())));
       if (refs.isEmpty()) {
-        return this.create(request, teamId);
+        return this.create(request, team);
       }
     } else {
       List<String> refs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.TASKTEMPLATE),
           Optional.of(List.of(templateName)), Optional.of(RelationshipType.BELONGSTO), Optional.of(RelationshipRef.GLOBAL), Optional.empty());
       if (refs.isEmpty()) {
-        return this.create(request, teamId);
+        return this.create(request, team);
       }
     }
 

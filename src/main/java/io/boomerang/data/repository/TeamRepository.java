@@ -7,7 +7,7 @@ import io.boomerang.data.entity.TeamEntity;
 
 public interface TeamRepository extends MongoRepository<TeamEntity, String> {
 
-  List<TeamEntity> findByNameLikeIgnoreCase(String name);
+  Optional<TeamEntity> findByNameIgnoreCase(String name);
   
   Long countByNameIgnoreCase(String name);
 

@@ -80,7 +80,7 @@ public class WorkflowV2Controller {
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
   public ResponseEntity<Workflow> createWorkflow(
-    @Parameter(name = "team", description = "Team as owner reference.", example = "63d3656ca845957db7d25ef0,63a3e732b0496509a7f1d763",
+    @Parameter(name = "team", description = "Team as owner reference.", example = "my-amazing-team",
     required = true) @RequestParam(required = true) String team,
     @RequestBody Workflow workflow) {
     return workflowService.create(workflow, team);
@@ -94,7 +94,7 @@ public class WorkflowV2Controller {
       @Parameter(name = "replace", description = "Replace existing version",
           required = false) @RequestParam(required = false, defaultValue = "false") boolean replace,
       @Parameter(name = "team", description = "Team as owner reference. Required if using apply to create new.",
-          example = "63d3656ca845957db7d25ef0,63a3e732b0496509a7f1d763",
+          example = "my-amazing-team",
           required = false) @RequestParam(required = false) Optional<String> team) {
     return workflowService.apply(workflow, replace, team);
   }
@@ -163,7 +163,7 @@ public class WorkflowV2Controller {
       @Parameter(name = "replace", description = "Replace existing version",
           required = false) @RequestParam(required = false, defaultValue = "false") boolean replace,
       @Parameter(name = "team", description = "Team as owner reference. Required if using apply to create new.",
-          example = "63d3656ca845957db7d25ef0,63a3e732b0496509a7f1d763",
+          example = "my-amazing-team",
           required = false) @RequestParam(required = false) Optional<String> team) {
     return workflowService.composeApply(canvas, replace, team);
   }

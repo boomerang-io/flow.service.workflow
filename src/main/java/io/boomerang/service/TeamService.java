@@ -1,18 +1,15 @@
 package io.boomerang.service;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.http.ResponseEntity;
-import io.boomerang.data.model.CurrentQuotas;
 import io.boomerang.data.model.Quotas;
 import io.boomerang.model.Team;
 import io.boomerang.model.TeamMember;
 import io.boomerang.model.TeamNameCheckRequest;
 import io.boomerang.model.TeamRequest;
-import io.boomerang.model.enums.TeamType;
 import io.boomerang.security.model.Role;
 
 public interface TeamService {
@@ -26,7 +23,7 @@ public interface TeamService {
       Optional<List<String>> queryLabels, Optional<List<String>> queryStatus,
       Optional<List<String>> queryIds);
 
-  Team create(TeamRequest request, TeamType type);
+  Team create(TeamRequest request);
 
   Team patch(String teamId, TeamRequest request);
 

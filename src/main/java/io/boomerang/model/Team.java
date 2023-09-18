@@ -19,6 +19,7 @@ public class Team {
 
   private String id;
   private String name;
+  private String displayName;
   private Date creationDate = new Date();
   private TeamStatus status = TeamStatus.active;
   private String externalRef;
@@ -52,6 +53,14 @@ public class Team {
 
   public void setName(String name) {
     this.name = name;
+  }
+
+  public String getDisplayName() {
+    return displayName;
+  }
+
+  public void setDisplayName(String displayName) {
+    this.displayName = displayName;
   }
 
   public Date getCreationDate() {

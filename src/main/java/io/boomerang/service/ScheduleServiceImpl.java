@@ -168,12 +168,12 @@ public class ScheduleServiceImpl implements ScheduleService {
    * @return echos the created schedule
    */
   @Override
-  public WorkflowSchedule create(final WorkflowSchedule schedule, String teamId) {
-    if (schedule != null && schedule.getWorkflowRef() != null && teamId != null) {
+  public WorkflowSchedule create(final WorkflowSchedule schedule, String team) {
+    if (schedule != null && schedule.getWorkflowRef() != null && team != null) {
       // Get Refs that request has access to
       final List<String> refs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.WORKFLOW),
           Optional.of(List.of(schedule.getWorkflowRef())), Optional.of(RelationshipType.BELONGSTO),
-          Optional.ofNullable(RelationshipRef.TEAM), Optional.of(List.of(teamId)));
+          Optional.ofNullable(RelationshipRef.TEAM), Optional.of(List.of(team)));
       if (refs.isEmpty()) {
         // TODO: better error
         throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);

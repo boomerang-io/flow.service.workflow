@@ -11,7 +11,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import io.boomerang.data.model.Quotas;
-import io.boomerang.data.model.TeamSettings;
 import io.boomerang.model.AbstractParam;
 import io.boomerang.model.enums.TeamStatus;
 import io.boomerang.model.enums.TeamType;
@@ -24,11 +23,13 @@ public class TeamEntity {
   @Id
   private String id;
   private String name;
+  private String displayName;
   private Date creationDate = new Date();
-  private TeamType type = TeamType.team; 
+  private TeamType type;
   private TeamStatus status = TeamStatus.active;
   private String externalRef;
   private Map<String, String> labels = new HashMap<>();
+  private Map<String, Object> annotations = new HashMap<>();
   private List<AbstractParam> parameters = new LinkedList<>();
 //  private TeamSettings settings;
   private Quotas quotas;
@@ -44,6 +45,12 @@ public class TeamEntity {
   }
   public void setName(String name) {
     this.name = name;
+  }
+  public String getDisplayName() {
+    return displayName;
+  }
+  public void setDisplayName(String displayName) {
+    this.displayName = displayName;
   }
   public Date getCreationDate() {
     return creationDate;
@@ -80,6 +87,12 @@ public class TeamEntity {
   }
   public void setLabels(Map<String, String> labels) {
     this.labels = labels;
+  }
+  public Map<String, Object> getAnnotations() {
+    return annotations;
+  }
+  public void setAnnotations(Map<String, Object> annotations) {
+    this.annotations = annotations;
   }
   public List<AbstractParam> getParameters() {
     return parameters;

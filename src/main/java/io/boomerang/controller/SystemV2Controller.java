@@ -108,7 +108,7 @@ public class SystemV2Controller {
   @GetMapping(value = "/navigation")
   @AuthScope(action = PermissionAction.READ, scope = PermissionScope.SYSTEM, types = {AuthType.session, AuthType.global})
   @Operation(summary = "Retrieve navigation.")
-  public ResponseEntity<List<Navigation>> getNavigation(@Parameter(name = "teamId", description = "The id of the Team that the user is currently on", example = "123143412312310",
+  public ResponseEntity<List<Navigation>> getNavigation(@Parameter(name = "team", description = "Team as owner reference", example = "my-amazing-team",
       required = false) @RequestParam(required = false) Optional<String> teamId) {
     List<Navigation> response = navigationService.getNavigation(identityService.isCurrentUserAdmin(), teamId);
     

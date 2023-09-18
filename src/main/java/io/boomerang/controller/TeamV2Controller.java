@@ -1,7 +1,6 @@
 package io.boomerang.controller;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -21,7 +20,6 @@ import io.boomerang.model.Team;
 import io.boomerang.model.TeamMember;
 import io.boomerang.model.TeamNameCheckRequest;
 import io.boomerang.model.TeamRequest;
-import io.boomerang.model.enums.TeamType;
 import io.boomerang.security.model.Role;
 import io.boomerang.service.TeamService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -49,16 +47,17 @@ public class TeamV2Controller {
     return teamService.validateName(request);
   }
   
-  @GetMapping(value = "/{teamId}")
+  @GetMapping(value = "/{team}")
 //  @AuthenticationScope(scopes = {TokenPermission.global, TokenPermission.team, TokenPermission.user})
   @Operation(summary = "Get team")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
   public Team getTeam(
-      @Parameter(name = "teamId",
-      description = "ID of Team",
-      required = true) @PathVariable String teamId) {
-    return teamService.get(teamId);
+      @Parameter(name = "team",
+          description = "Team as owner reference.",
+          example = "my-amazing-team",
+          required = true) @PathVariable String team) {
+    return teamService.get(team);
   }
 
   @GetMapping(value = "/query")
@@ -72,8 +71,8 @@ public class TeamV2Controller {
       @Parameter(name = "statuses", description = "List of statuses to filter for. Defaults to all.",
           example = "active,inactive",
           required = false) @RequestParam(required = false) Optional<List<String>> statuses,
-      @Parameter(name = "ids", description = "List of ids to filter for.", 
-      required = false) @RequestParam(required = false) Optional<List<String>> ids,
+      @Parameter(name = "teams", description = "List of Team names to filter for.", example = "my-amazing-team,boomerangs-return",
+      required = false) @RequestParam(required = false) Optional<List<String>> names,
       @Parameter(name = "limit", description = "Result Size", example = "10",
       required = true) @RequestParam(required = false) Optional<Integer> limit,
   @Parameter(name = "page", description = "Page Number", example = "0",
@@ -82,7 +81,7 @@ public class TeamV2Controller {
   required = false) @RequestParam(defaultValue = "DESC") Optional<Direction> order,
   @Parameter(name = "sort", description = "The element to sort on", example = "0",
   required = false) @RequestParam(defaultValue = "name") Optional<String> sort) {
-    return teamService.query(page, limit, order, sort, labels, statuses, ids);
+    return teamService.query(page, limit, order, sort, labels, statuses, names);
   }
   
   @PostMapping(value = "")
@@ -91,51 +90,60 @@ public class TeamV2Controller {
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
   public Team createTeam(@RequestBody TeamRequest request) {
-    return teamService.create(request, TeamType.team);
+    return teamService.create(request);
   }
   
-  @PatchMapping(value = "/{teamId}")
+  @PatchMapping(value = "/{team}")
 //  @AuthenticationScope(scopes = {TokenPermission.global})
   @Operation(summary = "Patch or update a team")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
-  public Team updateTeam(@Parameter(name = "teamId",
+  public Team updateTeam(@Parameter(name = "team",
       description = "ID of Team", required = true) @PathVariable String teamId, @RequestBody TeamRequest request) {
     return teamService.patch(teamId, request);
   }
   
-  @DeleteMapping(value = "/{teamId}/members")
-  public void removeMembers(@Parameter(name = "teamId",
-      description = "ID of Team", required = true) @PathVariable String teamId, @RequestBody List<TeamMember> request) {
-      teamService.removeMembers(teamId, request);
+  @DeleteMapping(value = "/{team}/members")
+  public void removeMembers(
+      @Parameter(name = "team",
+      description = "Team as owner reference.",
+      example = "my-amazing-team", required = true) @PathVariable String team, @RequestBody List<TeamMember> request) {
+      teamService.removeMembers(team, request);
   }
   
-  @DeleteMapping(value = "/{teamId}/leave")
+  @DeleteMapping(value = "/{team}/leave")
   //Auth scope to user and session
-  public void leave(@Parameter(name = "teamId",
-      description = "ID of Team", required = true) @PathVariable String teamId) {
-      teamService.leave(teamId);
+  public void leave(
+      @Parameter(name = "team",
+      description = "Team as owner reference.",
+      required = true) @PathVariable String team) {
+      teamService.leave(team);
   }
 
-  @DeleteMapping(value = "/{teamId}/parameters")
+  @DeleteMapping(value = "/{team}/parameters")
   public void deleteParameters(
-      @Parameter(name = "teamId",
-      description = "ID of Team",
-      required = true) @PathVariable String teamId,
+      @Parameter(name = "team",
+      description = "Team as owner reference.",
+      required = true) @PathVariable String team,
       @RequestBody List<String> keys) {
-    teamService.deleteParameters(teamId, keys);
+    teamService.deleteParameters(team, keys);
   }
   
-  @DeleteMapping(value = "/{teamId}/approvers")
-  public void deleteApproverGroup(@PathVariable String teamId,
+  @DeleteMapping(value = "/{team}/approvers")
+  public void deleteApproverGroup(
+      @Parameter(name = "team",
+      description = "Team as owner reference.",
+      required = true) @PathVariable String team,
       @RequestBody List<String> names) {
-    teamService.deleteApproverGroups(teamId, names);
+    teamService.deleteApproverGroups(team, names);
   }
 
-  @DeleteMapping(value = "/{teamId}/quotas")
-  public void resetQuotas(@Parameter(name = "teamId", description = "ID of Team",
-      required = true) @PathVariable String teamId) {
-    teamService.deleteCustomQuotas(teamId);
+  @DeleteMapping(value = "/{team}/quotas")
+  public void resetQuotas(
+      @Parameter(name = "team",
+      description = "Team as owner reference.",
+      required = true) @PathVariable String team) {
+    teamService.deleteCustomQuotas(team);
   }
 
   @GetMapping(value = "/quotas/default")

@@ -91,7 +91,7 @@ public class TaskTemplateV2Controller {
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
   public TaskTemplate createTaskTemplate(
-      @Parameter(name = "team", description = "Team as owner reference.", example = "63d3656ca845957db7d25ef0,63a3e732b0496509a7f1d763",
+      @Parameter(name = "team", description = "Team as owner reference.", example = "my-amazing-team",
       required = false) @RequestParam(required = false) Optional<String> team,
       @RequestBody TaskTemplate taskTemplate) {
     return taskTemplateService.create(taskTemplate, team);
@@ -103,7 +103,7 @@ public class TaskTemplateV2Controller {
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
   public TektonTask createTaskTemplateYAML(
-      @Parameter(name = "team", description = "Team as owner reference.", example = "63d3656ca845957db7d25ef0,63a3e732b0496509a7f1d763",
+      @Parameter(name = "team", description = "Team as owner reference.", example = "my-amazing-team",
       required = false) @RequestParam(required = false) Optional<String> team,
       @RequestBody TektonTask taskTemplate) {
     return taskTemplateService.createAsTekton(taskTemplate, team);
@@ -118,7 +118,7 @@ public class TaskTemplateV2Controller {
       @Parameter(name = "replace",
       description = "Replace existing version",
       required = false) @RequestParam(required = false, defaultValue = "false") boolean replace,
-      @Parameter(name = "team", description = "Team as owner reference.", example = "63d3656ca845957db7d25ef0,63a3e732b0496509a7f1d763",
+      @Parameter(name = "team", description = "Team as owner reference.", example = "my-amazing-team",
       required = false) @RequestParam(required = false) Optional<String> team) {
     return taskTemplateService.apply(taskTemplate, replace, team);
   }
@@ -132,7 +132,7 @@ public class TaskTemplateV2Controller {
       @Parameter(name = "replace",
       description = "Replace existing version",
       required = false) @RequestParam(required = false, defaultValue = "false") boolean replace,
-      @Parameter(name = "team", description = "Team as owner reference.", example = "63d3656ca845957db7d25ef0,63a3e732b0496509a7f1d763",
+      @Parameter(name = "team", description = "Team as owner reference.", example = "my-amazing-team",
       required = false) @RequestParam(required = false) Optional<String> team) {
     return taskTemplateService.applyAsTekton(taskTemplate, replace, team);
   }

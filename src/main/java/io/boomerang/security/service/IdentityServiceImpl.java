@@ -37,9 +37,6 @@ import io.boomerang.data.repository.UserRepository;
 import io.boomerang.error.BoomerangError;
 import io.boomerang.error.BoomerangException;
 import io.boomerang.model.OneTimeCode;
-import io.boomerang.model.TeamMember;
-import io.boomerang.model.TeamNameCheckRequest;
-import io.boomerang.model.TeamRequest;
 import io.boomerang.model.TeamSummary;
 import io.boomerang.model.TeamSummaryInsights;
 import io.boomerang.model.User;
@@ -49,10 +46,8 @@ import io.boomerang.model.UserStatus;
 import io.boomerang.model.enums.RelationshipRef;
 import io.boomerang.model.enums.RelationshipType;
 import io.boomerang.model.enums.TeamStatus;
-import io.boomerang.model.enums.TeamType;
 import io.boomerang.model.enums.UserType;
 import io.boomerang.security.model.AuthType;
-import io.boomerang.security.model.RoleEnum;
 import io.boomerang.security.model.Token;
 import io.boomerang.security.repository.RoleRepository;
 import io.boomerang.service.RelationshipService;
@@ -227,7 +222,7 @@ public class IdentityServiceImpl implements IdentityService {
     List<TeamSummary> teamSummaries = new LinkedList<>();
     List<String> permissions = new LinkedList<>();
     teamRefs.forEach((k, v) -> {
-      Optional<TeamEntity> teamEntity = teamRepository.findById(k);
+      Optional<TeamEntity> teamEntity = teamRepository.findByNameIgnoreCase(k);
       if (teamEntity.isPresent()) {
         //Generate TeamSummary + Insight
         TeamSummary ts = new TeamSummary(teamEntity.get());
@@ -403,6 +398,7 @@ public class IdentityServiceImpl implements IdentityService {
   }
 
   @Override
+  //TODO - determine if we can set User to deleted and just remove the relationships
   public void delete(String userId) {
     Optional<UserEntity> user = userRepository.findById(userId);
     List<String> teamRefs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.USER), Optional.of(List.of(userId)), Optional.of(RelationshipType.MEMBEROF), Optional.of(RelationshipRef.TEAM), Optional.empty());

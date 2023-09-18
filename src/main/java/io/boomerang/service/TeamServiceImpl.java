@@ -49,7 +49,6 @@ import io.boomerang.model.User;
 import io.boomerang.model.enums.RelationshipRef;
 import io.boomerang.model.enums.RelationshipType;
 import io.boomerang.model.enums.TeamStatus;
-import io.boomerang.model.enums.TeamType;
 import io.boomerang.model.enums.UserType;
 import io.boomerang.model.ref.WorkflowRunInsight;
 import io.boomerang.security.entity.RoleEntity;
@@ -58,6 +57,7 @@ import io.boomerang.security.model.RoleEnum;
 import io.boomerang.security.repository.RoleRepository;
 import io.boomerang.security.service.IdentityService;
 import io.boomerang.util.DataAdapterUtil.FieldType;
+import io.boomerang.util.StringUtil;
 
 @Service
 public class TeamServiceImpl implements TeamService {
@@ -108,7 +108,7 @@ public class TeamServiceImpl implements TeamService {
   @Override
   public ResponseEntity<?> validateName(TeamNameCheckRequest request) {
     if (request.getName() != null && !request.getName().isBlank()) {
-      if (teamRepository.countByNameIgnoreCase(request.getName()) > 0) {
+      if (teamRepository.countByNameIgnoreCase(StringUtil.kebabCase(request.getName())) > 0) {
         return ResponseEntity.unprocessableEntity().build();
       }
       return ResponseEntity.ok().build();
@@ -121,17 +121,17 @@ public class TeamServiceImpl implements TeamService {
    * Retrieve a single team by ID
    */
   @Override
-  public Team get(String teamId) {
-    if (teamId == null || teamId.isBlank()) {
+  public Team get(String team) {
+    if (team == null || team.isBlank()) {
       throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
     }
     List<String> teamRefs = relationshipService.getFilteredToRefs(Optional.empty(),
         Optional.empty(), Optional.of(RelationshipType.MEMBEROF),
-        Optional.of(RelationshipRef.TEAM), Optional.of(List.of(teamId)));
+        Optional.of(RelationshipRef.TEAM), Optional.of(List.of(team)));
     if (teamRefs.isEmpty()) {
       throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
     }
-    Optional<TeamEntity> entity = teamRepository.findById(teamId);
+    Optional<TeamEntity> entity = teamRepository.findByNameIgnoreCase(team);
     if (!entity.isPresent()) {
       throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
     }
@@ -143,32 +143,21 @@ public class TeamServiceImpl implements TeamService {
    * Creates a new Team
    * 
    * - Name must not be blank
+   * - Display name must not be blank
    */
   @Override
-  public Team create(TeamRequest request, TeamType type) {
-    if (!request.getName().isBlank()) {
-      //Validate name - future when Name is Slug
-//        String teamName = firstName + "'s Team";
-//        TeamNameCheckRequest checkRequest = new TeamNameCheckRequest(teamName);
-//        boolean validName = false;
-//        Integer teamNumber = 1;
-//        while (!validName) {
-//          try {
-//            teamService.validateName(checkRequest);
-//            validName = true;
-//          } catch (Exception e) {
-//            teamName = teamName + " " + teamNumber;
-//          }
-//        }
+  public Team create(TeamRequest request) {
+    if (!request.getName().isBlank() && !request.getDisplayName().isBlank()) {
+      //Validate name - will throw exception if not valid
+      TeamNameCheckRequest checkRequest = new TeamNameCheckRequest(request.getName());
+      this.validateName(checkRequest);
       
-      TeamEntity teamEntity = new TeamEntity();
-      teamEntity.setType(type); // Only create TeamType.Team in most cases - User and System are internally created.
       /*
-       * Copy majority of fields. 
+       * Create TeamEntity & Copy majority of fields. 
        * - Status is ignored - can only be active
        * - Members, quotas, parameters, and approverGroups need further logic
        */
-      
+      TeamEntity teamEntity = new TeamEntity();     
       BeanUtils.copyProperties(request, teamEntity, "id", "status", "members", "quotas", "parameters", "approverGroups");
 
       // Set custom quotas
@@ -190,7 +179,7 @@ public class TeamServiceImpl implements TeamService {
 
       teamEntity = teamRepository.save(teamEntity);
 
-      // Create Relationships for Users
+      // Create Member Relationships
       createOrUpdateUserRelationships(teamEntity.getId(), request.getMembers());
       
       return convertTeamEntityToTeam(teamEntity);
@@ -204,18 +193,18 @@ public class TeamServiceImpl implements TeamService {
    * Patch team
    */
   @Override
-  public Team patch(String teamId, TeamRequest request) {
+  public Team patch(String team, TeamRequest request) {
     if (request != null) {
-      if (teamId == null || teamId.isBlank()) {
+      if (team == null || team.isBlank()) {
         throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
       }
       List<String> teamRefs = relationshipService.getFilteredToRefs(Optional.empty(),
           Optional.empty(), Optional.of(RelationshipType.MEMBEROF),
-          Optional.of(RelationshipRef.TEAM), Optional.of(List.of(teamId)));
+          Optional.of(RelationshipRef.TEAM), Optional.of(List.of(team)));
       if (teamRefs.isEmpty()) {
         throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
       }
-      Optional<TeamEntity> optTeamEntity = teamRepository.findById(teamId);
+      Optional<TeamEntity> optTeamEntity = teamRepository.findByNameIgnoreCase(team);
       if (!optTeamEntity.isPresent()) {
         throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
       }
@@ -266,9 +255,9 @@ public class TeamServiceImpl implements TeamService {
    */
   @Override
   public Page<Team> query(Optional<Integer> queryPage, Optional<Integer> queryLimit, Optional<Direction> queryOrder, Optional<String> querySort, Optional<List<String>> queryLabels,
-      Optional<List<String>> queryStatus, Optional<List<String>> queryIds) {    
+      Optional<List<String>> queryStatus, Optional<List<String>> queryTeams) {    
     List<String> teamRefs = relationshipService.getFilteredToRefs(Optional.empty(), Optional.empty(),
-        Optional.of(RelationshipType.MEMBEROF), Optional.of(RelationshipRef.TEAM), queryIds);
+        Optional.of(RelationshipType.MEMBEROF), Optional.of(RelationshipRef.TEAM), queryTeams);
     
     LOGGER.debug("TeamRefs: " + teamRefs.toString());
 
@@ -341,18 +330,18 @@ public class TeamServiceImpl implements TeamService {
   }
 
   @Override
-  public void removeMembers(String teamId, List<TeamMember> request) {
+  public void removeMembers(String team, List<TeamMember> request) {
     if (request != null && !request.isEmpty()) {
-      if (teamId == null || teamId.isBlank()) {
+      if (team == null || team.isBlank()) {
         throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
       }
       List<String> teamRefs = relationshipService.getFilteredToRefs(Optional.empty(),
           Optional.empty(), Optional.of(RelationshipType.MEMBEROF),
-          Optional.of(RelationshipRef.TEAM), Optional.of(List.of(teamId)));
+          Optional.of(RelationshipRef.TEAM), Optional.of(List.of(team)));
       if (teamRefs.isEmpty()) {
         throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
       }
-      Optional<TeamEntity> optTeamEntity = teamRepository.findById(teamId);
+      Optional<TeamEntity> optTeamEntity = teamRepository.findByNameIgnoreCase(team);
       if (!optTeamEntity.isPresent()) {
         throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
       }
@@ -370,7 +359,7 @@ public class TeamServiceImpl implements TeamService {
       }
       if (!userRefs.isEmpty()) {
         relationshipService.removeRelationships(RelationshipRef.USER, userRefs, RelationshipRef.TEAM,
-            List.of(teamId));
+            List.of(team));
       }
     }
   }
@@ -381,21 +370,21 @@ public class TeamServiceImpl implements TeamService {
    *  
    *  TODO: ensure the remaining owner cannot leave the team
    */
-  public void leave(String teamId) {
-      if (teamId == null || teamId.isBlank()) {
+  public void leave(String team) {
+      if (team == null || team.isBlank()) {
         throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
       }
       List<String> teamRefs = relationshipService.getFilteredToRefs(Optional.empty(),
           Optional.empty(), Optional.of(RelationshipType.MEMBEROF),
-          Optional.of(RelationshipRef.TEAM), Optional.of(List.of(teamId)));
+          Optional.of(RelationshipRef.TEAM), Optional.of(List.of(team)));
       if (teamRefs.isEmpty()) {
         throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
       }
-      Optional<TeamEntity> optTeamEntity = teamRepository.findById(teamId);
+      Optional<TeamEntity> optTeamEntity = teamRepository.findByNameIgnoreCase(team);
       if (!optTeamEntity.isPresent()) {
         throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
       }
-      relationshipService.removeUserTeamRelationship(teamId);
+      relationshipService.removeUserTeamRelationship(team);
   }
 
   /*
@@ -421,17 +410,17 @@ public class TeamServiceImpl implements TeamService {
    * Delete parameters by key
    */
   @Override
-  public void deleteParameters(String teamId, List<String> request) {
-    if (teamId == null || teamId.isBlank()) {
+  public void deleteParameters(String team, List<String> request) {
+    if (team == null || team.isBlank()) {
       throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
     }
     List<String> teamRefs = relationshipService.getFilteredToRefs(Optional.empty(),
         Optional.empty(), Optional.of(RelationshipType.MEMBEROF),
-        Optional.of(RelationshipRef.TEAM), Optional.of(List.of(teamId)));
+        Optional.of(RelationshipRef.TEAM), Optional.of(List.of(team)));
     if (teamRefs.isEmpty()) {
       throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
     }
-    Optional<TeamEntity> optTeamEntity = teamRepository.findById(teamId);
+    Optional<TeamEntity> optTeamEntity = teamRepository.findByNameIgnoreCase(team);
     if (!optTeamEntity.isPresent()) {
       throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
     }
@@ -465,7 +454,7 @@ public class TeamServiceImpl implements TeamService {
     List<String> approverGroupRefs =
         relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.APPROVERGROUP),
             Optional.empty(), Optional.of(RelationshipType.BELONGSTO),
-            Optional.of(RelationshipRef.TEAM), Optional.of(List.of(teamEntity.getId())));
+            Optional.of(RelationshipRef.TEAM), Optional.of(List.of(teamEntity.getName())));
     
     List<ApproverGroupEntity> approverGroupEntities =
         approverGroupRepository.findByIdIn(approverGroupRefs);
@@ -490,7 +479,7 @@ public class TeamServiceImpl implements TeamService {
         if (r.getApprovers() != null) {
           List<String> userRefs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.USER),
               Optional.empty(), Optional.of(RelationshipType.MEMBEROF),
-              Optional.of(RelationshipRef.TEAM), Optional.of(List.of(teamEntity.getId())));
+              Optional.of(RelationshipRef.TEAM), Optional.of(List.of(teamEntity.getName())));
           LOGGER.debug("User Refs: " + userRefs.toString());
           List<String> validApproverRefs = r.getApprovers().stream()
               .filter(a -> userRefs.contains(a)).collect(Collectors.toList());
@@ -506,7 +495,7 @@ public class TeamServiceImpl implements TeamService {
         if (r.getApprovers() != null) {
           List<String> userRefs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.USER),
               Optional.empty(), Optional.of(RelationshipType.MEMBEROF),
-              Optional.of(RelationshipRef.TEAM), Optional.of(List.of(teamEntity.getId())));
+              Optional.of(RelationshipRef.TEAM), Optional.of(List.of(teamEntity.getName())));
           LOGGER.debug("User Refs: " + userRefs.toString());
           List<String> validApproverRefs = r.getApprovers().stream()
               .filter(a -> userRefs.contains(a)).collect(Collectors.toList());
@@ -515,7 +504,7 @@ public class TeamServiceImpl implements TeamService {
         }
         approverGroupEntity = approverGroupRepository.save(approverGroupEntity);
         relationshipService.addRelationshipRef(RelationshipRef.APPROVERGROUP,
-            approverGroupEntity.getId(), RelationshipType.BELONGSTO, RelationshipRef.TEAM, Optional.of(teamEntity.getId()), Optional.empty());
+            approverGroupEntity.getId(), RelationshipType.BELONGSTO, RelationshipRef.TEAM, Optional.of(teamEntity.getName()), Optional.empty());
       }
     }
   }
@@ -526,17 +515,17 @@ public class TeamServiceImpl implements TeamService {
    * - Removes relationship as well
    */
   @Override
-  public void deleteApproverGroups(String teamId, List<String> request) {
-    if (teamId == null || teamId.isBlank()) {
+  public void deleteApproverGroups(String team, List<String> request) {
+    if (team == null || team.isBlank()) {
       throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
     }
     List<String> teamRefs = relationshipService.getFilteredToRefs(Optional.empty(),
         Optional.empty(), Optional.of(RelationshipType.MEMBEROF),
-        Optional.of(RelationshipRef.TEAM), Optional.of(List.of(teamId)));
+        Optional.of(RelationshipRef.TEAM), Optional.of(List.of(team)));
     if (teamRefs.isEmpty()) {
       throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
     }
-    Optional<TeamEntity> optTeamEntity = teamRepository.findById(teamId);
+    Optional<TeamEntity> optTeamEntity = teamRepository.findByNameIgnoreCase(team);
     if (!optTeamEntity.isPresent()) {
       throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
     }
@@ -546,7 +535,7 @@ public class TeamServiceImpl implements TeamService {
       if (ag.isPresent()) {
         approverGroupRepository.deleteById(r);
         relationshipService.removeRelationships(RelationshipRef.APPROVERGROUP,
-          List.of(r), RelationshipRef.TEAM, List.of(teamId));
+          List.of(r), RelationshipRef.TEAM, List.of(team));
       }
     }
   }
@@ -555,17 +544,17 @@ public class TeamServiceImpl implements TeamService {
    * Delete custom quotas on the team and reset back to default
    */
   @Override
-  public void deleteCustomQuotas(String teamId) {
-    if (teamId == null || teamId.isBlank()) {
+  public void deleteCustomQuotas(String team) {
+    if (team == null || team.isBlank()) {
       throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
     }
     List<String> teamRefs = relationshipService.getFilteredToRefs(Optional.empty(),
         Optional.empty(), Optional.of(RelationshipType.MEMBEROF),
-        Optional.of(RelationshipRef.TEAM), Optional.of(List.of(teamId)));
+        Optional.of(RelationshipRef.TEAM), Optional.of(List.of(team)));
     if (teamRefs.isEmpty()) {
       throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
     }
-    Optional<TeamEntity> optTeamEntity = teamRepository.findById(teamId);
+    Optional<TeamEntity> optTeamEntity = teamRepository.findByNameIgnoreCase(team);
     if (!optTeamEntity.isPresent()) {
       throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
     }
@@ -589,7 +578,7 @@ public class TeamServiceImpl implements TeamService {
    * Used by WorkflowRun Service to ensure Workflow can run
    */
   public CurrentQuotas getQuotas(String teamId) {
-    Optional<TeamEntity> optTeamEntity = teamRepository.findById(teamId);
+    Optional<TeamEntity> optTeamEntity = teamRepository.findByNameIgnoreCase(teamId);
     if (optTeamEntity.isPresent()) {
       Quotas quotas = setDefaultQuotas();
       setCustomQuotas(quotas, optTeamEntity.get().getQuotas());
@@ -667,7 +656,7 @@ public class TeamServiceImpl implements TeamService {
     List<String> approverGroupRefs =
         relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.APPROVERGROUP),
             Optional.empty(), Optional.of(RelationshipType.BELONGSTO),
-            Optional.of(RelationshipRef.TEAM), Optional.of(List.of(teamEntity.getId())));
+            Optional.of(RelationshipRef.TEAM), Optional.of(List.of(teamEntity.getName())));
     List<ApproverGroupEntity> approverGroupEntities =
         approverGroupRepository.findByIdIn(approverGroupRefs);
     List<ApproverGroup> approverGroups = new LinkedList<>();
@@ -730,7 +719,7 @@ public class TeamServiceImpl implements TeamService {
     }
   }
 
-  private CurrentQuotas setCurrentQuotas(CurrentQuotas currentQuotas, String teamId) {
+  private CurrentQuotas setCurrentQuotas(CurrentQuotas currentQuotas, String team) {
     // Set Quota Reset Date
     Calendar nextMonth = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
     nextMonth.add(Calendar.MONTH, 1);
@@ -759,7 +748,7 @@ public class TeamServiceImpl implements TeamService {
     WorkflowRunInsight insight =
         workflowRunService.insight(Optional.of(currentMonthStart.getTimeInMillis()),
             Optional.of(currentMonthEnd.getTimeInMillis()), Optional.empty(), Optional.empty(),
-            Optional.of(List.of(teamId)));
+            Optional.of(List.of(team)));
     currentQuotas.setCurrentConcurrentWorkflows(insight.getConcurrentRuns().intValue());
     currentQuotas.setCurrentRunTotalDuration(insight.getTotalDuration().intValue());
     currentQuotas.setCurrentRunMedianDuration(insight.getMedianDuration().intValue());
@@ -768,7 +757,7 @@ public class TeamServiceImpl implements TeamService {
     // TODO update to only be active workflows
     List<String> workflowRefs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.WORKFLOW),
         Optional.empty(), Optional.of(RelationshipType.BELONGSTO),
-        Optional.of(RelationshipRef.TEAM), Optional.of(List.of(teamId)));
+        Optional.of(RelationshipRef.TEAM), Optional.of(List.of(team)));
     currentQuotas.setCurrentWorkflowCount(workflowRefs.size());
 
     // TODO look into this one
@@ -796,10 +785,10 @@ public class TeamServiceImpl implements TeamService {
   /*
    * Returns the List of UserSummary for a team
    */
-  private List<TeamMember> getUsersForTeam(String teamId) {
+  private List<TeamMember> getUsersForTeam(String team) {
     List<RelationshipEntity> userRels = relationshipService.getFilteredRels(Optional.of(RelationshipRef.USER),
         Optional.empty(), Optional.of(RelationshipType.MEMBEROF),
-        Optional.of(RelationshipRef.TEAM), Optional.of(List.of(teamId)), true);
+        Optional.of(RelationshipRef.TEAM), Optional.of(List.of(team)), true);
     List<TeamMember> teamUsers = new LinkedList<>();
     if (!userRels.isEmpty()) {
       userRels.forEach(rel -> {
@@ -823,10 +812,10 @@ public class TeamServiceImpl implements TeamService {
    * If user does not exist, a user record will be created with a relationship to the team
    * TODO - invite the user rather than create a relationship
    */
-  private void createOrUpdateUserRelationships(String teamId, List<TeamMember> users) {
+  private void createOrUpdateUserRelationships(String team, List<TeamMember> users) {
     List<String> userRefs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.USER),
         Optional.empty(), Optional.of(RelationshipType.MEMBEROF),
-        Optional.of(RelationshipRef.TEAM), Optional.of(List.of(teamId)));
+        Optional.of(RelationshipRef.TEAM), Optional.of(List.of(team)));
     if (users != null && !users.isEmpty()) {
       for (TeamMember userSummary : users) {
         Optional<User> userEntity = null;
@@ -840,7 +829,7 @@ public class TeamServiceImpl implements TeamService {
         if (userEntity.isPresent() && !userRefs.contains(userEntity.get().getId())) {
           //Create team relationship for existing user
           relationshipService.addRelationshipRef(RelationshipRef.USER, userEntity.get().getId(), RelationshipType.MEMBEROF,
-              RelationshipRef.TEAM, Optional.of(teamId), Optional.of(Map.of("role",userSummary.getRole())));
+              RelationshipRef.TEAM, Optional.of(team), Optional.of(Map.of("role",userSummary.getRole())));
         } else if (userEntity.isPresent() && userRefs.contains(userEntity.get().getId())) {
           //Patch team relationship for existing team member
           relationshipService.patchRelationshipData(RelationshipRef.USER, userEntity.get().getId(), RelationshipType.MEMBEROF, Map.of("role",userSummary.getRole()));
@@ -849,7 +838,7 @@ public class TeamServiceImpl implements TeamService {
           Optional<UserEntity> newUser = identityService.getAndRegisterUser(userSummary.getEmail(), null, null, Optional.of(UserType.user));
           if (newUser.isPresent()) {
             relationshipService.addRelationshipRef(RelationshipRef.USER, newUser.get().getId(), RelationshipType.MEMBEROF,
-                RelationshipRef.TEAM, Optional.of(teamId),Optional.of(Map.of("role",userSummary.getRole())));
+                RelationshipRef.TEAM, Optional.of(team),Optional.of(Map.of("role",userSummary.getRole())));
           }
           //TODO - throw error for user that can't be created?
         } 

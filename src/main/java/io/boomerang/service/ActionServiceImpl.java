@@ -198,10 +198,10 @@ public class ActionServiceImpl implements ActionService {
   @Override
   public Page<Action> query(Optional<Date> from, Optional<Date> to, Pageable pageable,
       Optional<List<ActionType>> types, Optional<List<ActionStatus>> status,
-      Optional<List<String>> workflowIds, Optional<List<String>> teamIds) {
+      Optional<List<String>> workflowIds, Optional<List<String>> teams) {
     List<String> workflowRefs =
         relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.WORKFLOW), workflowIds,
-            Optional.of(RelationshipType.BELONGSTO), Optional.of(RelationshipRef.TEAM), teamIds);
+            Optional.of(RelationshipType.BELONGSTO), Optional.of(RelationshipRef.TEAM), teams);
 
     Criteria criteria = buildCriteriaList(from, to, Optional.of(workflowRefs), types, status);
     Query query = new Query(criteria).with(pageable);
@@ -221,10 +221,10 @@ public class ActionServiceImpl implements ActionService {
   }
 
   @Override
-  public ActionSummary summary(Optional<Date> fromDate, Optional<Date> toDate, Optional<List<String>> workflowIds, Optional<List<String>> teamIds) {
+  public ActionSummary summary(Optional<Date> fromDate, Optional<Date> toDate, Optional<List<String>> workflowIds, Optional<List<String>> teams) {
     List<String> workflowRefs =
         relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.WORKFLOW),
-            workflowIds, Optional.of(RelationshipType.BELONGSTO), Optional.of(RelationshipRef.TEAM), teamIds);
+            workflowIds, Optional.of(RelationshipType.BELONGSTO), Optional.of(RelationshipRef.TEAM), teams);
     
     long approvalCount = this.getActionCountForType(ActionType.approval, fromDate,
         toDate, Optional.of(workflowRefs));
