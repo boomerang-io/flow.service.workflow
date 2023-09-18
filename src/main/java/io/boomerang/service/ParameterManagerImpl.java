@@ -106,8 +106,8 @@ public class ParameterManagerImpl implements ParameterManager {
   /*
    * Build up the Team Params - defaultValue is not used with Team Params and can be ignored.
    */
-  private void buildTeamParams(Map<String, Object> teamParams, String teamId) {
-      Optional<TeamEntity> optTeamEntity = teamRepository.findById(teamId);
+  private void buildTeamParams(Map<String, Object> teamParams, String team) {
+      Optional<TeamEntity> optTeamEntity = teamRepository.findByNameIgnoreCase(team);
       if (!optTeamEntity.isPresent()) {
         throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
       }
