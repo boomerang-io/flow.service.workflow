@@ -180,7 +180,7 @@ public class TeamServiceImpl implements TeamService {
       teamEntity = teamRepository.save(teamEntity);
 
       // Create Member Relationships
-      createOrUpdateUserRelationships(teamEntity.getId(), request.getMembers());
+      createOrUpdateUserRelationships(teamEntity.getName(), request.getMembers());
       
       return convertTeamEntityToTeam(teamEntity);
     } else {
@@ -242,7 +242,7 @@ public class TeamServiceImpl implements TeamService {
       teamRepository.save(teamEntity);
 
       // Create / Update Relationships for Users
-      createOrUpdateUserRelationships(teamEntity.getId(), request.getMembers());
+      createOrUpdateUserRelationships(teamEntity.getName(), request.getMembers());
       return convertTeamEntityToTeam(teamEntity);
     }
     throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
@@ -643,13 +643,13 @@ public class TeamServiceImpl implements TeamService {
 //    team.setWorkflows(summary);
     
     // Get Members
-    team.setMembers(getUsersForTeam(teamEntity.getId()));
+    team.setMembers(getUsersForTeam(teamEntity.getName()));
 
     // Get default & custom stored Quotas
     Quotas quotas = setDefaultQuotas();
     setCustomQuotas(quotas, teamEntity.getQuotas());
     CurrentQuotas currentQuotas = new CurrentQuotas(quotas);
-    setCurrentQuotas(currentQuotas, teamEntity.getId());
+    setCurrentQuotas(currentQuotas, teamEntity.getName());
     team.setQuotas(currentQuotas);
 
     // Get Approver Groups
