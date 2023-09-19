@@ -99,8 +99,8 @@ public class TeamServiceImpl implements TeamService {
   @Autowired
   private WorkflowRunService workflowRunService;
   
-  @Autowired
-  private WorkflowService workflowService;
+//  @Autowired
+//  private WorkflowService workflowService;
 
   /*
    * Validate the team name - used by the UI to determine if a team can be created
@@ -108,7 +108,9 @@ public class TeamServiceImpl implements TeamService {
   @Override
   public ResponseEntity<?> validateName(TeamNameCheckRequest request) {
     if (request.getName() != null && !request.getName().isBlank()) {
-      if (teamRepository.countByNameIgnoreCase(StringUtil.kebabCase(request.getName())) > 0) {
+      String kebabName = StringUtil.kebabCase(request.getName());
+      List<String> reservedNames = List.of("home", "system", "profile");
+      if ((teamRepository.countByNameIgnoreCase(kebabName) > 0) || reservedNames.contains(kebabName)) {
         return ResponseEntity.unprocessableEntity().build();
       }
       return ResponseEntity.ok().build();
