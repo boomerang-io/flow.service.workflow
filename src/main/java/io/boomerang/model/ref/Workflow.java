@@ -55,7 +55,7 @@ public class Workflow {
   
   private List<WorkflowWorkspace> workspaces = new LinkedList<>();
   
-  private List<AbstractParam> config;
+  private List<AbstractParam> config = new LinkedList<>();
 
   private Map<String, Object> unknownFields = new HashMap<>();
 

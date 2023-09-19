@@ -75,7 +75,7 @@ public class WorkflowV2Controller {
     return workflowService.query(limit, page, sort, labels, statuses, teams, workflows);
   }
 
-  @PostMapping(value = "/")
+  @PostMapping(value = "")
   @Operation(summary = "Create a new workflow")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
