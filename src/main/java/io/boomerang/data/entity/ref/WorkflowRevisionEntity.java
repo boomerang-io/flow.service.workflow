@@ -6,10 +6,10 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import io.boomerang.data.model.ref.WorkflowTask;
 import io.boomerang.model.AbstractParam;
 import io.boomerang.model.ref.ChangeLog;
 import io.boomerang.model.ref.ParamSpec;
+import io.boomerang.model.ref.Task;
 import io.boomerang.model.ref.WorkflowWorkspace;
 import nonapi.io.github.classgraph.json.Id;
 
@@ -29,7 +29,7 @@ public class WorkflowRevisionEntity {
 
   private String workflowRef;
 
-  private List<WorkflowTask> tasks = new LinkedList<>();
+  private List<Task> tasks = new LinkedList<>();
 
   private ChangeLog changelog;
 
@@ -76,11 +76,11 @@ public class WorkflowRevisionEntity {
     this.workflowRef = workflowId;
   }
 
-  public List<WorkflowTask> getTasks() {
+  public List<Task> getTasks() {
     return tasks;
   }
 
-  public void setTasks(List<WorkflowTask> tasks) {
+  public void setTasks(List<Task> tasks) {
     this.tasks = tasks;
   }
 

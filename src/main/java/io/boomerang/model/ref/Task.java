@@ -7,10 +7,13 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import io.boomerang.model.enums.ref.TaskType;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
+@JsonInclude(Include.NON_NULL)
 public class Task {
   
   private String name;
@@ -28,10 +31,10 @@ public class Task {
   //Uses RunParam as the ParamSpec comes from the TaskTemplate
   private List<RunParam> params = new LinkedList<>();
   
-  private List<TaskDependency> dependencies;
+  private List<TaskDependency> dependencies = new LinkedList<>();;
   
   //This is needed as some of our Tasks allow you to define Result Definitions on the fly
-  private List<ResultSpec> results;
+  private List<ResultSpec> results = new LinkedList<>();;
   
   //Optional - the default is that the workspace goes to all Tasks
   //Not supported by all integrations
