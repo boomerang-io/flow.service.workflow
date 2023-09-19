@@ -236,6 +236,10 @@ public class TokenServiceImpl implements TokenService {
     }
     return false;
   }
+  
+  public void deleteAllForPrincipal(@Valid String principal) {
+      this.tokenRepository.deleteAllByPrincipal(principal);
+  }
 
   @Override
   public Page<Token> query(Optional<Date> from, Optional<Date> to, Optional<Integer> queryLimit,

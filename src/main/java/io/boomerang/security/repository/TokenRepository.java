@@ -6,4 +6,6 @@ import io.boomerang.security.entity.TokenEntity;
 
 public interface TokenRepository extends MongoRepository<TokenEntity, String> {
   Optional<TokenEntity> findByToken(String token);
+  
+  void deleteAllByPrincipal(String principal);
 }

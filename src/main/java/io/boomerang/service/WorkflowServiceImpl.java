@@ -46,6 +46,7 @@ import io.boomerang.model.ref.Workflow;
 import io.boomerang.model.ref.WorkflowTrigger;
 import io.boomerang.model.ref.WorkflowWorkspace;
 import io.boomerang.model.ref.WorkflowWorkspaceSpec;
+import io.boomerang.security.service.TokenServiceImpl;
 import io.boomerang.util.DataAdapterUtil;
 import io.boomerang.util.DataAdapterUtil.FieldType;
 
@@ -76,6 +77,9 @@ public class WorkflowServiceImpl implements WorkflowService {
   
   @Autowired
   private SettingsService settingsService;
+  
+  @Autowired
+  private TokenServiceImpl tokenService;
 
   /*
    * Get Worklfow
@@ -307,6 +311,8 @@ public class WorkflowServiceImpl implements WorkflowService {
    * Set Workflow to Deleted Status
    * 
    * The Workflow is kept around so as to ensure that we can display the WorkflowRun in the Activity screen. 
+   * 
+   * Engine takes care of disabling Triggers and deleting Workspaces
    */
   @Override
   public ResponseEntity<Void> delete(String workflowId) {
@@ -318,30 +324,17 @@ public class WorkflowServiceImpl implements WorkflowService {
         Optional.of(List.of(workflowId)), Optional.of(RelationshipType.BELONGSTO), Optional.of(RelationshipRef.TEAM), Optional.empty());
     if (!workflowRefs.isEmpty()) {
       engineClient.deleteWorkflow(workflowId);
+      // Delete all Schedules
       try {
         scheduleService.deleteAllForWorkflow(workflowId);
       } catch (SchedulerException e) {
         // TODO Auto-generated catch block
         e.printStackTrace();
       }
-      // TODO: delete all triggers
-      // TODO: delete all tokens
-//      if (entity.getTriggers() != null) {
-//        Triggers trigger = entity.getTriggers();
-//        if (trigger != null) {
-//          TriggerScheduler scheduler = trigger.getScheduler();
-//          if (scheduler != null && scheduler.getEnable()) {
-//            try {
-//              workflowScheduleService.deleteAllSchedules(workflowId);
-//            } catch (SchedulerException e) {
-//              logger.info("Unable to remove job. ");
-//              logger.error(e);
-//            }
-//          }
-//        }
-//      }
       
-      //TODO delete all workspaces
+      // Delete all tokens
+      tokenService.deleteAllForPrincipal(workflowId);
+      
       return ResponseEntity.noContent().build();
     } else {
       // TODO: do we want to return invalid ref or unauthorized
