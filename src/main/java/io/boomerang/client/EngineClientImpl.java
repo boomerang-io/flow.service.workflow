@@ -628,10 +628,6 @@ public class EngineClientImpl implements EngineClient {
           restTemplate.exchange(url, HttpMethod.DELETE, null, Void.class);
 
       LOGGER.info("Status Response: " + response.getStatusCode());
-
-      if (!HttpStatus.NO_CONTENT.equals(response.getStatusCode())) {
-        throw new RestClientException("Unable to delete Workflow");
-      }
     } catch (RestClientException ex) {
       LOGGER.error(ex.toString());
       throw new BoomerangException(ex, HttpStatus.INTERNAL_SERVER_ERROR.value(),

@@ -60,7 +60,7 @@ public class WorkflowV2Controller {
       description = "List of url encoded labels. For example Organization=Boomerang,customKey=test would be encoded as Organization%3DBoomerang,customKey%3Dtest)",
       required = false) @RequestParam(required = false) Optional<List<String>> labels,
       @Parameter(name = "statuses", description = "List of statuses to filter for. Defaults to all.",
-          example = "active,archived",
+          example = "active,inactive",
           required = false) @RequestParam(required = false) Optional<List<String>> statuses,
       @Parameter(name = "workflows", description = "List of workflows to filter for.", 
       required = false) @RequestParam(required = false) Optional<List<String>> workflows,
@@ -107,24 +107,6 @@ public class WorkflowV2Controller {
       @Parameter(name = "workflowId", description = "ID of Workflow",
           required = true) @PathVariable String workflowId) {
     return workflowService.changelog(workflowId);
-  }
-
-  @PutMapping(value = "/{workflowId}/enable")
-  @Operation(summary = "Enable a workflow")
-  @ApiResponses(value = {@ApiResponse(responseCode = "204", description = "OK"),
-      @ApiResponse(responseCode = "400", description = "Bad Request")})
-  public ResponseEntity<Void> enableWorkflow(@Parameter(name = "workflowId",
-      description = "ID of Workflow", required = true) @PathVariable String workflowId) {
-    return workflowService.enable(workflowId);
-  }
-
-  @PutMapping(value = "/{workflowId}/disable")
-  @Operation(summary = "Disable a workflow")
-  @ApiResponses(value = {@ApiResponse(responseCode = "204", description = "OK"),
-      @ApiResponse(responseCode = "400", description = "Bad Request")})
-  public ResponseEntity<Void> disableWorkflow(@Parameter(name = "workflowId",
-      description = "ID of Workflow", required = true) @PathVariable String workflowId) {
-    return workflowService.disable(workflowId);
   }
 
   @DeleteMapping(value = "/{workflowId}")

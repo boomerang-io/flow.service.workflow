@@ -23,10 +23,6 @@ public interface WorkflowService {
 
   ResponseEntity<Workflow> apply(Workflow workflow, boolean replace, Optional<String> team);
 
-  ResponseEntity<Void> enable(String workflowId);
-
-  ResponseEntity<Void> disable(String workflowId);
-
   ResponseEntity<Void> delete(String workflowId);
 
   ResponseEntity<InputStreamResource> export(String workflowId);

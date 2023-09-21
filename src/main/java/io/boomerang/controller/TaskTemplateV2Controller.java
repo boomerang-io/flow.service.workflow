@@ -148,7 +148,7 @@ public class TaskTemplateV2Controller {
     return taskTemplateService.changelog(name);
   }
 
-  @PostMapping(value = "validate", consumes = "application/x-yaml", produces = "application/x-yaml")
+  @PostMapping(value = "/validate", consumes = "application/x-yaml", produces = "application/x-yaml")
   public void validateYaml(@RequestBody TektonTask tektonTask) {
     taskTemplateService.validateAsTekton(tektonTask);
   }

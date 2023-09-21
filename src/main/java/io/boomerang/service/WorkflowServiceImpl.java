@@ -266,48 +266,6 @@ public class WorkflowServiceImpl implements WorkflowService {
   }
 
   /*
-   * Set Workflow to Active Status
-   */
-  @Override
-  public ResponseEntity<Void> enable(String workflowId) {
-    if (workflowId == null || workflowId.isBlank()) {
-      throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
-    }
-
-    List<String> workflowRefs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.WORKFLOW),
-        Optional.of(List.of(workflowId)), Optional.of(RelationshipType.BELONGSTO),  Optional.of(RelationshipRef.TEAM), Optional.empty());
-    if (!workflowRefs.isEmpty()) {
-      engineClient.enableWorkflow(workflowId);
-      // Enable schedules
-      return ResponseEntity.noContent().build();
-    } else {
-      // TODO: do we want to return invalid ref or unauthorized
-      throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
-    }
-  }
-
-  /*
-   * Set Workflow to Inactive Status
-   */
-  @Override
-  public ResponseEntity<Void> disable(String workflowId) {
-    if (workflowId == null || workflowId.isBlank()) {
-      throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
-    }
-
-    List<String> workflowRefs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.WORKFLOW),
-        Optional.of(List.of(workflowId)), Optional.of(RelationshipType.BELONGSTO), Optional.of(RelationshipRef.TEAM), Optional.empty());
-    if (!workflowRefs.isEmpty()) {
-      engineClient.disableWorkflow(workflowId);
-      //TODO: disable all schedules
-      return ResponseEntity.noContent().build();
-    } else {
-      // TODO: do we want to return invalid ref or unauthorized
-      throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
-    }
-  }
-
-  /*
    * Set Workflow to Deleted Status
    * 
    * The Workflow is kept around so as to ensure that we can display the WorkflowRun in the Activity screen. 
