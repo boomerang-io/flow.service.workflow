@@ -9,6 +9,7 @@ import io.boomerang.model.ref.TaskRun;
 import io.boomerang.model.ref.TaskRunEndRequest;
 import io.boomerang.model.ref.TaskTemplate;
 import io.boomerang.model.ref.Workflow;
+import io.boomerang.model.ref.WorkflowCount;
 import io.boomerang.model.ref.WorkflowRun;
 import io.boomerang.model.ref.WorkflowRunCount;
 import io.boomerang.model.ref.WorkflowRunInsight;
@@ -89,4 +90,7 @@ public interface EngineClient {
   ResponseEntity<Void> deleteWorkflowTemplate(String name);
 
   List<ChangeLogVersion> getWorkflowChangeLog(String workflowId);
+
+  WorkflowCount countWorkflows(Optional<List<String>> queryLabels,
+      Optional<List<String>> queryWorkflows, Optional<Long> fromDate, Optional<Long> toDate);
 }

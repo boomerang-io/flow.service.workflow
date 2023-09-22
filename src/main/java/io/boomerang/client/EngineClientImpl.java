@@ -30,6 +30,7 @@ import io.boomerang.model.ref.TaskRun;
 import io.boomerang.model.ref.TaskRunEndRequest;
 import io.boomerang.model.ref.TaskTemplate;
 import io.boomerang.model.ref.Workflow;
+import io.boomerang.model.ref.WorkflowCount;
 import io.boomerang.model.ref.WorkflowRun;
 import io.boomerang.model.ref.WorkflowRunCount;
 import io.boomerang.model.ref.WorkflowRunInsight;
@@ -75,6 +76,9 @@ public class EngineClientImpl implements EngineClient {
 
   @Value("${flow.engine.workflow.query.url}")
   public String queryWorkflowURL;
+
+  @Value("${flow.engine.workflow.count.url}")
+  public String countWorkflowURL;
 
   @Value("${flow.engine.workflow.create.url}")
   public String createWorkflowURL;
@@ -464,7 +468,7 @@ public class EngineClientImpl implements EngineClient {
   public WorkflowResponsePage queryWorkflows(Optional<Integer> queryLimit,
       Optional<Integer> queryPage, Optional<Direction> querySort,
       Optional<List<String>> queryLabels, Optional<List<String>> queryStatus,
-      Optional<List<String>> queryIds) {
+      Optional<List<String>> queryWorkflows) {
     try {
       UriComponentsBuilder urlBuilder = UriComponentsBuilder.fromHttpUrl(queryWorkflowURL);
       if (queryPage.isPresent()) {
@@ -482,8 +486,8 @@ public class EngineClientImpl implements EngineClient {
       if (queryStatus.isPresent()) {
         urlBuilder.queryParam("status", queryStatus.get());
       }
-      if (queryIds.isPresent() && !queryIds.get().isEmpty()) {
-        urlBuilder.queryParam("ids", queryIds.get());
+      if (queryWorkflows.isPresent() && !queryWorkflows.get().isEmpty()) {
+        urlBuilder.queryParam("workflows", queryWorkflows.get());
       }
       URI encodedURI = urlBuilder.build().encode().toUri();
 
@@ -494,6 +498,43 @@ public class EngineClientImpl implements EngineClient {
 
       LOGGER.info("Status Response: " + response.getStatusCode());
       LOGGER.info("Content Response: " + response.getBody().getContent().toString());
+
+      return response.getBody();
+    } catch (RestClientException ex) {
+      LOGGER.error(ex.toString());
+      throw new BoomerangException(ex, HttpStatus.INTERNAL_SERVER_ERROR.value(),
+          ex.getClass().getSimpleName(), "Exception in communicating with internal services.",
+          HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @Override
+  public WorkflowCount countWorkflows(Optional<List<String>> queryLabels,
+      Optional<List<String>> queryWorkflows,
+      Optional<Long> fromDate, Optional<Long> toDate) {
+    try {
+      UriComponentsBuilder urlBuilder = UriComponentsBuilder.fromHttpUrl(countWorkflowURL);
+      if (fromDate.isPresent()) {
+        urlBuilder.queryParam("fromDate", fromDate.get());
+      }
+      if (toDate.isPresent()) {
+        urlBuilder.queryParam("toDate", toDate.get());
+      }
+      if (queryLabels.isPresent()) {
+        urlBuilder.queryParam("labels", queryLabels.get());
+      }
+      if (queryWorkflows.isPresent() && !queryWorkflows.get().isEmpty()) {
+        urlBuilder.queryParam("workflows", queryWorkflows.get());
+      }
+      URI encodedURI = urlBuilder.build().encode().toUri();
+
+      LOGGER.info("Query URL: " + encodedURI);
+
+      ResponseEntity<WorkflowCount> response =
+          restTemplate.getForEntity(encodedURI, WorkflowCount.class);
+
+      LOGGER.info("Status Response: " + response.getStatusCode());
+      LOGGER.info("Content Response: " + response.getBody().toString());
 
       return response.getBody();
     } catch (RestClientException ex) {

@@ -50,6 +50,7 @@ import io.boomerang.model.enums.RelationshipRef;
 import io.boomerang.model.enums.RelationshipType;
 import io.boomerang.model.enums.TeamStatus;
 import io.boomerang.model.enums.UserType;
+import io.boomerang.model.ref.WorkflowCount;
 import io.boomerang.model.ref.WorkflowRunInsight;
 import io.boomerang.security.entity.RoleEntity;
 import io.boomerang.security.model.Role;
@@ -100,8 +101,8 @@ public class TeamServiceImpl implements TeamService {
   @Autowired
   private WorkflowRunService workflowRunService;
   
-//  @Autowired
-//  private WorkflowService workflowService;
+  @Autowired
+  private WorkflowService workflowService;
 
   /*
    * Validate the team name - used by the UI to determine if a team can be created
@@ -756,11 +757,10 @@ public class TeamServiceImpl implements TeamService {
     currentQuotas.setCurrentRunMedianDuration(insight.getMedianDuration().intValue());
     currentQuotas.setCurrentRuns(insight.getTotalRuns().intValue());
 
-    // TODO update to only be active workflows
-    List<String> workflowRefs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.WORKFLOW),
-        Optional.empty(), Optional.of(RelationshipType.BELONGSTO),
-        Optional.of(RelationshipRef.TEAM), Optional.of(List.of(team)));
-    currentQuotas.setCurrentWorkflowCount(workflowRefs.size());
+    WorkflowCount count = workflowService.count(Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(List.of(team)), Optional.empty());
+    Long active = count.getStatus().get("active");
+    Long inactive = count.getStatus().get("inactive");
+    currentQuotas.setCurrentWorkflowCount((int) (active + inactive));
 
     // TODO look into this one
     currentQuotas.setCurrentPersistentStorage(null);

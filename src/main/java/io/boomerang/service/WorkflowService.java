@@ -9,6 +9,7 @@ import io.boomerang.client.WorkflowResponsePage;
 import io.boomerang.model.WorkflowCanvas;
 import io.boomerang.model.ref.ChangeLogVersion;
 import io.boomerang.model.ref.Workflow;
+import io.boomerang.model.ref.WorkflowCount;
 
 public interface WorkflowService {
 
@@ -37,5 +38,8 @@ public interface WorkflowService {
   List<String> getAvailableParameters(String workflowId);
 
   ResponseEntity<List<ChangeLogVersion>> changelog(String workflowId);
+
+  WorkflowCount count(Optional<Long> from, Optional<Long> to, Optional<List<String>> queryLabels,
+      Optional<List<String>> queryTeams, Optional<List<String>> queryWorkflows);
   
 }

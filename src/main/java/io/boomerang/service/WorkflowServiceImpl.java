@@ -43,6 +43,7 @@ import io.boomerang.model.ref.Trigger;
 import io.boomerang.model.ref.TriggerEvent;
 import io.boomerang.model.ref.TriggerScheduler;
 import io.boomerang.model.ref.Workflow;
+import io.boomerang.model.ref.WorkflowCount;
 import io.boomerang.model.ref.WorkflowTrigger;
 import io.boomerang.model.ref.WorkflowWorkspace;
 import io.boomerang.model.ref.WorkflowWorkspaceSpec;
@@ -146,6 +147,17 @@ public class WorkflowServiceImpl implements WorkflowService {
     }
     
     return response;
+  }
+  
+  /*
+   * Retrieve the statistics for a specific period of time and filters
+   */
+  @Override
+  public WorkflowCount count(Optional<Long> from, Optional<Long> to,  Optional<List<String>> queryLabels, Optional<List<String>> queryTeams, Optional<List<String>> queryWorkflows) {
+    List<String> refs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.WORKFLOW), queryWorkflows, Optional.of(RelationshipType.BELONGSTO), Optional.of(RelationshipRef.TEAM), queryTeams);
+    LOGGER.debug("Query Ids: ", refs);
+    
+    return engineClient.countWorkflows(queryLabels, Optional.of(refs), from, to);
   }
 
   /*
