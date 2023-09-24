@@ -302,7 +302,7 @@ public class TeamServiceImpl implements TeamService {
       }
     }
 
-    Criteria criteria = Criteria.where("id").in(teamRefs);
+    Criteria criteria = Criteria.where("name").in(teamRefs);
     criteriaList.add(criteria);
 
     Criteria[] criteriaArray = criteriaList.toArray(new Criteria[criteriaList.size()]);
