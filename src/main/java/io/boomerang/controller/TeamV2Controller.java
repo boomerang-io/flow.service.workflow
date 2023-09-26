@@ -99,8 +99,8 @@ public class TeamV2Controller {
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
   public Team updateTeam(@Parameter(name = "team",
-      description = "ID of Team", required = true) @PathVariable String teamId, @RequestBody TeamRequest request) {
-    return teamService.patch(teamId, request);
+      description = "ID of Team", required = true) @PathVariable String team, @RequestBody TeamRequest request) {
+    return teamService.patch(team, request);
   }
   
   @DeleteMapping(value = "/{team}/members")
