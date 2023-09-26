@@ -548,6 +548,7 @@ public class WorkflowServiceImpl implements WorkflowService {
       CanvasNodeData nodeData = new CanvasNodeData();
       nodeData.setName(task.getName());
       nodeData.setParams(task.getParams());
+      nodeData.setResults(task.getResults());
       nodeData.setTemplateRef(task.getTemplateRef());
       nodeData.setTemplateVersion(task.getTemplateVersion());
       //TODO figure out template upgrades
@@ -597,6 +598,7 @@ public class WorkflowServiceImpl implements WorkflowService {
       position.put("y", node.getPosition().getY());
       task.getAnnotations().put("boomerang.io/position", position);
       task.setParams(node.getData().getParams());
+      task.setResults(node.getData().getResults());
       task.setTemplateRef(node.getData().getTemplateRef());
       task.setTemplateVersion(node.getData().getTemplateVersion());
       

@@ -6,12 +6,14 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.boomerang.model.ref.ResultSpec;
 import io.boomerang.model.ref.RunParam;
 
 public class CanvasNodeData {
   
   String name;
   List<RunParam> params;
+  List<ResultSpec> results;
   String templateRef;
   Integer templateVersion;
   boolean templateUpgradesAvailable;
@@ -35,6 +37,14 @@ public class CanvasNodeData {
     this.params = params;
   }
   
+  public List<ResultSpec> getResults() {
+    return results;
+  }
+
+  public void setResults(List<ResultSpec> results) {
+    this.results = results;
+  }
+
   public String getTemplateRef() {
     return templateRef;
   }
