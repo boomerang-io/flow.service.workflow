@@ -14,9 +14,8 @@ public class MongoConfiguration {
     if (workflowCollectionPrefix == null || workflowCollectionPrefix.isBlank()) {
       return "" + collectionName;
     }
-    String newCollectionName = workflowCollectionPrefix + "_" + collectionName;
-    
-    return newCollectionName;
+    workflowCollectionPrefix = workflowCollectionPrefix.endsWith("_") ? workflowCollectionPrefix : workflowCollectionPrefix + "_";
+    return workflowCollectionPrefix + collectionName;
   }
   
   public String collectionPrefix() {
