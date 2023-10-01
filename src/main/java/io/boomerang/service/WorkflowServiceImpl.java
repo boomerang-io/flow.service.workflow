@@ -466,11 +466,6 @@ public class WorkflowServiceImpl implements WorkflowService {
    * Sets up the Triggers as per v3 design
    */
   private void setupTriggerDefaults(final Workflow workflow) {
-
-    if (workflow.getTokens() == null) {
-      workflow.setTokens(new LinkedList<>());
-    }
-
     if (workflow.getTriggers() == null) {
       workflow.setTriggers(new WorkflowTrigger());
       workflow.getTriggers().getManual().setEnable(true);
