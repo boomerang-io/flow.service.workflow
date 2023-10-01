@@ -42,21 +42,12 @@ public class Workflow {
   private Long timeout;
   private Long retries;
   private boolean upgradesAvailable = false;
-
   //TODO: adjust the triggers model
   private WorkflowTrigger triggers;
-  
-  //TODO: revisit tokens implementation
-  private List<WorkflowToken> tokens;
-  
   private List<Task> tasks = new LinkedList<>();
-
   private List<ParamSpec> params = new LinkedList<>();
-  
-  private List<WorkflowWorkspace> workspaces = new LinkedList<>();
-  
-  private List<AbstractParam> config = new LinkedList<>();
-
+  private List<WorkflowWorkspace> workspaces = new LinkedList<>();  
+  private List<AbstractParam> config = new LinkedList<>();;
   private Map<String, Object> unknownFields = new HashMap<>();
 
   @JsonAnyGetter
@@ -221,14 +212,6 @@ public class Workflow {
 
   public void setTriggers(WorkflowTrigger triggers) {
     this.triggers = triggers;
-  }
-
-  public List<WorkflowToken> getTokens() {
-    return tokens;
-  }
-
-  public void setTokens(List<WorkflowToken> tokens) {
-    this.tokens = tokens;
   }
 
   public boolean isUpgradesAvailable() {
