@@ -105,6 +105,7 @@ public class QuartzSchedulerService {
   }
   
   public void pauseJob(WorkflowScheduleEntity schedule) throws SchedulerException {
+    logger.debug("Pause Job - " + schedule.getId() + " " + schedule.getWorkflowRef());
     Scheduler scheduler = schedulerFactoryBean.getScheduler();
     scheduler.pauseJob(new JobKey(schedule.getId(), schedule.getWorkflowRef()));
   }
