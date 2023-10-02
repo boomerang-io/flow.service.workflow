@@ -403,7 +403,7 @@ public class WorkflowServiceImpl implements WorkflowService {
         Optional.of(List.of(workflowId)), Optional.of(RelationshipType.BELONGSTO),  Optional.of(RelationshipRef.TEAM), Optional.empty());
     if (!teamRefs.isEmpty()) {
       Workflow workflow = engineClient.getWorkflow(workflowId, Optional.empty(), true);
-      List<String> paramKeys = parameterManager.buildParamKeys(teamRefs.get(0), workflow.getParams());
+      List<String> paramKeys = parameterManager.buildParamKeys(teamRefs.get(0), workflowId, workflow.getParams());
       workflow.getTasks().forEach(t -> {
         if (t.getResults() != null && !t.getResults().isEmpty()) {
           t.getResults().forEach(r -> {
@@ -497,20 +497,20 @@ public class WorkflowServiceImpl implements WorkflowService {
   /*
    * Update Triggers
    */
-  private void updateScheduleTriggers(final Workflow updatedWorkflow, WorkflowTrigger currentTriggers) {
+  private void updateScheduleTriggers(final Workflow request, WorkflowTrigger currentTriggers) {
     if (currentTriggers == null) {
       currentTriggers = new WorkflowTrigger();
     }
-    if (updatedWorkflow.getTriggers() != null) {
+    if (request.getTriggers() != null) {
       boolean currentSchedulerEnabled = false;
       if (currentTriggers.getScheduler() != null) {
         currentSchedulerEnabled = currentTriggers.getScheduler().getEnable();
       }
-      boolean updatedSchedulerEnabled = updatedWorkflow.getTriggers() != null ? updatedWorkflow.getTriggers().getScheduler().getEnable() : false;
-      if (updatedSchedulerEnabled == false) {
-        scheduleService.disableAllTriggerSchedules(updatedWorkflow.getId());
+      boolean updatedSchedulerEnabled = request.getTriggers() != null && request.getTriggers().getScheduler() != null ? request.getTriggers().getScheduler().getEnable() : false;
+      if (currentSchedulerEnabled != false && updatedSchedulerEnabled == false) {
+        scheduleService.disableAllTriggerSchedules(request.getId());
       } else if (currentSchedulerEnabled == false && updatedSchedulerEnabled == true) {
-        scheduleService.enableAllTriggerSchedules(updatedWorkflow.getId());
+        scheduleService.enableAllTriggerSchedules(request.getId());
       }
     }
   }
