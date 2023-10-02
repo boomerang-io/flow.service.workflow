@@ -47,6 +47,9 @@ public class QuartzConfiguration {
     prop.setProperty("org.quartz.jobStore.mongoUri", mongoUri);
     
     String collectionNamePrefix = mongoConfiguration.collectionPrefix();
+    if (collectionNamePrefix.endsWith("_")) {
+      collectionNamePrefix = collectionNamePrefix.substring(0, collectionNamePrefix.length()-1);
+    }
     prop.setProperty("org.quartz.jobStore.collectionPrefix", collectionNamePrefix);
     logger.debug("Quartz Configuration: " + prop.toString());
     
