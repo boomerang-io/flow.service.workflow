@@ -1,6 +1,5 @@
 package io.boomerang.service;
 
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -17,6 +16,9 @@ import io.boomerang.model.enums.RelationshipRef;
 import io.boomerang.model.enums.RelationshipType;
 import io.boomerang.model.ref.ParamLayers;
 import io.boomerang.model.ref.ParamSpec;
+import io.boomerang.security.entity.TokenEntity;
+import io.boomerang.security.model.AuthType;
+import io.boomerang.security.repository.TokenRepository;
 
 /*
  * This is one half of the Param Layers. It collects the Global, Team, and Context Layers.
@@ -38,12 +40,15 @@ public class ParameterManagerImpl implements ParameterManager {
   private GlobalParamService globalParamService;
 
   @Autowired
+  private TokenRepository tokenRepository;
+
+  @Autowired
   private RelationshipService relationshipService;
 
   final String[] reserved = {"system", "workflow", "global", "team", "workflow"};
   
   @Override
-  public List<String> buildParamKeys(String teamId, List<ParamSpec> workflowParamSpecs) {
+  public List<String> buildParamKeys(String teamId, String workflowId, List<ParamSpec> workflowParamSpecs) {
     ParamLayers paramLayers = new ParamLayers();
     Map<String, Object> globalParams = paramLayers.getGlobalParams();
     Map<String, Object> teamParams = paramLayers.getTeamParams();
@@ -61,7 +66,7 @@ public class ParameterManagerImpl implements ParameterManager {
     for (ParamSpec wfParam : workflowParamSpecs) {
       workflowParams.put(wfParam.getName(), "");
     }
-    buildContextParams(contextParams);
+    buildContextParams(contextParams, workflowId);
 
     return paramLayers.getFlatKeys();
   }
@@ -86,7 +91,7 @@ public class ParameterManagerImpl implements ParameterManager {
         buildTeamParams(teamParams, rel.get().getToRef());
       }
     }
-    buildContextParams(contextParams);
+    buildContextParams(contextParams, workflowId);
 
     return paramLayers;
   }
@@ -124,12 +129,12 @@ public class ParameterManagerImpl implements ParameterManager {
    * 
    * TODO: check this with the reserved Tekton ones
    */
-  private void buildContextParams(Map<String, Object> contextParams) {
+  private void buildContextParams(Map<String, Object> contextParams, String workflowId) {
     contextParams.put("workflowrun-trigger", "");
     contextParams.put("workflowrun-initiator", "");
     contextParams.put("workflowrun-id", "");
     contextParams.put("workflow-name", "");
-    contextParams.put("workflow-id", "");
+    contextParams.put("workflow-id", workflowId);
     contextParams.put("workflow-version", "");
     contextParams.put("taskrun-id", "");
     contextParams.put("taskrun-name", "");
@@ -138,13 +143,12 @@ public class ParameterManagerImpl implements ParameterManager {
     contextParams.put("wfe-url", this.settingsService.getWFEURL());
     contextParams.put("event-url", this.settingsService.getEventURL());
     
+    Optional<List<TokenEntity>> tokens = tokenRepository.findByPrincipalAndType(workflowId, AuthType.workflow);
     // Add Tokens
-    // TODO: use Relationship to get all the Tokens
-//    WorkflowEntity workflow = workflowService.getWorkflow(workflowId);
-//    if (workflow.getTokens() != null) {
-//      for (WorkflowToken token : workflow.getTokens()) {
-//        reservedProperties.put("context.tokens." + token.getLabel(), token.getToken());
-//      }
-//    }
+    if (tokens.isPresent() && !tokens.isEmpty()) {
+      for (TokenEntity t : tokens.get()) {
+        contextParams.put("context.tokens." + t.getName(), t.getToken());
+      }
+    }
   }
 }

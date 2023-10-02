@@ -390,14 +390,14 @@ public class TokenServiceImpl implements TokenService {
    */
   public Token createWorkflowSessionToken(String workflowRef) {
     CreateTokenRequest tokenRequest = new CreateTokenRequest();
-    tokenRequest.setName("Scheduled Job Token");
+    tokenRequest.setName("scheduled-job-token");
     tokenRequest.setType(AuthType.workflow);
     tokenRequest.setPrincipal(workflowRef);
     tokenRequest.setPermissions(List.of("workflow/" + workflowRef + "/**"));
     
     Calendar cal = Calendar.getInstance();
     cal.setTime(new Date());
-    cal.add(Calendar.HOUR, 12);
+    cal.add(Calendar.HOUR, 1);
     Date expiryDate = cal.getTime();
     tokenRequest.setExpirationDate(expiryDate);
     
