@@ -395,17 +395,12 @@ public class TeamServiceImpl implements TeamService {
    */
   private List<AbstractParam> createOrUpdateParameters(TeamEntity teamEntity, List<AbstractParam> request) {
     List<AbstractParam> parameters = teamEntity.getParameters();
-    for (AbstractParam r : request) {
-      AbstractParam parameter = parameters.stream()
-          .filter(p -> p.getKey().equals(r.getKey())).findAny().orElse(null);
-      //TODO make this better
-      if (parameter != null) {
-        parameters.remove(parameter);
-        BeanUtils.copyProperties(r, parameter);
-      }
-      parameters.add(parameter);
-    }
-
+    List<String> keys = request.stream().map(AbstractParam::getKey).toList();
+    //Check if parameter exists and remove
+    parameters = parameters.stream().filter(p -> !keys.contains(p.getKey())).toList();
+    
+    //Add all new / updated params
+    parameters.addAll(request);
     return parameters;
   }
 

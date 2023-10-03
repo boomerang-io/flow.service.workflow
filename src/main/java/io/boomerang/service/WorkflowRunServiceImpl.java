@@ -171,6 +171,7 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
           request.setTimeout(Long.valueOf(setting));
         }
       }
+      //These annotations are processed by the DAGUtility in the Engine
       Map<String, Object> executionAnnotations = new HashMap<>();
       executionAnnotations.put("boomerang.io/task-deletion", this.settingsService.getSettingConfig("task", "deletion.policy").getValue());
       executionAnnotations.put("boomerang.io/task-default-image", this.settingsService.getSettingConfig("task", "default.image").getValue());
