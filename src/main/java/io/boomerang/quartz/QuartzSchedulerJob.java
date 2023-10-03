@@ -85,7 +85,9 @@ public class QuartzSchedulerJob extends QuartzJobBean {
           new UsernamePasswordAuthenticationToken(jobDetail.getKey().getGroup(), null, authorities);
       authToken.setDetails(token);
       SecurityContextHolder.getContext().setAuthentication(authToken);
-
+      
+      boolean autoStart = applicationContext.getEnvironment().getProperty("flow.scheduleds.auto-start-on-submit", boolean.class);
+      logger.info("Auto Start: {}", autoStart);
       workflowRunService.submit(request, true);
     }
   }

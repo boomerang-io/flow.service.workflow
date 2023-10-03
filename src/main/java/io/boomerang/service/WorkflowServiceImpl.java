@@ -390,8 +390,8 @@ public class WorkflowServiceImpl implements WorkflowService {
     }
     
     Workflow workflow = convertCanvasToWorkflow(canvas);
-    this.apply(workflow, replace, team);
-    return ResponseEntity.ok(canvas);
+    ResponseEntity<Workflow> response = this.apply(workflow, replace, team);
+    return ResponseEntity.ok(convertWorkflowToCanvas(response.getBody()));
   }  
 
   @Override
