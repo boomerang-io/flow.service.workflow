@@ -198,6 +198,7 @@ public class TeamServiceImpl implements TeamService {
   @Override
   public Team patch(String team, TeamRequest request) {
     if (request != null) {
+      LOGGER.debug("Request: " + request.toString());
       if (team == null || team.isBlank()) {
         throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
       }
