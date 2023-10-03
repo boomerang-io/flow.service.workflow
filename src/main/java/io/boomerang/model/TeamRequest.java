@@ -27,6 +27,14 @@ public class TeamRequest {
   private List<TeamMember> members;
   private List<ApproverGroupRequest> approverGroups;
   
+  @Override
+  public String toString() {
+    return "TeamRequest [id=" + id + ", name=" + name + ", displayName=" + displayName + ", status="
+        + status + ", type=" + type + ", externalRef=" + externalRef + ", labels=" + labels
+        + ", parameters=" + parameters + ", quotas=" + quotas + ", members=" + members
+        + ", approverGroups=" + approverGroups + "]";
+  }
+  
   public String getId() {
     return id;
   }

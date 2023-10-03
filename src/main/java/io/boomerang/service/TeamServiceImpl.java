@@ -235,6 +235,7 @@ public class TeamServiceImpl implements TeamService {
       
       // Create / Update Parameters
       if (request.getParameters() != null && !request.getParameters().isEmpty()) {
+        LOGGER.debug("Request Parameters: " + request.getParameters().toString());
         createOrUpdateParameters(teamEntity, request.getParameters());
       }
       
