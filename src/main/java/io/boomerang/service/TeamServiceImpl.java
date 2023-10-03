@@ -172,7 +172,7 @@ public class TeamServiceImpl implements TeamService {
       
       // Create / Update Parameters
       if (request.getParameters() != null && !request.getParameters().isEmpty()) {
-        createOrUpdateParameters(teamEntity, request.getParameters());
+        teamEntity.setParameters(createOrUpdateParameters(teamEntity.getParameters(), request.getParameters()));
       }
       
       // Create / Update ApproverGroups
@@ -236,7 +236,7 @@ public class TeamServiceImpl implements TeamService {
       // Create / Update Parameters
       if (request.getParameters() != null && !request.getParameters().isEmpty()) {
         LOGGER.debug("Request Parameters: " + request.getParameters().toString());
-        createOrUpdateParameters(teamEntity, request.getParameters());
+        teamEntity.setParameters(createOrUpdateParameters(teamEntity.getParameters(), request.getParameters()));
       }
       
       // Create / Update ApproverGroups
@@ -395,16 +395,17 @@ public class TeamServiceImpl implements TeamService {
   /*
    * Creates or Updates Team Parameters
    */
-  private List<AbstractParam> createOrUpdateParameters(TeamEntity teamEntity, List<AbstractParam> request) {
-    List<AbstractParam> parameters = teamEntity.getParameters();
-    LOGGER.debug(parameters.toString());
-    List<String> keys = request.stream().map(AbstractParam::getKey).toList();
-    //Check if parameter exists and remove
-    parameters = parameters.stream().filter(p -> !keys.contains(p.getKey())).toList();
-    
-    //Add all new / updated params
-    parameters.addAll(request);
-    LOGGER.debug(parameters.toString());
+  private List<AbstractParam> createOrUpdateParameters(List<AbstractParam> parameters, List<AbstractParam> request) {
+    if (!request.isEmpty()) {
+      LOGGER.debug("Starting Parameters: " + parameters.toString());
+      List<String> keys = request.stream().map(AbstractParam::getKey).toList();
+      //Check if parameter exists and remove
+      parameters = parameters.stream().filter(p -> !keys.contains(p.getKey())).toList();
+      
+      //Add all new / updated params
+      parameters.addAll(request);
+    }
+    LOGGER.debug("Ending Parameters: " + parameters.toString());
     return parameters;
   }
 

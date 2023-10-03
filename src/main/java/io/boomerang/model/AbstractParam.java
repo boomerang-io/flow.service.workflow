@@ -30,6 +30,14 @@ public class AbstractParam {
   public AbstractParam() {
   }
 
+  @Override
+  public String toString() {
+    return "AbstractParam [key=" + key + ", description=" + description + ", label=" + label
+        + ", type=" + type + "]";
+  }
+
+
+
   public Boolean isHiddenValue() {
     return hiddenValue;
   }
