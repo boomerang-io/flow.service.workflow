@@ -398,9 +398,11 @@ public class TeamServiceImpl implements TeamService {
   private List<AbstractParam> createOrUpdateParameters(List<AbstractParam> parameters, List<AbstractParam> request) {
     if (!request.isEmpty()) {
       LOGGER.debug("Starting Parameters: " + parameters.toString());
+      LOGGER.debug("New Parameters: " + request.toString());
       List<String> keys = request.stream().map(AbstractParam::getKey).toList();
+      LOGGER.debug("New Parameter Keys: " + keys.toString());
       //Check if parameter exists and remove
-      parameters = parameters.stream().filter(p -> !keys.contains(p.getKey())).toList();
+      parameters = parameters.stream().filter(p -> !keys.contains(p.getKey())).collect(Collectors.toList());
       
       //Add all new / updated params
       parameters.addAll(request);
