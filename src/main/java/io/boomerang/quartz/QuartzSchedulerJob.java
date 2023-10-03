@@ -78,7 +78,7 @@ public class QuartzSchedulerJob extends QuartzJobBean {
       request.setParams(request.getParams());
       request.setTrigger("schedule");
 
-      //Hoist token to ThreadLocal SecurityContext - this AuthN/AuthZ the WorkflowRun to be triggered
+      //Hoist token to ThreadLocal SecurityContext - this AuthN/AuthZ allows the WorkflowRun to be triggered
       Token token = tokenService.createWorkflowSessionToken(jobDetail.getKey().getGroup());
       final List<GrantedAuthority> authorities = new ArrayList<>();
       final UsernamePasswordAuthenticationToken authToken =
@@ -86,9 +86,11 @@ public class QuartzSchedulerJob extends QuartzJobBean {
       authToken.setDetails(token);
       SecurityContextHolder.getContext().setAuthentication(authToken);
       
-      boolean autoStart = applicationContext.getEnvironment().getProperty("flow.scheduleds.auto-start-on-submit", boolean.class);
-      logger.info("Auto Start: {}", autoStart);
-      workflowRunService.submit(request, true);
+      //Auto start is not needed when using the default handler
+      //As the default handler will pick up the queued Workflow and start the Workflow when ready.
+      //However if using the non-default Handler then this may be needed to be set to true.
+      boolean autoStart = applicationContext.getEnvironment().getProperty("flow.scheduler.auto-start-on-submit", boolean.class);
+      workflowRunService.submit(request, autoStart);
     }
   }
 }

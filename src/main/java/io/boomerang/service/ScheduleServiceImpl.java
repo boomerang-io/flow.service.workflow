@@ -27,6 +27,7 @@ import com.cronutils.model.Cron;
 import com.cronutils.model.CronType;
 import com.cronutils.model.definition.CronDefinitionBuilder;
 import com.cronutils.parser.CronParser;
+import io.boomerang.client.EngineClient;
 import io.boomerang.data.entity.WorkflowScheduleEntity;
 import io.boomerang.data.repository.WorkflowScheduleRepository;
 import io.boomerang.error.BoomerangError;
@@ -63,6 +64,9 @@ public class ScheduleServiceImpl implements ScheduleService {
   
   @Autowired
   private RelationshipService relationshipService;
+
+  @Autowired
+  private EngineClient engineClient;
   
   @Autowired
   private MongoTemplate mongoTemplate;
@@ -195,8 +199,7 @@ public class ScheduleServiceImpl implements ScheduleService {
       // TODO: better accurate error
       throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
     }
-    Workflow workflow =
-        workflowService.get(schedule.getWorkflowRef(), Optional.empty(), false).getBody();
+    Workflow workflow = engineClient.getWorkflow(schedule.getWorkflowRef(), Optional.empty(), false);
     WorkflowScheduleEntity scheduleEntity = new WorkflowScheduleEntity();
     BeanUtils.copyProperties(schedule, scheduleEntity);
     Boolean enableJob = false;
