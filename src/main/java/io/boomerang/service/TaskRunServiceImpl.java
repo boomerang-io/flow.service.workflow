@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -27,6 +28,11 @@ import org.springframework.web.client.ResponseExtractor;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import io.boomerang.client.EngineClient;
+import io.boomerang.data.entity.RelationshipEntity;
+import io.boomerang.error.BoomerangError;
+import io.boomerang.error.BoomerangException;
+import io.boomerang.model.enums.RelationshipRef;
+import io.boomerang.model.enums.RelationshipType;
 import io.boomerang.model.ref.ParamLayers;
 import io.boomerang.model.ref.RunParam;
 import io.boomerang.model.ref.TaskRun;
@@ -49,14 +55,27 @@ public class TaskRunServiceImpl implements TaskRunService {
   @Autowired
   private ParameterManager parameterManager;
 
+  @Autowired
+  private RelationshipService relationshipService;
+
   @Override
   public StreamingResponseBody getTaskRunLog(String workflowRunId, String taskRunId) {
+    if (workflowRunId == null || workflowRunId.isBlank() || taskRunId == null || taskRunId.isBlank()) {
+      //TODO better error message
+      throw new BoomerangException(BoomerangError.WORKFLOW_RUN_INVALID_REF);
+    }
+    
+    Optional<RelationshipEntity> rel = relationshipService.getRelationship(RelationshipRef.WORKFLOWRUN, workflowRunId, RelationshipType.BELONGSTO);
+    if (rel.isEmpty()) {
+      //TODO better error message
+      throw new BoomerangException(BoomerangError.WORKFLOW_RUN_INVALID_REF);
+    }
 
     LOGGER.info("Getting TaskRun log for activity: {} task id: {}", workflowRunId, taskRunId);
     
     TaskRun taskRun = engineClient.getTaskRun(taskRunId);
 
-    List<String> removeList = buildRemovalList(workflowRunId, taskRunId, taskRun);
+    List<String> removeList = buildRemovalList(rel.get().getToRef(), workflowRunId, taskRunId, taskRun);
     LOGGER.debug("Removal List Count: {} ", removeList.size());
 
     //TODO come back and making this work with the new Handler request
@@ -132,10 +151,11 @@ public class TaskRunServiceImpl implements TaskRunService {
   }
 
   //TODO: verify this - i doubt we need to do it this way anymore. The TaskRun has the resolved parameters. So we can just check type and value and replace.
-  private List<String> buildRemovalList(String workflowRunId, String taskRunId, TaskRun taskRun) {
+  private List<String> buildRemovalList(String teamId, String workflowRunId, String taskRunId, TaskRun taskRun) {
     List<String> removalList = new LinkedList<>();
+    //TODO: it has to be workflowId not workflowRunId
     ParamLayers paramLayers =
-        parameterManager.buildParamLayers(workflowRunId);
+        parameterManager.buildParamLayers(teamId, workflowRunId);
     Map<String, Object> map = paramLayers.getFlatMap();
 
     if (taskRun != null && taskRun.getParams() != null) {
