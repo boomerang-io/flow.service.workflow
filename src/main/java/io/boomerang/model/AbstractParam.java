@@ -39,8 +39,6 @@ public class AbstractParam {
         + ", type=" + type + "]";
   }
 
-
-
   public Boolean isHiddenValue() {
     return hiddenValue;
   }

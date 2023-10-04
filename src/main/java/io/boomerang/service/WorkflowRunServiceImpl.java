@@ -24,6 +24,7 @@ import io.boomerang.model.ref.WorkflowRunCount;
 import io.boomerang.model.ref.WorkflowRunInsight;
 import io.boomerang.model.ref.WorkflowRunRequest;
 import io.boomerang.model.ref.WorkflowRunSubmitRequest;
+import io.boomerang.util.ParameterUtil;
 
 /*
  * This service replicates the required calls for Engine WorkflowRunV1 APIs
@@ -48,6 +49,9 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
   
   @Autowired
   private SettingsService settingsService;
+  
+  @Autowired
+  private ParameterManager parameterManager;
   
   /*
    * Get Workflow Run
@@ -176,6 +180,10 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
       executionAnnotations.put("boomerang.io/task-deletion", this.settingsService.getSettingConfig("task", "deletion.policy").getValue());
       executionAnnotations.put("boomerang.io/task-default-image", this.settingsService.getSettingConfig("task", "default.image").getValue());
       request.getAnnotations().putAll(executionAnnotations);
+      
+      //Add Context, Global, and Team parameters to the WorkflowRun request
+      request.setParams(ParameterUtil.mapToRunParamList(parameterManager.buildParamLayers(teamRelationship.get().getToRef(), request.getWorkflowRef()).getFlatMap()));
+      
       // TODO: figure out the storing of initiated by. Is that just a relationship?
       WorkflowRun wfRun = engineClient.submitWorkflowRun(request, start);
       // TODO: FUTURE - Creates the relationship with the Workflow

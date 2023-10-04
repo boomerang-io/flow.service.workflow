@@ -75,7 +75,7 @@ public class ParameterManagerImpl implements ParameterManager {
    * Only needs to set the Global, Team, and partial Context Params. Engine will add and resolve.
    */
   @Override
-  public ParamLayers buildParamLayers(String workflowId) {
+  public ParamLayers buildParamLayers(String teamId, String workflowId) {
     ParamLayers paramLayers = new ParamLayers();
     Map<String, Object> globalParams = paramLayers.getGlobalParams();
     Map<String, Object> teamParams = paramLayers.getTeamParams();
@@ -86,10 +86,7 @@ public class ParameterManagerImpl implements ParameterManager {
     }
     //Set Team Params
     if (settingsService.getSettingConfig("features", "teamParameters").getBooleanValue()) {
-      Optional<RelationshipEntity> rel = relationshipService.getRelationship(RelationshipRef.WORKFLOW, workflowId, RelationshipType.BELONGSTO);
-      if (rel.isEmpty()) {
-        buildTeamParams(teamParams, rel.get().getToRef());
-      }
+        buildTeamParams(teamParams, teamId);
     }
     buildContextParams(contextParams, workflowId);
 

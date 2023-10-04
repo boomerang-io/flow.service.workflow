@@ -44,7 +44,7 @@ public class InternalController {
   public ParamLayers getParamLayers(
       @Parameter(name = "workflowId", description = "ID of the Workflow",
       required = true) @PathVariable String workflowId) {
-    return parameterManager.buildParamLayers(workflowId);
+    return parameterManager.buildParamLayers("", workflowId);
   }
 
   // Used by Engine for RunScheduledWorkflow task
