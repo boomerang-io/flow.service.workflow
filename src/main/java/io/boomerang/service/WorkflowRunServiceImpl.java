@@ -19,6 +19,7 @@ import io.boomerang.error.BoomerangError;
 import io.boomerang.error.BoomerangException;
 import io.boomerang.model.enums.RelationshipRef;
 import io.boomerang.model.enums.RelationshipType;
+import io.boomerang.model.ref.ParamLayers;
 import io.boomerang.model.ref.RunParam;
 import io.boomerang.model.ref.WorkflowRun;
 import io.boomerang.model.ref.WorkflowRunCount;
@@ -183,9 +184,10 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
       request.getAnnotations().putAll(executionAnnotations);
       
       //Add Context, Global, and Team parameters to the WorkflowRun request
-      List<RunParam> params = ParameterUtil.mapToRunParamList(parameterManager.buildParamLayers(teamRelationship.get().getToRef(), request.getWorkflowRef()).getFlatMap());
-      LOGGER.debug("Param Layers: " + params.toString());
-      request.setParams(params);
+      ParamLayers paramLayers = parameterManager.buildParamLayers(teamRelationship.get().getToRef(), request.getWorkflowRef());
+      executionAnnotations.put("boomerang.io/global-params", paramLayers.getGlobalParams());
+      executionAnnotations.put("boomerang.io/context-params", paramLayers.getContextParams());
+      executionAnnotations.put("boomerang.io/team-params", paramLayers.getTeamParams());
       
       // TODO: figure out the storing of initiated by. Is that just a relationship?
       WorkflowRun wfRun = engineClient.submitWorkflowRun(request, start);
