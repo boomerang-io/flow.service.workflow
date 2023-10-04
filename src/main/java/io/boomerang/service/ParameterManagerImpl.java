@@ -5,15 +5,12 @@ import java.util.Map;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import io.boomerang.data.entity.RelationshipEntity;
 import io.boomerang.data.entity.TeamEntity;
 import io.boomerang.data.repository.TeamRepository;
 import io.boomerang.error.BoomerangError;
 import io.boomerang.error.BoomerangException;
 import io.boomerang.model.AbstractParam;
 import io.boomerang.model.GlobalParam;
-import io.boomerang.model.enums.RelationshipRef;
-import io.boomerang.model.enums.RelationshipType;
 import io.boomerang.model.ref.ParamLayers;
 import io.boomerang.model.ref.ParamSpec;
 import io.boomerang.security.entity.TokenEntity;
@@ -41,9 +38,6 @@ public class ParameterManagerImpl implements ParameterManager {
 
   @Autowired
   private TokenRepository tokenRepository;
-
-  @Autowired
-  private RelationshipService relationshipService;
 
   final String[] reserved = {"system", "workflow", "global", "team", "workflow"};
   
@@ -89,7 +83,7 @@ public class ParameterManagerImpl implements ParameterManager {
         buildTeamParams(teamParams, teamId);
     }
     buildContextParams(contextParams, workflowId);
-
+    
     return paramLayers;
   }
 
