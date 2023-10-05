@@ -23,6 +23,13 @@ public class WorkflowRunRequest {
   
   private Boolean debug;
 
+  @Override
+  public String toString() {
+    return "WorkflowRunRequest [labels=" + labels + ", annotations=" + annotations + ", params="
+        + params + ", workspaces=" + workspaces + ", timeout=" + timeout + ", retries=" + retries
+        + ", trigger=" + trigger + ", debug=" + debug + "]";
+  }
+
   public Map<String, String> getLabels() {
     return labels;
   }

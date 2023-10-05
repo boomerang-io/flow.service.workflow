@@ -85,7 +85,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
         //TODO - deprecate this form of header an only rely on AUTHORIZATION_HEADER
         authentication = getTokenAuthentication(req.getHeader(X_ACCESS_TOKEN));
       } else if (req.getParameter(TOKEN_URL_PARAM_NAME) != null) {
-        authentication = getTokenAuthentication(req.getHeader(TOKEN_URL_PARAM_NAME));
+        authentication = getTokenAuthentication(req.getParameter(TOKEN_URL_PARAM_NAME));
       } else if (req.getHeader(X_FORWARDED_EMAIL) != null) {
         authentication = getGithubUserAuthentication(req);
       } 
