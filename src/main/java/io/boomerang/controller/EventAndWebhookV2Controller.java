@@ -1,141 +1,98 @@
 package io.boomerang.controller;
-//package io.boomerang.v4.controller;
-//
-//import java.nio.charset.StandardCharsets;
-//import javax.servlet.http.HttpServletRequest;
-//import org.springframework.beans.factory.annotation.Autowired;
-//import org.springframework.http.HttpHeaders;
-//import org.springframework.http.HttpStatus;
-//import org.springframework.http.MediaType;
-//import org.springframework.http.ResponseEntity;
-//import org.springframework.util.MultiValueMap;
-//import org.springframework.web.bind.annotation.GetMapping;
-//import org.springframework.web.bind.annotation.PostMapping;
-//import org.springframework.web.bind.annotation.RequestBody;
-//import org.springframework.web.bind.annotation.RequestHeader;
-//import org.springframework.web.bind.annotation.RequestMapping;
-//import org.springframework.web.bind.annotation.RequestParam;
-//import org.springframework.web.bind.annotation.RestController;
-//import com.fasterxml.jackson.core.JsonProcessingException;
-//import com.fasterxml.jackson.databind.JsonMappingException;
-//import com.fasterxml.jackson.databind.JsonNode;
-//import com.fasterxml.jackson.databind.ObjectMapper;
-//import io.boomerang.attributes.TokenAttribute;
-//import io.boomerang.model.SlackEventPayload;
-//import io.boomerang.model.WebhookType;
-//import io.boomerang.v4.service.EventService;
-//import io.cloudevents.CloudEvent;
-//import io.cloudevents.spring.http.CloudEventHttpUtils;
-//import io.swagger.v3.oas.annotations.tags.Tag;
-//
-///*
-// * 
-// */
-//@RestController
-//@RequestMapping("/api/v2")
-//@Tag(name = "Event and Webhook Management",
-//    description = "Listen for Events or Webhook requests to execute Workflows and provide the ability to resolve Wait For Event TaskRuns.")
-//public class EventAndWebhookV2Controller {
-////
-////  @PostMapping(value = "/webhook/payload", consumes = "application/json; charset=utf-8")
-////  public FlowWebhookResponse submitWebhookEvent(@RequestBody RequestFlowExecution request) {
-////    return webhookService.submitWebhookEvent(request);
-////  }
-//
-//  @Autowired
-//  private EventService eventService;
-//  
-//  /**
-//   * HTTP Webhook accepting Generic, Slack Events, and Dockerhub subtypes. For Slack and
-//   * Dockerhub will respond/perform verification challenges.
-//   * <p>
-//   * <b>Note:</b> Partial conformance to the specification.
-//   * 
-//   * <h4>Specifications</h4>
-//   * <ul>
-//   * <li><a href=
-//   * "https://github.com/cloudevents/spec/blob/master/http-webhook.md">CloudEvents</a></li>
-//   * <li><a href="https://docs.docker.com/docker-hub/webhooks/">Dockerhub</a></li>
-//   * <li><a href="https://api.slack.com/events-api">Slack Events API</a></li>
-//   * <li><a href="https://api.slack.com/events">Slack Events</a></li>
-//   * </ul>
-//   * 
-//   * <h4>Sample</h4>
-//   * <code>/webhook?workflowId={workflowId}&type={generic|slack|dockerhub}&access_token={access_token}</code>
-//   */
-//  @PostMapping(value = "/webhook", consumes = "application/json; charset=utf-8")
-//  public ResponseEntity<?> acceptWebhookEvent(HttpServletRequest request, @RequestParam String workflowId,
-//      @RequestParam WebhookType type, @RequestBody JsonNode payload, @TokenAttribute String token) {    
-//    switch (type) {
-//      case slack:
-//        if (payload != null) {
-//          final String slackType = payload.get("type").asText();
-//  
-//          if ("url_verification".equals(slackType)) {
-//            SlackEventPayload response = new SlackEventPayload();
-//            final String slackChallenge = payload.get("challenge").asText();
-//            if (slackChallenge != null) {
-//              response.setChallenge(slackChallenge);
-//            }
-//            return ResponseEntity.ok(response);
-//          } else if (payload != null && ("shortcut".equals(slackType) || "event_callback".equals(slackType))) {
-//            // Handle Slack Events
-//            return eventProcessor.routeWebhookEvent(token, request.getRequestURL().toString(), "slack", workflowId, payload,
-//                null, null, STATUS_SUCCESS);
-//          } else {
-//            return ResponseEntity.badRequest().build();
-//          }
-//        } else {
-//          return ResponseEntity.badRequest().build();
-//        }
-//        
-//      case dockerhub:
-//        // TODO: dockerhub callback_url validation
-//        return eventProcessor.routeWebhookEvent(token, request.getRequestURL().toString(), "dockerhub", workflowId, payload,
-//            null, null, STATUS_SUCCESS);
-//
-//      case generic:
-//        return eventProcessor.routeWebhookEvent(token, request.getRequestURL().toString(), "webhook", workflowId, payload,
-//            null, null, STATUS_SUCCESS);
-//
-//      default:
-//        return ResponseEntity.badRequest().build();
-//    }
-//  }
-//  
-//  /**
-//   * HTTP Webhook accepting Slack Slash and Interactive Commands
-//   * 
-//   * <h4>Specifications</h4>
-//   * <ul>
-//   * <li><a href="https://api.slack.com/interactivity/handling">Slack Interactivity Handling</a></li>
-//   * </ul>
-//   * 
-//   * <h4>Sample</h4>
-//   * <code>/webhook?workflowId={workflowId}&type=slack&access_token={access_token}</code>
-//   * @throws JsonProcessingException 
-//   * @throws JsonMappingException 
-//   */
-//  @PostMapping(value = "/webhook", consumes = {MediaType.APPLICATION_FORM_URLENCODED_VALUE})
-//  public ResponseEntity<?> acceptWebhookEvent(HttpServletRequest request, @RequestParam String workflowId,
-//      @RequestParam WebhookType type, @TokenAttribute String token, @RequestHeader("x-slack-request-timestamp") String timestamp,
-//      @RequestHeader("x-slack-signature") String signature,
-//      @RequestParam MultiValueMap<String, String> slackEvent) throws JsonMappingException, JsonProcessingException {
-//
-//    if (slackEvent.containsKey("payload")) {
-//      String encodedpayload = slackEvent.get("payload").get(0);
-//      String decodedPayload = encodedpayload != null ? java.net.URLDecoder.decode(encodedpayload, StandardCharsets.UTF_8) : "";
-//
-//      ObjectMapper mapper = new ObjectMapper();
-//      JsonNode payload = mapper.readTree(decodedPayload);
-//      eventProcessor.routeWebhookEvent(token, request.getRequestURL().toString(), "slack", workflowId, payload,
-//          null, null, STATUS_SUCCESS);
-//      return ResponseEntity.ok(HttpStatus.OK);
-//    } else if (slackEvent.containsKey("command")) {
-//      
-//    }
-//    return ResponseEntity.ok(HttpStatus.UNAUTHORIZED);
-//  }
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import com.fasterxml.jackson.databind.JsonNode;
+import io.boomerang.model.SlackEventPayload;
+import io.boomerang.model.WebhookType;
+import io.boomerang.service.EventAndWebhookService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+/*
+ *  Handles receiving generic Webhook and CloudEvents as opposed to the WorkflowRun endpoint
+ */
+@RestController
+@RequestMapping("/api/v2")
+@Tag(name = "Event and Webhook Management",
+    description = "Listen for Events or Webhook requests to execute Workflows and provide the ability to resolve Wait For Event TaskRuns.")
+public class EventAndWebhookV2Controller {
+  
+  private static String STATUS_SUCCESS = "success";
+
+  @Autowired
+  private EventAndWebhookService eventAndWebhookService;
+  
+  /**
+   * HTTP Webhook accepting Generic, Slack Events, and Dockerhub subtypes. For Slack and
+   * Dockerhub will respond/perform verification challenges.
+   * <p>
+   * <b>Note:</b> Partial conformance to the specification.
+   * 
+   * <h4>Specifications</h4>
+   * <ul>
+   * <li><a href=
+   * "https://github.com/cloudevents/spec/blob/master/http-webhook.md">CloudEvents</a></li>
+   * <li><a href="https://docs.docker.com/docker-hub/webhooks/">Dockerhub</a></li>
+   * <li><a href="https://api.slack.com/events-api">Slack Events API</a></li>
+   * <li><a href="https://api.slack.com/events">Slack Events</a></li>
+   * </ul>
+   * 
+   * <h4>Sample</h4>
+   * <code>/webhook?workflowId={workflowId}&type={generic|slack|dockerhub}&access_token={access_token}</code>
+   */
+  @PostMapping(value = "/webhook", consumes = "application/json; charset=utf-8")
+  @Operation(summary = "Trigger WorkflowRun via Webhook.")
+  public ResponseEntity<?> acceptWebhookEvent(
+      @Parameter(name = "workflow",
+      description = "Workflow reference the request relates to",
+      required = true) @RequestParam(required = true) String workflow,
+      @Parameter(name = "type",
+      description = "The type of webhook allowing for specialised payloads. Defaults to 'generic'.",
+      required = true) @RequestParam(defaultValue = "generic") WebhookType type,
+      @RequestBody JsonNode payload) {    
+    switch (type) {
+      case slack:
+        if (payload != null) {
+          final String slackType = payload.get("type").asText();
+  
+          if ("url_verification".equals(slackType)) {
+            SlackEventPayload response = new SlackEventPayload();
+            final String slackChallenge = payload.get("challenge").asText();
+            if (slackChallenge != null) {
+              response.setChallenge(slackChallenge);
+            }
+            return ResponseEntity.ok(response);
+          } else if (payload != null && ("shortcut".equals(slackType) || "event_callback".equals(slackType))) {
+            // Handle Slack Events
+            return eventAndWebhookService.processWebhook("slack", workflow, payload,
+                null, null, STATUS_SUCCESS);
+          } else {
+            return ResponseEntity.badRequest().build();
+          }
+        } else {
+          return ResponseEntity.badRequest().build();
+        }
+        
+      case dockerhub:
+        // TODO: dockerhub callback_url validation
+        return eventAndWebhookService.processWebhook("dockerhub", workflow, payload,
+            null, null, STATUS_SUCCESS);
+
+      case generic:
+        return eventAndWebhookService.processWebhook("webhook", workflow, payload,
+            null, null, STATUS_SUCCESS);
+
+      default:
+        return ResponseEntity.badRequest().build();
+    }
+  }
 //
 //  /**
 //   * HTTP POST Webhook specifically for the "Wait For Event" workflow task.
@@ -194,4 +151,4 @@ package io.boomerang.controller;
 //
 //    return eventService.process(event);
 //  }
-//}
+}

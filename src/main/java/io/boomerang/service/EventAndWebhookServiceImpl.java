@@ -1,40 +1,42 @@
 package io.boomerang.service;
-//package io.boomerang.v4.service;
-//
-//import static io.cloudevents.core.CloudEventUtils.mapData;
-//import java.util.concurrent.CompletableFuture;
-//import java.util.concurrent.Future;
-//import java.util.function.Supplier;
-//import org.apache.logging.log4j.LogManager;
-//import org.apache.logging.log4j.Logger;
-//import org.springframework.beans.factory.annotation.Autowired;
-//import org.springframework.http.HttpStatus;
-//import org.springframework.http.ResponseEntity;
-//import org.springframework.stereotype.Service;
-//import com.fasterxml.jackson.databind.ObjectMapper;
-//import io.boomerang.client.EngineClient;
-//import io.boomerang.error.BoomerangException;
-//import io.boomerang.model.TaskCustom;
-//import io.boomerang.model.TaskResponse;
-//import io.boomerang.model.TaskTemplate;
-//import io.boomerang.model.WorkflowRequest;
-//import io.boomerang.model.ref.RunError;
-//import io.boomerang.model.ref.RunPhase;
-//import io.boomerang.model.ref.RunStatus;
-//import io.boomerang.model.ref.TaskRun;
-//import io.boomerang.model.ref.TaskRunEndRequest;
-//import io.boomerang.model.ref.TaskType;
-//import io.boomerang.model.ref.WorkflowRun;
-//import io.cloudevents.CloudEvent;
-//import io.cloudevents.core.data.PojoCloudEventData;
-//import io.cloudevents.jackson.PojoCloudEventDataMapper;
-//
-//@Service
-//public class EventServiceImpl implements EventService {
-//
-//  private static final Logger logger = LogManager.getLogger(EventServiceImpl.class);
-//
-//  private static final String TYPE_PREFIX = "io.boomerang.event.";
+
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jayway.jsonpath.Configuration;
+import com.jayway.jsonpath.DocumentContext;
+import com.jayway.jsonpath.JsonPath;
+import com.jayway.jsonpath.Option;
+import com.jayway.jsonpath.spi.json.JacksonJsonNodeJsonProvider;
+import com.jayway.jsonpath.spi.mapper.JacksonMappingProvider;
+import io.boomerang.data.entity.ref.WorkflowEntity;
+import io.boomerang.model.enums.ref.ParamType;
+import io.boomerang.model.ref.RunParam;
+import io.boomerang.model.ref.WorkflowRun;
+import io.boomerang.model.ref.WorkflowRunSubmitRequest;
+
+@Service
+public class EventAndWebhookServiceImpl implements EventAndWebhookService {
+
+  private static final Logger logger = LogManager.getLogger();
+
+  private static final String TYPE_PREFIX = "io.boomerang.event.";
+  
+  @Value("${flow.workflowrun.auto-start-on-submit}")
+  private boolean autoStart;
+
+  @Autowired
+  private WorkflowRunService workflowRunService;
 //  
 //  @Override
 //  public ResponseEntity<?> process(CloudEvent event) {
@@ -137,55 +139,21 @@ package io.boomerang.service;
 //    return CompletableFuture.supplyAsync(supplier);
 //  }
 //
-////  @Override
-////  public ResponseEntity<CloudEvent<AttributesImpl, JsonNode>> routeWebhookEvent(String token,
-////      String requestUri, String trigger, String workflowId, JsonNode payload,
-////      String workflowActivityId, String topic, String status) {
-////
-////    // Validate Token and WorkflowID. Do first.
-////    HttpStatus accessStatus = checkAccess(workflowId, token);
-////
-////    if (accessStatus != HttpStatus.OK) {
-////      return ResponseEntity.status(accessStatus).build();
-////    }
-////
-////    final String eventId = UUID.randomUUID().toString();
-////    final String eventType = TYPE_PREFIX + trigger;
-////    final URI uri = URI.create(requestUri);
-////    String subject = "/" + workflowId;
-////
-////    // Validate WFE Attributes
-////    if ("wfe".equals(trigger) && workflowActivityId != null) {
-////      subject = subject + "/" + workflowActivityId + "/" + topic;
-////    } else if ("wfe".equals(trigger)) {
-////
-////      // WFE requires workflowActivityId
-////      return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-////    }
-////
-////    if (!"failure".equals(status)) {
-////      status = "success";
-////    }
-////    CustomAttributeExtension statusCAE = new CustomAttributeExtension("status", status);
-////
-////    // @formatter:off
-////    final CloudEventImpl<JsonNode> cloudEvent = CloudEventBuilder.<JsonNode>builder()
-////        .withType(eventType)
-////        .withExtension(statusCAE)
-////        .withId(eventId)
-////        .withSource(uri)
-////        .withData(payload)
-////        .withSubject(subject)
-////        .withTime(ZonedDateTime.now())
-////        .build();
-////    // @formatter:on
-////
-////    logger.debug("routeWebhookEvent() - CloudEvent: " + cloudEvent);
-////
-////    forwardCloudEvent(cloudEvent);
-////
-////    return ResponseEntity.ok().body(cloudEvent);
-////  }
+  @Override
+  public ResponseEntity<WorkflowRun> processWebhook(String trigger, String workflowId, JsonNode payload,
+      String workflowActivityId, String topic, String status) {
+    WorkflowRunSubmitRequest request = new WorkflowRunSubmitRequest();
+    request.setWorkflowRef(workflowId);
+    request.setTrigger("webhook");
+    request.setParams(payloadToRunParams(payload));
+    
+    logger.debug("Webhook Request: " + request.toString());
+    
+    //Auto start is not needed when using the default handler
+    //As the default handler will pick up the queued Workflow and start the Workflow when ready.
+    //However if using the non-default Handler then this may be needed to be set to true.
+    return workflowRunService.submit(request, autoStart);
+  }
 ////
 ////  @Override
 ////  public ResponseEntity<CloudEvent<AttributesImpl, JsonNode>> routeCloudEvent(
@@ -274,4 +242,83 @@ package io.boomerang.service;
 ////      workflowClient.executeWorkflowPut(cloudEvent);
 ////    }
 ////  }
-//}
+  
+  /*
+  * Loop through a Workflow's parameters and if a JsonPath is set read the event payload and
+  * attempt to find a payload.
+  * 
+  * Notes: - We drop exceptions to ensure Workflow continues executing - We return null if path not
+  * found using DEFAULT_PATH_LEAF_TO_NULL.
+  * 
+  * Reference: - https://github.com/json-path/JsonPath#tweaking-configuration
+  */
+  private List<RunParam> payloadToRunParams(JsonNode payload) {
+//   Configuration jsonConfig = Configuration.builder().mappingProvider(new JacksonMappingProvider())
+//       .jsonProvider(new JacksonJsonNodeJsonProvider()).options(Option.DEFAULT_PATH_LEAF_TO_NULL)
+//       .build();
+
+   List<RunParam> params = new LinkedList<>();
+   RunParam payloadParam = new RunParam("payload", (Object) payload, ParamType.object);
+//   DocumentContext jsonContext = JsonPath.using(jsonConfig).parse(payload);
+//   if (inputProperties != null) {
+//     try {
+//       inputProperties.forEach(inputProperty -> {
+//         if (inputProperty.getJsonPath() != null && !inputProperty.getJsonPath().isBlank()) {
+//  
+//           JsonNode propertyValue = jsonContext.read(inputProperty.getJsonPath());
+//  
+//           if (!propertyValue.isNull()) {
+//             String value = propertyValue.toString();
+//             value = value.replaceAll("^\"+|\"+$", "");
+//             logger.info("processProperties() - Property: " + inputProperty.getKey()
+//                 + ", Json Path: " + inputProperty.getJsonPath() + ", Value: " + value);
+//             properties.put(inputProperty.getKey(), value);
+//           } else {
+//             logger.info("processProperties() - Skipping property: " + inputProperty.getKey());
+//           }
+//         }
+//       });
+//     } catch (Exception e) {
+//       // Log and drop exception. We want the workflow to continue execution.
+//       logger.error(e.toString());
+//     }
+//   }
+//   ObjectMapper mapper = new ObjectMapper();
+//   Map<String, String> payloadProperties = mapper.convertValue(payload.get("properties"),
+//       new TypeReference<Map<String, String>>() {});
+//   if (payloadProperties != null) {
+//     properties.putAll(payloadProperties);
+//   }
+  
+   // properties.put("eventPayload", eventData.toString());
+  
+//   WorkflowEntity workflow = workflowService.getWorkflow(workflowId);
+//   Map<String, String> finalProperties = new HashMap<>();
+//  
+//   if (!properties.isEmpty()) {
+//     List<KeyValuePair> propertyList = ParameterMapper.mapToKeyValuePairList(properties);
+//     Map<String, WorkflowProperty> workflowPropMap = workflow.getProperties().stream().collect(
+//         Collectors.toMap(WorkflowProperty::getKey, WorkflowProperty -> WorkflowProperty));
+//     // Use default value for password-type parameter when user input value is null when executing
+//     // workflow.
+//     propertyList.stream().forEach(p -> {
+//       if (workflowPropMap.get(p.getKey()) != null
+//           && FieldType.PASSWORD.value().equals(workflowPropMap.get(p.getKey()).getType())
+//           && p.getValue() == null) {
+//         p.setValue(workflowPropMap.get(p.getKey()).getDefaultValue());
+//       }
+//     });
+//  
+//     for (KeyValuePair prop : propertyList) {
+//       logger.info("processProperties() - " + prop.getKey() + "=" + prop.getValue());
+//       finalProperties.put(prop.getKey(), prop.getValue());
+//     }
+//   } else {
+//  
+//     for (WorkflowProperty property : workflow.getProperties()) {
+//       finalProperties.put(property.getKey(), property.getDefaultValue());
+//     }
+//   }
+   return params;
+  }
+}

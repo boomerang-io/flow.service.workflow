@@ -89,7 +89,7 @@ public class QuartzSchedulerJob extends QuartzJobBean {
       //Auto start is not needed when using the default handler
       //As the default handler will pick up the queued Workflow and start the Workflow when ready.
       //However if using the non-default Handler then this may be needed to be set to true.
-      boolean autoStart = applicationContext.getEnvironment().getProperty("flow.scheduler.auto-start-on-submit", boolean.class);
+      boolean autoStart = applicationContext.getEnvironment().getProperty("flow.workflowrun.auto-start-on-submit", boolean.class);
       workflowRunService.submit(request, autoStart);
     }
   }
