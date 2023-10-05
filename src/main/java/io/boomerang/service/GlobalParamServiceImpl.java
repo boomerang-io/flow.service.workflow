@@ -2,6 +2,7 @@ package io.boomerang.service;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,52 +39,40 @@ public class GlobalParamServiceImpl implements GlobalParamService {
 
   @Override
   public GlobalParam update(GlobalParam param) {
-    if (param.getKey() != null) {
-      //TODO Better exception related to Params
-      throw new BoomerangException(BoomerangError.REQUEST_INVALID_PARAMS);
+    if (!Objects.isNull(param) && param.getKey() != null) {
+      Optional<GlobalParamEntity> optParamEntity = paramRepository.findOneByKey(param.getKey());
+      if (!optParamEntity.isEmpty()) {    
+        // Copy updatedParam to ParamEntity except for ID (requester should not know ID);
+        BeanUtils.copyProperties(param, optParamEntity.get(), "id");
+        GlobalParamEntity paramEntity = paramRepository.save(optParamEntity.get());
+        return new GlobalParam(paramEntity);
+      }
     }
-    Optional<GlobalParamEntity> optParamEntity = paramRepository.findOneByKey(param.getKey());
-    if (optParamEntity.isEmpty()) {
-      //TODO Better exception related to Params
-      throw new BoomerangException(BoomerangError.REQUEST_INVALID_PARAMS);
-    }
-    
-    // Copy updatedParam to ParamEntity except for ID (requester should not know ID);
-    BeanUtils.copyProperties(param, optParamEntity.get(), "id");
-    GlobalParamEntity paramEntity = paramRepository.save(optParamEntity.get());
-
-    return new GlobalParam(paramEntity);
+    throw new BoomerangException(BoomerangError.PARAMS_INVALID_REFERENCE);
   }
 
   @Override
   public GlobalParam create(GlobalParam param) {
-    //Check mandatory elements
-    if (param.getKey() == null || param.getKey().isEmpty()) {
-      //TODO Better exception related to Params
-      throw new BoomerangException(BoomerangError.REQUEST_INVALID_PARAMS);
-    }
-    
-    // Ensure key is unique
-    if (paramRepository.countByKey(param.getKey()) > 0) {
-      //TODO Better exception related to Params
-      throw new BoomerangException(BoomerangError.REQUEST_INVALID_PARAMS);
-    }
-    
-    GlobalParamEntity entity = new GlobalParamEntity();
-    BeanUtils.copyProperties(param, entity, "id");
-    entity = paramRepository.save(entity);
+    if (!Objects.isNull(param) && param.getKey() != null) {
 
-    return new GlobalParam(entity);
+      // Ensure key is unique
+      if (paramRepository.countByKey(param.getKey()) > 0) {
+        throw new BoomerangException(BoomerangError.PARAMS_NON_UNIQUE_KEY);
+      }
+
+      GlobalParamEntity entity = new GlobalParamEntity();
+      BeanUtils.copyProperties(param, entity, "id");
+      entity = paramRepository.save(entity);
+      return new GlobalParam(entity);
+    }
+    throw new BoomerangException(BoomerangError.PARAMS_INVALID_REFERENCE);
   }
 
   @Override
   public void delete(String key) {
-    // Ensure key exists
-    if (paramRepository.countByKey(key) > 0) {
-      //TODO Better exception related to Params
-      throw new BoomerangException(BoomerangError.REQUEST_INVALID_PARAMS);
+    if (!Objects.isNull(key) && key != null && paramRepository.countByKey(key) > 0) {
+      paramRepository.deleteByKey(key);
     }
-    
-    paramRepository.deleteByKey(key);
+    throw new BoomerangException(BoomerangError.PARAMS_INVALID_REFERENCE);
   }
 }

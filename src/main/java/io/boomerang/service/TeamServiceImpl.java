@@ -8,6 +8,7 @@ import java.util.Calendar;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.TimeZone;
 import java.util.stream.Collectors;
@@ -77,9 +78,6 @@ public class TeamServiceImpl implements TeamService {
   @Autowired
   private TeamRepository teamRepository;
 
-//  @Autowired
-//  private UserRepository userRepository;
-
   @Autowired
   private IdentityService identityService;
 
@@ -112,11 +110,10 @@ public class TeamServiceImpl implements TeamService {
     if (request.getName() != null && !request.getName().isBlank()) {
       String kebabName = StringUtil.kebabCase(request.getName());
       if ((teamRepository.countByNameIgnoreCase(kebabName) > 0) || RESERVED_TEAM_NAMES.contains(kebabName)) {
-        return ResponseEntity.unprocessableEntity().build();
+        throw new BoomerangException(BoomerangError.TEAM_NON_UNIQUE_NAME);
       }
       return ResponseEntity.ok().build();
     }
-    // TODO: make this a better error for unable to verify team name i.e. name is mandatory
     throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
   }
 
@@ -125,21 +122,18 @@ public class TeamServiceImpl implements TeamService {
    */
   @Override
   public Team get(String team) {
-    if (team == null || team.isBlank()) {
-      throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
+    if (!Objects.isNull(team) && !team.isBlank()) {
+      List<String> teamRefs = relationshipService.getFilteredToRefs(Optional.empty(),
+          Optional.empty(), Optional.of(RelationshipType.MEMBEROF),
+          Optional.of(RelationshipRef.TEAM), Optional.of(List.of(team)));
+      if (!teamRefs.isEmpty()) {
+        Optional<TeamEntity> entity = teamRepository.findByNameIgnoreCase(team);
+        if (entity.isPresent()) {
+          return convertTeamEntityToTeam(entity.get());
+        }
+      }
     }
-    List<String> teamRefs = relationshipService.getFilteredToRefs(Optional.empty(),
-        Optional.empty(), Optional.of(RelationshipType.MEMBEROF),
-        Optional.of(RelationshipRef.TEAM), Optional.of(List.of(team)));
-    if (teamRefs.isEmpty()) {
-      throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
-    }
-    Optional<TeamEntity> entity = teamRepository.findByNameIgnoreCase(team);
-    if (!entity.isPresent()) {
-      throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
-    }
-
-    return convertTeamEntityToTeam(entity.get());
+    throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
   }
 
   /*
@@ -187,7 +181,6 @@ public class TeamServiceImpl implements TeamService {
       
       return convertTeamEntityToTeam(teamEntity);
     } else {
-      // TODO: make this a better error for unable to create team i.e. name is mandatory
       throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
     }
   }
@@ -398,9 +391,7 @@ public class TeamServiceImpl implements TeamService {
   private List<AbstractParam> createOrUpdateParameters(List<AbstractParam> parameters, List<AbstractParam> request) {
     if (!request.isEmpty()) {
       LOGGER.debug("Starting Parameters: " + parameters.toString());
-      LOGGER.debug("New Parameters: " + request.toString());
       List<String> keys = request.stream().map(AbstractParam::getKey).toList();
-      LOGGER.debug("New Parameter Keys: " + keys.toString());
       //Check if parameter exists and remove
       parameters = parameters.stream().filter(p -> !keys.contains(p.getKey())).collect(Collectors.toList());
       
@@ -444,9 +435,7 @@ public class TeamServiceImpl implements TeamService {
       teamEntity.setParameters(parameters);
       teamRepository.save(teamEntity);
     }
-
-    // TODO better exception for unable find key
-    throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
+    throw new BoomerangException(BoomerangError.PARAMS_INVALID_REFERENCE);
   }
   /*
    * Create & Update Approver Group
@@ -467,7 +456,6 @@ public class TeamServiceImpl implements TeamService {
     for (ApproverGroupRequest r : request) {
       //Ensure ApproverGroupName is not blank or null
       if (r.getName() == null || r.getName().isBlank()) {
-        // TODO better exception for invalid Team Parameter Name
         throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
       }
 

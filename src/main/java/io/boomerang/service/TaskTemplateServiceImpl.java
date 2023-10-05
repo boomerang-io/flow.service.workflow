@@ -2,12 +2,12 @@ package io.boomerang.service;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort.Direction;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import io.boomerang.client.EngineClient;
 import io.boomerang.client.TaskTemplateResponsePage;
@@ -51,34 +51,30 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
    */
   @Override
   public TaskTemplate get(String name, Optional<Integer> version) {
-    if (name == null || name.isBlank()) {
-      throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
-    }
-
-    // Check if requester has access to refs
-    // TODO: determine if all users need to be able to access (READ) but not edit (CREATE, UPDATE, DELETE)
-    List<String> refs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.TASKTEMPLATE),
-        Optional.of(List.of(name)), Optional.of(RelationshipType.BELONGSTO), Optional.of(RelationshipRef.GLOBAL), Optional.empty());
-    if (refs.isEmpty()) {
-      refs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.TASKTEMPLATE),
-          Optional.of(List.of(name)), Optional.of(RelationshipType.BELONGSTO), Optional.of(RelationshipRef.TEAM), Optional.empty());
-    }
-    
-    if (!refs.isEmpty()) {
-      TaskTemplate taskTemplate = engineClient.getTaskTemplate(name, version);
-      
-      // Process Parameters - create configs for any Params
-      if (taskTemplate.getSpec().getParams() != null && !taskTemplate.getSpec().getParams().isEmpty()) {
-        ParameterUtil.paramSpecToAbstractParam(taskTemplate.getSpec().getParams(), taskTemplate.getConfig());
+    if (!Objects.isNull(name) && !name.isBlank()) {
+      // Check if requester has access to refs
+      // TODO: determine if all users need to be able to access (READ) but not edit (CREATE, UPDATE, DELETE)
+      List<String> refs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.TASKTEMPLATE),
+          Optional.of(List.of(name)), Optional.of(RelationshipType.BELONGSTO), Optional.of(RelationshipRef.GLOBAL), Optional.empty());
+      if (refs.isEmpty()) {
+        refs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.TASKTEMPLATE),
+            Optional.of(List.of(name)), Optional.of(RelationshipType.BELONGSTO), Optional.of(RelationshipRef.TEAM), Optional.empty());
       }
       
-      // Switch from UserId to Users Name
-      switchChangeLogAuthorToUserName(taskTemplate.getChangelog());
-      return taskTemplate;
-    } else {
-      // TODO: do we want to return invalid ref or unauthorized
-      throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
+      if (!refs.isEmpty()) {
+        TaskTemplate taskTemplate = engineClient.getTaskTemplate(name, version);
+        
+        // Process Parameters - create configs for any Params
+        if (taskTemplate.getSpec().getParams() != null && !taskTemplate.getSpec().getParams().isEmpty()) {
+          ParameterUtil.paramSpecToAbstractParam(taskTemplate.getSpec().getParams(), taskTemplate.getConfig());
+        }
+        
+        // Switch from UserId to Users Name
+        switchChangeLogAuthorToUserName(taskTemplate.getChangelog());
+        return taskTemplate;
+      }
     }
+    throw new BoomerangException(BoomerangError.TASKTEMPLATE_INVALID_REF);
   }
 
   /*
@@ -136,7 +132,7 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
     updateChangeLog(request.getChangelog());
     
     // TODO: add a check that they are prefixed with the current team scope OR are a valid Global TaskTemplate
-    
+    // Come back to this once we have separated the controllers - works better for scope checks.
     TaskTemplate taskTemplate = engineClient.createTaskTemplate(request);
     if (team.isPresent()) {
       //Check user has access to team
@@ -144,8 +140,7 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
       List<String> refs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.USER),
           Optional.empty(), Optional.of(RelationshipType.MEMBEROF), Optional.of(RelationshipRef.TEAM), Optional.of(List.of(team.get())));
       if (refs.isEmpty()) {
-        // TODO: do we want to return invalid ref or unauthorized
-        throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
+        throw new BoomerangException(BoomerangError.TASKTEMPLATE_INVALID_REF);
       }
       // Create BELONGSTO relationship for mapping Workflow to Owner
       relationshipService.addRelationshipRef(RelationshipRef.TASKTEMPLATE, taskTemplate.getName(), RelationshipType.BELONGSTO, RelationshipRef.TEAM,
@@ -195,12 +190,10 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
       ParameterUtil.paramSpecToAbstractParam(request.getSpec().getParams(), request.getConfig());
       
       TaskTemplate template = engineClient.applyTaskTemplate(request, replace);
-      LOGGER.info("I got down here");
       switchChangeLogAuthorToUserName(template.getChangelog());
       return template;
     } else {
-      // TODO: do we want to return invalid ref or unauthorized
-      throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
+      throw new BoomerangException(BoomerangError.TASKTEMPLATE_INVALID_REF);
     }
   }
 
@@ -230,10 +223,8 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
     TaskTemplate template = this.get(name, version);
     if (template != null) {
       return TektonConverter.convertTaskTemplateToTektonTask(template);
-    } else {
-      // TODO: do we want to return invalid ref or unauthorized
-      throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
     }
+    throw new BoomerangException(BoomerangError.TASKTEMPLATE_INVALID_REF);
   }
 
   @Override
@@ -257,21 +248,20 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
 
   @Override
   public List<ChangeLogVersion> changelog(String name) {
-    if (name == null || name.isBlank()) {
-      throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
+    if (!Objects.isNull(name) && !name.isBlank()) {
+      List<String> refs =
+          relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.TASKTEMPLATE),
+              Optional.of(List.of(name)), Optional.of(RelationshipType.BELONGSTO),
+              Optional.of(RelationshipRef.GLOBAL), Optional.empty());
+      if (refs.isEmpty()) {
+        refs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.TASKTEMPLATE),
+            Optional.of(List.of(name)), Optional.of(RelationshipType.BELONGSTO),
+            Optional.of(RelationshipRef.TEAM), Optional.empty());
+      }
+      if (!refs.isEmpty()) {
+        return engineClient.getTaskTemplateChangeLog(name);
+      }
     }
-
-    List<String> refs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.TASKTEMPLATE),
-        Optional.of(List.of(name)), Optional.of(RelationshipType.BELONGSTO), Optional.of(RelationshipRef.GLOBAL), Optional.empty());
-    if (refs.isEmpty()) {
-      refs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.TASKTEMPLATE),
-          Optional.of(List.of(name)), Optional.of(RelationshipType.BELONGSTO), Optional.of(RelationshipRef.TEAM), Optional.empty());
-    }
-    if (!refs.isEmpty()) {
-      return engineClient.getTaskTemplateChangeLog(name);
-    } else {
-      // TODO: do we want to return invalid ref or unauthorized
-      throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
-    }
+    throw new BoomerangException(BoomerangError.TASKTEMPLATE_INVALID_REF);
   }
 }

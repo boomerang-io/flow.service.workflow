@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -60,61 +61,53 @@ public class TaskRunServiceImpl implements TaskRunService {
 
   @Override
   public StreamingResponseBody getTaskRunLog(String workflowRunId, String taskRunId) {
-    if (workflowRunId == null || workflowRunId.isBlank() || taskRunId == null || taskRunId.isBlank()) {
-      //TODO better error message
-      throw new BoomerangException(BoomerangError.WORKFLOW_RUN_INVALID_REF);
-    }
+    if (!Objects.isNull(workflowRunId) && !workflowRunId.isBlank() && !Objects.isNull(taskRunId) && !taskRunId.isBlank()) {
+      Optional<RelationshipEntity> rel = relationshipService.getRelationship(RelationshipRef.WORKFLOWRUN, workflowRunId, RelationshipType.BELONGSTO);
+      if (!rel.isEmpty()) {
+        LOGGER.info("Getting TaskRun log for activity: {} task id: {}", workflowRunId, taskRunId);    
+        TaskRun taskRun = engineClient.getTaskRun(taskRunId);
     
-    Optional<RelationshipEntity> rel = relationshipService.getRelationship(RelationshipRef.WORKFLOWRUN, workflowRunId, RelationshipType.BELONGSTO);
-    if (rel.isEmpty()) {
-      //TODO better error message
-      throw new BoomerangException(BoomerangError.WORKFLOW_RUN_INVALID_REF);
-    }
-
-    LOGGER.info("Getting TaskRun log for activity: {} task id: {}", workflowRunId, taskRunId);
+        List<String> removeList = buildRemovalList(rel.get().getToRef(), workflowRunId, taskRunId, taskRun);
+        LOGGER.debug("Removal List Count: {} ", removeList.size());
     
-    TaskRun taskRun = engineClient.getTaskRun(taskRunId);
-
-    List<String> removeList = buildRemovalList(rel.get().getToRef(), workflowRunId, taskRunId, taskRun);
-    LOGGER.debug("Removal List Count: {} ", removeList.size());
-
-    //TODO come back and making this work with the new Handler request
-    return outputStream -> {
-      Map<String, String> requestParams = new HashMap<>();
-//      requestParams.put("workflowId", activity.getWorkflowId());
-//      requestParams.put("workflowActivityId", activityId);
-//      requestParams.put("taskActivityId", taskExecution.getId());
-//      requestParams.put("labels", taskId);
-
-      String encodedURL =
-          requestParams.keySet().stream().map(key -> key + "=" + requestParams.get(key)).collect(
-              Collectors.joining("&", getStreamDownloadPath + "?", ""));
-
-      RequestCallback requestCallback = request -> request.getHeaders()
-          .setAccept(Arrays.asList(MediaType.APPLICATION_OCTET_STREAM, MediaType.ALL));
-
-      PrintWriter printWriter = new PrintWriter(outputStream);
-
-      ResponseExtractor<Void> responseExtractor =
-          getResponseExtractorForRemovalList(removeList, outputStream, printWriter);
-      LOGGER.info("Startingg log download: {}", encodedURL);
-      try {
-        restTemplate.execute(encodedURL, HttpMethod.GET, requestCallback, responseExtractor);
-      } catch (Exception ex) {
-        LOGGER.error("Error downloading logs: {} task id: {}", workflowRunId, taskRunId);
-        LOGGER.error(ExceptionUtils.getStackTrace(ex));
+        //TODO come back and making this work with the new Handler request
+        return outputStream -> {
+          Map<String, String> requestParams = new HashMap<>();
+    //      requestParams.put("workflowId", activity.getWorkflowId());
+    //      requestParams.put("workflowActivityId", activityId);
+    //      requestParams.put("taskActivityId", taskExecution.getId());
+    //      requestParams.put("labels", taskId);
+    
+          String encodedURL =
+              requestParams.keySet().stream().map(key -> key + "=" + requestParams.get(key)).collect(
+                  Collectors.joining("&", getStreamDownloadPath + "?", ""));
+    
+          RequestCallback requestCallback = request -> request.getHeaders()
+              .setAccept(Arrays.asList(MediaType.APPLICATION_OCTET_STREAM, MediaType.ALL));
+    
+          PrintWriter printWriter = new PrintWriter(outputStream);
+    
+          ResponseExtractor<Void> responseExtractor =
+              getResponseExtractorForRemovalList(removeList, outputStream, printWriter);
+          LOGGER.info("Startingg log download: {}", encodedURL);
+          try {
+            restTemplate.execute(encodedURL, HttpMethod.GET, requestCallback, responseExtractor);
+          } catch (Exception ex) {
+            LOGGER.error("Error downloading logs: {} task id: {}", workflowRunId, taskRunId);
+            LOGGER.error(ExceptionUtils.getStackTrace(ex));
+          }
+    
+          LOGGER.info("Completed log download: {}", encodedURL);
+        };
       }
-
-      LOGGER.info("Completed log download: {}", encodedURL);
-    };
+    }
+    throw new BoomerangException(BoomerangError.TASKRUN_INVALID_REF);
   }
-  
-
 
   private ResponseExtractor<Void> getResponseExtractorForRemovalList(List<String> maskWordList,
       OutputStream outputStream, PrintWriter printWriter) {
     if (maskWordList.isEmpty()) {
-      LOGGER.info("Remove word list empty, moving on.");
+      LOGGER.debug("Remove word list empty, moving on.");
       return restTemplateResponse -> {
         InputStream is = restTemplateResponse.getBody();
         int nRead;

@@ -140,15 +140,15 @@ public class ContextServiceImpl implements ContextService {
     }
     return result;
   }
-  
+
+  // return null instead of throwing exception when appName is not configured in settings.
   private String getAppNameInSettings() {
     try {
       AbstractParam config = settingsService.getSettingConfig("customizations", "appName");
       return config == null ? null : config.getValue();
     } catch (Exception e) {
+      return null;
     }
-    // return null instead of throwing exception when appName is not configured in settings.
-    return null;
   }
   
   private HttpHeaders buildHeaders(String email) {

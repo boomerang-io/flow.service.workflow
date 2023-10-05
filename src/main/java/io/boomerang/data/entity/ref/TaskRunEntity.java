@@ -59,8 +59,6 @@ public class TaskRunEntity {
   private RunPhase phase;
 
   private String statusMessage;
-  
-  private RunError error;
 
   @JsonIgnore
   private boolean preApproved;
@@ -74,9 +72,6 @@ public class TaskRunEntity {
   private String templateRef;
 
   private Integer templateVersion;
-
-  @JsonIgnore
-  private List<ResultSpec> templateResults;
 
   private String workflowRef;
 
@@ -235,14 +230,6 @@ public class TaskRunEntity {
     this.statusMessage = statusMessage;
   }
 
-  public RunError getError() {
-    return error;
-  }
-
-  public void setError(RunError error) {
-    this.error = error;
-  }
-
   public boolean isPreApproved() {
     return preApproved;
   }
@@ -281,14 +268,6 @@ public class TaskRunEntity {
 
   public void setTemplateVersion(Integer templateVersion) {
     this.templateVersion = templateVersion;
-  }
-
-  public List<ResultSpec> getTemplateResults() {
-    return templateResults;
-  }
-
-  public void setTemplateResults(List<ResultSpec> templateResults) {
-    this.templateResults = templateResults;
   }
 
   public String getWorkflowRunRef() {

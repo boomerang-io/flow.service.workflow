@@ -19,14 +19,16 @@ import io.boomerang.error.BoomerangError;
 import io.boomerang.error.BoomerangException;
 import io.boomerang.model.enums.RelationshipRef;
 import io.boomerang.model.enums.RelationshipType;
+import io.boomerang.model.enums.TriggerEnum;
+import io.boomerang.model.enums.ref.WorkflowStatus;
 import io.boomerang.model.ref.ParamLayers;
-import io.boomerang.model.ref.RunParam;
+import io.boomerang.model.ref.Workflow;
 import io.boomerang.model.ref.WorkflowRun;
 import io.boomerang.model.ref.WorkflowRunCount;
 import io.boomerang.model.ref.WorkflowRunInsight;
 import io.boomerang.model.ref.WorkflowRunRequest;
 import io.boomerang.model.ref.WorkflowRunSubmitRequest;
-import io.boomerang.util.ParameterUtil;
+import io.boomerang.model.ref.WorkflowTrigger;
 
 /*
  * This service replicates the required calls for Engine WorkflowRunV1 APIs
@@ -63,7 +65,7 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
   @Override
   public ResponseEntity<WorkflowRun> get(String workflowRunId, boolean withTasks) {
     if (workflowRunId == null || workflowRunId.isBlank()) {
-      throw new BoomerangException(BoomerangError.WORKFLOW_RUN_INVALID_REF);
+      throw new BoomerangException(BoomerangError.WORKFLOWRUN_INVALID_REF);
     }
 
     List<String> workflowRunRefs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.WORKFLOWRUN), Optional.of(List.of(workflowRunId)), Optional.of(RelationshipType.BELONGSTO), Optional.of(RelationshipRef.TEAM), Optional.empty());
@@ -71,8 +73,7 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
       WorkflowRun wfRun = engineClient.getWorkflowRun(workflowRunId, withTasks);
       return ResponseEntity.ok(wfRun);
     } else {
-      //TODO: do we want to return invalid ref or unauthorized
-      throw new BoomerangException(BoomerangError.WORKFLOW_RUN_INVALID_REF);
+      throw new BoomerangException(BoomerangError.WORKFLOWRUN_INVALID_REF);
     }
   }
 
@@ -100,8 +101,7 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
           toDate, queryLimit, queryPage, queryOrder, queryLabels, queryStatus, queryPhase, Optional.of(workflowRunRefs),
           queryWorkflows, queryTriggers);
     } else {
-      // TODO: do we want to return invalid ref or unauthorized
-      throw new BoomerangException(BoomerangError.WORKFLOW_RUN_INVALID_REF);
+      throw new BoomerangException(BoomerangError.WORKFLOWRUN_INVALID_REF);
     }
   }
   
@@ -142,7 +142,6 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
     if (!workflowRefs.isEmpty()) {
       return this.internalSubmit(request, start);
     } else {
-      //TODO: do we want to return invalid ref or unauthorized
       throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
     }
   }
@@ -158,7 +157,11 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
       boolean start) {
     Optional<RelationshipEntity> teamRelationship = relationshipService.getRelationship(
         RelationshipRef.WORKFLOW, request.getWorkflowRef(), RelationshipType.BELONGSTO);
-    if (teamRelationship.isPresent() && canRunWithQuotas(teamRelationship.get().getToRef(), request.getWorkflowRef())) {
+    if (teamRelationship.isPresent()) {
+      //Check Quotas - Throws Exception
+      canRunWithQuotas(teamRelationship.get().getToRef(), request.getWorkflowRef());
+      //Check Triggers - Throws Exception
+      canRunWithTrigger(request.getWorkflowRef(), Optional.of(request.getTrigger()));
       // Set Workflow & Task Debug
       if (!Objects.isNull(request.getDebug())) {
         boolean enableDebug = false;
@@ -187,6 +190,9 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
       executionAnnotations.put("boomerang.io/global-params", paramLayers.getGlobalParams());
       executionAnnotations.put("boomerang.io/context-params", paramLayers.getContextParams());
       executionAnnotations.put("boomerang.io/team-params", paramLayers.getTeamParams());
+      
+      //Add Contextual Information such as team-name. Used by Engine and the AcquireTaskLock and other tasks to add a hidden prefix.
+      executionAnnotations.put("boomerang.io/team-name", teamRelationship.get().getTo());
       request.getAnnotations().putAll(executionAnnotations);
       
       // TODO: figure out the storing of initiated by. Is that just a relationship?
@@ -200,7 +206,6 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
           teamRelationship.get().getTo(), Optional.of(teamRelationship.get().getToRef()), Optional.empty());
       return ResponseEntity.ok(wfRun);
     } else {
-      // TODO: make this better around exceeding quotas
       throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
     }
   }
@@ -214,15 +219,14 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
   public ResponseEntity<WorkflowRun> start(String workflowRunId,
       Optional<WorkflowRunRequest> optRunRequest) {
     if (workflowRunId == null || workflowRunId.isBlank()) {
-      throw new BoomerangException(BoomerangError.WORKFLOW_RUN_INVALID_REF);
+      throw new BoomerangException(BoomerangError.WORKFLOWRUN_INVALID_REF);
     }
     List<String> workflowRunRefs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.WORKFLOWRUN), Optional.of(List.of(workflowRunId)), Optional.of(RelationshipType.BELONGSTO), Optional.empty(), Optional.empty());
     if (!workflowRunRefs.isEmpty()) {
       WorkflowRun wfRun = engineClient.startWorkflowRun(workflowRunId, optRunRequest);
       return ResponseEntity.ok(wfRun);
     } else {
-      //TODO: do we want to return invalid ref or unauthorized
-      throw new BoomerangException(BoomerangError.WORKFLOW_RUN_INVALID_REF);
+      throw new BoomerangException(BoomerangError.WORKFLOWRUN_INVALID_REF);
     }
   }
 
@@ -234,15 +238,14 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
   @Override
   public ResponseEntity<WorkflowRun> finalize(String workflowRunId) {
     if (workflowRunId == null || workflowRunId.isBlank()) {
-      throw new BoomerangException(BoomerangError.WORKFLOW_RUN_INVALID_REF);
+      throw new BoomerangException(BoomerangError.WORKFLOWRUN_INVALID_REF);
     }
     List<String> workflowRunRefs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.WORKFLOWRUN), Optional.of(List.of(workflowRunId)), Optional.of(RelationshipType.BELONGSTO), Optional.empty(), Optional.empty());
     if (!workflowRunRefs.isEmpty()) {
       WorkflowRun wfRun = engineClient.finalizeWorkflowRun(workflowRunId);
       return ResponseEntity.ok(wfRun);
     } else {
-      //TODO: do we want to return invalid ref or unauthorized
-      throw new BoomerangException(BoomerangError.WORKFLOW_RUN_INVALID_REF);
+      throw new BoomerangException(BoomerangError.WORKFLOWRUN_INVALID_REF);
     }
   }
 
@@ -252,7 +255,7 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
   @Override
   public ResponseEntity<WorkflowRun> cancel(String workflowRunId) {
     if (workflowRunId == null || workflowRunId.isBlank()) {
-      throw new BoomerangException(BoomerangError.WORKFLOW_RUN_INVALID_REF);
+      throw new BoomerangException(BoomerangError.WORKFLOWRUN_INVALID_REF);
     }
     List<String> workflowRunRefs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.WORKFLOWRUN), Optional.of(List.of(workflowRunId)), Optional.of(RelationshipType.BELONGSTO), Optional.empty(), Optional.empty());
     if (!workflowRunRefs.isEmpty()) {
@@ -260,7 +263,7 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
       return ResponseEntity.ok(wfRun);
     } else {
       //TODO: do we want to return invalid ref or unauthorized
-      throw new BoomerangException(BoomerangError.WORKFLOW_RUN_INVALID_REF);
+      throw new BoomerangException(BoomerangError.WORKFLOWRUN_INVALID_REF);
     }
   }
 
@@ -270,31 +273,64 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
   @Override
   public ResponseEntity<WorkflowRun> retry(String workflowRunId) {
     if (workflowRunId == null || workflowRunId.isBlank()) {
-      throw new BoomerangException(BoomerangError.WORKFLOW_RUN_INVALID_REF);
+      throw new BoomerangException(BoomerangError.WORKFLOWRUN_INVALID_REF);
     }
     List<String> workflowRunRefs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.WORKFLOWRUN), Optional.of(List.of(workflowRunId)), Optional.of(RelationshipType.BELONGSTO), Optional.empty(), Optional.empty());
     if (!workflowRunRefs.isEmpty()) {
       WorkflowRun wfRun = engineClient.retryWorkflowRun(workflowRunId);
       return ResponseEntity.ok(wfRun);
     } else {
-      //TODO: do we want to return invalid ref or unauthorized
-      throw new BoomerangException(BoomerangError.WORKFLOW_RUN_INVALID_REF);
+      throw new BoomerangException(BoomerangError.WORKFLOWRUN_INVALID_REF);
     }
   }
 
   /*
    * Check if the Team Quotas allow a Workflow to run
    */
-  private boolean canRunWithQuotas(String teamId, String workflowId) {
-    if (!settingsService.getSettingConfig("features", "workflowQuotas").getBooleanValue()) {
-      return true;
+  private void canRunWithQuotas(String teamId, String workflowId) {
+    if (settingsService.getSettingConfig("features", "workflowQuotas").getBooleanValue()) {
+      CurrentQuotas quotas = teamService.getQuotas(teamId);
+      if (quotas.getCurrentConcurrentWorkflows() > quotas.getMaxConcurrentWorkflows()) {
+        throw new BoomerangException(BoomerangError.QUOTA_EXCEEDED, "Concurrent Workflows", quotas.getCurrentConcurrentWorkflows(), quotas.getMaxConcurrentWorkflows());
+      } else if (quotas.getCurrentRunTotalDuration() > quotas.getMaxWorkflowExecutionMonthly()) {
+        throw new BoomerangException(BoomerangError.QUOTA_EXCEEDED, "Concurrent Workflows", quotas.getCurrentRunTotalDuration(), quotas.getMaxWorkflowExecutionMonthly());
+      }
     }
-    CurrentQuotas quotas = teamService.getQuotas(teamId);
-    if (quotas.getCurrentConcurrentWorkflows() <= quotas.getMaxConcurrentWorkflows()
-        || quotas.getCurrentRunTotalDuration() <= quotas
-            .getMaxWorkflowExecutionMonthly()) {
-      return true;
+  }
+
+  /*
+   * Checks if the Workflow can be executed based on an active workflow and enabled triggers.
+   * 
+   * If trigger is Manual or Schedule then a deeper check is used to check if those triggers are
+   * enabled.
+   * 
+   * @param workflowId the Workflows unique ID
+   * 
+   * @param Trigger an optional Trigger object
+   */
+  protected void canRunWithTrigger(String workflowId, Optional<String> trigger) {
+    // Check no further if trigger not provided
+    if (trigger.isPresent() && !trigger.get().isEmpty()) {
+      // Check if Workflow exists and is active. Then check triggers are enabled.
+      //TODO determine a less expensive way to get the Workflow Triggers
+      Workflow workflow = engineClient.getWorkflow(workflowId, Optional.empty(), false);
+      if (!Objects.isNull(workflow)) {
+        WorkflowTrigger triggers = workflow.getTriggers();
+        if (TriggerEnum.manual.toString().equals(trigger.get()) && triggers.getManual() != null && triggers.getManual().getEnable()) {
+          return;
+        } else if (TriggerEnum.scheduler.toString().equals(trigger.get())
+            && triggers.getScheduler() != null && triggers.getScheduler().getEnable()) {
+          return;
+        } else if (TriggerEnum.webhook.toString().equals(trigger.get())
+            && triggers.getWebhook() != null && triggers.getWebhook().getEnable()) {
+          return;
+        } else if (TriggerEnum.custom.toString().equals(trigger.get())
+            && triggers.getCustom() != null && triggers.getCustom().getEnable()) {
+          return;
+        } else {
+          throw new BoomerangException(BoomerangError.WORKFLOWRUN_TRIGGER_DISABLED);
+        }
+      }
     }
-    return false;
   }
 }

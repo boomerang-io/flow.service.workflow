@@ -126,7 +126,6 @@ public class ActionServiceImpl implements ActionService {
         actionEntity.getActioners().add(audit);
       }
 
-
       int numberApprovals = actionEntity.getNumberOfApprovers();
       long approvedCount =
           actionEntity.getActioners().stream().filter(x -> x.isApproved()).count();

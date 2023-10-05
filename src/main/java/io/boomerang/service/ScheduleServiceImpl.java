@@ -88,8 +88,7 @@ public class ScheduleServiceImpl implements ScheduleService {
         return convertScheduleEntityToModel(scheduleEntity.get());
       }
     }
-    //TODO change error
-    throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
+    throw new BoomerangException(BoomerangError.SCHEDULE_INVALID_REF);
   }
   
   /*
@@ -102,8 +101,7 @@ public class ScheduleServiceImpl implements ScheduleService {
     if (scheduleEntity.isPresent()) {
         return convertScheduleEntityToModel(scheduleEntity.get());
     }
-    //TODO change error
-    throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
+    throw new BoomerangException(BoomerangError.SCHEDULE_INVALID_REF);
   }
   
   
@@ -160,10 +158,8 @@ public class ScheduleServiceImpl implements ScheduleService {
           workflowSchedules, pageable,
           () -> mongoTemplate.count(query, WorkflowScheduleEntity.class));
       return pages;
-    } else {
-      // TODO: do we want to return invalid ref or unauthorized
-      throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
     }
+    throw new BoomerangException(BoomerangError.SCHEDULE_INVALID_REF);
   }
   
   /*
@@ -178,15 +174,12 @@ public class ScheduleServiceImpl implements ScheduleService {
       final List<String> refs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.WORKFLOW),
           Optional.of(List.of(schedule.getWorkflowRef())), Optional.of(RelationshipType.BELONGSTO),
           Optional.ofNullable(RelationshipRef.TEAM), Optional.of(List.of(team)));
-      if (refs.isEmpty()) {
-        // TODO: better error
-        throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
+      if (!refs.isEmpty()) {
+        WorkflowScheduleEntity scheduleEntity = internalCreate(schedule);
+        return convertScheduleEntityToModel(scheduleEntity);
       }
-      WorkflowScheduleEntity scheduleEntity = internalCreate(schedule);
-      return convertScheduleEntityToModel(scheduleEntity);
     }
-    // TODO: better return error
-    throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
+    throw new BoomerangException(BoomerangError.SCHEDULE_INVALID_REF);
   }
 
   public WorkflowScheduleEntity internalCreate(final WorkflowSchedule schedule) {
@@ -197,8 +190,9 @@ public class ScheduleServiceImpl implements ScheduleService {
             && schedule.getCronSchedule() == null)
         || schedule.getTimezone() == null || schedule.getTimezone().isBlank()) {
       // TODO: better accurate error
-      throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
+      throw new BoomerangException(BoomerangError.SCHEDULE_INVALID_REQ);
     }
+    //TODO is there a less expensive way to find out the Workflow Trigger
     Workflow workflow = engineClient.getWorkflow(schedule.getWorkflowRef(), Optional.empty(), false);
     WorkflowScheduleEntity scheduleEntity = new WorkflowScheduleEntity();
     BeanUtils.copyProperties(schedule, scheduleEntity);
@@ -224,7 +218,8 @@ public class ScheduleServiceImpl implements ScheduleService {
     try {
       return new WorkflowSchedule(entity, this.taskScheduler.getNextTriggerDate(entity));
     } catch (Exception e) {
-      logger.info("Unable to retrieve next schedule date for {}, skipping.", entity.getId());
+      // Trap exception as we still want to return the dates that we can
+      logger.debug("Unable to retrieve next schedule date for {}, skipping.", entity.getId());
       return new WorkflowSchedule(entity);
     }
   }
@@ -283,7 +278,7 @@ public class ScheduleServiceImpl implements ScheduleService {
       } catch (Exception e) {
         // Trap exception as we still want to return the dates that we can
         e.printStackTrace();
-        logger.info("Unable to retrieve calendar for Schedule: {}, skipping.", scheduleEntity.getId());
+        logger.debug("Unable to retrieve calendar for Schedule: {}, skipping.", scheduleEntity.getId());
       }
     }
     return new LinkedList<>();
@@ -293,8 +288,6 @@ public class ScheduleServiceImpl implements ScheduleService {
    * Update a schedule based on the payload and the Schedules Id.
    * 
    * @return echos the updated schedule
-   * 
-   * TODO: update this to match the /apply design
    */
   @Override
   public WorkflowSchedule apply(final WorkflowSchedule request, Optional<String> team) {
@@ -332,7 +325,7 @@ public class ScheduleServiceImpl implements ScheduleService {
             if (WorkflowScheduleType.runOnce.equals(scheduleEntity.getType())) {
               Date currentDate = new Date();
               if (scheduleEntity.getDateSchedule().getTime() < currentDate.getTime()) {
-                logger.info("Cannot enable schedule (" + scheduleEntity.getId()
+                logger.error("Cannot enable schedule (" + scheduleEntity.getId()
                     + ") as it is in the past.");
                 scheduleEntity.setStatus(WorkflowScheduleStatus.error);
                 scheduleRepository.save(scheduleEntity);
@@ -354,17 +347,12 @@ public class ScheduleServiceImpl implements ScheduleService {
         scheduleRepository.save(scheduleEntity);
         createOrUpdateSchedule(scheduleEntity, enableJob);
         return convertScheduleEntityToModel(scheduleEntity);
-      } else {
-        // TODO: make this valid to apply creating without TeamID
-        throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
       }
     } else if (request != null && team.isPresent()) {
       request.setId(null);
       return this.create(request, team.get());
-    } else {
-      // TODO: make this valid to apply creating without TeamID
-      throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
-    }
+    } 
+    throw new BoomerangException(BoomerangError.SCHEDULE_INVALID_REF);
   }
 
   /*

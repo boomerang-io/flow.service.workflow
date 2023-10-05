@@ -39,8 +39,6 @@ public class RelationshipServiceImpl implements RelationshipService {
   /*
    * Creates a new RelationshipEntity for the provided inputs coupled with the current scope
    * 
-   * TODO: figure out future workflow token scope 
-   * 
    * @return RelationshipEntity
    */
   @Override
@@ -107,26 +105,13 @@ public class RelationshipServiceImpl implements RelationshipService {
   @Override
   public RelationshipEntity patchRelationshipData(RelationshipRef fromType, String fromRef, RelationshipType relationship, Map<String, Object> data) {
     Optional<RelationshipEntity> entity = getRelationship(fromType, fromRef, relationship);
-
     if (entity.isPresent()) {
         entity.get().getData().putAll(data);
       LOGGER.info("Relationship: " + entity.get().toString());
       return relationshipRepository.save(entity.get());
     } 
-    // TODO: make this a better error for unable to create team i.e. name is mandatory
-    throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
+    throw new BoomerangException(BoomerangError.UNABLE_PATCH_REL);
   }
-  
-//  /*
-//   * Retrieve RelationshipEntity for the provided inputs
-//   *
-//   * 
-//   * @return RelationshipEntity
-//   */
-//  @Override
-//  public Optional<RelationshipEntity> getRelationship(RelationshipRefType fromType, String fromRef) {
-//    return relationshipRepository.findByFromTypeAndFromRef(fromType, fromRef);
-//  }
 //  
   /*
    * Retrieve RelationshipEntity for the provided inputs
@@ -154,26 +139,6 @@ public class RelationshipServiceImpl implements RelationshipService {
     return Optional.empty();
   }
   
-//  /*
-//   * Returns the RelationshipEntities for the matching criteria
-//   * 
-//   * @return RelationshipEntity List
-//   */
-//  @Override
-//  public List<RelationshipEntity> getRelationships(RelationshipRefType fromType, String fromRef, RelationshipRefType toType, String toRef) {
-//    return relationshipRepository.findAll(Example.of(this.createRelationshipRef(fromType, fromRef, toType, Optional.of(toRef))));
-//  }
-//  
-//  /*
-//   * Returns the RelationshipEntities for the matching criteria
-//   * 
-//   * @return RelationshipEntity List
-//   */
-//  @Override
-//  public List<RelationshipEntity> getRelationships(RelationshipRefType fromType, String fromRef, RelationshipType relationship, RelationshipRefType toType, String toRef) {
-//    return relationshipRepository.findAll(Example.of(this.createRelationshipRef(fromType, fromRef, relationship, toType, Optional.of(toRef))));
-//  }
-  
   /*
    * Removes all relationships
    */
@@ -197,8 +162,6 @@ public class RelationshipServiceImpl implements RelationshipService {
       relationshipRepository.deleteAll(relEntities);
     }
   }
-  
-
   
   /*
    * Generates the TeamRefs for the current security scope with no elevated permissions.
@@ -280,13 +243,6 @@ public class RelationshipServiceImpl implements RelationshipService {
   public List<RelationshipEntity> getFilteredRels(Optional<RelationshipRef> from, Optional<List<String>> fromRefs, Optional<RelationshipType> type, Optional<RelationshipRef> to, 
       Optional<List<String>> toRefs, boolean elevate) {
     
-    //TODO Validation that we are not trying to get a relationship between two of the same objects or provide IDs with no context.
-//    if (from.isEmpty() && fromRefs.isPresent()) {
-//      throw new BoomerangException();
-//    } else if (from.isPresent() && to.isPresent() && from.get().equals(to.get())) {
-//      throw new BoomerangException();
-//    }
-    
     // Defaults if not provided
     if (type.isEmpty()) {
       type = Optional.of(RelationshipType.BELONGSTO);
@@ -295,7 +251,7 @@ public class RelationshipServiceImpl implements RelationshipService {
     }
 
     AuthType accessScope = identityService.getCurrentScope();
-    LOGGER.info("RelationshipFilter() - Access Scope: " + identityService.getCurrentScope());
+    LOGGER.debug("RelationshipFilter() - Access Scope: " + identityService.getCurrentScope());
     
     // If User is Admin provide global access
     // MEMBEROF requests are ignored as we only want to return that users Teams and as such don't elevate the scope
@@ -404,6 +360,7 @@ public class RelationshipServiceImpl implements RelationshipService {
 //   * 
 //   *  @return boolean
 //   */
+  //TODO replace a number of the getFilteredRefs with this
 //  @Override
 //  public boolean doesRelationshipExist(RelationshipRefType type,
 //      String fromRef) {
@@ -422,54 +379,6 @@ public class RelationshipServiceImpl implements RelationshipService {
 //    return relationshipRepository.findByFromTypeAndFromRefAndRelationship(type, fromRef, relationship).isPresent();
 //  }
 
-  private List<String> getRefsForTeams(RelationshipRef fromRef, Optional<List<String>> fromRefs, List<String> filteredTeams) {
-    List<RelationshipEntity> relationships = null;
-    if (fromRefs.isPresent()) {
-      relationships = this.relationshipRepository.findByFromAndFromRefInAndTypeAndToAndToRefIn(fromRef, fromRefs.get(), RelationshipType.BELONGSTO,
-          RelationshipRef.TEAM, filteredTeams);
-    } else {
-      relationships = this.relationshipRepository.findByFromAndTypeAndToAndToRefIn(fromRef, RelationshipType.BELONGSTO,
-          RelationshipRef.TEAM, filteredTeams);
-    }
-    return relationships.stream().map(RelationshipEntity::getFromRef).collect(Collectors.toList());
-  }
-
-//  private List<String> getRefsForAllTeams(RelationshipRef fromRef) {
-//    List<RelationshipEntity> relationships =
-//        this.relationshipRepository.findByFromAndTypeAndTo(fromRef, RelationshipType.BELONGSTO, RelationshipRef.TEAM);
-//    return relationships.stream().map(RelationshipEntity::getFromRef).collect(Collectors.toList());
-//  }
-//
-//  private List<String> getRefsForSystem(RelationshipRef fromRef) {
-//    List<RelationshipEntity> relationships =
-//        this.relationshipRepository.findByFromAndTypeAndTo(fromRef, RelationshipType.BELONGSTO, RelationshipRef.SYSTEM);
-//    return relationships.stream().map(RelationshipEntity::getFromRef).collect(Collectors.toList());
-//  }
-//
-//  private List<String> getRefsForTemplate(RelationshipRef fromRef) {
-//    List<RelationshipEntity> relationships =
-//        this.relationshipRepository.findByFromAndTypeAndTo(fromRef, RelationshipType.BELONGSTO, RelationshipRef.TEMPLATE);
-//    return relationships.stream().map(RelationshipEntity::getFromRef).collect(Collectors.toList());
-//  }
-
-//  private List<String> getRefsForUsers(RelationshipRef fromRef, Optional<List<String>> fromRefs, final List<String> users) {
-//    List<RelationshipEntity> relationships = null;
-//    if (fromRefs.isPresent()) {
-//      relationships = this.relationshipRepository.findByFromAndFromRefInAndTypeAndToAndToRefIn(fromRef, fromRefs.get(), RelationshipType.BELONGSTO,
-//          RelationshipRef.USER, users);
-//    } else {
-//      relationships = this.relationshipRepository.findByFromAndTypeAndToAndToRefIn(fromRef, RelationshipType.BELONGSTO,
-//          RelationshipRef.USER, users);
-//    }
-//    return relationships.stream().map(RelationshipEntity::getFromRef).collect(Collectors.toList());
-//  }
-
-//  private List<String> getRefsForAllUsers(RelationshipRef fromRef) {
-//    List<RelationshipEntity> relationships =
-//        this.relationshipRepository.findByFromAndTypeAndTo(fromRef, RelationshipType.BELONGSTO, RelationshipRef.USER);
-//    return relationships.stream().map(RelationshipEntity::getFromRef).collect(Collectors.toList());
-//  }
-//
   private List<String> getTeamsRefsByUsers(final List<String> userId) {
     List<RelationshipEntity> relationships = 
         this.relationshipRepository.findByFromAndFromRefInAndTypeAndTo(RelationshipRef.USER, userId, RelationshipType.MEMBEROF, RelationshipRef.TEAM);

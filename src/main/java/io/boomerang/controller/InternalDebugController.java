@@ -24,21 +24,4 @@ public class InternalDebugController {
   public CreateTokenResponse create(@RequestBody CreateTokenRequest newToken) {
     return tokenService.create(newToken);
   }
-
-//  @GetMapping("token-scopes")
-//  public List<TokenTypeResponse> getTokenScopes() {
-//
-//    List<TokenTypeResponse>  responses = new LinkedList<>();
-//
-//    for (TokenScope type : TokenScope.values()) {
-//      TokenTypeResponse response = new TokenTypeResponse();
-//      response.setAccess(type.access());
-//      response.setObject(type.object());
-//      response.setTypes(type.types());
-//
-//      responses.add(response);
-//
-//    }
-//    return responses;
-//  }
 }

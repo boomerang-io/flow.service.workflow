@@ -14,8 +14,6 @@ import io.boomerang.data.entity.SettingEntity;
 import io.boomerang.data.entity.WorkflowScheduleEntity;
 import io.boomerang.model.AbstractParam;
 import io.boomerang.model.WorkflowSchedule;
-import io.boomerang.model.ref.ParamLayers;
-import io.boomerang.service.ParameterManager;
 import io.boomerang.service.ScheduleServiceImpl;
 import io.boomerang.service.SettingsService;
 import io.swagger.v3.oas.annotations.Hidden;
@@ -31,21 +29,10 @@ import io.swagger.v3.oas.annotations.Parameter;
 public class InternalController {
   
   @Autowired
-  private ParameterManager parameterManager;
-  
-  @Autowired
   private SettingsService settingsService;
   
   @Autowired
   private ScheduleServiceImpl workflowScheduleService;
-
-  // Used by Engine to get Global, System, and Team paramlayers
-  @GetMapping(value = "/workflow/{workflowId}/paramlayers")
-  public ParamLayers getParamLayers(
-      @Parameter(name = "workflowId", description = "ID of the Workflow",
-      required = true) @PathVariable String workflowId) {
-    return parameterManager.buildParamLayers("", workflowId);
-  }
 
   // Used by Engine for RunScheduledWorkflow task
   @PostMapping(value = "/workflow/schedule")
