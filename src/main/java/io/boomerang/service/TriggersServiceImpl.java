@@ -24,7 +24,7 @@ import io.cloudevents.core.data.PojoCloudEventData;
 import io.cloudevents.jackson.PojoCloudEventDataMapper;
 
 @Service
-public class ListenerServiceImpl implements ListenerService {
+public class TriggersServiceImpl implements TriggerService {
 
   private static final Logger logger = LogManager.getLogger();
   

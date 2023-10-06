@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.fasterxml.jackson.databind.JsonNode;
 import io.boomerang.model.SlackEventPayload;
 import io.boomerang.model.WebhookType;
-import io.boomerang.service.ListenerService;
+import io.boomerang.service.TriggerService;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.spring.http.CloudEventHttpUtils;
 import io.swagger.v3.oas.annotations.Operation;
@@ -23,15 +23,13 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
-@RequestMapping("/api/v2/listener")
-@Tag(name = "Listens for Events, Topics, and Webhooks",
-    description = "Listen for Events or Webhook requests to execute Workflows and provide the ability to resolve Wait For Event TaskRuns.")
-public class ListenerV2Controller {
-  
-  private static String STATUS_SUCCESS = "success";
+@RequestMapping("/api/v2/triggers")
+@Tag(name = "Triggers for Events, Topics, and Webhooks",
+    description = "Listen for Events or Webhook requests to trigger Workflows and provide the ability to resolve Wait For Event TaskRuns.")
+public class TriggersV2Controller {
 
   @Autowired
-  private ListenerService listenerService;
+  private TriggerService listenerService;
   
   /**
    * HTTP Webhook accepting Generic, Slack Events, and Dockerhub subtypes. For Slack and
@@ -117,7 +115,7 @@ public class ListenerV2Controller {
       required = true) @RequestParam(required = true) String topic,
       @Parameter(name = "status",
       description = "The status to set the wait for end to",
-      required = false) @RequestParam(defaultValue = STATUS_SUCCESS) String status,
+      required = false) @RequestParam(defaultValue = "success") String status,
       @RequestBody JsonNode payload) {
       return listenerService.processWFE(workflow, workflowrun, topic, status, Optional.of(payload));
   }
@@ -142,7 +140,7 @@ public class ListenerV2Controller {
       required = true) @RequestParam(required = true) String topic,
       @Parameter(name = "status",
       description = "The status to set for the WaitForEvent TaskRun",
-      required = false) @RequestParam(defaultValue = STATUS_SUCCESS) String status) {
+      required = false) @RequestParam(defaultValue = "success") String status) {
         return listenerService.processWFE(workflow, workflowrun, topic, status, Optional.empty());
   }
 

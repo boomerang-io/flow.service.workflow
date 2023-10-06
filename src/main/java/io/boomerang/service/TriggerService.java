@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import io.boomerang.model.ref.WorkflowRun;
 import io.cloudevents.CloudEvent;
 
-public interface ListenerService {
+public interface TriggerService {
 
   ResponseEntity<WorkflowRun> processWebhook(String trigger, String workflowId,
       JsonNode payload);
