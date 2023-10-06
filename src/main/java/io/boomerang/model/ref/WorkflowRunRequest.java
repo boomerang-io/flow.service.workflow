@@ -76,14 +76,6 @@ public class WorkflowRunRequest {
     this.retries = retries;
   }
 
-  public String getTrigger() {
-    return trigger;
-  }
-
-  public void setTrigger(String trigger) {
-    this.trigger = trigger;
-  }
-
   public Boolean getDebug() {
     return debug;
   }
