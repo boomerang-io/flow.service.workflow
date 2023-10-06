@@ -40,7 +40,6 @@ import io.boomerang.model.ref.Task;
 import io.boomerang.model.ref.TaskDependency;
 import io.boomerang.model.ref.Trigger;
 import io.boomerang.model.ref.TriggerEvent;
-import io.boomerang.model.ref.TriggerScheduler;
 import io.boomerang.model.ref.Workflow;
 import io.boomerang.model.ref.WorkflowCount;
 import io.boomerang.model.ref.WorkflowTrigger;
@@ -441,34 +440,31 @@ public class WorkflowServiceImpl implements WorkflowService {
   }
 
   /*
-   * Sets up the Triggers as per v3 design
+   * Sets up the Triggers
    */
   private void setupTriggerDefaults(final Workflow workflow) {
     if (workflow.getTriggers() == null) {
+      //Manual trigger will be set to Enable = true.
       workflow.setTriggers(new WorkflowTrigger());
-      workflow.getTriggers().getManual().setEnable(true);
     }
 
     // Default to enabled for Workflows
     if (workflow.getTriggers().getManual() == null) {
-      Trigger manual = new Trigger();
-      manual.setEnable(Boolean.TRUE);
-      workflow.getTriggers().setManual(manual);
+      workflow.getTriggers().setManual(new Trigger(Boolean.TRUE));
     }
 
     if (workflow.getTriggers().getScheduler() == null) {
-      TriggerScheduler schedule = new TriggerScheduler();
-      workflow.getTriggers().setScheduler(schedule);
-    }
-
-    if (workflow.getTriggers().getEvent() == null) {
-      TriggerEvent custom = new TriggerEvent();
-      workflow.getTriggers().setEvent(custom);
+      workflow.getTriggers().setScheduler(new Trigger(Boolean.FALSE));
     }
 
     if (workflow.getTriggers().getWebhook() == null) {
-      TriggerEvent webhook = new TriggerEvent();
-      workflow.getTriggers().setWebhook(webhook);
+      workflow.getTriggers().setWebhook(new Trigger(Boolean.FALSE));
+    }
+
+    if (workflow.getTriggers().getEvent() == null) {
+      TriggerEvent event = new TriggerEvent();
+      event.setEnable(Boolean.FALSE);
+      workflow.getTriggers().setEvent(event);
     }
   }
 
