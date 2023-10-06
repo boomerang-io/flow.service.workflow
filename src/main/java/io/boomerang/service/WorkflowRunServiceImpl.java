@@ -20,7 +20,6 @@ import io.boomerang.error.BoomerangException;
 import io.boomerang.model.enums.RelationshipRef;
 import io.boomerang.model.enums.RelationshipType;
 import io.boomerang.model.enums.TriggerEnum;
-import io.boomerang.model.enums.ref.WorkflowStatus;
 import io.boomerang.model.ref.ParamLayers;
 import io.boomerang.model.ref.Workflow;
 import io.boomerang.model.ref.WorkflowRun;
@@ -161,7 +160,7 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
       //Check Quotas - Throws Exception
       canRunWithQuotas(teamRelationship.get().getToRef(), request.getWorkflowRef());
       //Check Triggers - Throws Exception
-      canRunWithTrigger(request.getWorkflowRef(), Optional.of(request.getTrigger()));
+      canRunWithTrigger(request.getWorkflowRef(), Optional.of(request.getTrigger()), Optional.of(request.getEventType()), Optional.of(request.getEventSubject()));
       // Set Workflow & Task Debug
       if (!Objects.isNull(request.getDebug())) {
         boolean enableDebug = false;
@@ -308,7 +307,7 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
    * 
    * @param Trigger an optional Trigger object
    */
-  protected void canRunWithTrigger(String workflowId, Optional<String> trigger) {
+  protected void canRunWithTrigger(String workflowId, Optional<String> trigger, Optional<String> eventType, Optional<String> eventSubject) {
     // Check no further if trigger not provided
     if (trigger.isPresent() && !trigger.get().isEmpty()) {
       // Check if Workflow exists and is active. Then check triggers are enabled.
@@ -324,12 +323,29 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
         } else if (TriggerEnum.webhook.toString().equals(trigger.get())
             && triggers.getWebhook() != null && triggers.getWebhook().getEnable()) {
           return;
-        } else if (TriggerEnum.custom.toString().equals(trigger.get())
-            && triggers.getCustom() != null && triggers.getCustom().getEnable()) {
-          return;
-        } else {
-          throw new BoomerangException(BoomerangError.WORKFLOWRUN_TRIGGER_DISABLED);
-        }
+        } else if (TriggerEnum.event.toString().equals(trigger.get())
+            && triggers.getEvent() != null && triggers.getEvent().getEnable()) {
+            Boolean canRunType = Boolean.FALSE;
+            Boolean canRunSubject = Boolean.FALSE;
+            if (!Objects.isNull(triggers.getEvent().getType()) && !triggers.getEvent().getType().isEmpty()) {
+              if (eventType.isPresent()) {
+                canRunType = eventType.get().matches(triggers.getEvent().getType());
+              }
+            } else {
+              canRunType = Boolean.TRUE;
+            }
+            if (!Objects.isNull(triggers.getEvent().getSubject()) && !triggers.getEvent().getSubject().isEmpty()) {
+              if (eventSubject.isPresent()) {
+                canRunSubject = eventSubject.get().matches(triggers.getEvent().getSubject());
+              }
+            } else {
+              canRunSubject = Boolean.TRUE;
+            }
+            if (canRunType && canRunSubject) {              
+              return;
+            }
+        } 
+        throw new BoomerangException(BoomerangError.WORKFLOWRUN_TRIGGER_DISABLED);
       }
     }
   }

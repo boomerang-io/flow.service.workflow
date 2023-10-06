@@ -3,15 +3,15 @@ package io.boomerang.model.ref;
 public class WorkflowTrigger {
 
   private Trigger manual;
-  private TriggerScheduler scheduler;
-  private TriggerEvent webhook;
-  private TriggerEvent custom;
+  private Trigger scheduler;
+  private Trigger webhook;
+  private TriggerEvent event;
   
   public WorkflowTrigger() {
-    webhook = new TriggerEvent();
-    custom = new TriggerEvent();
+    webhook = new Trigger();
+    event = new TriggerEvent();
     manual = new Trigger();
-    scheduler = new TriggerScheduler();
+    scheduler = new Trigger();
     
     manual.setEnable(Boolean.TRUE);
   }
@@ -22,22 +22,22 @@ public class WorkflowTrigger {
   public void setManual(Trigger manual) {
     this.manual = manual;
   }
-  public TriggerScheduler getScheduler() {
+  public Trigger getScheduler() {
     return scheduler;
   }
-  public void setScheduler(TriggerScheduler scheduler) {
+  public void setScheduler(Trigger scheduler) {
     this.scheduler = scheduler;
   }
-  public TriggerEvent getWebhook() {
+  public Trigger getWebhook() {
     return webhook;
   }
-  public void setWebhook(TriggerEvent webhook) {
+  public void setWebhook(Trigger webhook) {
     this.webhook = webhook;
   }
-  public TriggerEvent getCustom() {
-    return custom;
+  public TriggerEvent getEvent() {
+    return event;
   }
-  public void setCustom(TriggerEvent custom) {
-    this.custom = custom;
+  public void setEvent(TriggerEvent event) {
+    this.event = event;
   }
 }

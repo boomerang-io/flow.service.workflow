@@ -19,15 +19,13 @@ public class WorkflowRunRequest {
   
   private Long retries;
   
-  private String trigger;
-  
   private Boolean debug;
 
   @Override
   public String toString() {
     return "WorkflowRunRequest [labels=" + labels + ", annotations=" + annotations + ", params="
         + params + ", workspaces=" + workspaces + ", timeout=" + timeout + ", retries=" + retries
-        + ", trigger=" + trigger + ", debug=" + debug + "]";
+        + ", debug=" + debug + "]";
   }
 
   public Map<String, String> getLabels() {

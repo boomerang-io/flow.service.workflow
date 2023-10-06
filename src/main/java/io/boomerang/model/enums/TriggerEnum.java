@@ -4,7 +4,7 @@ import java.util.Arrays;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum TriggerEnum {
-  manual("manual"), scheduler("scheduler"), webhook("webhook"), custom("custom");
+  manual("manual"), scheduler("scheduler"), webhook("webhook"), event("event");
 
   private String trigger;
 

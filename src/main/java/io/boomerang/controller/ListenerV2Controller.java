@@ -117,7 +117,7 @@ public class ListenerV2Controller {
       required = true) @RequestParam(required = true) String topic,
       @Parameter(name = "status",
       description = "The status to set the wait for end to",
-      required = false) @RequestParam(defaultValue = "success") String status,
+      required = false) @RequestParam(defaultValue = STATUS_SUCCESS) String status,
       @RequestBody JsonNode payload) {
       return listenerService.processWFE(workflow, workflowrun, topic, status, Optional.of(payload));
   }
@@ -142,7 +142,7 @@ public class ListenerV2Controller {
       required = true) @RequestParam(required = true) String topic,
       @Parameter(name = "status",
       description = "The status to set for the WaitForEvent TaskRun",
-      required = false) @RequestParam(defaultValue = "success") String status) {
+      required = false) @RequestParam(defaultValue = STATUS_SUCCESS) String status) {
         return listenerService.processWFE(workflow, workflowrun, topic, status, Optional.empty());
   }
 
@@ -156,17 +156,24 @@ public class ListenerV2Controller {
    * @see https://github.com/cloudevents/spec/blob/v1.0/http-protocol-binding.md
    */
   @PostMapping(value = "/event", consumes = "application/cloudevents+json; charset=utf-8")
-  public ResponseEntity<?> accept(@RequestBody CloudEvent event) {
-    return listenerService.processEvent(event);
+  public ResponseEntity<?> accept(@Parameter(name = "workflow",
+      description = "The Workflow the request relates to",
+      required = false) @RequestParam(required = false) Optional<String> workflow,
+      @RequestBody CloudEvent event) {
+    return listenerService.processEvent(event, workflow);
   }
   
   /**
    * Accepts a Cloud Event with ce attributes are in the header
    */
   @PostMapping("/event")
-  public ResponseEntity<?> acceptEvent(@RequestHeader HttpHeaders headers, @RequestBody String data) {
+  public ResponseEntity<?> acceptEvent(@Parameter(name = "workflow",
+      description = "The Workflow the request relates to",
+      required = false) @RequestParam(required = false) Optional<String> workflow,
+      @RequestHeader HttpHeaders headers, 
+      @RequestBody String data) {
     CloudEvent event =
         CloudEventHttpUtils.toReader(headers, () -> data.getBytes()).toEvent();
-    return listenerService.processEvent(event);
+    return listenerService.processEvent(event, workflow);
   }
 }

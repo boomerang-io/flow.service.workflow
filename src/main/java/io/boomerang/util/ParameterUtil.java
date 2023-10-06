@@ -7,8 +7,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import io.boomerang.error.BoomerangError;
-import io.boomerang.error.BoomerangException;
 import io.boomerang.model.AbstractParam;
 import io.boomerang.model.enums.ref.ParamType;
 import io.boomerang.model.ref.ParamSpec;
@@ -119,7 +117,13 @@ public class ParameterUtil {
     if (parameterMap != null) {
       for (Entry<String, Object> entry : parameterMap.entrySet()) {
         String key = entry.getKey();
-        RunParam param = new RunParam(key, parameterMap.get(key));
+        ParamType type = ParamType.object;
+        if (parameterMap.get(key) instanceof String) {
+          type = ParamType.string;
+        } else if (parameterMap.get(key) instanceof List) {
+          type = ParamType.array;
+        }  
+        RunParam param = new RunParam(key, parameterMap.get(key), type);
         parameterList.add(param);
       }
     }

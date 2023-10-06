@@ -14,5 +14,5 @@ public interface ListenerService {
   ResponseEntity<WorkflowRun> processWFE(String workflowId, String workflowRunId, String topic,
       String status, Optional<JsonNode> payload);
 
-  ResponseEntity<?> processEvent(CloudEvent event);
+  ResponseEntity<WorkflowRun> processEvent(CloudEvent event, Optional<String> workflow);
 }

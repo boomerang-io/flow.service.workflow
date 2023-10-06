@@ -2,22 +2,19 @@ package io.boomerang.model.ref;
 
 public class TriggerEvent extends Trigger {
 
-  private String token;
-  private String topic;
-
-  public String getToken() {
-    return token;
+  private String type;
+  private String subject;
+  
+  public String getType() {
+    return type;
   }
-
-  public void setToken(String token) {
-    this.token = token;
+  public void setType(String type) {
+    this.type = type;
   }
-
-  public String getTopic() {
-    return topic;
+  public String getSubject() {
+    return subject;
   }
-
-  public void setTopic(String topic) {
-    this.topic = topic;
+  public void setSubject(String subject) {
+    this.subject = subject;
   }
 }

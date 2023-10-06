@@ -297,7 +297,7 @@ public class WorkflowServiceImpl implements WorkflowService {
    * The Workflow is kept around so as to ensure that we can display the WorkflowRun in the Activity
    * screen.
    * 
-   * Engine takes care of disabling Triggers and deleting Workspaces
+   * Engine takes care of deleting Triggers & Workspaces
    */
   @Override
   public ResponseEntity<Void> delete(String workflowId) {
@@ -461,9 +461,9 @@ public class WorkflowServiceImpl implements WorkflowService {
       workflow.getTriggers().setScheduler(schedule);
     }
 
-    if (workflow.getTriggers().getCustom() == null) {
+    if (workflow.getTriggers().getEvent() == null) {
       TriggerEvent custom = new TriggerEvent();
-      workflow.getTriggers().setCustom(custom);
+      workflow.getTriggers().setEvent(custom);
     }
 
     if (workflow.getTriggers().getWebhook() == null) {
