@@ -26,7 +26,6 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 import io.boomerang.model.FlowActivity;
 import io.boomerang.model.ListActivityResponse;
 import io.boomerang.model.TaskExecutionResponse;
-import io.boomerang.model.TeamWorkflowSummary;
 import io.boomerang.mongo.entity.ActivityEntity;
 import io.boomerang.mongo.entity.FlowUserEntity;
 import io.boomerang.mongo.entity.RevisionEntity;
@@ -154,12 +153,10 @@ public class ActivityController {
 
       final FlowUserEntity user = userIdentityService.getCurrentUser();
 
-      if (user != null) {
-        List<String> teamIdList =
-            user.getType().equals(UserType.admin) || user.getType().equals(UserType.operator)
-                ? teamService.getAllTeams().stream().map(TeamWorkflowSummary::getId)
-                    .collect(Collectors.toList())
-                : teamService.getUserTeams(user).stream().map(TeamWorkflowSummary::getId)
+      // Permission checking only for normal (Non-Admin and Non-Operator) user
+      if (user != null && !user.getType().equals(UserType.admin) 
+    		  && !user.getType().equals(UserType.operator)) {
+        List<String> teamIdList = teamService.getUsersTeamListing(user).stream().map(TeamEntity::getId)
                     .collect(Collectors.toList());
         if (!teamIdList.contains(teamId)) {
           return new ResponseEntity<>(new FlowActivity(), HttpStatus.FORBIDDEN);
