@@ -9,6 +9,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -27,17 +28,17 @@ import io.cloudevents.jackson.PojoCloudEventDataMapper;
 public class TriggersServiceImpl implements TriggerService {
 
   private static final Logger logger = LogManager.getLogger();
-  
+
   @Value("${flow.workflowrun.auto-start-on-submit}")
   private boolean autoStart;
 
   @Autowired
   private WorkflowRunService workflowRunService;
-  
+
   /*
    * Receives request and checks if its a supported event. Processing done async.
    * 
-   * @return accepted or unprocessable. 
+   * @return accepted or unprocessable.
    */
   @Override
   public ResponseEntity<WorkflowRun> processEvent(CloudEvent event, Optional<String> workflow) {
@@ -50,64 +51,73 @@ public class TriggersServiceImpl implements TriggerService {
     if (workflow.isPresent()) {
       request.setWorkflowRef(workflow.get());
     } else {
-      //Assume the WorkflowRef is in the subject
+      // Assume the WorkflowRef is in the subject
       request.setWorkflowRef(eventSubject.replace("/", ""));
     }
     request.setTrigger("event");
     request.setEventSubject(eventSubject);
     request.setEventType(eventType);
     request.setParams(eventToRunParams(event));
-    
+
     logger.debug("Webhook Request: " + request.toString());
-    
-    //Auto start is not needed when using the default handler
-    //As the default handler will pick up the queued Workflow and start the Workflow when ready.
-    //However if using the non-default Handler then this may be needed to be set to true.
+
+    // Auto start is not needed when using the default handler
+    // As the default handler will pick up the queued Workflow and start the Workflow when ready.
+    // However if using the non-default Handler then this may be needed to be set to true.
     return workflowRunService.submit(request, autoStart);
   }
-  
+
   @Override
-  public ResponseEntity<WorkflowRun> processWebhook(String trigger, String workflowId, JsonNode payload) {
+  public ResponseEntity<WorkflowRun> processWebhook(String trigger, String workflowId,
+      JsonNode payload) {
     WorkflowRunSubmitRequest request = new WorkflowRunSubmitRequest();
     request.setWorkflowRef(workflowId);
     request.setTrigger("webhook");
     request.setParams(payloadToRunParams(payload));
-    
+
     logger.debug("Webhook Request: " + request.toString());
-    
-    //Auto start is not needed when using the default handler
-    //As the default handler will pick up the queued Workflow and start the Workflow when ready.
-    //However if using the non-default Handler then this may be needed to be set to true.
+
+    // Auto start is not needed when using the default handler
+    // As the default handler will pick up the queued Workflow and start the Workflow when ready.
+    // However if using the non-default Handler then this may be needed to be set to true.
     return workflowRunService.submit(request, autoStart);
   }
-  
+
   @Override
-  public ResponseEntity<WorkflowRun> processWFE(String workflowId, String workflowRunId, String topic, String status, Optional<JsonNode> payload) {
-    //TODO figure out how to update the TaskRun for the WaitForEvent
+  public ResponseEntity<?> processGitHub(String trigger, String workflowId, JsonNode payload) {
+    logger.debug("Webhook Request: " + payload.toString());
+
+    return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+  }
+
+  @Override
+  public ResponseEntity<WorkflowRun> processWFE(String workflowId, String workflowRunId,
+      String topic, String status, Optional<JsonNode> payload) {
+    // TODO figure out how to update the TaskRun for the WaitForEvent
     return null;
   }
-  
+
   /*
-  * Set the webhook payload as a parameter
-  */
+   * Set the webhook payload as a parameter
+   */
   private List<RunParam> payloadToRunParams(JsonNode payload) {
     List<RunParam> params = new LinkedList<>();
     params.add(new RunParam("payload", (Object) payload, ParamType.object));
     return params;
   }
-  
+
   /*
-  * Convert the CloudEvent and the event's Data and create params
-  */
+   * Convert the CloudEvent and the event's Data and create params
+   */
   private List<RunParam> eventToRunParams(CloudEvent event) {
     List<RunParam> params = new LinkedList<>();
-    params.add(new RunParam("event", (Object) event, ParamType.object));   
+    params.add(new RunParam("event", (Object) event, ParamType.object));
 
     ObjectMapper mapper = new ObjectMapper();
-    PojoCloudEventData<Map<String, Object>> data =
-        mapData(event, PojoCloudEventDataMapper.from(mapper, new TypeReference<Map<String, Object>>() {}));   
-    params.add(new RunParam("payload", (Object) data, ParamType.object)); 
+    PojoCloudEventData<Map<String, Object>> data = mapData(event,
+        PojoCloudEventDataMapper.from(mapper, new TypeReference<Map<String, Object>>() {}));
+    params.add(new RunParam("payload", (Object) data, ParamType.object));
     params.addAll(ParameterUtil.mapToRunParamList(data.getValue()));
-   return params;
+    return params;
   }
 }

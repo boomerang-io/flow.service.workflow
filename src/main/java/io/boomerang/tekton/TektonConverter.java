@@ -12,24 +12,24 @@ import io.boomerang.model.ref.ParamSpec;
 import io.boomerang.model.ref.TaskTemplate;
 
 public class TektonConverter {
-  
+
   private TektonConverter() {
-    
+
   }
-  
+
   public static TektonTask convertTaskTemplateToTektonTask(TaskTemplate taskTemplate) {
     TektonTask tektonTask = new TektonTask();
     tektonTask.setApiVersion("tekton.dev/v1beta1");
     tektonTask.setKind("Task");
-    
-    Metadata metadata = new  Metadata();
+
+    Metadata metadata = new Metadata();
     metadata.setName(taskTemplate.getName());
     metadata.setLabels(new HashMap<String, String>());
     List<AbstractParam> configList = taskTemplate.getConfig();
     configList.forEach(c -> {
       c.setDescription(null);
       c.setDefaultValue(null);
-    });  
+    });
     Map<String, Object> annotations = metadata.getAnnotations();
     annotations.putAll(taskTemplate.getAnnotations());
     annotations.put("boomerang.io/icon", taskTemplate.getIcon());
@@ -39,10 +39,10 @@ public class TektonConverter {
     annotations.put("boomerang.io/version", taskTemplate.getVersion());
     annotations.put("boomerang.io/verified", taskTemplate.isVerified());
     tektonTask.setMetadata(metadata);
-    
+
     Spec spec = new Spec();
     spec.setDescription(taskTemplate.getDescription());
-    
+
     Step step = new Step();
     step.setName(taskTemplate.getName());
     step.setImage(taskTemplate.getSpec().getImage());
@@ -51,7 +51,7 @@ public class TektonConverter {
     step.setEnv(taskTemplate.getSpec().getEnvs());
     step.setCommand(taskTemplate.getSpec().getCommand());
     step.setArgs(taskTemplate.getSpec().getArguments());
-    
+
     List<Step> steps = new LinkedList<>();
     steps.add(step);
     spec.setSteps(steps);
@@ -63,7 +63,7 @@ public class TektonConverter {
         Param param = new Param();
         param.setName(templateParam.getName());
         param.setDescription(templateParam.getDescription());
-        if (templateParam.getDefaultValue() != null) { 
+        if (templateParam.getDefaultValue() != null) {
           param.setDefaultValue(templateParam.getDefaultValue());
         }
         param.setType(templateParam.getType());
@@ -73,24 +73,25 @@ public class TektonConverter {
     spec.setParams(params);
     spec.setResults(taskTemplate.getSpec().getResults());
     tektonTask.setSpec(spec);
-    
+
     return tektonTask;
   }
 
   /*
    * Converts a TektonTask to a Flow TaskTemplate.
    * 
-   * Version and Verified need to be set outside of this method once its known if the task exists and the requestor has access to the task.
+   * Version and Verified need to be set outside of this method once its known if the task exists
+   * and the requestor has access to the task.
    * 
    * TODO: figure out how Type is set
    */
   public static TaskTemplate convertTektonTaskToTaskTemplate(TektonTask task) {
     TaskTemplate taskTemplate = new TaskTemplate();
-    
+
     Metadata metadata = task.getMetadata();
     taskTemplate.setName(metadata.getName());
     taskTemplate.setLabels(metadata.getLabels());
-    
+
     List<AbstractParam> config = new LinkedList<>();
     taskTemplate.setConfig(config);
     List<AbstractParam> annotationParams = new LinkedList<>();
@@ -129,16 +130,16 @@ public class TektonConverter {
         annotationParams = (List<AbstractParam>) abstractParams;
       }
     }
-    
+
     Spec spec = task.getSpec();
     if (spec.getDescription() != null && !spec.getDescription().isBlank()) {
       taskTemplate.setDescription(spec.getDescription());
     }
     Step step = spec.getSteps().get(0);
-    if (step.getImage() != null && !step.getImage().isBlank()) {     
+    if (step.getImage() != null && !step.getImage().isBlank()) {
       taskTemplate.getSpec().setImage(step.getImage());
     }
-    if (step.getScript() != null && !step.getScript().isBlank()) {  
+    if (step.getScript() != null && !step.getScript().isBlank()) {
       taskTemplate.getSpec().setScript(step.getScript());
     }
     if (step.getWorkingDir() != null && !step.getWorkingDir().isBlank()) {
@@ -163,21 +164,22 @@ public class TektonConverter {
         paramSpec.setDefaultValue(param.getDefaultValue());
         paramSpec.setType(param.getType());
         paramSpecs.add(paramSpec);
-        Optional<AbstractParam> aParam = annotationParams.stream().filter(c -> c.getKey().equals(param.getName())).findFirst();
+        Optional<AbstractParam> aParam =
+            annotationParams.stream().filter(c -> c.getKey().equals(param.getName())).findFirst();
         if (aParam.isPresent()) {
           aParam.get().setDefaultValue(null);
           aParam.get().setDescription(null);
           // Legacy - might not be needed with model deserialisation
-//          if (defaultStr instanceof ArrayList<?>){
-//            ArrayList<String> values = (ArrayList<String>) defaultStr;
-//            StringBuilder sb = new StringBuilder();
-//            for (String line : values) {
-//              sb.append(line);
-//              sb.append('\n');
-//              newConfig.setDefaultValue(sb.toString());
-//            }
-//          }
-          //TODO ensure type matches
+          // if (defaultStr instanceof ArrayList<?>){
+          // ArrayList<String> values = (ArrayList<String>) defaultStr;
+          // StringBuilder sb = new StringBuilder();
+          // for (String line : values) {
+          // sb.append(line);
+          // sb.append('\n');
+          // newConfig.setDefaultValue(sb.toString());
+          // }
+          // }
+          // TODO ensure type matches
           taskTemplate.getConfig().add(aParam.get());
         } else {
           AbstractParam newAbstractParam = new AbstractParam();
@@ -186,21 +188,21 @@ public class TektonConverter {
           newAbstractParam.setType("text");
           newAbstractParam.setReadOnly(false);
           newAbstractParam.setPlaceholder("");
-          //TODO ensure type matches
+          // TODO ensure type matches
           taskTemplate.getConfig().add(newAbstractParam);
         }
       }
       taskTemplate.getSpec().setParams(paramSpecs);
     }
-    
+
     if (spec.getResults() != null && !spec.getResults().isEmpty()) {
       spec.setResults(spec.getResults());
     }
-    
+
     ChangeLog changelog = new ChangeLog();
     changelog.setDate(new Date());
     taskTemplate.setChangelog(changelog);
     return taskTemplate;
   }
-  
+
 }

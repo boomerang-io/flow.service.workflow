@@ -120,7 +120,7 @@ public class WorkflowRunV2Controller {
       required = true) @PathVariable String workflowRunId,
       @Parameter(name = "withTasks",
       description = "Include Task Runs in the response",
-      required = false) @RequestParam(defaultValue="true") boolean withTasks) {
+      required = false) @RequestParam(defaultValue = "true") boolean withTasks) {
     return workflowRunService.get(workflowRunId, withTasks);
   }
 

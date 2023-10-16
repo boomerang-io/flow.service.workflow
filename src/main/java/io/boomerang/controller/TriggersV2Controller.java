@@ -29,11 +29,11 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 public class TriggersV2Controller {
 
   @Autowired
-  private TriggerService listenerService;
-  
+  private TriggerService triggerService;
+
   /**
-   * HTTP Webhook accepting Generic, Slack Events, and Dockerhub subtypes. For Slack and
-   * Dockerhub will respond/perform verification challenges.
+   * HTTP Webhook accepting Generic, Slack Events, and Dockerhub subtypes. For Slack and Dockerhub
+   * will respond/perform verification challenges.
    * <p>
    * <b>Note:</b> Partial conformance to the specification.
    * 
@@ -47,7 +47,9 @@ public class TriggersV2Controller {
    * </ul>
    * 
    * <h4>Sample</h4>
-   * <p>Can use Authorization header or access_token URL Parameter</p>
+   * <p>
+   * Can use Authorization header or access_token URL Parameter
+   * </p>
    * 
    * <h4>Sample</h4>
    * <code>/webhook?workflow={workflow}&type={generic|slack|dockerhub}&access_token={access_token}</code>
@@ -55,18 +57,17 @@ public class TriggersV2Controller {
   @PostMapping(value = "/webhook", consumes = "application/json; charset=utf-8")
   @Operation(summary = "Trigger WorkflowRun via Webhook.")
   public ResponseEntity<?> acceptWebhookEvent(
-      @Parameter(name = "workflow",
-      description = "Workflow reference the request relates to",
-      required = true) @RequestParam(required = true) String workflow,
+      @Parameter(name = "workflow", description = "Workflow reference the request relates to",
+          required = false) @RequestParam(required = false) Optional<String> workflow,
       @Parameter(name = "type",
-      description = "The type of webhook allowing for specialised payloads. Defaults to 'generic'.",
-      required = true) @RequestParam(defaultValue = "generic") WebhookType type,
-      @RequestBody JsonNode payload) {    
+          description = "The type of webhook allowing for specialised payloads. Defaults to 'generic'.",
+          required = true) @RequestParam(defaultValue = "generic") WebhookType type,
+      @RequestBody JsonNode payload) {
     switch (type) {
       case slack:
         if (payload != null) {
           final String slackType = payload.get("type").asText();
-  
+
           if ("url_verification".equals(slackType)) {
             SlackEventPayload response = new SlackEventPayload();
             final String slackChallenge = payload.get("challenge").asText();
@@ -74,9 +75,10 @@ public class TriggersV2Controller {
               response.setChallenge(slackChallenge);
             }
             return ResponseEntity.ok(response);
-          } else if (payload != null && ("shortcut".equals(slackType) || "event_callback".equals(slackType))) {
+          } else if (payload != null
+              && ("shortcut".equals(slackType) || "event_callback".equals(slackType))) {
             // Handle Slack Events
-            return listenerService.processWebhook("slack", workflow, payload);
+            return triggerService.processWebhook("slack", workflow.get(), payload);
           } else {
             return ResponseEntity.badRequest().build();
           }
@@ -85,12 +87,12 @@ public class TriggersV2Controller {
         }
       case dockerhub:
         // TODO: dockerhub callback_url validation
-        return listenerService.processWebhook("dockerhub", workflow, payload);
+        return triggerService.processWebhook("dockerhub", workflow.get(), payload);
       case generic:
-        return listenerService.processWebhook("webhook", workflow, payload);
+        return triggerService.processWebhook("webhook", workflow.get(), payload);
       case github:
-        //TODO build out the GitHub Webhook receiver
-        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+        // TODO build out the GitHub Webhook receiver
+        return triggerService.processGitHub("github", null, payload);
       default:
         return ResponseEntity.badRequest().build();
     }
@@ -104,44 +106,38 @@ public class TriggersV2Controller {
    */
   @PostMapping(value = "/topic", consumes = "application/json; charset=utf-8")
   public ResponseEntity<?> acceptWaitForEvent(
-      @Parameter(name = "workflow",
-      description = "The Workflow the request relates to",
-      required = true) @RequestParam(required = true) String workflow,
-      @Parameter(name = "workflowrun",
-      description = "The WorkflowRun the request relates to",
-      required = true) @RequestParam(required = true) String workflowrun,
-      @Parameter(name = "topic",
-      description = "The topic to publish to",
-      required = true) @RequestParam(required = true) String topic,
-      @Parameter(name = "status",
-      description = "The status to set the wait for end to",
-      required = false) @RequestParam(defaultValue = "success") String status,
+      @Parameter(name = "workflow", description = "The Workflow the request relates to",
+          required = true) @RequestParam(required = true) String workflow,
+      @Parameter(name = "workflowrun", description = "The WorkflowRun the request relates to",
+          required = true) @RequestParam(required = true) String workflowrun,
+      @Parameter(name = "topic", description = "The topic to publish to",
+          required = true) @RequestParam(required = true) String topic,
+      @Parameter(name = "status", description = "The status to set the wait for end to",
+          required = false) @RequestParam(defaultValue = "success") String status,
       @RequestBody JsonNode payload) {
-      return listenerService.processWFE(workflow, workflowrun, topic, status, Optional.of(payload));
+    return triggerService.processWFE(workflow, workflowrun, topic, status, Optional.of(payload));
   }
-  
+
   /**
    * HTTP GET specifically for the "Wait For Event" workflow task.
    * 
-   * Typically you would use the POST, however this can be useful to trigger from an email to continue or similar.
+   * Typically you would use the POST, however this can be useful to trigger from an email to
+   * continue or similar.
    * 
    * <h4>Sample</h4>
    * <code>/topic?workflow={workflow}&workflowrun={workflowrun}&topic={topic}&status={status}&access_token={access_token}</code>
-   */  
+   */
   @GetMapping(value = "/topic")
-  public ResponseEntity<?> acceptWaitForEvent(@Parameter(name = "workflow",
-      description = "The Workflow the request relates to",
-      required = true) @RequestParam(required = true) String workflow,
-      @Parameter(name = "workflowrun",
-      description = "The WorkflowRun the request relates to",
-      required = true) @RequestParam(required = true) String workflowrun,
-      @Parameter(name = "topic",
-      description = "The topic to publish to",
-      required = true) @RequestParam(required = true) String topic,
-      @Parameter(name = "status",
-      description = "The status to set for the WaitForEvent TaskRun",
-      required = false) @RequestParam(defaultValue = "success") String status) {
-        return listenerService.processWFE(workflow, workflowrun, topic, status, Optional.empty());
+  public ResponseEntity<?> acceptWaitForEvent(
+      @Parameter(name = "workflow", description = "The Workflow the request relates to",
+          required = true) @RequestParam(required = true) String workflow,
+      @Parameter(name = "workflowrun", description = "The WorkflowRun the request relates to",
+          required = true) @RequestParam(required = true) String workflowrun,
+      @Parameter(name = "topic", description = "The topic to publish to",
+          required = true) @RequestParam(required = true) String topic,
+      @Parameter(name = "status", description = "The status to set for the WaitForEvent TaskRun",
+          required = false) @RequestParam(defaultValue = "success") String status) {
+    return triggerService.processWFE(workflow, workflowrun, topic, status, Optional.empty());
   }
 
   /**
@@ -154,24 +150,22 @@ public class TriggersV2Controller {
    * @see https://github.com/cloudevents/spec/blob/v1.0/http-protocol-binding.md
    */
   @PostMapping(value = "/event", consumes = "application/cloudevents+json; charset=utf-8")
-  public ResponseEntity<?> accept(@Parameter(name = "workflow",
-      description = "The Workflow the request relates to",
-      required = false) @RequestParam(required = false) Optional<String> workflow,
+  public ResponseEntity<?> accept(
+      @Parameter(name = "workflow", description = "The Workflow the request relates to",
+          required = false) @RequestParam(required = false) Optional<String> workflow,
       @RequestBody CloudEvent event) {
-    return listenerService.processEvent(event, workflow);
+    return triggerService.processEvent(event, workflow);
   }
-  
+
   /**
    * Accepts a Cloud Event with ce attributes are in the header
    */
   @PostMapping("/event")
-  public ResponseEntity<?> acceptEvent(@Parameter(name = "workflow",
-      description = "The Workflow the request relates to",
-      required = false) @RequestParam(required = false) Optional<String> workflow,
-      @RequestHeader HttpHeaders headers, 
-      @RequestBody String data) {
-    CloudEvent event =
-        CloudEventHttpUtils.toReader(headers, () -> data.getBytes()).toEvent();
-    return listenerService.processEvent(event, workflow);
+  public ResponseEntity<?> acceptEvent(
+      @Parameter(name = "workflow", description = "The Workflow the request relates to",
+          required = false) @RequestParam(required = false) Optional<String> workflow,
+      @RequestHeader HttpHeaders headers, @RequestBody String data) {
+    CloudEvent event = CloudEventHttpUtils.toReader(headers, () -> data.getBytes()).toEvent();
+    return triggerService.processEvent(event, workflow);
   }
 }

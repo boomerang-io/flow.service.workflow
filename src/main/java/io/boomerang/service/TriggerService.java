@@ -7,9 +7,9 @@ import io.boomerang.model.ref.WorkflowRun;
 import io.cloudevents.CloudEvent;
 
 public interface TriggerService {
+  ResponseEntity<?> processGitHub(String trigger, String workflowId, JsonNode payload);
 
-  ResponseEntity<WorkflowRun> processWebhook(String trigger, String workflowId,
-      JsonNode payload);
+  ResponseEntity<WorkflowRun> processWebhook(String trigger, String workflowId, JsonNode payload);
 
   ResponseEntity<WorkflowRun> processWFE(String workflowId, String workflowRunId, String topic,
       String status, Optional<JsonNode> payload);
