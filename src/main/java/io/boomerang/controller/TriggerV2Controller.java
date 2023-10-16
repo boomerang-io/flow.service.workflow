@@ -3,7 +3,6 @@ package io.boomerang.controller;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,10 +22,10 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
-@RequestMapping("/api/v2/triggers")
+@RequestMapping("/api/v2/trigger")
 @Tag(name = "Triggers for Events, Topics, and Webhooks",
     description = "Listen for Events or Webhook requests to trigger Workflows and provide the ability to resolve Wait For Event TaskRuns.")
-public class TriggersV2Controller {
+public class TriggerV2Controller {
 
   @Autowired
   private TriggerService triggerService;

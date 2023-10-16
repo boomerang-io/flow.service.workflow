@@ -29,7 +29,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import io.boomerang.controller.TriggersV2Controller;
+import io.boomerang.controller.TriggerV2Controller;
 import io.boomerang.controller.WorkflowController;
 import io.boomerang.integrations.data.entity.RevisionEntity;
 import io.boomerang.integrations.data.entity.WorkflowEntity;
@@ -65,7 +65,7 @@ public class WorkflowControllerTests extends FlowTests {
   private WorkflowController controller;
 
   @Autowired
-  private TriggersV2Controller internalController;
+  private TriggerV2Controller internalController;
 
   @Test
   public void testInternalWorkflowListing() {
