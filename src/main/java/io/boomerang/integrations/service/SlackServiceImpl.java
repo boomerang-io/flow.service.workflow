@@ -1,15 +1,16 @@
-package io.boomerang.extensions;
+package io.boomerang.integrations.service;
 
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -45,16 +46,15 @@ import com.slack.api.model.view.ViewClose;
 import com.slack.api.model.view.ViewSubmit;
 import com.slack.api.model.view.ViewTitle;
 import io.boomerang.error.BoomerangException;
-import io.boomerang.model.KeyValuePair;
+import io.boomerang.integrations.data.entity.IntegrationEntity;
+import io.boomerang.integrations.data.repository.ExtensionRepository;
 import io.boomerang.model.ref.Workflow;
 import io.boomerang.model.ref.WorkflowRun;
 import io.boomerang.model.ref.WorkflowRunSubmitRequest;
 import io.boomerang.service.RelationshipService;
-import io.boomerang.service.SettingsServiceImpl;
+import io.boomerang.service.SettingsService;
 import io.boomerang.service.WorkflowRunService;
 import io.boomerang.service.WorkflowService;
-import io.boomerang.v3.mongo.entity.ExtensionEntity;
-import io.boomerang.v3.mongo.repository.ExtensionRepository;
 
 /*
  * Handles the Slack app slash command and interactivity interactions
@@ -65,12 +65,12 @@ import io.boomerang.v3.mongo.repository.ExtensionRepository;
  * This service depends on the SlackSecurityVerificationFilter
  */
 @Service
-public class SlackExtensionImpl implements SlackExtension {
+public class SlackServiceImpl implements SlackService {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
     @Autowired
-    private SettingsServiceImpl flowSettingsService;
+    private SettingsService settingsService;
 
     @Autowired
     private WorkflowService workflowService;
@@ -84,8 +84,8 @@ public class SlackExtensionImpl implements SlackExtension {
     @Autowired
     private RelationshipService relationshipService;
 
-    @Autowired
-    private UserIdentityService userIdentityService;
+//    @Autowired
+//    private UserIdentityService userIdentityService;
 
     @Value("${flow.apps.flow.url}")
     private String flowAppsUrl;
@@ -359,13 +359,13 @@ public class SlackExtensionImpl implements SlackExtension {
     }
 
  private Boolean canExecuteWorkflow(String workflowId, String email) {
-   relationshipService.
-   if (filterService.getFilteredWorkflowIdsForUserEmail(Optional.empty(), Optional.empty(),
-       Optional.empty(), email).contains(workflowId)) {
-     LOGGER.debug("Can execute Workflow");
-     return true;
-   }
-   LOGGER.debug("No matching workflow found for User");
+//   relationshipService.
+//   if (filterService.getFilteredWorkflowIdsForUserEmail(Optional.empty(), Optional.empty(),
+//       Optional.empty(), email).contains(workflowId)) {
+//     LOGGER.debug("Can execute Workflow");
+//     return true;
+//   }
+//   LOGGER.debug("No matching workflow found for User");
    return false;
  }
 
@@ -425,11 +425,11 @@ public class SlackExtensionImpl implements SlackExtension {
      * user to the slack app in the workspace.
      */
     public ResponseEntity<?> handleAuth(String code) {
-        final String appId = flowSettingsService.getSetting("extensions", "slack.appId").getValue();
+        final String appId = settingsService.getSettingConfig("extensions", "slack.appId").getValue();
         final String clientId =
-                flowSettingsService.getSetting("extensions", "slack.clientId").getValue();
+                settingsService.getSettingConfig("extensions", "slack.clientId").getValue();
         final String clientSecret =
-                flowSettingsService.getSetting("extensions", "slack.clientSecret").getValue();
+                settingsService.getSettingConfig("extensions", "slack.clientSecret").getValue();
 
         Slack slack = Slack.getInstance();
         try {
@@ -457,16 +457,15 @@ public class SlackExtensionImpl implements SlackExtension {
      * @param OAuthV2AccessResponse
      */
     private void saveSlackAuthToken(OAuthV2AccessResponse authResponse) {
-        ExtensionEntity authExtension = new ExtensionEntity();
+        IntegrationEntity authExtension = new IntegrationEntity();
         ObjectMapper mapper = new ObjectMapper();
         Map<String, Object> payload =
                 mapper.convertValue(authResponse, new TypeReference<Map<String, Object>>() {});
-        KeyValuePair teamIdLabel = new KeyValuePair("teamId", authResponse.getTeam().getId());
 
-        // Optional<ExtensionEntity> origAuthExtension =
+        // Optional<IntegrationEntity> origAuthExtension =
         // extensionsRepository.findByType(EXTENSION_TYPE).stream()
         // .filter(e -> e.getLabels().indexOf(teamIdLabel) != -1).findFirst();
-        List<ExtensionEntity> authsList =
+        List<IntegrationEntity> authsList =
                 checkExistingAuthExtension(authResponse.getTeam().getId());
         if (!authsList.isEmpty()) {
             LOGGER.debug("Overriding existing Slack Team Auth");
@@ -476,8 +475,8 @@ public class SlackExtensionImpl implements SlackExtension {
             LOGGER.debug("Saving new Slack Team Auth");
             authExtension.setType(EXTENSION_TYPE);
             authExtension.setData(payload);
-            List<KeyValuePair> labels = new LinkedList<>();
-            labels.add(teamIdLabel);
+            Map<String, String> labels = new HashMap<>();
+            labels.put("teamId", authResponse.getTeam().getId());
             authExtension.setLabels(labels);
         }
         extensionsRepository.save(authExtension);
@@ -491,10 +490,9 @@ public class SlackExtensionImpl implements SlackExtension {
      * @param OAuthV2AccessResponse
      */
     private void addUserToAuthExtension(String teamId, String userId) {
-        List<ExtensionEntity> authExtensions = new LinkedList<>();
+        List<IntegrationEntity> authExtensions = new LinkedList<>();
         extensionsRepository.findByType(EXTENSION_TYPE).forEach(e -> {
-            Map<String, String> executionProperties =
-                    ParameterMapper.keyValuePairListToMap(e.getLabels());
+            Map<String, String> executionProperties = e.getLabels();
             if (executionProperties.containsKey("teamId")
                     && teamId.equals(executionProperties.get("teamId"))) {
                 authExtensions.add(e);
@@ -502,7 +500,7 @@ public class SlackExtensionImpl implements SlackExtension {
             }
         });
         if (!authExtensions.isEmpty()) {
-            ExtensionEntity authExtension = authExtensions.get(0);
+            IntegrationEntity authExtension = authExtensions.get(0);
             authExtension.getUsers().add(userId);
             extensionsRepository.save(authExtension);
             LOGGER.debug("Added user to Slack Team Extension");
@@ -513,11 +511,10 @@ public class SlackExtensionImpl implements SlackExtension {
     /*
      * Helper method to retrieve a saved Auth for a Slack Team (org)
      */
-    private List<ExtensionEntity> checkExistingAuthExtension(String teamId) {
-        List<ExtensionEntity> authExtensions = new LinkedList<>();
+    private List<IntegrationEntity> checkExistingAuthExtension(String teamId) {
+        List<IntegrationEntity> authExtensions = new LinkedList<>();
         extensionsRepository.findByType(EXTENSION_TYPE).forEach(e -> {
-            Map<String, String> executionProperties =
-                    ParameterMapper.keyValuePairListToMap(e.getLabels());
+            Map<String, String> executionProperties =e.getLabels();
             if (executionProperties.containsKey("teamId")
                     && teamId.equals(executionProperties.get("teamId"))) {
                 authExtensions.add(e);
@@ -531,10 +528,9 @@ public class SlackExtensionImpl implements SlackExtension {
      * Helper method to check if a User has opened the App as part of an Extension
      */
     private Boolean checkExistingAuthExtensionForUser(String teamId, String userId) {
-        List<ExtensionEntity> authExtensions = new LinkedList<>();
+        List<IntegrationEntity> authExtensions = new LinkedList<>();
         extensionsRepository.findByType(EXTENSION_TYPE).forEach(e -> {
-            Map<String, String> executionProperties =
-                    ParameterMapper.keyValuePairListToMap(e.getLabels());
+          Map<String, String> executionProperties =e.getLabels();
             if (executionProperties.containsKey("teamId")
                     && teamId.equals(executionProperties.get("teamId"))) {
                 authExtensions.add(e);
@@ -542,7 +538,7 @@ public class SlackExtensionImpl implements SlackExtension {
             }
         });
         if (!authExtensions.isEmpty()) {
-            ExtensionEntity authEntity = authExtensions.get(0);
+            IntegrationEntity authEntity = authExtensions.get(0);
             if (authEntity.getUsers().contains(userId)) {
                 LOGGER.debug("Found matching UserId on Team Auth Extension");
                 return true;
@@ -557,14 +553,14 @@ public class SlackExtensionImpl implements SlackExtension {
      * @param teamId
      */
     private String getSlackAuthToken(String teamId) {
-        List<ExtensionEntity> authsList = checkExistingAuthExtension(teamId);
+        List<IntegrationEntity> authsList = checkExistingAuthExtension(teamId);
         if (!authsList.isEmpty()) {
             String teamAuthToken = authsList.get(0).getData().get("accessToken").toString();
             LOGGER.debug("Using existing team Slack auth token: " + teamAuthToken);
             return teamAuthToken;
         }
         String defaultAuthToken =
-                flowSettingsService.getSetting("extensions", "slack.token").getValue();
+                settingsService.getSettingConfig("extensions", "slack.token").getValue();
         LOGGER.debug("Using default Slack auth token: " + defaultAuthToken);
         return defaultAuthToken;
     }
@@ -635,7 +631,7 @@ public class SlackExtensionImpl implements SlackExtension {
                                 req -> req.channel(userId).blocks(appHomeBlocks()));
                     }
                 }
-            } catch (RunWorkflowException | IOException | SlackApiException
+            } catch (IOException | SlackApiException
                     | HttpClientErrorException | BoomerangException e) {
                 LOGGER.error(e);
                 return false;
@@ -650,9 +646,9 @@ public class SlackExtensionImpl implements SlackExtension {
      * submitted in slack
      */
     private List<LayoutBlock> appHomeBlocks() {
-        String appName = flowSettingsService.getSetting("customizations", "appName").getValue();
+        String appName = settingsService.getSettingConfig("customizations", "appName").getValue();
         String platformName =
-                flowSettingsService.getSetting("customizations", "platformName").getValue();
+                settingsService.getSettingConfig("customizations", "platformName").getValue();
         String joinedName = platformName + " " + appName;
         List<LayoutBlock> blocks = new LinkedList<>();
         blocks.add(HeaderBlock.builder()
@@ -715,8 +711,7 @@ public class SlackExtensionImpl implements SlackExtension {
         return () -> {
             final String teamId = jsonPayload.get("team_id").asText();
             extensionsRepository.findByType(EXTENSION_TYPE).forEach(e -> {
-                Map<String, String> executionProperties =
-                        ParameterMapper.keyValuePairListToMap(e.getLabels());
+              Map<String, String> executionProperties =e.getLabels();
                 if (executionProperties.containsKey("teamId")
                         && teamId.equals(executionProperties.get("teamId"))) {
                     extensionsRepository.delete(e);
@@ -733,7 +728,7 @@ public class SlackExtensionImpl implements SlackExtension {
     @Override
     public ResponseEntity<?> installRedirect() throws URISyntaxException {
         final String installURL =
-                flowSettingsService.getSetting("extensions", "slack.installURL").getValue();
+                settingsService.getSettingConfig("extensions", "slack.installURL").getValue();
         return ResponseEntity.status(HttpStatus.FOUND).location(new URI(installURL)).build();
     }
 
@@ -747,7 +742,7 @@ public class SlackExtensionImpl implements SlackExtension {
     @Override
     public Boolean verifySignature(String signature, String timestamp, String body) {
         String key =
-                this.flowSettingsService.getSetting("extensions", "slack.signingSecret").getValue();
+                this.settingsService.getSettingConfig("extensions", "slack.signingSecret").getValue();
         LOGGER.debug("Key: " + key);
         LOGGER.debug("Slack Timestamp: " + timestamp);
         LOGGER.debug("Slack Body: " + body);

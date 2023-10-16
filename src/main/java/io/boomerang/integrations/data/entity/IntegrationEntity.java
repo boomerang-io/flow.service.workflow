@@ -1,4 +1,4 @@
-package io.boomerang.v3.mongo.entity;
+package io.boomerang.integrations.data.entity;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -11,8 +11,8 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(Include.NON_NULL)
-@Document(collection = "#{@mongoConfiguration.fullCollectionName('extensions')}")
-public class ExtensionEntity {
+@Document(collection = "#{@mongoConfiguration.fullCollectionName('integrations')}")
+public class IntegrationEntity {
   @Id
   private String id;
 

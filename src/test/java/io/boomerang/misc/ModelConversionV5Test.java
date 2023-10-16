@@ -8,9 +8,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.core.io.ClassPathResource;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import io.boomerang.integrations.data.entity.RevisionEntity;
 import io.boomerang.model.projectstormv5.WorkflowRevision;
 import io.boomerang.util.ModelConverterV5;
-import io.boomerang.v3.mongo.entity.RevisionEntity;
 
 public class ModelConversionV5Test {
 

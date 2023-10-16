@@ -1,13 +1,18 @@
 package io.boomerang.controller;
 
+import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,12 +23,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.boomerang.extensions.SlackExtension;
-import io.boomerang.security.interceptors.AuthScope;
-import io.boomerang.security.model.AuthType;
-import io.boomerang.security.model.PermissionAction;
-import io.boomerang.security.model.PermissionScope;
+import io.boomerang.integrations.service.SlackService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -35,17 +37,15 @@ import io.swagger.v3.oas.annotations.tags.Tag;
  * The Slack extension depends on the SlackSecurityVerificationFilter
  */
 @RestController
-@RequestMapping("/api/v2/integration/slack")
+@RequestMapping("/api/v2/integration")
 @Tag(name = "Integrations", description = "Handles the Slack integration.")
-public class IntegrationSlackV2Controller {
+public class IntegrationV2Controller {
     private static final Logger LOGGER = LogManager.getLogger();
 
     @Autowired
-    private SlackExtension slackExtension;
+    private SlackService slackExtension;
 
     @GetMapping(value = "/slack/auth")
-    @AuthScope(action = PermissionAction.WRITE, scope = PermissionScope.SYSTEM,
-            types = {AuthType.session, AuthType.global})
     @Operation(summary = "Receive Slack Oauth2 request")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
             @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -62,7 +62,6 @@ public class IntegrationSlackV2Controller {
 
     @PostMapping(value = "/slack/commands",
             consumes = {MediaType.APPLICATION_FORM_URLENCODED_VALUE})
-    @AuthenticationScope(scopes = {TokenScope.global})
     @Operation(summary = "Receive Slack Slash Commands")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
             @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -83,7 +82,6 @@ public class IntegrationSlackV2Controller {
     // https://api.slack.com/reference/interaction-payloads
     @PostMapping(value = "/slack/interactivity",
             consumes = {MediaType.APPLICATION_FORM_URLENCODED_VALUE})
-    @AuthenticationScope(scopes = {TokenScope.global})
     @Operation(summary = "Receive Slack Interactivity")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
             @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -110,7 +108,6 @@ public class IntegrationSlackV2Controller {
 
     // https://api.slack.com/apis/connections/events-api#receiving_events
     @PostMapping(value = "/slack/events", consumes = {MediaType.APPLICATION_JSON_VALUE})
-    @AuthenticationScope(scopes = {TokenScope.global})
     @Operation(summary = "Receive Slack Events")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
             @ApiResponse(responseCode = "400", description = "Bad Request")})
