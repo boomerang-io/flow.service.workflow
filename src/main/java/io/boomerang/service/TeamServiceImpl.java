@@ -64,7 +64,7 @@ import io.boomerang.util.StringUtil;
 @Service
 public class TeamServiceImpl implements TeamService {
 
-  public static final List<String> RESERVED_TEAM_NAMES = List.of("home", "admin", "system", "profile");
+  public static final List<String> RESERVED_TEAM_NAMES = List.of("home", "admin", "system", "profile", "connect");
   public static final String TEAMS_SETTINGS_KEY = "teams";
   public static final String MAX_TEAM_WORKFLOW_COUNT = "max.team.workflow.count";
   public static final String MAX_TEAM_CONCURRENT_WORKFLOW = "max.team.concurrent.workflows";

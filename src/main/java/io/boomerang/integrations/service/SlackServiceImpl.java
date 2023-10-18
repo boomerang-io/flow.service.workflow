@@ -425,11 +425,11 @@ public class SlackServiceImpl implements SlackService {
      * user to the slack app in the workspace.
      */
     public ResponseEntity<?> handleAuth(String code) {
-        final String appId = settingsService.getSettingConfig("extensions", "slack.appId").getValue();
+        final String appId = settingsService.getSettingConfig("integration", "slack.appId").getValue();
         final String clientId =
-                settingsService.getSettingConfig("extensions", "slack.clientId").getValue();
+                settingsService.getSettingConfig("integration", "slack.clientId").getValue();
         final String clientSecret =
-                settingsService.getSettingConfig("extensions", "slack.clientSecret").getValue();
+                settingsService.getSettingConfig("integration", "slack.clientSecret").getValue();
 
         Slack slack = Slack.getInstance();
         try {
@@ -560,7 +560,7 @@ public class SlackServiceImpl implements SlackService {
             return teamAuthToken;
         }
         String defaultAuthToken =
-                settingsService.getSettingConfig("extensions", "slack.token").getValue();
+                settingsService.getSettingConfig("integration", "slack.token").getValue();
         LOGGER.debug("Using default Slack auth token: " + defaultAuthToken);
         return defaultAuthToken;
     }
@@ -728,7 +728,7 @@ public class SlackServiceImpl implements SlackService {
     @Override
     public ResponseEntity<?> installRedirect() throws URISyntaxException {
         final String installURL =
-                settingsService.getSettingConfig("extensions", "slack.installURL").getValue();
+                settingsService.getSettingConfig("integration", "slack.installURL").getValue();
         return ResponseEntity.status(HttpStatus.FOUND).location(new URI(installURL)).build();
     }
 
@@ -742,7 +742,7 @@ public class SlackServiceImpl implements SlackService {
     @Override
     public Boolean verifySignature(String signature, String timestamp, String body) {
         String key =
-                this.settingsService.getSettingConfig("extensions", "slack.signingSecret").getValue();
+                this.settingsService.getSettingConfig("integration", "slack.signingSecret").getValue();
         LOGGER.debug("Key: " + key);
         LOGGER.debug("Slack Timestamp: " + timestamp);
         LOGGER.debug("Slack Body: " + body);

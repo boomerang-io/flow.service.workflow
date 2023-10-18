@@ -25,6 +25,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.boomerang.integrations.service.GitHubService;
 import io.boomerang.integrations.service.SlackService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -38,26 +39,29 @@ import io.swagger.v3.oas.annotations.tags.Tag;
  */
 @RestController
 @RequestMapping("/api/v2/integration")
-@Tag(name = "Integrations", description = "Handles the Slack integration.")
+@Tag(name = "Integrations", description = "Handles the integrations with 3rd parties such as Slack and GitHub.")
 public class IntegrationV2Controller {
     private static final Logger LOGGER = LogManager.getLogger();
 
     @Autowired
-    private SlackService slackExtension;
+    private SlackService slackService;
+
+    @Autowired
+    private GitHubService githubService;
 
     @GetMapping(value = "/slack/auth")
     @Operation(summary = "Receive Slack Oauth2 request")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
             @ApiResponse(responseCode = "400", description = "Bad Request")})
     ResponseEntity<?> receiveSlackAuth(HttpServletRequest request, @RequestParam String code) {
-        return slackExtension.handleAuth(code);
+        return slackService.handleAuth(code);
     }
 
     @GetMapping(value = "/slack/install")
     @Operation(summary = "Install URL Redirect")
     @ApiResponses(value = {@ApiResponse(responseCode = "302", description = "Found")})
     ResponseEntity<?> installSlack() throws URISyntaxException {
-        return slackExtension.installRedirect();
+        return slackService.installRedirect();
     }
 
     @PostMapping(value = "/slack/commands",
@@ -75,7 +79,7 @@ public class IntegrationV2Controller {
         // LOGGER.debug("Timestamp: " + timestamp);
         // LOGGER.debug("Payload: " + slackEvent);
 
-        CompletableFuture.supplyAsync(slackExtension.createRunModal(requestValueMapper(request)));
+        CompletableFuture.supplyAsync(slackService.createRunModal(requestValueMapper(request)));
         return ResponseEntity.ok().build();
     }
 
@@ -96,7 +100,7 @@ public class IntegrationV2Controller {
         Map<String, String> slackEvent = requestValueMapper(request);
         JsonNode payload = mapper.readTree(slackEvent.get("payload"));
         if (payload.has("type") && "view_submission".equals(payload.get("type").asText())) {
-            CompletableFuture.supplyAsync(slackExtension.executeRunModal(payload));
+            CompletableFuture.supplyAsync(slackService.executeRunModal(payload));
         } else if (payload.has("type")) {
             LOGGER.error("Unhandled Slack Interactivity Type: " + payload.get("type").asText());
         } else {
@@ -121,10 +125,10 @@ public class IntegrationV2Controller {
             return ResponseEntity.ok().body(payload.get("challenge"));
         } else if (payload.has("type")
                 && "app_home_opened".equals(payload.get("event").get("type").asText())) {
-            CompletableFuture.supplyAsync(slackExtension.appHomeOpened(payload));
+            CompletableFuture.supplyAsync(slackService.appHomeOpened(payload));
         } else if (payload.has("type")
                 && "app_uninstalled".equals(payload.get("event").get("type").asText())) {
-            CompletableFuture.supplyAsync(slackExtension.appUninstalled(payload));
+            CompletableFuture.supplyAsync(slackService.appUninstalled(payload));
         } else if (payload.has("type")) {
             LOGGER.error("Unhandled Slack Event Type: " + payload.get("type").asText());
         } else {
@@ -154,5 +158,17 @@ public class IntegrationV2Controller {
                         a -> a.length > 1 ? URLDecoder.decode(a[1], StandardCharsets.UTF_8) : ""));
         LOGGER.debug("Map: " + result.toString());
         return result;
+    }
+    
+    /*
+     * GitHub Endpoints
+     */
+    @GetMapping(value = "/github/installation")
+    @Operation(summary = "Retrieve the installation ID and store against a team")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
+        @ApiResponse(responseCode = "400", description = "Bad Request")})
+    ResponseEntity<?> githubInstall(@RequestParam String id) throws IOException {
+
+      return githubService.retrieveAppInstallation(id);
     }
 }
