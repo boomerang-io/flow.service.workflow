@@ -2,6 +2,7 @@ package io.boomerang.integrations.service;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,7 +14,10 @@ import com.spotify.github.v3.clients.GithubAppClient;
 import com.spotify.github.v3.clients.OrganisationClient;
 import io.boomerang.error.BoomerangError;
 import io.boomerang.error.BoomerangException;
+import io.boomerang.integrations.data.entity.IntegrationsEntity;
+import io.boomerang.integrations.data.repository.IntegrationsRepository;
 import io.boomerang.integrations.model.GHInstallationsResponse;
+import io.boomerang.integrations.model.GHLinkRequest;
 import io.boomerang.service.SettingsService;
 
 @Service
@@ -23,22 +27,15 @@ public class GitHubServiceImpl implements GitHubService {
 
   @Autowired
   private SettingsService settingsService;
+  
+  @Autowired
+  private IntegrationsRepository integrationsRepository;
 
   @Override
-  public ResponseEntity<?> retrieveAppInstallation(String code) {
-    final String appId = settingsService.getSettingConfig("integration", "github.appId").getValue();
+  public ResponseEntity<?> retrieveAppInstallation(Integer id) {
+    final GithubAppClient appClient = getGitHubAppClient(id);
     
-    final GitHubClient githubClient =
-        GitHubClient.create(
-          URI.create("https://api.github.com/"),
-          this.getPEMBytes(),
-          Integer.valueOf(appId));
-    
-    final OrganisationClient orgClient = githubClient.createOrganisationClient("");
-    
-    final GithubAppClient appClient = orgClient.createGithubAppClient();
-    
-    LOGGER.debug("GitHub Access Token: " + appClient.getAccessToken(Integer.valueOf(code)).join().toString());
+//    LOGGER.debug("GitHub Access Token: " + appClient.getAccessToken(Integer.valueOf(code)).join().toString());
     
     List<Installation> installations = appClient.getInstallations().join();
     
@@ -49,6 +46,21 @@ public class GitHubServiceImpl implements GitHubService {
       return ResponseEntity.ok(response);
     }
     throw new BoomerangException(BoomerangError.ACTION_INVALID_REF);
+  }
+
+  private GithubAppClient getGitHubAppClient(Integer installationId) {
+    final String appId = settingsService.getSettingConfig("integration", "github.appId").getValue();
+    final GitHubClient githubClient =
+        GitHubClient.create(
+          URI.create("https://api.github.com/"),
+          this.getPEMBytes(),
+          Integer.valueOf(appId),
+          installationId);
+    
+    final OrganisationClient orgClient = githubClient.createOrganisationClient("");
+    
+    final GithubAppClient appClient = orgClient.createGithubAppClient();
+    return appClient;
   }  
   
   private byte[] getPEMBytes() {
@@ -70,5 +82,18 @@ public class GitHubServiceImpl implements GitHubService {
     builder.append(RSA_END);
 
     return builder.toString().getBytes();
+  }
+
+  @Override
+  public ResponseEntity<?> linkAppInstallation(GHLinkRequest request) {
+    LOGGER.debug("linkAppInstallation() - " + request.toString());
+    GithubAppClient appClient = getGitHubAppClient(request.getInstallationId());
+    List<Installation> installations = appClient.getInstallations().join();
+    IntegrationsEntity entity = new IntegrationsEntity();
+    entity.setType("github_app");
+    entity.setData((Map<String, Object>) installations.get(0));
+    integrationsRepository.save(entity);
+    //TODO create Relationship with Team
+    return ResponseEntity.ok().build();
   }
 }

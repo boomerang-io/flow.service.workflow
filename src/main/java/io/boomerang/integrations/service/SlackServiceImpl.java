@@ -46,8 +46,8 @@ import com.slack.api.model.view.ViewClose;
 import com.slack.api.model.view.ViewSubmit;
 import com.slack.api.model.view.ViewTitle;
 import io.boomerang.error.BoomerangException;
-import io.boomerang.integrations.data.entity.IntegrationEntity;
-import io.boomerang.integrations.data.repository.ExtensionRepository;
+import io.boomerang.integrations.data.entity.IntegrationsEntity;
+import io.boomerang.integrations.data.repository.IntegrationsRepository;
 import io.boomerang.model.ref.Workflow;
 import io.boomerang.model.ref.WorkflowRun;
 import io.boomerang.model.ref.WorkflowRunSubmitRequest;
@@ -79,7 +79,7 @@ public class SlackServiceImpl implements SlackService {
     private WorkflowRunService workflowRunService;
 
     @Autowired
-    private ExtensionRepository extensionsRepository;
+    private IntegrationsRepository extensionsRepository;
 
     @Autowired
     private RelationshipService relationshipService;
@@ -457,7 +457,7 @@ public class SlackServiceImpl implements SlackService {
      * @param OAuthV2AccessResponse
      */
     private void saveSlackAuthToken(OAuthV2AccessResponse authResponse) {
-        IntegrationEntity authExtension = new IntegrationEntity();
+        IntegrationsEntity authExtension = new IntegrationsEntity();
         ObjectMapper mapper = new ObjectMapper();
         Map<String, Object> payload =
                 mapper.convertValue(authResponse, new TypeReference<Map<String, Object>>() {});
@@ -465,7 +465,7 @@ public class SlackServiceImpl implements SlackService {
         // Optional<IntegrationEntity> origAuthExtension =
         // extensionsRepository.findByType(EXTENSION_TYPE).stream()
         // .filter(e -> e.getLabels().indexOf(teamIdLabel) != -1).findFirst();
-        List<IntegrationEntity> authsList =
+        List<IntegrationsEntity> authsList =
                 checkExistingAuthExtension(authResponse.getTeam().getId());
         if (!authsList.isEmpty()) {
             LOGGER.debug("Overriding existing Slack Team Auth");
@@ -490,7 +490,7 @@ public class SlackServiceImpl implements SlackService {
      * @param OAuthV2AccessResponse
      */
     private void addUserToAuthExtension(String teamId, String userId) {
-        List<IntegrationEntity> authExtensions = new LinkedList<>();
+        List<IntegrationsEntity> authExtensions = new LinkedList<>();
         extensionsRepository.findByType(EXTENSION_TYPE).forEach(e -> {
             Map<String, String> executionProperties = e.getLabels();
             if (executionProperties.containsKey("teamId")
@@ -500,7 +500,7 @@ public class SlackServiceImpl implements SlackService {
             }
         });
         if (!authExtensions.isEmpty()) {
-            IntegrationEntity authExtension = authExtensions.get(0);
+            IntegrationsEntity authExtension = authExtensions.get(0);
             authExtension.getUsers().add(userId);
             extensionsRepository.save(authExtension);
             LOGGER.debug("Added user to Slack Team Extension");
@@ -511,8 +511,8 @@ public class SlackServiceImpl implements SlackService {
     /*
      * Helper method to retrieve a saved Auth for a Slack Team (org)
      */
-    private List<IntegrationEntity> checkExistingAuthExtension(String teamId) {
-        List<IntegrationEntity> authExtensions = new LinkedList<>();
+    private List<IntegrationsEntity> checkExistingAuthExtension(String teamId) {
+        List<IntegrationsEntity> authExtensions = new LinkedList<>();
         extensionsRepository.findByType(EXTENSION_TYPE).forEach(e -> {
             Map<String, String> executionProperties =e.getLabels();
             if (executionProperties.containsKey("teamId")
@@ -528,7 +528,7 @@ public class SlackServiceImpl implements SlackService {
      * Helper method to check if a User has opened the App as part of an Extension
      */
     private Boolean checkExistingAuthExtensionForUser(String teamId, String userId) {
-        List<IntegrationEntity> authExtensions = new LinkedList<>();
+        List<IntegrationsEntity> authExtensions = new LinkedList<>();
         extensionsRepository.findByType(EXTENSION_TYPE).forEach(e -> {
           Map<String, String> executionProperties =e.getLabels();
             if (executionProperties.containsKey("teamId")
@@ -538,7 +538,7 @@ public class SlackServiceImpl implements SlackService {
             }
         });
         if (!authExtensions.isEmpty()) {
-            IntegrationEntity authEntity = authExtensions.get(0);
+            IntegrationsEntity authEntity = authExtensions.get(0);
             if (authEntity.getUsers().contains(userId)) {
                 LOGGER.debug("Found matching UserId on Team Auth Extension");
                 return true;
@@ -553,7 +553,7 @@ public class SlackServiceImpl implements SlackService {
      * @param teamId
      */
     private String getSlackAuthToken(String teamId) {
-        List<IntegrationEntity> authsList = checkExistingAuthExtension(teamId);
+        List<IntegrationsEntity> authsList = checkExistingAuthExtension(teamId);
         if (!authsList.isEmpty()) {
             String teamAuthToken = authsList.get(0).getData().get("accessToken").toString();
             LOGGER.debug("Using existing team Slack auth token: " + teamAuthToken);

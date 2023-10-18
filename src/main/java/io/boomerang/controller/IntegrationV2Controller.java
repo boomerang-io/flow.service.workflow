@@ -25,6 +25,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.boomerang.integrations.model.GHLinkRequest;
 import io.boomerang.integrations.service.GitHubService;
 import io.boomerang.integrations.service.SlackService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -167,8 +168,15 @@ public class IntegrationV2Controller {
     @Operation(summary = "Retrieve the installation ID and store against a team")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
         @ApiResponse(responseCode = "400", description = "Bad Request")})
-    ResponseEntity<?> githubInstall(@RequestParam String id) throws IOException {
-
+    ResponseEntity<?> githubInstall(@RequestParam Integer id) throws IOException {
       return githubService.retrieveAppInstallation(id);
+    }
+
+    @PostMapping(value = "/github/link")
+    @Operation(summary = "Links the GitHub Installation ID with a Team")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
+        @ApiResponse(responseCode = "400", description = "Bad Request")})
+    ResponseEntity<?> githubLink(@RequestBody GHLinkRequest request) throws IOException {
+      return githubService.linkAppInstallation(request);
     }
 }
