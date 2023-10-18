@@ -163,7 +163,7 @@ public class IntegrationV2Controller {
     /*
      * GitHub Endpoints
      */
-    @GetMapping(value = "/github/installation")
+    @GetMapping(value = "/github/installations")
     @Operation(summary = "Retrieve the installation ID and store against a team")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
         @ApiResponse(responseCode = "400", description = "Bad Request")})
