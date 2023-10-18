@@ -11,6 +11,9 @@ import com.spotify.github.v3.checks.Installation;
 import com.spotify.github.v3.clients.GitHubClient;
 import com.spotify.github.v3.clients.GithubAppClient;
 import com.spotify.github.v3.clients.OrganisationClient;
+import io.boomerang.error.BoomerangError;
+import io.boomerang.error.BoomerangException;
+import io.boomerang.integrations.model.GHInstallationsResponse;
 import io.boomerang.service.SettingsService;
 
 @Service
@@ -41,7 +44,11 @@ public class GitHubServiceImpl implements GitHubService {
     
     LOGGER.debug("GitHub Installations: " + installations.toString());
     
-    return ResponseEntity.ok(installations);
+    if (!installations.isEmpty()) {
+      GHInstallationsResponse response = new GHInstallationsResponse(Integer.valueOf(installations.get(0).appId()), Integer.valueOf(installations.get(0).id()), installations.get(0).account().login(), installations.get(0).account().htmlUrl().toString(), Integer.valueOf(installations.get(0).account().id()), installations.get(0).account().type());
+      return ResponseEntity.ok(response);
+    }
+    throw new BoomerangException(BoomerangError.ACTION_INVALID_REF);
   }  
   
   private byte[] getPEMBytes() {
