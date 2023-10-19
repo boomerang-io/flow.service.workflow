@@ -555,7 +555,8 @@ public class SlackServiceImpl implements SlackService {
     private String getSlackAuthToken(String teamId) {
         List<IntegrationsEntity> authsList = checkExistingAuthExtension(teamId);
         if (!authsList.isEmpty()) {
-            String teamAuthToken = authsList.get(0).getData().get("accessToken").toString();
+            Map<String, Object> data = (Map<String, Object>) authsList.get(0).getData();
+            String teamAuthToken = data.get("accessToken").toString();
             LOGGER.debug("Using existing team Slack auth token: " + teamAuthToken);
             return teamAuthToken;
         }
