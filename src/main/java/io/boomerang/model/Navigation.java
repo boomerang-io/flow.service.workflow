@@ -14,6 +14,7 @@ public class Navigation {
   private boolean disabled;
   private String link;
   private List<Navigation> childLinks;
+  private boolean beta = false;
 
   public String getName() {
     return name;
@@ -61,6 +62,14 @@ public class Navigation {
 
   public void setChildLinks(List<Navigation> childLinks) {
     this.childLinks = childLinks;
+  }
+
+  public boolean isBeta() {
+    return beta;
+  }
+
+  public void setBeta(boolean beta) {
+    this.beta = beta;
   }
 
 

@@ -108,6 +108,15 @@ public class NavigationServiceImpl implements NavigationService {
       schedules.setLink(flowAppsUrl + teamIdURLContext + "/schedules");
       response.add(schedules);
 
+      Navigation integrations = new Navigation();
+      schedules.setName("Integrations");
+      schedules.setType(NavigationType.link);
+      schedules.setDisabled(disabled);
+      schedules.setIcon("AppConnectivity");
+      schedules.setLink(flowAppsUrl + teamIdURLContext + "/integrations");
+      schedules.setBeta(true);
+      response.add(integrations);
+
       response.add(divider);
 
       Navigation teamTasks = new Navigation();
