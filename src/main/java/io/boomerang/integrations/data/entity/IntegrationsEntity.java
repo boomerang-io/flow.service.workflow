@@ -18,7 +18,7 @@ public class IntegrationsEntity {
 
   private String type;
   
-  private Map<String, Object> data;
+  private Object data;
 
   private  Map<String, String> labels;
 
@@ -40,11 +40,11 @@ public class IntegrationsEntity {
     this.type = type;
   }
 
-  public Map<String, Object> getData() {
+  public Object getData() {
     return data;
   }
 
-  public void setData(Map<String, Object> data) {
+  public void setData(Object data) {
     this.data = data;
   }
 

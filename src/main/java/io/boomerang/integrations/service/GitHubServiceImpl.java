@@ -2,7 +2,7 @@ package io.boomerang.integrations.service;
 
 import java.net.URI;
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +18,9 @@ import io.boomerang.integrations.data.entity.IntegrationsEntity;
 import io.boomerang.integrations.data.repository.IntegrationsRepository;
 import io.boomerang.integrations.model.GHInstallationsResponse;
 import io.boomerang.integrations.model.GHLinkRequest;
+import io.boomerang.model.enums.RelationshipRef;
+import io.boomerang.model.enums.RelationshipType;
+import io.boomerang.service.RelationshipService;
 import io.boomerang.service.SettingsService;
 
 @Service
@@ -27,6 +30,9 @@ public class GitHubServiceImpl implements GitHubService {
 
   @Autowired
   private SettingsService settingsService;
+  
+  @Autowired
+  private RelationshipService relationshipService;
   
   @Autowired
   private IntegrationsRepository integrationsRepository;
@@ -91,9 +97,10 @@ public class GitHubServiceImpl implements GitHubService {
     List<Installation> installations = appClient.getInstallations().join();
     IntegrationsEntity entity = new IntegrationsEntity();
     entity.setType("github_app");
-    entity.setData((Map<String, Object>) installations.get(0));
-    integrationsRepository.save(entity);
-    //TODO create Relationship with Team
+    entity.setData(installations.get(0));
+    entity = integrationsRepository.save(entity);
+    
+    relationshipService.addRelationshipRef(RelationshipRef.INTEGRATION, entity.getId(), RelationshipType.BELONGSTO, RelationshipRef.TEAM, Optional.of(request.getTeam()), Optional.empty());
     return ResponseEntity.ok().build();
   }
 }
