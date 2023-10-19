@@ -1,5 +1,6 @@
 package io.boomerang.integrations.data.entity;
 
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -20,7 +21,7 @@ public class IntegrationsEntity {
   
   private Object data;
 
-  private  Map<String, String> labels;
+  private  Map<String, String> labels = new HashMap<>();
 
   private List<String> users = new LinkedList<>();
 

@@ -1,6 +1,7 @@
 package io.boomerang.controller;
 
 import java.util.Optional;
+import javax.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -61,7 +62,8 @@ public class TriggerV2Controller {
       @Parameter(name = "type",
           description = "The type of webhook allowing for specialised payloads. Defaults to 'generic'.",
           required = true) @RequestParam(defaultValue = "generic") WebhookType type,
-      @RequestBody JsonNode payload) {
+      @RequestBody JsonNode payload,
+      HttpServletRequest request) {
     switch (type) {
       case slack:
         if (payload != null) {
@@ -90,8 +92,11 @@ public class TriggerV2Controller {
       case generic:
         return triggerService.processWebhook("webhook", workflow.get(), payload);
       case github:
-        // TODO build out the GitHub Webhook receiver
-        return triggerService.processGitHub("github", null, payload);
+        String ghEventType = request.getHeader("x-github-event");
+        if (ghEventType != null) {
+          return triggerService.processGitHubWebhook("github", ghEventType, payload);          
+        }
+        return ResponseEntity.badRequest().build();
       default:
         return ResponseEntity.badRequest().build();
     }

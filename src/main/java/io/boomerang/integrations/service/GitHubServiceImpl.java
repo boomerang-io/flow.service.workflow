@@ -71,14 +71,11 @@ public class GitHubServiceImpl implements GitHubService {
   
   private byte[] getPEMBytes() {
     final String pem = settingsService.getSettingConfig("integration", "github.pem").getValue();
-    LOGGER.debug("getPEMBytes() " + pem);
-    
     final String RSA_BEGIN = "-----BEGIN RSA PRIVATE KEY-----";
     final String RSA_END = "-----END RSA PRIVATE KEY-----";
 
     String middle = pem.replace(RSA_BEGIN, "").replace(RSA_END, "").trim();
     String[] split = middle.split(" ");
-    LOGGER.debug(split.length);
     
     StringBuilder builder = new StringBuilder();
     builder.append(RSA_BEGIN).append("\n");

@@ -84,8 +84,8 @@ public class TriggersServiceImpl implements TriggerService {
   }
 
   @Override
-  public ResponseEntity<?> processGitHub(String trigger, String workflowId, JsonNode payload) {
-    logger.debug("Webhook Request: " + payload.toString());
+  public ResponseEntity<?> processGitHubWebhook(String trigger, String eventType, JsonNode payload) {
+    logger.debug("GitHub Webhook Request[" + eventType + "]: " + payload.toString());
 
     return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
   }
