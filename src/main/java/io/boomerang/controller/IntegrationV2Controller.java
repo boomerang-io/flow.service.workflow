@@ -5,6 +5,7 @@ import java.net.URISyntaxException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
@@ -25,8 +26,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.boomerang.integrations.data.entity.IntegrationTemplateEntity;
 import io.boomerang.integrations.model.GHLinkRequest;
 import io.boomerang.integrations.service.GitHubService;
+import io.boomerang.integrations.service.IntegrationService;
 import io.boomerang.integrations.service.SlackService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -45,11 +48,32 @@ public class IntegrationV2Controller {
     private static final Logger LOGGER = LogManager.getLogger();
 
     @Autowired
+    private IntegrationService integrationService;
+
+    @Autowired
     private SlackService slackService;
 
     @Autowired
     private GitHubService githubService;
 
+    @GetMapping()
+    @Operation(summary = "Retrieve the integrations")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
+        @ApiResponse(responseCode = "400", description = "Bad Request")})
+    List<IntegrationTemplateEntity> get(@RequestParam Integer id) throws IOException {
+      return integrationService.get();
+    }
+    
+    /*
+     * Slack Endpoints
+     */
+    
+    /**
+     * Slack Auth Endpoint
+     * @param request
+     * @param code
+     * @return
+     */
     @GetMapping(value = "/slack/auth")
     @Operation(summary = "Receive Slack Oauth2 request")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),

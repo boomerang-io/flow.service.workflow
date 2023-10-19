@@ -10,7 +10,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(Include.NON_NULL)
 @Document(collection = "#{@mongoConfiguration.fullCollectionName('integration_templates')}")
-public class IntegrationTemplatesEntity {
+public class IntegrationTemplateEntity {
   @Id
   private String id;
 
