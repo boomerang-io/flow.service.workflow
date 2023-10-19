@@ -14,9 +14,11 @@ public class IntegrationTemplateEntity {
   @Id
   private String id;
 
-  private String type;
+  private String name;
   
-  private URI url;
+  private String link;
+  
+  private String icon;
   
   private String status;
   
@@ -32,20 +34,28 @@ public class IntegrationTemplateEntity {
     this.id = id;
   }
 
-  public String getType() {
-    return type;
+  public String getName() {
+    return name;
   }
 
-  public void setType(String type) {
-    this.type = type;
+  public void setName(String name) {
+    this.name = name;
   }
 
-  public URI getUrl() {
-    return url;
+  public String getLink() {
+    return link;
   }
 
-  public void setUrl(URI url) {
-    this.url = url;
+  public void setLink(String link) {
+    this.link = link;
+  }
+
+  public String getIcon() {
+    return icon;
+  }
+
+  public void setIcon(String icon) {
+    this.icon = icon;
   }
 
   public String getStatus() {
@@ -70,7 +80,5 @@ public class IntegrationTemplateEntity {
 
   public void setInstructions(String instructions) {
     this.instructions = instructions;
-  }
-  
-  
+  }  
 }
