@@ -56,12 +56,12 @@ public class IntegrationV2Controller {
     @Autowired
     private GitHubService githubService;
 
-    @GetMapping()
+    @GetMapping(value = "")
     @Operation(summary = "Retrieve the integrations")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
         @ApiResponse(responseCode = "400", description = "Bad Request")})
-    List<IntegrationTemplateEntity> get(@RequestParam Integer id) throws IOException {
-      return integrationService.get();
+    List<IntegrationTemplateEntity> get(@RequestParam String team) throws IOException {
+      return integrationService.get(team);
     }
     
     /*

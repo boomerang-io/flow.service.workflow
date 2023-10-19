@@ -17,7 +17,7 @@ public class IntegrationServiceImpl implements IntegrationService {
   private IntegrationTemplateRepository integrationTemplateRepository;
 
   @Override
-  public List<IntegrationTemplateEntity> get() {
+  public List<IntegrationTemplateEntity> get(String team) {
     return integrationTemplateRepository.findAll();
   }
 }

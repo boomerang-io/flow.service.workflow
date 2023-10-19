@@ -5,6 +5,6 @@ import io.boomerang.integrations.data.entity.IntegrationTemplateEntity;
 
 public interface IntegrationService {
 
-  List<IntegrationTemplateEntity> get();
+  List<IntegrationTemplateEntity> get(String team);
 
 }
