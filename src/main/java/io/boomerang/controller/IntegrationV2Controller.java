@@ -205,7 +205,7 @@ public class IntegrationV2Controller {
       return githubService.linkAppInstallation(request);
     }
 
-    @DeleteMapping(value = "/github/link")
+    @PostMapping(value = "/github/unlink")
     @Operation(summary = "Unlinks the GitHub Installation ID from a Team")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK")})
     void githubUnlink(@RequestBody GHLinkRequest request) throws IOException {
