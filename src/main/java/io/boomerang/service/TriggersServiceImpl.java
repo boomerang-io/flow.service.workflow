@@ -94,9 +94,9 @@ public class TriggersServiceImpl implements TriggerService {
     switch (eventType) {
       case "installation" -> {
         if (payload.get("action") != null) {
-          if ("created".equals(payload.get("action").toString())) {
+          if ("created".equals(payload.get("action").asText())) {
             integrationService.create("github_app", payload.get("installation"));
-          } else if ("deleted".equals(payload.get("action").toString())) {
+          } else if ("deleted".equals(payload.get("action").asText())) {
             integrationService.delete("github_app", payload.get("installation"));
           }
           return ResponseEntity.ok().build();

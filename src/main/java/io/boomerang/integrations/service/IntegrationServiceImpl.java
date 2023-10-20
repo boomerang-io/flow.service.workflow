@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.bson.Document;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -59,15 +60,15 @@ public class IntegrationServiceImpl implements IntegrationService {
   public IntegrationsEntity create(String type, JsonNode data) {
     IntegrationsEntity entity = new IntegrationsEntity();
     entity.setType(type);
-    entity.setRef(data.get("id").toString());
-    entity.setData(data);
+    entity.setRef(data.get("id").asText());
+    entity.setData(Document.parse(data.toString()));
     return integrationsRepository.save(entity);
   }
   
   @Override
   public void delete(String type, JsonNode data) {
     Optional<IntegrationsEntity> optEntity =
-        integrationsRepository.findByRef(data.get("id").toString());
+        integrationsRepository.findByRef(data.get("id").asText());
     if (optEntity.isPresent()) {
       IntegrationsEntity entity = optEntity.get();
       integrationsRepository.delete(optEntity.get());
