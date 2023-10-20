@@ -15,7 +15,6 @@ import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.boomerang.integrations.service.GitHubService;
 import io.boomerang.integrations.service.IntegrationService;
 import io.boomerang.model.enums.ref.ParamType;
 import io.boomerang.model.ref.RunParam;
@@ -39,9 +38,6 @@ public class TriggersServiceImpl implements TriggerService {
 
   @Autowired
   private IntegrationService integrationService;
-
-  @Autowired
-  private GitHubService githubService;
 
   /*
    * Receives request and checks if its a supported event. Processing done async.
@@ -101,7 +97,7 @@ public class TriggersServiceImpl implements TriggerService {
           if ("created".equals(payload.get("action").toString())) {
             integrationService.create("github_app", payload.get("installation"));
           } else if ("deleted".equals(payload.get("action").toString())) {
-            githubService.unlinkAppInstallation("github_app", payload.get("installation"));
+            integrationService.delete("github_app", payload.get("installation"));
           }
           return ResponseEntity.ok().build();
         }
