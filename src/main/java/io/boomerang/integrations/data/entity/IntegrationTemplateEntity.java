@@ -15,6 +15,8 @@ public class IntegrationTemplateEntity {
   private String id;
 
   private String name;
+
+  private String type;
   
   private String link;
   
@@ -70,5 +72,13 @@ public class IntegrationTemplateEntity {
 
   public void setInstructions(String instructions) {
     this.instructions = instructions;
+  }
+
+  public String getType() {
+    return type;
+  }
+
+  public void setType(String type) {
+    this.type = type;
   }  
 }

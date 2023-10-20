@@ -44,11 +44,12 @@ public class IntegrationServiceImpl implements IntegrationService {
       List<String> refs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.INTEGRATION),
           Optional.empty(), Optional.of(RelationshipType.BELONGSTO),
           Optional.of(RelationshipRef.TEAM), Optional.of(List.of(team)));
+      LOGGER.debug("Refs: " + refs.toString());
       if (!refs.isEmpty()) {
-        Optional<IntegrationsEntity> entity = integrationsRepository.findByIdAndType(refs.get(0), t.getName());
+        i.setRef(refs.get(0));
+        Optional<IntegrationsEntity> entity = integrationsRepository.findByIdAndType(refs.get(0), t.getType());
         if (entity.isPresent()) {
           i.setStatus(IntegrationStatus.linked);          
-          i.setRef(refs.get(0));
         }
       }
       integrations.add(i);
