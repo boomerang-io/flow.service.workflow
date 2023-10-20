@@ -206,10 +206,9 @@ public class IntegrationV2Controller {
     }
 
     @DeleteMapping(value = "/github/link")
-    @Operation(summary = "Links the GitHub Installation ID with a Team")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
-        @ApiResponse(responseCode = "404", description = "Not Found")})
-    ResponseEntity<?> githubUnlink(@RequestBody GHLinkRequest request) throws IOException {
-      return githubService.unlinkAppInstallation(request);
+    @Operation(summary = "Unlinks the GitHub Installation ID from a Team")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK")})
+    void githubUnlink(@RequestBody GHLinkRequest request) throws IOException {
+      githubService.unlinkAppInstallation(request);
     }
 }
