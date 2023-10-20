@@ -40,4 +40,6 @@ public interface RelationshipService {
   List<RelationshipEntity> getFilteredRels(Optional<RelationshipRef> from,
       Optional<List<String>> fromRefs, Optional<RelationshipType> type,
       Optional<RelationshipRef> to, Optional<List<String>> toRefs, boolean elevate);
+
+  void removeRelationshipById(String id);
 }

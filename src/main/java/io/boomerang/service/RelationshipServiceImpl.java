@@ -140,6 +140,14 @@ public class RelationshipServiceImpl implements RelationshipService {
   }
   
   /*
+   * Removes a relationship by ID
+   */
+  @Override
+  public void removeRelationshipById(String id) {
+      relationshipRepository.deleteById(id);
+  }
+  
+  /*
    * Removes all relationships
    */
   @Override

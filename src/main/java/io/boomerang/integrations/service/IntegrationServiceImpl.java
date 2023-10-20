@@ -63,4 +63,19 @@ public class IntegrationServiceImpl implements IntegrationService {
     entity.setData(data);
     return integrationsRepository.save(entity);
   }
+  
+  @Override
+  public void delete(String type, JsonNode data) {
+    Optional<IntegrationsEntity> optEntity =
+        integrationsRepository.findByRef(data.get("id").toString());
+    if (optEntity.isPresent()) {
+      IntegrationsEntity entity = optEntity.get();
+      integrationsRepository.delete(optEntity.get());
+      List<String> rels =
+          relationshipService.getFilteredToRefs(Optional.of(RelationshipRef.INTEGRATION),
+              Optional.of(List.of(entity.getId())), Optional.of(RelationshipType.BELONGSTO),
+              Optional.of(RelationshipRef.TEAM), Optional.empty());
+      rels.forEach(r -> relationshipService.removeRelationshipById(r));
+    }
+  }
 }
