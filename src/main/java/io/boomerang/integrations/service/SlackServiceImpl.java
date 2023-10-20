@@ -501,7 +501,7 @@ public class SlackServiceImpl implements SlackService {
         });
         if (!authExtensions.isEmpty()) {
             IntegrationsEntity authExtension = authExtensions.get(0);
-            authExtension.getUsers().add(userId);
+//            authExtension.getUsers().add(userId);
             extensionsRepository.save(authExtension);
             LOGGER.debug("Added user to Slack Team Extension");
             LOGGER.debug(authExtension.toString());
@@ -539,10 +539,10 @@ public class SlackServiceImpl implements SlackService {
         });
         if (!authExtensions.isEmpty()) {
             IntegrationsEntity authEntity = authExtensions.get(0);
-            if (authEntity.getUsers().contains(userId)) {
-                LOGGER.debug("Found matching UserId on Team Auth Extension");
-                return true;
-            }
+//            if (authEntity.getUsers().contains(userId)) {
+//                LOGGER.debug("Found matching UserId on Team Auth Extension");
+//                return true;
+//            }
         }
         return false;
     }
