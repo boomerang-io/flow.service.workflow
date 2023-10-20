@@ -11,6 +11,4 @@ public interface IntegrationService {
 
   IntegrationsEntity create(String type, JsonNode data);
 
-  void delete(String string, JsonNode jsonNode);
-
 }
