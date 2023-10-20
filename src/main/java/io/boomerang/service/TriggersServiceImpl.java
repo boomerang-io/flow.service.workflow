@@ -15,6 +15,8 @@ import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.boomerang.integrations.data.entity.IntegrationsEntity;
+import io.boomerang.integrations.service.IntegrationService;
 import io.boomerang.model.enums.ref.ParamType;
 import io.boomerang.model.ref.RunParam;
 import io.boomerang.model.ref.WorkflowRun;
@@ -27,13 +29,16 @@ import io.cloudevents.jackson.PojoCloudEventDataMapper;
 @Service
 public class TriggersServiceImpl implements TriggerService {
 
-  private static final Logger logger = LogManager.getLogger();
+  private static final Logger LOGGER = LogManager.getLogger();
 
   @Value("${flow.workflowrun.auto-start-on-submit}")
   private boolean autoStart;
 
   @Autowired
   private WorkflowRunService workflowRunService;
+
+  @Autowired
+  private IntegrationService integrationService;
 
   /*
    * Receives request and checks if its a supported event. Processing done async.
@@ -43,9 +48,9 @@ public class TriggersServiceImpl implements TriggerService {
   @Override
   public ResponseEntity<WorkflowRun> processEvent(CloudEvent event, Optional<String> workflow) {
     String eventType = event.getType();
-    logger.debug("Event Type: " + eventType);
+    LOGGER.debug("Event Type: " + eventType);
     String eventSubject = event.getSubject();
-    logger.debug("Event Subject: " + eventSubject);
+    LOGGER.debug("Event Subject: " + eventSubject);
 
     WorkflowRunSubmitRequest request = new WorkflowRunSubmitRequest();
     if (workflow.isPresent()) {
@@ -59,7 +64,7 @@ public class TriggersServiceImpl implements TriggerService {
     request.setEventType(eventType);
     request.setParams(eventToRunParams(event));
 
-    logger.debug("Webhook Request: " + request.toString());
+    LOGGER.debug("Webhook Request: " + request.toString());
 
     // Auto start is not needed when using the default handler
     // As the default handler will pick up the queued Workflow and start the Workflow when ready.
@@ -75,7 +80,7 @@ public class TriggersServiceImpl implements TriggerService {
     request.setTrigger("webhook");
     request.setParams(payloadToRunParams(payload));
 
-    logger.debug("Webhook Request: " + request.toString());
+    LOGGER.debug("Webhook Request: " + request.toString());
 
     // Auto start is not needed when using the default handler
     // As the default handler will pick up the queued Workflow and start the Workflow when ready.
@@ -85,8 +90,20 @@ public class TriggersServiceImpl implements TriggerService {
 
   @Override
   public ResponseEntity<?> processGitHubWebhook(String trigger, String eventType, JsonNode payload) {
-    logger.debug("GitHub Webhook Request[" + eventType + "]: " + payload.toString());
-
+    LOGGER.debug("GitHub Webhook Request[" + eventType + "]: " + payload.toString());
+    
+    switch (eventType) {
+      case "installation" -> {
+        if (payload.get("action") != null) {
+          if ("created".equals(payload.get("action").toString())) {
+            integrationService.create("github_app", payload.get("installation"));
+          } else if ("deleted".equals(payload.get("action").toString())) {
+            integrationService.delete("github_app", payload.get("installation"));
+          }
+          return ResponseEntity.ok().build();
+        }
+      }
+    }
     return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
   }
 

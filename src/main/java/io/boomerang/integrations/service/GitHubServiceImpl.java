@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import com.spotify.github.v3.checks.Installation;
@@ -92,12 +93,22 @@ public class GitHubServiceImpl implements GitHubService {
     LOGGER.debug("linkAppInstallation() - " + request.toString());
     GithubAppClient appClient = getGitHubAppClient(request.getInstallationId());
     List<Installation> installations = appClient.getInstallations().join();
-    IntegrationsEntity entity = new IntegrationsEntity();
-    entity.setType("github_app");
-    entity.setData(installations.get(0));
-    entity = integrationsRepository.save(entity);
-    
-    relationshipService.addRelationshipRef(RelationshipRef.INTEGRATION, entity.getId(), RelationshipType.BELONGSTO, RelationshipRef.TEAM, Optional.of(request.getTeam()), Optional.empty());
-    return ResponseEntity.ok().build();
+    Optional<IntegrationsEntity> optEntity = integrationsRepository.findByRef(String.valueOf(installations.get(0).id()));
+    if (optEntity.isPresent()) {
+      IntegrationsEntity entity = optEntity.get();
+      relationshipService.addRelationshipRef(RelationshipRef.INTEGRATION, entity.getId(), RelationshipType.BELONGSTO, RelationshipRef.TEAM, Optional.of(request.getTeam()), Optional.empty());
+      return ResponseEntity.ok().build();
+    }
+    return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+  }
+
+  @Override
+  public void unlinkAppInstallation(GHLinkRequest request) {
+    Optional<IntegrationsEntity> optEntity = integrationsRepository.findByRef(request.getInstallationId().toString());
+    if (optEntity.isPresent()) {
+      IntegrationsEntity entity = optEntity.get();
+      relationshipService.removeRelationships(RelationshipRef.INTEGRATION, List.of(entity.getId()), RelationshipRef.TEAM, List.of(request.getTeam()));
+      integrationsRepository.delete(optEntity.get());
+    }
   }
 }

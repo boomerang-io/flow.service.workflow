@@ -15,6 +15,7 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -26,8 +27,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.boomerang.integrations.data.entity.IntegrationTemplateEntity;
 import io.boomerang.integrations.model.GHLinkRequest;
+import io.boomerang.integrations.model.Integration;
 import io.boomerang.integrations.service.GitHubService;
 import io.boomerang.integrations.service.IntegrationService;
 import io.boomerang.integrations.service.SlackService;
@@ -57,10 +58,10 @@ public class IntegrationV2Controller {
     private GitHubService githubService;
 
     @GetMapping(value = "")
-    @Operation(summary = "Retrieve the integrations")
+    @Operation(summary = "Retrieve the integrations and their status within a Team")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
         @ApiResponse(responseCode = "400", description = "Bad Request")})
-    List<IntegrationTemplateEntity> get(@RequestParam String team) throws IOException {
+    List<Integration> get(@RequestParam String team) throws IOException {
       return integrationService.get(team);
     }
     
@@ -199,8 +200,16 @@ public class IntegrationV2Controller {
     @PostMapping(value = "/github/link")
     @Operation(summary = "Links the GitHub Installation ID with a Team")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
-        @ApiResponse(responseCode = "400", description = "Bad Request")})
+        @ApiResponse(responseCode = "404", description = "Not Found")})
     ResponseEntity<?> githubLink(@RequestBody GHLinkRequest request) throws IOException {
       return githubService.linkAppInstallation(request);
+    }
+
+    @DeleteMapping(value = "/github/link")
+    @Operation(summary = "Links the GitHub Installation ID with a Team")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
+        @ApiResponse(responseCode = "404", description = "Not Found")})
+    ResponseEntity<?> githubUnlink(@RequestBody GHLinkRequest request) throws IOException {
+      return githubService.unlinkAppInstallation(request);
     }
 }

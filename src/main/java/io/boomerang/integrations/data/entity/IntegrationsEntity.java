@@ -9,6 +9,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import io.boomerang.integrations.model.enums.IntegrationStatus;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(Include.NON_NULL)
@@ -16,14 +17,16 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 public class IntegrationsEntity {
   @Id
   private String id;
-
+  
   private String type;
   
+  private String ref;
+  
   private Object data;
+  
+  private IntegrationStatus status = IntegrationStatus.unlinked;
 
   private  Map<String, String> labels = new HashMap<>();
-
-  private List<String> users = new LinkedList<>();
 
   public String getId() {
     return id;
@@ -41,6 +44,14 @@ public class IntegrationsEntity {
     this.type = type;
   }
 
+  public String getRef() {
+    return ref;
+  }
+
+  public void setRef(String ref) {
+    this.ref = ref;
+  }
+
   public Object getData() {
     return data;
   }
@@ -49,19 +60,19 @@ public class IntegrationsEntity {
     this.data = data;
   }
 
+  public IntegrationStatus getStatus() {
+    return status;
+  }
+
+  public void setStatus(IntegrationStatus status) {
+    this.status = status;
+  }
+
   public Map<String, String> getLabels() {
     return labels;
   }
 
   public void setLabels(Map<String, String> labels) {
     this.labels = labels;
-  }
-
-  public List<String> getUsers() {
-    return users;
-  }
-
-  public void setUsers(List<String> users) {
-    this.users = users;
   }
 }

@@ -1,16 +1,14 @@
-package io.boomerang.integrations.data.entity;
+package io.boomerang.integrations.model;
 
-import java.net.URI;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import io.boomerang.integrations.model.enums.IntegrationStatus;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(Include.NON_NULL)
-@Document(collection = "#{@mongoConfiguration.fullCollectionName('integration_templates')}")
-public class IntegrationTemplateEntity {
+public class Integration {
   @Id
   private String id;
 
@@ -20,9 +18,13 @@ public class IntegrationTemplateEntity {
   
   private String icon;
   
+  private IntegrationStatus status = IntegrationStatus.unlinked;
+  
   private String description;
 
   private String instructions;
+
+  private String ref;
 
   public String getId() {
     return id;
@@ -56,6 +58,14 @@ public class IntegrationTemplateEntity {
     this.icon = icon;
   }
 
+  public IntegrationStatus getStatus() {
+    return status;
+  }
+
+  public void setStatus(IntegrationStatus status) {
+    this.status = status;
+  }
+
   public String getDescription() {
     return description;
   }
@@ -70,5 +80,13 @@ public class IntegrationTemplateEntity {
 
   public void setInstructions(String instructions) {
     this.instructions = instructions;
+  }
+
+  public String getRef() {
+    return ref;
+  }
+
+  public void setRef(String ref) {
+    this.ref = ref;
   }  
 }

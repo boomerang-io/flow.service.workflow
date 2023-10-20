@@ -1,10 +1,16 @@
 package io.boomerang.integrations.service;
 
 import java.util.List;
-import io.boomerang.integrations.data.entity.IntegrationTemplateEntity;
+import com.fasterxml.jackson.databind.JsonNode;
+import io.boomerang.integrations.data.entity.IntegrationsEntity;
+import io.boomerang.integrations.model.Integration;
 
 public interface IntegrationService {
 
-  List<IntegrationTemplateEntity> get(String team);
+  List<Integration> get(String team);
+
+  IntegrationsEntity create(String type, JsonNode data);
+
+  void delete(String string, JsonNode jsonNode);
 
 }

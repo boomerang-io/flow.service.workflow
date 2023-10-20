@@ -9,4 +9,6 @@ public interface GitHubService {
 
   ResponseEntity<?> retrieveAppInstallation(Integer id);
 
+  void unlinkAppInstallation(GHLinkRequest request);
+
 }
