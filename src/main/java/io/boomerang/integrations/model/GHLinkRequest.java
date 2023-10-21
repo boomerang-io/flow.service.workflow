@@ -2,16 +2,16 @@ package io.boomerang.integrations.model;
 
 public class GHLinkRequest {
 
-  private Integer installationId;
+  private Integer ref;
 
   private String team;
 
-  public Integer getInstallationId() {
-    return installationId;
+  public Integer getRef() {
+    return ref;
   }
 
-  public void setInstallationId(Integer installationId) {
-    this.installationId = installationId;
+  public void setRef(Integer ref) {
+    this.ref = ref;
   }
 
   public String getTeam() {
