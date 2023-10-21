@@ -91,7 +91,7 @@ public class GitHubServiceImpl implements GitHubService {
   @Override
   public ResponseEntity<?> linkAppInstallation(GHLinkRequest request) {
     LOGGER.debug("linkAppInstallation() - " + request.toString());
-    GithubAppClient appClient = getGitHubAppClient(request.getRef());
+    GithubAppClient appClient = getGitHubAppClient(Integer.valueOf(request.getRef()));
     List<Installation> installations = appClient.getInstallations().join();
     Optional<IntegrationsEntity> optEntity = integrationsRepository.findByRef(String.valueOf(installations.get(0).id()));
     if (optEntity.isPresent()) {
@@ -104,7 +104,9 @@ public class GitHubServiceImpl implements GitHubService {
 
   @Override
   public void unlinkAppInstallation(GHLinkRequest request) {
-    Optional<IntegrationsEntity> optEntity = integrationsRepository.findById(request.getRef().toString());
+    LOGGER.debug("linkAppInstallation() - " + request.toString());
+    Optional<IntegrationsEntity> optEntity = integrationsRepository.findById(request.getRef());
+    LOGGER.debug(optEntity.isPresent());
     if (optEntity.isPresent()) {
       IntegrationsEntity entity = optEntity.get();
       relationshipService.removeRelationships(RelationshipRef.INTEGRATION, List.of(entity.getId()), RelationshipRef.TEAM, List.of(request.getTeam()));

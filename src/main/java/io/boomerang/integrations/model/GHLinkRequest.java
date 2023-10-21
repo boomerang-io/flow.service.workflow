@@ -2,15 +2,15 @@ package io.boomerang.integrations.model;
 
 public class GHLinkRequest {
 
-  private Integer ref;
+  private String ref;
 
   private String team;
 
-  public Integer getRef() {
+  public String getRef() {
     return ref;
   }
 
-  public void setRef(Integer ref) {
+  public void setRef(String ref) {
     this.ref = ref;
   }
 
