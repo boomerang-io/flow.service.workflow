@@ -21,6 +21,11 @@ public class Revision {
   private Integer version;
 
   private String workingDir;
+  
+  private String serviceAccountName;
+  
+  private String securityContext;
+  
   public List<String> getArguments() {
     return arguments;
   }
@@ -99,5 +104,21 @@ public class Revision {
 
   public void setWorkingDir(String workingDir) {
     this.workingDir = workingDir;
+  }
+
+  public String getServiceAccountName() {
+    return serviceAccountName;
+  }
+
+  public void setServiceAccountName(String serviceAccountName) {
+    this.serviceAccountName = serviceAccountName;
+  }
+
+  public String getSecurityContext() {
+    return securityContext;
+  }
+
+  public void setSecurityContext(String securityContext) {
+    this.securityContext = securityContext;
   }
 }
