@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import com.spotify.github.v3.apps.InstallationRepositoriesResponse;
 import com.spotify.github.v3.checks.Installation;
 import com.spotify.github.v3.clients.GitHubClient;
 import com.spotify.github.v3.clients.GithubAppClient;
@@ -39,18 +40,41 @@ public class GitHubServiceImpl implements GitHubService {
   private IntegrationsRepository integrationsRepository;
 
   @Override
-  public ResponseEntity<?> retrieveAppInstallation(Integer id) {
+  public ResponseEntity<?> getInstallation(Integer id) {
     final GithubAppClient appClient = getGitHubAppClient(id);
-    
-//    LOGGER.debug("GitHub Access Token: " + appClient.getAccessToken(Integer.valueOf(code)).join().toString());
-    
-    List<Installation> installations = appClient.getInstallations().join();
-    
-    LOGGER.debug("GitHub Installations: " + installations.toString());
-    
-    if (!installations.isEmpty()) {
-      GHInstallationsResponse response = new GHInstallationsResponse(Integer.valueOf(installations.get(0).appId()), Integer.valueOf(installations.get(0).id()), installations.get(0).account().login(), installations.get(0).account().htmlUrl().toString(), Integer.valueOf(installations.get(0).account().id()), installations.get(0).account().type());
+    try {
+      List<Installation> installations = appClient.getInstallations().join();
+      LOGGER.debug("GitHub Installation: " + installations.toString());
+      
+      InstallationRepositoriesResponse repositories = appClient.listAccessibleRepositories(installations.get(0).id()).join();
+      
+      GHInstallationsResponse response = new GHInstallationsResponse();
+      response.setAppId(Integer.valueOf(installations.get(0).appId()));
+      response.setInstallationId(Integer.valueOf(installations.get(0).id()));
+      response.setOrgSlug(installations.get(0).account().login());
+      response.setOrgUrl(installations.get(0).account().htmlUrl().toString());
+      response.setOrgId(Integer.valueOf(installations.get(0).account().id()));
+      response.setOrgType(installations.get(0).account().type());
+      response.setEvents(installations.get(0).events());
+      response.setRepositories(repositories.repositories().stream().map(r -> r.name()).toList());
       return ResponseEntity.ok(response);
+    } catch (Exception ex) {
+      throw new BoomerangException(ex, BoomerangError.ACTION_INVALID_REF);
+    }   
+  }
+  
+  @Override
+  public ResponseEntity<?> getInstallationForTeam(String team) {
+    List<String> rels =
+        relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.INTEGRATION),
+            Optional.empty(), Optional.of(RelationshipType.BELONGSTO),
+            Optional.of(RelationshipRef.TEAM), Optional.of(List.of(team)));
+
+    if (!rels.isEmpty()) {
+      Optional<IntegrationsEntity> optEntity = integrationsRepository.findById(rels.get(0)); 
+      if (optEntity.isPresent()) {        
+        return this.getInstallation(Integer.valueOf(optEntity.get().getRef()));
+      }
     }
     throw new BoomerangException(BoomerangError.ACTION_INVALID_REF);
   }
@@ -106,7 +130,6 @@ public class GitHubServiceImpl implements GitHubService {
   public void unlinkAppInstallation(GHLinkRequest request) {
     LOGGER.debug("linkAppInstallation() - " + request.toString());
     Optional<IntegrationsEntity> optEntity = integrationsRepository.findById(request.getRef());
-    LOGGER.debug(optEntity.isPresent());
     if (optEntity.isPresent()) {
       IntegrationsEntity entity = optEntity.get();
       relationshipService.removeRelationships(RelationshipRef.INTEGRATION, List.of(entity.getId()), RelationshipRef.TEAM, List.of(request.getTeam()));

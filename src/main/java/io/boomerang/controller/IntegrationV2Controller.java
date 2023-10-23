@@ -7,6 +7,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
@@ -15,7 +16,6 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -188,13 +188,18 @@ public class IntegrationV2Controller {
     
     /*
      * GitHub Endpoints
-     */
-    @GetMapping(value = "/github/installations")
+     */    
+    @GetMapping(value = "/github/installation")
     @Operation(summary = "Retrieve the installation ID and store against a team")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
         @ApiResponse(responseCode = "400", description = "Bad Request")})
-    ResponseEntity<?> githubInstall(@RequestParam Integer id) throws IOException {
-      return githubService.retrieveAppInstallation(id);
+    ResponseEntity<?> githubInstall(@RequestParam Optional<Integer> id, @RequestParam Optional<String> team) throws IOException {
+      if (id.isPresent()) {
+        return githubService.getInstallation(id.get());
+      } else if (team.isPresent()) {
+        return githubService.getInstallationForTeam(team.get());
+      }
+      return ResponseEntity.badRequest().build();
     }
 
     @PostMapping(value = "/github/link")

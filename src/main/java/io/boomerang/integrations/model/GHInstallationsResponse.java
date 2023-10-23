@@ -1,5 +1,7 @@
 package io.boomerang.integrations.model;
 
+import java.util.List;
+
 public class GHInstallationsResponse {
 
   private Integer appId;
@@ -13,19 +15,10 @@ public class GHInstallationsResponse {
   private Integer orgId;
   
   private String orgType;
+  
+  private List<String> events;
 
-  public GHInstallationsResponse() {
-  }  
-
-  public GHInstallationsResponse(Integer appId, Integer installationId, String orgSlug,
-      String orgUrl, Integer orgId, String orgType) {
-    this.appId = appId;
-    this.installationId = installationId;
-    this.orgSlug = orgSlug;
-    this.orgUrl = orgUrl;
-    this.orgId = orgId;
-    this.orgType = orgType;
-  }
+  private List<String> repositories;
 
   public Integer getAppId() {
     return appId;
@@ -73,5 +66,21 @@ public class GHInstallationsResponse {
 
   public void setOrgType(String orgType) {
     this.orgType = orgType;
+  }
+
+  public List<String> getEvents() {
+    return events;
+  }
+
+  public void setEvents(List<String> events) {
+    this.events = events;
+  }
+
+  public List<String> getRepositories() {
+    return repositories;
+  }
+
+  public void setRepositories(List<String> repositories) {
+    this.repositories = repositories;
   }
 }

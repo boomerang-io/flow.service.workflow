@@ -7,8 +7,10 @@ public interface GitHubService {
 
   ResponseEntity<?> linkAppInstallation(GHLinkRequest request);
 
-  ResponseEntity<?> retrieveAppInstallation(Integer id);
+  ResponseEntity<?> getInstallation(Integer id);
 
   void unlinkAppInstallation(GHLinkRequest request);
+
+  ResponseEntity<?> getInstallationForTeam(String team);
 
 }
