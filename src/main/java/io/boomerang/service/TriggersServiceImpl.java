@@ -16,6 +16,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.boomerang.integrations.service.IntegrationService;
+import io.boomerang.model.enums.TriggerEnum;
 import io.boomerang.model.enums.ref.ParamType;
 import io.boomerang.model.ref.RunParam;
 import io.boomerang.model.ref.WorkflowRun;
@@ -58,9 +59,9 @@ public class TriggersServiceImpl implements TriggerService {
       // Assume the WorkflowRef is in the subject
       request.setWorkflowRef(eventSubject.replace("/", ""));
     }
-    request.setTrigger("event");
-    request.setEventSubject(eventSubject);
-    request.setEventType(eventType);
+    request.setTrigger(TriggerEnum.event);
+    request.getTriggerDetails().put("subject", eventSubject);
+    request.getTriggerDetails().put("type", eventType);
     request.setParams(eventToRunParams(event));
 
     LOGGER.debug("Webhook Request: " + request.toString());
@@ -72,11 +73,11 @@ public class TriggersServiceImpl implements TriggerService {
   }
 
   @Override
-  public ResponseEntity<WorkflowRun> processWebhook(String trigger, String workflowId,
+  public ResponseEntity<WorkflowRun> processWebhook(String workflowId,
       JsonNode payload) {
     WorkflowRunSubmitRequest request = new WorkflowRunSubmitRequest();
     request.setWorkflowRef(workflowId);
-    request.setTrigger("webhook");
+    request.setTrigger(TriggerEnum.webhook);
     request.setParams(payloadToRunParams(payload));
 
     LOGGER.debug("Webhook Request: " + request.toString());
@@ -101,6 +102,18 @@ public class TriggersServiceImpl implements TriggerService {
           }
           return ResponseEntity.ok().build();
         }
+      }
+      default -> {
+        WorkflowRunSubmitRequest request = new WorkflowRunSubmitRequest();
+        request.setTrigger(TriggerEnum.github);
+        request.setParams(payloadToRunParams(payload));
+
+        LOGGER.debug("Webhook Request: " + request.toString());
+
+        // Auto start is not needed when using the default handler
+        // As the default handler will pick up the queued Workflow and start the Workflow when ready.
+        // However if using the non-default Handler then this may be needed to be set to true.
+        return workflowRunService.submit(request, autoStart);
       }
     }
     return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();

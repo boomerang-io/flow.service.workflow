@@ -37,6 +37,7 @@ import io.boomerang.model.WorkflowSchedule;
 import io.boomerang.model.WorkflowScheduleCalendar;
 import io.boomerang.model.enums.RelationshipRef;
 import io.boomerang.model.enums.RelationshipType;
+import io.boomerang.model.enums.TriggerEnum;
 import io.boomerang.model.enums.WorkflowScheduleStatus;
 import io.boomerang.model.enums.WorkflowScheduleType;
 import io.boomerang.model.ref.Workflow;
@@ -198,10 +199,12 @@ public class ScheduleServiceImpl implements ScheduleService {
     BeanUtils.copyProperties(schedule, scheduleEntity);
     Boolean enableJob = false;
     if (WorkflowScheduleStatus.active.equals(scheduleEntity.getStatus())
-        && workflow.getTriggers().getScheduler().getEnable()) {
+        && workflow != null && !workflow.getTriggers().isEmpty() && workflow.getTriggers().stream()
+            .anyMatch(obj -> (obj.getType().equals(TriggerEnum.scheduler) && obj.getEnabled()))) {
       enableJob = true;
     } else if (WorkflowScheduleStatus.active.equals(scheduleEntity.getStatus())
-        && !workflow.getTriggers().getScheduler().getEnable()) {
+        && workflow != null && !workflow.getTriggers().isEmpty() && !workflow.getTriggers().stream()
+            .anyMatch(obj -> (obj.getType().equals(TriggerEnum.scheduler) && obj.getEnabled()))) {
       scheduleEntity.setStatus(WorkflowScheduleStatus.trigger_disabled);
     }
     scheduleRepository.save(scheduleEntity);
@@ -318,7 +321,8 @@ public class ScheduleServiceImpl implements ScheduleService {
             enableJob = false;
           } else if (WorkflowScheduleStatus.inactive.equals(previousStatus)
               && WorkflowScheduleStatus.active.equals(newStatus)) {
-            if (workflow != null && !workflow.getTriggers().getScheduler().getEnable()) {
+            if (workflow != null && !workflow.getTriggers().isEmpty() && !workflow.getTriggers().stream()
+                .anyMatch(obj -> (obj.getType().equals(TriggerEnum.scheduler) && obj.getEnabled()))) {
               scheduleEntity.setStatus(WorkflowScheduleStatus.trigger_disabled);
               enableJob = false;
             }

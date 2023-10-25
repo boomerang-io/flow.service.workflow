@@ -160,7 +160,7 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
       //Check Quotas - Throws Exception
       canRunWithQuotas(teamRelationship.get().getToRef(), request.getWorkflowRef());
       //Check Triggers - Throws Exception
-      canRunWithTrigger(request.getWorkflowRef(), Optional.of(request.getTrigger()), Optional.of(request.getEventType()), Optional.of(request.getEventSubject()));
+      canRunWithTrigger(request.getWorkflowRef(), request.getTrigger(), Optional.of(request.getTriggerDetails()));
       // Set Workflow & Task Debug
       if (!Objects.isNull(request.getDebug())) {
         boolean enableDebug = false;
@@ -300,53 +300,70 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
   /*
    * Checks if the Workflow can be executed based on an active workflow and enabled triggers.
    * 
-   * If trigger is Manual or Schedule then a deeper check is used to check if those triggers are
-   * enabled.
-   * 
    * @param workflowId the Workflows unique ID
    * 
    * @param Trigger an optional Trigger object
    */
-  protected void canRunWithTrigger(String workflowId, Optional<String> trigger, Optional<String> eventType, Optional<String> eventSubject) {
+  protected void canRunWithTrigger(String workflowId, TriggerEnum runTrigger, Optional<Map<String, Object>> triggerDetails) {
     // Check no further if trigger not provided
-    if (trigger.isPresent() && !trigger.get().isEmpty()) {
+    if (!Objects.isNull(runTrigger)) {
       // Check if Workflow exists and is active. Then check triggers are enabled.
       //TODO determine a less expensive way to get the Workflow Triggers
       Workflow workflow = engineClient.getWorkflow(workflowId, Optional.empty(), false);
       if (!Objects.isNull(workflow)) {
-        WorkflowTrigger triggers = workflow.getTriggers();
-        if (TriggerEnum.manual.toString().equals(trigger.get()) && triggers.getManual() != null && triggers.getManual().getEnable()) {
+        List<WorkflowTrigger> triggers = workflow.getTriggers();
+        if (TriggerEnum.manual.equals(runTrigger) && triggers.stream()
+            .anyMatch(obj -> (obj.getType().equals(TriggerEnum.manual) && obj.getEnabled()))) {
           return;
-        } else if (TriggerEnum.scheduler.toString().equals(trigger.get())
-            && triggers.getScheduler() != null && triggers.getScheduler().getEnable()) {
+        } else if (TriggerEnum.scheduler.equals(runTrigger)
+            && triggers.stream()
+            .anyMatch(obj -> (obj.getType().equals(TriggerEnum.scheduler) && obj.getEnabled()))) {
           return;
-        } else if (TriggerEnum.webhook.toString().equals(trigger.get())
-            && triggers.getWebhook() != null && triggers.getWebhook().getEnable()) {
+        } else if (TriggerEnum.webhook.equals(runTrigger)
+            && triggers.stream()
+            .anyMatch(obj -> (obj.getType().equals(TriggerEnum.webhook) && obj.getEnabled()))) {
           return;
-        } else if (TriggerEnum.event.toString().equals(trigger.get())
-            && triggers.getEvent() != null && triggers.getEvent().getEnable()) {
-            Boolean canRunType = Boolean.FALSE;
-            Boolean canRunSubject = Boolean.FALSE;
-            if (!Objects.isNull(triggers.getEvent().getType()) && !triggers.getEvent().getType().isEmpty()) {
-              if (eventType.isPresent()) {
-                canRunType = eventType.get().matches(triggers.getEvent().getType());
-              }
-            } else {
-              canRunType = Boolean.TRUE;
-            }
-            if (!Objects.isNull(triggers.getEvent().getSubject()) && !triggers.getEvent().getSubject().isEmpty()) {
-              if (eventSubject.isPresent()) {
-                canRunSubject = eventSubject.get().matches(triggers.getEvent().getSubject());
-              }
-            } else {
-              canRunSubject = Boolean.TRUE;
-            }
-            if (canRunType && canRunSubject) {              
-              return;
-            }
-        } 
+        } else if (TriggerEnum.event.equals(runTrigger)
+            && triggers.stream()
+            .anyMatch(obj -> (obj.getType().equals(TriggerEnum.event) && obj.getEnabled()))) {
+            WorkflowTrigger trigger = triggers.stream().filter(obj -> obj.getType().equals(TriggerEnum.event)).findFirst().get();
+            validateTriggerConditions(triggerDetails, trigger);
+            return;
+        } else if (TriggerEnum.github.equals(runTrigger) && triggers.stream()
+            .anyMatch(obj -> (obj.getType().equals(TriggerEnum.github) && obj.getEnabled()))) {
+          WorkflowTrigger trigger = triggers.stream().filter(obj -> obj.getType().equals(TriggerEnum.github)).findFirst().get();
+          validateTriggerConditions(triggerDetails, trigger);
+          return;
+        }
         throw new BoomerangException(BoomerangError.WORKFLOWRUN_TRIGGER_DISABLED);
       }
     }
+  }
+
+  /*
+   * Implements the logic checks for each WorkflowTriggerCondition operation type
+   */
+  private void validateTriggerConditions(Optional<Map<String, Object>> triggerDetails,
+      WorkflowTrigger trigger) {
+    trigger.getConditions().forEach(con -> {
+      Boolean canRun = Boolean.TRUE;
+      switch (con.getOperation()) {
+        case matches -> {
+          String field = (String) triggerDetails.get().get(con.getField());
+          canRun = field.matches(con.getValue());
+        }
+        case equals -> {
+          String field = (String) triggerDetails.get().get(con.getField());
+          canRun = field.equals(con.getValue());
+        }
+        case in -> {
+          String field = (String) triggerDetails.get().get(con.getField());
+          canRun = con.getValues().contains(field);
+        }
+      }
+      if (!canRun) {
+        throw new BoomerangException(BoomerangError.WORKFLOWRUN_TRIGGER_DISABLED);
+      }
+    });
   }
 }

@@ -1,43 +1,35 @@
 package io.boomerang.model.ref;
 
+import java.util.List;
+import io.boomerang.model.enums.TriggerEnum;
+
 public class WorkflowTrigger {
 
-  private Trigger manual;
-  private Trigger scheduler;
-  private Trigger webhook;
-  private TriggerEvent event;
-  
-  public WorkflowTrigger() {
-    webhook = new Trigger();
-    event = new TriggerEvent();
-    manual = new Trigger();
-    scheduler = new Trigger();
-    
-    manual.setEnable(Boolean.TRUE);
+  private Boolean enabled = Boolean.FALSE;
+  private TriggerEnum type;
+  private List<WorkflowTriggerCondition> conditions;
+
+  public Boolean getEnabled() {
+    return enabled;
   }
-  
-  public Trigger getManual() {
-    return manual;
+
+  public void setEnabled(Boolean enabled) {
+    this.enabled = enabled;
   }
-  public void setManual(Trigger manual) {
-    this.manual = manual;
+
+  public TriggerEnum getType() {
+    return type;
   }
-  public Trigger getScheduler() {
-    return scheduler;
+
+  public void setType(TriggerEnum type) {
+    this.type = type;
   }
-  public void setScheduler(Trigger scheduler) {
-    this.scheduler = scheduler;
+
+  public List<WorkflowTriggerCondition> getConditions() {
+    return conditions;
   }
-  public Trigger getWebhook() {
-    return webhook;
-  }
-  public void setWebhook(Trigger webhook) {
-    this.webhook = webhook;
-  }
-  public TriggerEvent getEvent() {
-    return event;
-  }
-  public void setEvent(TriggerEvent event) {
-    this.event = event;
+
+  public void setConditions(List<WorkflowTriggerCondition> conditions) {
+    this.conditions = conditions;
   }
 }

@@ -48,6 +48,7 @@ import com.slack.api.model.view.ViewTitle;
 import io.boomerang.error.BoomerangException;
 import io.boomerang.integrations.data.entity.IntegrationsEntity;
 import io.boomerang.integrations.data.repository.IntegrationsRepository;
+import io.boomerang.model.enums.TriggerEnum;
 import io.boomerang.model.ref.Workflow;
 import io.boomerang.model.ref.WorkflowRun;
 import io.boomerang.model.ref.WorkflowRunSubmitRequest;
@@ -311,7 +312,7 @@ public class SlackServiceImpl implements SlackService {
                     if (userEmail != null && canExecuteWorkflow(workflowId, userEmail)) {
                         WorkflowRunSubmitRequest request = new WorkflowRunSubmitRequest();
                         request.setWorkflowRef(workflowId);
-                        request.setTrigger("webhook");
+                        request.setTrigger(TriggerEnum.webhook);
                         WorkflowRun workflowRun =
                                 workflowRunService.submit(request, true).getBody();
                         LOGGER.debug(workflowRun.toString());

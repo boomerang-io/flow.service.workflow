@@ -9,10 +9,10 @@ import io.cloudevents.CloudEvent;
 public interface TriggerService {
   ResponseEntity<?> processGitHubWebhook(String trigger, String eventType, JsonNode payload);
 
-  ResponseEntity<WorkflowRun> processWebhook(String trigger, String workflowId, JsonNode payload);
-
   ResponseEntity<WorkflowRun> processWFE(String workflowId, String workflowRunId, String topic,
       String status, Optional<JsonNode> payload);
 
   ResponseEntity<WorkflowRun> processEvent(CloudEvent event, Optional<String> workflow);
+
+  ResponseEntity<WorkflowRun> processWebhook(String workflowId, JsonNode payload);
 }

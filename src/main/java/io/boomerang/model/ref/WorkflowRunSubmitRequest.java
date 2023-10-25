@@ -1,8 +1,11 @@
 package io.boomerang.model.ref;
 
+import java.util.HashMap;
+import java.util.Map;
+import io.boomerang.model.enums.TriggerEnum;
+
 /*
- * Extended WorkflowRunSubmitRequest version for the Workflow service that includes eventType and
- * eventSource trigger details
+ * Extended WorkflowRunSubmitRequest version for the Workflow service that includes triggerDetails
  */
 public class WorkflowRunSubmitRequest extends WorkflowRunRequest {
 
@@ -10,11 +13,9 @@ public class WorkflowRunSubmitRequest extends WorkflowRunRequest {
 
   private Integer workflowVersion;
 
-  private String trigger;
+  private TriggerEnum trigger;
 
-  private String eventType;
-
-  private String eventSubject;
+  private Map<String, Object> triggerDetails = new HashMap<>();
 
   public String getWorkflowRef() {
     return workflowRef;
@@ -32,27 +33,19 @@ public class WorkflowRunSubmitRequest extends WorkflowRunRequest {
     this.workflowVersion = workflowVersion;
   }
 
-  public String getTrigger() {
+  public TriggerEnum getTrigger() {
     return trigger;
   }
 
-  public void setTrigger(String trigger) {
+  public void setTrigger(TriggerEnum trigger) {
     this.trigger = trigger;
   }
 
-  public String getEventType() {
-    return eventType;
+  public Map<String, Object> getTriggerDetails() {
+    return triggerDetails;
   }
 
-  public void setEventType(String eventType) {
-    this.eventType = eventType;
-  }
-
-  public String getEventSubject() {
-    return eventSubject;
-  }
-
-  public void setEventSubject(String eventSubject) {
-    this.eventSubject = eventSubject;
+  public void setEventType(Map<String, Object> triggerDetails) {
+    this.triggerDetails = triggerDetails;
   }
 }

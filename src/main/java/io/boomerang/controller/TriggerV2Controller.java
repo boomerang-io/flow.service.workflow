@@ -82,7 +82,8 @@ public class TriggerV2Controller {
         } else if (payload != null
             && ("shortcut".equals(slackType) || "event_callback".equals(slackType))) {
           // Handle Slack Events
-          return triggerService.processWebhook("slack", workflow.get(), payload);
+          // TODO change this to processSlackWebhook
+          return triggerService.processWebhook(workflow.get(), payload);
         } else {
           return ResponseEntity.badRequest().build();
         }
@@ -92,15 +93,12 @@ public class TriggerV2Controller {
     } else if (request.getHeader("x-github-event")!= null) {
       String ghEventType = request.getHeader("x-github-event");
       if (ghEventType != null) {
-        return triggerService.processGitHubWebhook("github", ghEventType, payload);          
+        triggerService.processGitHubWebhook("github", ghEventType, payload);    
+        return ResponseEntity.ok().build();
       }
       return ResponseEntity.badRequest().build();
-    }
-
-// TODO: dockerhub impl w callback_url validation
-//        return triggerService.processWebhook("dockerhub", workflow.get(), payload);
-    
-    return triggerService.processWebhook("webhook", workflow.get(), payload);
+    }    
+    return triggerService.processWebhook(workflow.get(), payload);
   }
 
   /**

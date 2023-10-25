@@ -42,8 +42,7 @@ public class Workflow {
   private Long timeout;
   private Long retries;
   private boolean upgradesAvailable = false;
-  //TODO: adjust the triggers model
-  private WorkflowTrigger triggers;
+  private List<WorkflowTrigger> triggers;
   private List<Task> tasks = new LinkedList<>();
   private List<ParamSpec> params = new LinkedList<>();
   private List<WorkflowWorkspace> workspaces = new LinkedList<>();  
@@ -206,11 +205,11 @@ public class Workflow {
     this.config = config;
   }
 
-  public WorkflowTrigger getTriggers() {
+  public List<WorkflowTrigger> getTriggers() {
     return triggers;
   }
 
-  public void setTriggers(WorkflowTrigger triggers) {
+  public void setTriggers(List<WorkflowTrigger> triggers) {
     this.triggers = triggers;
   }
 
