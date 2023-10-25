@@ -11,6 +11,8 @@ public class Spec {
 
   private List<Result> results;
   
+  private String serviceAccountName;
+  
   public List<Step> getSteps() {
     return steps;
   }
@@ -42,4 +44,13 @@ public class Spec {
   public void setResults(List<Result> results) {
     this.results = results;
   }
+
+  public String getServiceAccountName() {
+    return serviceAccountName;
+  }
+
+  public void setServiceAccountName(String serviceAccountName) {
+    this.serviceAccountName = serviceAccountName;
+  }
+  
 }

@@ -10,6 +10,8 @@
                 "image": "hi",
                 "command": ["test"],
                 "workingDir" : "/tmp2",
+                "serviceAccountName": "default",
+                "securityContext": "runAsNonRoot: true\nrunAsUser: 100\n",
                 "arguments": [
                     "system",
                     "sleep"

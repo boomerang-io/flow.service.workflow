@@ -24,6 +24,7 @@ spec:
   results:
     - name: commit
       description: The precise commit SHA after the git operation.
+  serviceAccountName: default
   steps:
   # Flow will only support single step
     - name: ubuntu-example
@@ -46,3 +47,6 @@ spec:
         - name: HOME
           value: /workspace
       args: ["ubuntu-build-example", "SECRETS-example.md"]
+      securityContext:
+        runAsUser: 2000
+        runAsNonRoot: true

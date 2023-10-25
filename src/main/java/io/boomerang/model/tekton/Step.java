@@ -2,6 +2,8 @@ package io.boomerang.model.tekton;
 
 import java.util.List;
 
+import io.fabric8.kubernetes.api.model.PodSecurityContext;
+
 public class Step {
 
   private String name;
@@ -11,6 +13,7 @@ public class Step {
   private List<Env> env;
   private List<String> command;
   private List<String> args;
+  private PodSecurityContext securityContext;
 
   public String getName() {
     return name;
@@ -66,5 +69,13 @@ public class Step {
 
   public void setWorkingDir(String workingDir) {
     this.workingDir = workingDir;
+  }
+
+  public PodSecurityContext getSecurityContext() {
+    return securityContext;
+  }
+
+  public void setSecurityContext(PodSecurityContext securityContext) {
+    this.securityContext = securityContext;
   }
 }
