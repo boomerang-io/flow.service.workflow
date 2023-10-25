@@ -34,7 +34,7 @@ import io.boomerang.mongo.model.ChangeLog;
 import io.boomerang.mongo.model.FlowTaskTemplateStatus;
 import io.boomerang.mongo.model.Revision;
 import io.boomerang.mongo.model.TaskTemplateConfig;
-import io.fabric8.kubernetes.api.model.PodSecurityContext;
+import io.boomerang.model.tekton.SecurityContext;
 
 public class TektonConverter {
   
@@ -100,7 +100,7 @@ public class TektonConverter {
       if (Strings.isNotBlank(sc)) {
         try {
           ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-          PodSecurityContext podSecurityContext = mapper.readValue(sc, PodSecurityContext.class);
+          SecurityContext podSecurityContext = mapper.readValue(sc, SecurityContext.class);
           step.setSecurityContext(podSecurityContext);
           
         } catch (JsonMappingException e) {
