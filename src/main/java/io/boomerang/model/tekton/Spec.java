@@ -1,6 +1,10 @@
 package io.boomerang.model.tekton;
 
 import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+
 import io.boomerang.model.Result;
 
 public class Spec {
@@ -11,6 +15,7 @@ public class Spec {
 
   private List<Result> results;
   
+  @JsonInclude(Include.NON_NULL)
   private String serviceAccountName;
   
   public List<Step> getSteps() {

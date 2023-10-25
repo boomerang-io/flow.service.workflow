@@ -2,6 +2,9 @@ package io.boomerang.model.tekton;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+
 import io.fabric8.kubernetes.api.model.PodSecurityContext;
 
 public class Step {
@@ -13,6 +16,7 @@ public class Step {
   private List<Env> env;
   private List<String> command;
   private List<String> args;
+  @JsonInclude(Include.NON_NULL)
   private PodSecurityContext securityContext;
 
   public String getName() {
