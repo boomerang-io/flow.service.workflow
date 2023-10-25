@@ -5,8 +5,6 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
-import io.fabric8.kubernetes.api.model.PodSecurityContext;
-
 public class Step {
 
   private String name;
@@ -17,7 +15,7 @@ public class Step {
   private List<String> command;
   private List<String> args;
   @JsonInclude(Include.NON_NULL)
-  private PodSecurityContext securityContext;
+  private SecurityContext securityContext;
 
   public String getName() {
     return name;
@@ -75,11 +73,11 @@ public class Step {
     this.workingDir = workingDir;
   }
 
-  public PodSecurityContext getSecurityContext() {
+  public SecurityContext getSecurityContext() {
     return securityContext;
   }
 
-  public void setSecurityContext(PodSecurityContext securityContext) {
+  public void setSecurityContext(SecurityContext securityContext) {
     this.securityContext = securityContext;
   }
 }
