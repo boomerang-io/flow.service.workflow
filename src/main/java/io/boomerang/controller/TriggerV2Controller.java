@@ -56,16 +56,13 @@ public class TriggerV2Controller {
    * </p>
    * 
    * <h4>Sample</h4>
-   * <code>/webhook?workflow={workflow}&type={generic|slack|dockerhub}&access_token={access_token}</code>
+   * <code>/webhook?workflow={workflow}&access_token={access_token}</code>
    */
   @PostMapping(value = "/webhook", consumes = "application/json; charset=utf-8")
   @Operation(summary = "Trigger WorkflowRun via Webhook.")
   public ResponseEntity<?> acceptWebhookEvent(
       @Parameter(name = "workflow", description = "Workflow reference the request relates to",
           required = false) @RequestParam(required = false) Optional<String> workflow,
-      @Parameter(name = "type",
-          description = "The type of webhook allowing for specialised payloads. Defaults to 'generic'.",
-          required = true) @RequestParam(defaultValue = "generic") WebhookType type,
       @RequestBody JsonNode payload,
       HttpServletRequest request) {
     request.getHeaderNames().asIterator()
