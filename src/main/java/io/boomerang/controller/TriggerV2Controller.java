@@ -2,6 +2,8 @@ package io.boomerang.controller;
 
 import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -27,6 +29,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Tag(name = "Triggers for Events, Topics, and Webhooks",
     description = "Listen for Events or Webhook requests to trigger Workflows and provide the ability to resolve Wait For Event TaskRuns.")
 public class TriggerV2Controller {
+
+  private static final Logger LOGGER = LogManager.getLogger();
 
   @Autowired
   private TriggerService triggerService;
@@ -64,42 +68,42 @@ public class TriggerV2Controller {
           required = true) @RequestParam(defaultValue = "generic") WebhookType type,
       @RequestBody JsonNode payload,
       HttpServletRequest request) {
-    switch (type) {
-      case slack:
-        if (payload != null) {
-          final String slackType = payload.get("type").asText();
+    request.getHeaderNames().asIterator()
+    .forEachRemaining(headerName ->
+            LOGGER.debug("HEADER::" + headerName + ": " + request.getHeader(headerName)));
+    if (request.getHeader("x-slack-signature")!= null) {
+      if (payload != null) {
+        final String slackType = payload.get("type").asText();
 
-          if ("url_verification".equals(slackType)) {
-            SlackEventPayload response = new SlackEventPayload();
-            final String slackChallenge = payload.get("challenge").asText();
-            if (slackChallenge != null) {
-              response.setChallenge(slackChallenge);
-            }
-            return ResponseEntity.ok(response);
-          } else if (payload != null
-              && ("shortcut".equals(slackType) || "event_callback".equals(slackType))) {
-            // Handle Slack Events
-            return triggerService.processWebhook("slack", workflow.get(), payload);
-          } else {
-            return ResponseEntity.badRequest().build();
+        if ("url_verification".equals(slackType)) {
+          SlackEventPayload response = new SlackEventPayload();
+          final String slackChallenge = payload.get("challenge").asText();
+          if (slackChallenge != null) {
+            response.setChallenge(slackChallenge);
           }
+          return ResponseEntity.ok(response);
+        } else if (payload != null
+            && ("shortcut".equals(slackType) || "event_callback".equals(slackType))) {
+          // Handle Slack Events
+          return triggerService.processWebhook("slack", workflow.get(), payload);
         } else {
           return ResponseEntity.badRequest().build();
         }
-      case dockerhub:
-        // TODO: dockerhub callback_url validation
-        return triggerService.processWebhook("dockerhub", workflow.get(), payload);
-      case generic:
-        return triggerService.processWebhook("webhook", workflow.get(), payload);
-      case github:
-        String ghEventType = request.getHeader("x-github-event");
-        if (ghEventType != null) {
-          return triggerService.processGitHubWebhook("github", ghEventType, payload);          
-        }
+      } else {
         return ResponseEntity.badRequest().build();
-      default:
-        return ResponseEntity.badRequest().build();
+      }
+    } else if (request.getHeader("x-github-event")!= null) {
+      String ghEventType = request.getHeader("x-github-event");
+      if (ghEventType != null) {
+        return triggerService.processGitHubWebhook("github", ghEventType, payload);          
+      }
+      return ResponseEntity.badRequest().build();
     }
+
+// TODO: dockerhub impl w callback_url validation
+//        return triggerService.processWebhook("dockerhub", workflow.get(), payload);
+    
+    return triggerService.processWebhook("webhook", workflow.get(), payload);
   }
 
   /**
