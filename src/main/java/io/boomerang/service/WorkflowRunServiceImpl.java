@@ -11,6 +11,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jayway.jsonpath.Configuration;
+import com.jayway.jsonpath.DocumentContext;
+import com.jayway.jsonpath.JsonPath;
+import com.jayway.jsonpath.Option;
+import com.jayway.jsonpath.spi.json.JacksonJsonNodeJsonProvider;
+import com.jayway.jsonpath.spi.mapper.JacksonMappingProvider;
 import io.boomerang.client.EngineClient;
 import io.boomerang.client.WorkflowRunResponsePage;
 import io.boomerang.data.entity.RelationshipEntity;
@@ -21,6 +29,8 @@ import io.boomerang.model.enums.RelationshipRef;
 import io.boomerang.model.enums.RelationshipType;
 import io.boomerang.model.enums.TriggerEnum;
 import io.boomerang.model.ref.ParamLayers;
+import io.boomerang.model.ref.RunParam;
+import io.boomerang.model.ref.Trigger;
 import io.boomerang.model.ref.Workflow;
 import io.boomerang.model.ref.WorkflowRun;
 import io.boomerang.model.ref.WorkflowRunCount;
@@ -28,6 +38,7 @@ import io.boomerang.model.ref.WorkflowRunInsight;
 import io.boomerang.model.ref.WorkflowRunRequest;
 import io.boomerang.model.ref.WorkflowRunSubmitRequest;
 import io.boomerang.model.ref.WorkflowTrigger;
+import io.boomerang.util.ParameterUtil;
 
 /*
  * This service replicates the required calls for Engine WorkflowRunV1 APIs
@@ -160,7 +171,7 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
       //Check Quotas - Throws Exception
       canRunWithQuotas(teamRelationship.get().getToRef(), request.getWorkflowRef());
       //Check Triggers - Throws Exception
-      canRunWithTrigger(request.getWorkflowRef(), request.getTrigger(), Optional.of(request.getTriggerDetails()));
+      canRunWithTrigger(request.getWorkflowRef(), request.getTrigger(), request.getParams());
       // Set Workflow & Task Debug
       if (!Objects.isNull(request.getDebug())) {
         boolean enableDebug = false;
@@ -304,35 +315,29 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
    * 
    * @param Trigger an optional Trigger object
    */
-  protected void canRunWithTrigger(String workflowId, TriggerEnum runTrigger, Optional<Map<String, Object>> triggerDetails) {
+  protected void canRunWithTrigger(String workflowId, TriggerEnum runTrigger, List<RunParam> params) {
     // Check no further if trigger not provided
     if (!Objects.isNull(runTrigger)) {
       // Check if Workflow exists and is active. Then check triggers are enabled.
-      //TODO determine a less expensive way to get the Workflow Triggers
       Workflow workflow = engineClient.getWorkflow(workflowId, Optional.empty(), false);
       if (!Objects.isNull(workflow)) {
-        List<WorkflowTrigger> triggers = workflow.getTriggers();
-        if (TriggerEnum.manual.equals(runTrigger) && triggers.stream()
-            .anyMatch(obj -> (obj.getType().equals(TriggerEnum.manual) && obj.getEnabled()))) {
+        WorkflowTrigger triggers = workflow.getTriggers();
+        if (TriggerEnum.manual.equals(runTrigger) && triggers.getManual().getEnabled()) {
           return;
-        } else if (TriggerEnum.scheduler.equals(runTrigger)
-            && triggers.stream()
-            .anyMatch(obj -> (obj.getType().equals(TriggerEnum.scheduler) && obj.getEnabled()))) {
+        } else if (TriggerEnum.schedule.equals(runTrigger)
+            && triggers.getSchedule().getEnabled()) {
           return;
         } else if (TriggerEnum.webhook.equals(runTrigger)
-            && triggers.stream()
-            .anyMatch(obj -> (obj.getType().equals(TriggerEnum.webhook) && obj.getEnabled()))) {
+            && triggers.getWebhook().getEnabled()) {
           return;
         } else if (TriggerEnum.event.equals(runTrigger)
-            && triggers.stream()
-            .anyMatch(obj -> (obj.getType().equals(TriggerEnum.event) && obj.getEnabled()))) {
-            WorkflowTrigger trigger = triggers.stream().filter(obj -> obj.getType().equals(TriggerEnum.event)).findFirst().get();
-            validateTriggerConditions(triggerDetails, trigger);
+            && triggers.getEvent().getEnabled()) {
+            Trigger trigger = triggers.getEvent();
+            validateTriggerConditions(ParameterUtil.getValue(params, "event"), trigger);
             return;
-        } else if (TriggerEnum.github.equals(runTrigger) && triggers.stream()
-            .anyMatch(obj -> (obj.getType().equals(TriggerEnum.github) && obj.getEnabled()))) {
-          WorkflowTrigger trigger = triggers.stream().filter(obj -> obj.getType().equals(TriggerEnum.github)).findFirst().get();
-          validateTriggerConditions(triggerDetails, trigger);
+        } else if (TriggerEnum.github.equals(runTrigger) && triggers.getWebhook().getEnabled()) {
+          Trigger trigger = triggers.getWebhook();
+          validateTriggerConditions(ParameterUtil.getValue(params, "payload"), trigger);
           return;
         }
         throw new BoomerangException(BoomerangError.WORKFLOWRUN_TRIGGER_DISABLED);
@@ -343,27 +348,37 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
   /*
    * Implements the logic checks for each WorkflowTriggerCondition operation type
    */
-  private void validateTriggerConditions(Optional<Map<String, Object>> triggerDetails,
-      WorkflowTrigger trigger) {
-    trigger.getConditions().forEach(con -> {
-      Boolean canRun = Boolean.TRUE;
-      switch (con.getOperation()) {
-        case matches -> {
-          String field = (String) triggerDetails.get().get(con.getField());
-          canRun = field.matches(con.getValue());
+  private void validateTriggerConditions(Object data,
+      Trigger trigger) {
+    if (!trigger.getConditions().isEmpty()) {
+      //Convert Object to JsonNode and configure for JsonPath
+      ObjectMapper mapper = new ObjectMapper();
+      JsonNode jData = mapper.valueToTree(data);
+      Configuration jsonConfig =
+          Configuration.builder().mappingProvider(new JacksonMappingProvider())
+              .jsonProvider(new JacksonJsonNodeJsonProvider())
+              .options(Option.DEFAULT_PATH_LEAF_TO_NULL).build();
+      DocumentContext jsonContext = JsonPath.using(jsonConfig).parse(jData);
+      
+      //Determine all conditions match
+      trigger.getConditions().forEach(con -> {
+        Boolean canRun = Boolean.TRUE;
+        String field = jsonContext.read(con.getField());
+        switch (con.getOperation()) {
+          case matches -> {
+            canRun = field.matches(con.getValue());
+          }
+          case equals -> {
+            canRun = field.equals(con.getValue());
+          }
+          case in -> {
+            canRun = con.getValues().contains(field);
+          }
         }
-        case equals -> {
-          String field = (String) triggerDetails.get().get(con.getField());
-          canRun = field.equals(con.getValue());
+        if (!canRun) {
+          throw new BoomerangException(BoomerangError.WORKFLOWRUN_TRIGGER_DISABLED);
         }
-        case in -> {
-          String field = (String) triggerDetails.get().get(con.getField());
-          canRun = con.getValues().contains(field);
-        }
-      }
-      if (!canRun) {
-        throw new BoomerangException(BoomerangError.WORKFLOWRUN_TRIGGER_DISABLED);
-      }
-    });
+      });
+    }
   }
 }

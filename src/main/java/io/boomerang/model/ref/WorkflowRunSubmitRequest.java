@@ -1,7 +1,5 @@
 package io.boomerang.model.ref;
 
-import java.util.HashMap;
-import java.util.Map;
 import io.boomerang.model.enums.TriggerEnum;
 
 /*
@@ -14,8 +12,6 @@ public class WorkflowRunSubmitRequest extends WorkflowRunRequest {
   private Integer workflowVersion;
 
   private TriggerEnum trigger;
-
-  private Map<String, Object> triggerDetails = new HashMap<>();
 
   public String getWorkflowRef() {
     return workflowRef;
@@ -39,13 +35,5 @@ public class WorkflowRunSubmitRequest extends WorkflowRunRequest {
 
   public void setTrigger(TriggerEnum trigger) {
     this.trigger = trigger;
-  }
-
-  public Map<String, Object> getTriggerDetails() {
-    return triggerDetails;
-  }
-
-  public void setEventType(Map<String, Object> triggerDetails) {
-    this.triggerDetails = triggerDetails;
   }
 }

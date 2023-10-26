@@ -77,7 +77,7 @@ public class QuartzSchedulerJob extends QuartzJobBean {
       request.setWorkflowRef(jobDetail.getKey().getGroup());
       request.setLabels(schedule.getLabels());
       request.setParams(request.getParams());
-      request.setTrigger(TriggerEnum.scheduler);
+      request.setTrigger(TriggerEnum.schedule);
 
       //Hoist token to ThreadLocal SecurityContext - this AuthN/AuthZ allows the WorkflowRun to be triggered
       Token token = tokenService.createWorkflowSessionToken(jobDetail.getKey().getGroup());

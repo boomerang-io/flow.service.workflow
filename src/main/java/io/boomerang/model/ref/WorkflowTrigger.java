@@ -1,35 +1,55 @@
 package io.boomerang.model.ref;
 
-import java.util.List;
-import io.boomerang.model.enums.TriggerEnum;
-
+/*
+ * This is a fixed trigger model due to the UI. 
+ * 
+ * TODO: in future you could have a List<Trigger> in Workflow and delete this class
+ */
 public class WorkflowTrigger {
 
-  private Boolean enabled = Boolean.FALSE;
-  private TriggerEnum type;
-  private List<WorkflowTriggerCondition> conditions;
+  private Trigger manual = new Trigger(true);
+  private Trigger schedule = new Trigger(false);
+  private Trigger webhook = new Trigger(false);
+  private Trigger event = new Trigger(false);
+  private Trigger github = new Trigger(false);
 
-  public Boolean getEnabled() {
-    return enabled;
+  public Trigger getManual() {
+    return manual;
   }
 
-  public void setEnabled(Boolean enabled) {
-    this.enabled = enabled;
+  public void setManual(Trigger manual) {
+    this.manual = manual;
   }
 
-  public TriggerEnum getType() {
-    return type;
+  public Trigger getSchedule() {
+    return schedule;
   }
 
-  public void setType(TriggerEnum type) {
-    this.type = type;
+  public void setSchedule(Trigger schedule) {
+    this.schedule = schedule;
   }
 
-  public List<WorkflowTriggerCondition> getConditions() {
-    return conditions;
+  public Trigger getWebhook() {
+    return webhook;
   }
 
-  public void setConditions(List<WorkflowTriggerCondition> conditions) {
-    this.conditions = conditions;
+  public void setWebhook(Trigger webhook) {
+    this.webhook = webhook;
+  }
+
+  public Trigger getEvent() {
+    return event;
+  }
+
+  public void setEvent(Trigger event) {
+    this.event = event;
+  }
+
+  public Trigger getGithub() {
+    return github;
+  }
+
+  public void setGithub(Trigger github) {
+    this.github = github;
   }
 }

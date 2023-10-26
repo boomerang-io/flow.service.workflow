@@ -3,7 +3,7 @@ package io.boomerang.model.ref;
 import java.util.List;
 import io.boomerang.model.enums.TriggerConditionOperation;
 
-public class WorkflowTriggerCondition {
+public class TriggerCondition {
   
   private String field;
   private TriggerConditionOperation operation;

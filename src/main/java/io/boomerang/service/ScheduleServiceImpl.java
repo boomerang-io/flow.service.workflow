@@ -193,18 +193,15 @@ public class ScheduleServiceImpl implements ScheduleService {
       // TODO: better accurate error
       throw new BoomerangException(BoomerangError.SCHEDULE_INVALID_REQ);
     }
-    //TODO is there a less expensive way to find out the Workflow Trigger
     Workflow workflow = engineClient.getWorkflow(schedule.getWorkflowRef(), Optional.empty(), false);
     WorkflowScheduleEntity scheduleEntity = new WorkflowScheduleEntity();
     BeanUtils.copyProperties(schedule, scheduleEntity);
     Boolean enableJob = false;
     if (WorkflowScheduleStatus.active.equals(scheduleEntity.getStatus())
-        && workflow != null && !workflow.getTriggers().isEmpty() && workflow.getTriggers().stream()
-            .anyMatch(obj -> (obj.getType().equals(TriggerEnum.scheduler) && obj.getEnabled()))) {
+        && workflow != null && workflow.getTriggers().getSchedule().getEnabled()) {
       enableJob = true;
     } else if (WorkflowScheduleStatus.active.equals(scheduleEntity.getStatus())
-        && workflow != null && !workflow.getTriggers().isEmpty() && !workflow.getTriggers().stream()
-            .anyMatch(obj -> (obj.getType().equals(TriggerEnum.scheduler) && obj.getEnabled()))) {
+        && workflow != null && !workflow.getTriggers().getSchedule().getEnabled()) {
       scheduleEntity.setStatus(WorkflowScheduleStatus.trigger_disabled);
     }
     scheduleRepository.save(scheduleEntity);
@@ -321,8 +318,7 @@ public class ScheduleServiceImpl implements ScheduleService {
             enableJob = false;
           } else if (WorkflowScheduleStatus.inactive.equals(previousStatus)
               && WorkflowScheduleStatus.active.equals(newStatus)) {
-            if (workflow != null && !workflow.getTriggers().isEmpty() && !workflow.getTriggers().stream()
-                .anyMatch(obj -> (obj.getType().equals(TriggerEnum.scheduler) && obj.getEnabled()))) {
+            if (workflow != null && !workflow.getTriggers().getSchedule().getEnabled()) {
               scheduleEntity.setStatus(WorkflowScheduleStatus.trigger_disabled);
               enableJob = false;
             }

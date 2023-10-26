@@ -60,8 +60,6 @@ public class TriggersServiceImpl implements TriggerService {
       request.setWorkflowRef(eventSubject.replace("/", ""));
     }
     request.setTrigger(TriggerEnum.event);
-    request.getTriggerDetails().put("subject", eventSubject);
-    request.getTriggerDetails().put("type", eventType);
     request.setParams(eventToRunParams(event));
 
     LOGGER.debug("Webhook Request: " + request.toString());

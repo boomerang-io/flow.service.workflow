@@ -34,14 +34,12 @@ import io.boomerang.model.CanvasNodePosition;
 import io.boomerang.model.WorkflowCanvas;
 import io.boomerang.model.enums.RelationshipRef;
 import io.boomerang.model.enums.RelationshipType;
-import io.boomerang.model.enums.TriggerEnum;
 import io.boomerang.model.enums.ref.TaskType;
 import io.boomerang.model.enums.ref.WorkflowStatus;
 import io.boomerang.model.ref.ChangeLogVersion;
 import io.boomerang.model.ref.Task;
 import io.boomerang.model.ref.TaskDependency;
-import io.boomerang.model.ref.WorkflowTrigger;
-import io.boomerang.model.ref.WorkflowTrigger;
+import io.boomerang.model.ref.Trigger;
 import io.boomerang.model.ref.Workflow;
 import io.boomerang.model.ref.WorkflowCount;
 import io.boomerang.model.ref.WorkflowTrigger;
@@ -445,18 +443,36 @@ public class WorkflowServiceImpl implements WorkflowService {
    * Sets up the Triggers
    */
   private void validateTriggerDefaults(final Workflow workflow) {
-    //TODO check if this is needed
+    if (workflow.getTriggers() == null) {
+      //Manual trigger will be set to Enable = true.
+      workflow.setTriggers(new WorkflowTrigger());
+    }
+
+    // Default to enabled for Workflows
+    if (workflow.getTriggers().getManual() == null) {
+      workflow.getTriggers().setManual(new Trigger(Boolean.TRUE));
+    }
+    if (workflow.getTriggers().getSchedule() == null) {
+      workflow.getTriggers().setSchedule(new Trigger(Boolean.FALSE));
+    }
+    if (workflow.getTriggers().getWebhook() == null) {
+      workflow.getTriggers().setWebhook(new Trigger(Boolean.FALSE));
+    }
+    if (workflow.getTriggers().getEvent() == null) {
+      workflow.getTriggers().setWebhook(new Trigger(Boolean.FALSE));
+    }
+    if (workflow.getTriggers().getGithub() == null) {
+      workflow.getTriggers().setGithub(new Trigger(Boolean.FALSE));
+    }
   }
 
   /*
    * Determine if Schedules need to be disabled based on triggers
    */
-  private void updateScheduleTriggers(final Workflow request, List<WorkflowTrigger> currentTriggers) {
-    if (!Objects.isNull(request.getTriggers()) && !Objects.isNull(currentTriggers)) {
-      boolean currentSchedulerEnabled = currentTriggers.stream()
-          .anyMatch(obj -> (obj.getType().equals(TriggerEnum.scheduler) && obj.getEnabled()));
-      boolean requestSchedulerEnabled = request.getTriggers().stream()
-          .anyMatch(obj -> (obj.getType().equals(TriggerEnum.scheduler) && obj.getEnabled()));
+  private void updateScheduleTriggers(final Workflow request, WorkflowTrigger currentTriggers) {
+    if (!Objects.isNull(request.getTriggers()) && !Objects.isNull(request.getTriggers().getSchedule()) && !Objects.isNull(currentTriggers) && !Objects.isNull(currentTriggers.getSchedule())) {
+      boolean currentSchedulerEnabled = currentTriggers.getSchedule().getEnabled();
+      boolean requestSchedulerEnabled = request.getTriggers().getSchedule().getEnabled();
       if (currentSchedulerEnabled != false && requestSchedulerEnabled == false) {
         scheduleService.disableAllTriggerSchedules(request.getId());
       } else if (currentSchedulerEnabled == false && requestSchedulerEnabled == true) {
