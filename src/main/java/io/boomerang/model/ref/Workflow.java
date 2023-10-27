@@ -12,8 +12,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import io.boomerang.data.entity.ref.WorkflowEntity;
-import io.boomerang.data.entity.ref.WorkflowRevisionEntity;
 import io.boomerang.model.AbstractParam;
 import io.boomerang.model.WorkflowCanvas;
 import io.boomerang.model.enums.ref.WorkflowStatus;
@@ -30,9 +28,9 @@ public class Workflow {
   
   private String id;
   private String name;
-  private Date creationDate = new Date();
   private WorkflowStatus status = WorkflowStatus.active;
   private Integer version = 1;
+  private Date creationDate = new Date();
   private ChangeLog changelog;
   private String icon;
   private String description;
@@ -48,6 +46,19 @@ public class Workflow {
   private List<WorkflowWorkspace> workspaces = new LinkedList<>();  
   private List<AbstractParam> config = new LinkedList<>();;
   private Map<String, Object> unknownFields = new HashMap<>();
+  
+  public Workflow() {
+  }
+  
+  /*
+  * Creates a Workflow from WorkflowCanvas
+  * 
+  * Does not copy / convert the stored Tasks onto the Workflow. If you want the Tasks you need to run
+  * workflow.setTasks(TaskMapper.revisionTasksToListOfTasks(wfRevisionEntity.getTasks()));
+  */
+  public Workflow(WorkflowCanvas wfCanvas) {
+    BeanUtils.copyProperties(wfCanvas, this);
+  }
 
   @JsonAnyGetter
   @JsonPropertyOrder(alphabetic = true)
@@ -58,31 +69,6 @@ public class Workflow {
   @JsonAnySetter
   public void setOtherField(String name, Object value) {
     unknownFields.put(name, value);
-  }
-  
-  public Workflow() {
-    
-  }
-
-  /*
-   * Creates a Workflow from WorkflowEntity and WorkflowRevisionEntity
-   * 
-   * Does not copy / convert the stored Tasks onto the Workflow. If you want the Tasks you need to run
-   * workflow.setTasks(TaskMapper.revisionTasksToListOfTasks(wfRevisionEntity.getTasks()));
-   */
-  public Workflow(WorkflowEntity wfEntity, WorkflowRevisionEntity wfRevisionEntity) {
-    BeanUtils.copyProperties(wfEntity, this);
-    BeanUtils.copyProperties(wfRevisionEntity, this, "id", "tasks");
-  }
-
-  /*
-   * Creates a Workflow from WorkflowCanvas
-   * 
-   * Does not copy / convert the stored Tasks onto the Workflow. If you want the Tasks you need to run
-   * workflow.setTasks(TaskMapper.revisionTasksToListOfTasks(wfRevisionEntity.getTasks()));
-   */
-  public Workflow(WorkflowCanvas wfCanvas) {
-    BeanUtils.copyProperties(wfCanvas, this);
   }
 
   public String getId() {
@@ -235,5 +221,5 @@ public class Workflow {
 
   public void setRetries(Long retries) {
     this.retries = retries;
-  } 
+  }
 }

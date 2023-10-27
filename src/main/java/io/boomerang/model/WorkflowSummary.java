@@ -5,7 +5,6 @@ import org.springframework.beans.BeanUtils;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import io.boomerang.data.entity.ref.WorkflowEntity;
 import io.boomerang.model.enums.ref.WorkflowStatus;
 import io.boomerang.model.ref.Workflow;
 
@@ -30,10 +29,6 @@ public class WorkflowSummary {
   
   public WorkflowSummary(Workflow workflow) {
     BeanUtils.copyProperties(workflow, this);
-  }
-  
-  public WorkflowSummary(WorkflowEntity workflowEntity) {
-    BeanUtils.copyProperties(workflowEntity, this);
   }
   
   public String getId() {

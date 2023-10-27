@@ -12,8 +12,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.boomerang.model.enums.ref.RunPhase;
 import io.boomerang.model.enums.ref.RunStatus;
 import io.boomerang.model.enums.ref.TaskType;
-import io.boomerang.model.ref.ResultSpec;
-import io.boomerang.model.ref.RunError;
 import io.boomerang.model.ref.RunParam;
 import io.boomerang.model.ref.RunResult;
 import io.boomerang.model.ref.TaskDependency;

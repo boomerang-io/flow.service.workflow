@@ -1,8 +1,6 @@
 package io.boomerang.model.ref;
 
 import java.util.Date;
-import org.springframework.beans.BeanUtils;
-import io.boomerang.data.entity.ref.WorkflowRunEntity;
 import io.boomerang.model.enums.ref.RunStatus;
 
 public class WorkflowRunSummary {
@@ -14,14 +12,6 @@ public class WorkflowRunSummary {
   private RunStatus status;
   private String workflowRef;
   private String workflowName;
-  
-  public WorkflowRunSummary() {
-    
-  }
-
-  public WorkflowRunSummary(WorkflowRunEntity entity) {
-    BeanUtils.copyProperties(entity, this);
-  }
 
   @Override
   public String toString() {
