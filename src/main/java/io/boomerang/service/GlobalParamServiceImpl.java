@@ -12,7 +12,6 @@ import io.boomerang.data.repository.GlobalParamRepository;
 import io.boomerang.error.BoomerangError;
 import io.boomerang.error.BoomerangException;
 import io.boomerang.model.AbstractParam;
-import io.boomerang.model.GlobalParam;
 import io.boomerang.util.DataAdapterUtil;
 import io.boomerang.util.DataAdapterUtil.FieldType;
 
