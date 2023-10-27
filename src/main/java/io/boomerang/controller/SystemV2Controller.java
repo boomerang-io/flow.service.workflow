@@ -15,16 +15,16 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import io.boomerang.model.AbstractParam;
 import io.boomerang.model.FeaturesAndQuotas;
-import io.boomerang.model.GlobalParam;
 import io.boomerang.model.HeaderNavigationResponse;
 import io.boomerang.model.Navigation;
 import io.boomerang.model.OneTimeCode;
 import io.boomerang.model.Setting;
 import io.boomerang.security.interceptors.AuthScope;
+import io.boomerang.security.model.AuthType;
 import io.boomerang.security.model.PermissionAction;
 import io.boomerang.security.model.PermissionScope;
-import io.boomerang.security.model.AuthType;
 import io.boomerang.security.service.IdentityService;
 import io.boomerang.service.ContextService;
 import io.boomerang.service.FeatureService;
@@ -122,7 +122,7 @@ public class SystemV2Controller {
   @Operation(summary = "Get all global Params")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
-  public List<GlobalParam> getAll() {
+  public List<AbstractParam> getAll() {
     return paramService.getAll();
   }
 
@@ -131,13 +131,13 @@ public class SystemV2Controller {
   @Operation(summary = "Create new global Param")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
-  public GlobalParam create(@RequestBody GlobalParam request) {
+  public AbstractParam create(@RequestBody AbstractParam request) {
     return paramService.create(request);
   }
 
   @PutMapping(value = "/global-params")
   @AuthScope(action = PermissionAction.WRITE, scope = PermissionScope.SYSTEM, types = {AuthType.session, AuthType.global})
-  public GlobalParam update(@RequestBody GlobalParam request) {
+  public AbstractParam update(@RequestBody AbstractParam request) {
     return paramService.update(request);
   }
 

@@ -11,7 +11,10 @@ import io.boomerang.data.entity.GlobalParamEntity;
 import io.boomerang.data.repository.GlobalParamRepository;
 import io.boomerang.error.BoomerangError;
 import io.boomerang.error.BoomerangException;
+import io.boomerang.model.AbstractParam;
 import io.boomerang.model.GlobalParam;
+import io.boomerang.util.DataAdapterUtil;
+import io.boomerang.util.DataAdapterUtil.FieldType;
 
 /*
  * CRUD for Global Params
@@ -27,32 +30,42 @@ public class GlobalParamServiceImpl implements GlobalParamService {
   private GlobalParamRepository paramRepository;
 
   @Override
-  public List<GlobalParam> getAll() {
-    List<GlobalParamEntity> paramEntites = paramRepository.findAll();
-    List<GlobalParam> params = new LinkedList<>();
-    for (GlobalParamEntity entity : paramEntites) {
-      GlobalParam param = new GlobalParam(entity);
+  public List<AbstractParam> getAll() {
+    List<GlobalParamEntity> entities = paramRepository.findAll();
+    List<AbstractParam> params = new LinkedList<>();
+    for (GlobalParamEntity entity : entities) {
+      params.add(convertToAbstractParamAndFilter(entity));
+    }
+    return params;
+  }
+  
+  public List<AbstractParam> getAllUnfiltered() {
+    List<GlobalParamEntity> entities = paramRepository.findAll();
+    List<AbstractParam> params = new LinkedList<>();
+    for (GlobalParamEntity entity : entities) {
+      AbstractParam param = new AbstractParam();
+      BeanUtils.copyProperties(entity, param, "id");
       params.add(param);
     }
     return params;
   }
 
   @Override
-  public GlobalParam update(GlobalParam param) {
+  public AbstractParam update(AbstractParam param) {
     if (!Objects.isNull(param) && param.getKey() != null) {
       Optional<GlobalParamEntity> optParamEntity = paramRepository.findOneByKey(param.getKey());
       if (!optParamEntity.isEmpty()) {    
         // Copy updatedParam to ParamEntity except for ID (requester should not know ID);
         BeanUtils.copyProperties(param, optParamEntity.get(), "id");
-        GlobalParamEntity paramEntity = paramRepository.save(optParamEntity.get());
-        return new GlobalParam(paramEntity);
+        GlobalParamEntity entity = paramRepository.save(optParamEntity.get());
+        return convertToAbstractParamAndFilter(entity);
       }
     }
     throw new BoomerangException(BoomerangError.PARAMS_INVALID_REFERENCE);
   }
 
   @Override
-  public GlobalParam create(GlobalParam param) {
+  public AbstractParam create(AbstractParam param) {
     if (!Objects.isNull(param) && param.getKey() != null) {
 
       // Ensure key is unique
@@ -63,7 +76,7 @@ public class GlobalParamServiceImpl implements GlobalParamService {
       GlobalParamEntity entity = new GlobalParamEntity();
       BeanUtils.copyProperties(param, entity, "id");
       entity = paramRepository.save(entity);
-      return new GlobalParam(entity);
+      return convertToAbstractParamAndFilter(entity);
     }
     throw new BoomerangException(BoomerangError.PARAMS_INVALID_REFERENCE);
   }
@@ -74,5 +87,14 @@ public class GlobalParamServiceImpl implements GlobalParamService {
       paramRepository.deleteByKey(key);
     }
     throw new BoomerangException(BoomerangError.PARAMS_INVALID_REFERENCE);
+  }
+  
+  /*
+   * Converts from GlobalParamEntity to AbstractParam and filters out secure values
+   */
+  private AbstractParam convertToAbstractParamAndFilter(GlobalParamEntity entity) {
+    AbstractParam param = new AbstractParam();
+    BeanUtils.copyProperties(entity, param, "id");
+    return DataAdapterUtil.filterAbstractParam(param, false, FieldType.PASSWORD.value());
   }
 }

@@ -1,15 +1,15 @@
 package io.boomerang.service;
 
 import java.util.List;
-import io.boomerang.model.GlobalParam;
+import io.boomerang.model.AbstractParam;
 
 public interface GlobalParamService {
 
-  GlobalParam create(GlobalParam globalParam);
+  AbstractParam create(AbstractParam globalParam);
 
-  List<GlobalParam> getAll();
+  List<AbstractParam> getAll();
 
-  GlobalParam update(GlobalParam params);
+  AbstractParam update(AbstractParam params);
 
   void delete(String key);
 

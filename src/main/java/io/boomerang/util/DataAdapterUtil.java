@@ -49,6 +49,20 @@ public class DataAdapterUtil {
 	  }
 	  return properties;
 	}
+	
+    public static AbstractParam filterAbstractParam(AbstractParam param,
+        boolean isDefaultValue, String fieldType) {
+      if (param == null || fieldType == null || !fieldType.equals(param.getType())) {
+        return null;
+      }
+      if (isDefaultValue) {
+        param.setDefaultValue(null);
+      } else {
+        param.setValue(null);
+      }
+      param.setHiddenValue(Boolean.TRUE);
+      return param;
+    }
     
     /**
      * Method for filtering sensitive data from Parameters based on AbstractConfig type (e.g. make null the value of any password

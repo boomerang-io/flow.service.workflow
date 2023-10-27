@@ -10,7 +10,6 @@ import io.boomerang.data.repository.TeamRepository;
 import io.boomerang.error.BoomerangError;
 import io.boomerang.error.BoomerangException;
 import io.boomerang.model.AbstractParam;
-import io.boomerang.model.GlobalParam;
 import io.boomerang.model.ref.ParamLayers;
 import io.boomerang.model.ref.ParamSpec;
 import io.boomerang.security.entity.TokenEntity;
@@ -34,7 +33,7 @@ public class ParameterManagerImpl implements ParameterManager {
   private TeamRepository teamRepository;
 
   @Autowired
-  private GlobalParamService globalParamService;
+  private GlobalParamServiceImpl globalParamService;
 
   @Autowired
   private TokenRepository tokenRepository;
@@ -91,8 +90,8 @@ public class ParameterManagerImpl implements ParameterManager {
    * Build up global Params layer - defaultValue is not used with Global Params and can be ignored.
    */
   private void buildGlobalParams(Map<String, Object> globalParams) {
-    List<GlobalParam> params = this.globalParamService.getAll();
-    for (GlobalParam param : params) {
+    List<AbstractParam> params = this.globalParamService.getAllUnfiltered();
+    for (AbstractParam param : params) {
       if (param.getValue() != null) {
         globalParams.put(param.getKey(), param.getValue());
       }
