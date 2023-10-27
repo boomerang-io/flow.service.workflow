@@ -18,8 +18,6 @@ import io.boomerang.util.DataAdapterUtil.FieldType;
 /*
  * CRUD for Global Params
  * 
- * TODO: validate no need to hide sensitive params as only Admins can access
- * 
  * TODO: check if this is feature gated in settings
  */
 @Service
