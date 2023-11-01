@@ -38,6 +38,9 @@ public class TriggersServiceImpl implements TriggerService {
   private WorkflowRunService workflowRunService;
 
   @Autowired
+  private WorkflowRunServiceImpl workflowRunServiceImp;
+
+  @Autowired
   private IntegrationService integrationService;
 
   /*
@@ -101,17 +104,20 @@ public class TriggersServiceImpl implements TriggerService {
           return ResponseEntity.ok().build();
         }
       }
-      default -> {
+      default -> {        
+        // Events that come in will have installation.id and if related to a repo, a repository.name
+        LOGGER.debug("Installation ID: " + payload.get("installation.id"));
+        String teamRef = integrationService.getTeamByRef(payload.get("installation.id").asText());
+        
         WorkflowRunSubmitRequest request = new WorkflowRunSubmitRequest();
         request.setTrigger(TriggerEnum.github);
         request.setParams(payloadToRunParams(payload));
 
-        LOGGER.debug("Webhook Request: " + request.toString());
-
         // Auto start is not needed when using the default handler
         // As the default handler will pick up the queued Workflow and start the Workflow when ready.
         // However if using the non-default Handler then this may be needed to be set to true.
-        return workflowRunService.submit(request, autoStart);
+        workflowRunServiceImp.internalSubmitForTeam(request, autoStart, teamRef);
+        return ResponseEntity.ok().build();
       }
     }
     return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();

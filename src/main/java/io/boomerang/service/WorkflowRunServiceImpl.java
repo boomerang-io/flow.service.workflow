@@ -168,10 +168,10 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
     Optional<RelationshipEntity> teamRelationship = relationshipService.getRelationship(
         RelationshipRef.WORKFLOW, request.getWorkflowRef(), RelationshipType.BELONGSTO);
     if (teamRelationship.isPresent()) {
+      //Check Triggers - Throws Exception - Check first, as if trigger not enabled, no point in checking quotas
+      canRunWithTrigger(request.getWorkflowRef(), request.getTrigger(), request.getParams());
       //Check Quotas - Throws Exception
       canRunWithQuotas(teamRelationship.get().getToRef(), request.getWorkflowRef());
-      //Check Triggers - Throws Exception
-      canRunWithTrigger(request.getWorkflowRef(), request.getTrigger(), request.getParams());
       // Set Workflow & Task Debug
       if (!Objects.isNull(request.getDebug())) {
         boolean enableDebug = false;
@@ -218,6 +218,24 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
     } else {
       throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
     }
+  }
+  
+  /*
+   * Submit WorkflowRun Internally by Team
+   * 
+   * Used by TriggerService
+   */
+  public void internalSubmitForTeam(WorkflowRunSubmitRequest request,
+      boolean start, String teamRef) {
+    List<String> wfRefs =
+        relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.WORKFLOW),
+            Optional.empty(), Optional.of(RelationshipType.BELONGSTO),
+            Optional.of(RelationshipRef.WORKFLOW), Optional.of(List.of(teamRef)));
+    
+    wfRefs.forEach(r -> {
+      request.setWorkflowRef(r);
+      this.internalSubmit(request, start);}
+    );
   }
   
   /*

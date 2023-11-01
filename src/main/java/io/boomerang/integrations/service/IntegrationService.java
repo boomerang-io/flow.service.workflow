@@ -13,4 +13,6 @@ public interface IntegrationService {
 
   void delete(String type, JsonNode data);
 
+  String getTeamByRef(String ref);
+
 }

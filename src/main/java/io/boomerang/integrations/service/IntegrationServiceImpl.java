@@ -58,6 +58,15 @@ public class IntegrationServiceImpl implements IntegrationService {
   }
   
   @Override
+  public String getTeamByRef(String ref) {
+      List<String> refs = relationshipService.getFilteredToRefs(Optional.of(RelationshipRef.INTEGRATION),
+          Optional.empty(), Optional.of(RelationshipType.BELONGSTO),
+          Optional.of(RelationshipRef.TEAM), Optional.empty());
+      LOGGER.debug("Team Refs: " + refs.toString());
+      return refs.get(0);
+  }
+  
+  @Override
   public IntegrationsEntity create(String type, JsonNode data) {
     IntegrationsEntity entity = new IntegrationsEntity();
     entity.setType(type);
