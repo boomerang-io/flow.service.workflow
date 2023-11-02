@@ -61,9 +61,9 @@ public class IntegrationServiceImpl implements IntegrationService {
   public String getTeamByRef(String ref) {
     Optional<IntegrationsEntity> optEntity = integrationsRepository.findByRef(ref);
     if (optEntity.isPresent()) {
-      IntegrationsEntity entity = optEntity.get();
+      LOGGER.debug("Integration Entity ID: " + optEntity.get().getId());
       List<String> refs = relationshipService.getFilteredToRefs(Optional.of(RelationshipRef.INTEGRATION),
-          Optional.of(List.of(entity.getId())), Optional.of(RelationshipType.BELONGSTO),
+          Optional.of(List.of(optEntity.get().getId())), Optional.of(RelationshipType.BELONGSTO),
           Optional.of(RelationshipRef.TEAM), Optional.empty());
       LOGGER.debug("Team Refs: " + refs.toString());
       return refs.get(0);
