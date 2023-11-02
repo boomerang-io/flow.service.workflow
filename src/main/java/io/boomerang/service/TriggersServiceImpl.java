@@ -4,6 +4,7 @@ import static io.cloudevents.core.CloudEventUtils.mapData;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -107,16 +108,19 @@ public class TriggersServiceImpl implements TriggerService {
       default -> {        
         // Events that come in will have installation.id and if related to a repo, a repository.name
         LOGGER.debug("Installation ID: " + payload.get("installation").get("id"));
-        String teamRef = integrationService.getTeamByRef(payload.get("installation").get("id").asText());
-        
-        WorkflowRunSubmitRequest request = new WorkflowRunSubmitRequest();
-        request.setTrigger(TriggerEnum.github);
-        request.setParams(payloadToRunParams(payload));
+        String teamRef =
+            integrationService.getTeamByRef(payload.get("installation").get("id").asText());
+        if (!Objects.isNull(teamRef) && !teamRef.isBlank()) {
+          WorkflowRunSubmitRequest request = new WorkflowRunSubmitRequest();
+          request.setTrigger(TriggerEnum.github);
+          request.setParams(payloadToRunParams(payload));
 
-        // Auto start is not needed when using the default handler
-        // As the default handler will pick up the queued Workflow and start the Workflow when ready.
-        // However if using the non-default Handler then this may be needed to be set to true.
-        workflowRunServiceImp.internalSubmitForTeam(request, autoStart, teamRef);
+          // Auto start is not needed when using the default handler
+          // As the default handler will pick up the queued Workflow and start the Workflow when
+          // ready.
+          // However if using the non-default Handler then this may be needed to be set to true.
+          workflowRunServiceImp.internalSubmitForTeam(request, autoStart, teamRef);
+        }
         return ResponseEntity.ok().build();
       }
     }
