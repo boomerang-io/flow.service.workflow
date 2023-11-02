@@ -447,21 +447,21 @@ public class WorkflowServiceImpl implements WorkflowService {
       //Manual trigger will be set to Enable = true.
       workflow.setTriggers(new WorkflowTrigger());
     }
-
+    LOGGER.debug("Triggers: " + workflow.getTriggers());
     // Default to enabled for Workflows
-    if (workflow.getTriggers().getManual() == null) {
+    if (Objects.isNull(workflow.getTriggers().getManual())) {
       workflow.getTriggers().setManual(new Trigger(Boolean.TRUE));
     }
-    if (workflow.getTriggers().getSchedule() == null) {
+    if (Objects.isNull(workflow.getTriggers().getSchedule())) {
       workflow.getTriggers().setSchedule(new Trigger(Boolean.FALSE));
     }
-    if (workflow.getTriggers().getWebhook() == null) {
+    if (Objects.isNull(workflow.getTriggers().getWebhook())) {
       workflow.getTriggers().setWebhook(new Trigger(Boolean.FALSE));
     }
-    if (workflow.getTriggers().getEvent() == null) {
-      workflow.getTriggers().setWebhook(new Trigger(Boolean.FALSE));
+    if (Objects.isNull(workflow.getTriggers().getEvent())) {
+      workflow.getTriggers().setEvent(new Trigger(Boolean.FALSE));
     }
-    if (workflow.getTriggers().getGithub() == null) {
+    if (Objects.isNull(workflow.getTriggers().getGithub())) {
       workflow.getTriggers().setGithub(new Trigger(Boolean.FALSE));
     }
   }
