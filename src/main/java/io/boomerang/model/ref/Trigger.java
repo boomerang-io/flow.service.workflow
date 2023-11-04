@@ -16,6 +16,11 @@ public class Trigger {
     this.enabled = enabled;
   }
 
+  @Override
+  public String toString() {
+    return "Trigger [enabled=" + enabled + ", conditions=" + conditions + "]";
+  }
+
   public Boolean getEnabled() {
     return enabled;
   }

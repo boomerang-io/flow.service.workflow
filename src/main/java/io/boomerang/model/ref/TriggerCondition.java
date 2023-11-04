@@ -9,6 +9,12 @@ public class TriggerCondition {
   private TriggerConditionOperation operation;
   private String value;
   private List<String> values;
+  
+  @Override
+  public String toString() {
+    return "TriggerCondition [field=" + field + ", operation=" + operation + ", value=" + value
+        + ", values=" + values + "]";
+  }
   public String getField() {
     return field;
   }
