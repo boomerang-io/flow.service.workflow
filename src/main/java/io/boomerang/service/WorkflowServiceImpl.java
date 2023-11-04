@@ -245,29 +245,27 @@ public class WorkflowServiceImpl implements WorkflowService {
    */
   @Override
   public ResponseEntity<Workflow> apply(Workflow workflow, boolean replace, Optional<String> team) {
-    String workflowId = workflow.getId();
-    List<String> workflowRefs =
-        relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.WORKFLOW),
-            Optional.of(List.of(workflowId)), Optional.of(RelationshipType.BELONGSTO),
-            Optional.of(RelationshipRef.TEAM), Optional.empty());
-
-    if (workflow != null && workflowId != null && !workflowId.isBlank()
-        && !workflowRefs.isEmpty()) {
-      updateScheduleTriggers(workflow,
-          this.get(workflowId, Optional.empty(), false).getBody().getTriggers());
-      validateTriggerDefaults(workflow);
-      // TODO check Workflow status before applying change
-      Workflow appliedWorkflow = engineClient.applyWorkflow(workflow, replace);
-      // Filter out sensitive values
-      DataAdapterUtil.filterParamSpecValueByFieldType(appliedWorkflow.getConfig(),
-          appliedWorkflow.getParams(), FieldType.PASSWORD.value());
-      return ResponseEntity.ok(appliedWorkflow);
-    } else if (workflow != null && team.isPresent()) {
+    if (workflow != null && workflow.getId() != null && !workflow.getId().isBlank()) {
+      List<String> workflowRefs =
+          relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.WORKFLOW),
+              Optional.of(List.of(workflow.getId())), Optional.of(RelationshipType.BELONGSTO),
+              Optional.of(RelationshipRef.TEAM), team.isPresent() ? Optional.of(List.of(team.get())): Optional.empty());
+      if (!workflowRefs.isEmpty()) {
+        updateScheduleTriggers(workflow,
+            this.get(workflow.getId(), Optional.empty(), false).getBody().getTriggers());
+        validateTriggerDefaults(workflow);
+        Workflow appliedWorkflow = engineClient.applyWorkflow(workflow, replace);
+        // Filter out sensitive values
+        DataAdapterUtil.filterParamSpecValueByFieldType(appliedWorkflow.getConfig(),
+            appliedWorkflow.getParams(), FieldType.PASSWORD.value());
+        return ResponseEntity.ok(appliedWorkflow);
+      }
+    } 
+    if (workflow != null && team.isPresent()) {
       workflow.setId(null);
       return this.create(workflow, team.get());
-    } else {
-      throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
     }
+    throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
   }
 
   /*
@@ -547,7 +545,9 @@ public class WorkflowServiceImpl implements WorkflowService {
    * Converts from Canvas Workflow to Workflow
    */
   protected Workflow convertCanvasToWorkflow(WorkflowCanvas canvas) {
+    LOGGER.debug("Workflow Canvas: " + canvas.toString());
     Workflow workflow = new Workflow(canvas);
+    LOGGER.debug("Converted Workfloed: " + workflow.toString());
     List<CanvasNode> nodes = canvas.getNodes();
     List<CanvasEdge> edges = canvas.getEdges();
 
