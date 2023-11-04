@@ -440,8 +440,8 @@ public class WorkflowServiceImpl implements WorkflowService {
   /*
    * Sets up the Triggers
    */
-  private void validateTriggerDefaults(final Workflow workflow) {
-    if (workflow.getTriggers() == null) {
+  private void validateTriggerDefaults(Workflow workflow) {
+    if (Objects.isNull(workflow.getTriggers())) {
       //Manual trigger will be set to Enable = true.
       workflow.setTriggers(new WorkflowTrigger());
     }

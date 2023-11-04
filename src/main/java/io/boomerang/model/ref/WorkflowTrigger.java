@@ -12,6 +12,12 @@ public class WorkflowTrigger {
   private Trigger webhook = new Trigger(false);
   private Trigger event = new Trigger(false);
   private Trigger github = new Trigger(false);
+  
+  @Override
+  public String toString() {
+    return "WorkflowTrigger [manual=" + manual + ", schedule=" + schedule + ", webhook=" + webhook
+        + ", event=" + event + ", github=" + github + "]";
+  }
 
   public Trigger getManual() {
     return manual;

@@ -40,7 +40,7 @@ public class Workflow {
   private Long timeout;
   private Long retries;
   private boolean upgradesAvailable = false;
-  private WorkflowTrigger triggers;
+  private WorkflowTrigger triggers = new WorkflowTrigger();
   private List<Task> tasks = new LinkedList<>();
   private List<ParamSpec> params = new LinkedList<>();
   private List<WorkflowWorkspace> workspaces = new LinkedList<>();  
@@ -58,6 +58,17 @@ public class Workflow {
   */
   public Workflow(WorkflowCanvas wfCanvas) {
     BeanUtils.copyProperties(wfCanvas, this);
+  }
+
+  @Override
+  public String toString() {
+    return "Workflow [id=" + id + ", name=" + name + ", status=" + status + ", version=" + version
+        + ", creationDate=" + creationDate + ", changelog=" + changelog + ", icon=" + icon
+        + ", description=" + description + ", markdown=" + markdown + ", labels=" + labels
+        + ", annotations=" + annotations + ", timeout=" + timeout + ", retries=" + retries
+        + ", upgradesAvailable=" + upgradesAvailable + ", triggers=" + triggers + ", tasks=" + tasks
+        + ", params=" + params + ", workspaces=" + workspaces + ", config=" + config
+        + ", unknownFields=" + unknownFields + "]";
   }
 
   @JsonAnyGetter
