@@ -10,7 +10,8 @@ public class CurrentQuotas extends Quotas {
   private Integer currentConcurrentRuns;
   private Integer currentRunTotalDuration;
   private Integer currentRunMedianDuration;
-  private Integer currentPersistentStorage;
+  // TODO: future - can't currently calculate this easily
+//  private Integer currentTotalWorkflowStorage;
   private Date monthlyResetDate;
   
   public CurrentQuotas() {
@@ -42,12 +43,6 @@ public class CurrentQuotas extends Quotas {
   }
   public void setCurrentRunTotalDuration(Integer currentRunDuration) {
     this.currentRunTotalDuration = currentRunDuration;
-  }
-  public Integer getCurrentPersistentStorage() {
-    return currentPersistentStorage;
-  }
-  public void setCurrentPersistentStorage(Integer currentPersistentStorage) {
-    this.currentPersistentStorage = currentPersistentStorage;
   }
   public Date getMonthlyResetDate() {
     return monthlyResetDate;

@@ -43,13 +43,13 @@ public class TeamControllerTests extends FlowTests {
     Assertions.assertEquals(Integer.valueOf(15),
         controller.getTeams().get(0).getQuotas().getMaxWorkflowCount());
     Assertions.assertEquals(Integer.valueOf(150),
-        controller.getTeams().get(0).getQuotas().getMaxWorkflowExecutionMonthly());
+        controller.getTeams().get(0).getQuotas().getMaxWorkflowRunMonthly());
     Assertions.assertEquals(Integer.valueOf(10),
         controller.getTeams().get(0).getQuotas().getMaxWorkflowStorage());
     Assertions.assertEquals(Integer.valueOf(60),
-        controller.getTeams().get(0).getQuotas().getMaxWorkflowExecutionTime());
+        controller.getTeams().get(0).getQuotas().getMaxWorkflowRunTime());
     Assertions.assertEquals(Integer.valueOf(2),
-        controller.getTeams().get(0).getQuotas().getMaxConcurrentWorkflows());
+        controller.getTeams().get(0).getQuotas().getMaxConcurrentRuns());
 
     Assertions.assertEquals(Integer.valueOf(9),
         controller.getTeams().get(0).getWorkflowQuotas().getCurrentWorkflowCount());
@@ -58,7 +58,7 @@ public class TeamControllerTests extends FlowTests {
     Assertions.assertEquals(Integer.valueOf(0),
         controller.getTeams().get(0).getWorkflowQuotas().getCurrentRunTotalDuration());
     Assertions.assertEquals(Integer.valueOf(0),
-        controller.getTeams().get(0).getWorkflowQuotas().getCurrentPersistentStorage());
+        controller.getTeams().get(0).getWorkflowQuotas().getCurrentTotalWorkflowStorage());
     Assertions.assertEquals(firstOfNextMonth(),
         controller.getTeams().get(0).getWorkflowQuotas().getMonthlyResetDate());
   }
@@ -77,13 +77,13 @@ public class TeamControllerTests extends FlowTests {
     Assertions.assertEquals(Integer.valueOf(10),
         controller.getTeams().get(3).getQuotas().getMaxWorkflowCount());
     Assertions.assertEquals(Integer.valueOf(4),
-        controller.getTeams().get(3).getQuotas().getMaxConcurrentWorkflows());
+        controller.getTeams().get(3).getQuotas().getMaxConcurrentRuns());
     Assertions.assertEquals(Integer.valueOf(100),
-        controller.getTeams().get(3).getQuotas().getMaxWorkflowExecutionMonthly());
+        controller.getTeams().get(3).getQuotas().getMaxWorkflowRunMonthly());
     Assertions.assertEquals(Integer.valueOf(5),
         controller.getTeams().get(3).getQuotas().getMaxWorkflowStorage());
     Assertions.assertEquals(Integer.valueOf(30),
-        controller.getTeams().get(3).getQuotas().getMaxWorkflowExecutionTime());
+        controller.getTeams().get(3).getQuotas().getMaxWorkflowRunTime());
     Assertions.assertEquals(Integer.valueOf(0),
         controller.getTeams().get(3).getWorkflowQuotas().getCurrentConcurrentWorkflows());
     Assertions.assertEquals(Integer.valueOf(0),
@@ -91,7 +91,7 @@ public class TeamControllerTests extends FlowTests {
     Assertions.assertEquals(Integer.valueOf(0),
         controller.getTeams().get(3).getWorkflowQuotas().getCurrentRunTotalDuration());
     Assertions.assertEquals(Integer.valueOf(0),
-        controller.getTeams().get(3).getWorkflowQuotas().getCurrentPersistentStorage());
+        controller.getTeams().get(3).getWorkflowQuotas().getCurrentTotalWorkflowStorage());
     Assertions.assertEquals(firstOfNextMonth(),
         controller.getTeams().get(3).getWorkflowQuotas().getMonthlyResetDate());
   }
@@ -163,26 +163,26 @@ public class TeamControllerTests extends FlowTests {
   public void testGetTeamQuotas() {
     CurrentQuotas quotas = controller.getTeamQuotas("5d1a1841f6ca2c00014c4309");
     Assertions.assertEquals(Integer.valueOf(15), quotas.getMaxWorkflowCount());
-    Assertions.assertEquals(Integer.valueOf(150), quotas.getMaxWorkflowExecutionMonthly());
+    Assertions.assertEquals(Integer.valueOf(150), quotas.getMaxWorkflowRunMonthly());
     Assertions.assertEquals(Integer.valueOf(10), quotas.getMaxWorkflowStorage());
-    Assertions.assertEquals(Integer.valueOf(60), quotas.getMaxWorkflowExecutionTime());
-    Assertions.assertEquals(Integer.valueOf(2), quotas.getMaxConcurrentWorkflows());
+    Assertions.assertEquals(Integer.valueOf(60), quotas.getMaxWorkflowRunTime());
+    Assertions.assertEquals(Integer.valueOf(2), quotas.getMaxConcurrentRuns());
 
     Assertions.assertEquals(Integer.valueOf(9), quotas.getCurrentWorkflowCount());
     Assertions.assertEquals(Integer.valueOf(3), quotas.getCurrentConcurrentWorkflows());
     Assertions.assertEquals(Integer.valueOf(0), quotas.getCurrentRunTotalDuration());
-    Assertions.assertEquals(Integer.valueOf(0), quotas.getCurrentPersistentStorage());
+    Assertions.assertEquals(Integer.valueOf(0), quotas.getCurrentTotalWorkflowStorage());
     Assertions.assertEquals(firstOfNextMonth(), quotas.getMonthlyResetDate());
 
     Assertions.assertEquals("5d1a1841f6ca2c00014c4309", controller.getTeams().get(0).getId());
     Assertions.assertEquals(quotas.getMaxWorkflowCount(),
         controller.getTeams().get(0).getQuotas().getMaxWorkflowCount());
-    Assertions.assertEquals(quotas.getMaxConcurrentWorkflows(),
-        controller.getTeams().get(0).getQuotas().getMaxConcurrentWorkflows());
-    Assertions.assertEquals(quotas.getMaxWorkflowExecutionMonthly(),
-        controller.getTeams().get(0).getQuotas().getMaxWorkflowExecutionMonthly());
-    Assertions.assertEquals(quotas.getMaxWorkflowExecutionTime(),
-        controller.getTeams().get(0).getQuotas().getMaxWorkflowExecutionTime());
+    Assertions.assertEquals(quotas.getMaxConcurrentRuns(),
+        controller.getTeams().get(0).getQuotas().getMaxConcurrentRuns());
+    Assertions.assertEquals(quotas.getMaxWorkflowRunMonthly(),
+        controller.getTeams().get(0).getQuotas().getMaxWorkflowRunMonthly());
+    Assertions.assertEquals(quotas.getMaxWorkflowRunTime(),
+        controller.getTeams().get(0).getQuotas().getMaxWorkflowRunTime());
     Assertions.assertEquals(quotas.getMaxWorkflowStorage(),
         controller.getTeams().get(0).getQuotas().getMaxWorkflowStorage());
 
@@ -193,26 +193,26 @@ public class TeamControllerTests extends FlowTests {
     CurrentQuotas previousQuotas = controller.getTeamQuotas("5d1a1841f6ca2c00014c4309");
 
     Assertions.assertEquals(Integer.valueOf(15), previousQuotas.getMaxWorkflowCount());
-    Assertions.assertEquals(Integer.valueOf(150), previousQuotas.getMaxWorkflowExecutionMonthly());
+    Assertions.assertEquals(Integer.valueOf(150), previousQuotas.getMaxWorkflowRunMonthly());
     Assertions.assertEquals(Integer.valueOf(10), previousQuotas.getMaxWorkflowStorage());
-    Assertions.assertEquals(Integer.valueOf(60), previousQuotas.getMaxWorkflowExecutionTime());
-    Assertions.assertEquals(Integer.valueOf(2), previousQuotas.getMaxConcurrentWorkflows());
+    Assertions.assertEquals(Integer.valueOf(60), previousQuotas.getMaxWorkflowRunTime());
+    Assertions.assertEquals(Integer.valueOf(2), previousQuotas.getMaxConcurrentRuns());
 
     controller.resetTeamQuotas("5d1a1841f6ca2c00014c4309");
 
     CurrentQuotas updatedQuotas = controller.getTeamQuotas("5d1a1841f6ca2c00014c4309");
 
     Assertions.assertEquals(Integer.valueOf(10), updatedQuotas.getMaxWorkflowCount());
-    Assertions.assertEquals(Integer.valueOf(100), updatedQuotas.getMaxWorkflowExecutionMonthly());
+    Assertions.assertEquals(Integer.valueOf(100), updatedQuotas.getMaxWorkflowRunMonthly());
     Assertions.assertEquals(Integer.valueOf(5), updatedQuotas.getMaxWorkflowStorage());
-    Assertions.assertEquals(Integer.valueOf(30), updatedQuotas.getMaxWorkflowExecutionTime());
-    Assertions.assertEquals(Integer.valueOf(4), updatedQuotas.getMaxConcurrentWorkflows());
+    Assertions.assertEquals(Integer.valueOf(30), updatedQuotas.getMaxWorkflowRunTime());
+    Assertions.assertEquals(Integer.valueOf(4), updatedQuotas.getMaxConcurrentRuns());
 
     Assertions.assertEquals(Integer.valueOf(9), updatedQuotas.getCurrentWorkflowCount());
     Assertions.assertEquals(Integer.valueOf(3), updatedQuotas.getCurrentConcurrentWorkflows());
     Assertions.assertEquals(Integer.valueOf(0), updatedQuotas.getCurrentRunTotalDuration());
     Assertions.assertEquals(Integer.valueOf(0),
-        updatedQuotas.getCurrentPersistentStorage());
+        updatedQuotas.getCurrentTotalWorkflowStorage());
     Assertions.assertEquals(firstOfNextMonth(), updatedQuotas.getMonthlyResetDate());
   }
 
@@ -220,33 +220,33 @@ public class TeamControllerTests extends FlowTests {
   public void testUpdateQuotas() {
     CurrentQuotas current = controller.getTeamQuotas("5d1a1841f6ca2c00014c4303"); // team3.json
     Assertions.assertEquals(Integer.valueOf(10), current.getMaxWorkflowCount());
-    Assertions.assertEquals(Integer.valueOf(4), current.getMaxConcurrentWorkflows());
-    Assertions.assertEquals(Integer.valueOf(100), current.getMaxWorkflowExecutionMonthly());
-    Assertions.assertEquals(Integer.valueOf(30), current.getMaxWorkflowExecutionTime());
+    Assertions.assertEquals(Integer.valueOf(4), current.getMaxConcurrentRuns());
+    Assertions.assertEquals(Integer.valueOf(100), current.getMaxWorkflowRunMonthly());
+    Assertions.assertEquals(Integer.valueOf(30), current.getMaxWorkflowRunTime());
     Assertions.assertEquals(Integer.valueOf(5), current.getMaxWorkflowStorage());
 
     Quotas quotas = new Quotas();
     quotas.setMaxWorkflowCount(20);
-    quotas.setMaxConcurrentWorkflows(8);
-    quotas.setMaxWorkflowExecutionMonthly(200);
-    quotas.setMaxWorkflowExecutionTime(60);
+    quotas.setMaxConcurrentRuns(8);
+    quotas.setMaxWorkflowRunMonthly(200);
+    quotas.setMaxWorkflowRunTime(60);
     quotas.setMaxWorkflowStorage(10);
 
     Quotas updateQuotas = controller.updateTeamQuotas("5d1a1841f6ca2c00014c4303", quotas);
     Assertions.assertEquals(Integer.valueOf(20), updateQuotas.getMaxWorkflowCount());
-    Assertions.assertEquals(Integer.valueOf(8), updateQuotas.getMaxConcurrentWorkflows());
-    Assertions.assertEquals(Integer.valueOf(200), updateQuotas.getMaxWorkflowExecutionMonthly());
-    Assertions.assertEquals(Integer.valueOf(60), updateQuotas.getMaxWorkflowExecutionTime());
+    Assertions.assertEquals(Integer.valueOf(8), updateQuotas.getMaxConcurrentRuns());
+    Assertions.assertEquals(Integer.valueOf(200), updateQuotas.getMaxWorkflowRunMonthly());
+    Assertions.assertEquals(Integer.valueOf(60), updateQuotas.getMaxWorkflowRunTime());
     Assertions.assertEquals(Integer.valueOf(10), updateQuotas.getMaxWorkflowStorage());
 
     CurrentQuotas updated = controller.getTeamQuotas("5d1a1841f6ca2c00014c4303");
     Assertions.assertEquals(updateQuotas.getMaxWorkflowCount(), updated.getMaxWorkflowCount());
-    Assertions.assertEquals(updateQuotas.getMaxConcurrentWorkflows(),
-        updated.getMaxConcurrentWorkflows());
-    Assertions.assertEquals(updateQuotas.getMaxWorkflowExecutionMonthly(),
-        updated.getMaxWorkflowExecutionMonthly());
-    Assertions.assertEquals(updateQuotas.getMaxWorkflowExecutionTime(),
-        updated.getMaxWorkflowExecutionTime());
+    Assertions.assertEquals(updateQuotas.getMaxConcurrentRuns(),
+        updated.getMaxConcurrentRuns());
+    Assertions.assertEquals(updateQuotas.getMaxWorkflowRunMonthly(),
+        updated.getMaxWorkflowRunMonthly());
+    Assertions.assertEquals(updateQuotas.getMaxWorkflowRunTime(),
+        updated.getMaxWorkflowRunTime());
     Assertions.assertEquals(updateQuotas.getMaxWorkflowStorage(), updated.getMaxWorkflowStorage());
   }
 
@@ -254,37 +254,37 @@ public class TeamControllerTests extends FlowTests {
   public void testUpdateQuotasForTeam() {
     Quotas quotas = new Quotas();
     quotas.setMaxWorkflowCount(25);
-    quotas.setMaxConcurrentWorkflows(11);
-    quotas.setMaxWorkflowExecutionMonthly(250);
-    quotas.setMaxWorkflowExecutionTime(74);
+    quotas.setMaxConcurrentRuns(11);
+    quotas.setMaxWorkflowRunMonthly(250);
+    quotas.setMaxWorkflowRunTime(74);
     quotas.setMaxWorkflowStorage(8);
 
     Quotas newQuotas = controller.updateQuotasForTeam("5d1a1841f6ca2c00014c4302", quotas);
 
     Assertions.assertEquals(Integer.valueOf(25), newQuotas.getMaxWorkflowCount());
-    Assertions.assertEquals(Integer.valueOf(11), newQuotas.getMaxConcurrentWorkflows());
-    Assertions.assertEquals(Integer.valueOf(250), newQuotas.getMaxWorkflowExecutionMonthly());
-    Assertions.assertEquals(Integer.valueOf(74), newQuotas.getMaxWorkflowExecutionTime());
+    Assertions.assertEquals(Integer.valueOf(11), newQuotas.getMaxConcurrentRuns());
+    Assertions.assertEquals(Integer.valueOf(250), newQuotas.getMaxWorkflowRunMonthly());
+    Assertions.assertEquals(Integer.valueOf(74), newQuotas.getMaxWorkflowRunTime());
     Assertions.assertEquals(Integer.valueOf(8), newQuotas.getMaxWorkflowStorage());
 
     CurrentQuotas updated = controller.getTeamQuotas("5d1a1841f6ca2c00014c4302");
     Assertions.assertEquals(newQuotas.getMaxWorkflowCount(), updated.getMaxWorkflowCount());
-    Assertions.assertEquals(newQuotas.getMaxConcurrentWorkflows(),
-        updated.getMaxConcurrentWorkflows());
-    Assertions.assertEquals(newQuotas.getMaxWorkflowExecutionMonthly(),
-        updated.getMaxWorkflowExecutionMonthly());
-    Assertions.assertEquals(newQuotas.getMaxWorkflowExecutionTime(),
-        updated.getMaxWorkflowExecutionTime());
+    Assertions.assertEquals(newQuotas.getMaxConcurrentRuns(),
+        updated.getMaxConcurrentRuns());
+    Assertions.assertEquals(newQuotas.getMaxWorkflowRunMonthly(),
+        updated.getMaxWorkflowRunMonthly());
+    Assertions.assertEquals(newQuotas.getMaxWorkflowRunTime(),
+        updated.getMaxWorkflowRunTime());
     Assertions.assertEquals(newQuotas.getMaxWorkflowStorage(), updated.getMaxWorkflowStorage());
   }
 
   @Test
   public void testGetDefaultQuotas() {
     Quotas quota = controller.getDefaultQuotas();
-    Assertions.assertEquals(Integer.valueOf(4), quota.getMaxConcurrentWorkflows());
+    Assertions.assertEquals(Integer.valueOf(4), quota.getMaxConcurrentRuns());
     Assertions.assertEquals(Integer.valueOf(10), quota.getMaxWorkflowCount());
-    Assertions.assertEquals(Integer.valueOf(100), quota.getMaxWorkflowExecutionMonthly());
-    Assertions.assertEquals(Integer.valueOf(30), quota.getMaxWorkflowExecutionTime());
+    Assertions.assertEquals(Integer.valueOf(100), quota.getMaxWorkflowRunMonthly());
+    Assertions.assertEquals(Integer.valueOf(30), quota.getMaxWorkflowRunTime());
     Assertions.assertEquals(Integer.valueOf(5), quota.getMaxWorkflowStorage());
   }
 

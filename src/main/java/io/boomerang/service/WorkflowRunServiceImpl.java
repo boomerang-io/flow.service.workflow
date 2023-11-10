@@ -1,5 +1,6 @@
 package io.boomerang.service;
 
+import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +39,7 @@ import io.boomerang.model.ref.WorkflowRunInsight;
 import io.boomerang.model.ref.WorkflowRunRequest;
 import io.boomerang.model.ref.WorkflowRunSubmitRequest;
 import io.boomerang.model.ref.WorkflowTrigger;
+import io.boomerang.model.ref.WorkflowWorkspace;
 import io.boomerang.util.ParameterUtil;
 
 /*
@@ -171,7 +173,7 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
       //Check Triggers - Throws Exception - Check first, as if trigger not enabled, no point in checking quotas
       canRunWithTrigger(request.getWorkflowRef(), request.getTrigger(), request.getParams());
       //Check Quotas - Throws Exception
-      canRunWithQuotas(teamRelationship.get().getToRef(), request.getWorkflowRef());
+      canRunWithQuotas(teamRelationship.get().getToRef(), request.getWorkflowRef(), Optional.of(request.getWorkspaces()));
       // Set Workflow & Task Debug
       if (!Objects.isNull(request.getDebug())) {
         boolean enableDebug = false;
@@ -314,14 +316,28 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
 
   /*
    * Check if the Team Quotas allow a Workflow to run
+   * 
+   * TODO: add additional checks for not exceeding Workspace size for any Workspace that is saved on the Workflow
    */
-  private void canRunWithQuotas(String teamId, String workflowId) {
+  private void canRunWithQuotas(String teamId, String workflowId, Optional<List<WorkflowWorkspace>> workspaces) {
     if (settingsService.getSettingConfig("features", "workflowQuotas").getBooleanValue()) {
       CurrentQuotas quotas = teamService.getQuotas(teamId);
-      if (quotas.getCurrentConcurrentWorkflows() > quotas.getMaxConcurrentWorkflows()) {
-        throw new BoomerangException(BoomerangError.QUOTA_EXCEEDED, "Concurrent Workflows", quotas.getCurrentConcurrentWorkflows(), quotas.getMaxConcurrentWorkflows());
-      } else if (quotas.getCurrentRunTotalDuration() > quotas.getMaxWorkflowExecutionMonthly()) {
-        throw new BoomerangException(BoomerangError.QUOTA_EXCEEDED, "Concurrent Workflows", quotas.getCurrentRunTotalDuration(), quotas.getMaxWorkflowExecutionMonthly());
+      if (quotas.getCurrentConcurrentWorkflows() > quotas.getMaxConcurrentRuns()) {
+        throw new BoomerangException(BoomerangError.QUOTA_EXCEEDED, "Concurrent Workflows", quotas.getCurrentConcurrentWorkflows(), quotas.getMaxConcurrentRuns());
+      } else if (quotas.getCurrentRuns() > quotas.getMaxWorkflowRunMonthly()) {
+        throw new BoomerangException(BoomerangError.QUOTA_EXCEEDED, "Number of Runs (executions)", quotas.getCurrentRuns(), quotas.getMaxWorkflowRunMonthly());
+      } else if (workspaces.isPresent() && workspaces.get().size() > 0) {
+        workspaces.get().forEach(ws -> {
+          try {
+            Field sizeField = ws.getSpec().getClass().getDeclaredField("size");
+            String size = (String) sizeField.get(ws.getSpec());
+            if (Integer.valueOf(size) > quotas.getMaxWorkflowStorage()) {
+              throw new BoomerangException(BoomerangError.QUOTA_EXCEEDED, "Requested Workspace size", size, quotas.getMaxWorkflowStorage());
+            }
+          } catch (NoSuchFieldException | IllegalAccessException ex) {
+            //Do nothing
+          }
+        });
       }
     }
   }

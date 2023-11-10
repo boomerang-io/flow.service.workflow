@@ -3,10 +3,10 @@ package io.boomerang.data.model;
 public class Quotas {
 
   private Integer maxWorkflowCount;
-  private Integer maxWorkflowExecutionMonthly;
+  private Integer maxWorkflowRunMonthly;
   private Integer maxWorkflowStorage;
-  private Integer maxWorkflowExecutionTime;
-  private Integer maxConcurrentWorkflows;
+  private Integer maxWorkflowRunTime;
+  private Integer maxConcurrentRuns;
   
   public Integer getMaxWorkflowCount() {
     return maxWorkflowCount;
@@ -14,11 +14,11 @@ public class Quotas {
   public void setMaxWorkflowCount(Integer maxWorkflowCount) {
     this.maxWorkflowCount = maxWorkflowCount;
   }
-  public Integer getMaxWorkflowExecutionMonthly() {
-    return maxWorkflowExecutionMonthly;
+  public Integer getMaxWorkflowRunMonthly() {
+    return maxWorkflowRunMonthly;
   }
-  public void setMaxWorkflowExecutionMonthly(Integer maxWorkflowExecutionMonthly) {
-    this.maxWorkflowExecutionMonthly = maxWorkflowExecutionMonthly;
+  public void setMaxWorkflowRunMonthly(Integer maxWorkflowRunMonthly) {
+    this.maxWorkflowRunMonthly = maxWorkflowRunMonthly;
   }
   public Integer getMaxWorkflowStorage() {
     return maxWorkflowStorage;
@@ -26,16 +26,16 @@ public class Quotas {
   public void setMaxWorkflowStorage(Integer maxWorkflowStorage) {
     this.maxWorkflowStorage = maxWorkflowStorage;
   }
-  public Integer getMaxWorkflowExecutionTime() {
-    return maxWorkflowExecutionTime;
+  public Integer getMaxWorkflowRunTime() {
+    return maxWorkflowRunTime;
   }
-  public void setMaxWorkflowExecutionTime(Integer maxWorkflowExecutionTime) {
-    this.maxWorkflowExecutionTime = maxWorkflowExecutionTime;
+  public void setMaxWorkflowRunTime(Integer maxWorkflowRunTime) {
+    this.maxWorkflowRunTime = maxWorkflowRunTime;
   }
-  public Integer getMaxConcurrentWorkflows() {
-    return maxConcurrentWorkflows;
+  public Integer getMaxConcurrentRuns() {
+    return maxConcurrentRuns;
   }
-  public void setMaxConcurrentWorkflows(Integer maxConcurrentWorkflows) {
-    this.maxConcurrentWorkflows = maxConcurrentWorkflows;
+  public void setMaxConcurrentRuns(Integer maxConcurrentRuns) {
+    this.maxConcurrentRuns = maxConcurrentRuns;
   }
 }

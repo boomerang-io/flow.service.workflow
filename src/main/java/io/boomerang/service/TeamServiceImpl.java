@@ -675,13 +675,13 @@ public class TeamServiceImpl implements TeamService {
     Quotas quotas = new Quotas();
     quotas.setMaxWorkflowCount(Integer
         .valueOf(settingsService.getSettingConfig(TEAMS_SETTINGS_KEY, MAX_TEAM_WORKFLOW_COUNT).getValue()));
-    quotas.setMaxWorkflowExecutionMonthly(Integer.valueOf(
+    quotas.setMaxWorkflowRunMonthly(Integer.valueOf(
         settingsService.getSettingConfig(TEAMS_SETTINGS_KEY, MAX_TEAM_WORKFLOW_EXECUTION_MONTHLY).getValue()));
     quotas.setMaxWorkflowStorage(Integer.valueOf(settingsService
         .getSettingConfig(TEAMS_SETTINGS_KEY, MAX_TEAM_WORKFLOW_STORAGE).getValue().replace("Gi", "")));
-    quotas.setMaxWorkflowExecutionTime(Integer
+    quotas.setMaxWorkflowRunTime(Integer
         .valueOf(settingsService.getSettingConfig(TEAMS_SETTINGS_KEY, MAX_TEAM_WORKFLOW_DURATION).getValue()));
-    quotas.setMaxConcurrentWorkflows(Integer
+    quotas.setMaxConcurrentRuns(Integer
         .valueOf(settingsService.getSettingConfig(TEAMS_SETTINGS_KEY, MAX_TEAM_CONCURRENT_WORKFLOW).getValue()));
     return quotas;
   }
@@ -697,17 +697,17 @@ public class TeamServiceImpl implements TeamService {
       if (customQuotas.getMaxWorkflowCount() != null) {
         quotas.setMaxWorkflowCount(customQuotas.getMaxWorkflowCount());
       }
-      if (customQuotas.getMaxWorkflowExecutionMonthly() != null) {
-        quotas.setMaxWorkflowExecutionMonthly(customQuotas.getMaxWorkflowExecutionMonthly());
+      if (customQuotas.getMaxWorkflowRunMonthly() != null) {
+        quotas.setMaxWorkflowRunMonthly(customQuotas.getMaxWorkflowRunMonthly());
       }
       if (customQuotas.getMaxWorkflowStorage() != null) {
         quotas.setMaxWorkflowStorage(customQuotas.getMaxWorkflowStorage());
       }
-      if (customQuotas.getMaxWorkflowExecutionTime() != null) {
-        quotas.setMaxWorkflowExecutionTime(customQuotas.getMaxWorkflowExecutionTime());
+      if (customQuotas.getMaxWorkflowRunTime() != null) {
+        quotas.setMaxWorkflowRunTime(customQuotas.getMaxWorkflowRunTime());
       }
-      if (customQuotas.getMaxConcurrentWorkflows() != null) {
-        quotas.setMaxConcurrentWorkflows(customQuotas.getMaxConcurrentWorkflows());
+      if (customQuotas.getMaxConcurrentRuns() != null) {
+        quotas.setMaxConcurrentRuns(customQuotas.getMaxConcurrentRuns());
       }
     }
   }
@@ -751,9 +751,6 @@ public class TeamServiceImpl implements TeamService {
     Long active = count.getStatus().get("active");
     Long inactive = count.getStatus().get("inactive");
     currentQuotas.setCurrentWorkflowCount((int) (active + inactive));
-
-    // TODO look into this one
-    currentQuotas.setCurrentPersistentStorage(null);
     return currentQuotas;
   }
 
