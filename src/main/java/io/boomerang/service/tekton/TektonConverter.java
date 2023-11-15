@@ -8,6 +8,15 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
+import org.apache.logging.log4j.util.Strings;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
+
 import io.boomerang.model.ParamType;
 import io.boomerang.model.Result;
 import io.boomerang.model.controller.TaskEnvVar;
@@ -25,6 +34,7 @@ import io.boomerang.mongo.model.ChangeLog;
 import io.boomerang.mongo.model.FlowTaskTemplateStatus;
 import io.boomerang.mongo.model.Revision;
 import io.boomerang.mongo.model.TaskTemplateConfig;
+import io.boomerang.model.tekton.SecurityContext;
 
 public class TektonConverter {
   
@@ -86,10 +96,30 @@ public class TektonConverter {
 
       step.setName(task.getName());
       
+      String sc = revision.getSecurityContext();
+      if (Strings.isNotBlank(sc)) {
+        try {
+          ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+          SecurityContext podSecurityContext = mapper.readValue(sc, SecurityContext.class);
+          step.setSecurityContext(podSecurityContext);
+          
+        } catch (JsonMappingException e) {
+          // TODO Auto-generated catch block
+          e.printStackTrace();
+        } catch (JsonProcessingException e) {
+          // TODO Auto-generated catch block
+          e.printStackTrace();
+        }
+      }
+      
       List<Step> steps = new LinkedList<>();
 
       steps.add(step);
       spec.setSteps(steps);
+      
+      if (Strings.isNotBlank(revision.getServiceAccountName())) {
+        spec.setServiceAccountName(revision.getServiceAccountName());
+      }
       
       List<Param> params = new LinkedList<>();
       List<TaskTemplateConfig> configList = revision.getConfig();
@@ -205,6 +235,18 @@ public class TektonConverter {
     revision.setArguments(step.getArgs());
     revision.setScript(step.getScript());
     revision.setWorkingDir(step.getWorkingDir());
+    if (step.getSecurityContext() != null) {
+      try {
+        ObjectMapper mapper =
+          new ObjectMapper(new YAMLFactory().enable(YAMLGenerator.Feature.MINIMIZE_QUOTES)
+              .disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER));
+        revision.setSecurityContext(mapper.writer().writeValueAsString(step.getSecurityContext()));
+      } catch (JsonProcessingException e) {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
+      }
+    }
+    revision.setServiceAccountName(spec.getServiceAccountName());
     
     List<TaskResult> taskResults = new LinkedList<>();
     

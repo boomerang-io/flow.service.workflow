@@ -65,6 +65,12 @@ public abstract class Task {
 
   @JsonProperty("workspaces")
   private List<TaskWorkspace> workspaces;
+  
+  @JsonProperty("serviceAccountName")
+  private String serviceAccountName;
+  
+  @JsonProperty("securityContext")
+  private String securityContext;
 
   public String getWorkflowName() {
     return workflowName;
@@ -212,5 +218,21 @@ public abstract class Task {
 
   public void setWorkspaces(List<TaskWorkspace> workspaces) {
     this.workspaces = workspaces;
+  }
+
+  public String getServiceAccountName() {
+	return serviceAccountName;
+  }
+
+  public void setServiceAccountName(String serviceAccountName) {
+	this.serviceAccountName = serviceAccountName;
+  }
+
+  public String getSecurityContext() {
+	return securityContext;
+  }
+
+  public void setSecurityContext(String securityContext) {
+	this.securityContext = securityContext;
   }
 }

@@ -13,6 +13,8 @@
         "version" : 1
         "image": "image",
         "command": "command",
+        "serviceAccountName": "dd-sc-1",
+        "securityContext":"runAsNonRoot: true\nrunAsUser: 100"
         "arguments": [
             "artifactory",
             "uploadFile"

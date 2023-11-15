@@ -2,6 +2,9 @@ package io.boomerang.model.tekton;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+
 public class Step {
 
   private String name;
@@ -11,6 +14,8 @@ public class Step {
   private List<Env> env;
   private List<String> command;
   private List<String> args;
+  @JsonInclude(Include.NON_NULL)
+  private SecurityContext securityContext;
 
   public String getName() {
     return name;
@@ -66,5 +71,13 @@ public class Step {
 
   public void setWorkingDir(String workingDir) {
     this.workingDir = workingDir;
+  }
+
+  public SecurityContext getSecurityContext() {
+    return securityContext;
+  }
+
+  public void setSecurityContext(SecurityContext securityContext) {
+    this.securityContext = securityContext;
   }
 }
