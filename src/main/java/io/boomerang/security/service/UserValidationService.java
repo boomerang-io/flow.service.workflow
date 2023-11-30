@@ -7,8 +7,6 @@ public interface UserValidationService {
 
   void validateUserForTeam(String teamId);
 
-  void validateUserForWorkflow(String workflowId);
-
   void validateUserAdminOrOperator();
   
   void validateUserAccessForWorkflow(WorkflowScope scope, String flowTeamId, String flowOwnerUserId, boolean editable);
