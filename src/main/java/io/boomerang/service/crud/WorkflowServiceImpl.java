@@ -294,9 +294,10 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   @Override
   public WorkflowSummary updateWorkflow(WorkflowSummary summary) {
-    userValidationService.validateUserForWorkflow(summary.getId());
+	userValidationService.validateUserAccessForWorkflow(summary.getScope(),
+			summary.getFlowTeamId(), summary.getOwnerUserId(), true);
+	
     final WorkflowEntity entity = workflowRepository.getWorkflow(summary.getId());
-
     entity.setFlowTeamId(summary.getFlowTeamId());
     entity.setName(summary.getName());
     entity.setDescription(summary.getDescription());
@@ -378,10 +379,8 @@ public class WorkflowServiceImpl implements WorkflowService {
   public WorkflowSummary updateWorkflowProperties(String workflowId,
       List<WorkflowProperty> properties) {
     final WorkflowEntity entity = workflowRepository.getWorkflow(workflowId);
-    if (entity.getScope() == WorkflowScope.team) {
-      userValidationService.validateUserForWorkflow(workflowId);
-    }
-    
+    userValidationService.validateUserAccessForWorkflow(entity.getScope(), 
+    		entity.getFlowTeamId(), entity.getOwnerUserId(), true);
     List<WorkflowProperty> populatedWorkflowProperties = this.populateWorkflowProperties(properties, entity.getProperties());
     entity.setProperties(populatedWorkflowProperties);
     workflowRepository.saveWorkflow(entity);

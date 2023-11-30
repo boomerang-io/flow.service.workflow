@@ -9,9 +9,9 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.google.inject.internal.util.Lists;
 import com.google.inject.internal.util.Maps;
@@ -29,11 +29,11 @@ import io.boomerang.mongo.model.ChangeLog;
 import io.boomerang.mongo.model.Dag;
 import io.boomerang.mongo.model.Revision;
 import io.boomerang.mongo.model.WorkFlowRevisionCount;
-import io.boomerang.mongo.model.WorkflowScope;
 import io.boomerang.mongo.model.next.DAGTask;
 import io.boomerang.mongo.service.FlowTaskTemplateService;
 import io.boomerang.mongo.service.FlowWorkflowService;
 import io.boomerang.mongo.service.RevisionService;
+import io.boomerang.security.service.UserValidationService;
 import io.boomerang.service.UserIdentityService;
 
 @Service
@@ -50,6 +50,9 @@ public class WorkflowVersionServiceImpl implements WorkflowVersionService {
 
   @Autowired
   private FlowWorkflowService workFlowRepository;
+  
+  @Autowired
+  private UserValidationService userValidationService;
 
   @Override
   public void deleteWorkflowVersionWithId(String id) {
@@ -81,15 +84,15 @@ public class WorkflowVersionServiceImpl implements WorkflowVersionService {
 
   @Override
   public FlowWorkflowRevision getWorkflowVersion(String workflowId, long verison) {
-
     final WorkflowEntity entity = workFlowRepository.getWorkflow(workflowId);
-
-    if (entity.getScope() == WorkflowScope.user
-        && !entity.getOwnerUserId().equals(userIdentityService.getCurrentUser().getId())) {
-      throw new HttpClientErrorException(HttpStatus.FORBIDDEN);
+    try {
+      userValidationService.validateUserAccessForWorkflow(entity.getScope(),
+    			entity.getFlowTeamId(), entity.getOwnerUserId(), false);
+    } catch (ResponseStatusException e) {
+      throw new HttpClientErrorException(e.getStatus());
     }
-    RevisionEntity revision = flowWorkflowService.getLatestWorkflowVersion(workflowId, verison);
 
+    RevisionEntity revision = flowWorkflowService.getLatestWorkflowVersion(workflowId, verison);
     updateTemplateVersions(revision);
 
     FlowWorkflowRevision flowRevision = new FlowWorkflowRevision(revision);

@@ -22,6 +22,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.server.ResponseStatusException;
+
 import io.boomerang.error.BoomerangException;
 import io.boomerang.model.DuplicateRequest;
 import io.boomerang.model.FlowWorkflowRevision;
@@ -32,13 +34,11 @@ import io.boomerang.model.WorkflowSchedule;
 import io.boomerang.model.WorkflowScheduleCalendar;
 import io.boomerang.model.WorkflowSummary;
 import io.boomerang.mongo.entity.WorkflowEntity;
-import io.boomerang.mongo.model.UserType;
 import io.boomerang.mongo.model.WorkflowProperty;
 import io.boomerang.mongo.model.WorkflowScope;
 import io.boomerang.mongo.model.WorkflowStatus;
 import io.boomerang.mongo.service.FlowWorkflowService;
 import io.boomerang.security.service.UserValidationService;
-import io.boomerang.service.UserIdentityService;
 import io.boomerang.service.crud.WorkflowScheduleService;
 import io.boomerang.service.crud.WorkflowService;
 import io.boomerang.service.crud.WorkflowVersionService;
@@ -55,9 +55,6 @@ public class WorkflowController {
 
   @Autowired
   private FlowWorkflowService workFlowRepository;
-
-  @Autowired
-  private UserIdentityService userIdentityService;
 
   @Autowired
   private WorkflowScheduleService workflowScheduleService;
@@ -83,10 +80,11 @@ public class WorkflowController {
   @GetMapping(value = "/{workFlowId}/revision")
   public FlowWorkflowRevision getWorkflowLatestVersion(@PathVariable String workFlowId) {
     final WorkflowEntity entity = workFlowRepository.getWorkflow(workFlowId);
-    if (!UserType.admin.equals(userIdentityService.getCurrentUser().getType())
-        && entity.getScope() == WorkflowScope.user
-        && !entity.getOwnerUserId().equals(userIdentityService.getCurrentUser().getId())) {
-      throw new HttpClientErrorException(HttpStatus.FORBIDDEN);
+    try {
+      userValidationService.validateUserAccessForWorkflow(entity.getScope(), 
+    		  entity.getFlowTeamId(), entity.getOwnerUserId(), false);
+    } catch (ResponseStatusException e) {
+      throw new HttpClientErrorException(e.getStatus());
     }
     return workflowVersionService.getLatestWorkflowVersion(workFlowId);
   }
@@ -100,10 +98,11 @@ public class WorkflowController {
   @GetMapping(value = "{id}/summary")
   public WorkflowSummary getWorkflowWithId(@PathVariable String id) {
     final WorkflowEntity entity = workFlowRepository.getWorkflow(id);
-    if (!UserType.admin.equals(userIdentityService.getCurrentUser().getType())
-        && entity.getScope() == WorkflowScope.user
-        && !entity.getOwnerUserId().equals(userIdentityService.getCurrentUser().getId())) {
-      throw new HttpClientErrorException(HttpStatus.FORBIDDEN);
+    try {
+      userValidationService.validateUserAccessForWorkflow(entity.getScope(), 
+      		  entity.getFlowTeamId(), entity.getOwnerUserId(), false);
+    } catch (ResponseStatusException e) {
+      throw new HttpClientErrorException(e.getStatus());
     }
     return workflowService.getWorkflow(id);
   }
@@ -116,9 +115,8 @@ public class WorkflowController {
 
   @PostMapping(value = "")
   public WorkflowSummary insertWorkflow(@RequestBody WorkflowSummary workflowSummaryEntity) {
-    if (workflowSummaryEntity.getFlowTeamId() != null) {
-      userValidationService.validateUserForTeam(workflowSummaryEntity.getFlowTeamId());
-    } 
+	userValidationService.validateUserAccessForWorkflow(workflowSummaryEntity.getScope(), 
+			workflowSummaryEntity.getFlowTeamId(), workflowSummaryEntity.getOwnerUserId(), true);
     workflowSummaryEntity.setStatus(WorkflowStatus.active);
     return workflowService.saveWorkflow(workflowSummaryEntity);
   }
