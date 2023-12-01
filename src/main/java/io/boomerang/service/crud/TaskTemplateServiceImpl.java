@@ -93,23 +93,25 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
 
   @Override
   public FlowTaskTemplate insertTaskTemplate(FlowTaskTemplate flowTaskTemplateEntity) {
-	userValidationService.validateUserAccessForTaskTemplate(flowTaskTemplateEntity.getScope(), 
+	FlowUserEntity user = userIdentityService.getCurrentUser();
+	userValidationService.validateUserAccessForTaskTemplate(user, flowTaskTemplateEntity.getScope(), 
 			flowTaskTemplateEntity.getFlowTeamId(), true);
     Date creationDate = new Date();
     flowTaskTemplateEntity.setCreatedDate(creationDate);
     flowTaskTemplateEntity.setLastModified(creationDate);
     flowTaskTemplateEntity.setVerified(false);
 
-    updateChangeLog(flowTaskTemplateEntity);
+    updateChangeLog(flowTaskTemplateEntity, user);
     return new FlowTaskTemplate(
         flowTaskTemplateService.insertTaskTemplate(flowTaskTemplateEntity));
   }
 
   @Override
   public FlowTaskTemplate updateTaskTemplate(FlowTaskTemplate flowTaskTemplateEntity) {
-	userValidationService.validateUserAccessForTaskTemplate(flowTaskTemplateEntity.getScope(), 
+	FlowUserEntity user = userIdentityService.getCurrentUser();
+	userValidationService.validateUserAccessForTaskTemplate(user, flowTaskTemplateEntity.getScope(), 
 				flowTaskTemplateEntity.getFlowTeamId(), true);
-    updateChangeLog(flowTaskTemplateEntity);
+    updateChangeLog(flowTaskTemplateEntity, user);
 
     flowTaskTemplateEntity.setLastModified(new Date());
     flowTaskTemplateEntity.setVerified(flowTaskTemplateService
@@ -132,10 +134,8 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
 
   }
 
-  private void updateChangeLog(FlowTaskTemplate flowTaskTemplateEntity) {
+  private void updateChangeLog(FlowTaskTemplate flowTaskTemplateEntity, FlowUserEntity user) {
     List<Revision> revisions = flowTaskTemplateEntity.getRevisions();
-    final FlowUserEntity user = userIdentityService.getCurrentUser();
-
     if (revisions != null) {
       for (Revision revision : revisions) {
         ChangeLog changelog = revision.getChangelog();

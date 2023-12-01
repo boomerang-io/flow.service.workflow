@@ -27,7 +27,11 @@ public class UserValidationServiceImpl implements UserValidationService {
 
   @Override
   public void validateUserForTeam(String teamId) {
-    FlowUserEntity user = userIdentityService.getCurrentUser();
+    this.validateUserForTeam(userIdentityService.getCurrentUser(), teamId);
+  }
+  
+  @Override
+  public void validateUserForTeam(FlowUserEntity user, String teamId) {
     if(user == null) {
       throw new ResponseStatusException(HttpStatus.FORBIDDEN);    	
     }
@@ -35,8 +39,14 @@ public class UserValidationServiceImpl implements UserValidationService {
   }
   
   @Override
-  public void validateUserAccessForWorkflow(WorkflowScope scope, String flowTeamId, String flowOwnerUserId, boolean editable) {
-    FlowUserEntity user = userIdentityService.getCurrentUser();
+  public void validateUserAccessForWorkflow(WorkflowScope scope, String flowTeamId,
+		String flowOwnerUserId, boolean editable) {
+	this.validateUserAccessForWorkflow(userIdentityService.getCurrentUser(),
+			scope, flowTeamId, flowOwnerUserId, editable);
+  }
+  
+  @Override
+  public void validateUserAccessForWorkflow(FlowUserEntity user, WorkflowScope scope, String flowTeamId, String flowOwnerUserId, boolean editable) {
     if(user == null) {
       throw new ResponseStatusException(HttpStatus.FORBIDDEN);    	
     }  
@@ -52,7 +62,12 @@ public class UserValidationServiceImpl implements UserValidationService {
   
   @Override
   public void validateUserAccessForTaskTemplate(TemplateScope scope, String taskTeamId, boolean editable) {
-	FlowUserEntity user = userIdentityService.getCurrentUser();
+    this.validateUserAccessForTaskTemplate(userIdentityService.getCurrentUser(),
+    		scope, taskTeamId, editable);
+  }
+  
+  @Override
+  public void validateUserAccessForTaskTemplate(FlowUserEntity user, TemplateScope scope, String taskTeamId, boolean editable) {
     if(user == null) {
       throw new ResponseStatusException(HttpStatus.FORBIDDEN);    	
     }  
@@ -65,7 +80,11 @@ public class UserValidationServiceImpl implements UserValidationService {
 
   @Override
   public void validateUserAdminOrOperator() {
-    FlowUserEntity user = userIdentityService.getCurrentUser();
+    this.validateUserAdminOrOperator(userIdentityService.getCurrentUser());
+  }
+  
+  @Override
+  public void validateUserAdminOrOperator(FlowUserEntity user) {
     if (user == null || !isPlatformAdminOrOperator(user)) {
       throw new ResponseStatusException(HttpStatus.FORBIDDEN);
     }
