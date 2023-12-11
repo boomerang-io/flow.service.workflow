@@ -197,23 +197,23 @@ public class WorkflowServiceImpl implements WorkflowService {
   
   @Override
   public Map<String, List<WorkflowSummary>> getWorkflowsForTeams(List<String> flowTeamIds) {
-		// Batch query work flows for a list of teams.
-		List<WorkflowEntity> workflowList = workflowRepository.getWorkflowsForTeams(flowTeamIds);  
-		if(workflowList == null || workflowList.isEmpty()) {
-			return Maps.newHashMap();
-		}
-		
-		// Collect flow Id.
-		List<String> flowIds = workflowList.stream().map(flow -> flow.getId()).collect(Collectors.toList());
-		// Batch query revision counts for a list of work flows
-		List<WorkFlowRevisionCount> workflowRevisionCounts = workflowVersionService.getWorkflowRevisionCounts(flowIds);
-		Map<String, WorkFlowRevisionCount> workflowRevisionCountMap = Maps.newHashMap();
-		workflowRevisionCounts.stream().forEach(workFlowRevisionCount -> {
-			workflowRevisionCountMap.put(workFlowRevisionCount.getId(), workFlowRevisionCount);
-		});
+	// Batch query work flows for a list of teams.
+	List<WorkflowEntity> workflowList = workflowRepository.getWorkflowsForTeams(flowTeamIds);  
+	if(workflowList == null || workflowList.isEmpty()) {
+		return Maps.newHashMap();
+	}
 	
-		// Construct workflow summary map(key= flowTeamId, value = List<WorkflowSummary>).
-		Map<String, List<WorkflowSummary>> result = new HashMap<String, List<WorkflowSummary>>();
+	// Collect flow Id.
+	List<String> flowIds = workflowList.stream().map(flow -> flow.getId()).collect(Collectors.toList());
+	// Batch query revision counts for a list of work flows
+	List<WorkFlowRevisionCount> workflowRevisionCounts = workflowVersionService.getWorkflowRevisionCounts(flowIds);
+	Map<String, WorkFlowRevisionCount> workflowRevisionCountMap = Maps.newHashMap();
+	workflowRevisionCounts.stream().forEach(workFlowRevisionCount -> {
+		workflowRevisionCountMap.put(workFlowRevisionCount.getId(), workFlowRevisionCount);
+	});
+
+	// Construct workflow summary map(key= flowTeamId, value = List<WorkflowSummary>).
+	Map<String, List<WorkflowSummary>> result = new HashMap<String, List<WorkflowSummary>>();
     for (final WorkflowEntity entity : workflowList) {
       if(result.get(entity.getFlowTeamId()) == null) {
       	result.put(entity.getFlowTeamId(), Lists.newArrayList());

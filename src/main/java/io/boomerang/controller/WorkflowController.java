@@ -97,13 +97,13 @@ public class WorkflowController {
 
   @GetMapping(value = "{id}/summary")
   public WorkflowSummary getWorkflowWithId(@PathVariable String id) {
-    final WorkflowEntity entity = workFlowRepository.getWorkflow(id);
-    try {
-      userValidationService.validateUserAccessForWorkflow(entity.getScope(), 
-      		  entity.getFlowTeamId(), entity.getOwnerUserId(), false);
-    } catch (ResponseStatusException e) {
-      throw new HttpClientErrorException(e.getStatus());
-    }
+//    final WorkflowEntity entity = workFlowRepository.getWorkflow(id);
+//    try {
+//      userValidationService.validateUserAccessForWorkflow(entity.getScope(), 
+//      		  entity.getFlowTeamId(), entity.getOwnerUserId(), false);
+//    } catch (ResponseStatusException e) {
+//      throw new HttpClientErrorException(e.getStatus());
+//    }
     return workflowService.getWorkflow(id);
   }
 
