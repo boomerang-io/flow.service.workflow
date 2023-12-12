@@ -30,6 +30,8 @@ public class TeamEntity {
   private List<ApproverGroup> approverGroups;
 
   private List<KeyValuePair> labels;
+  
+  private List<String> userRoles;
 
   public String getHigherLevelGroupId() {
     return higherLevelGroupId;
@@ -94,4 +96,13 @@ public class TeamEntity {
   public void setLabels(List<KeyValuePair> labels) {
     this.labels = labels;
   }
+
+  public List<String> getUserRoles() {
+    return userRoles;
+  }
+
+  public void setUserRoles(List<String> userRoles) {
+	this.userRoles = userRoles;
+  }
+
 }

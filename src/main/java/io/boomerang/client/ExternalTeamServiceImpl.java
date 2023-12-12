@@ -81,6 +81,7 @@ public class ExternalTeamServiceImpl implements ExternalTeamService {
         newTeam.setName(team.getName());
         newTeam.setIsActive(true);
         newTeam.setHigherLevelGroupId(team.getId());
+        newTeam.setUserRoles(team.getUserRoles());
         
         if(newTeam.getQuotas() == null) {
           Quotas quotas = new Quotas();

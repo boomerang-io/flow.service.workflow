@@ -16,9 +16,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.google.inject.internal.util.Lists;
 import com.google.inject.internal.util.Maps;
@@ -50,12 +50,12 @@ import io.boomerang.mongo.model.Quotas;
 import io.boomerang.mongo.model.Settings;
 import io.boomerang.mongo.model.Storage;
 import io.boomerang.mongo.model.TaskStatus;
-import io.boomerang.mongo.model.UserType;
 import io.boomerang.mongo.service.FlowSettingsService;
 import io.boomerang.mongo.service.FlowTeamService;
 import io.boomerang.mongo.service.FlowUserService;
 import io.boomerang.mongo.service.FlowWorkflowActivityService;
 import io.boomerang.mongo.service.FlowWorkflowService;
+import io.boomerang.security.service.UserValidationService;
 import io.boomerang.service.UserIdentityService;
 import static io.boomerang.util.DataAdapterUtil.*;
 
@@ -106,7 +106,10 @@ public class TeamServiceImpl implements TeamService {
 
   @Autowired
   private WorkflowVersionService workflowVersionService;
-
+  
+  @Autowired
+  private UserValidationService userValidationService;
+  
   private FlowTeam createFlowTeam(TeamEntity team) {
     FlowTeam flowTeam = new FlowTeam();
     BeanUtils.copyProperties(team, flowTeam);
@@ -902,14 +905,12 @@ public class TeamServiceImpl implements TeamService {
     return flowTeamService.save(team).getQuotas();
   }
 
-  protected void validateUser() {
-
-    FlowUserEntity userEntity = userIdentiyService.getCurrentUser();
-    if (userEntity == null || (!userEntity.getType().equals(UserType.admin)
-        && !userEntity.getType().equals(UserType.operator))) {
-
-      throw new HttpClientErrorException(HttpStatus.FORBIDDEN);
-    }
+  private void validateUser() {
+    try {
+	  userValidationService.validateUserAdminOrOperator();
+	} catch (ResponseStatusException e) {
+	  throw new HttpClientErrorException(e.getStatus());	
+   	}
   }
 
   @Override

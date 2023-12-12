@@ -4,7 +4,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,20 +21,19 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import io.boomerang.model.FlowActivity;
 import io.boomerang.model.ListActivityResponse;
 import io.boomerang.model.TaskExecutionResponse;
 import io.boomerang.mongo.entity.ActivityEntity;
-import io.boomerang.mongo.entity.FlowUserEntity;
 import io.boomerang.mongo.entity.RevisionEntity;
 import io.boomerang.mongo.entity.TeamEntity;
 import io.boomerang.mongo.entity.WorkflowEntity;
-import io.boomerang.mongo.model.UserType;
 import io.boomerang.mongo.model.WorkflowScope;
 import io.boomerang.mongo.service.FlowWorkflowService;
 import io.boomerang.mongo.service.RevisionService;
-import io.boomerang.service.UserIdentityService;
+import io.boomerang.security.service.UserValidationService;
 import io.boomerang.service.crud.FlowActivityService;
 import io.boomerang.service.crud.TeamService;
 
@@ -53,14 +51,13 @@ public class ActivityController {
   private TeamService teamService;
 
   @Autowired
-  private UserIdentityService userIdentityService;
-
-  @Autowired
   private RevisionService revisionService;
+  
+  @Autowired
+  private UserValidationService userValidationService;
 
   private static final String CREATIONDATESORT = "creationDate";
-
-
+  
   @GetMapping(value = "/activity")
   public ListActivityResponse getFlowActivities(
       @RequestParam(defaultValue = "ASC") Optional<Direction> order,
@@ -127,6 +124,7 @@ public class ActivityController {
     final FlowActivity response = new FlowActivity(activity);
 
     WorkflowEntity entity = this.workflowService.getWorkflow(workFlowId);
+    teamId = entity == null ? null : entity.getFlowTeamId();
     WorkflowScope scope = entity.getScope();
     if (scope == null) {
       scope = WorkflowScope.team;
@@ -143,26 +141,12 @@ public class ActivityController {
       }
     }
 
-    if ((workflowService.getWorkflow(workFlowId) != null)) {
-      teamId = workflowService.getWorkflow(workFlowId).getFlowTeamId();
-    } else {
-      teamId = null;
-    }
-
     if (teamId != null) {
-
-      final FlowUserEntity user = userIdentityService.getCurrentUser();
-
-      // Permission checking only for normal (Non-Admin and Non-Operator) user
-      if (user != null && !user.getType().equals(UserType.admin) 
-    		  && !user.getType().equals(UserType.operator)) {
-        List<String> teamIdList = teamService.getUsersTeamListing(user).stream().map(TeamEntity::getId)
-                    .collect(Collectors.toList());
-        if (!teamIdList.contains(teamId)) {
-          return new ResponseEntity<>(new FlowActivity(), HttpStatus.FORBIDDEN);
-        }
+      try {
+    	userValidationService.validateUserAccessForWorkflow(scope, teamId, entity.getOwnerUserId(), false);
+      } catch (ResponseStatusException e) {
+    	return new ResponseEntity<>(new FlowActivity(), e.getStatus());  
       }
-
       TeamEntity team = teamService.getTeamById(teamId);
       if (team != null) {
         teamName = team.getName();

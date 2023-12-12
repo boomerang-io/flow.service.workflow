@@ -6,9 +6,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 import io.boomerang.model.FlowTaskTemplate;
 import io.boomerang.model.TemplateScope;
 import io.boomerang.model.WorkflowSummary;
@@ -18,9 +16,9 @@ import io.boomerang.mongo.entity.FlowUserEntity;
 import io.boomerang.mongo.model.ChangeLog;
 import io.boomerang.mongo.model.FlowTaskTemplateStatus;
 import io.boomerang.mongo.model.Revision;
-import io.boomerang.mongo.model.UserType;
 import io.boomerang.mongo.model.WorkflowScope;
 import io.boomerang.mongo.service.FlowTaskTemplateService;
+import io.boomerang.security.service.UserValidationService;
 import io.boomerang.service.UserIdentityService;
 import io.boomerang.service.tekton.TektonConverter;
 
@@ -35,6 +33,9 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
 
   @Autowired
   private WorkflowService workflowService;
+  
+  @Autowired
+  private UserValidationService userValidationService;
 
   @Override
   public FlowTaskTemplate getTaskTemplateWithId(String id) {
@@ -92,55 +93,39 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
 
   @Override
   public FlowTaskTemplate insertTaskTemplate(FlowTaskTemplate flowTaskTemplateEntity) {
-    FlowUserEntity user = userIdentityService.getCurrentUser();
+	FlowUserEntity user = userIdentityService.getCurrentUser();
+	userValidationService.validateUserAccessForTaskTemplate(user, flowTaskTemplateEntity.getScope(), 
+			flowTaskTemplateEntity.getFlowTeamId(), true);
+    Date creationDate = new Date();
+    flowTaskTemplateEntity.setCreatedDate(creationDate);
+    flowTaskTemplateEntity.setLastModified(creationDate);
+    flowTaskTemplateEntity.setVerified(false);
 
-    if (user.getType() == UserType.admin || user.getType() == UserType.operator) {
-
-      Date creationDate = new Date();
-
-      flowTaskTemplateEntity.setCreatedDate(creationDate);
-      flowTaskTemplateEntity.setLastModified(creationDate);
-      flowTaskTemplateEntity.setVerified(false);
-
-      updateChangeLog(flowTaskTemplateEntity);
-
-      return new FlowTaskTemplate(
-          flowTaskTemplateService.insertTaskTemplate(flowTaskTemplateEntity));
-
-    } else {
-      throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-    }
-
+    updateChangeLog(flowTaskTemplateEntity, user);
+    return new FlowTaskTemplate(
+        flowTaskTemplateService.insertTaskTemplate(flowTaskTemplateEntity));
   }
 
   @Override
   public FlowTaskTemplate updateTaskTemplate(FlowTaskTemplate flowTaskTemplateEntity) {
-    FlowUserEntity user = userIdentityService.getCurrentUser();
+	FlowUserEntity user = userIdentityService.getCurrentUser();
+	userValidationService.validateUserAccessForTaskTemplate(user, flowTaskTemplateEntity.getScope(), 
+				flowTaskTemplateEntity.getFlowTeamId(), true);
+    updateChangeLog(flowTaskTemplateEntity, user);
 
-    if (user.getType() == UserType.admin || user.getType() == UserType.operator) {
-
-      updateChangeLog(flowTaskTemplateEntity);
-
-      flowTaskTemplateEntity.setLastModified(new Date());
-      flowTaskTemplateEntity.setVerified(flowTaskTemplateService
-          .getTaskTemplateWithId(flowTaskTemplateEntity.getId()).isVerified());
-      return new FlowTaskTemplate(
-          flowTaskTemplateService.updateTaskTemplate(flowTaskTemplateEntity));
-
-    } else {
-      throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-    }
+    flowTaskTemplateEntity.setLastModified(new Date());
+    flowTaskTemplateEntity.setVerified(flowTaskTemplateService
+        .getTaskTemplateWithId(flowTaskTemplateEntity.getId()).isVerified());
+    return new FlowTaskTemplate(
+        flowTaskTemplateService.updateTaskTemplate(flowTaskTemplateEntity));  
   }
 
   @Override
   public void deleteTaskTemplateWithId(String id) {
-    FlowUserEntity user = userIdentityService.getCurrentUser();
-
-    if (user.getType() == UserType.admin || user.getType() == UserType.operator) {
-      flowTaskTemplateService.deleteTaskTemplate(flowTaskTemplateService.getTaskTemplateWithId(id));
-    } else {
-      throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-    }
+	FlowTaskTemplateEntity flowTaskTemplateEntity = flowTaskTemplateService.getTaskTemplateWithId(id);
+	userValidationService.validateUserAccessForTaskTemplate(flowTaskTemplateEntity.getScope(), 
+			flowTaskTemplateEntity.getFlowTeamId(), true);
+	flowTaskTemplateService.deleteTaskTemplate(flowTaskTemplateEntity);
   }
 
   @Override
@@ -149,10 +134,8 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
 
   }
 
-  private void updateChangeLog(FlowTaskTemplate flowTaskTemplateEntity) {
+  private void updateChangeLog(FlowTaskTemplate flowTaskTemplateEntity, FlowUserEntity user) {
     List<Revision> revisions = flowTaskTemplateEntity.getRevisions();
-    final FlowUserEntity user = userIdentityService.getCurrentUser();
-
     if (revisions != null) {
       for (Revision revision : revisions) {
         ChangeLog changelog = revision.getChangelog();
