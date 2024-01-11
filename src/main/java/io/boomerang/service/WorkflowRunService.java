@@ -9,7 +9,6 @@ import io.boomerang.model.ref.WorkflowRun;
 import io.boomerang.model.ref.WorkflowRunCount;
 import io.boomerang.model.ref.WorkflowRunInsight;
 import io.boomerang.model.ref.WorkflowRunRequest;
-import io.boomerang.model.ref.WorkflowRunSubmitRequest;
 
 public interface WorkflowRunService {
 
@@ -19,8 +18,6 @@ public interface WorkflowRunService {
       Optional<List<String>> queryPhase, Optional<List<String>> queryTeams,
       Optional<List<String>> queryWorkflowRuns, Optional<List<String>> queryWorkflows,
       Optional<List<String>> queryTriggers);
-
-  ResponseEntity<WorkflowRun> submit(WorkflowRunSubmitRequest request, boolean start);
 
   ResponseEntity<WorkflowRun> get(String workflowRunId, boolean withTasks);
 

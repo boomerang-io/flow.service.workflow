@@ -21,7 +21,7 @@ import io.boomerang.model.enums.TriggerEnum;
 import io.boomerang.model.enums.ref.ParamType;
 import io.boomerang.model.ref.RunParam;
 import io.boomerang.model.ref.WorkflowRun;
-import io.boomerang.model.ref.WorkflowRunSubmitRequest;
+import io.boomerang.model.ref.WorkflowSubmitRequest;
 import io.boomerang.util.ParameterUtil;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.data.PojoCloudEventData;
@@ -36,10 +36,7 @@ public class TriggersServiceImpl implements TriggerService {
   private boolean autoStart;
 
   @Autowired
-  private WorkflowRunService workflowRunService;
-
-  @Autowired
-  private WorkflowRunServiceImpl workflowRunServiceImp;
+  private WorkflowServiceImpl workflowService;
 
   @Autowired
   private IntegrationService integrationService;
@@ -50,18 +47,19 @@ public class TriggersServiceImpl implements TriggerService {
    * @return accepted or unprocessable.
    */
   @Override
-  public ResponseEntity<WorkflowRun> processEvent(CloudEvent event, Optional<String> workflow) {
+  public WorkflowRun processEvent(CloudEvent event, Optional<String> workflow) {
     String eventType = event.getType();
     LOGGER.debug("Event Type: " + eventType);
     String eventSubject = event.getSubject();
     LOGGER.debug("Event Subject: " + eventSubject);
 
-    WorkflowRunSubmitRequest request = new WorkflowRunSubmitRequest();
+    WorkflowSubmitRequest request = new WorkflowSubmitRequest();
+    String workflowRef = null;
     if (workflow.isPresent()) {
-      request.setWorkflowRef(workflow.get());
+      workflowRef = workflow.get();
     } else {
       // Assume the WorkflowRef is in the subject
-      request.setWorkflowRef(eventSubject.replace("/", ""));
+      workflowRef = eventSubject.replace("/", "");
     }
     request.setTrigger(TriggerEnum.event);
     request.setParams(eventToRunParams(event));
@@ -71,14 +69,13 @@ public class TriggersServiceImpl implements TriggerService {
     // Auto start is not needed when using the default handler
     // As the default handler will pick up the queued Workflow and start the Workflow when ready.
     // However if using the non-default Handler then this may be needed to be set to true.
-    return workflowRunService.submit(request, autoStart);
+    return workflowService.submit(workflowRef, request, autoStart);
   }
 
   @Override
-  public ResponseEntity<WorkflowRun> processWebhook(String workflowId,
+  public WorkflowRun processWebhook(String workflowId,
       JsonNode payload) {
-    WorkflowRunSubmitRequest request = new WorkflowRunSubmitRequest();
-    request.setWorkflowRef(workflowId);
+    WorkflowSubmitRequest request = new WorkflowSubmitRequest();
     request.setTrigger(TriggerEnum.webhook);
     request.setParams(payloadToRunParams(payload));
 
@@ -87,7 +84,7 @@ public class TriggersServiceImpl implements TriggerService {
     // Auto start is not needed when using the default handler
     // As the default handler will pick up the queued Workflow and start the Workflow when ready.
     // However if using the non-default Handler then this may be needed to be set to true.
-    return workflowRunService.submit(request, autoStart);
+    return workflowService.submit(workflowId, request, autoStart);
   }
 
   @Override
@@ -111,7 +108,7 @@ public class TriggersServiceImpl implements TriggerService {
         String teamRef =
             integrationService.getTeamByRef(payload.get("installation").get("id").asText());
         if (!Objects.isNull(teamRef) && !teamRef.isBlank()) {
-          WorkflowRunSubmitRequest request = new WorkflowRunSubmitRequest();
+          WorkflowSubmitRequest request = new WorkflowSubmitRequest();
           request.setTrigger(TriggerEnum.github);
           request.setParams(payloadToRunParams(payload));
 
@@ -119,7 +116,7 @@ public class TriggersServiceImpl implements TriggerService {
           // As the default handler will pick up the queued Workflow and start the Workflow when
           // ready.
           // However if using the non-default Handler then this may be needed to be set to true.
-          workflowRunServiceImp.internalSubmitForTeam(request, autoStart, teamRef);
+          workflowService.internalSubmitForTeam(request, autoStart, teamRef);
         }
         return ResponseEntity.ok().build();
       }
@@ -128,7 +125,7 @@ public class TriggersServiceImpl implements TriggerService {
   }
 
   @Override
-  public ResponseEntity<WorkflowRun> processWFE(String workflowId, String workflowRunId,
+  public WorkflowRun processWFE(String workflowId, String workflowRunId,
       String topic, String status, Optional<JsonNode> payload) {
     // TODO figure out how to update the TaskRun for the WaitForEvent
     return null;

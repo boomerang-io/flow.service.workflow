@@ -51,10 +51,9 @@ import io.boomerang.integrations.data.repository.IntegrationsRepository;
 import io.boomerang.model.enums.TriggerEnum;
 import io.boomerang.model.ref.Workflow;
 import io.boomerang.model.ref.WorkflowRun;
-import io.boomerang.model.ref.WorkflowRunSubmitRequest;
+import io.boomerang.model.ref.WorkflowSubmitRequest;
 import io.boomerang.service.RelationshipService;
 import io.boomerang.service.SettingsService;
-import io.boomerang.service.WorkflowRunService;
 import io.boomerang.service.WorkflowService;
 
 /*
@@ -75,9 +74,6 @@ public class SlackServiceImpl implements SlackService {
 
     @Autowired
     private WorkflowService workflowService;
-
-    @Autowired
-    private WorkflowRunService workflowRunService;
 
     @Autowired
     private IntegrationsRepository extensionsRepository;
@@ -310,11 +306,10 @@ public class SlackServiceImpl implements SlackService {
                     // Trigger workflow Execution and impersonate Slack user
                     String userEmail = userInfo.getUser().getProfile().getEmail();
                     if (userEmail != null && canExecuteWorkflow(workflowId, userEmail)) {
-                        WorkflowRunSubmitRequest request = new WorkflowRunSubmitRequest();
-                        request.setWorkflowRef(workflowId);
+                        WorkflowSubmitRequest request = new WorkflowSubmitRequest();
                         request.setTrigger(TriggerEnum.webhook);
                         WorkflowRun workflowRun =
-                                workflowRunService.submit(request, true).getBody();
+                                workflowService.submit(workflowId, request, true);
                         LOGGER.debug(workflowRun.toString());
 
                         // ChatPostMessageResponse messageResponse = slack.methods(authToken)

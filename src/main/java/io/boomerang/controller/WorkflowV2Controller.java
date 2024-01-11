@@ -19,6 +19,8 @@ import io.boomerang.client.WorkflowResponsePage;
 import io.boomerang.model.WorkflowCanvas;
 import io.boomerang.model.ref.ChangeLogVersion;
 import io.boomerang.model.ref.Workflow;
+import io.boomerang.model.ref.WorkflowRun;
+import io.boomerang.model.ref.WorkflowSubmitRequest;
 import io.boomerang.security.interceptors.AuthScope;
 import io.boomerang.security.model.PermissionAction;
 import io.boomerang.security.model.PermissionScope;
@@ -116,7 +118,21 @@ public class WorkflowV2Controller {
   public ResponseEntity<Void> deleteWorkflow(@Parameter(name = "workflowId",
       description = "ID of Workflow", required = true) @PathVariable String workflowId) {
     return workflowService.delete(workflowId);
-  }  
+  }
+
+  @PostMapping(value = "/{workflowId}/submit")
+  @Operation(summary = "Submit a Workflow to be run. Will queue the WorkflowRun ready for execution.")
+  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
+      @ApiResponse(responseCode = "400", description = "Bad Request")})
+  public WorkflowRun submitWorkflow(
+      @Parameter(name = "workflowId",
+      description = "ID of Workflow", required = true) @PathVariable String workflowId,
+      @Parameter(name = "start",
+      description = "Start the WorkflowRun immediately after submission",
+      required = false) @RequestParam(required = false, defaultValue = "false") boolean start,
+      @RequestBody WorkflowSubmitRequest request) {
+    return workflowService.submit(workflowId, request, start);
+  }
 
   @GetMapping(value = "/{workflowId}/export", produces = "application/json")
   @Operation(summary = "Export the Workflow as JSON.")

@@ -35,14 +35,14 @@ import io.boomerang.model.ref.WorkflowRun;
 import io.boomerang.model.ref.WorkflowRunCount;
 import io.boomerang.model.ref.WorkflowRunInsight;
 import io.boomerang.model.ref.WorkflowRunRequest;
-import io.boomerang.model.ref.WorkflowRunSubmitRequest;
+import io.boomerang.model.ref.WorkflowSubmitRequest;
 import io.boomerang.model.ref.WorkflowTemplate;
 
 @Service
 @Primary
-public class EngineClientImpl implements EngineClient {
+public class submitWorkflow implements EngineClient {
 
-  private static final Logger LOGGER = LogManager.getLogger(EngineClientImpl.class);
+  private static final Logger LOGGER = LogManager.getLogger(submitWorkflow.class);
 
   @Value("${flow.engine.workflowrun.query.url}")
   public String queryWorkflowRunURL;
@@ -55,9 +55,6 @@ public class EngineClientImpl implements EngineClient {
 
   @Value("${flow.engine.workflowrun.get.url}")
   public String getWorkflowRunURL;
-
-  @Value("${flow.engine.workflowrun.submit.url}")
-  public String submitWorkflowRunURL;
 
   @Value("${flow.engine.workflowrun.start.url}")
   public String startWorkflowRunURL;
@@ -85,6 +82,9 @@ public class EngineClientImpl implements EngineClient {
 
   @Value("${flow.engine.workflow.apply.url}")
   public String applyWorkflowURL;
+
+  @Value("${flow.engine.workflow.submit.url}")
+  public String submitWorkflowURL;
 
   @Value("${flow.engine.workflow.changelog.url}")
   public String changelogWorkflowURL;
@@ -311,34 +311,6 @@ public class EngineClientImpl implements EngineClient {
           HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
-
-  @Override
-  public WorkflowRun submitWorkflowRun(WorkflowRunSubmitRequest request, boolean start) {
-    try {
-      String url = submitWorkflowRunURL;
-      Map<String, String> requestParams = new HashMap<>();
-      requestParams.put("start", Boolean.toString(start));
-      String encodedURL =
-          requestParams.keySet().stream().map(key -> key + "=" + requestParams.get(key))
-              .collect(Collectors.joining("&", url + "?", ""));
-
-      LOGGER.info("URL: " + encodedURL);
-
-      ResponseEntity<WorkflowRun> response =
-          restTemplate.postForEntity(encodedURL, request, WorkflowRun.class);
-
-      LOGGER.info("Status Response: " + response.getStatusCode());
-      LOGGER.info("Content Response: " + response.getBody().toString());
-
-      return response.getBody();
-    } catch (RestClientException ex) {
-      LOGGER.error(ex.toString());
-      throw new BoomerangException(ex, HttpStatus.INTERNAL_SERVER_ERROR.value(),
-          ex.getClass().getSimpleName(), "Exception in communicating with internal services.",
-          HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-  }
-
   @Override
   public WorkflowRun startWorkflowRun(String workflowRunId, Optional<WorkflowRunRequest> request) {
     try {
@@ -583,6 +555,33 @@ public class EngineClientImpl implements EngineClient {
       HttpEntity<Workflow> entity = new HttpEntity<Workflow>(workflow, headers);
       ResponseEntity<Workflow> response =
           restTemplate.exchange(encodedURL, HttpMethod.PUT, entity, Workflow.class);
+
+      LOGGER.info("Status Response: " + response.getStatusCode());
+      LOGGER.info("Content Response: " + response.getBody().toString());
+
+      return response.getBody();
+    } catch (RestClientException ex) {
+      LOGGER.error(ex.toString());
+      throw new BoomerangException(ex, HttpStatus.INTERNAL_SERVER_ERROR.value(),
+          ex.getClass().getSimpleName(), "Exception in communicating with internal services.",
+          HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @Override
+  public WorkflowRun submitWorkflow(String workflowId, WorkflowSubmitRequest request, boolean start) {
+    try {
+      String url = submitWorkflowURL.replace("{workflowId}", workflowId);
+      Map<String, String> requestParams = new HashMap<>();
+      requestParams.put("start", Boolean.toString(start));
+      String encodedURL =
+          requestParams.keySet().stream().map(key -> key + "=" + requestParams.get(key))
+              .collect(Collectors.joining("&", url + "?", ""));
+
+      LOGGER.info("URL: " + encodedURL);
+
+      ResponseEntity<WorkflowRun> response =
+          restTemplate.postForEntity(encodedURL, request, WorkflowRun.class);
 
       LOGGER.info("Status Response: " + response.getStatusCode());
       LOGGER.info("Content Response: " + response.getBody().toString());

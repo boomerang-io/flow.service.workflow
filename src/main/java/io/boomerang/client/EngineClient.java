@@ -14,7 +14,7 @@ import io.boomerang.model.ref.WorkflowRun;
 import io.boomerang.model.ref.WorkflowRunCount;
 import io.boomerang.model.ref.WorkflowRunInsight;
 import io.boomerang.model.ref.WorkflowRunRequest;
-import io.boomerang.model.ref.WorkflowRunSubmitRequest;
+import io.boomerang.model.ref.WorkflowSubmitRequest;
 import io.boomerang.model.ref.WorkflowTemplate;
 
 public interface EngineClient {
@@ -34,8 +34,6 @@ public interface EngineClient {
   WorkflowRunCount countWorkflowRuns(Optional<List<String>> queryLabels,
       Optional<List<String>> queryWorkflows, Optional<Long> fromDate, Optional<Long> toDate);
 
-  WorkflowRun submitWorkflowRun(WorkflowRunSubmitRequest request, boolean start);
-
   WorkflowRun startWorkflowRun(String workflowRunId,
       Optional<WorkflowRunRequest> optRunRequest);
 
@@ -54,6 +52,8 @@ public interface EngineClient {
   Workflow createWorkflow(Workflow workflow);
 
   Workflow applyWorkflow(Workflow workflow, boolean replace);
+
+  WorkflowRun submitWorkflow(String workflowId, WorkflowSubmitRequest request, boolean start);
 
   void enableWorkflow(String workflowId);
 

@@ -10,6 +10,8 @@ import io.boomerang.model.WorkflowCanvas;
 import io.boomerang.model.ref.ChangeLogVersion;
 import io.boomerang.model.ref.Workflow;
 import io.boomerang.model.ref.WorkflowCount;
+import io.boomerang.model.ref.WorkflowRun;
+import io.boomerang.model.ref.WorkflowSubmitRequest;
 
 public interface WorkflowService {
 
@@ -41,5 +43,8 @@ public interface WorkflowService {
 
   WorkflowCount count(Optional<Long> from, Optional<Long> to, Optional<List<String>> queryLabels,
       Optional<List<String>> queryTeams, Optional<List<String>> queryWorkflows);
+
+  WorkflowRun submit(String workflowId, WorkflowSubmitRequest request,
+      boolean start);
   
 }

@@ -22,7 +22,7 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 import io.boomerang.model.ref.WorkflowRun;
 import io.boomerang.model.ref.WorkflowRunCount;
 import io.boomerang.model.ref.WorkflowRunRequest;
-import io.boomerang.model.ref.WorkflowRunSubmitRequest;
+import io.boomerang.model.ref.WorkflowSubmitRequest;
 import io.boomerang.service.TaskRunService;
 import io.boomerang.service.WorkflowRunService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -96,18 +96,6 @@ public class WorkflowRunV2Controller {
       @Parameter(name = "toDate", description = "The unix timestamp / date to search to in milliseconds since epoch", example = "1680267600000",
       required = false) @RequestParam Optional<Long> toDate) {
     return workflowRunService.count(fromDate, toDate, labels, teams, workflows);
-  }
-
-  @PostMapping(value = "/submit")
-  @Operation(summary = "Submit a Workflow to be run. Will queue the WorkflowRun ready for execution.")
-  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
-      @ApiResponse(responseCode = "400", description = "Bad Request")})
-  public ResponseEntity<WorkflowRun> submitWorkflowRun(
-      @Parameter(name = "start",
-      description = "Start the WorkflowRun immediately after submission",
-      required = false) @RequestParam(required = false, defaultValue = "false") boolean start,
-      @RequestBody WorkflowRunSubmitRequest request) {
-    return workflowRunService.submit(request, start);
   }
 
   @GetMapping(value = "/{workflowRunId}")

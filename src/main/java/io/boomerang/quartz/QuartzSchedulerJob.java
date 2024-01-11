@@ -17,11 +17,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import io.boomerang.model.WorkflowSchedule;
 import io.boomerang.model.enums.TriggerEnum;
 import io.boomerang.model.enums.WorkflowScheduleType;
-import io.boomerang.model.ref.WorkflowRunSubmitRequest;
+import io.boomerang.model.ref.WorkflowSubmitRequest;
 import io.boomerang.security.model.Token;
 import io.boomerang.security.service.TokenServiceImpl;
 import io.boomerang.service.ScheduleServiceImpl;
-import io.boomerang.service.WorkflowRunServiceImpl;
+import io.boomerang.service.WorkflowServiceImpl;
 
 /*
  * This is used by the Quartz Trigger to execute the Scheduled Job
@@ -60,8 +60,8 @@ public class QuartzSchedulerJob extends QuartzJobBean {
       logger.info("applicationContext is null");
     }
 
-    WorkflowRunServiceImpl workflowRunService =
-        applicationContext.getBean(WorkflowRunServiceImpl.class);
+    WorkflowServiceImpl workflowService =
+        applicationContext.getBean(WorkflowServiceImpl.class);
     ScheduleServiceImpl workflowScheduleService =
         applicationContext.getBean(ScheduleServiceImpl.class);
     TokenServiceImpl tokenService = applicationContext.getBean(TokenServiceImpl.class);
@@ -73,8 +73,7 @@ public class QuartzSchedulerJob extends QuartzJobBean {
         workflowScheduleService.complete(schedule.getId());
       }
 
-      WorkflowRunSubmitRequest request = new WorkflowRunSubmitRequest();
-      request.setWorkflowRef(jobDetail.getKey().getGroup());
+      WorkflowSubmitRequest request = new WorkflowSubmitRequest();
       request.setLabels(schedule.getLabels());
       request.setParams(request.getParams());
       request.setTrigger(TriggerEnum.schedule);
@@ -91,7 +90,7 @@ public class QuartzSchedulerJob extends QuartzJobBean {
       //As the default handler will pick up the queued Workflow and start the Workflow when ready.
       //However if using the non-default Handler then this may be needed to be set to true.
       boolean autoStart = applicationContext.getEnvironment().getProperty("flow.workflowrun.auto-start-on-submit", boolean.class);
-      workflowRunService.submit(request, autoStart);
+      workflowService.submit(jobDetail.getKey().getGroup(), request, autoStart);
     }
   }
 }

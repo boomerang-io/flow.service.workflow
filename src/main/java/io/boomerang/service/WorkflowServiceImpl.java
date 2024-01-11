@@ -2,6 +2,7 @@ package io.boomerang.service;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -20,10 +21,18 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jayway.jsonpath.Configuration;
+import com.jayway.jsonpath.DocumentContext;
+import com.jayway.jsonpath.JsonPath;
+import com.jayway.jsonpath.Option;
+import com.jayway.jsonpath.spi.json.JacksonJsonNodeJsonProvider;
+import com.jayway.jsonpath.spi.mapper.JacksonMappingProvider;
 import io.boomerang.client.EngineClient;
 import io.boomerang.client.WorkflowResponsePage;
 import io.boomerang.data.entity.RelationshipEntity;
+import io.boomerang.data.model.CurrentQuotas;
 import io.boomerang.error.BoomerangError;
 import io.boomerang.error.BoomerangException;
 import io.boomerang.model.CanvasEdge;
@@ -34,20 +43,26 @@ import io.boomerang.model.CanvasNodePosition;
 import io.boomerang.model.WorkflowCanvas;
 import io.boomerang.model.enums.RelationshipRef;
 import io.boomerang.model.enums.RelationshipType;
+import io.boomerang.model.enums.TriggerEnum;
 import io.boomerang.model.enums.ref.TaskType;
 import io.boomerang.model.enums.ref.WorkflowStatus;
 import io.boomerang.model.ref.ChangeLogVersion;
+import io.boomerang.model.ref.ParamLayers;
+import io.boomerang.model.ref.RunParam;
 import io.boomerang.model.ref.Task;
 import io.boomerang.model.ref.TaskDependency;
 import io.boomerang.model.ref.Trigger;
 import io.boomerang.model.ref.Workflow;
 import io.boomerang.model.ref.WorkflowCount;
+import io.boomerang.model.ref.WorkflowRun;
+import io.boomerang.model.ref.WorkflowSubmitRequest;
 import io.boomerang.model.ref.WorkflowTrigger;
 import io.boomerang.model.ref.WorkflowWorkspace;
 import io.boomerang.model.ref.WorkflowWorkspaceSpec;
 import io.boomerang.security.service.TokenServiceImpl;
 import io.boomerang.util.DataAdapterUtil;
 import io.boomerang.util.DataAdapterUtil.FieldType;
+import io.boomerang.util.ParameterUtil;
 
 /*
  * This service replicates the required calls for Engine WorkflowV1 APIs
@@ -80,6 +95,9 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   @Autowired
   private TokenServiceImpl tokenService;
+  
+  @Autowired
+  private TeamServiceImpl teamService;
 
   /*
    * Get Worklfow
@@ -265,6 +283,104 @@ public class WorkflowServiceImpl implements WorkflowService {
       return this.create(workflow, team.get());
     }
     throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
+  }
+
+  /*
+   * Submit Workflow to Run
+   */
+  @Override
+  public WorkflowRun submit(String workflowId, WorkflowSubmitRequest request, boolean start) {
+    if (workflowId == null || workflowId.isBlank()) {
+      throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
+    }
+    List<String> workflowRefs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.WORKFLOW),
+        Optional.of(List.of(workflowId)), Optional.of(RelationshipType.BELONGSTO), Optional.empty(), Optional.empty());
+    // Check if Workflow can run (Quotas & Triggers)
+    // TODO: check triggers allow submission
+    if (!workflowRefs.isEmpty()) {
+      return this.internalSubmit(workflowId, request, start);
+    } else {
+      throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
+    }
+  }
+  
+  /*
+   * Submit WorkflowRun Internally by Team
+   * 
+   * Used by TriggerService
+   */
+  public void internalSubmitForTeam(WorkflowSubmitRequest request,
+      boolean start, String teamRef) {
+    List<String> wfRefs =
+        relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.WORKFLOW),
+            Optional.empty(), Optional.of(RelationshipType.BELONGSTO),
+            Optional.of(RelationshipRef.WORKFLOW), Optional.of(List.of(teamRef)));
+    
+    wfRefs.forEach(r -> {
+      this.internalSubmit(r, request, start);}
+    );
+  }
+  
+  /*
+   * Submit WorkflowRun Internally
+   * 
+   * Caution: bypasses the authN and authZ and Relationship checks
+   */
+  public WorkflowRun internalSubmit(String workflowId, WorkflowSubmitRequest request,
+      boolean start) {
+    Optional<RelationshipEntity> teamRelationship = relationshipService.getRelationship(
+        RelationshipRef.WORKFLOW, workflowId, RelationshipType.BELONGSTO);
+    if (teamRelationship.isPresent()) {
+      //Check Triggers - Throws Exception - Check first, as if trigger not enabled, no point in checking quotas
+      canRunWithTrigger(workflowId, request.getTrigger(), request.getParams());
+      //Check Quotas - Throws Exception
+      canRunWithQuotas(teamRelationship.get().getToRef(), workflowId, Optional.of(request.getWorkspaces()));
+      // Set Workflow & Task Debug
+      if (!Objects.isNull(request.getDebug())) {
+        boolean enableDebug = false;
+        String setting =
+            this.settingsService.getSettingConfig("task", "debug").getValue();
+        if (setting != null) {
+          enableDebug = Boolean.parseBoolean(setting);
+        }
+        request.setDebug(Boolean.valueOf(enableDebug));
+      }
+      // Set Workflow Timeout
+      if (!Objects.isNull(request.getTimeout())) {
+        String setting = this.settingsService
+            .getSettingConfig("task", "default.timeout").getValue();
+        if (setting != null) {
+          request.setTimeout(Long.valueOf(setting));
+        }
+      }
+      //These annotations are processed by the DAGUtility in the Engine
+      Map<String, Object> executionAnnotations = new HashMap<>();
+      executionAnnotations.put("boomerang.io/task-deletion", this.settingsService.getSettingConfig("task", "deletion.policy").getValue());
+      executionAnnotations.put("boomerang.io/task-default-image", this.settingsService.getSettingConfig("task", "default.image").getValue());
+      
+      //Add Context, Global, and Team parameters to the WorkflowRun request
+      ParamLayers paramLayers = parameterManager.buildParamLayers(teamRelationship.get().getToRef(), workflowId);
+      executionAnnotations.put("boomerang.io/global-params", paramLayers.getGlobalParams());
+      executionAnnotations.put("boomerang.io/context-params", paramLayers.getContextParams());
+      executionAnnotations.put("boomerang.io/team-params", paramLayers.getTeamParams());
+      
+      //Add Contextual Information such as team-name. Used by Engine and the AcquireTaskLock and other tasks to add a hidden prefix.
+      executionAnnotations.put("boomerang.io/team-name", teamRelationship.get().getTo());
+      request.getAnnotations().putAll(executionAnnotations);
+      
+      // TODO: figure out the storing of initiated by. Is that just a relationship?
+      WorkflowRun wfRun = engineClient.submitWorkflow(workflowId, request, start);
+      // TODO: FUTURE - Creates the relationship with the Workflow
+      // relationshipService.addRelationshipRef(RelationshipRef.WORKFLOWRUN, wfRun.getId(),
+      // RelationshipType.EXECUTIONOF, RelationshipRef.WORKFLOW, Optional.of(workflowId));
+
+      // Creates the owning relationship with the team that owns the Workflow
+      relationshipService.addRelationshipRef(RelationshipRef.WORKFLOWRUN, wfRun.getId(), RelationshipType.BELONGSTO,
+          teamRelationship.get().getTo(), Optional.of(teamRelationship.get().getToRef()), Optional.empty());
+      return wfRun;
+    } else {
+      throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
+    }
   }
 
   /*
@@ -475,6 +591,108 @@ public class WorkflowServiceImpl implements WorkflowService {
       } else if (currentSchedulerEnabled == false && requestSchedulerEnabled == true) {
         scheduleService.enableAllTriggerSchedules(request.getId());
       }
+    }
+  }
+
+  /*
+   * Check if the Team Quotas allow a Workflow to run
+   * 
+   * TODO: add additional checks for not exceeding Workspace size for any Workspace that is saved on the Workflow
+   */
+  private void canRunWithQuotas(String teamId, String workflowId, Optional<List<WorkflowWorkspace>> workspaces) {
+    if (settingsService.getSettingConfig("features", "workflowQuotas").getBooleanValue()) {
+      CurrentQuotas quotas = teamService.getQuotas(teamId);
+      if (quotas.getCurrentConcurrentWorkflows() > quotas.getMaxConcurrentRuns()) {
+        throw new BoomerangException(BoomerangError.QUOTA_EXCEEDED, "Concurrent Workflows", quotas.getCurrentConcurrentWorkflows(), quotas.getMaxConcurrentRuns());
+      } else if (quotas.getCurrentRuns() > quotas.getMaxWorkflowRunMonthly()) {
+        throw new BoomerangException(BoomerangError.QUOTA_EXCEEDED, "Number of Runs (executions)", quotas.getCurrentRuns(), quotas.getMaxWorkflowRunMonthly());
+      } else if (workspaces.isPresent() && workspaces.get().size() > 0) {
+        workspaces.get().forEach(ws -> {
+          try {
+            Field sizeField = ws.getSpec().getClass().getDeclaredField("size");
+            String size = (String) sizeField.get(ws.getSpec());
+            if (Integer.valueOf(size) > quotas.getMaxWorkflowStorage()) {
+              throw new BoomerangException(BoomerangError.QUOTA_EXCEEDED, "Requested Workspace size", size, quotas.getMaxWorkflowStorage());
+            }
+          } catch (NoSuchFieldException | IllegalAccessException ex) {
+            //Do nothing
+          }
+        });
+      }
+    }
+  }
+
+  /*
+   * Checks if the Workflow can be executed based on an active workflow and enabled triggers.
+   * 
+   * @param workflowId the Workflows unique ID
+   * 
+   * @param Trigger an optional Trigger object
+   */
+  protected void canRunWithTrigger(String workflowId, TriggerEnum runTrigger, List<RunParam> params) {
+    // Check no further if trigger not provided
+    if (!Objects.isNull(runTrigger)) {
+      // Check if Workflow exists and is active. Then check triggers are enabled.
+      Workflow workflow = engineClient.getWorkflow(workflowId, Optional.empty(), false);
+      if (!Objects.isNull(workflow)) {
+        WorkflowTrigger triggers = workflow.getTriggers();
+        if (TriggerEnum.manual.equals(runTrigger) && triggers.getManual().getEnabled()) {
+          return;
+        } else if (TriggerEnum.schedule.equals(runTrigger)
+            && triggers.getSchedule().getEnabled()) {
+          return;
+        } else if (TriggerEnum.webhook.equals(runTrigger)
+            && triggers.getWebhook().getEnabled()) {
+          return;
+        } else if (TriggerEnum.event.equals(runTrigger)
+            && triggers.getEvent().getEnabled()) {
+            Trigger trigger = triggers.getEvent();
+            validateTriggerConditions(ParameterUtil.getValue(params, "event"), trigger);
+            return;
+        } else if (TriggerEnum.github.equals(runTrigger) && triggers.getWebhook().getEnabled()) {
+          Trigger trigger = triggers.getWebhook();
+          validateTriggerConditions(ParameterUtil.getValue(params, "payload"), trigger);
+          return;
+        }
+        throw new BoomerangException(BoomerangError.WORKFLOWRUN_TRIGGER_DISABLED);
+      }
+    }
+  }
+
+  /*
+   * Implements the logic checks for each WorkflowTriggerCondition operation type
+   */
+  private void validateTriggerConditions(Object data,
+      Trigger trigger) {
+    if (!trigger.getConditions().isEmpty()) {
+      //Convert Object to JsonNode and configure for JsonPath
+      ObjectMapper mapper = new ObjectMapper();
+      JsonNode jData = mapper.valueToTree(data);
+      Configuration jsonConfig =
+          Configuration.builder().mappingProvider(new JacksonMappingProvider())
+              .jsonProvider(new JacksonJsonNodeJsonProvider())
+              .options(Option.DEFAULT_PATH_LEAF_TO_NULL).build();
+      DocumentContext jsonContext = JsonPath.using(jsonConfig).parse(jData);
+      
+      //Determine all conditions match
+      trigger.getConditions().forEach(con -> {
+        Boolean canRun = Boolean.TRUE;
+        String field = jsonContext.read(con.getField());
+        switch (con.getOperation()) {
+          case matches -> {
+            canRun = field.matches(con.getValue());
+          }
+          case equals -> {
+            canRun = field.equals(con.getValue());
+          }
+          case in -> {
+            canRun = con.getValues().contains(field);
+          }
+        }
+        if (!canRun) {
+          throw new BoomerangException(BoomerangError.WORKFLOWRUN_TRIGGER_DISABLED);
+        }
+      });
     }
   }
 
