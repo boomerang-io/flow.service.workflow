@@ -54,7 +54,7 @@ public class SecurityInterceptor implements HandlerInterceptor {
       AuthType[] requiredTypes = authScope.types();
       Token accessToken = this.identityService.getCurrentIdentity();
       // Check the required level of token is present
-      if (!Arrays.asList(requiredTypes).contains(accessToken.getType().toString())) {
+      if (!Arrays.asList(requiredTypes).contains(accessToken.getType())) {
         LOGGER.error("SecurityInterceptor - Unauthorized Type / Level. Needed: {}, Provided: {}", requiredTypes.toString(), accessToken.getType().toString());
      // TODO set this to return false
 //      response.getWriter().write("");

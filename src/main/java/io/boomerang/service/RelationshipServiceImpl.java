@@ -390,6 +390,6 @@ public class RelationshipServiceImpl implements RelationshipService {
   private List<String> getTeamsRefsByUsers(final List<String> userId) {
     List<RelationshipEntity> relationships = 
         this.relationshipRepository.findByFromAndFromRefInAndTypeAndTo(RelationshipRef.USER, userId, RelationshipType.MEMBEROF, RelationshipRef.TEAM);
-    return relationships.stream().map(RelationshipEntity::getFromRef).collect(Collectors.toList());
+    return relationships.stream().map(RelationshipEntity::getToRef).collect(Collectors.toList());
   }
 }

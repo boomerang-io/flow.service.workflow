@@ -124,7 +124,6 @@ public class WorkflowServiceImpl implements WorkflowService {
         relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.WORKFLOW),
             queryWorkflows, Optional.of(RelationshipType.BELONGSTO),
             Optional.ofNullable(RelationshipRef.TEAM), queryTeams);
-    LOGGER.debug("Query Ids: ", workflowRefs);
     if (workflowRefs.isEmpty()) {
       return new WorkflowResponsePage();
     }
