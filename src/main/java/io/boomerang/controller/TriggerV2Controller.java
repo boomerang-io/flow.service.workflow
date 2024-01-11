@@ -83,7 +83,7 @@ public class TriggerV2Controller {
             && ("shortcut".equals(slackType) || "event_callback".equals(slackType))) {
           // Handle Slack Events
           // TODO change this to processSlackWebhook
-          return triggerService.processWebhook(workflow.get(), payload);
+          return ResponseEntity.ok(triggerService.processWebhook(workflow.get(), payload));
         } else {
           return ResponseEntity.badRequest().build();
         }
@@ -98,7 +98,7 @@ public class TriggerV2Controller {
       }
       return ResponseEntity.badRequest().build();
     }    
-    return triggerService.processWebhook(workflow.get(), payload);
+    return ResponseEntity.ok(triggerService.processWebhook(workflow.get(), payload));
   }
 
   /**
@@ -118,7 +118,7 @@ public class TriggerV2Controller {
       @Parameter(name = "status", description = "The status to set the wait for end to",
           required = false) @RequestParam(defaultValue = "success") String status,
       @RequestBody JsonNode payload) {
-    return triggerService.processWFE(workflow, workflowrun, topic, status, Optional.of(payload));
+    return ResponseEntity.ok(triggerService.processWFE(workflow, workflowrun, topic, status, Optional.of(payload)));
   }
 
   /**
@@ -140,7 +140,7 @@ public class TriggerV2Controller {
           required = true) @RequestParam(required = true) String topic,
       @Parameter(name = "status", description = "The status to set for the WaitForEvent TaskRun",
           required = false) @RequestParam(defaultValue = "success") String status) {
-    return triggerService.processWFE(workflow, workflowrun, topic, status, Optional.empty());
+    return ResponseEntity.ok(triggerService.processWFE(workflow, workflowrun, topic, status, Optional.empty()));
   }
 
   /**
@@ -157,7 +157,7 @@ public class TriggerV2Controller {
       @Parameter(name = "workflow", description = "The Workflow the request relates to",
           required = false) @RequestParam(required = false) Optional<String> workflow,
       @RequestBody CloudEvent event) {
-    return triggerService.processEvent(event, workflow);
+    return ResponseEntity.ok(triggerService.processEvent(event, workflow));
   }
 
   /**
@@ -169,6 +169,6 @@ public class TriggerV2Controller {
           required = false) @RequestParam(required = false) Optional<String> workflow,
       @RequestHeader HttpHeaders headers, @RequestBody String data) {
     CloudEvent event = CloudEventHttpUtils.toReader(headers, () -> data.getBytes()).toEvent();
-    return triggerService.processEvent(event, workflow);
+    return ResponseEntity.ok(triggerService.processEvent(event, workflow));
   }
 }
