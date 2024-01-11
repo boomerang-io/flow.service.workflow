@@ -822,13 +822,16 @@ public class FlowActivityServiceImpl implements FlowActivityService {
     }
 
     long maxDuration = TimeUnit.MINUTES.toMillis(this.maxWorkflowDuration);
+    LOGGER.info("The max.workflow.duration is " + maxDuration);
+
     if (scope == WorkflowScope.user) {
       maxDuration = TimeUnit.MINUTES.toMillis(Integer.parseInt(
           flowSettingsService.getConfiguration("users", "max.user.workflow.duration").getValue()));
-
+      LOGGER.info("The max.workflow.duration changed to " + maxDuration + " as there is a value for max.user.workflow.duration.");
     } else if (scope == WorkflowScope.team) {
       maxDuration = TimeUnit.MINUTES.toMillis(teamService.getTeamById(workflow.getFlowTeamId())
           .getQuotas().getMaxWorkflowExecutionTime());
+      LOGGER.info("The max.workflow.duration changed to " + maxDuration + " as there is a value for team max workflow execution time.");
     }
 
     List<TaskExecutionEntity> activites = taskService.findTaskActiivtyForActivity(activityId);
@@ -837,17 +840,19 @@ public class FlowActivityServiceImpl implements FlowActivityService {
 
     for (TaskExecutionEntity task : activites) {
       if (task.getTaskType() == TaskType.template || task.getTaskType() == TaskType.customtask) {
-
         if (task.getFlowTaskStatus() == TaskStatus.completed
             || task.getFlowTaskStatus() == TaskStatus.failure) {
           totalDuration += task.getDuration();
+          LOGGER.info("The duration for activity " + task.getActivityId() + " is " + task.getDuration());
         } else if (task.getFlowTaskStatus() == TaskStatus.inProgress) {
           Date currentTime = new Date();
           long inProgressTime = currentTime.getTime() - task.getStartTime().getTime();
+          LOGGER.info("The inProgressTime for activity " + task.getActivityId() + " is " + inProgressTime);
           totalDuration += inProgressTime;
         }
       }
     }
+    LOGGER.info("The totalDuration is " + totalDuration);
 
     if (maxDuration < totalDuration) {
       return true;
