@@ -500,6 +500,7 @@ public class TaskServiceImpl implements TaskService {
     String workflowActivityId = workflowActivity.getId();
 
     boolean workflowQuotasEnabled = flowSettingsService.getConfiguration("features", "workflowQuotas").getBooleanValue();
+    LOGGER.debug("[{}] Workflow Quotas Enabled", workflowQuotasEnabled);
     
     if (workflowQuotasEnabled && this.flowActivityService.hasExceededExecutionQuotas(workflowActivityId)) {
       LOGGER.error("Workflow has been cancelled due to its max workflow duration has exceeded.");
