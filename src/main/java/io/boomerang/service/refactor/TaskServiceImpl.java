@@ -46,6 +46,7 @@ import io.boomerang.mongo.model.next.DAGTask;
 import io.boomerang.mongo.model.next.Dependency;
 import io.boomerang.mongo.service.ActivityTaskService;
 import io.boomerang.mongo.service.ApprovalService;
+import io.boomerang.mongo.service.FlowSettingsService;
 import io.boomerang.mongo.service.FlowTaskTemplateService;
 import io.boomerang.mongo.service.FlowWorkflowActivityService;
 import io.boomerang.mongo.service.FlowWorkflowService;
@@ -91,6 +92,9 @@ public class TaskServiceImpl implements TaskService {
 
   @Autowired
   private LockManager lockManager;
+  
+  @Autowired
+  private FlowSettingsService flowSettingsService;
 
   private static final Logger LOGGER = LogManager.getLogger();
 
@@ -495,7 +499,10 @@ public class TaskServiceImpl implements TaskService {
 
     String workflowActivityId = workflowActivity.getId();
 
-    if (this.flowActivityService.hasExceededExecutionQuotas(workflowActivityId)) {
+    boolean workflowQuotasEnabled = flowSettingsService.getConfiguration("features", "workflowQuotas").getBooleanValue();
+    LOGGER.debug("[{}] Workflow Quotas Enabled", workflowQuotasEnabled);
+    
+    if (workflowQuotasEnabled && this.flowActivityService.hasExceededExecutionQuotas(workflowActivityId)) {
       LOGGER.error("Workflow has been cancelled due to its max workflow duration has exceeded.");
       ErrorResponse response = new ErrorResponse();
       response
