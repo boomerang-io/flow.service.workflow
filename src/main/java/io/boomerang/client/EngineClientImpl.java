@@ -1,5 +1,8 @@
 package io.boomerang.client;
 
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -737,20 +740,10 @@ public class EngineClientImpl implements EngineClient {
       return outputStream -> {
         RequestCallback requestCallback = request -> request.getHeaders()
             .setAccept(Arrays.asList(MediaType.APPLICATION_OCTET_STREAM, MediaType.ALL));
-
-        ResponseExtractor<ResponseEntity<StreamingResponseBody>> responseExtractor = response -> {
-          return ResponseEntity.status(response.getRawStatusCode())
-                  .headers(response.getHeaders())
-                  .body(inputStream -> {
-                      byte[] data = new byte[2048];
-                      int read = 0;
-                      while ((read = response.getBody().read(data)) > 0) {
-                        inputStream.write(data, 0, read);
-                      }
-                      inputStream.flush();
-                  });
-          };
-        LOGGER.info("Starting log download: {}", url);
+        PrintWriter printWriter = new PrintWriter(outputStream);
+        ResponseExtractor<Void> responseExtractor =
+            getResponseExtractor(outputStream, printWriter);
+        LOGGER.info("Starting TaskRun[{}] log stream...", taskRunId);
         try {
           restTemplate.execute(url, HttpMethod.GET, requestCallback, responseExtractor);
         } catch (Exception ex) {
@@ -760,6 +753,19 @@ public class EngineClientImpl implements EngineClient {
               HttpStatus.INTERNAL_SERVER_ERROR);
         }
         LOGGER.info("Finished TaskRun[{}] log stream.", taskRunId);
+      };
+  }
+  
+  private ResponseExtractor<Void> getResponseExtractor(
+      OutputStream outputStream, PrintWriter printWriter) {
+      return restTemplateResponse -> {
+        InputStream is = restTemplateResponse.getBody();
+        int nRead;
+        byte[] data = new byte[1024];
+        while ((nRead = is.read(data, 0, data.length)) != -1) {
+          outputStream.write(data, 0, nRead);
+        }
+        return null;
       };
   }
 
