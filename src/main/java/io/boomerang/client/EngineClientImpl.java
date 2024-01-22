@@ -731,7 +731,7 @@ public class EngineClientImpl implements EngineClient {
   
   @Override
   public StreamingResponseBody streamTaskRunLog(String taskRunId) {
-    String url = endTaskRunURL.replace("{taskRunId}", taskRunId);
+    String url = logStreamTaskRunURL.replace("{taskRunId}", taskRunId);
     LOGGER.info("URL: " + url);
       
       return outputStream -> {
