@@ -21,9 +21,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @RequestMapping("/api/v2/taskrun")
 @Tag(name = "TaskRun Management", description = "View, Start, Stop, and Update Status of your Task Runs.")
 public class TaskRunV2Controller {
+  
   @Autowired
   private TaskRunService taskRunService;
-
 
   @GetMapping(value = "/{taskRunId}/log")
   @Operation(summary = "Retrieve a TaskRuns log from a specific WorkflowRun.")
