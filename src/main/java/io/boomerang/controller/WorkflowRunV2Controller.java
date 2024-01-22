@@ -2,28 +2,21 @@ package io.boomerang.controller;
 
 import java.util.List;
 import java.util.Optional;
-import javax.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort.Direction;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import io.boomerang.model.ref.WorkflowRun;
 import io.boomerang.model.ref.WorkflowRunCount;
 import io.boomerang.model.ref.WorkflowRunRequest;
-import io.boomerang.model.ref.WorkflowSubmitRequest;
-import io.boomerang.service.TaskRunService;
 import io.boomerang.service.WorkflowRunService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -39,9 +32,6 @@ public class WorkflowRunV2Controller {
 
   @Autowired
   private WorkflowRunService workflowRunService;
-
-  @Autowired
-  private TaskRunService taskRunService;
 
   @GetMapping(value = "/query")
   @Operation(summary = "Search for WorkflowRuns")
@@ -156,23 +146,5 @@ public class WorkflowRunV2Controller {
       required = true) @PathVariable(required = true) String workflowRunId,
       @RequestBody Optional<WorkflowRunRequest> runRequest) {
     return workflowRunService.retry(workflowRunId);
-  }
-
-  @GetMapping(value = "/{workflowRunId}/{taskRunId}/log")
-  @Operation(summary = "Retrieve a TaskRuns log from a specific WorkflowRun.")
-  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
-      @ApiResponse(responseCode = "400", description = "Bad Request")})
-  @ResponseBody
-  public ResponseEntity<StreamingResponseBody> getTaskRunLog(
-      @Parameter(name = "workflowRunId",
-      description = "ID of WorkflowRun",
-      required = true) @PathVariable String workflowRunId,
-      @Parameter(name = "taskRunId",
-      description = "Id of TaskRun",
-      required = true) @PathVariable String taskRunId,
-      HttpServletResponse response) {
-  response.setContentType("text/plain");
-  response.setCharacterEncoding("UTF-8");
-  return new ResponseEntity<StreamingResponseBody>(taskRunService.getTaskRunLog(workflowRunId, taskRunId), HttpStatus.OK);
   }
 }

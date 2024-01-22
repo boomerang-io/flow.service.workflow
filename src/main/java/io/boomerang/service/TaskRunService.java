@@ -4,6 +4,6 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 
 public interface TaskRunService {
 
-  StreamingResponseBody getTaskRunLog(String workflowRunId, String taskRunId);
+  StreamingResponseBody streamLog(String taskRunId);
 
 }

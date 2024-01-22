@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import io.boomerang.model.ref.ChangeLogVersion;
 import io.boomerang.model.ref.TaskRun;
 import io.boomerang.model.ref.TaskRunEndRequest;
@@ -64,6 +65,8 @@ public interface EngineClient {
   TaskRun endTaskRun(String taskRunId, TaskRunEndRequest request);
 
   TaskRun getTaskRun(String taskRunId);
+  
+  StreamingResponseBody streamTaskRunLog(String taskRunId);
 
   TaskTemplate getTaskTemplate(String name, Optional<Integer> version);
 

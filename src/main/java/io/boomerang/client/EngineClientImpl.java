@@ -21,8 +21,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RequestCallback;
+import org.springframework.web.client.ResponseExtractor;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import org.springframework.web.util.UriComponentsBuilder;
 import io.boomerang.error.BoomerangException;
 import io.boomerang.model.ref.ChangeLogVersion;
@@ -40,9 +43,9 @@ import io.boomerang.model.ref.WorkflowTemplate;
 
 @Service
 @Primary
-public class submitWorkflow implements EngineClient {
+public class EngineClientImpl implements EngineClient {
 
-  private static final Logger LOGGER = LogManager.getLogger(submitWorkflow.class);
+  private static final Logger LOGGER = LogManager.getLogger(EngineClientImpl.class);
 
   @Value("${flow.engine.workflowrun.query.url}")
   public String queryWorkflowRunURL;
@@ -103,6 +106,9 @@ public class submitWorkflow implements EngineClient {
 
   @Value("${flow.engine.taskrun.end.url}")
   public String endTaskRunURL;
+
+  @Value("${flow.engine.taskrun.logstream.url}")
+  private String logStreamTaskRunURL;
 
   @Value("${flow.engine.tasktemplate.get.url}")
   public String getTaskTemplateURL;
@@ -703,7 +709,6 @@ public class submitWorkflow implements EngineClient {
   public TaskRun endTaskRun(String taskRunId, TaskRunEndRequest request) {
     try {
       String url = endTaskRunURL.replace("{taskRunId}", taskRunId);
-
       LOGGER.info("URL: " + url);
 
       final HttpHeaders headers = new HttpHeaders();
@@ -722,6 +727,40 @@ public class submitWorkflow implements EngineClient {
           ex.getClass().getSimpleName(), "Exception in communicating with internal services.",
           HttpStatus.INTERNAL_SERVER_ERROR);
     }
+  }
+  
+  @Override
+  public StreamingResponseBody streamTaskRunLog(String taskRunId) {
+    String url = endTaskRunURL.replace("{taskRunId}", taskRunId);
+    LOGGER.info("URL: " + url);
+      
+      return outputStream -> {
+        RequestCallback requestCallback = request -> request.getHeaders()
+            .setAccept(Arrays.asList(MediaType.APPLICATION_OCTET_STREAM, MediaType.ALL));
+
+        ResponseExtractor<ResponseEntity<StreamingResponseBody>> responseExtractor = response -> {
+          return ResponseEntity.status(response.getRawStatusCode())
+                  .headers(response.getHeaders())
+                  .body(inputStream -> {
+                      byte[] data = new byte[2048];
+                      int read = 0;
+                      while ((read = response.getBody().read(data)) > 0) {
+                        inputStream.write(data, 0, read);
+                      }
+                      inputStream.flush();
+                  });
+          };
+        LOGGER.info("Starting log download: {}", url);
+        try {
+          restTemplate.execute(url, HttpMethod.GET, requestCallback, responseExtractor);
+        } catch (Exception ex) {
+          LOGGER.error(ex.toString());
+          throw new BoomerangException(ex, HttpStatus.INTERNAL_SERVER_ERROR.value(),
+              ex.getClass().getSimpleName(), "Exception in communicating with internal services.",
+              HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        LOGGER.info("Finished TaskRun[{}] log stream.", taskRunId);
+      };
   }
 
   /*
