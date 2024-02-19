@@ -142,11 +142,13 @@ public class AuthenticationFilter extends OncePerRequestFilter {
       final String jws = token.replace("Bearer ", "");
       Claims claims;
       String withoutSignature = jws.substring(0, jws.lastIndexOf('.') + 1);
+
       try {
         claims = (Claims) new DefaultJwtParser().parse(withoutSignature).getBody();
       } catch (ExpiredJwtException e) {
         claims = e.getClaims();
       }
+      LOGGER.debug("AuthFilter() - claims: " + claims.toString());
       String email = null;
       if (claims.get("emailAddress") != null) {
         email = (String) claims.get("emailAddress");
