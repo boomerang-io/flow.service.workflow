@@ -340,6 +340,10 @@ public class TokenServiceImpl implements TokenService {
     if (activateOverride && !identityService.isActivated()) {
       user = identityService.getAndRegisterUser(email, firstName, lastName,
           Optional.of(UserType.admin));
+      if (user.isPresent()) {
+        relationshipService.addRelationshipRef(RelationshipRef.USER, user.get().getId(), RelationshipType.MEMBEROF,
+            RelationshipRef.TEAM, Optional.of("system"),Optional.of(Map.of("role",RoleEnum.OWNER.getLabel())));
+      }
     } else if (identityService.isActivated()) {
       user = identityService.getAndRegisterUser(email, firstName, lastName,
           Optional.of(UserType.user));
