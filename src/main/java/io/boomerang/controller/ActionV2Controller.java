@@ -55,6 +55,16 @@ public class ActionV2Controller {
       required = true) @PathVariable String actionId) {
       actionService.get(actionId);
   }
+  
+  @GetMapping(value = "")
+  @Operation(summary = "Retrieve a specifc Action by TaskRun")
+  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
+      @ApiResponse(responseCode = "400", description = "Bad Request")})
+  public void getByTaskRun(
+      @Parameter(name = "taskRunId", description = "Retrieve Action by TaskRun",
+      required = true) @RequestParam(required = true) String taskRunId) {
+      actionService.getByTaskRun(taskRunId);
+  }
 
   @GetMapping(value = "/query")
   @Operation(summary = "Search for Actions")
