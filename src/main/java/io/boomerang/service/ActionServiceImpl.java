@@ -137,9 +137,15 @@ public class ActionServiceImpl implements ActionService {
           approved = true;
         }
         actionEntity.setStatus(approved ? ActionStatus.approved : ActionStatus.rejected);
-        TaskRunEndRequest endRequest = new TaskRunEndRequest();
-        endRequest.setStatus(approved ? RunStatus.succeeded : RunStatus.failed);
-        engineClient.endTaskRun(actionEntity.getTaskRunRef(), endRequest);
+        try {
+          TaskRunEndRequest endRequest = new TaskRunEndRequest();
+          endRequest.setStatus(approved ? RunStatus.succeeded : RunStatus.failed);
+          engineClient.endTaskRun(actionEntity.getTaskRunRef(), endRequest);
+        } catch (BoomerangException e) {
+        //TODO better error around INVALID APPROVER GROUP REF
+          throw new BoomerangException(BoomerangError.ACTION_INVALID_REF);
+        }
+        this.actionRepository.save(actionEntity);
       }
     }
   }
