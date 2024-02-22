@@ -239,9 +239,10 @@ public class ParameterUtil {
     if (paramSpecs != null && !paramSpecs.isEmpty()) {
       for (ParamSpec ps : paramSpecs) {
         AbstractParam param = new AbstractParam();
-        if (abstractParams.stream().filter(p -> p.getKey().equals(ps.getName())).count() > 0) {
+        if (abstractParams.stream().anyMatch(p -> p.getKey().equals(ps.getName()))) {
           param = abstractParams.stream().filter(p -> p.getKey().equals(ps.getName())).findFirst()
               .get();
+          abstractParams.remove(param);
         } else {
           param.setKey(ps.getName());
         }
@@ -249,7 +250,10 @@ public class ParameterUtil {
           param.setDefaultValue(ps.getDefaultValue().toString());
         }
         param.setDescription(ps.getDescription());
-        param.setType("text");
+        //TOOD better type mapping
+        if (param.getType().isEmpty()) {
+          param.setType("text");
+        }
         params.add(param);
       } ;
     }
