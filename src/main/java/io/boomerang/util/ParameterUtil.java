@@ -7,13 +7,15 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import io.boomerang.model.AbstractParam;
 import io.boomerang.model.enums.ref.ParamType;
 import io.boomerang.model.ref.ParamSpec;
 import io.boomerang.model.ref.RunParam;
 
 public class ParameterUtil {
-
+  
   /*
    * Add a parameter to an existing Run Parameter list
    * 
@@ -255,7 +257,7 @@ public class ParameterUtil {
           param.setType("text");
         }
         params.add(param);
-      } ;
+      }
     }
     // If any abstractParams are remaining, return them
     if (abstractParams != null && !abstractParams.isEmpty()) {

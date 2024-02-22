@@ -444,14 +444,7 @@ public class TeamServiceImpl implements TeamService {
    * - ApproverGroup name must be unique per team
    */
   private void createOrUpdateApproverGroups(TeamEntity teamEntity, List<ApproverGroupRequest> request) {
-    //Retrieve ApproverGroups by relationship as they are stored separately to the TeamEntity
-    List<String> approverGroupRefs =
-        relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.APPROVERGROUP),
-            Optional.empty(), Optional.of(RelationshipType.BELONGSTO),
-            Optional.of(RelationshipRef.TEAM), Optional.of(List.of(teamEntity.getName())));
-    
-    List<ApproverGroupEntity> approverGroupEntities =
-        approverGroupRepository.findByIdIn(approverGroupRefs);
+    List<ApproverGroupEntity> approverGroupEntities = getApproverGroupsForTeam(teamEntity.getName());
     
     for (ApproverGroupRequest r : request) {
       //Ensure ApproverGroupName is not blank or null
@@ -500,6 +493,18 @@ public class TeamServiceImpl implements TeamService {
             approverGroupEntity.getId(), RelationshipType.BELONGSTO, RelationshipRef.TEAM, Optional.of(teamEntity.getName()), Optional.empty());
       }
     }
+  }
+  
+  //Retrieve ApproverGroups by relationship as they are stored separately to the TeamEntity
+  private List<ApproverGroupEntity> getApproverGroupsForTeam(String team) {
+    List<String> approverGroupRefs =
+        relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.APPROVERGROUP),
+            Optional.empty(), Optional.of(RelationshipType.BELONGSTO),
+            Optional.of(RelationshipRef.TEAM), Optional.of(List.of(team)));
+    
+    List<ApproverGroupEntity> approverGroupEntities =
+        approverGroupRepository.findByIdIn(approverGroupRefs);
+    return approverGroupEntities;
   }
 
   /*

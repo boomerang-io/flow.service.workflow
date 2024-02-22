@@ -65,9 +65,8 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
         TaskTemplate taskTemplate = engineClient.getTaskTemplate(name, version);
         
         // Process Parameters - create configs for any Params
-        if (taskTemplate.getSpec().getParams() != null && !taskTemplate.getSpec().getParams().isEmpty()) {
-          ParameterUtil.paramSpecToAbstractParam(taskTemplate.getSpec().getParams(), taskTemplate.getConfig());
-        }
+        taskTemplate.getSpec().setParams(ParameterUtil.abstractParamsToParamSpecs(taskTemplate.getConfig(), taskTemplate.getSpec().getParams()));
+        taskTemplate.setConfig(ParameterUtil.paramSpecToAbstractParam(taskTemplate.getSpec().getParams(), taskTemplate.getConfig()));
         
         // Switch from UserId to Users Name
         switchChangeLogAuthorToUserName(taskTemplate.getChangelog());
