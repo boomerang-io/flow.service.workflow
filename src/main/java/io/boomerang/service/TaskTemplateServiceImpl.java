@@ -186,8 +186,8 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
       updateChangeLog(request.getChangelog());
       
       // Process Parameters - ensure Param and Config share the same params
-      ParameterUtil.abstractParamsToParamSpecs(request.getConfig(), request.getSpec().getParams());
-      ParameterUtil.paramSpecToAbstractParam(request.getSpec().getParams(), request.getConfig());
+      request.getSpec().setParams(ParameterUtil.abstractParamsToParamSpecs(request.getConfig(), request.getSpec().getParams()));
+      request.setConfig(ParameterUtil.paramSpecToAbstractParam(request.getSpec().getParams(), request.getConfig()));
       
       TaskTemplate template = engineClient.applyTaskTemplate(request, replace);
       switchChangeLogAuthorToUserName(template.getChangelog());
