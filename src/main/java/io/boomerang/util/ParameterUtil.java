@@ -207,7 +207,7 @@ public class ParameterUtil {
     if (abstractParams != null && !abstractParams.isEmpty()) {
       for (AbstractParam ap : abstractParams) {
         ParamSpec param = new ParamSpec();
-        if (paramSpecs.stream().filter(p -> p.getName().equals(ap.getKey())).count() > 0) {
+        if (paramSpecs != null && !paramSpecs.isEmpty() && paramSpecs.stream().filter(p -> p.getName().equals(ap.getKey())).count() > 0) {
           param =
               paramSpecs.stream().filter(p -> p.getName().equals(ap.getKey())).findFirst().get();
           paramSpecs.remove(param);
