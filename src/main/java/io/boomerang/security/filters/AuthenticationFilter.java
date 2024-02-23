@@ -208,7 +208,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 
       if (email != null && !email.isBlank()) {
         final Token userSessionToken =
-            tokenService.createUserSessionToken(email, null, null, activateOverride);
+            tokenService.createUserSessionToken(email, null, null, allowActivation, allowUserCreation);
         final List<GrantedAuthority> authorities = new ArrayList<>();
         final UsernamePasswordAuthenticationToken authToken =
             new UsernamePasswordAuthenticationToken(email, password, authorities);
