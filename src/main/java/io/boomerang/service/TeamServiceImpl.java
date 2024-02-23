@@ -829,7 +829,7 @@ public class TeamServiceImpl implements TeamService {
           relationshipService.patchRelationshipData(RelationshipRef.USER, userEntity.get().getId(), RelationshipType.MEMBEROF, Map.of("role",userSummary.getRole()));
         } else {
           //Create new user record & relationship
-          Optional<UserEntity> newUser = identityService.getAndRegisterUser(userSummary.getEmail(), null, null, Optional.of(UserType.user));
+          Optional<UserEntity> newUser = identityService.getAndRegisterUser(userSummary.getEmail(), null, null, Optional.of(UserType.user), false);
           if (newUser.isPresent()) {
             relationshipService.addRelationshipRef(RelationshipRef.USER, newUser.get().getId(), RelationshipType.MEMBEROF,
                 RelationshipRef.TEAM, Optional.of(team),Optional.of(Map.of("role",userSummary.getRole())));
