@@ -6,7 +6,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
-import java.util.regex.Pattern;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -26,7 +25,6 @@ import com.slack.api.app_backend.SlackSignature.Generator;
 import com.slack.api.app_backend.SlackSignature.Verifier;
 import io.boomerang.security.AuthorizationException;
 import io.boomerang.security.model.Token;
-import io.boomerang.security.model.TokenTypePrefix;
 import io.boomerang.security.service.TokenService;
 import io.boomerang.service.SettingsService;
 import io.jsonwebtoken.Claims;
@@ -53,6 +51,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
   private static final String X_SLACK_SIGNATURE = "X-Slack-Signature";
   private static final String X_SLACK_TIMESTAMP = "X-Slack-Request-Timestamp";
   private static final String PATH_ACTIVATE = "/api/v2/activate";
+  private static final String PATH_PROFILE = "/api/v2/user/profile";
   private static final String TOKEN_PATTERN = "Bearer\\sbf._(.)+";
 
   private TokenService tokenService;
@@ -133,9 +132,14 @@ public class AuthenticationFilter extends OncePerRequestFilter {
   {
     final String token = request.getHeader(AUTHORIZATION_HEADER);
 
-    boolean activateOverride = false;
+    boolean allowActivation = false;
     if (request.getServletPath().startsWith(PATH_ACTIVATE)) {
-      activateOverride = true;
+      allowActivation = true;
+    }
+    
+    boolean allowUserCreation = false;
+    if (request.getServletPath().startsWith(PATH_PROFILE)) {
+      allowUserCreation = true;
     }
 
     if (token.startsWith("Bearer ")) {
@@ -175,7 +179,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 
       if (email != null && !email.isBlank()) {
         final Token userSessionToken =
-            tokenService.createUserSessionToken(email, firstName, lastName, activateOverride);
+            tokenService.createUserSessionToken(email, firstName, lastName, allowActivation, allowUserCreation);
         final List<GrantedAuthority> authorities = new ArrayList<>();
         final UsernamePasswordAuthenticationToken authToken =
             new UsernamePasswordAuthenticationToken(email, null, authorities);
@@ -222,14 +226,19 @@ public class AuthenticationFilter extends OncePerRequestFilter {
    * TODO: what is the value for X_FORWARDED_USER
    */
   private Authentication getGithubUserAuthentication(HttpServletRequest request) {
-    boolean activateOverride = false;
+    boolean allowActivation = false;
     if (request.getServletPath().startsWith(PATH_ACTIVATE)) {
-      activateOverride = true;
+      allowActivation = true;
+    }
+    
+    boolean allowUserCreation = false;
+    if (request.getServletPath().startsWith(PATH_PROFILE)) {
+      allowUserCreation = true;
     }
     String email = request.getHeader(X_FORWARDED_EMAIL);
     String userName = request.getHeader(X_FORWARDED_USER);
     final Token token =
-        tokenService.createUserSessionToken(email, userName, null, activateOverride);
+        tokenService.createUserSessionToken(email, userName, null, allowActivation, allowUserCreation);
     if (email != null && !email.isBlank()) {
       final List<GrantedAuthority> authorities = new ArrayList<>();
       final UsernamePasswordAuthenticationToken authToken =

@@ -335,25 +335,24 @@ public class TokenServiceImpl implements TokenService {
    * TODO: is this method declaration ever call besides the wrapper - should they be combined.
    */
   public Token createUserSessionToken(String email, String firstName, String lastName,
-      boolean activateOverride) {
+      boolean allowActivation, boolean allowUserCreation) {
     Optional<UserEntity> user = Optional.empty();
-    if (activateOverride && !identityService.isActivated()) {
+    if (allowActivation && !identityService.isActivated()) {
       user = identityService.getAndRegisterUser(email, firstName, lastName,
-          Optional.of(UserType.admin));
+          Optional.of(UserType.admin), allowUserCreation);
       if (user.isPresent()) {
         relationshipService.addRelationshipRef(RelationshipRef.USER, user.get().getId(), RelationshipType.MEMBEROF,
             RelationshipRef.TEAM, Optional.of("system"),Optional.of(Map.of("role",RoleEnum.OWNER.getLabel())));
       }
     } else if (identityService.isActivated()) {
       user = identityService.getAndRegisterUser(email, firstName, lastName,
-          Optional.of(UserType.user));
+          Optional.of(UserType.user), allowUserCreation);
     } else {
       throw new HttpClientErrorException(HttpStatus.LOCKED);
     }
 
     if (!user.isPresent()) {
-      // TODO throw exception
-      return null;
+      throw new HttpClientErrorException(HttpStatus.FORBIDDEN);
     }
     Calendar cal = Calendar.getInstance();
     cal.setTime(new Date());
@@ -373,7 +372,7 @@ public class TokenServiceImpl implements TokenService {
       permissions.addAll(roleRepository.findByTypeAndName("global", UserType.operator.toString()).getPermissions());
     } else {
       // Collect all team permissions the user has
-      Map<String, String> teamRefs = relationshipService.getMyTeamRefsAndRoles();
+      Map<String, String> teamRefs = relationshipService.getMyTeamRefsAndRoles(user.get().getId());
       teamRefs.forEach((k, v) -> {
         roleRepository.findByTypeAndName("team", v).getPermissions().stream().forEach(p -> permissions.add(p.replace("{principal}", k)));
       });

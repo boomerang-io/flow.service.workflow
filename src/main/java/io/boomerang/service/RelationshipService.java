@@ -35,7 +35,7 @@ public interface RelationshipService {
   Optional<String> getRelationshipRef(RelationshipRef fromType, String fromRef,
       RelationshipType relationship);
 
-  Map<String, String> getMyTeamRefsAndRoles();
+  Map<String, String> getMyTeamRefsAndRoles(String userId);
 
   List<RelationshipEntity> getFilteredRels(Optional<RelationshipRef> from,
       Optional<List<String>> fromRefs, Optional<RelationshipType> type,

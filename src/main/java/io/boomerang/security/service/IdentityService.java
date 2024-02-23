@@ -7,12 +7,10 @@ import org.springframework.data.domain.Sort.Direction;
 import org.springframework.http.ResponseEntity;
 import io.boomerang.data.entity.UserEntity;
 import io.boomerang.model.OneTimeCode;
-import io.boomerang.model.Team;
 import io.boomerang.model.User;
 import io.boomerang.model.UserProfile;
 import io.boomerang.model.UserRequest;
 import io.boomerang.model.enums.UserType;
-import io.boomerang.model.ref.Workflow;
 import io.boomerang.security.model.AuthType;
 import io.boomerang.security.model.Token;
 
@@ -37,7 +35,7 @@ public interface IdentityService {
 //  Team getCurrentTeam();
 
   Optional<UserEntity> getAndRegisterUser(String email, String firstName, String lastName,
-      Optional<UserType> usertype);
+      Optional<UserType> usertype, boolean allowUserCreation);
 
   Page<User> query(Optional<Integer> queryPage, Optional<Integer> queryLimit,
       Optional<Direction> queryOrder, Optional<String> querySort,

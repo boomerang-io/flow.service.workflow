@@ -60,16 +60,16 @@ public class IdentityServiceImpl implements IdentityService {
 
   @Value("${flow.externalUrl.user}")
   private String externalUserUrl;
-  
+
   @Value("${flow.otc}")
-  private String corePlatformOTC;  
+  private String corePlatformOTC;
 
   @Autowired
   private ExternalUserService extUserService;
-  
+
   @Autowired
   private UserRepository userRepository;
-  
+
   @Autowired
   private RelationshipService relationshipService;
 
@@ -94,7 +94,7 @@ public class IdentityServiceImpl implements IdentityService {
     }
     return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
   }
-  
+
   /*
    * Used by the CreateUserSession to check if instance is activated
    */
@@ -111,14 +111,14 @@ public class IdentityServiceImpl implements IdentityService {
    */
   @Override
   public Optional<UserEntity> getAndRegisterUser(String email, String firstName, String lastName,
-      Optional<UserType> usertype) {
+      Optional<UserType> usertype, boolean allowUserCreation) {
     if (email == null || email.isBlank()) {
       return Optional.empty();
     }
 
     Optional<UserEntity> userEntity = getUserEntityByEmail(email);
     if (externalUserUrl.isBlank()) {
-      if (userEntity.isEmpty()) {
+      if (userEntity.isEmpty() && allowUserCreation) {
         // Create new User (UserEntity is defaulted on new)
         UserEntity newUserEntity = new UserEntity();
         newUserEntity.setEmail(email);
@@ -126,9 +126,11 @@ public class IdentityServiceImpl implements IdentityService {
           newUserEntity.setType(usertype.get());
         }
         userEntity = Optional.of(newUserEntity);
+      } else if (userEntity.isEmpty()) {
+        return Optional.empty();
       }
       // Refresh name from provided details
-      String name; 
+      String name;
       if (firstName == null && lastName == null && email != null) {
         name = email;
       } else {
@@ -147,7 +149,8 @@ public class IdentityServiceImpl implements IdentityService {
   }
 
   private void convertExternalUserType(ExternalUserProfile extUser, UserEntity userEntity) {
-    if (!UserType.user.equals(extUser.getType()) && !UserType.admin.equals(extUser.getType()) && !UserType.operator.equals(extUser.getType())) {
+    if (!UserType.user.equals(extUser.getType()) && !UserType.admin.equals(extUser.getType())
+        && !UserType.operator.equals(extUser.getType())) {
       userEntity.setType(UserType.user);
     }
   }
@@ -170,7 +173,7 @@ public class IdentityServiceImpl implements IdentityService {
     }
     return Optional.empty();
   }
-  
+
   @Override
   public Optional<User> getUserByEmail(String userEmail) {
     Optional<UserEntity> userEntity = getUserEntityByEmail(userEmail);
@@ -179,10 +182,11 @@ public class IdentityServiceImpl implements IdentityService {
     }
     return Optional.empty();
   }
-  
+
   private Optional<UserEntity> getUserEntityByEmail(String userEmail) {
     if (externalUserUrl.isBlank()) {
-    UserEntity extUser = userRepository.findByEmailIgnoreCaseAndStatus(userEmail, UserStatus.active);
+      UserEntity extUser =
+          userRepository.findByEmailIgnoreCaseAndStatus(userEmail, UserStatus.active);
       if (extUser != null) {
         UserEntity userEntity = new UserEntity();
         BeanUtils.copyProperties(extUser, userEntity);
@@ -218,24 +222,31 @@ public class IdentityServiceImpl implements IdentityService {
       }
     }
     // Add TeamSummaries
-    Map<String, String> teamRefs = relationshipService.getMyTeamRefsAndRoles();
+    Map<String, String> teamRefs = relationshipService.getMyTeamRefsAndRoles(profile.getId());
     List<TeamSummary> teamSummaries = new LinkedList<>();
     List<String> permissions = new LinkedList<>();
     teamRefs.forEach((k, v) -> {
       Optional<TeamEntity> teamEntity = teamRepository.findByNameIgnoreCase(k);
       if (teamEntity.isPresent()) {
-        //Generate TeamSummary + Insight
+        // Generate TeamSummary + Insight
         TeamSummary ts = new TeamSummary(teamEntity.get());
         TeamSummaryInsights tsi = new TeamSummaryInsights();
-        List<String> memberRefs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.USER), Optional.empty(), Optional.of(RelationshipType.MEMBEROF), Optional.of(RelationshipRef.TEAM), Optional.of(List.of(k)));
+        List<String> memberRefs =
+            relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.USER),
+                Optional.empty(), Optional.of(RelationshipType.MEMBEROF),
+                Optional.of(RelationshipRef.TEAM), Optional.of(List.of(k)));
         tsi.setMembers(Long.valueOf(memberRefs.size()));
-        List<String> workflowRefs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.WORKFLOW), Optional.empty(), Optional.of(RelationshipType.BELONGSTO), Optional.of(RelationshipRef.TEAM), Optional.of(List.of(k)));
+        List<String> workflowRefs =
+            relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.WORKFLOW),
+                Optional.empty(), Optional.of(RelationshipType.BELONGSTO),
+                Optional.of(RelationshipRef.TEAM), Optional.of(List.of(k)));
         tsi.setWorkflows(Long.valueOf(workflowRefs.size()));
         ts.setInsights(tsi);
         teamSummaries.add(ts);
-        
-        //Generate Permissions
-        roleRepository.findByTypeAndName("team", v).getPermissions().stream().forEach(p -> permissions.add(p.replace("{principal}", k)));
+
+        // Generate Permissions
+        roleRepository.findByTypeAndName("team", v).getPermissions().stream()
+            .forEach(p -> permissions.add(p.replace("{principal}", k)));
       }
     });
     profile.setTeams(teamSummaries);
@@ -243,34 +254,42 @@ public class IdentityServiceImpl implements IdentityService {
     return profile;
   }
 
-//  /*
-//   * Retrieves the profile for a specified user. Does not use current session.
-//   */
-//  @Override
-//  public UserProfile getProfile(String userId) {
-//    if (externalUserUrl.isBlank()) {
-//      Optional<UserEntity> flowUser = userRepository.findById(userId);
-//      if (flowUser.isPresent()) {
-//        UserProfile profile = new UserProfile(flowUser.get());
-//        List<String> teamRefs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.USER), Optional.of(List.of(userId)), Optional.of(RelationshipType.MEMBEROF), Optional.of(RelationshipRef.TEAM), Optional.empty());
-//        List<Team> usersTeams = teamService.query(Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(teamRefs)).getContent();
-//        profile.setTeams(usersTeams);
-//        return profile;
-//      }
-//    } else {
-//      ExternalUserProfile extUserProfile = extUserService.getUserProfileById(userId);
-//      if (extUserProfile != null) {
-//        UserProfile profile = new UserProfile();
-//        BeanUtils.copyProperties(extUserProfile, profile);
-//        convertExternalUserType(extUserProfile, profile);
-//        List<String> teamRefs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.USER), Optional.of(List.of(userId)), Optional.of(RelationshipType.MEMBEROF), Optional.of(RelationshipRef.TEAM), Optional.empty());
-//        List<Team> usersTeams = teamService.query(Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(teamRefs)).getContent();
-//        profile.setTeams(usersTeams);
-//        return profile;
-//      }
-//    }
-//    return null;
-//  }
+  // /*
+  // * Retrieves the profile for a specified user. Does not use current session.
+  // */
+  // @Override
+  // public UserProfile getProfile(String userId) {
+  // if (externalUserUrl.isBlank()) {
+  // Optional<UserEntity> flowUser = userRepository.findById(userId);
+  // if (flowUser.isPresent()) {
+  // UserProfile profile = new UserProfile(flowUser.get());
+  // List<String> teamRefs =
+  // relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.USER),
+  // Optional.of(List.of(userId)), Optional.of(RelationshipType.MEMBEROF),
+  // Optional.of(RelationshipRef.TEAM), Optional.empty());
+  // List<Team> usersTeams = teamService.query(Optional.empty(), Optional.empty(), Optional.empty(),
+  // Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(teamRefs)).getContent();
+  // profile.setTeams(usersTeams);
+  // return profile;
+  // }
+  // } else {
+  // ExternalUserProfile extUserProfile = extUserService.getUserProfileById(userId);
+  // if (extUserProfile != null) {
+  // UserProfile profile = new UserProfile();
+  // BeanUtils.copyProperties(extUserProfile, profile);
+  // convertExternalUserType(extUserProfile, profile);
+  // List<String> teamRefs =
+  // relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.USER),
+  // Optional.of(List.of(userId)), Optional.of(RelationshipType.MEMBEROF),
+  // Optional.of(RelationshipRef.TEAM), Optional.empty());
+  // List<Team> usersTeams = teamService.query(Optional.empty(), Optional.empty(), Optional.empty(),
+  // Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(teamRefs)).getContent();
+  // profile.setTeams(usersTeams);
+  // return profile;
+  // }
+  // }
+  // return null;
+  // }
 
   /*
    * Query for Users
@@ -281,14 +300,16 @@ public class IdentityServiceImpl implements IdentityService {
       Optional<List<String>> queryLabels, Optional<List<String>> queryStatus,
       Optional<List<String>> queryIds) {
     Pageable pageable = Pageable.unpaged();
-    final Sort sort = Sort.by(new Order(queryOrder.orElse(Direction.ASC), querySort.orElse("name")));
+    final Sort sort =
+        Sort.by(new Order(queryOrder.orElse(Direction.ASC), querySort.orElse("name")));
     if (queryLimit.isPresent()) {
       pageable = PageRequest.of(queryPage.get(), queryLimit.get(), sort);
     }
-    
-    //TODO figure out a Ref search for querying users - lock to admin for now.
-//    List<String> userRefs = relationshipService.getFilteredRefs(Optional.empty(), Optional.empty(),
-//        Optional.of(RelationshipType.MEMBEROF), Optional.of(RelationshipRef.TEAM), queryIds);
+
+    // TODO figure out a Ref search for querying users - lock to admin for now.
+    // List<String> userRefs = relationshipService.getFilteredRefs(Optional.empty(),
+    // Optional.empty(),
+    // Optional.of(RelationshipType.MEMBEROF), Optional.of(RelationshipRef.TEAM), queryIds);
 
     List<Criteria> criteriaList = new ArrayList<>();
     if (queryLabels.isPresent()) {
@@ -336,22 +357,23 @@ public class IdentityServiceImpl implements IdentityService {
 
     List<UserEntity> entities = mongoTemplate.find(query, UserEntity.class);
     LOGGER.debug("Found " + entities.size() + " users.");
-    
+
     List<User> users = new LinkedList<>();
     if (!entities.isEmpty()) {
       entities.forEach(e -> users.add(new User(e)));
     }
-    Page<User> pages =
-        PageableExecutionUtils.getPage(users,
-            pageable, () -> mongoTemplate.count(query, UserEntity.class));
+    Page<User> pages = PageableExecutionUtils.getPage(users, pageable,
+        () -> mongoTemplate.count(query, UserEntity.class));
 
     return pages;
   }
-  
+
   @Override
   public User create(UserRequest request) {
-    if (externalUserUrl.isBlank() && request != null && request.getEmail() != null && this.userRepository.countByEmailIgnoreCaseAndStatus(request.getEmail(), UserStatus.active) == 0) {
-      //Create User (UserEntity is defaulted on new)
+    if (externalUserUrl.isBlank() && request != null && request.getEmail() != null
+        && this.userRepository.countByEmailIgnoreCaseAndStatus(request.getEmail(),
+            UserStatus.active) == 0) {
+      // Create User (UserEntity is defaulted on new)
       UserEntity userEntity = new UserEntity();
       userEntity.setEmail(request.getEmail());
       if (request.getName() != null && !request.getName().isBlank()) {
@@ -368,19 +390,20 @@ public class IdentityServiceImpl implements IdentityService {
 
       return new User(userEntity);
     } else {
-      //TODO throw exception
+      // TODO throw exception
       return null;
     }
   }
 
   @Override
-  //TODO throw exception if externalUserURL is provided
+  // TODO throw exception if externalUserURL is provided
   public void apply(UserRequest request) {
     Optional<UserEntity> userOptional = Optional.empty();
     if (request != null && request.getId() != null && !request.getId().isBlank()) {
       userOptional = this.userRepository.findByIdAndStatus(request.getId(), UserStatus.active);
     } else if (request != null && request.getEmail() != null && !request.getEmail().isBlank()) {
-      userOptional = Optional.of(this.userRepository.findByEmailIgnoreCaseAndStatus(request.getEmail(), UserStatus.active));
+      userOptional = Optional.of(this.userRepository
+          .findByEmailIgnoreCaseAndStatus(request.getEmail(), UserStatus.active));
     }
     if (userOptional.isPresent()) {
       UserEntity user = userOptional.get();
@@ -398,12 +421,15 @@ public class IdentityServiceImpl implements IdentityService {
   }
 
   @Override
-  //TODO - determine if we can set User to deleted and just remove the relationships
+  // TODO - determine if we can set User to deleted and just remove the relationships
   public void delete(String userId) {
     Optional<UserEntity> user = userRepository.findById(userId);
-    List<String> teamRefs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.USER), Optional.of(List.of(userId)), Optional.of(RelationshipType.MEMBEROF), Optional.of(RelationshipRef.TEAM), Optional.empty());
+    List<String> teamRefs =
+        relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.USER),
+            Optional.of(List.of(userId)), Optional.of(RelationshipType.MEMBEROF),
+            Optional.of(RelationshipRef.TEAM), Optional.empty());
     if (!teamRefs.isEmpty()) {
-        throw new BoomerangException(BoomerangError.USER_UNABLE_TO_DELETE);
+      throw new BoomerangException(BoomerangError.USER_UNABLE_TO_DELETE);
     }
     if (user.isPresent()) {
       user.get().setStatus(UserStatus.deleted);
@@ -442,8 +468,7 @@ public class IdentityServiceImpl implements IdentityService {
     if (SecurityContextHolder.getContext() != null
         && SecurityContextHolder.getContext().getAuthentication() != null
         && SecurityContextHolder.getContext().getAuthentication().getDetails() != null
-        && SecurityContextHolder.getContext().getAuthentication()
-        .getDetails() instanceof Token) {
+        && SecurityContextHolder.getContext().getAuthentication().getDetails() instanceof Token) {
       Token details = (Token) SecurityContextHolder.getContext().getAuthentication().getDetails();
       return details.getType();
     }

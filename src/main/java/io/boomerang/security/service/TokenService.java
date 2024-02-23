@@ -13,7 +13,7 @@ import io.boomerang.security.model.AuthType;
 
 public interface TokenService {
   public Token get(String value);
-  public Token createUserSessionToken(String email, String firstName, String lastName, boolean isProfile);
+  public Token createUserSessionToken(String email, String firstName, String lastName, boolean allowActivation, boolean allowUserCreation);
   public CreateTokenResponse create(CreateTokenRequest token);
   public boolean validate(String token);
   public boolean delete(@Valid String id);
