@@ -729,7 +729,7 @@ public class WorkflowServiceImpl implements WorkflowService {
       nodeData.setTemplateRef(task.getTemplateRef());
       nodeData.setTemplateVersion(task.getTemplateVersion());
       // TODO figure out template upgrades
-      nodeData.setTemplateUpgradesAvailable(false);
+      nodeData.setTemplateUpgradesAvailable(task.getTemplateUpgradesAvailable());
       node.setData(nodeData);
       nodes.add(node);
       taskNameToNodeId.put(task.getName(), node.getId());

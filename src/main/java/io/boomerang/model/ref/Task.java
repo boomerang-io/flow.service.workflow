@@ -4,16 +4,18 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import org.springframework.data.annotation.Transient;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import io.boomerang.model.enums.ref.TaskType;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(Include.NON_NULL)
+@JsonPropertyOrder({"name", "type", "templateRef", "templateVersion", "templateUpgradesAvailable", "timeout", "retries", "dependencies" })
 public class Task {
   
   private String name;
@@ -24,14 +26,22 @@ public class Task {
   
   private Integer templateVersion;
   
+  @JsonInclude()
+  @Transient
+  private Boolean templateUpgradesAvailable = false;
+  
+  private Long timeout;
+  
+  //private long retries = -1;
+  
+  private List<TaskDependency> dependencies = new LinkedList<>();;
+  
   private Map<String, String> labels = new HashMap<>();
   
   private Map<String, Object> annotations = new HashMap<>();
   
   //Uses RunParam as the ParamSpec comes from the TaskTemplate
   private List<RunParam> params = new LinkedList<>();
-  
-  private List<TaskDependency> dependencies = new LinkedList<>();;
   
   //This is needed as some of our Tasks allow you to define Result Definitions on the fly
   private List<ResultSpec> results = new LinkedList<>();;
@@ -83,6 +93,22 @@ public class Task {
 
   public void setTemplateVersion(Integer templateVersion) {
     this.templateVersion = templateVersion;
+  }
+
+  public Boolean getTemplateUpgradesAvailable() {
+    return templateUpgradesAvailable;
+  }
+
+  public void setTemplateUpgradesAvailable(Boolean templateUpgradesAvailable) {
+    this.templateUpgradesAvailable = templateUpgradesAvailable;
+  }
+
+  public Long getTimeout() {
+    return timeout;
+  }
+
+  public void setTimeout(Long timeout) {
+    this.timeout = timeout;
   }
 
   public List<RunParam> getParams() {
