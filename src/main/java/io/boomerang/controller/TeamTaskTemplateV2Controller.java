@@ -24,10 +24,10 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
-@RequestMapping("/api/v2/tasktemplate")
+@RequestMapping("/api/v2/team/{team}/tasktemplate")
 @Tag(name = "Task Template Management",
 description = "Create and Manage the global Task Templates, or Task Definitions.")
-public class TaskTemplateV2Controller {
+public class TeamTaskTemplateV2Controller {
 
   @Autowired
   private TaskTemplateService taskTemplateService;
@@ -40,10 +40,14 @@ public class TaskTemplateV2Controller {
       @Parameter(name = "name",
       description = "Name of Task Template",
       required = true) @PathVariable String name,
+      @Parameter(name = "team",
+      description = "Owning team name.",
+      example = "my-amazing-team",
+      required = true) @PathVariable String team,
       @Parameter(name = "version",
       description = "Task Template Version",
       required = false) @RequestParam(required = false) Optional<Integer> version) {
-    return taskTemplateService.get(name, version, Optional.empty());
+    return taskTemplateService.get(name, version, Optional.of(team));
   }
   
   @GetMapping(value = "{name}", produces = "application/x-yaml")
@@ -54,10 +58,14 @@ public class TaskTemplateV2Controller {
       @Parameter(name = "name",
       description = "Name of Task Template",
       required = true) @PathVariable String name,
+      @Parameter(name = "team",
+      description = "Owning team name.",
+      example = "my-amazing-team",
+      required = true) @PathVariable String team,
       @Parameter(name = "version",
       description = "Task Template Version",
       required = false) @RequestParam(required = false) Optional<Integer> version) {
-    return taskTemplateService.getAsTekton(name, version, Optional.empty());
+    return taskTemplateService.getAsTekton(name, version, Optional.of(team));
   }
   
   @GetMapping(value = "/query")
@@ -65,6 +73,10 @@ public class TaskTemplateV2Controller {
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
   public TaskTemplateResponsePage queryTaskTemplates(
+      @Parameter(name = "team",
+      description = "Owning team name.",
+      example = "my-amazing-team",
+      required = true) @PathVariable String team,
       @Parameter(name = "labels",
       description = "List of url encoded labels. For example Organization=Boomerang,customKey=test would be encoded as Organization%3DBoomerang,customKey%3Dtest)",
       required = false) @RequestParam(required = false) Optional<List<String>> labels,
@@ -74,15 +86,13 @@ public class TaskTemplateV2Controller {
       @Parameter(name = "names",
       description = "List of TaskTemplate Names  to filter for. Defaults to all.", example = "switch,event-wait",
       required = false) @RequestParam(required = false)  Optional<List<String>> names,
-      @Parameter(name = "teams", description = "List of teams to filter for. If no team is specified then Global task templates will be retrieved.", 
-      required = false) @RequestParam(required = false) Optional<List<String>> teams,
       @Parameter(name = "limit", description = "Result Size", example = "10",
       required = true) @RequestParam(required = false) Optional<Integer> limit,
   @Parameter(name = "page", description = "Page Number", example = "0",
       required = true) @RequestParam(defaultValue = "0") Optional<Integer> page,
   @Parameter(name = "sort", description = "Ascending (ASC) or Descending (DESC) sort on creationDate", example = "ASC",
   required = true) @RequestParam(defaultValue = "ASC") Optional<Direction> sort) {
-    return taskTemplateService.query(limit, page, sort, labels, statuses, names, Optional.empty());
+    return taskTemplateService.query(limit, page, sort, labels, statuses, names, Optional.of(team));
   }
 
   @PostMapping(value = "")
@@ -91,8 +101,12 @@ public class TaskTemplateV2Controller {
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
   public TaskTemplate createTaskTemplate(
+      @Parameter(name = "team",
+      description = "Owning team name.",
+      example = "my-amazing-team",
+      required = true) @PathVariable String team,
       @RequestBody TaskTemplate taskTemplate) {
-    return taskTemplateService.create(taskTemplate, Optional.empty());
+    return taskTemplateService.create(taskTemplate, Optional.of(team));
   }
 
   @PostMapping(value = "", consumes = "application/x-yaml", produces = "application/x-yaml")
@@ -101,8 +115,12 @@ public class TaskTemplateV2Controller {
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
   public TektonTask createTaskTemplateYAML(
+      @Parameter(name = "team",
+      description = "Owning team name.",
+      example = "my-amazing-team",
+      required = true) @PathVariable String team,
       @RequestBody TektonTask taskTemplate) {
-    return taskTemplateService.createAsTekton(taskTemplate, Optional.empty());
+    return taskTemplateService.createAsTekton(taskTemplate, Optional.of(team));
   }
 
   @PutMapping(value = "")
@@ -110,11 +128,16 @@ public class TaskTemplateV2Controller {
             description = "The name must only contain alphanumeric and - characeters. If the name exists, apply will create a new version.")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
-  public TaskTemplate applyTaskTemplate(@RequestBody TaskTemplate taskTemplate,
+  public TaskTemplate applyTaskTemplate(
+      @Parameter(name = "team",
+      description = "Owning team name.",
+      example = "my-amazing-team",
+      required = true) @PathVariable String team,
+      @RequestBody TaskTemplate taskTemplate,
       @Parameter(name = "replace",
       description = "Replace existing version",
       required = false) @RequestParam(required = false, defaultValue = "false") boolean replace) {
-    return taskTemplateService.apply(taskTemplate, replace, Optional.empty());
+    return taskTemplateService.apply(taskTemplate, replace, Optional.of(team));
   }
 
   @PutMapping(value = "", consumes = "application/x-yaml", produces = "application/x-yaml")
@@ -122,11 +145,16 @@ public class TaskTemplateV2Controller {
             description = "The name must only contain alphanumeric and - characeters. If the name exists, apply will create a new version.")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
-  public TektonTask applyTaskTemplateYAML(@RequestBody TektonTask taskTemplate,
+  public TektonTask applyTaskTemplateYAML(
+      @Parameter(name = "team",
+      description = "Owning team name.",
+      example = "my-amazing-team",
+      required = true) @PathVariable String team,
+      @RequestBody TektonTask taskTemplate,
       @Parameter(name = "replace",
       description = "Replace existing version",
       required = false) @RequestParam(required = false, defaultValue = "false") boolean replace) {
-    return taskTemplateService.applyAsTekton(taskTemplate, replace, Optional.empty());
+    return taskTemplateService.applyAsTekton(taskTemplate, replace, Optional.of(team));
   }
   
   @GetMapping(value = "/{name}/changelog")
@@ -134,10 +162,14 @@ public class TaskTemplateV2Controller {
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
   public List<ChangeLogVersion> getChangelog(
+      @Parameter(name = "team",
+      description = "Owning team name.",
+      example = "my-amazing-team",
+      required = true) @PathVariable String team,
       @Parameter(name = "name",
       description = "Name of Task Template",
       required = true) @PathVariable String name) {
-    return taskTemplateService.changelog(name);
+    return taskTemplateService.changelog(team + "/" + name);
   }
 
   @PostMapping(value = "/validate", consumes = "application/x-yaml", produces = "application/x-yaml")

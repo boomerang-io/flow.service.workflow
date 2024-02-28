@@ -4,6 +4,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,7 +51,7 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
    * Get TaskTemplate by name and optional version. If no version specified, will retrieve the latest.
    */
   @Override
-  public TaskTemplate get(String name, Optional<Integer> version) {
+  public TaskTemplate get(String name, Optional<Integer> version, Optional<String> team) {
     if (!Objects.isNull(name) && !name.isBlank()) {
       // Check if requester has access to refs
       // TODO: determine if all users need to be able to access (READ) but not edit (CREATE, UPDATE, DELETE)
@@ -59,6 +60,11 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
       if (refs.isEmpty()) {
         refs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.TASKTEMPLATE),
             Optional.of(List.of(name)), Optional.of(RelationshipType.BELONGSTO), Optional.of(RelationshipRef.TEAM), Optional.empty());
+      }
+      
+      // Prefix name with team scope
+      if (team.isPresent()) {
+        name = team + "/" + name;
       }
       
       if (!refs.isEmpty()) {
@@ -82,19 +88,22 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
   @Override
   public TaskTemplateResponsePage query(Optional<Integer> queryLimit, Optional<Integer> queryPage, Optional<Direction> querySort,
       Optional<List<String>> queryLabels, Optional<List<String>> queryStatus,
-      Optional<List<String>> queryNames, Optional<List<String>> queryTeams) {
+      Optional<List<String>> queryNames, Optional<String> queryTeam) {
     
     // Get Refs that request has access to
     List<String> refs = null;
-    if (queryTeams.isPresent()) {
+    if (queryTeam.isPresent()) {
       refs =
           relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.TASKTEMPLATE), queryNames,
               Optional.of(RelationshipType.BELONGSTO), Optional.of(RelationshipRef.TEAM),
-              queryTeams);
+              Optional.of(List.of(queryTeam.get())));
       //Return empty with no teams, otherwise when sending to the engine, the refs is empty and all task-templates will be returned.
       if (refs == null || refs.size() == 0) {
         return new TaskTemplateResponsePage();
       }
+      
+      //Prefix name with team scope
+      refs = refs.stream().map(t -> queryTeam.get() + "/" + t).collect(Collectors.toList());
     } else {
       refs =
           relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.TASKTEMPLATE), queryNames,
@@ -107,7 +116,10 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
         queryLabels, queryStatus, Optional.of(refs));
 
     if (!response.getContent().isEmpty()) {
-      response.getContent().forEach(t -> switchChangeLogAuthorToUserName(t.getChangelog()));
+      response.getContent().forEach(t -> {
+        switchChangeLogAuthorToUserName(t.getChangelog());
+        t.setName(t.getName().split("/")[1]);
+      });
     }
     return response;
   }
@@ -120,7 +132,7 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
   @Override
   public TaskTemplate create(TaskTemplate request,
       Optional<String> team) {
-    // Set verfied to false - this is only able to be set via Engine or Loader
+    // Set verified to false - this is only able to be set via Engine or Loader
     request.setVerified(false);
     
     // Process Parameters - ensure Param and Config share the same params
@@ -130,7 +142,12 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
     // Update Changelog
     updateChangeLog(request.getChangelog());
     
-    // TODO: add a check that they are prefixed with the current team scope OR are a valid Global TaskTemplate
+    String templateName = request.getName();
+    // Prefix name with team scope
+    if (team.isPresent()) {
+      request.setName(team.get() + "/" + request.getName());
+    }
+    
     // Come back to this once we have separated the controllers - works better for scope checks.
     TaskTemplate taskTemplate = engineClient.createTaskTemplate(request);
     if (team.isPresent()) {
@@ -142,15 +159,18 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
         throw new BoomerangException(BoomerangError.TASKTEMPLATE_INVALID_REF);
       }
       // Create BELONGSTO relationship for mapping Workflow to Owner
-      relationshipService.addRelationshipRef(RelationshipRef.TASKTEMPLATE, taskTemplate.getName(), RelationshipType.BELONGSTO, RelationshipRef.TEAM,
+      relationshipService.addRelationshipRef(RelationshipRef.TASKTEMPLATE, templateName, RelationshipType.BELONGSTO, RelationshipRef.TEAM,
           team, Optional.empty());
     } else {
       // Creates a relationship to GLOBAL
       //TODO: check user is ADMIN
       relationshipService.addRelationshipRef(RelationshipRef.TASKTEMPLATE,
-          taskTemplate.getName(), RelationshipType.BELONGSTO ,RelationshipRef.GLOBAL, Optional.empty(), Optional.empty());
+          templateName, RelationshipType.BELONGSTO ,RelationshipRef.GLOBAL, Optional.empty(), Optional.empty());
     }
     switchChangeLogAuthorToUserName(taskTemplate.getChangelog());
+    
+    //Revert name for end user
+    taskTemplate.setName(templateName);
     return taskTemplate;
   }
 
@@ -181,6 +201,11 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
       // Set verfied to false - this is only able to be set via Engine or Loader
       request.setVerified(false);
       
+      // Prefix name with team scope
+      if (team.isPresent()) {
+        request.setName(team.get() + "/" + templateName);
+      }
+      
       // Update Changelog
       updateChangeLog(request.getChangelog());
       
@@ -190,6 +215,7 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
       
       TaskTemplate template = engineClient.applyTaskTemplate(request, replace);
       switchChangeLogAuthorToUserName(template.getChangelog());
+      template.setName(templateName);
       return template;
     } else {
       throw new BoomerangException(BoomerangError.TASKTEMPLATE_INVALID_REF);
@@ -218,8 +244,8 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
   }
 
   @Override
-  public TektonTask getAsTekton(String name, Optional<Integer> version) {
-    TaskTemplate template = this.get(name, version);
+  public TektonTask getAsTekton(String name, Optional<Integer> version, Optional<String> team) {
+    TaskTemplate template = this.get(name, version, team);
     if (template != null) {
       return TektonConverter.convertTaskTemplateToTektonTask(template);
     }
@@ -227,16 +253,16 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
   }
 
   @Override
-  public TektonTask createAsTekton(TektonTask tektonTask, Optional<String> teamId) {
+  public TektonTask createAsTekton(TektonTask tektonTask, Optional<String> team) {
     TaskTemplate template = TektonConverter.convertTektonTaskToTaskTemplate(tektonTask);
-    this.create(template, teamId);
+    this.create(template, team);
     return tektonTask;
   }
 
   @Override
-  public TektonTask applyAsTekton(TektonTask tektonTask, boolean replace, Optional<String> teamId) {
+  public TektonTask applyAsTekton(TektonTask tektonTask, boolean replace, Optional<String> team) {
     TaskTemplate template = TektonConverter.convertTektonTaskToTaskTemplate(tektonTask);
-    this.apply(template, replace, teamId);
+    this.apply(template, replace, team);
     return tektonTask;
   }
 

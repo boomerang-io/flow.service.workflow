@@ -10,23 +10,24 @@ import io.boomerang.tekton.TektonTask;
 
 public interface TaskTemplateService {
 
-  TaskTemplate get(String name, Optional<Integer> version);
+  TaskTemplate get(String name, Optional<Integer> version, Optional<String> team);
 
   TaskTemplateResponsePage query(Optional<Integer> queryLimit, Optional<Integer> queryPage,
       Optional<Direction> querySort, Optional<List<String>> queryLabels,
       Optional<List<String>> queryStatus, Optional<List<String>> queryNames,
-      Optional<List<String>> queryTeams);
-
+      Optional<String> queryTeam);
+  
   TaskTemplate create(TaskTemplate request, Optional<String> team);
 
   TaskTemplate apply(TaskTemplate request, boolean replace,
-      Optional<String> teamId);
+      Optional<String> team);
 
-  TektonTask getAsTekton(String name, Optional<Integer> version);
+  TektonTask getAsTekton(String name, Optional<Integer> version,
+      Optional<String> team);
 
-  TektonTask createAsTekton(TektonTask tektonTask, Optional<String> teamId);
+  TektonTask createAsTekton(TektonTask tektonTask, Optional<String> team);
 
-  TektonTask applyAsTekton(TektonTask tektonTask, boolean replace, Optional<String> teamId);
+  TektonTask applyAsTekton(TektonTask tektonTask, boolean replace, Optional<String> team);
 
   void validateAsTekton(TektonTask tektonTask);
 
