@@ -62,7 +62,7 @@ public class IntegrationV2Controller {
     private GitHubService githubService;
 
     @GetMapping(value = "")
-    @AuthScope(action = PermissionAction.READ, scope = PermissionScope.INTEGRATIONS, types = {AuthType.team})
+    @AuthScope(action = PermissionAction.READ, scope = PermissionScope.INTEGRATION, types = {AuthType.team})
     @Operation(summary = "Retrieve the integrations and their status within a Team")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
         @ApiResponse(responseCode = "400", description = "Bad Request")})
