@@ -55,6 +55,16 @@ public class UserV2Controller {
   public UserProfile getProfile() {
     return identityService.getCurrentProfile();
   }
+  
+  @PatchMapping(value = "/profile")
+  @AuthScope(action = PermissionAction.WRITE, scope = PermissionScope.USER, types = {AuthType.session, AuthType.user})
+  @Operation(summary = "Get your Profile")
+  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
+      @ApiResponse(responseCode = "423", description = "OK"),
+      @ApiResponse(responseCode = "404", description = "Instance not activated. Profile locked.")})
+  public void updateProfile(@RequestBody UserRequest request) {
+    identityService.updateCurrentProfile(request);
+  }
 
   @GetMapping(value = "/{userId}")
   @AuthScope(action = PermissionAction.READ, scope = PermissionScope.USER, types = {AuthType.session, AuthType.user, AuthType.team, AuthType.global})

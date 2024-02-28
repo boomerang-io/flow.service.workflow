@@ -179,7 +179,11 @@ public class WorkflowServiceImpl implements WorkflowService {
         Optional.of(RelationshipType.BELONGSTO), Optional.of(RelationshipRef.TEAM), queryTeams);
     LOGGER.debug("Query Ids: ", refs);
 
-    return engineClient.countWorkflows(queryLabels, Optional.of(refs), from, to);
+    //Handle no Workflows for Team. Otherwise the engine will return all workflows due to no filter
+    if (refs.size() > 0) {
+      return engineClient.countWorkflows(queryLabels, Optional.of(refs), from, to);
+    }
+    return new WorkflowCount();
   }
 
   /*

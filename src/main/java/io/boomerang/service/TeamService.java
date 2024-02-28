@@ -40,4 +40,6 @@ public interface TeamService {
   ResponseEntity<Quotas> getDefaultQuotas();
 
   ResponseEntity<List<Role>> getRoles();
+
+//  void delete(String team);
 }

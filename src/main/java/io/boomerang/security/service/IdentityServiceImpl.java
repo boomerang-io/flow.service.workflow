@@ -253,6 +253,13 @@ public class IdentityServiceImpl implements IdentityService {
     profile.setPermissions(permissions);
     return profile;
   }
+  
+  @Override
+  public void updateCurrentProfile(UserRequest request) {
+    String userId = getCurrentPrincipal();
+    request.setId(userId);
+    this.apply(request);
+  }
 
   // /*
   // * Retrieves the profile for a specified user. Does not use current session.
@@ -379,6 +386,9 @@ public class IdentityServiceImpl implements IdentityService {
       if (request.getName() != null && !request.getName().isBlank()) {
         userEntity.setName(request.getName());
       }
+      if (request.getDisplayName() != null && !request.getDisplayName().isBlank()) {
+        userEntity.setDisplayName(request.getDisplayName());
+      }
       if (request.getType() != null) {
         userEntity.setType(request.getType());
       }
@@ -409,6 +419,9 @@ public class IdentityServiceImpl implements IdentityService {
       UserEntity user = userOptional.get();
       if (request.getName() != null && !request.getName().isBlank()) {
         user.setName(request.getName());
+      }
+      if (request.getDisplayName() != null && !request.getDisplayName().isBlank()) {
+        user.setDisplayName(request.getDisplayName());
       }
       if (request.getType() != null) {
         user.setType(request.getType());

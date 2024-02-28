@@ -245,6 +245,36 @@ public class TeamServiceImpl implements TeamService {
     }
     throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
   }
+  
+  /*
+   * Destructive cascade Team deletion
+   */
+//  @Override
+//  public void delete(String team) {
+//    if (team == null || team.isBlank()) {
+//      throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
+//    }
+//    List<String> teamRefs = relationshipService.getFilteredToRefs(Optional.empty(),
+//        Optional.empty(), Optional.of(RelationshipType.MEMBEROF),
+//        Optional.of(RelationshipRef.TEAM), Optional.of(List.of(team)));
+//    if (teamRefs.isEmpty()) {
+//      throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
+//    }
+//    Optional<TeamEntity> optTeamEntity = teamRepository.findByNameIgnoreCase(team);
+//    if (!optTeamEntity.isPresent()) {
+//      throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
+//    }
+//    TeamEntity teamEntity = optTeamEntity.get();
+//    
+//    // Get and delete all workflows
+//    List<String> workflowRefs = relationshipService.getFilteredToRefs(Optional.of(RelationshipRef.WORKFLOW),
+//        Optional.empty(), Optional.of(RelationshipType.BELONGSTO),
+//        Optional.of(RelationshipRef.TEAM), Optional.of(List.of(team)));
+//    
+//    
+//    
+//    // Get and delete all 
+//  }
 
   /*
    * Query for Teams
@@ -753,9 +783,13 @@ public class TeamServiceImpl implements TeamService {
     currentQuotas.setCurrentRuns(insight.getTotalRuns().intValue());
 
     WorkflowCount count = workflowService.count(Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(List.of(team)), Optional.empty());
-    Long active = count.getStatus().get("active");
-    Long inactive = count.getStatus().get("inactive");
-    currentQuotas.setCurrentWorkflowCount((int) (active + inactive));
+    if (count.getStatus() != null) {
+      Long active = count.getStatus().get("active");
+      Long inactive = count.getStatus().get("inactive");
+      currentQuotas.setCurrentWorkflowCount((int) (active + inactive));
+    } else {
+      currentQuotas.setCurrentWorkflowCount(0);
+    }
     return currentQuotas;
   }
 

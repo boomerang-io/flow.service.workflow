@@ -55,4 +55,6 @@ public interface IdentityService {
   boolean isActivated();
 
   String getCurrentPrincipal();
+
+  void updateCurrentProfile(UserRequest request);
 }

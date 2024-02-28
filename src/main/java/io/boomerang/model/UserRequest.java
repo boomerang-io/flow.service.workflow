@@ -16,6 +16,7 @@ public class UserRequest {
   private String id;
   private String email;
   private String name;
+  private String displayName;
   private UserType type;
   private UserStatus status;
   private Map<String, String> labels = new HashMap<>();
@@ -51,6 +52,15 @@ public class UserRequest {
   public void setName(String name) {
     this.name = name;
   }
+
+  public String getDisplayName() {
+    return displayName;
+  }
+
+  public void setDisplayName(String displayName) {
+    this.displayName = displayName;
+  }
+
 
   public UserType getType() {
     return type;
