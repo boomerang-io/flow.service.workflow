@@ -23,21 +23,26 @@ import io.boomerang.error.BoomerangException;
 import io.boomerang.model.CronValidationResponse;
 import io.boomerang.model.WorkflowSchedule;
 import io.boomerang.model.WorkflowScheduleCalendar;
+import io.boomerang.security.interceptors.AuthScope;
+import io.boomerang.security.model.AuthType;
+import io.boomerang.security.model.PermissionAction;
+import io.boomerang.security.model.PermissionScope;
 import io.boomerang.service.ScheduleService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
-@RequestMapping("/api/v2/schedules")
+@RequestMapping("/api/v2/schedule")
 @Tag(name = "Schedule Management",
 description = "Provide the ability to create and update Schedules.")
-public class SchedulesV2Controller {
+public class ScheduleV2Controller {
 
   @Autowired
   private ScheduleService workflowScheduleService;
   
   @GetMapping(value = "/validate/cron")
+  @AuthScope(action = PermissionAction.READ, scope = PermissionScope.SCHEDULE, types = {AuthType.team})
   @Operation(summary = "Validate a Schedules CRON.")
   public CronValidationResponse validateCron(@Parameter(name = "cron",
       description = "A CRON expression to validate",
@@ -46,12 +51,14 @@ public class SchedulesV2Controller {
   }
   
   @GetMapping(value = "/{scheduleId}")
+  @AuthScope(action = PermissionAction.READ, scope = PermissionScope.SCHEDULE, types = {AuthType.team})
   @Operation(summary = "Retrieve a Schedule.")
   public WorkflowSchedule get(@PathVariable String scheduleId) {
     return workflowScheduleService.get(scheduleId);
   }
   
   @GetMapping(value = "/query")
+  @AuthScope(action = PermissionAction.READ, scope = PermissionScope.SCHEDULE, types = {AuthType.team})
   @Operation(summary = "Search for Schedules")
   public Page<WorkflowSchedule> query(
       @Parameter(name = "statuses", description = "List of statuses to filter for. Defaults to all.",
@@ -73,6 +80,7 @@ public class SchedulesV2Controller {
   }
   
   @GetMapping(value = "/calendars")
+  @AuthScope(action = PermissionAction.READ, scope = PermissionScope.SCHEDULE, types = {AuthType.team})
   @Operation(summary = "Retrieve Calendars for Schedules by Dates.")
   public List<WorkflowScheduleCalendar> getCalendarsForSchedules(@RequestParam List<String> schedules, @RequestParam Long fromDate, @RequestParam Long toDate) {
     if (schedules != null && !schedules.isEmpty() && fromDate != null && toDate != null) {
@@ -85,6 +93,7 @@ public class SchedulesV2Controller {
   }
   
   @PostMapping(value = "")
+  @AuthScope(action = PermissionAction.WRITE, scope = PermissionScope.SCHEDULE, types = {AuthType.team})
   @Operation(summary = "Create a Schedule.")
   public WorkflowSchedule createSchedule(
       @Parameter(name = "team", description = "Team as owner reference.", example = "my-amazing-team",
@@ -94,6 +103,7 @@ public class SchedulesV2Controller {
   }
   
   @PutMapping(value = "")
+  @AuthScope(action = PermissionAction.WRITE, scope = PermissionScope.SCHEDULE, types = {AuthType.team})
   @Operation(summary = "Apply a Schedule.")
   public WorkflowSchedule updateSchedule(@RequestBody WorkflowSchedule schedule,
       @Parameter(name = "team", description = "Team as owner reference. Required if using apply to create new.",
@@ -103,6 +113,7 @@ public class SchedulesV2Controller {
   }
   
   @DeleteMapping(value = "/{scheduleId}")
+  @AuthScope(action = PermissionAction.DELETE, scope = PermissionScope.SCHEDULE, types = {AuthType.team})
   @Operation(summary = "Delete a Schedule.")
   public ResponseEntity<?> deleteSchedule(@PathVariable String scheduleId) {
     return workflowScheduleService.delete(scheduleId);

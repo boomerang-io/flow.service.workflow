@@ -14,6 +14,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import io.boomerang.model.ref.WorkflowRunInsight;
+import io.boomerang.security.interceptors.AuthScope;
+import io.boomerang.security.model.AuthType;
+import io.boomerang.security.model.PermissionAction;
+import io.boomerang.security.model.PermissionScope;
 import io.boomerang.service.InsightsService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -32,7 +36,7 @@ public class InsightsV2Controller {
   private static final String CREATIONDATESORT = "creationDate";
 
   @GetMapping(value = "/insights")
-//  @AuthenticationScope(scopes = {TokenPermission.global, TokenPermission.team, TokenPermission.user})
+  @AuthScope(action = PermissionAction.READ, scope = PermissionScope.INSIGHTS, types = {AuthType.team})
   @Operation(summary = "Retrieve insights for a team.")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})

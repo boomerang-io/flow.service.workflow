@@ -17,6 +17,10 @@ import org.springframework.web.bind.annotation.RestController;
 import io.boomerang.model.ref.WorkflowRun;
 import io.boomerang.model.ref.WorkflowRunCount;
 import io.boomerang.model.ref.WorkflowRunRequest;
+import io.boomerang.security.interceptors.AuthScope;
+import io.boomerang.security.model.AuthType;
+import io.boomerang.security.model.PermissionAction;
+import io.boomerang.security.model.PermissionScope;
 import io.boomerang.service.WorkflowRunService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -34,6 +38,7 @@ public class WorkflowRunV2Controller {
   private WorkflowRunService workflowRunService;
 
   @GetMapping(value = "/query")
+  @AuthScope(action = PermissionAction.READ, scope = PermissionScope.WORKFLOWRUN, types = {AuthType.team})
   @Operation(summary = "Search for WorkflowRuns")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -69,6 +74,7 @@ public class WorkflowRunV2Controller {
   }  
 
   @GetMapping(value = "/count")
+  @AuthScope(action = PermissionAction.READ, scope = PermissionScope.WORKFLOWRUN, types = {AuthType.team})
   @Operation(summary = "Retrieve a summary of WorkflowRuns by Status.")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -89,6 +95,7 @@ public class WorkflowRunV2Controller {
   }
 
   @GetMapping(value = "/{workflowRunId}")
+  @AuthScope(action = PermissionAction.READ, scope = PermissionScope.WORKFLOWRUN, types = {AuthType.team})
   @Operation(summary = "Retrieve a specific WorkflowRun.")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -103,6 +110,7 @@ public class WorkflowRunV2Controller {
   }
 
   @PutMapping(value = "/{workflowRunId}/start")
+  @AuthScope(action = PermissionAction.ACTION, scope = PermissionScope.WORKFLOWRUN, types = {AuthType.team})
   @Operation(summary = "Start Workflow Run execution. The Workflow Run has to already have been queued.")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -115,6 +123,7 @@ public class WorkflowRunV2Controller {
   }
 
   @PutMapping(value = "/{workflowRunId}/finalize")
+  @AuthScope(action = PermissionAction.ACTION, scope = PermissionScope.WORKFLOWRUN, types = {AuthType.team})
   @Operation(summary = "End a WorkflowRun")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -126,6 +135,7 @@ public class WorkflowRunV2Controller {
   }
 
   @DeleteMapping(value = "/{workflowRunId}/cancel")
+  @AuthScope(action = PermissionAction.ACTION, scope = PermissionScope.WORKFLOWRUN, types = {AuthType.team})
   @Operation(summary = "Cancel a WorkflowRun")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -137,6 +147,7 @@ public class WorkflowRunV2Controller {
   }
 
   @PutMapping(value = "/{workflowRunId}/retry")
+  @AuthScope(action = PermissionAction.ACTION, scope = PermissionScope.WORKFLOWRUN, types = {AuthType.team})
   @Operation(summary = "Retry Workflow Run execution.")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})

@@ -15,6 +15,10 @@ import org.springframework.web.bind.annotation.RestController;
 import io.boomerang.client.TaskTemplateResponsePage;
 import io.boomerang.model.ref.ChangeLogVersion;
 import io.boomerang.model.ref.TaskTemplate;
+import io.boomerang.security.interceptors.AuthScope;
+import io.boomerang.security.model.AuthType;
+import io.boomerang.security.model.PermissionAction;
+import io.boomerang.security.model.PermissionScope;
 import io.boomerang.service.TaskTemplateService;
 import io.boomerang.tekton.TektonTask;
 import io.swagger.v3.oas.annotations.Operation;
@@ -33,6 +37,7 @@ public class TeamTaskTemplateV2Controller {
   private TaskTemplateService taskTemplateService;
   
   @GetMapping(value = "/{name}")
+  @AuthScope(action = PermissionAction.READ, scope = PermissionScope.TASKTEMPLATE, types = {AuthType.team})
   @Operation(summary = "Retrieve a specific task template. If no version specified, the latest version is returned.")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -51,6 +56,7 @@ public class TeamTaskTemplateV2Controller {
   }
   
   @GetMapping(value = "{name}", produces = "application/x-yaml")
+  @AuthScope(action = PermissionAction.READ, scope = PermissionScope.TASKTEMPLATE, types = {AuthType.team})
   @Operation(summary = "Retrieve a specific task template as Tekton Task YAML. If no version specified, the latest version is returned.")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -69,6 +75,7 @@ public class TeamTaskTemplateV2Controller {
   }
   
   @GetMapping(value = "/query")
+  @AuthScope(action = PermissionAction.READ, scope = PermissionScope.TASKTEMPLATE, types = {AuthType.team})
   @Operation(summary = "Search for Task Templates. If teams are provided it will query the teams. If no teams are provided it will query Global Task Templates")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -96,6 +103,7 @@ public class TeamTaskTemplateV2Controller {
   }
 
   @PostMapping(value = "")
+  @AuthScope(action = PermissionAction.WRITE, scope = PermissionScope.TASKTEMPLATE, types = {AuthType.team})
   @Operation(summary = "Create a new Task Template",
             description = "The name needs to be unique and must only contain alphanumeric and - characeters.")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
@@ -110,6 +118,7 @@ public class TeamTaskTemplateV2Controller {
   }
 
   @PostMapping(value = "", consumes = "application/x-yaml", produces = "application/x-yaml")
+  @AuthScope(action = PermissionAction.WRITE, scope = PermissionScope.TASKTEMPLATE, types = {AuthType.team})
   @Operation(summary = "Create a new Task Template using Tekton Task YAML",
             description = "The name needs to be unique and must only contain alphanumeric and - characeters.")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
@@ -124,6 +133,7 @@ public class TeamTaskTemplateV2Controller {
   }
 
   @PutMapping(value = "")
+  @AuthScope(action = PermissionAction.WRITE, scope = PermissionScope.TASKTEMPLATE, types = {AuthType.team})
   @Operation(summary = "Update, replace, or create new, Task Template",
             description = "The name must only contain alphanumeric and - characeters. If the name exists, apply will create a new version.")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
@@ -141,6 +151,7 @@ public class TeamTaskTemplateV2Controller {
   }
 
   @PutMapping(value = "", consumes = "application/x-yaml", produces = "application/x-yaml")
+  @AuthScope(action = PermissionAction.WRITE, scope = PermissionScope.TASKTEMPLATE, types = {AuthType.team})
   @Operation(summary = "Update, replace, or create new using Tekton Task YAML",
             description = "The name must only contain alphanumeric and - characeters. If the name exists, apply will create a new version.")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
@@ -158,6 +169,7 @@ public class TeamTaskTemplateV2Controller {
   }
   
   @GetMapping(value = "/{name}/changelog")
+  @AuthScope(action = PermissionAction.READ, scope = PermissionScope.TASKTEMPLATE, types = {AuthType.team})
   @Operation(summary = "Retrieve the changlog", description = "Retrieves each versions changelog and returns them all as a list.")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -173,6 +185,7 @@ public class TeamTaskTemplateV2Controller {
   }
 
   @PostMapping(value = "/validate", consumes = "application/x-yaml", produces = "application/x-yaml")
+  @AuthScope(action = PermissionAction.READ, scope = PermissionScope.TASKTEMPLATE, types = {AuthType.team})
   public void validateYaml(@RequestBody TektonTask tektonTask) {
     taskTemplateService.validateAsTekton(tektonTask);
   }

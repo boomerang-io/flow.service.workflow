@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.fasterxml.jackson.databind.JsonNode;
 import io.boomerang.model.SlackEventPayload;
-import io.boomerang.model.WebhookType;
 import io.boomerang.service.TriggerService;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.spring.http.CloudEventHttpUtils;

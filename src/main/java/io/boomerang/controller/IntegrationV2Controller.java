@@ -32,6 +32,10 @@ import io.boomerang.integrations.model.Integration;
 import io.boomerang.integrations.service.GitHubService;
 import io.boomerang.integrations.service.IntegrationService;
 import io.boomerang.integrations.service.SlackService;
+import io.boomerang.security.interceptors.AuthScope;
+import io.boomerang.security.model.AuthType;
+import io.boomerang.security.model.PermissionAction;
+import io.boomerang.security.model.PermissionScope;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -58,6 +62,7 @@ public class IntegrationV2Controller {
     private GitHubService githubService;
 
     @GetMapping(value = "")
+    @AuthScope(action = PermissionAction.READ, scope = PermissionScope.INTEGRATIONS, types = {AuthType.team})
     @Operation(summary = "Retrieve the integrations and their status within a Team")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
         @ApiResponse(responseCode = "400", description = "Bad Request")})

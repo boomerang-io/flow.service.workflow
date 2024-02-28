@@ -41,6 +41,7 @@ public class WorkflowV2Controller {
   private WorkflowService workflowService;
 
   @GetMapping(value = "/{workflowId}")
+  @AuthScope(action = PermissionAction.READ, scope = PermissionScope.WORKFLOW, types = {AuthType.team})
   @Operation(summary = "Retrieve a Workflow", description = "Retrieve a version of the Workflow. Defaults to latest. Optionally without Tasks")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -55,6 +56,7 @@ public class WorkflowV2Controller {
   }
 
   @GetMapping(value = "/query")
+  @AuthScope(action = PermissionAction.READ, scope = PermissionScope.WORKFLOW, types = {AuthType.team})
   @Operation(summary = "Search for Workflows")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -78,6 +80,7 @@ public class WorkflowV2Controller {
   }
 
   @PostMapping(value = "")
+  @AuthScope(action = PermissionAction.WRITE, scope = PermissionScope.WORKFLOW, types = {AuthType.team})
   @Operation(summary = "Create a new workflow")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -89,6 +92,7 @@ public class WorkflowV2Controller {
   }
 
   @PutMapping(value = "")
+  @AuthScope(action = PermissionAction.WRITE, scope = PermissionScope.WORKFLOW, types = {AuthType.team})
   @Operation(summary = "Update, replace, or create new, Workflow")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -102,6 +106,7 @@ public class WorkflowV2Controller {
   }
   
   @GetMapping(value = "/{workflowId}/changelog")
+  @AuthScope(action = PermissionAction.READ, scope = PermissionScope.WORKFLOW, types = {AuthType.team})
   @Operation(summary = "Retrieve the changlog", description = "Retrieves each versions changelog and returns them all as a list.")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -112,6 +117,7 @@ public class WorkflowV2Controller {
   }
 
   @DeleteMapping(value = "/{workflowId}")
+  @AuthScope(action = PermissionAction.DELETE, scope = PermissionScope.WORKFLOW, types = {AuthType.team})
   @Operation(summary = "Delete a workflow")
   @ApiResponses(value = {@ApiResponse(responseCode = "204", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -121,6 +127,7 @@ public class WorkflowV2Controller {
   }
 
   @PostMapping(value = "/{workflowId}/submit")
+  @AuthScope(action = PermissionAction.ACTION, scope = PermissionScope.WORKFLOW, types = {AuthType.team})
   @Operation(summary = "Submit a Workflow to be run. Will queue the WorkflowRun ready for execution.")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -135,13 +142,14 @@ public class WorkflowV2Controller {
   }
 
   @GetMapping(value = "/{workflowId}/export", produces = "application/json")
+  @AuthScope(action = PermissionAction.READ, scope = PermissionScope.WORKFLOW, types = {AuthType.team})
   @Operation(summary = "Export the Workflow as JSON.")
   public ResponseEntity<InputStreamResource> export(@PathVariable String workflowId) {
     return workflowService.export(workflowId);
   }
 
   @GetMapping(value = "/{workflowId}/compose")
-  @AuthScope(types = {AuthType.global}, action = PermissionAction.READ, scope = PermissionScope.PARAMETER)
+  @AuthScope(action = PermissionAction.READ, scope = PermissionScope.WORKFLOW, types = {AuthType.team})
   @Operation(summary = "Convert workflow to compose model for UI Designer and detailed Activity screens.")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -154,6 +162,7 @@ public class WorkflowV2Controller {
   }
 
   @PutMapping(value = "/{workflowId}/compose")
+  @AuthScope(action = PermissionAction.WRITE, scope = PermissionScope.WORKFLOW, types = {AuthType.team})
   @Operation(summary = "Update, replace, or create new, Workflow for Canvas")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -167,6 +176,7 @@ public class WorkflowV2Controller {
   }
 
   @PostMapping(value = "/{workflowId}/duplicate")
+  @AuthScope(action = PermissionAction.WRITE, scope = PermissionScope.WORKFLOW, types = {AuthType.team})
   @Operation(summary = "Duplicates the workflow.")
   public ResponseEntity<Workflow> duplicateWorkflow(
       @Parameter(name = "workflowId", description = "ID of Workflow",
@@ -191,6 +201,7 @@ public class WorkflowV2Controller {
 //  }
 
   @GetMapping(value = "/{workflowId}/available-parameters")
+  @AuthScope(action = PermissionAction.READ, scope = PermissionScope.WORKFLOW, types = {AuthType.team})
   @Operation(summary = "Retrieve the parameters.")
   public List<String> getAvailableParameters(@PathVariable String workflowId) {
     return workflowService.getAvailableParameters(workflowId);
