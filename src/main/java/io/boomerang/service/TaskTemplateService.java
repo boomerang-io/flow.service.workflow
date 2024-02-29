@@ -31,5 +31,5 @@ public interface TaskTemplateService {
 
   void validateAsTekton(TektonTask tektonTask);
 
-  List<ChangeLogVersion> changelog(String name);
+  List<ChangeLogVersion> changelog(String name, Optional<String> team);
 }

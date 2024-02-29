@@ -37,6 +37,8 @@ import io.boomerang.util.ParameterUtil;
 public class TaskTemplateServiceImpl implements TaskTemplateService {
 
   private static final Logger LOGGER = LogManager.getLogger();
+  
+  private static final String NAME_SEPARATOR = "~~";
 
   @Autowired
   private EngineClient engineClient;
@@ -63,12 +65,13 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
       }
       
       // Prefix name with team scope
+      String scopedName = name;
       if (team.isPresent()) {
-        name = team + "/" + name;
+        scopedName = team.get() + NAME_SEPARATOR + name;
       }
       
       if (!refs.isEmpty()) {
-        TaskTemplate taskTemplate = engineClient.getTaskTemplate(name, version);
+        TaskTemplate taskTemplate = engineClient.getTaskTemplate(scopedName, version);
         
         // Process Parameters - create configs for any Params
         taskTemplate.getSpec().setParams(ParameterUtil.abstractParamsToParamSpecs(taskTemplate.getConfig(), taskTemplate.getSpec().getParams()));
@@ -76,6 +79,9 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
         
         // Switch from UserId to Users Name
         switchChangeLogAuthorToUserName(taskTemplate.getChangelog());
+        LOGGER.debug("Changelog: " + taskTemplate.getChangelog().toString());
+        //Revert name for end user
+        taskTemplate.setName(name);
         return taskTemplate;
       }
     }
@@ -103,7 +109,7 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
       }
       
       //Prefix name with team scope
-      refs = refs.stream().map(t -> queryTeam.get() + "/" + t).collect(Collectors.toList());
+      refs = refs.stream().map(t -> queryTeam.get() + NAME_SEPARATOR + t).collect(Collectors.toList());
     } else {
       refs =
           relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.TASKTEMPLATE), queryNames,
@@ -118,7 +124,7 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
     if (!response.getContent().isEmpty()) {
       response.getContent().forEach(t -> {
         switchChangeLogAuthorToUserName(t.getChangelog());
-        t.setName(t.getName().split("/")[1]);
+        t.setName(t.getName().contains(NAME_SEPARATOR) ? t.getName().split(NAME_SEPARATOR)[1]: t.getName());
       });
     }
     return response;
@@ -145,7 +151,7 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
     String templateName = request.getName();
     // Prefix name with team scope
     if (team.isPresent()) {
-      request.setName(team.get() + "/" + request.getName());
+      request.setName(team.get() + NAME_SEPARATOR + request.getName());
     }
     
     // Come back to this once we have separated the controllers - works better for scope checks.
@@ -203,7 +209,7 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
       
       // Prefix name with team scope
       if (team.isPresent()) {
-        request.setName(team.get() + "/" + templateName);
+        request.setName(team.get() + NAME_SEPARATOR + templateName);
       }
       
       // Update Changelog
@@ -233,12 +239,14 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
     }
   }
 
+  //TODO - need to make more performant
   private void switchChangeLogAuthorToUserName(ChangeLog changelog) {
-    //TODO: needs to handle Principal's of team / global
     if (changelog != null && changelog.getAuthor() != null) {
       Optional<User> user = identityService.getUserByID(changelog.getAuthor());
       if (user.isPresent()) {
-        changelog.setAuthor(user.get().getName());
+        changelog.setAuthor(user.get().getDisplayName().isEmpty() ? user.get().getName() : user.get().getDisplayName());
+      } else {
+        changelog.setAuthor("---");
       }
     }
   }
@@ -272,20 +280,29 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
   }
 
   @Override
-  public List<ChangeLogVersion> changelog(String name) {
+  public List<ChangeLogVersion> changelog(String name, Optional<String> team) {
     if (!Objects.isNull(name) && !name.isBlank()) {
-      List<String> refs =
+      if (team.isPresent()) {
+        List<String> refs =
           relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.TASKTEMPLATE),
               Optional.of(List.of(name)), Optional.of(RelationshipType.BELONGSTO),
-              Optional.of(RelationshipRef.GLOBAL), Optional.empty());
-      if (refs.isEmpty()) {
-        refs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.TASKTEMPLATE),
+              Optional.of(RelationshipRef.TEAM), Optional.of(List.of(team.get())));
+        if (!refs.isEmpty()) {
+          List<ChangeLogVersion> changeLog = engineClient.getTaskTemplateChangeLog(team.get() + NAME_SEPARATOR + name);
+          changeLog.forEach(clv -> switchChangeLogAuthorToUserName(clv));
+          return changeLog;
+        }
+      } else {
+        List<String> refs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.TASKTEMPLATE),
             Optional.of(List.of(name)), Optional.of(RelationshipType.BELONGSTO),
-            Optional.of(RelationshipRef.TEAM), Optional.empty());
+            Optional.of(RelationshipRef.GLOBAL), Optional.empty());
+        if (!refs.isEmpty()) {
+          List<ChangeLogVersion> changeLog = engineClient.getTaskTemplateChangeLog(name);
+          changeLog.forEach(clv -> switchChangeLogAuthorToUserName(clv));
+          return changeLog;
+        }
       }
-      if (!refs.isEmpty()) {
-        return engineClient.getTaskTemplateChangeLog(name);
-      }
+      
     }
     throw new BoomerangException(BoomerangError.TASKTEMPLATE_INVALID_REF);
   }

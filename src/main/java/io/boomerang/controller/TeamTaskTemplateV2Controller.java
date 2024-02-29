@@ -181,7 +181,7 @@ public class TeamTaskTemplateV2Controller {
       @Parameter(name = "name",
       description = "Name of Task Template",
       required = true) @PathVariable String name) {
-    return taskTemplateService.changelog(team + "/" + name);
+    return taskTemplateService.changelog(name, Optional.of(team));
   }
 
   @PostMapping(value = "/validate", consumes = "application/x-yaml", produces = "application/x-yaml")

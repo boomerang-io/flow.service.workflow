@@ -23,6 +23,11 @@ public class ChangeLog {
     this.date = new Date();
   }
 
+  @Override
+  public String toString() {
+    return "ChangeLog [author=" + author + ", reason=" + reason + ", date=" + date + "]";
+  }
+
   public String getAuthor() {
     return author;
   }
@@ -46,7 +51,4 @@ public class ChangeLog {
   public void setDate(Date date) {
     this.date = date;
   }
-
-  
-
 }
