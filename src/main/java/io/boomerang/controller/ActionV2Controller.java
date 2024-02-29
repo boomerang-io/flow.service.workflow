@@ -43,7 +43,7 @@ public class ActionV2Controller {
   private ActionService actionService;
 
   @PutMapping(value = "")
-  @AuthScope(action = PermissionAction.ACTION, scope = PermissionScope.ACTION, types = {AuthType.team})
+  @AuthScope(action = PermissionAction.ACTION, scope = PermissionScope.ACTION, types = {AuthType.session, AuthType.session, AuthType.team, AuthType.global})
   @Operation(summary = "Provide an update for an Action")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -52,7 +52,7 @@ public class ActionV2Controller {
   }
 
   @GetMapping(value = "/{actionId}")
-  @AuthScope(action = PermissionAction.READ, scope = PermissionScope.ACTION, types = {AuthType.team})
+  @AuthScope(action = PermissionAction.READ, scope = PermissionScope.ACTION, types = {AuthType.session, AuthType.session, AuthType.team, AuthType.global})
   @Operation(summary = "Retrieve a specific Action by Id")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -63,7 +63,7 @@ public class ActionV2Controller {
   }
   
   @GetMapping(value = "")
-  @AuthScope(action = PermissionAction.READ, scope = PermissionScope.ACTION, types = {AuthType.team})
+  @AuthScope(action = PermissionAction.READ, scope = PermissionScope.ACTION, types = {AuthType.session, AuthType.session, AuthType.team, AuthType.global})
   @Operation(summary = "Retrieve a specifc Action by TaskRun")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -74,7 +74,7 @@ public class ActionV2Controller {
   }
 
   @GetMapping(value = "/query")
-  @AuthScope(action = PermissionAction.READ, scope = PermissionScope.ACTION, types = {AuthType.team})
+  @AuthScope(action = PermissionAction.READ, scope = PermissionScope.ACTION, types = {AuthType.session, AuthType.session, AuthType.team, AuthType.global})
   @Operation(summary = "Search for Actions")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -116,7 +116,7 @@ public class ActionV2Controller {
   }
   
   @GetMapping(value = "/summary")
-  @AuthScope(action = PermissionAction.READ, scope = PermissionScope.ACTION, types = {AuthType.team})
+  @AuthScope(action = PermissionAction.READ, scope = PermissionScope.ACTION, types = {AuthType.session, AuthType.session, AuthType.team, AuthType.global})
   @Operation(summary = "Get Actions Summary")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})

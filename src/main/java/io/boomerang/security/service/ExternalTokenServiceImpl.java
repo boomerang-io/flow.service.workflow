@@ -2,11 +2,8 @@ package io.boomerang.security.service;
 
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.Calendar;
 import java.util.Date;
-import org.apache.commons.codec.binary.Hex;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import io.jsonwebtoken.Jwts;
@@ -19,8 +16,6 @@ public class ExternalTokenServiceImpl implements ExternalTokenService {
 
   @Value("${api.token:boomerangsecuritytokenvalid12345}")
   private String apiToken;
-
-  private final ThreadLocal<String> tokenMap = new ThreadLocal<>(); // NOSONAR
 
   @Override
   @NoLogging
@@ -55,40 +50,5 @@ public class ExternalTokenServiceImpl implements ExternalTokenService {
     final Calendar now = Calendar.getInstance();
     now.add(Calendar.MINUTE, 10);
     return now.getTime();
-  }
-
-  @Override
-  @NoLogging
-  public String getToken(boolean encoded) {
-    if (encoded) {
-      return sha1(apiToken);
-    }
-    return apiToken;
-  }
-
-  @Override
-  @NoLogging
-  public String getUserToken() {
-    return tokenMap.get();
-  }
-
-  @NoLogging
-  private String sha1(String input) {
-    String sha1 = null;
-
-    try {
-      final MessageDigest msdDigest = MessageDigest.getInstance("SHA-1");
-      msdDigest.update(input.getBytes(StandardCharsets.UTF_8), 0, input.length());
-      sha1 = Hex.encodeHexString(msdDigest.digest());
-    } catch (NoSuchAlgorithmException e) {
-      return null;
-    }
-    return sha1;
-  }
-
-  @Override
-  @NoLogging
-  public void storeUserToken(String token) {
-    tokenMap.set(token);
   }
 }

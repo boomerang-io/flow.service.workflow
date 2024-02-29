@@ -45,7 +45,6 @@ public class SecurityInterceptor implements HandlerInterceptor {
       if (identityService.getCurrentScope() == null) {
         LOGGER.error("SecurityInterceptor - mismatch between AuthN and AuthZ. A permitAll route has an AuthScope.");
         // If annotation is found but CurrentScope is not then mismatch must have happened between routes with AuthN and AuthZ
-        // TODO set this to return false
         response.getWriter().write("");
         response.setStatus(401);
         return false;
@@ -55,7 +54,7 @@ public class SecurityInterceptor implements HandlerInterceptor {
       Token accessToken = this.identityService.getCurrentIdentity();
       // Check the required level of token is present
       if (!Arrays.asList(requiredTypes).contains(accessToken.getType())) {
-        LOGGER.error("SecurityInterceptor - Unauthorized Type / Level. Needed: {}, Provided: {}", requiredTypes.toString(), accessToken.getType().toString());
+        LOGGER.error("SecurityInterceptor - Unauthorized Type / Level. Needed: {}, Provided: {}", Arrays.toString(requiredTypes), accessToken.getType().toString());
      // TODO set this to return false
 //      response.getWriter().write("");
 //      response.setStatus(401);
@@ -63,7 +62,8 @@ public class SecurityInterceptor implements HandlerInterceptor {
       }
       PermissionScope requiredScope = authScope.scope();
       PermissionAction requiredAccess = authScope.action();
-      String requiredRegex = "(\\*{2}|" + requiredScope.getLabel() + ")\\/(\\*{2})\\/(\\*{2}|" + requiredAccess.getLabel() + "){1}";
+      String requiredRegex = "(\\*{2}|" + requiredScope.getLabel() + ")\\/(\\*{2}|.*)\\/(\\*{2}|" + requiredAccess.getLabel() + ")";
+      LOGGER.debug("SecurityInterceptor - Permission Regex: {}", requiredRegex.toString());
       LOGGER.debug("SecurityInterceptor - Permission needed: {}, Provided: {}", requiredScope.getLabel() + "/**/" + requiredAccess.getLabel(), accessToken.getPermissions().toString());
       if (!accessToken.getPermissions().stream().anyMatch(p -> (p.matches(requiredRegex)))) {
         LOGGER.error("SecurityInterceptor - Unauthorized Permission.");

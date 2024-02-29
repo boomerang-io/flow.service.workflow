@@ -42,8 +42,8 @@ public class TeamV2Controller {
   private TeamService teamService;
   
   @PostMapping(value = "/validate-name")
-  @AuthScope(action = PermissionAction.READ, scope = PermissionScope.TEAM, types = {AuthType.team})
-  @Operation(summary = "Check team name")
+  @AuthScope(action = PermissionAction.READ, scope = PermissionScope.TEAM, types = {AuthType.session, AuthType.user, AuthType.global})
+  @Operation(summary = "Validate team name and check uniqueness.")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "422", description = "Name is already taken"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -52,7 +52,7 @@ public class TeamV2Controller {
   }
   
   @GetMapping(value = "/{team}")
-  @AuthScope(action = PermissionAction.READ, scope = PermissionScope.TEAM, types = {AuthType.team})
+  @AuthScope(action = PermissionAction.READ, scope = PermissionScope.TEAM, types = {AuthType.session, AuthType.user, AuthType.team, AuthType.global})
   @Operation(summary = "Get team")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -65,7 +65,7 @@ public class TeamV2Controller {
   }
 
   @GetMapping(value = "/query")
-  @AuthScope(action = PermissionAction.READ, scope = PermissionScope.TEAM, types = {AuthType.team})
+  @AuthScope(action = PermissionAction.READ, scope = PermissionScope.TEAM, types = {AuthType.session, AuthType.user, AuthType.team, AuthType.global})
   @Operation(summary = "Search for Teams")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -89,7 +89,7 @@ public class TeamV2Controller {
   }
   
   @PostMapping(value = "")
-  @AuthScope(action = PermissionAction.WRITE, scope = PermissionScope.TEAM, types = {AuthType.team})
+  @AuthScope(action = PermissionAction.WRITE, scope = PermissionScope.TEAM, types = {AuthType.session, AuthType.user, AuthType.global})
   @Operation(summary = "Create new team")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -98,7 +98,7 @@ public class TeamV2Controller {
   }
   
   @PatchMapping(value = "/{team}")
-  @AuthScope(action = PermissionAction.WRITE, scope = PermissionScope.TEAM, types = {AuthType.team})
+  @AuthScope(action = PermissionAction.WRITE, scope = PermissionScope.TEAM, types = {AuthType.session, AuthType.user, AuthType.team, AuthType.global})
   @Operation(summary = "Patch or update a team")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
@@ -117,7 +117,7 @@ public class TeamV2Controller {
 //  }
   
   @DeleteMapping(value = "/{team}/members")
-  @AuthScope(action = PermissionAction.DELETE, scope = PermissionScope.TEAM, types = {AuthType.team})
+  @AuthScope(action = PermissionAction.DELETE, scope = PermissionScope.TEAM, types = {AuthType.session, AuthType.user, AuthType.team, AuthType.global})
   public void removeMembers(
       @Parameter(name = "team",
       description = "Team as owner reference.",
@@ -135,7 +135,7 @@ public class TeamV2Controller {
   }
 
   @DeleteMapping(value = "/{team}/parameters")
-  @AuthScope(action = PermissionAction.DELETE, scope = PermissionScope.TEAM, types = {AuthType.team})
+  @AuthScope(action = PermissionAction.DELETE, scope = PermissionScope.TEAM, types = {AuthType.session, AuthType.user, AuthType.team, AuthType.global})
   public void deleteParameters(
       @Parameter(name = "team",
       description = "Team as owner reference.",
@@ -145,7 +145,7 @@ public class TeamV2Controller {
   }
   
   @DeleteMapping(value = "/{team}/approvers")
-  @AuthScope(action = PermissionAction.DELETE, scope = PermissionScope.TEAM, types = {AuthType.team})
+  @AuthScope(action = PermissionAction.DELETE, scope = PermissionScope.TEAM, types = {AuthType.session, AuthType.user, AuthType.team, AuthType.global})
   public void deleteApproverGroup(
       @Parameter(name = "team",
       description = "Team as owner reference.",
@@ -155,7 +155,7 @@ public class TeamV2Controller {
   }
 
   @DeleteMapping(value = "/{team}/quotas")
-  @AuthScope(action = PermissionAction.DELETE, scope = PermissionScope.TEAM, types = {AuthType.team})
+  @AuthScope(action = PermissionAction.DELETE, scope = PermissionScope.TEAM, types = {AuthType.session, AuthType.user, AuthType.team, AuthType.global})
   public void resetQuotas(
       @Parameter(name = "team",
       description = "Team as owner reference.",
@@ -164,13 +164,13 @@ public class TeamV2Controller {
   }
 
   @GetMapping(value = "/quotas/default")
-  @AuthScope(action = PermissionAction.READ, scope = PermissionScope.TEAM, types = {AuthType.team})
+  @AuthScope(action = PermissionAction.READ, scope = PermissionScope.TEAM, types = {AuthType.session, AuthType.user, AuthType.team, AuthType.global})
   public ResponseEntity<Quotas> getDefaultQuotas() {
     return teamService.getDefaultQuotas();
   }
 
   @GetMapping(value = "/roles")
-  @AuthScope(action = PermissionAction.READ, scope = PermissionScope.TEAM, types = {AuthType.team})
+  @AuthScope(action = PermissionAction.READ, scope = PermissionScope.TEAM, types = {AuthType.session, AuthType.user, AuthType.team, AuthType.global})
   public ResponseEntity<List<Role>> getRoles() {
     return teamService.getRoles();
   }
