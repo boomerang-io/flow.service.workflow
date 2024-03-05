@@ -41,5 +41,5 @@ public interface TeamService {
 
   ResponseEntity<List<Role>> getRoles();
 
-//  void delete(String team);
+  void delete(String team);
 }

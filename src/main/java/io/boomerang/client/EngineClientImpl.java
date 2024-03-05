@@ -74,6 +74,9 @@ public class EngineClientImpl implements EngineClient {
   @Value("${flow.engine.workflowrun.retry.url}")
   public String retryWorkflowRunURL;
 
+  @Value("${flow.engine.workflowrun.delete.url}")
+  public String deleteWorkflowRunURL;
+
   @Value("${flow.engine.workflow.get.url}")
   public String getWorkflowURL;
 
@@ -127,6 +130,9 @@ public class EngineClientImpl implements EngineClient {
 
   @Value("${flow.engine.tasktemplate.changelog.url}")
   public String changelogTaskTemplateURL;
+
+  @Value("${flow.engine.tasktemplate.delete.url}")
+  public String deleteTaskTemplateURL;
 
   @Value("${flow.engine.workflowtemplate.get.url}")
   public String getWorkflowTemplateURL;
@@ -411,6 +417,24 @@ public class EngineClientImpl implements EngineClient {
     }
   }
 
+  @Override
+  public void deleteWorkflowRun(String workflowRunId) {
+    try {
+      String url = deleteWorkflowRunURL.replace("{workflowRunId}", workflowRunId);
+
+      LOGGER.info("URL: " + url);
+      ResponseEntity<Void> response =
+          restTemplate.exchange(url, HttpMethod.DELETE, null, Void.class);
+
+      LOGGER.info("Status Response: " + response.getStatusCode());
+    } catch (RestClientException ex) {
+      LOGGER.error(ex.toString());
+      throw new BoomerangException(ex, HttpStatus.INTERNAL_SERVER_ERROR.value(),
+          ex.getClass().getSimpleName(), "Exception in communicating with internal services.",
+          HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
   /*
    * ************************************** Workflow endpoints
    * **************************************
@@ -671,10 +695,15 @@ public class EngineClientImpl implements EngineClient {
   public void deleteWorkflow(String workflowId) {
     try {
       String url = deleteWorkflowURL.replace("{workflowId}", workflowId);
+      Map<String, String> requestParams = new HashMap<>();
+      requestParams.put("cascade", Boolean.toString(false));
+      String encodedURL =
+          requestParams.keySet().stream().map(key -> key + "=" + requestParams.get(key))
+              .collect(Collectors.joining("&", url + "?", ""));
 
-      LOGGER.info("URL: " + url);
+      LOGGER.info("URL: " + encodedURL);
       ResponseEntity<Void> response =
-          restTemplate.exchange(url, HttpMethod.DELETE, null, Void.class);
+          restTemplate.exchange(encodedURL, HttpMethod.DELETE, null, Void.class);
 
       LOGGER.info("Status Response: " + response.getStatusCode());
     } catch (RestClientException ex) {
@@ -918,6 +947,25 @@ public class EngineClientImpl implements EngineClient {
     }
   }
 
+  @Override
+  public ResponseEntity<Void> deleteTaskTemplate(String name) {
+    try {
+      String url = deleteTaskTemplateURL.replace("{name}", name);
+
+      LOGGER.info("URL: " + url);
+      ResponseEntity<Void> response =
+          restTemplate.exchange(url, HttpMethod.DELETE, null, Void.class);
+
+      LOGGER.info("Status Response: " + response.getStatusCode());
+      return response;
+    } catch (RestClientException ex) {
+      LOGGER.error(ex.toString());
+      throw new BoomerangException(ex, HttpStatus.INTERNAL_SERVER_ERROR.value(),
+          ex.getClass().getSimpleName(), "Exception in communicating with internal services.",
+          HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
   /*
    * ************************************** 
    * WorkflowTemplate endpoints
@@ -1055,10 +1103,6 @@ public class EngineClientImpl implements EngineClient {
           restTemplate.exchange(url, HttpMethod.DELETE, null, Void.class);
 
       LOGGER.info("Status Response: " + response.getStatusCode());
-
-      if (!HttpStatus.NO_CONTENT.equals(response.getStatusCode())) {
-        throw new RestClientException("Unable to delete Workflow");
-      }
       return response;
     } catch (RestClientException ex) {
       LOGGER.error(ex.toString());

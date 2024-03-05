@@ -6,8 +6,8 @@ import java.util.Map;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import io.boomerang.model.enums.RelationshipRef;
 import io.boomerang.model.enums.RelationshipType;
+import io.boomerang.model.enums.RelationshipLabel;
 
 /*
  * Entity for Relationships
@@ -19,17 +19,17 @@ public class RelationshipEntity {
   @Id
   private String id;
   private Date creationDate = new Date();
-  private RelationshipType type; 
-  private RelationshipRef from;
+  private RelationshipType from;
   private String fromRef;
-  private RelationshipRef to;
+  private RelationshipLabel type; 
+  private RelationshipType to;
   private String toRef;
   private Map<String, Object> data = new HashMap<>();
    
   @Override
   public String toString() {
-    return "RelationshipEntity [id=" + id + ", type=" + type + ", from="
-        + from + ", fromRef=" + fromRef + ", to=" + to + ", toRef=" + toRef + ", date=" + creationDate + ", data=" + data + "]";
+    return "RelationshipEntity [id=" + id + ", from="
+        + from + ", fromRef=" + fromRef + ", label=" + type + ", to=" + to + ", toRef=" + toRef + ", date=" + creationDate + ", data=" + data + "]";
   }
   public String getId() {
     return id;
@@ -37,16 +37,16 @@ public class RelationshipEntity {
   public void setId(String id) {
     this.id = id;
   }
-  public RelationshipType getType() {
+  public RelationshipLabel getLabel() {
     return type;
   }
-  public void setType(RelationshipType type) {
+  public void setLabel(RelationshipLabel type) {
     this.type = type;
   }
-  public RelationshipRef getFrom() {
+  public RelationshipType getFrom() {
     return from;
   }
-  public void setFrom(RelationshipRef from) {
+  public void setFrom(RelationshipType from) {
     this.from = from;
   }
   public String getFromRef() {
@@ -55,10 +55,10 @@ public class RelationshipEntity {
   public void setFromRef(String fromRef) {
     this.fromRef = fromRef;
   }
-  public RelationshipRef getTo() {
+  public RelationshipType getTo() {
     return to;
   }
-  public void setTo(RelationshipRef to) {
+  public void setTo(RelationshipType to) {
     this.to = to;
   }
   public String getToRef() {

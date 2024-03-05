@@ -32,4 +32,6 @@ public interface TaskTemplateService {
   void validateAsTekton(TektonTask tektonTask);
 
   List<ChangeLogVersion> changelog(String name, Optional<String> team);
+
+  void delete(String name, String team);
 }

@@ -107,14 +107,14 @@ public class TeamV2Controller {
     return teamService.patch(team, request);
   }
 
-//  @DeleteMapping(value = "/{team}")
-//  @Operation(summary = "Delete a team")
-//  @ApiResponses(value = {@ApiResponse(responseCode = "204", description = "OK"),
-//      @ApiResponse(responseCode = "400", description = "Bad Request")})
-//  public void deleteWorkflow(@Parameter(name = "team",
-//      description = "ID of Team", required = true) @PathVariable String team) {
-//    teamService.delete(team);
-//  }
+  @DeleteMapping(value = "/{team}")
+  @Operation(summary = "Delete a team")
+  @ApiResponses(value = {@ApiResponse(responseCode = "204", description = "OK"),
+      @ApiResponse(responseCode = "400", description = "Bad Request")})
+  public void deleteWorkflow(@Parameter(name = "team",
+      description = "ID of Team", required = true) @PathVariable String team) {
+    teamService.delete(team);
+  }
   
   @DeleteMapping(value = "/{team}/members")
   @AuthScope(action = PermissionAction.DELETE, scope = PermissionScope.TEAM, types = {AuthType.session, AuthType.user, AuthType.team, AuthType.global})

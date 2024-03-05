@@ -15,4 +15,6 @@ public interface TeamRepository extends MongoRepository<TeamEntity, String> {
   Optional<TeamEntity> findById(String id);
 
   List<TeamEntity> findByIdIn(List<String> ids);
+  
+  void deleteByName(String name);
 }

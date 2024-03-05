@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort.Direction;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -188,5 +189,17 @@ public class TeamTaskTemplateV2Controller {
   @AuthScope(action = PermissionAction.READ, scope = PermissionScope.TASKTEMPLATE, types = {AuthType.team})
   public void validateYaml(@RequestBody TektonTask tektonTask) {
     taskTemplateService.validateAsTekton(tektonTask);
+  }
+
+  @DeleteMapping(value = "/{name}")
+  @Operation(summary = "Delete a Team Task Template")
+  @ApiResponses(value = {@ApiResponse(responseCode = "204", description = "OK"),
+      @ApiResponse(responseCode = "400", description = "Bad Request")})
+  public void deleteWorkflow(
+      @Parameter(name = "team", description = "Owning team name.", example = "my-amazing-team",
+          required = true) @PathVariable String team,
+      @Parameter(name = "name", description = "Name of Task Template",
+          required = true) @PathVariable String name) {
+    taskTemplateService.delete(name, team);
   }
 }

@@ -28,8 +28,8 @@ import io.boomerang.model.Action;
 import io.boomerang.model.ActionRequest;
 import io.boomerang.model.ActionSummary;
 import io.boomerang.model.User;
-import io.boomerang.model.enums.RelationshipRef;
 import io.boomerang.model.enums.RelationshipType;
+import io.boomerang.model.enums.RelationshipLabel;
 import io.boomerang.model.enums.ref.ActionStatus;
 import io.boomerang.model.enums.ref.ActionType;
 import io.boomerang.model.enums.ref.RunStatus;
@@ -82,9 +82,9 @@ public class ActionServiceImpl implements ActionService {
 
       // Check if requester has access to the Workflow the Action Entity belongs to
       List<String> workflowRefs =
-          relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.WORKFLOW),
+          relationshipService.getFilteredFromRefs(Optional.of(RelationshipType.WORKFLOW),
               Optional.of(List.of(actionEntity.getWorkflowRef())),
-              Optional.of(RelationshipType.BELONGSTO), Optional.empty(), Optional.empty());
+              Optional.of(RelationshipLabel.BELONGSTO), Optional.empty(), Optional.empty());
       if (workflowRefs.isEmpty()) {
         throw new BoomerangException(BoomerangError.ACTION_INVALID_REF);
       }
@@ -97,8 +97,8 @@ public class ActionServiceImpl implements ActionService {
       } else if (actionEntity.getType() == ActionType.approval) {
         if (actionEntity.getApproverGroupRef() != null) {
           List<String> approverGroupRefs = relationshipService.getFilteredFromRefs(
-              Optional.of(RelationshipRef.APPROVERGROUP), Optional.of(List.of(actionEntity.getApproverGroupRef())),
-              Optional.of(RelationshipType.BELONGSTO), Optional.empty(), Optional.empty());
+              Optional.of(RelationshipType.APPROVERGROUP), Optional.of(List.of(actionEntity.getApproverGroupRef())),
+              Optional.of(RelationshipLabel.BELONGSTO), Optional.empty(), Optional.empty());
           if (approverGroupRefs.isEmpty()) {
             //TODO better error around INVALID APPROVER GROUP REF
             throw new BoomerangException(BoomerangError.ACTION_INVALID_REF);
@@ -205,8 +205,8 @@ public class ActionServiceImpl implements ActionService {
       Optional<List<ActionType>> types, Optional<List<ActionStatus>> status,
       Optional<List<String>> workflowIds, Optional<List<String>> teams) {
     List<String> workflowRefs =
-        relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.WORKFLOW), workflowIds,
-            Optional.of(RelationshipType.BELONGSTO), Optional.of(RelationshipRef.TEAM), teams);
+        relationshipService.getFilteredFromRefs(Optional.of(RelationshipType.WORKFLOW), workflowIds,
+            Optional.of(RelationshipLabel.BELONGSTO), Optional.of(RelationshipType.TEAM), teams);
 
     Criteria criteria = buildCriteriaList(from, to, Optional.of(workflowRefs), types, status);
     Query query = new Query(criteria).with(pageable);
@@ -228,8 +228,8 @@ public class ActionServiceImpl implements ActionService {
   @Override
   public ActionSummary summary(Optional<Date> fromDate, Optional<Date> toDate, Optional<List<String>> workflowIds, Optional<List<String>> teams) {
     List<String> workflowRefs =
-        relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.WORKFLOW),
-            workflowIds, Optional.of(RelationshipType.BELONGSTO), Optional.of(RelationshipRef.TEAM), teams);
+        relationshipService.getFilteredFromRefs(Optional.of(RelationshipType.WORKFLOW),
+            workflowIds, Optional.of(RelationshipLabel.BELONGSTO), Optional.of(RelationshipType.TEAM), teams);
     
     long approvalCount = this.getActionCountForType(ActionType.approval, fromDate,
         toDate, Optional.of(workflowRefs));

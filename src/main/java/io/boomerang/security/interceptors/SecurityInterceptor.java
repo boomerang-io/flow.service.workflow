@@ -36,15 +36,14 @@ public class SecurityInterceptor implements HandlerInterceptor {
       HandlerMethod handlerMethod = (HandlerMethod) handler;
       AuthScope authScope = handlerMethod.getMethod().getAnnotation(AuthScope.class);
       if (authScope == null) {
-        LOGGER.debug("SecurityInterceptor: Skipping Authorization");
         // No annotation found - route does not need authZ
+        LOGGER.info("SecurityInterceptor - No Auth annotation found. Skipping Authorization.");
         return true;
       }
 
-      LOGGER.debug("SecurityInterceptor Scope: " + identityService.getCurrentScope());
+      // If annotation is found but CurrentScope is not then mismatch must have happened between routes with AuthN and AuthZ
       if (identityService.getCurrentScope() == null) {
-        LOGGER.error("SecurityInterceptor - mismatch between AuthN and AuthZ. A permitAll route has an AuthScope.");
-        // If annotation is found but CurrentScope is not then mismatch must have happened between routes with AuthN and AuthZ
+        LOGGER.error("SecurityInterceptor - mismatch between AuthN and AuthZ. A permitAll route has an AuthScope. Scope: {}.", identityService.getCurrentScope());
         response.getWriter().write("");
         response.setStatus(401);
         return false;
@@ -63,8 +62,7 @@ public class SecurityInterceptor implements HandlerInterceptor {
       PermissionScope requiredScope = authScope.scope();
       PermissionAction requiredAccess = authScope.action();
       String requiredRegex = "(\\*{2}|" + requiredScope.getLabel() + ")\\/(\\*{2}|.*)\\/(\\*{2}|" + requiredAccess.getLabel() + ")";
-      LOGGER.debug("SecurityInterceptor - Permission Regex: {}", requiredRegex.toString());
-      LOGGER.debug("SecurityInterceptor - Permission needed: {}, Provided: {}", requiredScope.getLabel() + "/**/" + requiredAccess.getLabel(), accessToken.getPermissions().toString());
+      LOGGER.info("SecurityInterceptor - Permission needed: {}, Provided: {}", requiredScope.getLabel() + "/**/" + requiredAccess.getLabel(), accessToken.getPermissions().toString());
       if (!accessToken.getPermissions().stream().anyMatch(p -> (p.matches(requiredRegex)))) {
         LOGGER.error("SecurityInterceptor - Unauthorized Permission.");
         // TODO set this to return false

@@ -43,8 +43,8 @@ import io.boomerang.model.User;
 import io.boomerang.model.UserProfile;
 import io.boomerang.model.UserRequest;
 import io.boomerang.model.UserStatus;
-import io.boomerang.model.enums.RelationshipRef;
 import io.boomerang.model.enums.RelationshipType;
+import io.boomerang.model.enums.RelationshipLabel;
 import io.boomerang.model.enums.TeamStatus;
 import io.boomerang.model.enums.UserType;
 import io.boomerang.security.model.AuthType;
@@ -232,14 +232,14 @@ public class IdentityServiceImpl implements IdentityService {
         TeamSummary ts = new TeamSummary(teamEntity.get());
         TeamSummaryInsights tsi = new TeamSummaryInsights();
         List<String> memberRefs =
-            relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.USER),
-                Optional.empty(), Optional.of(RelationshipType.MEMBEROF),
-                Optional.of(RelationshipRef.TEAM), Optional.of(List.of(k)));
+            relationshipService.getFilteredFromRefs(Optional.of(RelationshipType.USER),
+                Optional.empty(), Optional.of(RelationshipLabel.MEMBEROF),
+                Optional.of(RelationshipType.TEAM), Optional.of(List.of(k)));
         tsi.setMembers(Long.valueOf(memberRefs.size()));
         List<String> workflowRefs =
-            relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.WORKFLOW),
-                Optional.empty(), Optional.of(RelationshipType.BELONGSTO),
-                Optional.of(RelationshipRef.TEAM), Optional.of(List.of(k)));
+            relationshipService.getFilteredFromRefs(Optional.of(RelationshipType.WORKFLOW),
+                Optional.empty(), Optional.of(RelationshipLabel.BELONGSTO),
+                Optional.of(RelationshipType.TEAM), Optional.of(List.of(k)));
         tsi.setWorkflows(Long.valueOf(workflowRefs.size()));
         ts.setInsights(tsi);
         teamSummaries.add(ts);
@@ -438,9 +438,9 @@ public class IdentityServiceImpl implements IdentityService {
   public void delete(String userId) {
     Optional<UserEntity> user = userRepository.findById(userId);
     List<String> teamRefs =
-        relationshipService.getFilteredFromRefs(Optional.of(RelationshipRef.USER),
-            Optional.of(List.of(userId)), Optional.of(RelationshipType.MEMBEROF),
-            Optional.of(RelationshipRef.TEAM), Optional.empty());
+        relationshipService.getFilteredFromRefs(Optional.of(RelationshipType.USER),
+            Optional.of(List.of(userId)), Optional.of(RelationshipLabel.MEMBEROF),
+            Optional.of(RelationshipType.TEAM), Optional.empty());
     if (!teamRefs.isEmpty()) {
       throw new BoomerangException(BoomerangError.USER_UNABLE_TO_DELETE);
     }

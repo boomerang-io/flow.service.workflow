@@ -44,6 +44,8 @@ public interface EngineClient {
 
   WorkflowRun retryWorkflowRun(String workflowRunId);
 
+  void deleteWorkflowRun(String workflowRunId);
+
   Workflow getWorkflow(String workflowId, Optional<Integer> version, boolean withTasks);
 
   WorkflowResponsePage queryWorkflows(Optional<Integer> queryLimit, Optional<Integer> queryPage,
@@ -79,6 +81,8 @@ public interface EngineClient {
   TaskTemplate applyTaskTemplate(TaskTemplate workflow, boolean replace);
 
   List<ChangeLogVersion> getTaskTemplateChangeLog(String name);
+
+  ResponseEntity<Void> deleteTaskTemplate(String name);
 
   WorkflowTemplate getWorkflowTemplate(String name, Optional<Integer> version, boolean withTasks);
 

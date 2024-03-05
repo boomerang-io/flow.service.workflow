@@ -15,26 +15,26 @@ import io.boomerang.model.ref.WorkflowSubmitRequest;
 
 public interface WorkflowService {
 
-  ResponseEntity<Workflow> get(String workflowId, Optional<Integer> version, boolean withTasks);
+  Workflow get(String workflowId, Optional<Integer> version, boolean withTasks);
 
   WorkflowResponsePage query(Optional<Integer> queryLimit, Optional<Integer> queryPage,
       Optional<Direction> querySort, Optional<List<String>> queryLabels,
       Optional<List<String>> queryStatus, Optional<List<String>> queryTeams,
       Optional<List<String>> queryWorkflows);
 
-  ResponseEntity<Workflow> create(Workflow request, String team);
+  Workflow create(Workflow request, String team);
 
-  ResponseEntity<Workflow> apply(Workflow workflow, boolean replace, Optional<String> team);
+  Workflow apply(Workflow workflow, boolean replace, Optional<String> team);
 
-  ResponseEntity<Void> delete(String workflowId);
+  void delete(String workflowId);
 
   ResponseEntity<InputStreamResource> export(String workflowId);
 
-  ResponseEntity<Workflow> duplicate(String workflowId);
+  Workflow duplicate(String workflowId);
 
-  ResponseEntity<WorkflowCanvas> composeGet(String workflowId, Optional<Integer> version);
+  WorkflowCanvas composeGet(String workflowId, Optional<Integer> version);
 
-  ResponseEntity<WorkflowCanvas> composeApply(WorkflowCanvas canvas, boolean replace,
+  WorkflowCanvas composeApply(WorkflowCanvas canvas, boolean replace,
       Optional<String> team);
 
   List<String> getAvailableParameters(String workflowId);

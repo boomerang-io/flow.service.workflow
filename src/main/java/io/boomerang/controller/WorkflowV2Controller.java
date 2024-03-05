@@ -45,7 +45,7 @@ public class WorkflowV2Controller {
   @Operation(summary = "Retrieve a Workflow", description = "Retrieve a version of the Workflow. Defaults to latest. Optionally without Tasks")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
-  public ResponseEntity<Workflow> getWorkflow(
+  public Workflow getWorkflow(
       @Parameter(name = "workflowId", description = "ID of Workflow",
           required = true) @PathVariable String workflowId,
       @Parameter(name = "version", description = "Workflow Version",
@@ -84,7 +84,7 @@ public class WorkflowV2Controller {
   @Operation(summary = "Create a new workflow")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
-  public ResponseEntity<Workflow> createWorkflow(
+  public Workflow createWorkflow(
     @Parameter(name = "team", description = "Team as owner reference.", example = "my-amazing-team",
     required = true) @RequestParam(required = true) String team,
     @RequestBody Workflow workflow) {
@@ -96,7 +96,7 @@ public class WorkflowV2Controller {
   @Operation(summary = "Update, replace, or create new, Workflow")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
-  public ResponseEntity<Workflow> applyWorkflow(@RequestBody Workflow workflow,
+  public Workflow applyWorkflow(@RequestBody Workflow workflow,
       @Parameter(name = "replace", description = "Replace existing version",
           required = false) @RequestParam(required = false, defaultValue = "false") boolean replace,
       @Parameter(name = "team", description = "Team as owner reference. Required if using apply to create new.",
@@ -121,9 +121,9 @@ public class WorkflowV2Controller {
   @Operation(summary = "Delete a workflow")
   @ApiResponses(value = {@ApiResponse(responseCode = "204", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
-  public ResponseEntity<Void> deleteWorkflow(@Parameter(name = "workflowId",
+  public void deleteWorkflow(@Parameter(name = "workflowId",
       description = "ID of Workflow", required = true) @PathVariable String workflowId) {
-    return workflowService.delete(workflowId);
+    workflowService.delete(workflowId);
   }
 
   @PostMapping(value = "/{workflowId}/submit")
@@ -153,7 +153,7 @@ public class WorkflowV2Controller {
   @Operation(summary = "Convert workflow to compose model for UI Designer and detailed Activity screens.")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
-  public ResponseEntity<WorkflowCanvas> compose(
+  public WorkflowCanvas compose(
       @Parameter(name = "workflowId", description = "ID of Workflow",
           required = true) @PathVariable String workflowId,
       @Parameter(name = "version", description = "Workflow Version",
@@ -166,7 +166,7 @@ public class WorkflowV2Controller {
   @Operation(summary = "Update, replace, or create new, Workflow for Canvas")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
-  public ResponseEntity<WorkflowCanvas> applyCanvas(@RequestBody WorkflowCanvas canvas,
+  public WorkflowCanvas applyCanvas(@RequestBody WorkflowCanvas canvas,
       @Parameter(name = "replace", description = "Replace existing version",
           required = false) @RequestParam(required = false, defaultValue = "false") boolean replace,
       @Parameter(name = "team", description = "Team as owner reference. Required if using apply to create new.",
@@ -178,7 +178,7 @@ public class WorkflowV2Controller {
   @PostMapping(value = "/{workflowId}/duplicate")
   @AuthScope(action = PermissionAction.WRITE, scope = PermissionScope.WORKFLOW, types = {AuthType.team})
   @Operation(summary = "Duplicates the workflow.")
-  public ResponseEntity<Workflow> duplicateWorkflow(
+  public Workflow duplicateWorkflow(
       @Parameter(name = "workflowId", description = "ID of Workflow",
       required = true) @PathVariable String workflowId) {
     return workflowService.duplicate(workflowId);
