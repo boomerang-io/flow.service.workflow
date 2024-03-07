@@ -6,38 +6,38 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Update;
 import io.boomerang.data.entity.RelationshipEntity;
 import io.boomerang.model.enums.RelationshipLabel;
-import io.boomerang.model.enums.RelationshipType;
+import io.boomerang.model.enums.RelationshipNodeType;
 
 public interface RelationshipRepository extends MongoRepository<RelationshipEntity, String> {
 //
-  Optional<RelationshipEntity> findByFromAndFromRefAndType(RelationshipType from, String fromRef, RelationshipLabel type);
+  Optional<RelationshipEntity> findByFromAndFromRefAndType(RelationshipNodeType from, String fromRef, RelationshipLabel type);
 //  
-  List<RelationshipEntity> findByFromAndTypeAndTo(RelationshipType from, RelationshipLabel type, RelationshipType to);
+  List<RelationshipEntity> findByFromAndTypeAndTo(RelationshipNodeType from, RelationshipLabel type, RelationshipNodeType to);
   
-List<RelationshipEntity> findByFromAndFromRefInAndTypeAndTo(RelationshipType from, List<String> fromRef, RelationshipLabel type, RelationshipType to);
+List<RelationshipEntity> findByFromAndFromRefInAndTypeAndTo(RelationshipNodeType from, List<String> fromRef, RelationshipLabel type, RelationshipNodeType to);
   
-List<RelationshipEntity> findByFromAndTypeAndToAndToRefIn(RelationshipType from, RelationshipLabel type, RelationshipType to,
+List<RelationshipEntity> findByFromAndTypeAndToAndToRefIn(RelationshipNodeType from, RelationshipLabel type, RelationshipNodeType to,
     List<String> toRef);
 
-  List<RelationshipEntity> findByFromAndFromRefInAndToAndToRefIn(RelationshipType from, List<String> fromRef, RelationshipType to,
+  List<RelationshipEntity> findByFromAndFromRefInAndToAndToRefIn(RelationshipNodeType from, List<String> fromRef, RelationshipNodeType to,
       List<String> toRef);
 
-  List<RelationshipEntity> findByFromAndFromRefInAndTo(RelationshipType from, List<String> fromRef, RelationshipType to);
+  List<RelationshipEntity> findByFromAndFromRefInAndTo(RelationshipNodeType from, List<String> fromRef, RelationshipNodeType to);
 
-  List<RelationshipEntity> findByFromAndFromRefInAndTypeAndToAndToRefIn(RelationshipType from, List<String> fromRef, RelationshipLabel type, RelationshipType to,
+  List<RelationshipEntity> findByFromAndFromRefInAndTypeAndToAndToRefIn(RelationshipNodeType from, List<String> fromRef, RelationshipLabel type, RelationshipNodeType to,
       List<String> toRef);
   
-  void deleteByToAndToRef(RelationshipType to,
+  void deleteByToAndToRef(RelationshipNodeType to,
       String toRef);
   
-  void deleteByFromAndFromRef(RelationshipType from,
+  void deleteByFromAndFromRef(RelationshipNodeType from,
       String fromRef);
   
   @Update("{ '$set' : { 'fromRef' : ?2 } }")
-  void findAndSetFromRefByFromAndFromRef(RelationshipType from,
+  void findAndSetFromRefByFromAndFromRef(RelationshipNodeType from,
       String fromRef, String newFromRef); 
   
   @Update("{ '$set' : { 'toRef' : ?2 } }")
-  void findAndSetToRefByToAndToRef(RelationshipType to,
+  void findAndSetToRefByToAndToRef(RelationshipNodeType to,
       String toRef, String newToRef); 
 }

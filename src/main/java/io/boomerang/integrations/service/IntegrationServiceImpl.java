@@ -16,7 +16,7 @@ import io.boomerang.integrations.data.repository.IntegrationTemplateRepository;
 import io.boomerang.integrations.data.repository.IntegrationsRepository;
 import io.boomerang.integrations.model.Integration;
 import io.boomerang.integrations.model.enums.IntegrationStatus;
-import io.boomerang.model.enums.RelationshipType;
+import io.boomerang.model.enums.RelationshipNodeType;
 import io.boomerang.model.enums.RelationshipLabel;
 import io.boomerang.service.RelationshipService;
 
@@ -41,9 +41,9 @@ public class IntegrationServiceImpl implements IntegrationService {
     templates.forEach(t -> {
       Integration i = new Integration();
       BeanUtils.copyProperties(t, i);
-      List<String> refs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipType.INTEGRATION),
+      List<String> refs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipNodeType.INTEGRATION),
           Optional.empty(), Optional.of(RelationshipLabel.BELONGSTO),
-          Optional.of(RelationshipType.TEAM), Optional.of(List.of(team)));
+          Optional.of(RelationshipNodeType.TEAM), Optional.of(List.of(team)));
       LOGGER.debug("Refs: " + refs.toString());
       if (!refs.isEmpty()) {
         i.setRef(refs.get(0));
@@ -62,9 +62,9 @@ public class IntegrationServiceImpl implements IntegrationService {
     Optional<IntegrationsEntity> optEntity = integrationsRepository.findByRef(ref);
     if (optEntity.isPresent()) {
       LOGGER.debug("Integration Entity ID: " + optEntity.get().getId());
-      List<String> refs = relationshipService.getFilteredToRefs(Optional.of(RelationshipType.INTEGRATION),
+      List<String> refs = relationshipService.getFilteredToRefs(Optional.of(RelationshipNodeType.INTEGRATION),
           Optional.of(List.of(optEntity.get().getId())), Optional.of(RelationshipLabel.BELONGSTO),
-          Optional.of(RelationshipType.TEAM), Optional.empty());
+          Optional.of(RelationshipNodeType.TEAM), Optional.empty());
       LOGGER.debug("Team Refs: " + refs.toString());
       return refs.get(0);
     }
@@ -88,9 +88,9 @@ public class IntegrationServiceImpl implements IntegrationService {
       IntegrationsEntity entity = optEntity.get();
       integrationsRepository.delete(optEntity.get());
       List<String> rels =
-          relationshipService.getFilteredToRefs(Optional.of(RelationshipType.INTEGRATION),
+          relationshipService.getFilteredToRefs(Optional.of(RelationshipNodeType.INTEGRATION),
               Optional.of(List.of(entity.getId())), Optional.of(RelationshipLabel.BELONGSTO),
-              Optional.of(RelationshipType.TEAM), Optional.empty());
+              Optional.of(RelationshipNodeType.TEAM), Optional.empty());
       rels.forEach(r -> relationshipService.removeRelationshipById(r));
     }
   }

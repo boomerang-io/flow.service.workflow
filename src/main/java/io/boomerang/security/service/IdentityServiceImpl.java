@@ -43,14 +43,15 @@ import io.boomerang.model.User;
 import io.boomerang.model.UserProfile;
 import io.boomerang.model.UserRequest;
 import io.boomerang.model.UserStatus;
-import io.boomerang.model.enums.RelationshipType;
 import io.boomerang.model.enums.RelationshipLabel;
+import io.boomerang.model.enums.RelationshipNodeType;
 import io.boomerang.model.enums.TeamStatus;
 import io.boomerang.model.enums.UserType;
 import io.boomerang.security.model.AuthType;
 import io.boomerang.security.model.Token;
 import io.boomerang.security.repository.RoleRepository;
 import io.boomerang.service.RelationshipService;
+import io.boomerang.service.RelationshipServiceImpl;
 import io.boomerang.service.TeamService;
 
 @Service
@@ -72,6 +73,9 @@ public class IdentityServiceImpl implements IdentityService {
 
   @Autowired
   private RelationshipService relationshipService;
+
+  @Autowired
+  private RelationshipServiceImpl relationshipServiceImpl;
 
   @Autowired
   private TeamService teamService;
@@ -117,8 +121,9 @@ public class IdentityServiceImpl implements IdentityService {
     }
 
     Optional<UserEntity> userEntity = getUserEntityByEmail(email);
+    boolean createRelationshipNode = false;
     if (externalUserUrl.isBlank()) {
-      if (userEntity.isEmpty() && allowUserCreation) {
+      if (userEntity.isEmpty() && allowUserCreation) {          
         // Create new User (UserEntity is defaulted on new)
         UserEntity newUserEntity = new UserEntity();
         newUserEntity.setEmail(email);
@@ -143,6 +148,11 @@ public class IdentityServiceImpl implements IdentityService {
         userEntity.get().getSettings().setIsFirstVisit(false);
       }
       userEntity = Optional.of(userRepository.save(userEntity.get()));
+      //Create User relationship node if entity was created
+      //At end due to the save only happening at the end.
+      if (createRelationshipNode) {        
+        relationshipServiceImpl.createUserNode(userEntity.get().getId(), email);
+      }
     }
 
     return userEntity;
@@ -232,14 +242,14 @@ public class IdentityServiceImpl implements IdentityService {
         TeamSummary ts = new TeamSummary(teamEntity.get());
         TeamSummaryInsights tsi = new TeamSummaryInsights();
         List<String> memberRefs =
-            relationshipService.getFilteredFromRefs(Optional.of(RelationshipType.USER),
+            relationshipService.getFilteredFromRefs(Optional.of(RelationshipNodeType.USER),
                 Optional.empty(), Optional.of(RelationshipLabel.MEMBEROF),
-                Optional.of(RelationshipType.TEAM), Optional.of(List.of(k)));
+                Optional.of(RelationshipNodeType.TEAM), Optional.of(List.of(k)));
         tsi.setMembers(Long.valueOf(memberRefs.size()));
         List<String> workflowRefs =
-            relationshipService.getFilteredFromRefs(Optional.of(RelationshipType.WORKFLOW),
+            relationshipService.getFilteredFromRefs(Optional.of(RelationshipNodeType.WORKFLOW),
                 Optional.empty(), Optional.of(RelationshipLabel.BELONGSTO),
-                Optional.of(RelationshipType.TEAM), Optional.of(List.of(k)));
+                Optional.of(RelationshipNodeType.TEAM), Optional.of(List.of(k)));
         tsi.setWorkflows(Long.valueOf(workflowRefs.size()));
         ts.setInsights(tsi);
         teamSummaries.add(ts);
@@ -438,9 +448,9 @@ public class IdentityServiceImpl implements IdentityService {
   public void delete(String userId) {
     Optional<UserEntity> user = userRepository.findById(userId);
     List<String> teamRefs =
-        relationshipService.getFilteredFromRefs(Optional.of(RelationshipType.USER),
+        relationshipService.getFilteredFromRefs(Optional.of(RelationshipNodeType.USER),
             Optional.of(List.of(userId)), Optional.of(RelationshipLabel.MEMBEROF),
-            Optional.of(RelationshipType.TEAM), Optional.empty());
+            Optional.of(RelationshipNodeType.TEAM), Optional.empty());
     if (!teamRefs.isEmpty()) {
       throw new BoomerangException(BoomerangError.USER_UNABLE_TO_DELETE);
     }

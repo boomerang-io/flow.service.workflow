@@ -28,4 +28,8 @@ public enum RoleEnum {
     return BY_LABEL.get(label);
   }
   
+  public static boolean hasLabel(String label) {
+    return BY_LABEL.containsKey(label);
+  }
+  
 }

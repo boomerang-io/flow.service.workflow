@@ -6,7 +6,7 @@ import java.util.Map;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import io.boomerang.model.enums.RelationshipType;
+import io.boomerang.model.enums.RelationshipNodeType;
 import io.boomerang.model.enums.RelationshipLabel;
 
 /*
@@ -19,10 +19,10 @@ public class RelationshipEntity {
   @Id
   private String id;
   private Date creationDate = new Date();
-  private RelationshipType from;
+  private RelationshipNodeType from;
   private String fromRef;
   private RelationshipLabel type; 
-  private RelationshipType to;
+  private RelationshipNodeType to;
   private String toRef;
   private Map<String, Object> data = new HashMap<>();
    
@@ -43,10 +43,10 @@ public class RelationshipEntity {
   public void setLabel(RelationshipLabel type) {
     this.type = type;
   }
-  public RelationshipType getFrom() {
+  public RelationshipNodeType getFrom() {
     return from;
   }
-  public void setFrom(RelationshipType from) {
+  public void setFrom(RelationshipNodeType from) {
     this.from = from;
   }
   public String getFromRef() {
@@ -55,10 +55,10 @@ public class RelationshipEntity {
   public void setFromRef(String fromRef) {
     this.fromRef = fromRef;
   }
-  public RelationshipType getTo() {
+  public RelationshipNodeType getTo() {
     return to;
   }
-  public void setTo(RelationshipType to) {
+  public void setTo(RelationshipNodeType to) {
     this.to = to;
   }
   public String getToRef() {
