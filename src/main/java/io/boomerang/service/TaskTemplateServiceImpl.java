@@ -15,7 +15,7 @@ import io.boomerang.client.TaskTemplateResponsePage;
 import io.boomerang.error.BoomerangError;
 import io.boomerang.error.BoomerangException;
 import io.boomerang.model.User;
-import io.boomerang.model.enums.RelationshipType;
+import io.boomerang.model.enums.RelationshipNodeType;
 import io.boomerang.model.enums.RelationshipLabel;
 import io.boomerang.model.ref.ChangeLog;
 import io.boomerang.model.ref.ChangeLogVersion;
@@ -57,11 +57,11 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
     if (!Objects.isNull(name) && !name.isBlank()) {
       // Check if requester has access to refs
       // TODO: determine if all users need to be able to access (READ) but not edit (CREATE, UPDATE, DELETE)
-      List<String> refs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipType.TASKTEMPLATE),
-          Optional.of(List.of(name)), Optional.of(RelationshipLabel.BELONGSTO), Optional.of(RelationshipType.GLOBAL), Optional.empty());
+      List<String> refs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipNodeType.TASKTEMPLATE),
+          Optional.of(List.of(name)), Optional.of(RelationshipLabel.BELONGSTO), Optional.of(RelationshipNodeType.GLOBAL), Optional.empty());
       if (refs.isEmpty()) {
-        refs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipType.TASKTEMPLATE),
-            Optional.of(List.of(name)), Optional.of(RelationshipLabel.BELONGSTO), Optional.of(RelationshipType.TEAM), Optional.empty());
+        refs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipNodeType.TASKTEMPLATE),
+            Optional.of(List.of(name)), Optional.of(RelationshipLabel.BELONGSTO), Optional.of(RelationshipNodeType.TEAM), Optional.empty());
       }
       
       // Prefix name with team scope
@@ -100,8 +100,8 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
     List<String> refs = null;
     if (queryTeam.isPresent()) {
       refs =
-          relationshipService.getFilteredFromRefs(Optional.of(RelationshipType.TASKTEMPLATE), queryNames,
-              Optional.of(RelationshipLabel.BELONGSTO), Optional.of(RelationshipType.TEAM),
+          relationshipService.getFilteredFromRefs(Optional.of(RelationshipNodeType.TASKTEMPLATE), queryNames,
+              Optional.of(RelationshipLabel.BELONGSTO), Optional.of(RelationshipNodeType.TEAM),
               Optional.of(List.of(queryTeam.get())));
       //Return empty with no teams, otherwise when sending to the engine, the refs is empty and all task-templates will be returned.
       if (refs == null || refs.size() == 0) {
@@ -112,8 +112,8 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
       refs = refs.stream().map(t -> queryTeam.get() + NAME_SEPARATOR + t).collect(Collectors.toList());
     } else {
       refs =
-          relationshipService.getFilteredFromRefs(Optional.of(RelationshipType.TASKTEMPLATE), queryNames,
-              Optional.of(RelationshipLabel.BELONGSTO), Optional.of(RelationshipType.GLOBAL),
+          relationshipService.getFilteredFromRefs(Optional.of(RelationshipNodeType.TASKTEMPLATE), queryNames,
+              Optional.of(RelationshipLabel.BELONGSTO), Optional.of(RelationshipNodeType.GLOBAL),
               Optional.empty());
     }
     LOGGER.debug("Query Refs: {}", refs.toString());
@@ -159,19 +159,19 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
     if (team.isPresent()) {
       //Check user has access to team
 
-      List<String> refs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipType.USER),
-          Optional.empty(), Optional.of(RelationshipLabel.MEMBEROF), Optional.of(RelationshipType.TEAM), Optional.of(List.of(team.get())));
+      List<String> refs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipNodeType.USER),
+          Optional.empty(), Optional.of(RelationshipLabel.MEMBEROF), Optional.of(RelationshipNodeType.TEAM), Optional.of(List.of(team.get())));
       if (refs.isEmpty()) {
         throw new BoomerangException(BoomerangError.TASKTEMPLATE_INVALID_REF);
       }
       // Create BELONGSTO relationship for mapping Workflow to Owner
-      relationshipService.addRelationshipRef(RelationshipType.TASKTEMPLATE, templateName, RelationshipLabel.BELONGSTO, RelationshipType.TEAM,
+      relationshipService.addRelationshipRef(RelationshipNodeType.TASKTEMPLATE, templateName, RelationshipLabel.BELONGSTO, RelationshipNodeType.TEAM,
           team, Optional.empty());
     } else {
       // Creates a relationship to GLOBAL
       //TODO: check user is ADMIN
-      relationshipService.addRelationshipRef(RelationshipType.TASKTEMPLATE,
-          templateName, RelationshipLabel.BELONGSTO ,RelationshipType.GLOBAL, Optional.empty(), Optional.empty());
+      relationshipService.addRelationshipRef(RelationshipNodeType.TASKTEMPLATE,
+          templateName, RelationshipLabel.BELONGSTO ,RelationshipNodeType.GLOBAL, Optional.empty(), Optional.empty());
     }
     switchChangeLogAuthorToUserName(taskTemplate.getChangelog());
     
@@ -190,14 +190,14 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
     //The engine will check if the template exists or not
     // TODO: figure out what to do with name collisions between teams
     if (team.isPresent()) {
-    List<String> refs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipType.TASKTEMPLATE),
-        Optional.of(List.of(templateName)), Optional.of(RelationshipLabel.BELONGSTO), Optional.of(RelationshipType.TEAM), Optional.of(List.of(team.get())));
+    List<String> refs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipNodeType.TASKTEMPLATE),
+        Optional.of(List.of(templateName)), Optional.of(RelationshipLabel.BELONGSTO), Optional.of(RelationshipNodeType.TEAM), Optional.of(List.of(team.get())));
       if (refs.isEmpty()) {
         return this.create(request, team);
       }
     } else {
-      List<String> refs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipType.TASKTEMPLATE),
-          Optional.of(List.of(templateName)), Optional.of(RelationshipLabel.BELONGSTO), Optional.of(RelationshipType.GLOBAL), Optional.empty());
+      List<String> refs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipNodeType.TASKTEMPLATE),
+          Optional.of(List.of(templateName)), Optional.of(RelationshipLabel.BELONGSTO), Optional.of(RelationshipNodeType.GLOBAL), Optional.empty());
       if (refs.isEmpty()) {
         return this.create(request, team);
       }
@@ -284,18 +284,18 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
     if (!Objects.isNull(name) && !name.isBlank()) {
       if (team.isPresent()) {
         List<String> refs =
-          relationshipService.getFilteredFromRefs(Optional.of(RelationshipType.TASKTEMPLATE),
+          relationshipService.getFilteredFromRefs(Optional.of(RelationshipNodeType.TASKTEMPLATE),
               Optional.of(List.of(name)), Optional.of(RelationshipLabel.BELONGSTO),
-              Optional.of(RelationshipType.TEAM), Optional.of(List.of(team.get())));
+              Optional.of(RelationshipNodeType.TEAM), Optional.of(List.of(team.get())));
         if (!refs.isEmpty()) {
           List<ChangeLogVersion> changeLog = engineClient.getTaskTemplateChangeLog(team.get() + NAME_SEPARATOR + name);
           changeLog.forEach(clv -> switchChangeLogAuthorToUserName(clv));
           return changeLog;
         }
       } else {
-        List<String> refs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipType.TASKTEMPLATE),
+        List<String> refs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipNodeType.TASKTEMPLATE),
             Optional.of(List.of(name)), Optional.of(RelationshipLabel.BELONGSTO),
-            Optional.of(RelationshipType.GLOBAL), Optional.empty());
+            Optional.of(RelationshipNodeType.GLOBAL), Optional.empty());
         if (!refs.isEmpty()) {
           List<ChangeLogVersion> changeLog = engineClient.getTaskTemplateChangeLog(name);
           changeLog.forEach(clv -> switchChangeLogAuthorToUserName(clv));
@@ -319,9 +319,9 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
 
     // Check if requester has access
     List<String> refs =
-        relationshipService.getFilteredFromRefs(Optional.of(RelationshipType.TASKTEMPLATE),
+        relationshipService.getFilteredFromRefs(Optional.of(RelationshipNodeType.TASKTEMPLATE),
             Optional.of(List.of(name)), Optional.of(RelationshipLabel.BELONGSTO),
-            Optional.of(RelationshipType.TEAM), Optional.empty());
+            Optional.of(RelationshipNodeType.TEAM), Optional.empty());
 
     // Prefix name with team scope
 

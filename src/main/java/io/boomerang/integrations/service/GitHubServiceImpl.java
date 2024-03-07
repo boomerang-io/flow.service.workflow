@@ -20,7 +20,7 @@ import io.boomerang.integrations.data.entity.IntegrationsEntity;
 import io.boomerang.integrations.data.repository.IntegrationsRepository;
 import io.boomerang.integrations.model.GHInstallationsResponse;
 import io.boomerang.integrations.model.GHLinkRequest;
-import io.boomerang.model.enums.RelationshipType;
+import io.boomerang.model.enums.RelationshipNodeType;
 import io.boomerang.model.enums.RelationshipLabel;
 import io.boomerang.service.RelationshipService;
 import io.boomerang.service.SettingsService;
@@ -66,9 +66,9 @@ public class GitHubServiceImpl implements GitHubService {
   @Override
   public ResponseEntity<?> getInstallationForTeam(String team) {
     List<String> rels =
-        relationshipService.getFilteredFromRefs(Optional.of(RelationshipType.INTEGRATION),
+        relationshipService.getFilteredFromRefs(Optional.of(RelationshipNodeType.INTEGRATION),
             Optional.empty(), Optional.of(RelationshipLabel.BELONGSTO),
-            Optional.of(RelationshipType.TEAM), Optional.of(List.of(team)));
+            Optional.of(RelationshipNodeType.TEAM), Optional.of(List.of(team)));
 
     if (!rels.isEmpty()) {
       Optional<IntegrationsEntity> optEntity = integrationsRepository.findById(rels.get(0)); 
@@ -120,7 +120,7 @@ public class GitHubServiceImpl implements GitHubService {
     Optional<IntegrationsEntity> optEntity = integrationsRepository.findByRef(String.valueOf(installations.get(0).id()));
     if (optEntity.isPresent()) {
       IntegrationsEntity entity = optEntity.get();
-      relationshipService.addRelationshipRef(RelationshipType.INTEGRATION, entity.getId(), RelationshipLabel.BELONGSTO, RelationshipType.TEAM, Optional.of(request.getTeam()), Optional.empty());
+      relationshipService.addRelationshipRef(RelationshipNodeType.INTEGRATION, entity.getId(), RelationshipLabel.BELONGSTO, RelationshipNodeType.TEAM, Optional.of(request.getTeam()), Optional.empty());
       return ResponseEntity.ok().build();
     }
     return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
@@ -132,7 +132,7 @@ public class GitHubServiceImpl implements GitHubService {
     Optional<IntegrationsEntity> optEntity = integrationsRepository.findById(request.getRef());
     if (optEntity.isPresent()) {
       IntegrationsEntity entity = optEntity.get();
-      relationshipService.removeRelationships(RelationshipType.INTEGRATION, List.of(entity.getId()), RelationshipType.TEAM, List.of(request.getTeam()));
+      relationshipService.removeRelationships(RelationshipNodeType.INTEGRATION, List.of(entity.getId()), RelationshipNodeType.TEAM, List.of(request.getTeam()));
       integrationsRepository.delete(optEntity.get());
     }
   }

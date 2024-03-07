@@ -42,7 +42,7 @@ import io.boomerang.model.CanvasNodeData;
 import io.boomerang.model.CanvasNodePosition;
 import io.boomerang.model.WorkflowCanvas;
 import io.boomerang.model.enums.RelationshipLabel;
-import io.boomerang.model.enums.RelationshipType;
+import io.boomerang.model.enums.RelationshipNodeType;
 import io.boomerang.model.enums.TriggerEnum;
 import io.boomerang.model.enums.ref.TaskType;
 import io.boomerang.model.enums.ref.WorkflowStatus;
@@ -112,7 +112,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     }
 
     List<String> workflowRefs = relationshipService.getFilteredFromRefs(
-        Optional.of(RelationshipType.WORKFLOW), Optional.of(List.of(workflowId)),
+        Optional.of(RelationshipNodeType.WORKFLOW), Optional.of(List.of(workflowId)),
         Optional.of(RelationshipLabel.BELONGSTO), Optional.empty(), Optional.empty());
     if (!workflowRefs.isEmpty()) {
       Workflow workflow = engineClient.getWorkflow(workflowId, version, withTasks);
@@ -139,9 +139,9 @@ public class WorkflowServiceImpl implements WorkflowService {
 
     // Get Refs that request has access to
     List<String> workflowRefs =
-        relationshipService.getFilteredFromRefs(Optional.of(RelationshipType.WORKFLOW),
+        relationshipService.getFilteredFromRefs(Optional.of(RelationshipNodeType.WORKFLOW),
             queryWorkflows, Optional.of(RelationshipLabel.BELONGSTO),
-            Optional.ofNullable(RelationshipType.TEAM), queryTeams);
+            Optional.ofNullable(RelationshipNodeType.TEAM), queryTeams);
     if (workflowRefs.isEmpty()) {
       return new WorkflowResponsePage();
     }
@@ -175,8 +175,8 @@ public class WorkflowServiceImpl implements WorkflowService {
       Optional<List<String>> queryLabels, Optional<List<String>> queryTeams,
       Optional<List<String>> queryWorkflows) {
     List<String> refs = relationshipService.getFilteredFromRefs(
-        Optional.of(RelationshipType.WORKFLOW), queryWorkflows,
-        Optional.of(RelationshipLabel.BELONGSTO), Optional.of(RelationshipType.TEAM), queryTeams);
+        Optional.of(RelationshipNodeType.WORKFLOW), queryWorkflows,
+        Optional.of(RelationshipLabel.BELONGSTO), Optional.of(RelationshipNodeType.TEAM), queryTeams);
     LOGGER.debug("Query Ids: ", refs);
 
     //Handle no Workflows for Team. Otherwise the engine will return all workflows due to no filter
@@ -205,8 +205,8 @@ public class WorkflowServiceImpl implements WorkflowService {
 
     Workflow workflow = engineClient.createWorkflow(request);
     // Create BELONGSTO relationship for mapping Workflow to Owner
-    relationshipService.addRelationshipRef(RelationshipType.WORKFLOW, workflow.getId(),
-        RelationshipLabel.BELONGSTO, RelationshipType.TEAM, Optional.of(team), Optional.empty());
+    relationshipService.addRelationshipRef(RelationshipNodeType.WORKFLOW, workflow.getId(),
+        RelationshipLabel.BELONGSTO, RelationshipNodeType.TEAM, Optional.of(team), Optional.empty());
 
     // Filter out sensitive values
     DataAdapterUtil.filterParamSpecValueByFieldType(workflow.getConfig(), workflow.getParams(),
@@ -269,9 +269,9 @@ public class WorkflowServiceImpl implements WorkflowService {
   public Workflow apply(Workflow workflow, boolean replace, Optional<String> team) {
     if (workflow != null && workflow.getId() != null && !workflow.getId().isBlank()) {
       List<String> workflowRefs =
-          relationshipService.getFilteredFromRefs(Optional.of(RelationshipType.WORKFLOW),
+          relationshipService.getFilteredFromRefs(Optional.of(RelationshipNodeType.WORKFLOW),
               Optional.of(List.of(workflow.getId())), Optional.of(RelationshipLabel.BELONGSTO),
-              Optional.of(RelationshipType.TEAM), team.isPresent() ? Optional.of(List.of(team.get())): Optional.empty());
+              Optional.of(RelationshipNodeType.TEAM), team.isPresent() ? Optional.of(List.of(team.get())): Optional.empty());
       if (!workflowRefs.isEmpty()) {
         updateScheduleTriggers(workflow,
             this.get(workflow.getId(), Optional.empty(), false).getTriggers());
@@ -298,7 +298,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     if (workflowId == null || workflowId.isBlank()) {
       throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
     }
-    List<String> workflowRefs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipType.WORKFLOW),
+    List<String> workflowRefs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipNodeType.WORKFLOW),
         Optional.of(List.of(workflowId)), Optional.of(RelationshipLabel.BELONGSTO), Optional.empty(), Optional.empty());
     // Check if Workflow can run (Quotas & Triggers)
     // TODO: check triggers allow submission
@@ -317,9 +317,9 @@ public class WorkflowServiceImpl implements WorkflowService {
   public void internalSubmitForTeam(WorkflowSubmitRequest request,
       boolean start, String teamRef) {
     List<String> wfRefs =
-        relationshipService.getFilteredFromRefs(Optional.of(RelationshipType.WORKFLOW),
+        relationshipService.getFilteredFromRefs(Optional.of(RelationshipNodeType.WORKFLOW),
             Optional.empty(), Optional.of(RelationshipLabel.BELONGSTO),
-            Optional.of(RelationshipType.WORKFLOW), Optional.of(List.of(teamRef)));
+            Optional.of(RelationshipNodeType.WORKFLOW), Optional.of(List.of(teamRef)));
     
     wfRefs.forEach(r -> {
       this.internalSubmit(r, request, start);}
@@ -334,7 +334,7 @@ public class WorkflowServiceImpl implements WorkflowService {
   public WorkflowRun internalSubmit(String workflowId, WorkflowSubmitRequest request,
       boolean start) {
     Optional<RelationshipEntity> teamRelationship = relationshipService.getRelationship(
-        RelationshipType.WORKFLOW, workflowId, RelationshipLabel.BELONGSTO);
+        RelationshipNodeType.WORKFLOW, workflowId, RelationshipLabel.BELONGSTO);
     if (teamRelationship.isPresent()) {
       //Check Triggers - Throws Exception - Check first, as if trigger not enabled, no point in checking quotas
       canRunWithTrigger(workflowId, request.getTrigger(), request.getParams());
@@ -378,7 +378,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
       // Creates the owning relationship with the team that owns the Workflow
       // This is needed for when we delete the Workflows but not the WorkflowRuns (to maintain activity history and quotas) 
-      relationshipService.addRelationshipRef(RelationshipType.WORKFLOWRUN, wfRun.getId(), RelationshipLabel.BELONGSTO,
+      relationshipService.addRelationshipRef(RelationshipNodeType.WORKFLOWRUN, wfRun.getId(), RelationshipLabel.BELONGSTO,
           teamRelationship.get().getTo(), Optional.of(teamRelationship.get().getToRef()), Optional.empty());
       return wfRun;
     } else {
@@ -397,7 +397,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     }
 
     List<String> workflowRefs = relationshipService.getFilteredFromRefs(
-        Optional.of(RelationshipType.WORKFLOW), Optional.of(List.of(workflowId)),
+        Optional.of(RelationshipNodeType.WORKFLOW), Optional.of(List.of(workflowId)),
         Optional.of(RelationshipLabel.BELONGSTO), Optional.empty(), Optional.empty());
     if (!workflowRefs.isEmpty()) {
       return ResponseEntity.ok(engineClient.getWorkflowChangeLog(workflowId));
@@ -420,9 +420,9 @@ public class WorkflowServiceImpl implements WorkflowService {
     }
 
     List<String> workflowRefs =
-        relationshipService.getFilteredFromRefs(Optional.of(RelationshipType.WORKFLOW),
+        relationshipService.getFilteredFromRefs(Optional.of(RelationshipNodeType.WORKFLOW),
             Optional.of(List.of(workflowId)), Optional.of(RelationshipLabel.BELONGSTO),
-            Optional.of(RelationshipType.TEAM), Optional.empty());
+            Optional.of(RelationshipNodeType.TEAM), Optional.empty());
     if (!workflowRefs.isEmpty()) {
       engineClient.deleteWorkflow(workflowId);
       // Delete all Schedules
@@ -439,7 +439,7 @@ public class WorkflowServiceImpl implements WorkflowService {
       //TODO: cancel any running WorkflowRuns - will need to do a query first
       // OR move to a model where Audit takes care of things.
       
-      relationshipService.removeRelationships(RelationshipType.WORKFLOW, workflowRefs, RelationshipType.TEAM, workflowRefs);
+      relationshipService.removeRelationships(RelationshipNodeType.WORKFLOW, workflowRefs, RelationshipNodeType.TEAM, workflowRefs);
     } else {
       throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
     }
@@ -485,7 +485,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     workflow.setId(null);
     workflow.setName(workflow.getName() + " (duplicate)");
     Optional<RelationshipEntity> relEntity = relationshipService
-        .getRelationship(RelationshipType.WORKFLOW, workflowId, RelationshipLabel.BELONGSTO);
+        .getRelationship(RelationshipNodeType.WORKFLOW, workflowId, RelationshipLabel.BELONGSTO);
     return this.create(workflow, relEntity.get().getToRef());
   }
 
@@ -501,9 +501,9 @@ public class WorkflowServiceImpl implements WorkflowService {
     }
 
     List<String> workflowRefs =
-        relationshipService.getFilteredFromRefs(Optional.of(RelationshipType.WORKFLOW),
+        relationshipService.getFilteredFromRefs(Optional.of(RelationshipNodeType.WORKFLOW),
             Optional.of(List.of(workflowId)), Optional.of(RelationshipLabel.BELONGSTO),
-            Optional.of(RelationshipType.TEAM), Optional.empty());
+            Optional.of(RelationshipNodeType.TEAM), Optional.empty());
     if (!workflowRefs.isEmpty()) {
       Workflow workflow = engineClient.getWorkflow(workflowId, version, true);
       return convertWorkflowToCanvas(workflow);
@@ -536,9 +536,9 @@ public class WorkflowServiceImpl implements WorkflowService {
       throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
     }
     List<String> teamRefs =
-        relationshipService.getFilteredToRefs(Optional.of(RelationshipType.WORKFLOW),
+        relationshipService.getFilteredToRefs(Optional.of(RelationshipNodeType.WORKFLOW),
             Optional.of(List.of(workflowId)), Optional.of(RelationshipLabel.BELONGSTO),
-            Optional.of(RelationshipType.TEAM), Optional.empty());
+            Optional.of(RelationshipNodeType.TEAM), Optional.empty());
     if (!teamRefs.isEmpty()) {
       Workflow workflow = engineClient.getWorkflow(workflowId, Optional.empty(), true);
       List<String> paramKeys =

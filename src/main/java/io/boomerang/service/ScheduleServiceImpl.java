@@ -35,7 +35,7 @@ import io.boomerang.error.BoomerangException;
 import io.boomerang.model.CronValidationResponse;
 import io.boomerang.model.WorkflowSchedule;
 import io.boomerang.model.WorkflowScheduleCalendar;
-import io.boomerang.model.enums.RelationshipType;
+import io.boomerang.model.enums.RelationshipNodeType;
 import io.boomerang.model.enums.RelationshipLabel;
 import io.boomerang.model.enums.WorkflowScheduleStatus;
 import io.boomerang.model.enums.WorkflowScheduleType;
@@ -81,8 +81,8 @@ public class ScheduleServiceImpl implements ScheduleService {
     final Optional<WorkflowScheduleEntity> scheduleEntity = scheduleRepository.findById(scheduleId);
     if (scheduleEntity.isPresent()) {
       // Get Refs that request has access to
-      List<String> refs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipType.WORKFLOW),
-          Optional.of(List.of(scheduleEntity.get().getWorkflowRef())), Optional.of(RelationshipLabel.BELONGSTO), Optional.ofNullable(RelationshipType.TEAM),
+      List<String> refs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipNodeType.WORKFLOW),
+          Optional.of(List.of(scheduleEntity.get().getWorkflowRef())), Optional.of(RelationshipLabel.BELONGSTO), Optional.ofNullable(RelationshipNodeType.TEAM),
           Optional.empty());
       if (!refs.isEmpty()) {
         return convertScheduleEntityToModel(scheduleEntity.get());
@@ -114,8 +114,8 @@ public class ScheduleServiceImpl implements ScheduleService {
   public Page<WorkflowSchedule> query(int page, int limit, Sort sort, Optional<List<String>> queryStatus, Optional<List<String>> queryTypes, Optional<List<String>> queryWorkflows,
       Optional<List<String>> queryTeams) {
     // Get Refs that request has access to
-    List<String> refs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipType.WORKFLOW),
-        queryWorkflows, Optional.of(RelationshipLabel.BELONGSTO), Optional.ofNullable(RelationshipType.TEAM),
+    List<String> refs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipNodeType.WORKFLOW),
+        queryWorkflows, Optional.of(RelationshipLabel.BELONGSTO), Optional.ofNullable(RelationshipNodeType.TEAM),
         queryTeams);
 
     if (!refs.isEmpty()) {
@@ -171,9 +171,9 @@ public class ScheduleServiceImpl implements ScheduleService {
   public WorkflowSchedule create(final WorkflowSchedule schedule, String team) {
     if (schedule != null && schedule.getWorkflowRef() != null && team != null) {
       // Get Refs that request has access to
-      final List<String> refs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipType.WORKFLOW),
+      final List<String> refs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipNodeType.WORKFLOW),
           Optional.of(List.of(schedule.getWorkflowRef())), Optional.of(RelationshipLabel.BELONGSTO),
-          Optional.ofNullable(RelationshipType.TEAM), Optional.of(List.of(team)));
+          Optional.ofNullable(RelationshipNodeType.TEAM), Optional.of(List.of(team)));
       if (!refs.isEmpty()) {
         WorkflowScheduleEntity scheduleEntity = internalCreate(schedule);
         return convertScheduleEntityToModel(scheduleEntity);
