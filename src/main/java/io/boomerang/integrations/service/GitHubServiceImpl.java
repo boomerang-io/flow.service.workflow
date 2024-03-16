@@ -20,9 +20,10 @@ import io.boomerang.integrations.data.entity.IntegrationsEntity;
 import io.boomerang.integrations.data.repository.IntegrationsRepository;
 import io.boomerang.integrations.model.GHInstallationsResponse;
 import io.boomerang.integrations.model.GHLinkRequest;
-import io.boomerang.model.enums.RelationshipNodeType;
 import io.boomerang.model.enums.RelationshipLabel;
+import io.boomerang.model.enums.RelationshipNodeType;
 import io.boomerang.service.RelationshipService;
+import io.boomerang.service.RelationshipServiceImpl;
 import io.boomerang.service.SettingsService;
 
 @Service
@@ -35,6 +36,9 @@ public class GitHubServiceImpl implements GitHubService {
   
   @Autowired
   private RelationshipService relationshipService;
+  
+  @Autowired
+  private RelationshipServiceImpl relationshipServiceImpl;
   
   @Autowired
   private IntegrationsRepository integrationsRepository;
@@ -121,6 +125,7 @@ public class GitHubServiceImpl implements GitHubService {
     if (optEntity.isPresent()) {
       IntegrationsEntity entity = optEntity.get();
       relationshipService.addRelationshipRef(RelationshipNodeType.INTEGRATION, entity.getId(), RelationshipLabel.BELONGSTO, RelationshipNodeType.TEAM, Optional.of(request.getTeam()), Optional.empty());
+      relationshipServiceImpl.upsertTeamConnectionBySlug(RelationshipNodeType.INTEGRATION, RelationshipLabel.INTEGRATIONFOR, null, null, null);
       return ResponseEntity.ok().build();
     }
     return ResponseEntity.status(HttpStatus.NOT_FOUND).build();

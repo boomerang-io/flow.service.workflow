@@ -36,8 +36,8 @@ import io.boomerang.data.entity.UserEntity;
 import io.boomerang.data.entity.ref.ActionEntity;
 import io.boomerang.error.BoomerangError;
 import io.boomerang.error.BoomerangException;
-import io.boomerang.model.enums.RelationshipNodeType;
 import io.boomerang.model.enums.RelationshipLabel;
+import io.boomerang.model.enums.RelationshipNodeType;
 import io.boomerang.model.enums.UserType;
 import io.boomerang.security.entity.TokenEntity;
 import io.boomerang.security.model.AuthType;
@@ -50,6 +50,7 @@ import io.boomerang.security.model.TokenTypePrefix;
 import io.boomerang.security.repository.RoleRepository;
 import io.boomerang.security.repository.TokenRepository;
 import io.boomerang.service.RelationshipService;
+import io.boomerang.service.RelationshipServiceImpl;
 
 @Service
 public class TokenServiceImpl implements TokenService {
@@ -73,6 +74,9 @@ public class TokenServiceImpl implements TokenService {
 
   @Autowired
   private RelationshipService relationshipService;
+
+  @Autowired
+  private RelationshipServiceImpl relationshipServiceImpl;
 
   @Value("${flow.token.max-user-session-duration}")
   private Integer MAX_USER_SESSION_TOKEN_DURATION;
@@ -372,7 +376,7 @@ public class TokenServiceImpl implements TokenService {
       permissions.addAll(roleRepository.findByTypeAndName("global", UserType.operator.toString()).getPermissions());
     } else {
       // Collect all team permissions the user has
-      Map<String, String> teamRefs = relationshipService.getMyTeamRefsAndRoles(user.get().getId());
+      Map<String, String> teamRefs = relationshipServiceImpl.getMyTeamSlugsAndRoles(user.get().getId());
       teamRefs.forEach((k, v) -> {
         roleRepository.findByTypeAndName("team", v).getPermissions().stream().forEach(p -> permissions.add(p.replace("{principal}", k)));
       });

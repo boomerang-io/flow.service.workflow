@@ -26,10 +26,10 @@ public class RelationshipConnectionEntity {
     // TODO Auto-generated constructor stub
   }
 
-  public RelationshipConnectionEntity(RelationshipLabel label, ObjectId to,
+  public RelationshipConnectionEntity(RelationshipLabel label, String to,
       Optional<Map<String, String>> data) {
     this.label = label;
-    this.to = to;
+    this.to = new ObjectId(to);
     if (data.isPresent()) {
       this.data = data.get();      
     }
@@ -57,12 +57,12 @@ public class RelationshipConnectionEntity {
     this.label = label;
   }
 
-  public ObjectId getTo() {
-    return to;
+  public String getTo() {
+    return to.toString();
   }
 
-  public void setTo(ObjectId to) {
-    this.to = to;
+  public void setTo(String to) {
+    this.to = new ObjectId(to);
   }
 
   public Map<String, String> getData() {

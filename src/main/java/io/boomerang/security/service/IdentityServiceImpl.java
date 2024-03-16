@@ -151,7 +151,7 @@ public class IdentityServiceImpl implements IdentityService {
       //Create User relationship node if entity was created
       //At end due to the save only happening at the end.
       if (createRelationshipNode) {        
-        relationshipServiceImpl.createUserNode(userEntity.get().getId(), email);
+        relationshipServiceImpl.createNode(RelationshipNodeType.USER, userEntity.get().getId(), email, Optional.empty());
       }
     }
 
@@ -232,11 +232,13 @@ public class IdentityServiceImpl implements IdentityService {
       }
     }
     // Add TeamSummaries
-    Map<String, String> teamRefs = relationshipService.getMyTeamRefsAndRoles(profile.getId());
+//    Map<String, String> teamRefs = relationshipService.getMyTeamRefsAndRoles(profile.getId());
+    Map<String, String> teamRefs = relationshipServiceImpl.getMyTeamRefsAndRoles(profile.getId());
+    //TODO - change to return an Object with teamId, teamSlug, 
     List<TeamSummary> teamSummaries = new LinkedList<>();
     List<String> permissions = new LinkedList<>();
     teamRefs.forEach((k, v) -> {
-      Optional<TeamEntity> teamEntity = teamRepository.findByNameIgnoreCase(k);
+      Optional<TeamEntity> teamEntity = teamRepository.findById(k);
       if (teamEntity.isPresent()) {
         // Generate TeamSummary + Insight
         TeamSummary ts = new TeamSummary(teamEntity.get());

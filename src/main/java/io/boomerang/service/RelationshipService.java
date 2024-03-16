@@ -9,8 +9,6 @@ import io.boomerang.model.enums.RelationshipLabel;
 
 public interface RelationshipService {
 
-  RelationshipEntity addRelationshipRefForCurrentScope(RelationshipNodeType fromType, String fromRef);
-
   RelationshipEntity addRelationshipRef(RelationshipNodeType fromType, String fromRef,
       RelationshipLabel relationship, RelationshipNodeType toType, Optional<String> toRef,
       Optional<Map<String, Object>> data);
@@ -47,5 +45,5 @@ public interface RelationshipService {
 
   void removeRelationshipById(String id);
 
-  void updateTeamSlug(String oldRef, String newRef);
+  void updateTeamNodeSlug(String oldRef, String newRef);
 }
