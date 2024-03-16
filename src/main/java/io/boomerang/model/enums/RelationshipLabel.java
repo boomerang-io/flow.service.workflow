@@ -10,7 +10,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
  * - https://tinkerpop.apache.org/docs/3.6.2/recipes/
  */
 public enum RelationshipLabel {
-  BELONGSTO("Belongs To"), MEMBEROF("Member Of"), EXECUTIONOF("Execution Of"), CREATED("Created");//, INITIATEDBY("Initiated By");
+  BELONGSTO("Belongs To"), INTEGRATIONFOR("Integration For"), MEMBEROF("Member Of"), EXECUTIONOF("Execution Of"), CREATED("Created");//, INITIATEDBY("Initiated By");
 
   private String name;
 

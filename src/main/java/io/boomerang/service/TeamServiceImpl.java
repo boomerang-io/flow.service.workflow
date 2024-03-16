@@ -123,8 +123,8 @@ public class TeamServiceImpl implements TeamService {
     if (request.getName() != null && !request.getName().isBlank()) {
       String kebabName = StringUtil.kebabCase(request.getName());
       
-      //TODO move this to check the relationship of type TEAM and unique slug
-      if ((teamRepository.countByNameIgnoreCase(kebabName) > 0) || RESERVED_TEAM_NAMES.contains(kebabName)) {
+      //Ensures unique team name (slug)
+      if (relationshipServiceImpl.doesSlugExistForType(RelationshipNodeType.TEAM, kebabName) || RESERVED_TEAM_NAMES.contains(kebabName)) {
         throw new BoomerangException(BoomerangError.TEAM_NON_UNIQUE_NAME);
       }
       return ResponseEntity.ok().build();
@@ -140,7 +140,6 @@ public class TeamServiceImpl implements TeamService {
     if (!Objects.isNull(team) && !team.isBlank()) {
       if (relationshipServiceImpl.hasTeamRelationship(Optional.empty(),
           Optional.empty(), RelationshipLabel.MEMBEROF, team, false)) {
-        //TODO, get the teamId from the relationship so slugs can be kept in the relationship
         Optional<TeamEntity> entity = teamRepository.findByNameIgnoreCase(team);
         if (entity.isPresent()) {
           return convertTeamEntityToTeam(entity.get());
@@ -189,7 +188,7 @@ public class TeamServiceImpl implements TeamService {
       }
 
       teamEntity = teamRepository.save(teamEntity);
-      relationshipServiceImpl.createTeamNode(teamEntity.getId(), teamEntity.getName());
+      relationshipServiceImpl.createNode(RelationshipNodeType.TEAM, teamEntity.getId(), teamEntity.getName(), Optional.empty());
 
       // Create Member Relationships
       createOrUpdateUserRelationships(teamEntity.getName(), request.getMembers());
@@ -210,10 +209,12 @@ public class TeamServiceImpl implements TeamService {
       if (team == null || team.isBlank()) {
         throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
       }
-      List<String> teamRefs = relationshipService.getFilteredToRefs(Optional.empty(),
-          Optional.empty(), Optional.of(RelationshipLabel.MEMBEROF),
-          Optional.of(RelationshipNodeType.TEAM), Optional.of(List.of(team)));
-      if (teamRefs.isEmpty()) {
+//      List<String> teamRefs = relationshipService.getFilteredToRefs(Optional.empty(),
+//          Optional.empty(), Optional.of(RelationshipLabel.MEMBEROF),
+//          Optional.of(RelationshipNodeType.TEAM), Optional.of(List.of(team)));
+//      if (teamRefs.isEmpty()) {
+      if (!relationshipServiceImpl.hasTeamRelationship(Optional.empty(),
+          Optional.empty(), RelationshipLabel.MEMBEROF, team, false)) {
         throw new BoomerangException(BoomerangError.TEAM_INVALID_REF);
       }
       Optional<TeamEntity> optTeamEntity = teamRepository.findByNameIgnoreCase(team);
@@ -259,7 +260,7 @@ public class TeamServiceImpl implements TeamService {
       
       // Update any existing relationships if the name has changed
       if (updatedName) {
-        relationshipServiceImpl.updateTeamSlug(originalName, request.getName());
+        relationshipServiceImpl.updateTeamNodeSlug(originalName, request.getName());
       }
 
       // Create / Update Relationships for Users
@@ -301,10 +302,14 @@ public class TeamServiceImpl implements TeamService {
         Optional.of(RelationshipNodeType.TEAM), Optional.of(List.of(team)));
     templateRefs.forEach(ref -> taskTemplateService.delete(ref, team));
     
+    // TODO - Delete Team Integration Installations
+    
+    // Delete Team
+    teamRepository.deleteByName(team);
+    
     // Delete all Team Relationships
     relationshipServiceImpl.removeRelationships(RelationshipNodeType.TEAM, team);
     
-    teamRepository.deleteByName(team);
   }
 
   /*
@@ -406,7 +411,7 @@ public class TeamServiceImpl implements TeamService {
       }
       List<String> userRefs = new LinkedList<>();
       for (TeamMember userSummary : request) {
-        Optional<User> userEntity = null;
+        Optional<User> userEntity = Optional.empty();
         if (!userSummary.getId().isEmpty()) {
           userEntity = identityService.getUserByID(userSummary.getId());
         } else if (!userSummary.getEmail().isEmpty()) {
@@ -815,7 +820,7 @@ public class TeamServiceImpl implements TeamService {
     
     WorkflowRunInsight auditInsight = auditInterceptor.insights(Optional.of(currentMonthStart.getTimeInMillis()),
             Optional.of(currentMonthEnd.getTimeInMillis()), team);
-    
+    LOGGER.debug("Audit Insight: {}", auditInsight.toString());
 
     WorkflowCount count = workflowService.count(Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(List.of(team)), Optional.empty());
     if (count.getStatus() != null) {
@@ -891,9 +896,7 @@ public class TeamServiceImpl implements TeamService {
         }
         //Check the provided role is valid in our system
         if (RoleEnum.hasLabel(userSummary.getRole())) {
-          relationshipServiceImpl.addTeamConnectionBySlug(RelationshipNodeType.USER, userEntity.get().getId(), RelationshipLabel.MEMBEROF,
-              team, Optional.of(Map.of("role",userSummary.getRole())));
-          relationshipServiceImpl.updateTeamConnectionBySlug(RelationshipNodeType.USER, userEntity.get().getId(), RelationshipLabel.MEMBEROF,
+          relationshipServiceImpl.upsertTeamConnectionBySlug(RelationshipNodeType.USER, userEntity.get().getId(), RelationshipLabel.MEMBEROF,
               team, Optional.of(Map.of("role",userSummary.getRole())));
         } else {
           throw new BoomerangException(BoomerangError.TEAM_INVALID_USER_ROLE); 

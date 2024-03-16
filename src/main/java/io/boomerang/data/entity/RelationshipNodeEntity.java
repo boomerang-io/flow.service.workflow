@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
+import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import org.springframework.data.mongodb.core.mapping.Document;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.boomerang.model.enums.RelationshipNodeType;
@@ -14,6 +16,10 @@ import io.boomerang.model.enums.RelationshipNodeType;
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Document(collection = "#{@mongoConfiguration.fullCollectionName('relationship_nodes')}")
+@CompoundIndexes({
+  @CompoundIndex(name = "type_slug_idx", def = "{'type' : -1, 'slug': -1}"),
+  @CompoundIndex(name = "type_ref_idx", def = "{'type' : -1, 'ref': -1}")
+})
 public class RelationshipNodeEntity {
 
   @Id

@@ -53,7 +53,7 @@ public class TeamTaskTemplateV2Controller {
       @Parameter(name = "version",
       description = "Task Template Version",
       required = false) @RequestParam(required = false) Optional<Integer> version) {
-    return taskTemplateService.get(name, version, Optional.of(team));
+    return taskTemplateService.get(name, version, team);
   }
   
   @GetMapping(value = "{name}", produces = "application/x-yaml")
@@ -72,7 +72,7 @@ public class TeamTaskTemplateV2Controller {
       @Parameter(name = "version",
       description = "Task Template Version",
       required = false) @RequestParam(required = false) Optional<Integer> version) {
-    return taskTemplateService.getAsTekton(name, version, Optional.of(team));
+    return taskTemplateService.getAsTekton(name, version, team);
   }
   
   @GetMapping(value = "/query")
@@ -100,7 +100,7 @@ public class TeamTaskTemplateV2Controller {
       required = true) @RequestParam(defaultValue = "0") Optional<Integer> page,
   @Parameter(name = "sort", description = "Ascending (ASC) or Descending (DESC) sort on creationDate", example = "ASC",
   required = true) @RequestParam(defaultValue = "ASC") Optional<Direction> sort) {
-    return taskTemplateService.query(limit, page, sort, labels, statuses, names, Optional.of(team));
+    return taskTemplateService.query(limit, page, sort, labels, statuses, names, team);
   }
 
   @PostMapping(value = "")
@@ -115,7 +115,7 @@ public class TeamTaskTemplateV2Controller {
       example = "my-amazing-team",
       required = true) @PathVariable String team,
       @RequestBody TaskTemplate taskTemplate) {
-    return taskTemplateService.create(taskTemplate, Optional.of(team));
+    return taskTemplateService.create(taskTemplate, team);
   }
 
   @PostMapping(value = "", consumes = "application/x-yaml", produces = "application/x-yaml")
@@ -130,7 +130,7 @@ public class TeamTaskTemplateV2Controller {
       example = "my-amazing-team",
       required = true) @PathVariable String team,
       @RequestBody TektonTask taskTemplate) {
-    return taskTemplateService.createAsTekton(taskTemplate, Optional.of(team));
+    return taskTemplateService.createAsTekton(taskTemplate, team);
   }
 
   @PutMapping(value = "")
@@ -148,7 +148,7 @@ public class TeamTaskTemplateV2Controller {
       @Parameter(name = "replace",
       description = "Replace existing version",
       required = false) @RequestParam(required = false, defaultValue = "false") boolean replace) {
-    return taskTemplateService.apply(taskTemplate, replace, Optional.of(team));
+    return taskTemplateService.apply(taskTemplate, replace, team);
   }
 
   @PutMapping(value = "", consumes = "application/x-yaml", produces = "application/x-yaml")
@@ -166,7 +166,7 @@ public class TeamTaskTemplateV2Controller {
       @Parameter(name = "replace",
       description = "Replace existing version",
       required = false) @RequestParam(required = false, defaultValue = "false") boolean replace) {
-    return taskTemplateService.applyAsTekton(taskTemplate, replace, Optional.of(team));
+    return taskTemplateService.applyAsTekton(taskTemplate, replace, team);
   }
   
   @GetMapping(value = "/{name}/changelog")
@@ -182,7 +182,7 @@ public class TeamTaskTemplateV2Controller {
       @Parameter(name = "name",
       description = "Name of Task Template",
       required = true) @PathVariable String name) {
-    return taskTemplateService.changelog(name, Optional.of(team));
+    return taskTemplateService.changelog(name, team);
   }
 
   @PostMapping(value = "/validate", consumes = "application/x-yaml", produces = "application/x-yaml")

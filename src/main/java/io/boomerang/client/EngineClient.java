@@ -72,9 +72,10 @@ public interface EngineClient {
 
   TaskTemplate getTaskTemplate(String name, Optional<Integer> version);
 
-  TaskTemplateResponsePage queryTaskTemplates(Optional<Integer> queryLimit, Optional<Integer> queryPage,
-      Optional<Direction> querySort, Optional<List<String>> queryLabels, Optional<List<String>> queryStatus,
-      Optional<List<String>> queryIds);
+  TaskTemplateResponsePage queryTaskTemplates(Optional<Integer> queryLimit,
+      Optional<Integer> queryPage, Optional<Direction> querySort,
+      Optional<List<String>> queryLabels, Optional<List<String>> queryStatus,
+      List<String> queryRefs);
 
   TaskTemplate createTaskTemplate(TaskTemplate taskTemplate);
 

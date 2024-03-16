@@ -1,14 +1,16 @@
 package io.boomerang.data.repository;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import org.bson.types.ObjectId;
 import org.springframework.data.mongodb.repository.Aggregation;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.mongodb.repository.Update;
 import io.boomerang.data.entity.RelationshipConnectionEntity;
 import io.boomerang.data.entity.RelationshipEntityV2;
-import io.boomerang.data.entity.RelationshipEntityV2Aggregate;
+import io.boomerang.data.entity.RelationshipEntityV2Graph;
 import io.boomerang.model.enums.RelationshipLabel;
 import io.boomerang.model.enums.RelationshipNodeType;
 
@@ -30,13 +32,29 @@ public interface RelationshipRepositoryV2 extends MongoRepository<RelationshipEn
   void deleteByTypeAndRefOrSlug(RelationshipNodeType type,
       String slug);
   
+  boolean existsByTypeAndSlug(RelationshipNodeType type,
+      String slug);
+
+  boolean existsByTypeAndSlugAndConnectionsTo(RelationshipNodeType type, String slug, ObjectId to);
+  
   @Aggregation(pipeline={"{'$match':{'type': ?0, '$or': [{'slug': ?1},{'ref': ?1}]}}",
       "{ '$graphLookup' : { 'from' :  ?2, 'startWith': '$_id', 'connectFromField':'id', 'connectToField': 'connections.to', 'as': 'children', restrictSearchWithMatch: {'connections.label': ?3 } } }"})
-  RelationshipEntityV2Aggregate findRelationshipsByLabel(RelationshipNodeType type, String ref, String collection, RelationshipLabel label);
+  RelationshipEntityV2Graph graphRelationshipsByLabelTo(RelationshipNodeType type, String ref, String collection, RelationshipLabel label);
   
+  @Aggregation(pipeline={"{'$match':{'type': ?0, '$or': [{'slug': ?1},{'ref': ?1}]}}",
+      "{ '$graphLookup' : { 'from' :  ?2, 'startWith': '$_id', 'connectFromField':'id', 'connectToField': 'connections.to', 'as': 'children', restrictSearchWithMatch: {'type': ?3 } } }"})
+  RelationshipEntityV2Graph graphRelationshipsByTypeTo(RelationshipNodeType type, String ref, String collection, RelationshipNodeType childType);
+  
+  @Aggregation(pipeline={"{'$match':{'type': 'USER', '$or': [{'slug': ?0},{'ref': ?0}]}}",
+      "{ '$graphLookup' : { 'from' :  ?1, 'startWith': '$connections.to', 'connectFromField':'connections.to', 'connectToField': '_id', 'as': 'children' } }",
+      "{ '$addFields' : { 'teams' : { '$map' : { 'input' : '$children', 'in' : { '$mergeObjects' : [ '$$this', { '$arrayElemAt' : [ '$connections', { '$indexOfArray': [ '$connections.to', '$$this._id' ] } ] } ] } } } } }"})
+  RelationshipEntityV2Graph findUserTeamRelationships(String ref, String collection);
+  
+  @Query("{'type': ?0, '$or': [{'slug': ?1},{'ref': ?1}]}")
   @Update("{ '$push' : { 'connections' : ?2 } }")
-  long findAndPushConnectionByTypeAndRefOrSlug(RelationshipNodeType type, String ref, RelationshipConnectionEntity connection);
+  long pushConnectionByTypeAndRefOrSlug(RelationshipNodeType type, String ref, RelationshipConnectionEntity connection);
   
-  @Update("{ '$set' : { 'connections.$.data.role' : ?4 } }")
-  long findAndUpdateConnectionByTypeAndRefOrSlugAndConnectionsLabelAndConnectionsTo(RelationshipNodeType type, String ref, RelationshipLabel label, String to, String role);
+  @Query("{'type': ?0, '$or': [{'slug': ?1},{'ref': ?1}], 'connections.to': ?2}")
+  @Update("{ '$set' : { 'connections.$.data' : ?3 } }")
+  long updateConnectionByTypeAndRefOrSlug(RelationshipNodeType type, String ref, ObjectId to, Map<String, String> data);
 }

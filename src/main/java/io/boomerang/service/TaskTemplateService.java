@@ -10,28 +10,45 @@ import io.boomerang.tekton.TektonTask;
 
 public interface TaskTemplateService {
 
-  TaskTemplate get(String name, Optional<Integer> version, Optional<String> team);
+  TaskTemplate get(String name, Optional<Integer> version, String team);
+
+  TaskTemplate get(String name, Optional<Integer> version);
 
   TaskTemplateResponsePage query(Optional<Integer> queryLimit, Optional<Integer> queryPage,
       Optional<Direction> querySort, Optional<List<String>> queryLabels,
-      Optional<List<String>> queryStatus, Optional<List<String>> queryNames,
-      Optional<String> queryTeam);
+      Optional<List<String>> queryStatus, Optional<List<String>> queryNames);
+
+  TaskTemplateResponsePage query(Optional<Integer> queryLimit, Optional<Integer> queryPage,
+      Optional<Direction> querySort, Optional<List<String>> queryLabels,
+      Optional<List<String>> queryStatus, Optional<List<String>> queryNames, String queryTeam);
   
-  TaskTemplate create(TaskTemplate request, Optional<String> team);
+  TaskTemplate create(TaskTemplate request, String team);
+
+  TaskTemplate create(TaskTemplate request);
 
   TaskTemplate apply(TaskTemplate request, boolean replace,
-      Optional<String> team);
+      String team);
+  
+  TaskTemplate apply(TaskTemplate request, boolean replace);
 
   TektonTask getAsTekton(String name, Optional<Integer> version,
-      Optional<String> team);
+      String team);
+  
+  TektonTask getAsTekton(String name, Optional<Integer> version);
 
-  TektonTask createAsTekton(TektonTask tektonTask, Optional<String> team);
+  TektonTask createAsTekton(TektonTask tektonTask, String team);
 
-  TektonTask applyAsTekton(TektonTask tektonTask, boolean replace, Optional<String> team);
+  TektonTask createAsTekton(TektonTask tektonTask);
+
+  TektonTask applyAsTekton(TektonTask tektonTask, boolean replace, String team);
+
+  TektonTask applyAsTekton(TektonTask tektonTask, boolean replace);
 
   void validateAsTekton(TektonTask tektonTask);
 
-  List<ChangeLogVersion> changelog(String name, Optional<String> team);
+  List<ChangeLogVersion> changelog(String name, String team);
+  
+  List<ChangeLogVersion> changelog(String name);
 
   void delete(String name, String team);
 }

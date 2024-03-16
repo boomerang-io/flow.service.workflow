@@ -16,9 +16,10 @@ import io.boomerang.integrations.data.repository.IntegrationTemplateRepository;
 import io.boomerang.integrations.data.repository.IntegrationsRepository;
 import io.boomerang.integrations.model.Integration;
 import io.boomerang.integrations.model.enums.IntegrationStatus;
-import io.boomerang.model.enums.RelationshipNodeType;
 import io.boomerang.model.enums.RelationshipLabel;
+import io.boomerang.model.enums.RelationshipNodeType;
 import io.boomerang.service.RelationshipService;
+import io.boomerang.service.RelationshipServiceImpl;
 
 @Service
 public class IntegrationServiceImpl implements IntegrationService {
@@ -33,6 +34,9 @@ public class IntegrationServiceImpl implements IntegrationService {
   
   @Autowired
   private RelationshipService relationshipService;
+  
+  @Autowired
+  private RelationshipServiceImpl relationshipServiceImpl;
 
   @Override
   public List<Integration> get(String team) {
@@ -77,7 +81,11 @@ public class IntegrationServiceImpl implements IntegrationService {
     entity.setType(type);
     entity.setRef(data.get("id").asText());
     entity.setData(Document.parse(data.toString()));
-    return integrationsRepository.save(entity);
+    entity = integrationsRepository.save(entity);
+    
+    relationshipServiceImpl.createNode(RelationshipNodeType.INTEGRATION, entity.getId(), "", null);
+    
+    return entity;
   }
   
   @Override

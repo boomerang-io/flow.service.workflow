@@ -6,6 +6,8 @@ import java.util.Map;
 import java.util.Optional;
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
+import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import org.springframework.data.mongodb.core.mapping.Document;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.boomerang.model.enums.RelationshipLabel;
@@ -15,6 +17,11 @@ import io.boomerang.model.enums.RelationshipLabel;
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Document(collection = "#{@mongoConfiguration.fullCollectionName('relationship_edges')}")
+@CompoundIndexes({
+  @CompoundIndex(name = "from_to_idx", def = "{'from' : -1, 'to': -1}"),
+  @CompoundIndex(name = "from_to_label_idx", def = "{'from' : -1, 'to': -1, 'label': -1}"),
+  @CompoundIndex(name = "to_label_idx", def = "{'to': -1, 'label': -1}")
+})
 public class RelationshipEdgeEntity {
 
   @Id
