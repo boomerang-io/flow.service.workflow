@@ -33,26 +33,30 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
-@RequestMapping("/api/v2/workflow")
-@Tag(name = "Workflow Management", description = "Create, List, and Manage your Workflows.")
-public class WorkflowV2Controller {
+@RequestMapping("/api/v2/team/{team}/workflow")
+@Tag(name = "Workflow Management", description = "Create, list, and manage your Workflows.")
+public class TeamWorkflowV2Controller {
 
   @Autowired
   private WorkflowService workflowService;
 
-  @GetMapping(value = "/{workflowId}")
+  @GetMapping(value = "/{workflow}")
   @AuthScope(action = PermissionAction.READ, scope = PermissionScope.WORKFLOW, types = {AuthType.team})
   @Operation(summary = "Retrieve a Workflow", description = "Retrieve a version of the Workflow. Defaults to latest. Optionally without Tasks")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
   public Workflow getWorkflow(
-      @Parameter(name = "workflowId", description = "ID of Workflow",
-          required = true) @PathVariable String workflowId,
+      @Parameter(name = "workflow", description = "Workflow reference",
+          required = true) @PathVariable String workflow,
+      @Parameter(name = "team",
+      description = "Owning team name.",
+      example = "my-amazing-team",
+      required = true) @PathVariable String team,
       @Parameter(name = "version", description = "Workflow Version",
           required = false) @RequestParam(required = false) Optional<Integer> version,
       @Parameter(name = "withTasks", description = "Include Workflow Tasks",
       required = false) @RequestParam(defaultValue="true") boolean withTasks) {
-    return workflowService.get(workflowId, version, withTasks);
+    return workflowService.get(team, workflow, version, withTasks);
   }
 
   @GetMapping(value = "/query")
@@ -60,7 +64,12 @@ public class WorkflowV2Controller {
   @Operation(summary = "Search for Workflows")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
-  public WorkflowResponsePage queryWorkflows(@Parameter(name = "labels",
+  public WorkflowResponsePage queryWorkflows(
+      @Parameter(name = "team",
+      description = "Owning team name.",
+      example = "my-amazing-team",
+      required = true) @PathVariable String team,
+      @Parameter(name = "labels",
       description = "List of url encoded labels. For example Organization=Boomerang,customKey=test would be encoded as Organization%3DBoomerang,customKey%3Dtest)",
       required = false) @RequestParam(required = false) Optional<List<String>> labels,
       @Parameter(name = "statuses", description = "List of statuses to filter for. Defaults to all.",
@@ -68,15 +77,13 @@ public class WorkflowV2Controller {
           required = false) @RequestParam(required = false) Optional<List<String>> statuses,
       @Parameter(name = "workflows", description = "List of workflows to filter for.", 
       required = false) @RequestParam(required = false) Optional<List<String>> workflows,
-      @Parameter(name = "teams", description = "List of teams to filter for.", 
-      required = false) @RequestParam(required = false) Optional<List<String>> teams,
       @Parameter(name = "limit", description = "Result Size", example = "10",
       required = true) @RequestParam(required = false) Optional<Integer> limit,
   @Parameter(name = "page", description = "Page Number", example = "0",
       required = true) @RequestParam(defaultValue = "0") Optional<Integer> page,
   @Parameter(name = "sort", description = "Ascending (ASC) or Descending (DESC) sort on creationDate", example = "ASC",
   required = true) @RequestParam(defaultValue = "ASC") Optional<Direction> sort) {
-    return workflowService.query(limit, page, sort, labels, statuses, teams, workflows);
+    return workflowService.query(team, limit, page, sort, labels, statuses, workflows);
   }
 
   @PostMapping(value = "")
@@ -85,10 +92,12 @@ public class WorkflowV2Controller {
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
   public Workflow createWorkflow(
-    @Parameter(name = "team", description = "Team as owner reference.", example = "my-amazing-team",
-    required = true) @RequestParam(required = true) String team,
+      @Parameter(name = "team",
+      description = "Owning team name.",
+      example = "my-amazing-team",
+      required = true) @PathVariable String team,
     @RequestBody Workflow workflow) {
-    return workflowService.create(workflow, team);
+    return workflowService.create(team, workflow);
   }
 
   @PutMapping(value = "")
@@ -97,33 +106,43 @@ public class WorkflowV2Controller {
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
   public Workflow applyWorkflow(@RequestBody Workflow workflow,
+      @Parameter(name = "team",
+      description = "Owning team name.",
+      example = "my-amazing-team",
+      required = true) @PathVariable String team,
       @Parameter(name = "replace", description = "Replace existing version",
-          required = false) @RequestParam(required = false, defaultValue = "false") boolean replace,
-      @Parameter(name = "team", description = "Team as owner reference. Required if using apply to create new.",
-          example = "my-amazing-team",
-          required = false) @RequestParam(required = false) Optional<String> team) {
-    return workflowService.apply(workflow, replace, team);
+          required = false) @RequestParam(required = false, defaultValue = "false") boolean replace) {
+    return workflowService.apply(team, workflow, replace);
   }
   
-  @GetMapping(value = "/{workflowId}/changelog")
+  @GetMapping(value = "/{workflow}/changelog")
   @AuthScope(action = PermissionAction.READ, scope = PermissionScope.WORKFLOW, types = {AuthType.team})
   @Operation(summary = "Retrieve the changlog", description = "Retrieves each versions changelog and returns them all as a list.")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
   public ResponseEntity<List<ChangeLogVersion>> getChangelog(
-      @Parameter(name = "workflowId", description = "ID of Workflow",
-          required = true) @PathVariable String workflowId) {
-    return workflowService.changelog(workflowId);
+      @Parameter(name = "team",
+      description = "Owning team name.",
+      example = "my-amazing-team",
+      required = true) @PathVariable String team,
+      @Parameter(name = "workflow", description = "Workflow reference",
+          required = true) @PathVariable String workflow) {
+    return workflowService.changelog(team, workflow);
   }
 
-  @DeleteMapping(value = "/{workflowId}")
+  @DeleteMapping(value = "/{workflow}")
   @AuthScope(action = PermissionAction.DELETE, scope = PermissionScope.WORKFLOW, types = {AuthType.team})
   @Operation(summary = "Delete a workflow")
   @ApiResponses(value = {@ApiResponse(responseCode = "204", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
-  public void deleteWorkflow(@Parameter(name = "workflowId",
-      description = "ID of Workflow", required = true) @PathVariable String workflowId) {
-    workflowService.delete(workflowId);
+  public void deleteWorkflow(
+      @Parameter(name = "team",
+      description = "Owning team name.",
+      example = "my-amazing-team",
+      required = true) @PathVariable String team,
+      @Parameter(name = "workflow",
+      description = "Workflow reference", required = true) @PathVariable String workflow) {
+    workflowService.delete(team, workflow);
   }
 
   @PostMapping(value = "/{workflowId}/submit")
@@ -132,56 +151,76 @@ public class WorkflowV2Controller {
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
   public WorkflowRun submitWorkflow(
-      @Parameter(name = "workflowId",
-      description = "ID of Workflow", required = true) @PathVariable String workflowId,
+      @Parameter(name = "team",
+      description = "Owning team name.",
+      example = "my-amazing-team",
+      required = true) @PathVariable String team,
+      @Parameter(name = "workflow",
+      description = "Workflow reference", required = true) @PathVariable String workflow,
       @Parameter(name = "start",
       description = "Start the WorkflowRun immediately after submission",
       required = false) @RequestParam(required = false, defaultValue = "false") boolean start,
       @RequestBody WorkflowSubmitRequest request) {
-    return workflowService.submit(workflowId, request, start);
+    return workflowService.submit(team, workflow, request, start);
   }
 
-  @GetMapping(value = "/{workflowId}/export", produces = "application/json")
+  @GetMapping(value = "/{workflow}/export", produces = "application/json")
   @AuthScope(action = PermissionAction.READ, scope = PermissionScope.WORKFLOW, types = {AuthType.team})
   @Operation(summary = "Export the Workflow as JSON.")
-  public ResponseEntity<InputStreamResource> export(@PathVariable String workflowId) {
-    return workflowService.export(workflowId);
+  public ResponseEntity<InputStreamResource> export(
+      @Parameter(name = "team",
+      description = "Owning team name.",
+      example = "my-amazing-team",
+      required = true) @PathVariable String team,
+      @Parameter(name = "workflow",
+      description = "Workflow reference", required = true) @PathVariable String workflow) {
+    return workflowService.export(team, workflow);
   }
 
-  @GetMapping(value = "/{workflowId}/compose")
+  @GetMapping(value = "/{workflow}/compose")
   @AuthScope(action = PermissionAction.READ, scope = PermissionScope.WORKFLOW, types = {AuthType.team})
   @Operation(summary = "Convert workflow to compose model for UI Designer and detailed Activity screens.")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
   public WorkflowCanvas compose(
-      @Parameter(name = "workflowId", description = "ID of Workflow",
-          required = true) @PathVariable String workflowId,
+      @Parameter(name = "team",
+      description = "Owning team name.",
+      example = "my-amazing-team",
+      required = true) @PathVariable String team,
+      @Parameter(name = "workflow", description = "Workflow reference",
+          required = true) @PathVariable String workflow,
       @Parameter(name = "version", description = "Workflow Version",
           required = false) @RequestParam(required = false) Optional<Integer> version) {
-    return workflowService.composeGet(workflowId, version);
+    return workflowService.composeGet(team, workflow, version);
   }
 
-  @PutMapping(value = "/{workflowId}/compose")
+  @PutMapping(value = "/{workflow}/compose")
   @AuthScope(action = PermissionAction.WRITE, scope = PermissionScope.WORKFLOW, types = {AuthType.team})
   @Operation(summary = "Update, replace, or create new, Workflow for Canvas")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
-  public WorkflowCanvas applyCanvas(@RequestBody WorkflowCanvas canvas,
+  public WorkflowCanvas applyCanvas(
+      @Parameter(name = "team",
+      description = "Owning team name.",
+      example = "my-amazing-team",
+      required = true) @PathVariable String team,
+      @RequestBody WorkflowCanvas canvas,
       @Parameter(name = "replace", description = "Replace existing version",
-          required = false) @RequestParam(required = false, defaultValue = "false") boolean replace,
-      @Parameter(name = "team", description = "Team as owner reference. Required if using apply to create new.",
-          example = "my-amazing-team",
-          required = false) @RequestParam(required = false) Optional<String> team) {
-    return workflowService.composeApply(canvas, replace, team);
+          required = false) @RequestParam(required = false, defaultValue = "false") boolean replace) {
+    return workflowService.composeApply(team, canvas, replace);
   }
 
-  @PostMapping(value = "/{workflowId}/duplicate")
+  @PostMapping(value = "/{workflow}/duplicate")
   @AuthScope(action = PermissionAction.WRITE, scope = PermissionScope.WORKFLOW, types = {AuthType.team})
   @Operation(summary = "Duplicates the workflow.")
   public Workflow duplicateWorkflow(
-      @Parameter(name = "workflowId", description = "ID of Workflow",
-      required = true) @PathVariable String workflowId) {
-    return workflowService.duplicate(workflowId);
+      @Parameter(name = "team",
+      description = "Owning team name.",
+      example = "my-amazing-team",
+      required = true) @PathVariable String team,
+      @Parameter(name = "workflow", description = "Workflow reference",
+      required = true) @PathVariable String workflow) {
+    return workflowService.duplicate(team, workflow);
   }
 
 //  @PostMapping(value = "{id}/token")
@@ -200,11 +239,17 @@ public class WorkflowV2Controller {
 //    return workflowService.validateWorkflowToken(id, tokenPayload);
 //  }
 
-  @GetMapping(value = "/{workflowId}/available-parameters")
+  @GetMapping(value = "/{workflow}/available-parameters")
   @AuthScope(action = PermissionAction.READ, scope = PermissionScope.WORKFLOW, types = {AuthType.team})
   @Operation(summary = "Retrieve the parameters.")
-  public List<String> getAvailableParameters(@PathVariable String workflowId) {
-    return workflowService.getAvailableParameters(workflowId);
+  public List<String> getAvailableParameters(
+      @Parameter(name = "team",
+      description = "Owning team name.",
+      example = "my-amazing-team",
+      required = true) @PathVariable String team,
+      @Parameter(name = "workflow", description = "Workflow reference",
+      required = true) @PathVariable String workflow) {
+    return workflowService.getAvailableParameters(team, workflow);
   }
 
 //  @GetMapping(value = "/{workflowId}/schedules")

@@ -8,11 +8,11 @@ import org.springframework.data.domain.Pageable;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
-import io.boomerang.model.ref.TaskTemplate;
+import io.boomerang.model.ref.Task;
 
-public class TaskTemplateResponsePage extends PageImpl<TaskTemplate> {
+public class TaskResponsePage extends PageImpl<Task> {
   @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-  public TaskTemplateResponsePage(@JsonProperty("content") List<TaskTemplate> content,
+  public TaskResponsePage(@JsonProperty("content") List<Task> content,
                       @JsonProperty("number") int number,
                       @JsonProperty("size") int size,
                       @JsonProperty("totalElements") Long totalElements,
@@ -26,15 +26,15 @@ public class TaskTemplateResponsePage extends PageImpl<TaskTemplate> {
       super(content, PageRequest.of(number, size), totalElements);
   }
 
-  public TaskTemplateResponsePage(List<TaskTemplate> content, Pageable pageable, long total) {
+  public TaskResponsePage(List<Task> content, Pageable pageable, long total) {
       super(content, pageable, total);
   }
 
-  public TaskTemplateResponsePage(List<TaskTemplate> content) {
+  public TaskResponsePage(List<Task> content) {
       super(content);
   }
 
-  public TaskTemplateResponsePage() {
+  public TaskResponsePage() {
       super(new ArrayList<>());
   }
 }

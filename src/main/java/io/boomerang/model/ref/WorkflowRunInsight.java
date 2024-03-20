@@ -7,6 +7,12 @@ public class WorkflowRunInsight {
   private Long totalDuration;
   private Long medianDuration;
 
+  @Override
+  public String toString() {
+    return "WorkflowRunInsight [totalRuns=" + totalRuns + ", concurrentRuns=" + concurrentRuns
+        + ", totalDuration=" + totalDuration + ", medianDuration=" + medianDuration + "]";
+  }
+
   public Long getTotalRuns() {
     return totalRuns;
   }

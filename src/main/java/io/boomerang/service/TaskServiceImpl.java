@@ -10,15 +10,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.stereotype.Service;
 import io.boomerang.client.EngineClient;
-import io.boomerang.client.TaskTemplateResponsePage;
+import io.boomerang.client.TaskResponsePage;
 import io.boomerang.error.BoomerangError;
 import io.boomerang.error.BoomerangException;
 import io.boomerang.model.User;
 import io.boomerang.model.enums.RelationshipLabel;
-import io.boomerang.model.enums.RelationshipNodeType;
+import io.boomerang.model.enums.RelationshipType;
 import io.boomerang.model.ref.ChangeLog;
 import io.boomerang.model.ref.ChangeLogVersion;
-import io.boomerang.model.ref.TaskTemplate;
+import io.boomerang.model.ref.Task;
 import io.boomerang.security.service.IdentityService;
 import io.boomerang.tekton.TektonConverter;
 import io.boomerang.tekton.TektonTask;
@@ -33,7 +33,7 @@ import io.boomerang.util.ParameterUtil;
  * - Converts response as needed for UI (including converting ID to Slug)
  */
 @Service
-public class TaskTemplateServiceImpl implements TaskTemplateService {
+public class TaskServiceImpl implements TaskService {
 
   private static final Logger LOGGER = LogManager.getLogger();
   
@@ -53,33 +53,33 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
    * TODO: determine if all users need to be able to access (READ) but not edit (CREATE, UPDATE, DELETE)
    */
   @Override
-  public TaskTemplate get(String name, Optional<Integer> version, String team) {
-    if (!Objects.isNull(name) && !name.isBlank() && relationshipServiceImpl.hasTeamRelationship(Optional.of(RelationshipNodeType.TASK),
+  public Task get(String team, String name, Optional<Integer> version) {
+    // Checks principal and provided Task has relationship to Team.
+    if (!Objects.isNull(name) && !name.isBlank() && relationshipServiceImpl.hasTeamRelationship(Optional.of(RelationshipType.TASK),
           Optional.of(name), RelationshipLabel.BELONGSTO, team, false)) {
-        String ref = relationshipServiceImpl.getRefFromSlug(RelationshipNodeType.TASK, name);
+        String ref = relationshipServiceImpl.getRefFromSlug(RelationshipType.TASK, name);
         return internalGet(ref, version);
     }
-    throw new BoomerangException(BoomerangError.TASKTEMPLATE_INVALID_REF);
+    throw new BoomerangException(BoomerangError.TASK_INVALID_REF, name, version.isPresent() ? version.get() : "latest");
   }
     
   /*
    * Retrieve a GLOBALTASK by name and optional version. If no version specified, will retrieve the latest.
-   * TODO: determine if all users need to be able to access (READ) but not edit (CREATE, UPDATE, DELETE)
+   * TODO: determine if all users need to be able to access (READ) but not edit (CREATE, UPDATE, DELETE).
    */
   @Override
-  public TaskTemplate get(String name, Optional<Integer> version) {
+  public Task get(String name, Optional<Integer> version) {
     if (!Objects.isNull(name) && !name.isBlank()
-        && relationshipServiceImpl.hasGlobalRelationship(
-            Optional.of(RelationshipNodeType.GLOBALTASK), Optional.of(name),
-            RelationshipLabel.BELONGSTO, false)) {
-      String ref = relationshipServiceImpl.getRefFromSlug(RelationshipNodeType.GLOBALTASK, name);
+        && relationshipServiceImpl.hasRootRelationship(
+            RelationshipType.GLOBALTASK, name)) {
+      String ref = relationshipServiceImpl.getRefFromSlug(RelationshipType.GLOBALTASK, name);
       return internalGet(ref, version);
     }
-    throw new BoomerangException(BoomerangError.TASKTEMPLATE_INVALID_REF);
+    throw new BoomerangException(BoomerangError.TASK_INVALID_REF, name, version.isPresent() ? version.get() : "latest");
   }
 
-  private TaskTemplate internalGet(String id, Optional<Integer> version) {
-    TaskTemplate taskTemplate = engineClient.getTaskTemplate(id, version);
+  private Task internalGet(String id, Optional<Integer> version) {
+    Task taskTemplate = engineClient.getTask(id, version);
     
     // Process Parameters - create configs for any Params
     taskTemplate.getSpec().setParams(ParameterUtil.abstractParamsToParamSpecs(taskTemplate.getConfig(), taskTemplate.getSpec().getParams()));
@@ -99,15 +99,15 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
    * Query for TASKS.
    */
   @Override
-  public TaskTemplateResponsePage query(Optional<Integer> queryLimit, Optional<Integer> queryPage, Optional<Direction> querySort,
+  public TaskResponsePage query(String queryTeam, Optional<Integer> queryLimit, Optional<Integer> queryPage, Optional<Direction> querySort,
       Optional<List<String>> queryLabels, Optional<List<String>> queryStatus,
-      Optional<List<String>> queryNames, String queryTeam) {
+      Optional<List<String>> queryNames) {
     
     //The filteredRefs call will check for having a relationship
-    List<String> refs = relationshipServiceImpl.getFilteredRefs(Optional.of(RelationshipNodeType.TASK), queryNames, RelationshipLabel.BELONGSTO, RelationshipNodeType.TEAM, queryTeam, false);
+    List<String> refs = relationshipServiceImpl.getFilteredRefs(Optional.of(RelationshipType.TASK), queryNames, RelationshipLabel.BELONGSTO, RelationshipType.TEAM, queryTeam, false);
     LOGGER.debug("Task Refs: {}", refs.toString());
     if (refs == null || refs.size() == 0) {
-      return new TaskTemplateResponsePage();
+      return new TaskResponsePage();
     }
     return internalQuery(queryLimit, queryPage, querySort, queryLabels, queryStatus, refs);
   }
@@ -116,22 +116,22 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
    * Query for GLOBALTASKS.
    */
   @Override
-  public TaskTemplateResponsePage query(Optional<Integer> queryLimit, Optional<Integer> queryPage, Optional<Direction> querySort,
+  public TaskResponsePage query(Optional<Integer> queryLimit, Optional<Integer> queryPage, Optional<Direction> querySort,
       Optional<List<String>> queryLabels, Optional<List<String>> queryStatus,
       Optional<List<String>> queryNames) {
     
-    List<String> refs = relationshipServiceImpl.getGlobalTaskRefs(queryNames);
+    List<String> refs = relationshipServiceImpl.getRootRefs(RelationshipType.GLOBALTASK, queryNames);
     LOGGER.debug("Global Task Refs: {}", refs.toString());
     if (refs == null || refs.size() == 0) {
-      return new TaskTemplateResponsePage();
+      return new TaskResponsePage();
     }
     return internalQuery(queryLimit, queryPage, querySort, queryLabels, queryStatus, refs);
   }
   
-  private TaskTemplateResponsePage internalQuery(Optional<Integer> queryLimit, Optional<Integer> queryPage, Optional<Direction> querySort,
+  private TaskResponsePage internalQuery(Optional<Integer> queryLimit, Optional<Integer> queryPage, Optional<Direction> querySort,
       Optional<List<String>> queryLabels, Optional<List<String>> queryStatus,
       List<String> queryRefs) {
-    TaskTemplateResponsePage response = engineClient.queryTaskTemplates(queryLimit, queryPage, querySort,
+    TaskResponsePage response = engineClient.queryTask(queryLimit, queryPage, querySort,
         queryLabels, queryStatus, queryRefs);
 
     if (!response.getContent().isEmpty()) {
@@ -145,39 +145,31 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
   }
   
   /*
-   * Creates the TaskTemplate and Relationship
-   * 
-   * The Engine checks for unique names so this method does not have to, however it does need to add the 
+   * Creates the Task and Relationship
    */
   @Override
-  public TaskTemplate create(TaskTemplate request,
-      String team) {
+  public Task create(String team, Task request) {
     // Validate Access
     if (!relationshipServiceImpl.hasTeamRelationship(Optional.empty(),
         Optional.empty(), RelationshipLabel.MEMBEROF, team, false)) {
-      //TODO throw correct error - not a member of team
-      throw new BoomerangException(BoomerangError.TASKTEMPLATE_INVALID_NAME, request.getName());
+      throw new BoomerangException(BoomerangError.PERMISSION_DENIED);
     }
     
     // Check name matches the requirements
     if (request.getName().isBlank() || !request.getName().matches(NAME_REGEX)) {
-      throw new BoomerangException(BoomerangError.TASKTEMPLATE_INVALID_NAME, request.getName());
+      throw new BoomerangException(BoomerangError.TASK_INVALID_NAME, request.getName());
     }
     
     // Check Slugs for Tasks in team
-    if (relationshipServiceImpl.doesSlugExistInTeam(RelationshipNodeType.TASK, request.getName(), team)) {
-     //TODO throw correct error - already exists
-      throw new BoomerangException(BoomerangError.TASKTEMPLATE_INVALID_NAME, request.getName());
+    if (relationshipServiceImpl.doesSlugOrRefExistForTypeInTeam(RelationshipType.TASK, request.getName(), team)) {
+      throw new BoomerangException(BoomerangError.TASK_ALREADY_EXISTS, request.getName());
     }
     
     // Create Task
-    TaskTemplate task = internalCreate(request);
+    Task task = internalCreate(request);
 
     // Create Relationship
-    // TODO allow node to be created with a connection
-    relationshipServiceImpl.createNode(RelationshipNodeType.TASK, task.getId(), task.getName(), Optional.empty());
-    relationshipServiceImpl.upsertTeamConnectionBySlug(RelationshipNodeType.TASK, task.getId(), RelationshipLabel.BELONGSTO,
-        team, Optional.empty());
+    relationshipServiceImpl.createNodeWithTeamConnection(RelationshipType.TASK, task.getId(), task.getName(), team, Optional.empty());
     
     // Remove ID
     task.setId(null);
@@ -185,30 +177,29 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
   }
 
   @Override
-  public TaskTemplate create(TaskTemplate request) {
+  public Task create(Task request) {
     // Check name matches the requirements
     if (request.getName().isBlank() || !request.getName().matches(NAME_REGEX)) {
-      throw new BoomerangException(BoomerangError.TASKTEMPLATE_INVALID_NAME, request.getName());
+      throw new BoomerangException(BoomerangError.TASK_INVALID_NAME, request.getName());
     }
     
     // Check Slugs for GlobalTasks
-    if (relationshipServiceImpl.doesSlugExistForType(RelationshipNodeType.GLOBALTASK, request.getName())) {
-     //TODO throw correct error
-      throw new BoomerangException(BoomerangError.TASKTEMPLATE_INVALID_NAME, request.getName());
+    if (relationshipServiceImpl.doesSlugOrRefExistForType(RelationshipType.GLOBALTASK, request.getName())) {
+      throw new BoomerangException(BoomerangError.TASK_ALREADY_EXISTS, request.getName());
     }
     
     // Create Task
-    TaskTemplate task = internalCreate(request);
+    Task task = internalCreate(request);
 
     // Create Relationship
-    relationshipServiceImpl.createNode(RelationshipNodeType.GLOBALTASK, task.getId(), task.getName(), Optional.empty());
+    relationshipServiceImpl.createNode(RelationshipType.GLOBALTASK, task.getId(), task.getName(), Optional.empty());
 
     // Remove ID
     task.setId(null);
     return task;  
   }
   
-  private TaskTemplate internalCreate(TaskTemplate request) {
+  private Task internalCreate(Task request) {
     // Ignore any provided Ids as this is a create
     request.setId(null);
     // Set verified to false - this is only able to be set via Engine or Loader
@@ -222,7 +213,7 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
     updateChangeLog(request.getChangelog());
     
     // Come back to this once we have separated the controllers - works better for scope checks.
-    TaskTemplate taskTemplate = engineClient.createTaskTemplate(request);
+    Task taskTemplate = engineClient.createTask(request);
     switchChangeLogAuthorToUserName(taskTemplate.getChangelog());
 
     return taskTemplate;
@@ -232,40 +223,58 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
    * Apply allows you to create a new version as well as create new
    */
   @Override
-  public TaskTemplate apply(TaskTemplate request, boolean replace, String team) {
+  public Task apply(String team, String name, Task request, boolean replace) {
     if (request.getName().isBlank() || !request.getName().matches(NAME_REGEX)) {
-      throw new BoomerangException(BoomerangError.TASKTEMPLATE_INVALID_NAME, request.getName());
+      throw new BoomerangException(BoomerangError.TASK_INVALID_NAME, request.getName());
     }
-    if (relationshipServiceImpl.doesSlugExistInTeam(RelationshipNodeType.TASK, request.getName(), team)) {
-      // Update template
-      if (!relationshipServiceImpl.hasTeamRelationship(Optional.of(RelationshipNodeType.TASK),
+    // Check if slug exists
+    // TODO evaluate if this check can change - can we just check for relationship to team for this object or will that also check principal's relationship to team.
+    if (relationshipServiceImpl.doesSlugOrRefExistForTypeInTeam(RelationshipType.TASK, request.getName(), team)) {
+      if (!relationshipServiceImpl.hasTeamRelationship(Optional.of(RelationshipType.TASK),
           Optional.of(request.getName()), RelationshipLabel.BELONGSTO, team, false)) {
-        //TODO - change error to don't have access
-        throw new BoomerangException(BoomerangError.TASKTEMPLATE_INVALID_NAME, request.getName());
+        throw new BoomerangException(BoomerangError.TASK_INVALID_REF, name, request.getVersion() != null ? request.getVersion() : "latest");
       }
-      String ref = relationshipServiceImpl.getRefFromSlug(RelationshipNodeType.TASK, request.getName());
+      String ref = relationshipServiceImpl.getRefFromSlug(RelationshipType.TASK, request.getName());
       request.setId(ref);
-      return this.internalApply(request, replace);
+      Task task = this.internalApply(name, request, replace);
+      
+      //Update relationship if slug changes
+      if (request.getName() != null && !request.getName().isBlank() && !name.equals(request.getName())) {
+        relationshipServiceImpl.updateNodeSlug(RelationshipType.GLOBALTASK, name, request.getName());
+      }
+
+      // Remove ID
+      task.setId(null);
+      return task;
     } else {
-      return this.create(request, team);
+      return this.create(team, request);
     }
   }
   
   @Override
-  public TaskTemplate apply(TaskTemplate request, boolean replace) {
+  public Task apply(String name, Task request, boolean replace) {
     if (request.getName().isBlank() || !request.getName().matches(NAME_REGEX)) {
-      throw new BoomerangException(BoomerangError.TASKTEMPLATE_INVALID_NAME, request.getName());
+      throw new BoomerangException(BoomerangError.TASK_INVALID_NAME, name);
     }
-    if (relationshipServiceImpl.doesSlugExistForType(RelationshipNodeType.GLOBALTASK, request.getName())) {
-      String ref = relationshipServiceImpl.getRefFromSlug(RelationshipNodeType.GLOBALTASK, request.getName());
+    if (relationshipServiceImpl.doesSlugOrRefExistForType(RelationshipType.GLOBALTASK, name)) {
+      String ref = relationshipServiceImpl.getRefFromSlug(RelationshipType.GLOBALTASK, name);
       request.setId(ref);
-      return this.internalApply(request, replace);
+      Task task = this.internalApply(name, request, replace);
+      
+      //Update relationship if slug changes
+      if (request.getName() != null && !request.getName().isBlank() && !name.equals(request.getName())) {
+        relationshipServiceImpl.updateNodeSlug(RelationshipType.GLOBALTASK, name, request.getName());
+      }
+
+      // Remove ID
+      task.setId(null);
+      return task;
     } else {
       return this.create(request);
     }
   }
   
-  private TaskTemplate internalApply(TaskTemplate request, boolean replace) {  
+  private Task internalApply(String name, Task request, boolean replace) {  
     // Set verfied to false - this is only able to be set via Engine or Loader
     request.setVerified(false);
     
@@ -276,7 +285,7 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
     request.getSpec().setParams(ParameterUtil.abstractParamsToParamSpecs(request.getConfig(), request.getSpec().getParams()));
     request.setConfig(ParameterUtil.paramSpecToAbstractParam(request.getSpec().getParams(), request.getConfig()));
     
-    TaskTemplate template = engineClient.applyTaskTemplate(request, replace);
+    Task template = engineClient.applyTask(request, replace);
     switchChangeLogAuthorToUserName(template.getChangelog());
     
     return template;
@@ -306,42 +315,42 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
   }
 
   @Override
-  public TektonTask getAsTekton(String name, Optional<Integer> version, String team) {
-    TaskTemplate template = this.get(name, version, team);
+  public TektonTask getAsTekton(String team, String name, Optional<Integer> version) {
+    Task template = this.get(team, name, version);
     return TektonConverter.convertTaskTemplateToTektonTask(template);
   }
 
   @Override
   public TektonTask getAsTekton(String name, Optional<Integer> version) {
-    TaskTemplate template = this.get(name, version);
+    Task template = this.get(name, version);
     return TektonConverter.convertTaskTemplateToTektonTask(template);
   }
 
   @Override
-  public TektonTask createAsTekton(TektonTask tektonTask, String team) {
-    TaskTemplate template = TektonConverter.convertTektonTaskToTaskTemplate(tektonTask);
-    this.create(template, team);
+  public TektonTask createAsTekton(String team, TektonTask tektonTask) {
+    Task template = TektonConverter.convertTektonTaskToTaskTemplate(tektonTask);
+    this.create(team, template);
     return tektonTask;
   }
 
   @Override
   public TektonTask createAsTekton(TektonTask tektonTask) {
-    TaskTemplate template = TektonConverter.convertTektonTaskToTaskTemplate(tektonTask);
+    Task template = TektonConverter.convertTektonTaskToTaskTemplate(tektonTask);
     this.create(template);
     return tektonTask;
   }
 
   @Override
-  public TektonTask applyAsTekton(TektonTask tektonTask, boolean replace, String team) {
-    TaskTemplate template = TektonConverter.convertTektonTaskToTaskTemplate(tektonTask);
-    this.apply(template, replace, team);
+  public TektonTask applyAsTekton(String team, String name, TektonTask tektonTask, boolean replace) {
+    Task template = TektonConverter.convertTektonTaskToTaskTemplate(tektonTask);
+    this.apply(team, name, template, replace);
     return tektonTask;
   }
 
   @Override
-  public TektonTask applyAsTekton(TektonTask tektonTask, boolean replace) {
-    TaskTemplate template = TektonConverter.convertTektonTaskToTaskTemplate(tektonTask);
-    this.apply(template, replace);
+  public TektonTask applyAsTekton(String name, TektonTask tektonTask, boolean replace) {
+    Task template = TektonConverter.convertTektonTaskToTaskTemplate(tektonTask);
+    this.apply(name, template, replace);
     return tektonTask;
   }
 
@@ -351,35 +360,35 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
   }
 
   @Override
-  public List<ChangeLogVersion> changelog(String name, String team) {
+  public List<ChangeLogVersion> changelog(String team, String name) {
     if (name.isBlank() || !name.matches(NAME_REGEX)) {
-      throw new BoomerangException(BoomerangError.TASKTEMPLATE_INVALID_NAME, name);
+      throw new BoomerangException(BoomerangError.TASK_INVALID_NAME, name);
     }
-    if (relationshipServiceImpl.doesSlugExistInTeam(RelationshipNodeType.TASK, name, team)) {
-      if (!relationshipServiceImpl.hasTeamRelationship(Optional.of(RelationshipNodeType.TASK),
+    if (relationshipServiceImpl.doesSlugOrRefExistForTypeInTeam(RelationshipType.TASK, name, team)) {
+      if (!relationshipServiceImpl.hasTeamRelationship(Optional.of(RelationshipType.TASK),
           Optional.of(name), RelationshipLabel.BELONGSTO, team, false)) {
         //TODO - change error to don't have access
-        throw new BoomerangException(BoomerangError.TASKTEMPLATE_INVALID_NAME, name);
+        throw new BoomerangException(BoomerangError.TASK_INVALID_NAME, name);
       }
-      String ref = relationshipServiceImpl.getRefFromSlug(RelationshipNodeType.TASK, name);
+      String ref = relationshipServiceImpl.getRefFromSlug(RelationshipType.TASK, name);
       return internalChangelog(ref);
     }
     //TODO - change error to don't have access
-    throw new BoomerangException(BoomerangError.TASKTEMPLATE_INVALID_NAME, name);
+    throw new BoomerangException(BoomerangError.TASK_INVALID_NAME, name);
   }
 
   @Override
   public List<ChangeLogVersion> changelog(String name) {
-    if (relationshipServiceImpl.doesSlugExistForType(RelationshipNodeType.GLOBALTASK, name)) {
-      String ref = relationshipServiceImpl.getRefFromSlug(RelationshipNodeType.GLOBALTASK, name);
+    if (relationshipServiceImpl.doesSlugOrRefExistForType(RelationshipType.GLOBALTASK, name)) {
+      String ref = relationshipServiceImpl.getRefFromSlug(RelationshipType.GLOBALTASK, name);
       return internalChangelog(ref);
     }
     //TODO - change error to don't have access
-    throw new BoomerangException(BoomerangError.TASKTEMPLATE_INVALID_NAME, name);
+    throw new BoomerangException(BoomerangError.TASK_INVALID_NAME, name);
   }
   
   private List<ChangeLogVersion> internalChangelog(String id) {
-    List<ChangeLogVersion> changeLog = engineClient.getTaskTemplateChangeLog(id);
+    List<ChangeLogVersion> changeLog = engineClient.getTaskChangeLog(id);
     changeLog.forEach(clv -> switchChangeLogAuthorToUserName(clv));
     return changeLog;
   }
@@ -389,20 +398,20 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
    * inactive)
    */
   @Override
-  public void delete(String name, String team) {
+  public void delete(String team, String name) {
     if (Objects.isNull(name) || name.isBlank()) {
-      throw new BoomerangException(BoomerangError.TASKTEMPLATE_INVALID_REF);
+      throw new BoomerangException(BoomerangError.TASK_INVALID_REF);
     }
-    if (relationshipServiceImpl.doesSlugExistInTeam(RelationshipNodeType.TASK, name, team)) {
-      if (!relationshipServiceImpl.hasTeamRelationship(Optional.of(RelationshipNodeType.TASK),
+    if (relationshipServiceImpl.doesSlugOrRefExistForTypeInTeam(RelationshipType.TASK, name, team)) {
+      if (!relationshipServiceImpl.hasTeamRelationship(Optional.of(RelationshipType.TASK),
           Optional.of(name), RelationshipLabel.BELONGSTO, team, false)) {
         //TODO - change error to don't have access
-        throw new BoomerangException(BoomerangError.TASKTEMPLATE_INVALID_NAME, name);
+        throw new BoomerangException(BoomerangError.TASK_INVALID_NAME, name);
       }
-      String ref = relationshipServiceImpl.getRefFromSlug(RelationshipNodeType.TASK, name);
-      engineClient.deleteTaskTemplate(ref);
+      String ref = relationshipServiceImpl.getRefFromSlug(RelationshipType.TASK, name);
+      engineClient.deleteTask(ref);
     }
     //TODO - change error to don't have access
-    throw new BoomerangException(BoomerangError.TASKTEMPLATE_INVALID_NAME, name);
+    throw new BoomerangException(BoomerangError.TASK_INVALID_NAME, name);
   }
 }

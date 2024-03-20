@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import io.boomerang.model.enums.ref.ExecutionCondition;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class TaskDependency {
+public class WorkflowTaskDependency {
 
   private String taskRef;
 

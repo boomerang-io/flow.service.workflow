@@ -34,7 +34,7 @@ import io.boomerang.error.BoomerangException;
 import io.boomerang.model.ref.ChangeLogVersion;
 import io.boomerang.model.ref.TaskRun;
 import io.boomerang.model.ref.TaskRunEndRequest;
-import io.boomerang.model.ref.TaskTemplate;
+import io.boomerang.model.ref.Task;
 import io.boomerang.model.ref.Workflow;
 import io.boomerang.model.ref.WorkflowCount;
 import io.boomerang.model.ref.WorkflowRun;
@@ -116,23 +116,23 @@ public class EngineClientImpl implements EngineClient {
   @Value("${flow.engine.taskrun.logstream.url}")
   private String logStreamTaskRunURL;
 
-  @Value("${flow.engine.tasktemplate.get.url}")
-  public String getTaskTemplateURL;
+  @Value("${flow.engine.task.get.url}")
+  public String getTaskURL;
 
-  @Value("${flow.engine.tasktemplate.query.url}")
-  public String queryTaskTemplateURL;
+  @Value("${flow.engine.task.query.url}")
+  public String queryTaskURL;
 
-  @Value("${flow.engine.tasktemplate.create.url}")
-  public String createTaskTemplateURL;
+  @Value("${flow.engine.task.create.url}")
+  public String createTaskURL;
 
-  @Value("${flow.engine.tasktemplate.apply.url}")
-  public String applyTaskTemplateURL;
+  @Value("${flow.engine.task.apply.url}")
+  public String applyTaskURL;
 
-  @Value("${flow.engine.tasktemplate.changelog.url}")
-  public String changelogTaskTemplateURL;
+  @Value("${flow.engine.task.changelog.url}")
+  public String changelogTaskURL;
 
-  @Value("${flow.engine.tasktemplate.delete.url}")
-  public String deleteTaskTemplateURL;
+  @Value("${flow.engine.task.delete.url}")
+  public String deleteTaskURL;
 
   @Value("${flow.engine.workflowtemplate.get.url}")
   public String getWorkflowTemplateURL;
@@ -799,13 +799,13 @@ public class EngineClientImpl implements EngineClient {
   }
 
   /*
-   * ************************************** TaskTemplate endpoints
+   * ************************************** Task endpoints
    * **************************************
    */
   @Override
-  public TaskTemplate getTaskTemplate(String name, Optional<Integer> version) {
+  public Task getTask(String ref, Optional<Integer> version) {
     try {
-      String url = getTaskTemplateURL.replace("{name}", name);
+      String url = getTaskURL.replace("{ref}", ref);
       Map<String, String> requestParams = new HashMap<>();
       if (version.isPresent()) {
         requestParams.put("version", version.get().toString());
@@ -817,7 +817,7 @@ public class EngineClientImpl implements EngineClient {
 
       LOGGER.info("URL: " + encodedURL);
 
-      ResponseEntity<TaskTemplate> response = restTemplate.getForEntity(encodedURL, TaskTemplate.class);
+      ResponseEntity<Task> response = restTemplate.getForEntity(encodedURL, Task.class);
 
       LOGGER.info("Status Response: " + response.getStatusCode());
       LOGGER.info("Content Response: " + response.getBody().toString());
@@ -832,12 +832,12 @@ public class EngineClientImpl implements EngineClient {
   }
 
   @Override
-  public TaskTemplateResponsePage queryTaskTemplates(Optional<Integer> queryLimit,
+  public TaskResponsePage queryTask(Optional<Integer> queryLimit,
       Optional<Integer> queryPage, Optional<Direction> querySort,
       Optional<List<String>> queryLabels, Optional<List<String>> queryStatus,
       List<String> queryRefs) {
     try {
-      UriComponentsBuilder urlBuilder = UriComponentsBuilder.fromHttpUrl(queryTaskTemplateURL);
+      UriComponentsBuilder urlBuilder = UriComponentsBuilder.fromHttpUrl(queryTaskURL);
       if (queryPage.isPresent()) {
         urlBuilder.queryParam("page", Integer.toString(queryPage.get()));
       }
@@ -858,8 +858,8 @@ public class EngineClientImpl implements EngineClient {
 
       LOGGER.info("Query URL: " + encodedURI);
 
-      ResponseEntity<TaskTemplateResponsePage> response =
-          restTemplate.getForEntity(encodedURI, TaskTemplateResponsePage.class);
+      ResponseEntity<TaskResponsePage> response =
+          restTemplate.getForEntity(encodedURI, TaskResponsePage.class);
 
       LOGGER.info("Status Response: " + response.getStatusCode());
       LOGGER.info("Content Response: " + response.getBody().getContent().toString());
@@ -874,12 +874,12 @@ public class EngineClientImpl implements EngineClient {
   }
 
   @Override
-  public TaskTemplate createTaskTemplate(TaskTemplate taskTemplate) {
+  public Task createTask(Task request) {
     try {
-      LOGGER.info("URL: " + createTaskTemplateURL);
+      LOGGER.info("URL: " + createTaskURL);
 
-      ResponseEntity<TaskTemplate> response =
-          restTemplate.postForEntity(createTaskTemplateURL, taskTemplate, TaskTemplate.class);
+      ResponseEntity<Task> response =
+          restTemplate.postForEntity(createTaskURL, request, Task.class);
 
       LOGGER.info("Status Response: " + response.getStatusCode());
       LOGGER.info("Content Response: " + response.getBody().toString());
@@ -894,9 +894,9 @@ public class EngineClientImpl implements EngineClient {
   }
 
   @Override
-  public TaskTemplate applyTaskTemplate(TaskTemplate taskTemplate, boolean replace) {
+  public Task applyTask(Task task, boolean replace) {
     try {
-      String url = applyTaskTemplateURL;
+      String url = applyTaskURL;
       Map<String, String> requestParams = new HashMap<>();
       requestParams.put("replace", Boolean.toString(replace));
 
@@ -908,9 +908,9 @@ public class EngineClientImpl implements EngineClient {
 
       final HttpHeaders headers = new HttpHeaders();
       headers.setContentType(MediaType.APPLICATION_JSON);
-      HttpEntity<TaskTemplate> entity = new HttpEntity<TaskTemplate>(taskTemplate, headers);
-      ResponseEntity<TaskTemplate> response =
-          restTemplate.exchange(encodedURL, HttpMethod.PUT, entity, TaskTemplate.class);
+      HttpEntity<Task> entity = new HttpEntity<Task>(task, headers);
+      ResponseEntity<Task> response =
+          restTemplate.exchange(encodedURL, HttpMethod.PUT, entity, Task.class);
 
       LOGGER.info("Status Response: " + response.getStatusCode());
       LOGGER.info("Content Response: " + response.getBody().toString());
@@ -925,9 +925,9 @@ public class EngineClientImpl implements EngineClient {
   }
   
   @Override
-  public List<ChangeLogVersion> getTaskTemplateChangeLog(String name) {
+  public List<ChangeLogVersion> getTaskChangeLog(String ref) {
     try {
-      String url = changelogTaskTemplateURL.replace("{name}", name);
+      String url = changelogTaskURL.replace("{ref}", ref);
 
       LOGGER.info("URL: " + url);
 
@@ -946,9 +946,9 @@ public class EngineClientImpl implements EngineClient {
   }
 
   @Override
-  public ResponseEntity<Void> deleteTaskTemplate(String name) {
+  public ResponseEntity<Void> deleteTask(String ref) {
     try {
-      String url = deleteTaskTemplateURL.replace("{name}", name);
+      String url = deleteTaskURL.replace("{ref}", ref);
 
       LOGGER.info("URL: " + url);
       ResponseEntity<Void> response =

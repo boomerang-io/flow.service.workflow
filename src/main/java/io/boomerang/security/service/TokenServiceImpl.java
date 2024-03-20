@@ -37,7 +37,7 @@ import io.boomerang.data.entity.ref.ActionEntity;
 import io.boomerang.error.BoomerangError;
 import io.boomerang.error.BoomerangException;
 import io.boomerang.model.enums.RelationshipLabel;
-import io.boomerang.model.enums.RelationshipNodeType;
+import io.boomerang.model.enums.RelationshipType;
 import io.boomerang.model.enums.UserType;
 import io.boomerang.security.entity.TokenEntity;
 import io.boomerang.security.model.AuthType;
@@ -153,8 +153,8 @@ public class TokenServiceImpl implements TokenService {
       }
       // Validate principal against all the team permissions the user has
       List<RelationshipEntity> userRels = relationshipService.getFilteredRels(
-          Optional.of(RelationshipNodeType.USER), Optional.of(List.of(request.getPrincipal())),
-          Optional.of(RelationshipLabel.MEMBEROF), Optional.of(RelationshipNodeType.TEAM), teams, false);
+          Optional.of(RelationshipType.USER), Optional.of(List.of(request.getPrincipal())),
+          Optional.of(RelationshipLabel.MEMBEROF), Optional.of(RelationshipType.TEAM), teams, false);
       for (RelationshipEntity rel : userRels) {
         String role = RoleEnum.READER.getLabel();
         if (rel.getData() != null && rel.getData().get("role") != null) {
@@ -345,8 +345,8 @@ public class TokenServiceImpl implements TokenService {
       user = identityService.getAndRegisterUser(email, firstName, lastName,
           Optional.of(UserType.admin), allowUserCreation);
       if (user.isPresent()) {
-        relationshipService.addRelationshipRef(RelationshipNodeType.USER, user.get().getId(), RelationshipLabel.MEMBEROF,
-            RelationshipNodeType.TEAM, Optional.of("system"),Optional.of(Map.of("role",RoleEnum.OWNER.getLabel())));
+        relationshipService.addRelationshipRef(RelationshipType.USER, user.get().getId(), RelationshipLabel.MEMBEROF,
+            RelationshipType.TEAM, Optional.of("system"),Optional.of(Map.of("role",RoleEnum.OWNER.getLabel())));
       }
     } else if (identityService.isActivated()) {
       user = identityService.getAndRegisterUser(email, firstName, lastName,

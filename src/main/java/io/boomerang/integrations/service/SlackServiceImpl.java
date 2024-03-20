@@ -148,7 +148,7 @@ public class SlackServiceImpl implements SlackService {
                     String userEmail = userInfo.getUser().getProfile().getEmail();
                     if (userEmail != null && canExecuteWorkflow(workflowId, userEmail)) {
                         workflow =
-                                workflowService.get(workflowId, Optional.empty(), false);
+                                workflowService.get(teamId, workflowId, Optional.empty(), false);
                         if (workflow != null) {
                             modalViewBuilder.submit(ViewSubmit.builder().type("plain_text")
                                     .text(":point_right: Run it").emoji(true).build());
@@ -309,7 +309,7 @@ public class SlackServiceImpl implements SlackService {
                         WorkflowSubmitRequest request = new WorkflowSubmitRequest();
                         request.setTrigger(TriggerEnum.webhook);
                         WorkflowRun workflowRun =
-                                workflowService.submit(workflowId, request, true);
+                                workflowService.submit(teamId, workflowId, request, true);
                         LOGGER.debug(workflowRun.toString());
 
                         // ChatPostMessageResponse messageResponse = slack.methods(authToken)

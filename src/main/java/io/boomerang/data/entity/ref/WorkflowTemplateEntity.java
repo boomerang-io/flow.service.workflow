@@ -15,7 +15,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import io.boomerang.model.AbstractParam;
 import io.boomerang.model.ref.ChangeLog;
 import io.boomerang.model.ref.ParamSpec;
-import io.boomerang.model.ref.Task;
+import io.boomerang.model.ref.WorkflowTask;
 import io.boomerang.model.ref.WorkflowWorkspace;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -37,7 +37,7 @@ public class WorkflowTemplateEntity {
   private String markdown;
   private Map<String, String> labels = new HashMap<>();
   private Map<String, Object> annotations = new HashMap<>();
-  private List<Task> tasks = new LinkedList<>();
+  private List<WorkflowTask> tasks = new LinkedList<>();
   private ChangeLog changelog;
   private List<ParamSpec> params;
   private List<WorkflowWorkspace> workspaces;
@@ -105,10 +105,10 @@ public class WorkflowTemplateEntity {
   public void setAnnotations(Map<String, Object> annotations) {
     this.annotations = annotations;
   }
-  public List<Task> getTasks() {
+  public List<WorkflowTask> getTasks() {
     return tasks;
   }
-  public void setTasks(List<Task> tasks) {
+  public void setTasks(List<WorkflowTask> tasks) {
     this.tasks = tasks;
   }
   public ChangeLog getChangelog() {

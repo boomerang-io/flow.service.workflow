@@ -8,7 +8,7 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 import io.boomerang.model.ref.ChangeLogVersion;
 import io.boomerang.model.ref.TaskRun;
 import io.boomerang.model.ref.TaskRunEndRequest;
-import io.boomerang.model.ref.TaskTemplate;
+import io.boomerang.model.ref.Task;
 import io.boomerang.model.ref.Workflow;
 import io.boomerang.model.ref.WorkflowCount;
 import io.boomerang.model.ref.WorkflowRun;
@@ -70,20 +70,20 @@ public interface EngineClient {
   
   StreamingResponseBody streamTaskRunLog(String taskRunId);
 
-  TaskTemplate getTaskTemplate(String name, Optional<Integer> version);
+  Task getTask(String name, Optional<Integer> version);
 
-  TaskTemplateResponsePage queryTaskTemplates(Optional<Integer> queryLimit,
+  TaskResponsePage queryTask(Optional<Integer> queryLimit,
       Optional<Integer> queryPage, Optional<Direction> querySort,
       Optional<List<String>> queryLabels, Optional<List<String>> queryStatus,
       List<String> queryRefs);
 
-  TaskTemplate createTaskTemplate(TaskTemplate taskTemplate);
+  Task createTask(Task taskTemplate);
 
-  TaskTemplate applyTaskTemplate(TaskTemplate workflow, boolean replace);
+  Task applyTask(Task workflow, boolean replace);
 
-  List<ChangeLogVersion> getTaskTemplateChangeLog(String name);
+  List<ChangeLogVersion> getTaskChangeLog(String name);
 
-  ResponseEntity<Void> deleteTaskTemplate(String name);
+  ResponseEntity<Void> deleteTask(String name);
 
   WorkflowTemplate getWorkflowTemplate(String name, Optional<Integer> version, boolean withTasks);
 

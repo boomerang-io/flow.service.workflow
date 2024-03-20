@@ -9,7 +9,7 @@ import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import org.springframework.data.mongodb.core.mapping.Document;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import io.boomerang.model.enums.RelationshipNodeType;
+import io.boomerang.model.enums.RelationshipType;
 
 /*
  * Entity for Relationships
@@ -25,7 +25,7 @@ public class RelationshipNodeEntity {
   @Id
   private String id;
   private Date creationDate = new Date();
-  private RelationshipNodeType type;
+  private RelationshipType type;
   private String ref;
   private String slug;
   private Map<String, String> data = new HashMap<>();
@@ -34,7 +34,7 @@ public class RelationshipNodeEntity {
     // TODO Auto-generated constructor stub
   }
 
-  public RelationshipNodeEntity(RelationshipNodeType type, String ref, String slug,
+  public RelationshipNodeEntity(RelationshipType type, String ref, String slug,
       Optional<Map<String, String>> data) {
     this.type = type;
     this.ref = ref;
@@ -62,10 +62,10 @@ public class RelationshipNodeEntity {
   public void setCreationDate(Date creationDate) {
     this.creationDate = creationDate;
   }
-  public RelationshipNodeType getType() {
+  public RelationshipType getType() {
     return type;
   }
-  public void setType(RelationshipNodeType type) {
+  public void setType(RelationshipType type) {
     this.type = type;
   }
   public String getRef() {
