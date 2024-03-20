@@ -14,7 +14,7 @@ import io.boomerang.model.enums.ref.RunStatus;
 import io.boomerang.model.enums.ref.TaskType;
 import io.boomerang.model.ref.RunParam;
 import io.boomerang.model.ref.RunResult;
-import io.boomerang.model.ref.TaskDependency;
+import io.boomerang.model.ref.WorkflowTaskDependency;
 import io.boomerang.model.ref.TaskRunSpec;
 import io.boomerang.model.ref.TaskWorkspace;
 
@@ -65,11 +65,11 @@ public class TaskRunEntity {
   private String decisionValue;
 
   @JsonIgnore
-  private List<TaskDependency> dependencies;
+  private List<WorkflowTaskDependency> dependencies;
 
-  private String templateRef;
+  private String taskRef;
 
-  private Integer templateVersion;
+  private Integer taskVersion;
 
   private String workflowRef;
 
@@ -82,8 +82,8 @@ public class TaskRunEntity {
     return "TaskRunEntity [id=" + id + ", type=" + type + ", name=" + name + ", labels=" + labels
         + ", creationDate=" + creationDate + ", startTime=" + startTime + ", duration=" + duration
         + ", timeout=" + timeout + ", params=" + params + ", results=" + results + ", workspaces="
-        + workspaces + ", status=" + status + ", phase=" + phase + ", templateRef=" + templateRef
-        + ", templateVersion=" + templateVersion + ", workflowRef=" + workflowRef
+        + workspaces + ", status=" + status + ", phase=" + phase + ", taskRef=" + taskRef
+        + ", taskVersion=" + taskVersion + ", workflowRef=" + workflowRef
         + ", workflowRevisionRef=" + workflowRevisionRef + ", workflowRunRef=" + workflowRunRef
         + "]";
   }
@@ -244,28 +244,28 @@ public class TaskRunEntity {
     this.decisionValue = decisionValue;
   }
 
-  public List<TaskDependency> getDependencies() {
+  public List<WorkflowTaskDependency> getDependencies() {
     return dependencies;
   }
 
-  public void setDependencies(List<TaskDependency> dependencies) {
+  public void setDependencies(List<WorkflowTaskDependency> dependencies) {
     this.dependencies = dependencies;
   }
 
-  public String getTemplateRef() {
-    return templateRef;
+  public String getTaskRef() {
+    return taskRef;
   }
 
-  public void setTemplateRef(String templateRef) {
-    this.templateRef = templateRef;
+  public void setTaskRef(String taskRef) {
+    this.taskRef = taskRef;
   }
 
-  public Integer getTemplateVersion() {
-    return templateVersion;
+  public Integer getTaskVersion() {
+    return taskVersion;
   }
 
-  public void setTemplateVersion(Integer templateVersion) {
-    this.templateVersion = templateVersion;
+  public void setTaskVersion(Integer taskVersion) {
+    this.taskVersion = taskVersion;
   }
 
   public String getWorkflowRunRef() {

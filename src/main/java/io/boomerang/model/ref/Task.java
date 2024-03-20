@@ -1,74 +1,47 @@
 package io.boomerang.model.ref;
 
+import java.util.Date;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import org.springframework.data.annotation.Transient;
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import org.springframework.data.annotation.Id;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import io.boomerang.model.AbstractParam;
+import io.boomerang.model.enums.ref.TaskTemplateStatus;
 import io.boomerang.model.enums.ref.TaskType;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(Include.NON_NULL)
-@JsonPropertyOrder({"name", "type", "templateRef", "templateVersion", "templateUpgradesAvailable", "timeout", "retries", "dependencies" })
 public class Task {
   
+  @Id
+  private String id;
   private String name;
-  
+  private String displayName;
   private TaskType type;
-  
-  private String templateRef;
-  
-  private Integer templateVersion;
-  
-  @JsonInclude()
-  @Transient
-  private Boolean templateUpgradesAvailable = false;
-  
-  private Long timeout;
-  
-  //private long retries = -1;
-  
-  private List<TaskDependency> dependencies = new LinkedList<>();;
-  
+  private Integer version;
+  private TaskTemplateStatus status = TaskTemplateStatus.active;
+  private Date creationDate = new Date();
+  private boolean verified;
+  private String description;
   private Map<String, String> labels = new HashMap<>();
-  
   private Map<String, Object> annotations = new HashMap<>();
-  
-  //Uses RunParam as the ParamSpec comes from the TaskTemplate
-  private List<RunParam> params = new LinkedList<>();
-  
-  //This is needed as some of our Tasks allow you to define Result Definitions on the fly
-  private List<ResultSpec> results = new LinkedList<>();;
-  
-  //Optional - the default is that the workspace goes to all Tasks
-  //Not supported by all integrations
-  private List<TaskWorkspace> workspaces;
+  private ChangeLog changelog;
+  private String category;
+  private TaskSpec spec = new TaskSpec();
+  private List<AbstractParam> config;
+  private String icon;
 
-  private Map<String, Object> unknownFields = new HashMap<>();
+  public Task() {
 
-  @JsonAnyGetter
-  @JsonPropertyOrder(alphabetic = true)
-  public Map<String, Object> otherFields() {
-    return unknownFields;
   }
 
-  @JsonAnySetter
-  public void setOtherField(String name, Object value) {
-    unknownFields.put(name, value);
+  public String getId() {
+    return id;
   }
 
-  public TaskType getType() {
-    return type;
-  }
-
-  public void setType(TaskType type) {
-    this.type = type;
+  public void setId(String id) {
+    this.id = id;
   }
 
   public String getName() {
@@ -79,68 +52,60 @@ public class Task {
     this.name = name;
   }
 
-  public String getTemplateRef() {
-    return templateRef;
+  public String getDisplayName() {
+    return displayName;
   }
 
-  public void setTemplateRef(String templateRef) {
-    this.templateRef = templateRef;
+  public void setDisplayName(String displayName) {
+    this.displayName = displayName;
   }
 
-  public Integer getTemplateVersion() {
-    return templateVersion;
+  public TaskType getType() {
+    return type;
   }
 
-  public void setTemplateVersion(Integer templateVersion) {
-    this.templateVersion = templateVersion;
+  public void setType(TaskType type) {
+    this.type = type;
   }
 
-  public Boolean getTemplateUpgradesAvailable() {
-    return templateUpgradesAvailable;
+  public Integer getVersion() {
+    return version;
   }
 
-  public void setTemplateUpgradesAvailable(Boolean templateUpgradesAvailable) {
-    this.templateUpgradesAvailable = templateUpgradesAvailable;
+  public void setVersion(Integer version) {
+    this.version = version;
   }
 
-  public Long getTimeout() {
-    return timeout;
+  public TaskTemplateStatus getStatus() {
+    return status;
   }
 
-  public void setTimeout(Long timeout) {
-    this.timeout = timeout;
+  public void setStatus(TaskTemplateStatus status) {
+    this.status = status;
   }
 
-  public List<RunParam> getParams() {
-    return params;
+  public Date getCreationDate() {
+    return creationDate;
   }
 
-  public void setParams(List<RunParam> params) {
-    this.params = params;
+  public void setCreationDate(Date creationDate) {
+    this.creationDate = creationDate;
   }
 
-  public Map<String, Object> getAnnotations() {
-    return annotations;
+  public boolean isVerified() {
+    return verified;
   }
 
-  public void setAnnotations(Map<String, Object> annotations) {
-    this.annotations = annotations;
+  public void setVerified(boolean verified) {
+    this.verified = verified;
   }
 
-  public List<TaskDependency> getDependencies() {
-    return dependencies;
+  public String getDescription() {
+    return description;
   }
 
-  public void setDependencies(List<TaskDependency> dependencies) {
-    this.dependencies = dependencies;
-  }
-
-  public List<ResultSpec> getResults() {
-    return results;
-  }
-
-  public void setResults(List<ResultSpec> results) {
-    this.results = results;
+  public void setDescription(String description) {
+    this.description = description;
   }
 
   public Map<String, String> getLabels() {
@@ -151,11 +116,51 @@ public class Task {
     this.labels = labels;
   }
 
-  public List<TaskWorkspace> getWorkspaces() {
-    return workspaces;
+  public Map<String, Object> getAnnotations() {
+    return annotations;
   }
 
-  public void setWorkspaces(List<TaskWorkspace> workspaces) {
-    this.workspaces = workspaces;
+  public void setAnnotations(Map<String, Object> annotations) {
+    this.annotations = annotations;
+  }
+
+  public ChangeLog getChangelog() {
+    return changelog;
+  }
+
+  public void setChangelog(ChangeLog changelog) {
+    this.changelog = changelog;
+  }
+
+  public String getCategory() {
+    return category;
+  }
+
+  public void setCategory(String category) {
+    this.category = category;
+  }
+
+  public TaskSpec getSpec() {
+    return spec;
+  }
+
+  public void setSpec(TaskSpec spec) {
+    this.spec = spec;
+  }
+
+  public List<AbstractParam> getConfig() {
+    return config;
+  }
+
+  public void setConfig(List<AbstractParam> config) {
+    this.config = config;
+  }
+
+  public String getIcon() {
+    return icon;
+  }
+
+  public void setIcon(String icon) {
+    this.icon = icon;
   }
 }

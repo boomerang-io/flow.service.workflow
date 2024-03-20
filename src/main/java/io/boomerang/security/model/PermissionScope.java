@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public enum PermissionScope {
-  SYSTEM("system"), WORKFLOW("workflow"), WORKFLOWRUN("workflowrun"), WORKFLOWTEMPLATE("workflowtemplate"), TASKRUN("taskrun"), TASKTEMPLATE("tasktemplate)"), 
+  SYSTEM("system"), WORKFLOW("workflow"), WORKFLOWRUN("workflowrun"), WORKFLOWTEMPLATE("workflowtemplate"), TASKRUN("taskrun"), TASK("task"), 
   ACTION("action"), USER("user"), TEAM("team"), TOKEN("token"), PARAMETER("parameter"), SCHEDULE("schedule"), INSIGHTS("insights"), INTEGRATION("integration"), ANY("**");
 
   private String label;

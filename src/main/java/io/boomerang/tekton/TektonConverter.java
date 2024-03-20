@@ -9,7 +9,7 @@ import java.util.Optional;
 import io.boomerang.model.AbstractParam;
 import io.boomerang.model.ref.ChangeLog;
 import io.boomerang.model.ref.ParamSpec;
-import io.boomerang.model.ref.TaskTemplate;
+import io.boomerang.model.ref.Task;
 
 public class TektonConverter {
 
@@ -17,7 +17,7 @@ public class TektonConverter {
 
   }
 
-  public static TektonTask convertTaskTemplateToTektonTask(TaskTemplate taskTemplate) {
+  public static TektonTask convertTaskTemplateToTektonTask(Task taskTemplate) {
     TektonTask tektonTask = new TektonTask();
     tektonTask.setApiVersion("tekton.dev/v1beta1");
     tektonTask.setKind("Task");
@@ -85,8 +85,8 @@ public class TektonConverter {
    * 
    * TODO: figure out how Type is set
    */
-  public static TaskTemplate convertTektonTaskToTaskTemplate(TektonTask task) {
-    TaskTemplate taskTemplate = new TaskTemplate();
+  public static Task convertTektonTaskToTaskTemplate(TektonTask task) {
+    Task taskTemplate = new Task();
 
     Metadata metadata = task.getMetadata();
     taskTemplate.setName(metadata.getName());

@@ -14,9 +14,9 @@ public class CanvasNodeData {
   String name;
   List<RunParam> params;
   List<ResultSpec> results;
-  String templateRef;
-  Integer templateVersion;
-  boolean templateUpgradesAvailable;
+  String taskRef;
+  Integer taskVersion;
+  boolean upgradesAvailable;
   
   @JsonIgnore
   private Map<String, Object> additionalProperties = new HashMap<>();
@@ -45,28 +45,28 @@ public class CanvasNodeData {
     this.results = results;
   }
 
-  public String getTemplateRef() {
-    return templateRef;
+  public String getTaskRef() {
+    return taskRef;
   }
 
-  public void setTemplateRef(String templateRef) {
-    this.templateRef = templateRef;
+  public void setTaskRef(String templateRef) {
+    this.taskRef = templateRef;
   }
   
-  public Integer getTemplateVersion() {
-    return templateVersion;
+  public Integer getTaskVersion() {
+    return taskVersion;
   }
 
-  public void setTemplateVersion(Integer templateVersion) {
-    this.templateVersion = templateVersion;
+  public void setTaskVersion(Integer taskVersion) {
+    this.taskVersion = taskVersion;
   }
 
-  public boolean getTemplateUpgradesAvailable() {
-    return templateUpgradesAvailable;
+  public boolean getUpgradesAvailable() {
+    return upgradesAvailable;
   }
 
-  public void setTemplateUpgradesAvailable(boolean templateUpgradesAvailable) {
-    this.templateUpgradesAvailable = templateUpgradesAvailable;
+  public void setUpgradesAvailable(boolean upgradesAvailable) {
+    this.upgradesAvailable = upgradesAvailable;
   }
 
   @JsonAnyGetter

@@ -8,34 +8,34 @@ import org.springframework.data.mongodb.repository.Query;
 import io.boomerang.data.entity.RelationshipNodeEntity;
 import io.boomerang.data.entity.RelationshipNodeEntityAggregate;
 import io.boomerang.model.enums.RelationshipLabel;
-import io.boomerang.model.enums.RelationshipNodeType;
+import io.boomerang.model.enums.RelationshipType;
 
 public interface RelationshipNodeRepository extends MongoRepository<RelationshipNodeEntity, String> {
   
   @Query("{'type': ?0, '$or': [{'slug': ?1},{'ref': ?1}]}")
-  Optional<RelationshipNodeEntity> findFirstByTypeAndRefOrSlug(RelationshipNodeType type, String ref);
+  Optional<RelationshipNodeEntity> findFirstByTypeAndRefOrSlug(RelationshipType type, String ref);
   
-  List<RelationshipNodeEntity> findAllByTypeAndRefIn(RelationshipNodeType type, List<String> refs);
+  List<RelationshipNodeEntity> findAllByTypeAndRefIn(RelationshipType type, List<String> refs);
   
-  Optional<RelationshipNodeEntity> findFirstByTypeAndSlug(RelationshipNodeType type, String slug);
+  Optional<RelationshipNodeEntity> findFirstByTypeAndSlug(RelationshipType type, String slug);
   
   @Aggregation(pipeline={"{'$match':{'type': ?0, 'slug': ?1}}","{ '$set' : { 'slug' : ?2 } }"})
-  RelationshipNodeEntity findAndSetSlugByTypeAndSlug(RelationshipNodeType type, String slug, 
+  RelationshipNodeEntity findAndSetSlugByTypeAndSlug(RelationshipType type, String slug, 
       String newSlug);  
   
-  void deleteByTypeAndRefOrSlug(RelationshipNodeType type,
+  void deleteByTypeAndRefOrSlug(RelationshipType type,
       String slug); 
   
-  boolean existsByTypeAndSlug(RelationshipNodeType type,
+  boolean existsByTypeAndSlug(RelationshipType type,
       String slug);
   
   @Aggregation(pipeline={"{'$match':{'type': ?0, '$or': [{'slug': ?1},{'ref': ?1}]}}",
       "{ '$graphLookup' : { 'from' :  ?2, 'startWith': '$_id', 'connectFromField':'id', 'connectToField': 'to', 'as': 'paths', restrictSearchWithMatch: {'label': ?3 } } }",
       "{ '$graphLookup' : { 'from' :  ?4, 'startWith': '$paths.from', 'connectFromField':'paths.from', 'connectToField': '_id', 'as': 'children' } }"})
-  RelationshipNodeEntityAggregate findRelationshipsByGraphTo(RelationshipNodeType type, String ref, String edgeCollection, RelationshipLabel label, String nodeCollection);
+  RelationshipNodeEntityAggregate findRelationshipsByGraphTo(RelationshipType type, String ref, String edgeCollection, RelationshipLabel label, String nodeCollection);
   
   @Aggregation(pipeline={"{'$match':{'type': ?0, '$or': [{'slug': ?1},{'ref': ?1}]}}",
       "{ '$graphLookup' : { 'from' :  ?2, 'startWith': '$_id', 'connectFromField':'id', 'connectToField': 'from', 'as': 'paths', restrictSearchWithMatch: {'label': ?3 } } }",
       "{ '$graphLookup' : { 'from' :  ?4, 'startWith': '$paths.to', 'connectFromField':'paths.to', 'connectToField': '_id', 'as': 'children' } }"})
-  RelationshipNodeEntityAggregate findRelationshipsByGraphFrom(RelationshipNodeType type, String ref, String edgeCollection, RelationshipLabel label, String nodeCollection);
+  RelationshipNodeEntityAggregate findRelationshipsByGraphFrom(RelationshipType type, String ref, String edgeCollection, RelationshipLabel label, String nodeCollection);
 }

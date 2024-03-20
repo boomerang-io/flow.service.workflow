@@ -60,8 +60,8 @@ public class AuditInterceptor {
    * 
    * TODO: adjust if Workflow moves to slug
    */
-  @AfterReturning(pointcut="execution(* io.boomerang.service.WorkflowService.create(..)) && args(request, team)", returning="entity")
-  public void createWorkflow(JoinPoint joinPoint, Workflow request, String team, Workflow entity) {
+  @AfterReturning(pointcut="execution(* io.boomerang.service.WorkflowService.create(..)) && args(team, request)", returning="entity")
+  public void createWorkflow(JoinPoint joinPoint, String team, Workflow request, Workflow entity) {
     createLog(AuditScope.WORKFLOW, entity.getId(), Optional.empty(), Optional.of(getTeamAuditIdFromName(team)), Optional.of(Map.of("name", entity.getName())));
   }
   
@@ -70,32 +70,32 @@ public class AuditInterceptor {
    * 
    * Ref: https://docs.spring.io/spring-framework/reference/core/aop/proxying.html#aop-understanding-aop-proxies
    */
-  @AfterReturning(pointcut="execution(* io.boomerang.service.WorkflowService.duplicate(..)) && args(id)", returning="entity")
-  private void duplicateWorkflow(JoinPoint joinPoint, String id, Workflow entity) {
+  @AfterReturning(pointcut="execution(* io.boomerang.service.WorkflowService.duplicate(..)) && args(team, id)", returning="entity")
+  private void duplicateWorkflow(JoinPoint joinPoint, String team, String id, Workflow entity) {
     Map<String, String> data = new HashMap<>();
     data.put("duplicateOf", id);
     data.put("name", entity.getName());
-    createLog(AuditScope.WORKFLOW, entity.getId(), Optional.empty(), Optional.of(getParentAuditIdFromWorkflow(id)), Optional.of(data));
+    createLog(AuditScope.WORKFLOW, entity.getId(), Optional.empty(), Optional.of(getTeamAuditIdFromName(team)), Optional.of(data));
   }
   
-  @AfterReturning(pointcut="execution(* io.boomerang.service.WorkflowService.apply(..)) && args(request, replace, team)", returning="entity")
-  private void updateWorkflow(JoinPoint thisJoinPoint, Workflow request, boolean replace, String team, Workflow entity) {
+  @AfterReturning(pointcut="execution(* io.boomerang.service.WorkflowService.apply(..)) && args(team, request, replace)", returning="entity")
+  private void updateWorkflow(JoinPoint thisJoinPoint, String team, Workflow request, boolean replace, Workflow entity) {
     updateLog(AuditType.updated, entity.getId(), Optional.empty(), Optional.empty(), Optional.of(Map.of("name", entity.getName())));
   }
   
-  @AfterReturning(pointcut="execution(* io.boomerang.service.WorkflowService.composeApply(..)) && args(request, replace, team)", returning="entity")
-  private void updateWorkflow(JoinPoint thisJoinPoint, WorkflowCanvas request, boolean replace, Optional<String> team, WorkflowCanvas entity) {
+  @AfterReturning(pointcut="execution(* io.boomerang.service.WorkflowService.composeApply(..)) && args(team, request, replace)", returning="entity")
+  private void updateWorkflow(JoinPoint thisJoinPoint, String team, WorkflowCanvas request, boolean replace, WorkflowCanvas entity) {
     updateLog(AuditType.updated, entity.getId(), Optional.empty(), Optional.empty(), Optional.of(Map.of("name", entity.getName())));
   }
   
-  @AfterReturning(pointcut="execution(* io.boomerang.service.WorkflowService.submit(..)) && args(id, team)", returning="entity")
-  private void updateWorkflow(JoinPoint thisJoinPoint, String id, String team, WorkflowRun entity) {
+  @AfterReturning(pointcut="execution(* io.boomerang.service.WorkflowService.submit(..)) && args(team, id)", returning="entity")
+  private void updateWorkflow(JoinPoint thisJoinPoint, String team, String id, WorkflowRun entity) {
     updateLog(AuditType.submitted, id, Optional.empty(), Optional.of(getTeamAuditIdFromName(team)), Optional.empty());
   }
   
   @AfterReturning("execution(* io.boomerang.service.WorkflowService.delete(..))"
-      + " && args(id)")
-  private void deleteWorkflow(JoinPoint thisJoinPoint, String id) {
+      + " && args(team, id)")
+  private void deleteWorkflow(JoinPoint thisJoinPoint, String team, String id) {
     LOGGER.debug("AuditInterceptor - {}", thisJoinPoint.getSignature().getDeclaringType());
     updateLog(AuditType.deleted, id, Optional.empty(), Optional.empty(), Optional.empty());
   }
@@ -196,17 +196,10 @@ public class AuditInterceptor {
       teamNameToAuditId.put(name, optAuditEntity.get().getId());
       return optAuditEntity.get().getId();
     }
-    LOGGER.error("Unable to find Audit record for team: {}", name);
-    return null;
-  }
-
-  private String getParentAuditIdFromWorkflow(String name) {
-    Optional<AuditEntity> optAuditEntity = auditRepository.findFirstByWorkflowDuplicateOf(name);
-    if (optAuditEntity.isPresent()) {
-      return optAuditEntity.get().getParent();
-    }
-    LOGGER.error("Unable to find parent Audit record for: {}", name);
-    return null;
+//    AuditEntity log = createLog(AuditScope.TEAM, "", Optional.of(name), Optional.empty(), Optional.of(Map.of("name", name)));
+//    teamNameToAuditId.put(name, log.getId());
+//    return log.getId();
+    return "";
   }
   
   public WorkflowRunInsight insights(Optional<Long> from, Optional<Long> to, String queryTeam) {

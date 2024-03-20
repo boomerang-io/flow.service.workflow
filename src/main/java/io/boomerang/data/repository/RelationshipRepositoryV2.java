@@ -12,38 +12,40 @@ import io.boomerang.data.entity.RelationshipConnectionEntity;
 import io.boomerang.data.entity.RelationshipEntityV2;
 import io.boomerang.data.entity.RelationshipEntityV2Graph;
 import io.boomerang.model.enums.RelationshipLabel;
-import io.boomerang.model.enums.RelationshipNodeType;
+import io.boomerang.model.enums.RelationshipType;
 
 public interface RelationshipRepositoryV2 extends MongoRepository<RelationshipEntityV2, String> {
 
-  Integer countByTypeAndRefInAndConnectionsTo(RelationshipNodeType type, List<String> ref, String to);
+  Integer countByTypeAndRefInAndConnectionsTo(RelationshipType type, List<String> ref, String to);
   
   @Query("{'type': ?0, '$or': [{'slug': ?1},{'ref': ?1}]}")
-  Optional<RelationshipEntityV2> findFirstByTypeAndRefOrSlug(RelationshipNodeType type, String ref);
+  Optional<RelationshipEntityV2> findFirstByTypeAndRefOrSlug(RelationshipType type, String ref);
   
-  List<RelationshipEntityV2> findAllByTypeAndRefInAndConnectionsTo(RelationshipNodeType type, List<String> ref, String to);
+  List<RelationshipEntityV2> findAllByTypeAndRefInAndConnectionsTo(RelationshipType type, List<String> ref, String to);
   
   List<RelationshipEntityV2> findAllByConnectionsLabelAndConnectionsTo(RelationshipLabel label, String to);
   
   @Aggregation(pipeline={"{'$match':{'type': ?0, 'slug': ?1}}","{ '$set' : { 'slug' : ?2 } }"})
-  RelationshipEntityV2 findAndSetSlugByTypeAndSlug(RelationshipNodeType type, String slug, 
+  RelationshipEntityV2 findAndSetSlugByTypeAndSlug(RelationshipType type, String slug, 
       String newSlug);  
   
-  void deleteByTypeAndRefOrSlug(RelationshipNodeType type,
+  @Query("{'type': ?0, '$or': [{'slug': ?1},{'ref': ?1}]}")
+  void deleteByTypeAndRefOrSlug(RelationshipType type,
       String slug);
   
-  boolean existsByTypeAndSlug(RelationshipNodeType type,
-      String slug);
+  @Query(value = "{ 'type': ?0, $or: [ { 'ref': ?1 }, { 'slug': ?1 } ] }", exists = true)
+  boolean existsByTypeAndRefOrSlug(RelationshipType type,
+      String ref);
 
-  boolean existsByTypeAndSlugAndConnectionsTo(RelationshipNodeType type, String slug, ObjectId to);
+  boolean existsByTypeAndSlugAndConnectionsTo(RelationshipType type, String slug, ObjectId to);
   
   @Aggregation(pipeline={"{'$match':{'type': ?0, '$or': [{'slug': ?1},{'ref': ?1}]}}",
       "{ '$graphLookup' : { 'from' :  ?2, 'startWith': '$_id', 'connectFromField':'id', 'connectToField': 'connections.to', 'as': 'children', restrictSearchWithMatch: {'connections.label': ?3 } } }"})
-  RelationshipEntityV2Graph graphRelationshipsByLabelTo(RelationshipNodeType type, String ref, String collection, RelationshipLabel label);
+  RelationshipEntityV2Graph graphRelationshipsByLabelTo(RelationshipType type, String ref, String collection, RelationshipLabel label);
   
   @Aggregation(pipeline={"{'$match':{'type': ?0, '$or': [{'slug': ?1},{'ref': ?1}]}}",
       "{ '$graphLookup' : { 'from' :  ?2, 'startWith': '$_id', 'connectFromField':'id', 'connectToField': 'connections.to', 'as': 'children', restrictSearchWithMatch: {'type': ?3 } } }"})
-  RelationshipEntityV2Graph graphRelationshipsByTypeTo(RelationshipNodeType type, String ref, String collection, RelationshipNodeType childType);
+  RelationshipEntityV2Graph graphRelationshipsByTypeTo(RelationshipType type, String ref, String collection, RelationshipType childType);
   
   @Aggregation(pipeline={"{'$match':{'type': 'USER', '$or': [{'slug': ?0},{'ref': ?0}]}}",
       "{ '$graphLookup' : { 'from' :  ?1, 'startWith': '$connections.to', 'connectFromField':'connections.to', 'connectToField': '_id', 'as': 'children' } }",
@@ -52,9 +54,9 @@ public interface RelationshipRepositoryV2 extends MongoRepository<RelationshipEn
   
   @Query("{'type': ?0, '$or': [{'slug': ?1},{'ref': ?1}]}")
   @Update("{ '$push' : { 'connections' : ?2 } }")
-  long pushConnectionByTypeAndRefOrSlug(RelationshipNodeType type, String ref, RelationshipConnectionEntity connection);
+  long pushConnectionByTypeAndRefOrSlug(RelationshipType type, String ref, RelationshipConnectionEntity connection);
   
   @Query("{'type': ?0, '$or': [{'slug': ?1},{'ref': ?1}], 'connections.to': ?2}")
   @Update("{ '$set' : { 'connections.$.data' : ?3 } }")
-  long updateConnectionByTypeAndRefOrSlug(RelationshipNodeType type, String ref, ObjectId to, Map<String, String> data);
+  long updateConnectionByTypeAndRefOrSlug(RelationshipType type, String ref, ObjectId to, Map<String, String> data);
 }

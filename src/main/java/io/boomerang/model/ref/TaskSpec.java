@@ -7,7 +7,7 @@ import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-public class TaskTemplateSpec {
+public class TaskSpec {
 
   private List<String> arguments;
   private List<String> command;

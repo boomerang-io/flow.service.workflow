@@ -15,36 +15,33 @@ import io.boomerang.model.ref.WorkflowSubmitRequest;
 
 public interface WorkflowService {
 
-  Workflow get(String workflowId, Optional<Integer> version, boolean withTasks);
+  Workflow get(String team, String workflowId, Optional<Integer> version, boolean withTasks);
 
-  WorkflowResponsePage query(Optional<Integer> queryLimit, Optional<Integer> queryPage,
+  WorkflowResponsePage query(String queryTeam, Optional<Integer> queryLimit, Optional<Integer> queryPage,
       Optional<Direction> querySort, Optional<List<String>> queryLabels,
-      Optional<List<String>> queryStatus, Optional<List<String>> queryTeams,
+      Optional<List<String>> queryStatus, Optional<List<String>> queryWorkflows);
+
+  Workflow create(String team, Workflow request);
+
+  Workflow apply(String team, Workflow workflow, boolean replace);
+
+  void delete(String team, String workflowId);
+
+  ResponseEntity<InputStreamResource> export(String team, String workflowId);
+
+  Workflow duplicate(String team, String workflowId);
+
+  WorkflowCanvas composeGet(String team, String workflowId, Optional<Integer> version);
+
+  WorkflowCanvas composeApply(String team, WorkflowCanvas canvas, boolean replace);
+
+  List<String> getAvailableParameters(String team, String workflowId);
+
+  ResponseEntity<List<ChangeLogVersion>> changelog(String team, String workflowId);
+
+  WorkflowCount count(String queryTeam, Optional<Long> from, Optional<Long> to, Optional<List<String>> queryLabels,
       Optional<List<String>> queryWorkflows);
 
-  Workflow create(Workflow request, String team);
-
-  Workflow apply(Workflow workflow, boolean replace, Optional<String> team);
-
-  void delete(String workflowId);
-
-  ResponseEntity<InputStreamResource> export(String workflowId);
-
-  Workflow duplicate(String workflowId);
-
-  WorkflowCanvas composeGet(String workflowId, Optional<Integer> version);
-
-  WorkflowCanvas composeApply(WorkflowCanvas canvas, boolean replace,
-      Optional<String> team);
-
-  List<String> getAvailableParameters(String workflowId);
-
-  ResponseEntity<List<ChangeLogVersion>> changelog(String workflowId);
-
-  WorkflowCount count(Optional<Long> from, Optional<Long> to, Optional<List<String>> queryLabels,
-      Optional<List<String>> queryTeams, Optional<List<String>> queryWorkflows);
-
-  WorkflowRun submit(String workflowId, WorkflowSubmitRequest request,
+  WorkflowRun submit(String team, String workflowId, WorkflowSubmitRequest request,
       boolean start);
-  
 }

@@ -116,7 +116,7 @@ public class TriggersServiceImpl implements TriggerService {
           // As the default handler will pick up the queued Workflow and start the Workflow when
           // ready.
           // However if using the non-default Handler then this may be needed to be set to true.
-          workflowService.internalSubmitForTeam(request, autoStart, teamRef);
+          workflowService.internalSubmitForTeam(teamRef, request, autoStart);
         }
         return ResponseEntity.ok().build();
       }

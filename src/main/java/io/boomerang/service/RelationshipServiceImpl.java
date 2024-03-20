@@ -11,6 +11,7 @@ import org.apache.logging.log4j.Logger;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
@@ -29,7 +30,7 @@ import io.boomerang.data.repository.RelationshipRepositoryV2;
 import io.boomerang.error.BoomerangError;
 import io.boomerang.error.BoomerangException;
 import io.boomerang.model.enums.RelationshipLabel;
-import io.boomerang.model.enums.RelationshipNodeType;
+import io.boomerang.model.enums.RelationshipType;
 import io.boomerang.security.model.AuthType;
 import io.boomerang.security.model.RoleEnum;
 import io.boomerang.security.service.IdentityService;
@@ -109,7 +110,7 @@ public class RelationshipServiceImpl implements RelationshipService {
    * @return RelationshipEntity
    */
   @Override
-  public RelationshipEntity addRelationshipRef(RelationshipNodeType fromType, String fromRef, RelationshipLabel relationship, RelationshipNodeType toType, Optional<String> toRef, Optional<Map<String, Object>> data) {   
+  public RelationshipEntity addRelationshipRef(RelationshipType fromType, String fromRef, RelationshipLabel relationship, RelationshipType toType, Optional<String> toRef, Optional<Map<String, Object>> data) {   
     RelationshipEntity relEntity = new RelationshipEntity();
     relEntity.setFrom(fromType);
     relEntity.setFromRef(fromRef);
@@ -131,7 +132,7 @@ public class RelationshipServiceImpl implements RelationshipService {
    * @return RelationshipEntity
    */
   @Override
-  public RelationshipEntity patchRelationshipData(RelationshipNodeType fromType, String fromRef, RelationshipLabel relationship, Map<String, Object> data) {
+  public RelationshipEntity patchRelationshipData(RelationshipType fromType, String fromRef, RelationshipLabel relationship, Map<String, Object> data) {
     Optional<RelationshipEntity> entity = getRelationship(fromType, fromRef, relationship);
     if (entity.isPresent()) {
         entity.get().getData().putAll(data);
@@ -148,7 +149,7 @@ public class RelationshipServiceImpl implements RelationshipService {
    * @return RelationshipEntity
    */
   @Override
-  public Optional<RelationshipEntity> getRelationship(RelationshipNodeType fromType, String fromRef, RelationshipLabel relationship) {
+  public Optional<RelationshipEntity> getRelationship(RelationshipType fromType, String fromRef, RelationshipLabel relationship) {
     return relationshipRepository.findByFromAndFromRefAndType(fromType, fromRef, relationship);
   }
   
@@ -159,7 +160,7 @@ public class RelationshipServiceImpl implements RelationshipService {
    * @return RelationshipEntity
    */
   @Override
-  public Optional<String> getRelationshipRef(RelationshipNodeType fromType, String fromRef, RelationshipLabel relationship) {
+  public Optional<String> getRelationshipRef(RelationshipType fromType, String fromRef, RelationshipLabel relationship) {
     Optional<RelationshipEntity> rel = getRelationship(fromType, fromRef, relationship);
     if (rel.isPresent()) {
       return Optional.of(rel.get().getToRef());
@@ -179,8 +180,8 @@ public class RelationshipServiceImpl implements RelationshipService {
    * Removes all relationships
    */
   @Override
-  public void removeRelationships(RelationshipNodeType fromType, List<String> fromRefs,
-      RelationshipNodeType toType, List<String> toRefs) {
+  public void removeRelationships(RelationshipType fromType, List<String> fromRefs,
+      RelationshipType toType, List<String> toRefs) {
     List<RelationshipEntity> relEntities = relationshipRepository.findByFromAndFromRefInAndToAndToRefIn(fromType, fromRefs, toType, toRefs);
     if (!relEntities.isEmpty()) {
       relationshipRepository.deleteAll(relEntities);
@@ -191,8 +192,8 @@ public class RelationshipServiceImpl implements RelationshipService {
    * Removes all relationships
    */
   @Override
-  public void removeRelationships(RelationshipNodeType fromType, List<String> fromRefs,
-      RelationshipNodeType toType) {
+  public void removeRelationships(RelationshipType fromType, List<String> fromRefs,
+      RelationshipType toType) {
     List<RelationshipEntity> relEntities = relationshipRepository.findByFromAndFromRefInAndTo(fromType, fromRefs, toType);
     if (!relEntities.isEmpty()) {
       relationshipRepository.deleteAll(relEntities);
@@ -203,7 +204,7 @@ public class RelationshipServiceImpl implements RelationshipService {
    * Removes all Team Relationships
    */
   @Override
-  public void removeRelationships(RelationshipNodeType toType, String toRef) {
+  public void removeRelationships(RelationshipType toType, String toRef) {
     relationshipRepository.deleteByToAndToRef(toType, toRef);
     relationshipRepository.deleteByFromAndFromRef(toType, toRef);
   }
@@ -214,7 +215,7 @@ public class RelationshipServiceImpl implements RelationshipService {
   @Override
   public void removeUserTeamRelationship(String toRef) {
     String userId = identityService.getCurrentPrincipal();
-    List<RelationshipEntity> relEntities = relationshipRepository.findByFromAndFromRefInAndToAndToRefIn(RelationshipNodeType.USER, List.of(userId), RelationshipNodeType.TEAM, List.of(toRef));
+    List<RelationshipEntity> relEntities = relationshipRepository.findByFromAndFromRefInAndToAndToRefIn(RelationshipType.USER, List.of(userId), RelationshipType.TEAM, List.of(toRef));
     if (!relEntities.isEmpty()) {
       relationshipRepository.deleteAll(relEntities);
     }
@@ -252,7 +253,7 @@ public class RelationshipServiceImpl implements RelationshipService {
    * @return list of filtered FromRefs
    */
   @Override
-  public List<String> getFilteredFromRefs(Optional<RelationshipNodeType> from, Optional<List<String>> fromRefs, Optional<RelationshipLabel> type, Optional<RelationshipNodeType> to, 
+  public List<String> getFilteredFromRefs(Optional<RelationshipType> from, Optional<List<String>> fromRefs, Optional<RelationshipLabel> type, Optional<RelationshipType> to, 
       Optional<List<String>> toRefs) {
     return getFilteredRels(from, fromRefs, type, to, toRefs, true).stream().map(RelationshipEntity::getFromRef).collect(Collectors.toList());
   }
@@ -275,7 +276,7 @@ public class RelationshipServiceImpl implements RelationshipService {
    * @return list of filtered FromRefs
    */
   @Override
-  public List<String> getFilteredToRefs(Optional<RelationshipNodeType> from, Optional<List<String>> fromRefs, Optional<RelationshipLabel> type, Optional<RelationshipNodeType> to, 
+  public List<String> getFilteredToRefs(Optional<RelationshipType> from, Optional<List<String>> fromRefs, Optional<RelationshipLabel> type, Optional<RelationshipType> to, 
       Optional<List<String>> toRefs) {
     return getFilteredRels(from, fromRefs, type, to, toRefs, true).stream().map(RelationshipEntity::getToRef).collect(Collectors.toList());
   }
@@ -298,14 +299,14 @@ public class RelationshipServiceImpl implements RelationshipService {
    * @return filtered RelationshipEntities
    */
   @Override
-  public List<RelationshipEntity> getFilteredRels(Optional<RelationshipNodeType> from, Optional<List<String>> fromRefs, Optional<RelationshipLabel> label, Optional<RelationshipNodeType> to, 
+  public List<RelationshipEntity> getFilteredRels(Optional<RelationshipType> from, Optional<List<String>> fromRefs, Optional<RelationshipLabel> label, Optional<RelationshipType> to, 
       Optional<List<String>> toRefs, boolean elevate) {
     
     // Defaults if not provided
     if (label.isEmpty()) {
       label = Optional.of(RelationshipLabel.BELONGSTO);
     } else if (RelationshipLabel.MEMBEROF.equals(label.get())) {
-      from = Optional.of(RelationshipNodeType.USER);
+      from = Optional.of(RelationshipType.USER);
     }
 
     AuthType accessScope = identityService.getCurrentScope();
@@ -322,9 +323,9 @@ public class RelationshipServiceImpl implements RelationshipService {
       case session:
       case user:
         String userId = identityService.getCurrentPrincipal();
-        if (from.isPresent() && RelationshipNodeType.USER.equals(from.get())) {
+        if (from.isPresent() && RelationshipType.USER.equals(from.get())) {
           fromRefs = Optional.of(List.of(userId));
-        } else if (to.isPresent() && RelationshipNodeType.TEAM.equals(to.get())) {
+        } else if (to.isPresent() && RelationshipType.TEAM.equals(to.get())) {
           List<String> filteredTeams = getTeamsRefsByUsers(List.of(userId));
          if (toRefs.isPresent()) {
            // If toRefs are provided (i.e. TeamIds) then filter to ones provided that the user has access to
@@ -339,11 +340,11 @@ public class RelationshipServiceImpl implements RelationshipService {
         // Add refs based on Workflow
         // Will either set toRef to the WorkflowID or make sure its in the list of provided Refs
         String workflowId = identityService.getCurrentPrincipal();
-        if (to.isPresent() && RelationshipNodeType.WORKFLOW.equals(to.get())) {
+        if (to.isPresent() && RelationshipType.WORKFLOW.equals(to.get())) {
           if (!toRefs.isPresent() || (toRefs.isPresent() && toRefs.get().contains(workflowId))) {
             toRefs = Optional.of(List.of(workflowId));
           }
-        } else if (from.isPresent() && RelationshipNodeType.WORKFLOW.equals(from.get())) {
+        } else if (from.isPresent() && RelationshipType.WORKFLOW.equals(from.get())) {
           if (!fromRefs.isPresent() || (fromRefs.isPresent() && fromRefs.get().contains(workflowId))) {
             fromRefs = Optional.of(List.of(workflowId));
           }
@@ -352,7 +353,7 @@ public class RelationshipServiceImpl implements RelationshipService {
       case team:
         // Add refs based on Tokens Team
         String teamId = identityService.getCurrentPrincipal();
-        if (to.isPresent() && RelationshipNodeType.TEAM.equals(to.get())) {
+        if (to.isPresent() && RelationshipType.TEAM.equals(to.get())) {
           if (!toRefs.isPresent() || (toRefs.isPresent() && toRefs.get().contains(teamId))) {
             toRefs = Optional.of(List.of(teamId)); 
           }
@@ -439,7 +440,7 @@ public class RelationshipServiceImpl implements RelationshipService {
 
   private List<String> getTeamsRefsByUsers(final List<String> userId) {
     List<RelationshipEntity> relationships = 
-        this.relationshipRepository.findByFromAndFromRefInAndTypeAndTo(RelationshipNodeType.USER, userId, RelationshipLabel.MEMBEROF, RelationshipNodeType.TEAM);
+        this.relationshipRepository.findByFromAndFromRefInAndTypeAndTo(RelationshipType.USER, userId, RelationshipLabel.MEMBEROF, RelationshipType.TEAM);
     return relationships.stream().map(RelationshipEntity::getToRef).collect(Collectors.toList());
   }
   
@@ -657,23 +658,31 @@ public class RelationshipServiceImpl implements RelationshipService {
   /*
    * Helper method. Checks for relationship to Team by Slug or Ref
    */
-  public boolean hasTeamRelationship(Optional<RelationshipNodeType> fromType, Optional<String> fromRef, RelationshipLabel label, String toRef, boolean elevate) {    
-      return hasRelationships(fromType, fromRef.isPresent() ? Optional.of(List.of(fromRef.get())) : Optional.empty(), label, RelationshipNodeType.TEAM, toRef, elevate);
+  public boolean hasTeamRelationship(Optional<RelationshipType> fromType, Optional<String> fromRef, RelationshipLabel label, String toRef, boolean elevate) {    
+      return hasRelationships(fromType, fromRef.isPresent() ? Optional.of(List.of(fromRef.get())) : Optional.empty(), label, RelationshipType.TEAM, toRef, elevate);
   }
   
-  public boolean hasTeamRelationships(Optional<RelationshipNodeType> fromType, Optional<List<String>> fromRefs, RelationshipLabel label, String toRef, boolean elevate) {    
-    return hasRelationships(fromType, fromRefs, label, RelationshipNodeType.TEAM, toRef, elevate);
+  public boolean hasTeamRelationships(Optional<RelationshipType> fromType, Optional<List<String>> fromRefs, RelationshipLabel label, String toRef, boolean elevate) {    
+    return hasRelationships(fromType, fromRefs, label, RelationshipType.TEAM, toRef, elevate);
   }
   
-  public boolean hasGlobalRelationship(Optional<RelationshipNodeType> fromType, Optional<String> fromRef, RelationshipLabel label, boolean elevate) {    
-    return hasRelationships(fromType, fromRef.isPresent() ? Optional.of(List.of(fromRef.get())) : Optional.empty(), label, RelationshipNodeType.GLOBAL, null, elevate);
+  public boolean hasRootRelationship(RelationshipType type, String ref) {
+    List<String> rootRefs = getRootRefs(type, Optional.of(List.of(ref)));
+    if (rootRefs.size() > 0) {
+      return true;
+    }
+    return false;
   }
   
-  public boolean hasGlobalRelationships(Optional<RelationshipNodeType> fromType, Optional<List<String>> fromRefs, RelationshipLabel label, boolean elevate) {    
-    return hasRelationships(fromType, fromRefs, label, RelationshipNodeType.GLOBAL, null, elevate);
+  public boolean hasRootRelationships(RelationshipType type, List<String> refs) {   
+    List<String> rootRefs = getRootRefs(type, Optional.of(refs));
+    if (rootRefs.size() > 0) {
+      return true;
+    }
+    return false;
   }
   
-  private boolean hasRelationships(Optional<RelationshipNodeType> fromType, Optional<List<String>> fromRefs, RelationshipLabel label, RelationshipNodeType toType, String toRef, boolean elevate) {
+  private boolean hasRelationships(Optional<RelationshipType> fromType, Optional<List<String>> fromRefs, RelationshipLabel label, RelationshipType toType, String toRef, boolean elevate) {
     List<String> refs = filter(fromType, fromRefs, label, toType, toRef, elevate);
     if (refs.size() > 0) {
       return true;
@@ -681,27 +690,29 @@ public class RelationshipServiceImpl implements RelationshipService {
     return false;
   }
   
-  public List<String> getFilteredRefs(Optional<RelationshipNodeType> fromType, Optional<List<String>> fromRefs, RelationshipLabel label, RelationshipNodeType toType, String toRef, boolean elevate) {
+  public List<String> getFilteredRefs(Optional<RelationshipType> fromType, Optional<List<String>> fromRefs, RelationshipLabel label, RelationshipType toType, String toRef, boolean elevate) {
     return filter(fromType, fromRefs, label, toType, toRef, elevate);
   }
   
-  /*
-   * Helper method. Should only be used after checking if relationship exists. 
-   */
-  public String getRefFromSlug(RelationshipNodeType type, String refOrSlug) {
-    Optional<RelationshipEntityV2> node = this.relationshipRepositoryV2.findFirstByTypeAndRefOrSlug(type, refOrSlug);
-    if (node.isPresent()) {
-      return node.get().getRef();
+  public List<String> getRootRefs(RelationshipType type, Optional<List<String>> slugs) {
+    // Root nodes have no parent - thus no need to use a Graph. Query for nodes.
+    List<Criteria> criteriaList = new ArrayList<>();
+    Criteria criteria = Criteria.where("type").is(type);
+    criteriaList.add(criteria);
+    if (slugs.isPresent()) {
+      criteria = Criteria.where("slug").in(slugs.get());
+      criteriaList.add(criteria);
     }
-    return "";
+    Criteria[] criteriaArray = criteriaList.toArray(new Criteria[criteriaList.size()]);
+    Criteria allCriteria = new Criteria();
+    if (criteriaArray.length > 0) {
+      allCriteria.andOperator(criteriaArray);
+    }
+    Query query = new Query(allCriteria);
+    
+    List<RelationshipEntityV2> relEntities = mongoTemplate.find(query, RelationshipEntityV2.class);
+    return relEntities.stream().map(e -> e.getRef()).toList();
   }
-  
-  /*
-   * Helper method. Checks for relationship to Global
-   */
-//  public boolean hasGlobalRelationship(Optional<RelationshipNodeType> fromType, Optional<String> fromRef, RelationshipLabel label, boolean elevate) {    
-////    return hasRelationships(fromType, fromRef.isPresent() ? Optional.of(List.of(fromRef.get())) : Optional.empty(), label, RelationshipNodeType.GLOBAL, Optional.empty(), elevate);
-//  }
 
   /*
    * Checks the in memory cache map or retrieves from DB
@@ -709,12 +720,12 @@ public class RelationshipServiceImpl implements RelationshipService {
   private String getTeamRelationshipId(String slug) {
       if (!teamSlugToRelationshipId.containsKey(slug)) {
         if (usev2) {
-          Optional<RelationshipEntityV2> teamNodeV2 = this.relationshipRepositoryV2.findFirstByTypeAndRefOrSlug(RelationshipNodeType.TEAM, slug);
+          Optional<RelationshipEntityV2> teamNodeV2 = this.relationshipRepositoryV2.findFirstByTypeAndRefOrSlug(RelationshipType.TEAM, slug);
           if (teamNodeV2.isPresent()) {
             teamSlugToRelationshipId.put(slug, teamNodeV2.get().getId());
           }
         } else {
-          Optional<RelationshipNodeEntity> teamNode = this.relationshipNodeRepository.findFirstByTypeAndRefOrSlug(RelationshipNodeType.TEAM, slug);
+          Optional<RelationshipNodeEntity> teamNode = this.relationshipNodeRepository.findFirstByTypeAndRefOrSlug(RelationshipType.TEAM, slug);
           if (teamNode.isPresent()) {
             teamSlugToRelationshipId.put(slug, teamNode.get().getId());
           }
@@ -726,7 +737,7 @@ public class RelationshipServiceImpl implements RelationshipService {
   /*
    * This method understands the connection direction. Check the relationship arch diagram to understand how this works.
    */
-  private List<String> filter(Optional<RelationshipNodeType> fromType, Optional<List<String>> fromRefs, RelationshipLabel label, RelationshipNodeType toType, String toRef, boolean elevate) {
+  private List<String> filter(Optional<RelationshipType> fromType, Optional<List<String>> fromRefs, RelationshipLabel label, RelationshipType toType, String toRef, boolean elevate) {
     List<String> refs = new ArrayList<>();
     AuthType accessScope = identityService.getCurrentScope();
     LOGGER.debug("RelationshipFilter() - Access Scope: " + identityService.getCurrentScope());
@@ -744,17 +755,17 @@ public class RelationshipServiceImpl implements RelationshipService {
         String userId = identityService.getCurrentPrincipal();
         // Set up default type for not specified
         if (fromType.isEmpty()) {
-          fromType = Optional.of(RelationshipNodeType.USER);
+          fromType = Optional.of(RelationshipType.USER);
         }
         // Enforce single UserId of self
-        if (fromType.isPresent() && RelationshipNodeType.USER.equals(fromType.get())) {
+        if (fromType.isPresent() && RelationshipType.USER.equals(fromType.get())) {
           if ((fromRefs.isPresent() && fromRefs.get().contains(userId)) || fromRefs.isEmpty()) {
             LOGGER.debug("FromType and FromRef is correct");
             fromRefs = Optional.of(List.of(userId));
           } else {
             return refs;
           }
-        } else if (RelationshipNodeType.USER.equals(toType)) {
+        } else if (RelationshipType.USER.equals(toType)) {
           if (!toRef.equals(userId)) {
             return refs;
           }
@@ -775,15 +786,15 @@ public class RelationshipServiceImpl implements RelationshipService {
         String workflowId = identityService.getCurrentPrincipal();
         // Set up default type for not specified
         if (fromType.isEmpty()) {
-          fromType = Optional.of(RelationshipNodeType.WORKFLOW);
+          fromType = Optional.of(RelationshipType.WORKFLOW);
         }
-        if (fromType.isPresent() && RelationshipNodeType.WORKFLOW.equals(fromType.get())) {
+        if (fromType.isPresent() && RelationshipType.WORKFLOW.equals(fromType.get())) {
           if ((fromRefs.isPresent() && fromRefs.get().contains(workflowId)) || fromRefs.isEmpty()) {
             fromRefs = Optional.of(List.of(workflowId));
           } else {
             return refs;
           }
-        } else if (RelationshipNodeType.WORKFLOW.equals(toType)) {
+        } else if (RelationshipType.WORKFLOW.equals(toType)) {
           if (!toRef.equals(workflowId)) {
             return refs;
           }
@@ -793,7 +804,7 @@ public class RelationshipServiceImpl implements RelationshipService {
         // Validate refs based on Team principals
         // Note: team is currently never the from, everything goes to a team
         String teamId = identityService.getCurrentPrincipal();
-        if (RelationshipNodeType.TEAM.equals(toType)) {
+        if (RelationshipType.TEAM.equals(toType)) {
           if (!toRef.equals(teamId)) {
             return refs;
           }
@@ -810,9 +821,13 @@ public class RelationshipServiceImpl implements RelationshipService {
         RelationshipEntityV2Graph aggregate = this.relationshipRepositoryV2.graphRelationshipsByTypeTo(toType, toRef, mongoConfiguration.fullCollectionName("relationships_v2"), fromType.get());
         LOGGER.debug(aggregate.toString());
         if (!aggregate.getChildren().isEmpty()) {
-          final List<String> finalFromRefs = fromRefs.get(); 
-          LOGGER.debug("Children: {}", aggregate.getChildren().toString());
-          if (aggregate.getChildren().stream().filter(c -> finalFromRefs.contains(c.getRef())).count() == finalFromRefs.size()) {
+          if (fromRefs.isPresent()) {
+            final List<String> finalFromRefs = fromRefs.get(); 
+            LOGGER.debug("Children: {}", aggregate.getChildren().toString());
+            if (aggregate.getChildren().stream().filter(c -> finalFromRefs.contains(c.getRef())).count() == finalFromRefs.size()) {
+              return aggregate.getChildren().stream().map(c -> c.getRef()).toList();
+            }
+          } else {
             return aggregate.getChildren().stream().map(c -> c.getRef()).toList();
           }
         }
@@ -839,7 +854,39 @@ public class RelationshipServiceImpl implements RelationshipService {
     return refs;
   }
   
-  public void createNode(RelationshipNodeType type, String ref, String slug, Optional<Map<String, String>> data) {
+  /*
+   * Helper method. Should only be used after checking if relationship exists. 
+   */
+  public String getRefFromSlug(RelationshipType type, String refOrSlug) {
+    Optional<RelationshipEntityV2> node = this.relationshipRepositoryV2.findFirstByTypeAndRefOrSlug(type, refOrSlug);
+    if (node.isPresent()) {
+      return node.get().getRef();
+    }
+    return "";
+  }
+  
+  /*
+   * Helper method. Should only be used after checking if relationship exists. 
+   */
+  public String getSlugFromRef(RelationshipType type, String refOrSlug) {
+    Optional<RelationshipEntityV2> node = this.relationshipRepositoryV2.findFirstByTypeAndRefOrSlug(type, refOrSlug);
+    if (node.isPresent()) {
+      return node.get().getSlug();
+    }
+    return "";
+  }
+  
+  public void createNodeWithTeamConnection(RelationshipType type, String ref, String slug, String to, Optional<Map<String, String>> data) {
+    if (usev2) {
+      Optional<RelationshipEntityV2> toNode = this.relationshipRepositoryV2.findFirstByTypeAndRefOrSlug(RelationshipType.TEAM, to);
+      this.relationshipRepositoryV2.insert(new RelationshipEntityV2(type, ref, slug, Optional.empty(), new RelationshipConnectionEntity(RelationshipLabel.BELONGSTO, toNode.get().getId(), data)));
+    } else {
+      //TODO
+      LOGGER.warn("This method is not implemented yet");
+    }
+  }
+  
+  public void createNode(RelationshipType type, String ref, String slug, Optional<Map<String, String>> data) {
     if (usev2) {
       this.relationshipRepositoryV2.insert(new RelationshipEntityV2(type, ref, slug, data));
     } else {
@@ -847,11 +894,11 @@ public class RelationshipServiceImpl implements RelationshipService {
     }
   }
   
-  public void upsertTeamConnectionBySlug(RelationshipNodeType fromType, String fromRef, RelationshipLabel label, String slug, Optional<Map<String, String>> data) {
+  public void upsertTeamConnectionBySlug(RelationshipType fromType, String fromRef, RelationshipLabel label, String slug, Optional<Map<String, String>> data) {
     if (usev2) {
 //      this.relationshipRepositoryV2.findAndUpdateConnectionByTypeAndRefOrSlugAndConnectionsLabelAndConnectionsTo(fromType, fromRef, label, getTeamRelationshipId(slug), "reader");
 //      this.relationshipRepositoryV2.existsByTypeAndRefOrSlug(fromType, fromRef, slug)
-      Optional<RelationshipEntityV2> teamNode = this.relationshipRepositoryV2.findFirstByTypeAndRefOrSlug(RelationshipNodeType.TEAM, slug);
+      Optional<RelationshipEntityV2> teamNode = this.relationshipRepositoryV2.findFirstByTypeAndRefOrSlug(RelationshipType.TEAM, slug);
       if (teamNode.isPresent()) {
         long update = this.relationshipRepositoryV2.updateConnectionByTypeAndRefOrSlug(fromType, fromRef, new ObjectId(teamNode.get().getId()), data.get());
         LOGGER.debug("Updates made: {}", update);
@@ -878,7 +925,7 @@ public class RelationshipServiceImpl implements RelationshipService {
   public Map<String, String> getMembersAndRoleForTeamBySlug(String slug) {
     Map<String, String> memberRoleMap = new HashMap<String, String>();
     if (usev2) {
-      RelationshipEntityV2Graph graph = this.relationshipRepositoryV2.graphRelationshipsByTypeTo(RelationshipNodeType.TEAM, slug, mongoConfiguration.fullCollectionName("relationships_v2"), RelationshipNodeType.USER);
+      RelationshipEntityV2Graph graph = this.relationshipRepositoryV2.graphRelationshipsByTypeTo(RelationshipType.TEAM, slug, mongoConfiguration.fullCollectionName("relationships_v2"), RelationshipType.USER);
       LOGGER.debug(graph.toString());
   //    String teamNodeId = getTeamRelationshipIdFromSlug(slug);
   //    List<RelationshipEntityV2> memberNodes = this.relationshipRepositoryV2.findAllByConnectionsLabelAndConnectionsTo(RelationshipLabel.MEMBEROF, teamNodeId);      
@@ -893,7 +940,7 @@ public class RelationshipServiceImpl implements RelationshipService {
           });
       }
     } else {
-      RelationshipNodeEntityAggregate aggregate = this.relationshipNodeRepository.findRelationshipsByGraphTo(RelationshipNodeType.TEAM, slug, mongoConfiguration.fullCollectionName("relationship_edges"), RelationshipLabel.MEMBEROF, mongoConfiguration.fullCollectionName("relationship_nodes"));
+      RelationshipNodeEntityAggregate aggregate = this.relationshipNodeRepository.findRelationshipsByGraphTo(RelationshipType.TEAM, slug, mongoConfiguration.fullCollectionName("relationship_edges"), RelationshipLabel.MEMBEROF, mongoConfiguration.fullCollectionName("relationship_nodes"));
       LOGGER.debug(aggregate.toString());
       if (!aggregate.getChildren().isEmpty() && !aggregate.getPaths().isEmpty()) {
         Map<String, Map<String, String>> pathRoles = aggregate.getPaths().stream().collect(Collectors.toMap(RelationshipEdgeEntity::getFrom, RelationshipEdgeEntity::getData));
@@ -906,16 +953,16 @@ public class RelationshipServiceImpl implements RelationshipService {
   }
   
   // Team Node
-  public void updateTeamNodeSlug(String currentSlug, String newSlug) {
+  public void updateNodeSlug(RelationshipType type, String currentSlug, String newSlug) {
     if (usev2) {
-      RelationshipEntityV2 entity = this.relationshipRepositoryV2.findAndSetSlugByTypeAndSlug(RelationshipNodeType.TEAM, currentSlug, newSlug);
+      RelationshipEntityV2 entity = this.relationshipRepositoryV2.findAndSetSlugByTypeAndSlug(type, currentSlug, newSlug);
       teamSlugToRelationshipId.remove(currentSlug);
       teamSlugToRelationshipId.put(newSlug, entity.getId());
 //      teamSlugToRef.remove(currentSlug);
 //      teamSlugToRef.put(newSlug, entity.getRef());
     } else {
 
-      RelationshipNodeEntity entity = this.relationshipNodeRepository.findAndSetSlugByTypeAndSlug(RelationshipNodeType.TEAM, currentSlug, newSlug);
+      RelationshipNodeEntity entity = this.relationshipNodeRepository.findAndSetSlugByTypeAndSlug(type, currentSlug, newSlug);
       teamSlugToRelationshipId.remove(currentSlug);
       teamSlugToRelationshipId.put(newSlug, entity.getId());
 //      teamSlugToRef.remove(currentSlug);
@@ -923,7 +970,7 @@ public class RelationshipServiceImpl implements RelationshipService {
     }
   }
   
-  public void removeRelationshipsByRefOrSlug(RelationshipNodeType type, String slug) {
+  public void removeNodeByRefOrSlug(RelationshipType type, String slug) {
     if (usev2) {
       this.relationshipRepositoryV2.deleteByTypeAndRefOrSlug(type, slug);
     } else {
@@ -934,9 +981,9 @@ public class RelationshipServiceImpl implements RelationshipService {
   /*
    * This is used for top level nodes such as Team, GlobalTasks, etc
    */
-  public boolean doesSlugExistForType(RelationshipNodeType type, String slug) {
+  public boolean doesSlugOrRefExistForType(RelationshipType type, String slug) {
     if (usev2) {
-      return this.relationshipRepositoryV2.existsByTypeAndSlug(type, slug);
+      return this.relationshipRepositoryV2.existsByTypeAndRefOrSlug(type, slug);
     } else {
       return this.relationshipNodeRepository.existsByTypeAndSlug(type, slug);
     }
@@ -945,16 +992,17 @@ public class RelationshipServiceImpl implements RelationshipService {
   /*
    * This is used to find a slug for all Nodes of a Type within a particular team
    */
-  public boolean doesSlugExistInTeam(RelationshipNodeType type, String slug, String team) {
+  public boolean doesSlugOrRefExistForTypeInTeam(RelationshipType type, String slug, String team) {
     if (usev2) {
-      RelationshipEntityV2Graph graph = this.relationshipRepositoryV2.graphRelationshipsByTypeTo(RelationshipNodeType.TEAM, team, mongoConfiguration.fullCollectionName("relationships_v2"), type);
+      RelationshipEntityV2Graph graph = this.relationshipRepositoryV2.graphRelationshipsByTypeTo(RelationshipType.TEAM, team, mongoConfiguration.fullCollectionName("relationships_v2"), type);
       if (!graph.getChildren().isEmpty()) {
-        return graph.getChildren().stream().anyMatch(c -> c.getSlug().equals(slug));
+        return graph.getChildren().stream().anyMatch(c -> c.getSlug().equals(slug) || c.getRef().equals(slug));
       }
-      return false;
     } else {
-      return this.relationshipNodeRepository.existsByTypeAndSlug(type, slug);
+      //TODO
+      LOGGER.warn("This method is not implemented yet");
     }
+    return false;
   }
   
   public Map<String, String> getMyTeamRefsAndRoles(String userId) {
@@ -1007,27 +1055,6 @@ public class RelationshipServiceImpl implements RelationshipService {
   }
   
   private RelationshipNodeEntityAggregate getMyTeamAggregate(String userId) {
-    return this.relationshipNodeRepository.findRelationshipsByGraphFrom(RelationshipNodeType.USER, userId, mongoConfiguration.fullCollectionName("relationship_edges"), RelationshipLabel.MEMBEROF, mongoConfiguration.fullCollectionName("relationship_nodes"));
-  }
-  
-  public List<String> getGlobalTaskRefs(Optional<List<String>> slugs) {
-    //All Users have access to Global Tasks. No need to use a Graph. Query for nodes.
-    // Create manual query for MongoDB
-    List<Criteria> criteriaList = new ArrayList<>();
-    Criteria criteria = Criteria.where("type").is(RelationshipNodeType.GLOBALTASK);
-    criteriaList.add(criteria);
-    if (slugs.isPresent()) {
-      criteria = Criteria.where("slug").in(slugs.get());
-      criteriaList.add(criteria);
-    }
-    Criteria[] criteriaArray = criteriaList.toArray(new Criteria[criteriaList.size()]);
-    Criteria allCriteria = new Criteria();
-    if (criteriaArray.length > 0) {
-      allCriteria.andOperator(criteriaArray);
-    }
-    Query query = new Query(allCriteria);
-    
-    List<RelationshipEntityV2> relEntities = mongoTemplate.find(query, RelationshipEntityV2.class);
-    return relEntities.stream().map(e -> e.getRef()).toList();
+    return this.relationshipNodeRepository.findRelationshipsByGraphFrom(RelationshipType.USER, userId, mongoConfiguration.fullCollectionName("relationship_edges"), RelationshipLabel.MEMBEROF, mongoConfiguration.fullCollectionName("relationship_nodes"));
   }
 }
