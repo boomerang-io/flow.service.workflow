@@ -18,8 +18,8 @@ public class InsightsServiceImpl implements InsightsService {
    * Wraps insight call on WorkflowRuns
    */
   @Override
-  public WorkflowRunInsight getInsights(Optional<Date> from, Optional<Date> to,
-      Pageable pageable, Optional<List<String>> workflowIds, Optional<List<String>> teamIds,
+  public WorkflowRunInsight getInsights(String team, Optional<Date> from, Optional<Date> to,
+      Pageable pageable, Optional<List<String>> workflowIds,
       Optional<List<String>> statuses, Optional<List<String>> triggers) {
 
     Optional<Long> fromLong = Optional.empty();
@@ -32,8 +32,7 @@ public class InsightsServiceImpl implements InsightsService {
       toLong = Optional.of(to.get().getTime());
     }
     
-    return workflowRunService.insight(fromLong,
-            toLong, Optional.empty(), workflowIds,
-            teamIds);
+    return workflowRunService.insight(team, fromLong,
+            toLong, Optional.empty(), workflowIds);
   }
 }
