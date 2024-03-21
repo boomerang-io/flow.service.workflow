@@ -29,10 +29,10 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
-@RequestMapping("/api/v2/workflowrun")
+@RequestMapping("/api/v2/team/{team}/workflowrun")
 @Tag(name = "WorkflowRun Management",
     description = "Submit requests to execute Workflows and provide the ability to search and retrieve Workflow activities.")
-public class WorkflowRunV2Controller {
+public class TeamWorkflowRunV2Controller {
 
   @Autowired
   private WorkflowRunService workflowRunService;
@@ -43,6 +43,10 @@ public class WorkflowRunV2Controller {
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
   public Page<WorkflowRun> query(
+      @Parameter(name = "team",
+      description = "Owning team name.",
+      example = "my-amazing-team",
+      required = true) @PathVariable String team,
       @Parameter(name = "labels",
       description = "List of url encoded labels. For example Organization=Boomerang,customKey=test would be encoded as Organization%3DBoomerang,customKey%3Dtest)",
       required = false) @RequestParam(required = false) Optional<List<String>> labels,
@@ -52,8 +56,6 @@ public class WorkflowRunV2Controller {
       @Parameter(name = "phase",
       description = "List of phases to filter for. Defaults to all.", example = "completed,finalized",
       required = false) @RequestParam(required = false)  Optional<List<String>> phase,
-      @Parameter(name = "teams", description = "List of teams to filter for.", 
-      required = false) @RequestParam(required = false) Optional<List<String>> teams,
       @Parameter(name = "workflowruns", description = "List of WorkflowRun IDs to filter for.", 
       required = false) @RequestParam(required = false) Optional<List<String>> workflowruns,
       @Parameter(name = "workflows", description = "List of Workflow IDs to filter for.", 
@@ -70,7 +72,7 @@ public class WorkflowRunV2Controller {
       required = false) @RequestParam Optional<Long> fromDate,
       @Parameter(name = "toDate", description = "The unix timestamp / date to search to in milliseconds since epoch", example = "1680267600000",
       required = false) @RequestParam Optional<Long> toDate) {
-    return workflowRunService.query(fromDate, toDate, limit, page, order, labels, statuses, phase, teams, workflowruns, workflows, triggers);
+    return workflowRunService.query(team, fromDate, toDate, limit, page, order, labels, statuses, phase, workflowruns, workflows, triggers);
   }  
 
   @GetMapping(value = "/count")
@@ -79,11 +81,13 @@ public class WorkflowRunV2Controller {
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
   public WorkflowRunCount count(
+      @Parameter(name = "team",
+      description = "Owning team name.",
+      example = "my-amazing-team",
+      required = true) @PathVariable String team,
       @Parameter(name = "labels",
       description = "List of url encoded labels. For example Organization=Boomerang,customKey=test would be encoded as Organization%3DBoomerang,customKey%3Dtest)",
       required = false) @RequestParam(required = false) Optional<List<String>> labels,
-      @Parameter(name = "teams", description = "List of teams to filter for.", 
-      required = false) @RequestParam(required = false) Optional<List<String>> teams,
       @Parameter(name = "workflows",
       description = "List of Workflow IDs  to filter for. Does not validate the IDs provided. Defaults to all.", example = "63d3656ca845957db7d25ef0,63a3e732b0496509a7f1d763",
       required = false) @RequestParam(required = false)  Optional<List<String>> workflows,
@@ -91,7 +95,7 @@ public class WorkflowRunV2Controller {
       required = false) @RequestParam Optional<Long> fromDate,
       @Parameter(name = "toDate", description = "The unix timestamp / date to search to in milliseconds since epoch", example = "1680267600000",
       required = false) @RequestParam Optional<Long> toDate) {
-    return workflowRunService.count(fromDate, toDate, labels, teams, workflows);
+    return workflowRunService.count(team, fromDate, toDate, labels, workflows);
   }
 
   @GetMapping(value = "/{workflowRunId}")
@@ -99,27 +103,35 @@ public class WorkflowRunV2Controller {
   @Operation(summary = "Retrieve a specific WorkflowRun.")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
-  public ResponseEntity<WorkflowRun> getTaskRuns(
+  public ResponseEntity<WorkflowRun> get(
+      @Parameter(name = "team",
+      description = "Owning team name.",
+      example = "my-amazing-team",
+      required = true) @PathVariable String team,
       @Parameter(name = "workflowRunId",
       description = "ID of WorkflowRun",
       required = true) @PathVariable String workflowRunId,
       @Parameter(name = "withTasks",
       description = "Include Task Runs in the response",
       required = false) @RequestParam(defaultValue = "true") boolean withTasks) {
-    return workflowRunService.get(workflowRunId, withTasks);
+    return workflowRunService.get(team, workflowRunId, withTasks);
   }
 
   @PutMapping(value = "/{workflowRunId}/start")
   @AuthScope(action = PermissionAction.ACTION, scope = PermissionScope.WORKFLOWRUN, types = {AuthType.team})
-  @Operation(summary = "Start Workflow Run execution. The Workflow Run has to already have been queued.")
+  @Operation(summary = "Start WorkflowRun execution. The WorkflowRun has to already have been queued.")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
-  public ResponseEntity<WorkflowRun> startWorkflowRun(
+  public ResponseEntity<WorkflowRun> start(
+      @Parameter(name = "team",
+      description = "Owning team name.",
+      example = "my-amazing-team",
+      required = true) @PathVariable String team,
       @Parameter(name = "workflowRunId",
       description = "ID of WorkflowRun to Start",
       required = true) @PathVariable(required = true) String workflowRunId,
       @RequestBody Optional<WorkflowRunRequest> runRequest) {
-    return workflowRunService.start(workflowRunId, runRequest);
+    return workflowRunService.start(team, workflowRunId, runRequest);
   }
 
   @PutMapping(value = "/{workflowRunId}/finalize")
@@ -127,11 +139,15 @@ public class WorkflowRunV2Controller {
   @Operation(summary = "End a WorkflowRun")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
-  public ResponseEntity<WorkflowRun> endWorkflowRun(
+  public ResponseEntity<WorkflowRun> finalize(
+      @Parameter(name = "team",
+      description = "Owning team name.",
+      example = "my-amazing-team",
+      required = true) @PathVariable String team,
       @Parameter(name = "workflowRunId",
-      description = "ID of Workflow Run to Finalize",
+      description = "ID of WorkflowRun to Finalize",
       required = true) @PathVariable(required = true) String workflowRunId) {
-    return workflowRunService.finalize(workflowRunId);
+    return workflowRunService.finalize(team, workflowRunId);
   }
 
   @DeleteMapping(value = "/{workflowRunId}/cancel")
@@ -139,23 +155,31 @@ public class WorkflowRunV2Controller {
   @Operation(summary = "Cancel a WorkflowRun")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
-  public ResponseEntity<WorkflowRun> cancelWorkflowRun(
+  public ResponseEntity<WorkflowRun> cancel(
+      @Parameter(name = "team",
+      description = "Owning team name.",
+      example = "my-amazing-team",
+      required = true) @PathVariable String team,
       @Parameter(name = "workflowRunId",
-      description = "ID of Workflow Run to Cancel",
+      description = "ID of WorkflowRun to Cancel",
       required = true) @PathVariable(required = true) String workflowRunId) {
-    return workflowRunService.cancel(workflowRunId);
+    return workflowRunService.cancel(team, workflowRunId);
   }
 
   @PutMapping(value = "/{workflowRunId}/retry")
   @AuthScope(action = PermissionAction.ACTION, scope = PermissionScope.WORKFLOWRUN, types = {AuthType.team})
-  @Operation(summary = "Retry Workflow Run execution.")
+  @Operation(summary = "Retry WorkflowRun execution.")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
-  public ResponseEntity<WorkflowRun> retryWorkflowRun(
+  public ResponseEntity<WorkflowRun> retry(
+      @Parameter(name = "team",
+      description = "Owning team name.",
+      example = "my-amazing-team",
+      required = true) @PathVariable String team,
       @Parameter(name = "workflowRunId",
-      description = "ID of Workflow Run to Retry.",
+      description = "ID of WorkflowRun to Retry.",
       required = true) @PathVariable(required = true) String workflowRunId,
       @RequestBody Optional<WorkflowRunRequest> runRequest) {
-    return workflowRunService.retry(workflowRunId);
+    return workflowRunService.retry(team, workflowRunId);
   }
 }

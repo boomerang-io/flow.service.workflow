@@ -12,30 +12,26 @@ import io.boomerang.model.ref.WorkflowRunRequest;
 
 public interface WorkflowRunService {
 
-  WorkflowRunResponsePage query(Optional<Long> fromDate, Optional<Long> toDate,
+  WorkflowRunResponsePage query(String team, Optional<Long> fromDate, Optional<Long> toDate,
       Optional<Integer> queryLimit, Optional<Integer> queryPage, Optional<Direction> queryOrder,
       Optional<List<String>> queryLabels, Optional<List<String>> queryStatus,
-      Optional<List<String>> queryPhase, Optional<List<String>> queryTeams,
-      Optional<List<String>> queryWorkflowRuns, Optional<List<String>> queryWorkflows,
-      Optional<List<String>> queryTriggers);
+      Optional<List<String>> queryPhase, Optional<List<String>> queryWorkflowRuns,
+      Optional<List<String>> queryWorkflows, Optional<List<String>> queryTriggers);
 
-  ResponseEntity<WorkflowRun> get(String workflowRunId, boolean withTasks);
+  ResponseEntity<WorkflowRun> get(String team, String workflowRunId, boolean withTasks);
 
-  ResponseEntity<WorkflowRun> start(String workflowRunId,
+  ResponseEntity<WorkflowRun> start(String team, String workflowRunId,
       Optional<WorkflowRunRequest> optRunRequest);
 
-  ResponseEntity<WorkflowRun> finalize(String workflowRunId);
+  ResponseEntity<WorkflowRun> finalize(String team, String workflowRunId);
 
-  ResponseEntity<WorkflowRun> cancel(String workflowRunId);
+  ResponseEntity<WorkflowRun> cancel(String team, String workflowRunId);
 
-  ResponseEntity<WorkflowRun> retry(String workflowRunId);
+  ResponseEntity<WorkflowRun> retry(String team, String workflowRunId);
 
-  WorkflowRunInsight insight(Optional<Long> from, Optional<Long> to,
-      Optional<List<String>> queryLabels, Optional<List<String>> queryWorkflows,
-      Optional<List<String>> queryTeams);
+  WorkflowRunInsight insight(String team, Optional<Long> from, Optional<Long> to,
+      Optional<List<String>> queryLabels, Optional<List<String>> queryWorkflows);
 
-  WorkflowRunCount count(Optional<Long> from, Optional<Long> to,
-      Optional<List<String>> queryLabels, Optional<List<String>> queryWorkflows,
-      Optional<List<String>> queryTeams);
-  
+  WorkflowRunCount count(String team, Optional<Long> from, Optional<Long> to,
+      Optional<List<String>> queryLabels, Optional<List<String>> queryWorkflows);
 }

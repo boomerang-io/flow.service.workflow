@@ -31,7 +31,6 @@ import com.jayway.jsonpath.spi.json.JacksonJsonNodeJsonProvider;
 import com.jayway.jsonpath.spi.mapper.JacksonMappingProvider;
 import io.boomerang.client.EngineClient;
 import io.boomerang.client.WorkflowResponsePage;
-import io.boomerang.data.entity.RelationshipEntity;
 import io.boomerang.data.model.CurrentQuotas;
 import io.boomerang.error.BoomerangError;
 import io.boomerang.error.BoomerangException;

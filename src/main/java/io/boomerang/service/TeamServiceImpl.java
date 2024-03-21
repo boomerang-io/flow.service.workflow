@@ -810,9 +810,8 @@ public class TeamServiceImpl implements TeamService {
     nextMonth.set(Calendar.MILLISECOND, 0);
 
     WorkflowRunInsight insight =
-        workflowRunService.insight(Optional.of(currentMonthStart.getTimeInMillis()),
-            Optional.of(currentMonthEnd.getTimeInMillis()), Optional.empty(), Optional.empty(),
-            Optional.of(List.of(team)));
+        workflowRunService.insight(team, Optional.of(currentMonthStart.getTimeInMillis()),
+            Optional.of(currentMonthEnd.getTimeInMillis()), Optional.empty(), Optional.empty());
     currentQuotas.setCurrentConcurrentWorkflows(insight.getConcurrentRuns().intValue());
     currentQuotas.setCurrentRunTotalDuration(insight.getTotalDuration().intValue());
     currentQuotas.setCurrentRunMedianDuration(insight.getMedianDuration().intValue());

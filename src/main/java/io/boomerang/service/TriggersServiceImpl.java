@@ -16,7 +16,11 @@ import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.boomerang.error.BoomerangError;
+import io.boomerang.error.BoomerangException;
 import io.boomerang.integrations.service.IntegrationService;
+import io.boomerang.model.enums.RelationshipLabel;
+import io.boomerang.model.enums.RelationshipType;
 import io.boomerang.model.enums.TriggerEnum;
 import io.boomerang.model.enums.ref.ParamType;
 import io.boomerang.model.ref.RunParam;
@@ -40,6 +44,9 @@ public class TriggersServiceImpl implements TriggerService {
 
   @Autowired
   private IntegrationService integrationService;
+
+  @Autowired
+  private RelationshipServiceImpl relationshipServiceImpl;
 
   /*
    * Receives request and checks if its a supported event. Processing done async.
@@ -65,26 +72,38 @@ public class TriggersServiceImpl implements TriggerService {
     request.setParams(eventToRunParams(event));
 
     LOGGER.debug("Webhook Request: " + request.toString());
+    
+    // Get the Workflows team
+    Optional<String> teamRef = relationshipServiceImpl.getRelationshipRef(RelationshipType.WORKFLOW, workflowRef, RelationshipLabel.BELONGSTO);
+    if (teamRef.isEmpty()) {
+      throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
+    }
 
     // Auto start is not needed when using the default handler
     // As the default handler will pick up the queued Workflow and start the Workflow when ready.
     // However if using the non-default Handler then this may be needed to be set to true.
-    return workflowService.submit(workflowRef, request, autoStart);
+    return workflowService.submit(teamRef.get(), workflowRef, request, autoStart);
   }
 
   @Override
-  public WorkflowRun processWebhook(String workflowId,
+  public WorkflowRun processWebhook(String workflowRef,
       JsonNode payload) {
     WorkflowSubmitRequest request = new WorkflowSubmitRequest();
     request.setTrigger(TriggerEnum.webhook);
     request.setParams(payloadToRunParams(payload));
 
     LOGGER.debug("Webhook Request: " + request.toString());
+    
+    // Get the Workflows team
+    Optional<String> teamRef = relationshipServiceImpl.getRelationshipRef(RelationshipType.WORKFLOW, workflowRef, RelationshipLabel.BELONGSTO);
+    if (teamRef.isEmpty()) {
+      throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
+    }
 
     // Auto start is not needed when using the default handler
     // As the default handler will pick up the queued Workflow and start the Workflow when ready.
     // However if using the non-default Handler then this may be needed to be set to true.
-    return workflowService.submit(workflowId, request, autoStart);
+    return workflowService.submit(teamRef.get(), workflowRef, request, autoStart);
   }
 
   @Override
