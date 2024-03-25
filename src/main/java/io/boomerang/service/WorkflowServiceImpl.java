@@ -13,7 +13,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.quartz.SchedulerException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.data.domain.Sort.Direction;
@@ -86,7 +85,7 @@ public class WorkflowServiceImpl implements WorkflowService {
   private RelationshipServiceImpl relationshipServiceImpl;
 
   @Autowired
-  private ScheduleService scheduleService;
+  private ScheduleServiceImpl scheduleService;
 
   @Autowired
   private ParameterManager parameterManager;
@@ -323,7 +322,7 @@ public class WorkflowServiceImpl implements WorkflowService {
    * 
    * Used by TriggerService
    */
-  public void internalSubmitForTeam(String team, WorkflowSubmitRequest request,
+  protected void internalSubmitForTeam(String team, WorkflowSubmitRequest request,
       boolean start) {
     List<String> wfRefs =
         relationshipServiceImpl.getFilteredRefs(Optional.of(RelationshipType.WORKFLOW),
@@ -424,13 +423,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     if (relationshipServiceImpl.hasTeamRelationship(Optional.of(RelationshipType.WORKFLOW),
         Optional.of(workflowId), RelationshipLabel.BELONGSTO, team, false)) {
       engineClient.deleteWorkflow(workflowId);
-      // Delete all Schedules
-      try {
-        scheduleService.deleteAllForWorkflow(workflowId);
-      } catch (SchedulerException e) {
-        // TODO Auto-generated catch block
-        e.printStackTrace();
-      }
+      scheduleService.deleteAllForWorkflow(workflowId);
 
       // Delete all tokens
       tokenService.deleteAllForPrincipal(workflowId);

@@ -35,11 +35,12 @@ public class InternalController {
   private ScheduleServiceImpl workflowScheduleService;
 
   // Used by Engine for RunScheduledWorkflow task
+  // Team will be black and the QuartzSchedulerJob will handle it
   @PostMapping(value = "/workflow/schedule")
   @Operation(summary = "Create a Schedule.")
   public WorkflowScheduleEntity createSchedule(
       @RequestBody WorkflowSchedule schedule) {
-    return workflowScheduleService.internalCreate(schedule);
+    return workflowScheduleService.internalCreate("", schedule);
   }
   
   // Used by Handler to get the feature flags and real time value for settings

@@ -11,7 +11,6 @@ import org.apache.logging.log4j.Logger;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
@@ -738,7 +737,7 @@ public class RelationshipServiceImpl implements RelationshipService {
    * This method understands the connection direction. Check the relationship arch diagram to understand how this works.
    */
   private List<String> filter(Optional<RelationshipType> fromType, Optional<List<String>> fromRefs, RelationshipLabel label, RelationshipType toType, String toRef, boolean elevate) {
-    List<String> refs = new ArrayList<>();
+    List<String> filteredRefs = new ArrayList<>();
     AuthType accessScope = identityService.getCurrentScope();
     LOGGER.debug("RelationshipFilter() - Access Scope: " + identityService.getCurrentScope());
     
@@ -763,11 +762,11 @@ public class RelationshipServiceImpl implements RelationshipService {
             LOGGER.debug("FromType and FromRef is correct");
             fromRefs = Optional.of(List.of(userId));
           } else {
-            return refs;
+            return filteredRefs;
           }
         } else if (RelationshipType.USER.equals(toType)) {
           if (!toRef.equals(userId)) {
-            return refs;
+            return filteredRefs;
           }
         }
         // If relationship of Object (not user, such as Workflow) to Team, then check user has access to Team
@@ -792,11 +791,11 @@ public class RelationshipServiceImpl implements RelationshipService {
           if ((fromRefs.isPresent() && fromRefs.get().contains(workflowId)) || fromRefs.isEmpty()) {
             fromRefs = Optional.of(List.of(workflowId));
           } else {
-            return refs;
+            return filteredRefs;
           }
         } else if (RelationshipType.WORKFLOW.equals(toType)) {
           if (!toRef.equals(workflowId)) {
-            return refs;
+            return filteredRefs;
           }
         }
         break;
@@ -806,7 +805,7 @@ public class RelationshipServiceImpl implements RelationshipService {
         String teamId = identityService.getCurrentPrincipal();
         if (RelationshipType.TEAM.equals(toType)) {
           if (!toRef.equals(teamId)) {
-            return refs;
+            return filteredRefs;
           }
         }
         break;
@@ -823,17 +822,13 @@ public class RelationshipServiceImpl implements RelationshipService {
         if (!aggregate.getChildren().isEmpty()) {
           if (fromRefs.isPresent()) {
             final List<String> finalFromRefs = fromRefs.get(); 
-            LOGGER.debug("Children: {}", aggregate.getChildren().toString());
-            if (aggregate.getChildren().stream().filter(c -> finalFromRefs.contains(c.getRef())).count() == finalFromRefs.size()) {
-              return aggregate.getChildren().stream().map(c -> c.getRef()).toList();
-            }
+            filteredRefs = aggregate.getChildren().stream().filter(c -> finalFromRefs.contains(c.getRef())).map(c -> c.getRef()).toList();
           } else {
-            return aggregate.getChildren().stream().map(c -> c.getRef()).toList();
+            filteredRefs = aggregate.getChildren().stream().map(c -> c.getRef()).toList();
           }
         }
       } catch (Exception ex) {
         LOGGER.error(ex);
-        return refs;
       }
     } else {
       try {
@@ -841,17 +836,14 @@ public class RelationshipServiceImpl implements RelationshipService {
         LOGGER.debug(aggregate.toString());
         if (!aggregate.getChildren().isEmpty()) {
           final List<String> finalFromRefs = fromRefs.get(); 
-          LOGGER.debug("Children: {}", aggregate.getChildren().toString());
-          if (aggregate.getChildren().stream().filter(c -> finalFromRefs.contains(c.getRef())).count() == finalFromRefs.size()) {
-            return aggregate.getChildren().stream().map(c -> c.getRef()).toList();
-          }
+          filteredRefs = aggregate.getChildren().stream().filter(c -> finalFromRefs.contains(c.getRef())).map(c -> c.getRef()).toList();
         }
       } catch (Exception ex) {
         LOGGER.error(ex);
-        return refs;
       }
     }
-    return refs;
+    LOGGER.debug("Filtered Refs: {}", filteredRefs);
+    return filteredRefs;
   }
   
   /*
@@ -1003,6 +995,14 @@ public class RelationshipServiceImpl implements RelationshipService {
       LOGGER.warn("This method is not implemented yet");
     }
     return false;
+  }
+  
+  /* 
+   * Helper method used for Schedules to get their Team
+   */
+  public String getWorkflowsTeamSlug(String ref) {
+    RelationshipEntityV2Graph graph = this.relationshipRepositoryV2.findWorkflowTeamRelationship(ref, mongoConfiguration.fullCollectionName("relationships_v2"));
+    return !graph.getChildren().isEmpty() && graph.getChildren().get(0).getSlug() != null ? graph.getChildren().get(0).getSlug() : "";
   }
   
   public Map<String, String> getMyTeamRefsAndRoles(String userId) {

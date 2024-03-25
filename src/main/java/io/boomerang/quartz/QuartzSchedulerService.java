@@ -39,7 +39,7 @@ public class QuartzSchedulerService {
   @Autowired
   private ScheduleService workflowScheduleService;
 
-  public void createOrUpdateCronJob(WorkflowScheduleEntity schedule) {
+  public void createOrUpdateCronJob(String team, WorkflowScheduleEntity schedule) {
     String cronString = schedule.getCronSchedule();
     String timezone = schedule.getTimezone();
     if (cronString != null && timezone != null) {
@@ -60,7 +60,7 @@ public class QuartzSchedulerService {
       String workflowId = schedule.getWorkflowRef();
       Scheduler scheduler = schedulerFactoryBean.getScheduler();
       JobDetail jobDetail =
-          JobBuilder.newJob(QuartzSchedulerJob.class).withIdentity(scheduleId, workflowId).build();         
+          JobBuilder.newJob(QuartzSchedulerJob.class).withIdentity(scheduleId, workflowId).withDescription(team).build();         
 //    TODO: determine if we add a calendar entry for excluded dates
     CronScheduleBuilder cronScheduleBuilder =
         CronScheduleBuilder.cronSchedule(cronString).inTimeZone(timeZone);
@@ -82,11 +82,11 @@ public class QuartzSchedulerService {
     }
   }
   
-  public void createOrUpdateRunOnceJob(WorkflowScheduleEntity schedule) throws Exception {
+  public void createOrUpdateRunOnceJob(String team, WorkflowScheduleEntity schedule) throws Exception {
     String scheduleId = schedule.getId();
     String workflowId = schedule.getWorkflowRef();
     Scheduler scheduler = schedulerFactoryBean.getScheduler();
-    JobDetail jobDetail = JobBuilder.newJob(QuartzSchedulerJob.class).withIdentity(scheduleId, workflowId).build();
+    JobDetail jobDetail = JobBuilder.newJob(QuartzSchedulerJob.class).withIdentity(scheduleId, workflowId).withDescription(team).build();
     SimpleScheduleBuilder simpleScheduleBuilder = SimpleScheduleBuilder.simpleSchedule().withRepeatCount(0);
     SimpleTrigger trigger = TriggerBuilder.newTrigger().withIdentity(scheduleId, workflowId).startAt(schedule.getDateSchedule())
         .withSchedule(simpleScheduleBuilder).build();

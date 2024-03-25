@@ -41,7 +41,7 @@ public class ScheduleV2Controller {
   @Autowired
   private ScheduleService workflowScheduleService;
   
-  @GetMapping(value = "/validate/cron")
+  @GetMapping(value = "/validate-cron")
   @AuthScope(action = PermissionAction.READ, scope = PermissionScope.SCHEDULE, types = {AuthType.team})
   @Operation(summary = "Validate a Schedules CRON.")
   public CronValidationResponse validateCron(@Parameter(name = "cron",
@@ -49,86 +49,4 @@ public class ScheduleV2Controller {
       required = true) @RequestParam String cron) {
     return workflowScheduleService.validateCron(cron);
   }
-  
-  @GetMapping(value = "/{scheduleId}")
-  @AuthScope(action = PermissionAction.READ, scope = PermissionScope.SCHEDULE, types = {AuthType.team})
-  @Operation(summary = "Retrieve a Schedule.")
-  public WorkflowSchedule get(@PathVariable String scheduleId) {
-    return workflowScheduleService.get(scheduleId);
-  }
-  
-  @GetMapping(value = "/query")
-  @AuthScope(action = PermissionAction.READ, scope = PermissionScope.SCHEDULE, types = {AuthType.team})
-  @Operation(summary = "Search for Schedules")
-  public Page<WorkflowSchedule> query(
-      @Parameter(name = "statuses", description = "List of statuses to filter for. Defaults to all.",
-          example = "active,archived",
-          required = false) @RequestParam(required = false) Optional<List<String>> statuses,
-      @Parameter(name = "types", description = "List of types to filter for. Defaults to all.",
-      example = "cron,advancedCron",
-      required = false) @RequestParam(required = false) Optional<List<String>> types,
-      @Parameter(name = "workflows", description = "List of workflows to filter for.", 
-      required = false) @RequestParam(required = false) Optional<List<String>> workflows,
-      @Parameter(name = "teams", description = "List of teams to filter for.", 
-      required = false) @RequestParam(required = false) Optional<List<String>> teams,
-      @Parameter(name = "limit", description = "Result Size", example = "10",
-          required = true) @RequestParam(defaultValue = "10") int limit,
-      @Parameter(name = "page", description = "Page Number", example = "0",
-          required = true) @RequestParam(defaultValue = "0") int page) {
-    final Sort sort = Sort.by(new Order(Direction.ASC, "creationDate"));
-      return workflowScheduleService.query(page, limit, sort, statuses, types, workflows, teams);
-  }
-  
-  @GetMapping(value = "/calendars")
-  @AuthScope(action = PermissionAction.READ, scope = PermissionScope.SCHEDULE, types = {AuthType.team})
-  @Operation(summary = "Retrieve Calendars for Schedules by Dates.")
-  public List<WorkflowScheduleCalendar> getCalendarsForSchedules(@RequestParam List<String> schedules, @RequestParam Long fromDate, @RequestParam Long toDate) {
-    if (schedules != null && !schedules.isEmpty() && fromDate != null && toDate != null) {
-      Date from = new Date(fromDate * 1000);
-      Date to = new Date(toDate * 1000);
-      return workflowScheduleService.calendars(schedules, from, to);
-    } else {
-      throw new BoomerangException(0, "Invalid fromDate or toDate", HttpStatus.BAD_REQUEST);
-    }
-  }
-  
-  @PostMapping(value = "")
-  @AuthScope(action = PermissionAction.WRITE, scope = PermissionScope.SCHEDULE, types = {AuthType.team})
-  @Operation(summary = "Create a Schedule.")
-  public WorkflowSchedule createSchedule(
-      @Parameter(name = "team", description = "Team as owner reference.", example = "my-amazing-team",
-      required = true) @RequestParam(required = true) String team,
-      @RequestBody WorkflowSchedule schedule) {
-    return workflowScheduleService.create(schedule, team);
-  }
-  
-  @PutMapping(value = "")
-  @AuthScope(action = PermissionAction.WRITE, scope = PermissionScope.SCHEDULE, types = {AuthType.team})
-  @Operation(summary = "Apply a Schedule.")
-  public WorkflowSchedule updateSchedule(@RequestBody WorkflowSchedule schedule,
-      @Parameter(name = "team", description = "Team as owner reference. Required if using apply to create new.",
-      example = "my-amazing-team",
-      required = false) @RequestParam(required = false) Optional<String> team) {
-    return workflowScheduleService.apply(schedule, team);
-  }
-  
-  @DeleteMapping(value = "/{scheduleId}")
-  @AuthScope(action = PermissionAction.DELETE, scope = PermissionScope.SCHEDULE, types = {AuthType.team})
-  @Operation(summary = "Delete a Schedule.")
-  public ResponseEntity<?> deleteSchedule(@PathVariable String scheduleId) {
-    return workflowScheduleService.delete(scheduleId);
-  }
-  
-  //TODO: commented out in Web - is this useful?
-//  @GetMapping(value = "/{scheduleId}/calendar")
-//  @Operation(summary = "Retrieve a Calendar based on dates.")
-//  public List<Date> getScheduleForDates(@PathVariable String scheduleId, @RequestParam Long fromDate, @RequestParam Long toDate) {
-//    if (fromDate != null && toDate != null) {
-//      Date from = new Date(fromDate * 1000);
-//      Date to = new Date(toDate * 1000);
-//      return workflowScheduleService.getCalendarForDates(scheduleId, from, to);
-//    } else {
-//      throw new BoomerangException(0, "Invalid fromDate or toDate", HttpStatus.BAD_REQUEST);
-//    }
-//  }
 }

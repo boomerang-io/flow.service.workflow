@@ -3,42 +3,33 @@ package io.boomerang.service;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
-import org.quartz.SchedulerException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.ResponseEntity;
 import io.boomerang.model.CronValidationResponse;
 import io.boomerang.model.WorkflowSchedule;
 import io.boomerang.model.WorkflowScheduleCalendar;
 
 public interface ScheduleService {
 
-  WorkflowSchedule get(String scheduleId);
-
-  Page<WorkflowSchedule> query(int page, int limit, Sort sort,
-      Optional<List<String>> queryWorkflows, Optional<List<String>> queryTeams,
-      Optional<List<String>> queryStatus, Optional<List<String>> queryTypes);
-
-  List<WorkflowScheduleCalendar> calendars(List<String> scheduleIds, Date fromDate,
-      Date toDate);
-
-  WorkflowSchedule create(WorkflowSchedule schedule, String teamId);
-
-  ResponseEntity<?> delete(String scheduleId);
-
-  WorkflowSchedule apply(WorkflowSchedule request, Optional<String> team);
-
+  //Global method - no team
   CronValidationResponse validateCron(String cronString);
 
-//  List<Date> getCalendarForDates(String scheduleId, Date fromDate, Date toDate);
+  //Team methods
+  WorkflowSchedule get(String team, String scheduleId);
 
-  void enableAllTriggerSchedules(String workflowId);
+  Page<WorkflowSchedule> query(String queryTeam, int page, int limit, Sort sort,
+      Optional<List<String>> queryStatus, Optional<List<String>> queryTypes,
+      Optional<List<String>> queryWorkflows);
 
-  void disableAllTriggerSchedules(String workflowId);
+  List<WorkflowScheduleCalendar> calendars(String team, List<String> scheduleIds, Date fromDate,
+      Date toDate);
 
-  void deleteAllForWorkflow(String workflowId) throws SchedulerException;
+  WorkflowSchedule create(String team, WorkflowSchedule schedule);
 
-  List<WorkflowScheduleCalendar> getCalendarsForWorkflow(String workflowId, Date fromDate,
+  void delete(String team, String scheduleId);
+
+  WorkflowSchedule apply(String team, WorkflowSchedule request);
+  List<WorkflowScheduleCalendar> getCalendarsForWorkflow(String team, String workflowId, Date fromDate,
       Date toDate);
 
 }
