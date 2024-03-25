@@ -20,6 +20,7 @@ import io.boomerang.model.enums.WorkflowScheduleType;
 import io.boomerang.model.ref.WorkflowSubmitRequest;
 import io.boomerang.security.model.Token;
 import io.boomerang.security.service.TokenServiceImpl;
+import io.boomerang.service.RelationshipServiceImpl;
 import io.boomerang.service.ScheduleServiceImpl;
 import io.boomerang.service.WorkflowServiceImpl;
 
@@ -65,6 +66,7 @@ public class QuartzSchedulerJob extends QuartzJobBean {
     ScheduleServiceImpl workflowScheduleService =
         applicationContext.getBean(ScheduleServiceImpl.class);
     TokenServiceImpl tokenService = applicationContext.getBean(TokenServiceImpl.class);
+    RelationshipServiceImpl relationshipService = applicationContext.getBean(RelationshipServiceImpl.class);
 
     WorkflowSchedule schedule = workflowScheduleService.internalGet(jobDetail.getKey().getName());
     if (schedule != null) {
@@ -90,7 +92,13 @@ public class QuartzSchedulerJob extends QuartzJobBean {
       //As the default handler will pick up the queued Workflow and start the Workflow when ready.
       //However if using the non-default Handler then this may be needed to be set to true.
       boolean autoStart = applicationContext.getEnvironment().getProperty("flow.workflowrun.auto-start-on-submit", boolean.class);
-      workflowService.submit(jobDetail.getKey().getGroup(), request, autoStart);
+      String team = jobDetail.getDescription();
+      if (team == null || team.isEmpty()) {
+        //Attempt to get the team from Workflow relationship.
+        //Internal create for Workflows that create schedules via Engine where team won't be set.
+        team = relationshipService.getWorkflowsTeamSlug(jobDetail.getKey().getGroup());
+      }
+      workflowService.submit(team, jobDetail.getKey().getGroup(), request, autoStart);
     }
   }
 }

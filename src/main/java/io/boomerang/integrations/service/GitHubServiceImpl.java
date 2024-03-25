@@ -124,8 +124,8 @@ public class GitHubServiceImpl implements GitHubService {
     Optional<IntegrationsEntity> optEntity = integrationsRepository.findByRef(String.valueOf(installations.get(0).id()));
     if (optEntity.isPresent()) {
       IntegrationsEntity entity = optEntity.get();
-      relationshipService.addRelationshipRef(RelationshipType.INTEGRATION, entity.getId(), RelationshipLabel.BELONGSTO, RelationshipType.TEAM, Optional.of(request.getTeam()), Optional.empty());
-      relationshipServiceImpl.upsertTeamConnectionBySlug(RelationshipType.INTEGRATION, RelationshipLabel.INTEGRATIONFOR, null, null, null);
+//      relationshipService.addRelationshipRef(RelationshipType.INTEGRATION, entity.getId(), RelationshipLabel.BELONGSTO, RelationshipType.TEAM, Optional.of(request.getTeam()), Optional.empty());
+      relationshipServiceImpl.upsertTeamConnectionBySlug(RelationshipType.INTEGRATION, entity.getId(), RelationshipLabel.INTEGRATIONFOR, request.getTeam(), Optional.empty());
       return ResponseEntity.ok().build();
     }
     return ResponseEntity.status(HttpStatus.NOT_FOUND).build();

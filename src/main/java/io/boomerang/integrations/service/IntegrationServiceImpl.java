@@ -20,6 +20,7 @@ import io.boomerang.model.enums.RelationshipLabel;
 import io.boomerang.model.enums.RelationshipType;
 import io.boomerang.service.RelationshipService;
 import io.boomerang.service.RelationshipServiceImpl;
+import io.boomerang.service.SettingsService;
 
 @Service
 public class IntegrationServiceImpl implements IntegrationService {
@@ -37,12 +38,16 @@ public class IntegrationServiceImpl implements IntegrationService {
   
   @Autowired
   private RelationshipServiceImpl relationshipServiceImpl;
+  
+  @Autowired
+  private SettingsService settingsService;
 
   @Override
   public List<Integration> get(String team) {
     List<IntegrationTemplateEntity> templates = integrationTemplateRepository.findAll();
     List<Integration> integrations = new LinkedList<>();
     templates.forEach(t -> {
+      LOGGER.debug(t.toString());
       Integration i = new Integration();
       BeanUtils.copyProperties(t, i);
       List<String> refs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipType.INTEGRATION),
@@ -55,6 +60,9 @@ public class IntegrationServiceImpl implements IntegrationService {
         if (entity.isPresent()) {
           i.setStatus(IntegrationStatus.linked);          
         }
+      }
+      if ("github".equals(i.getName().toLowerCase())) {
+        i.getLink().replace("{app_name}", settingsService.getSettingConfig("integration", "github.appName").getValue());
       }
       integrations.add(i);
     });

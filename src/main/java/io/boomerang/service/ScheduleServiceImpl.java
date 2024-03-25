@@ -28,6 +28,7 @@ import com.cronutils.model.CronType;
 import com.cronutils.model.definition.CronDefinitionBuilder;
 import com.cronutils.parser.CronParser;
 import io.boomerang.client.EngineClient;
+import io.boomerang.client.WorkflowResponsePage;
 import io.boomerang.data.entity.WorkflowScheduleEntity;
 import io.boomerang.data.repository.WorkflowScheduleRepository;
 import io.boomerang.error.BoomerangError;
@@ -63,7 +64,7 @@ public class ScheduleServiceImpl implements ScheduleService {
   private WorkflowService workflowService;
   
   @Autowired
-  private RelationshipService relationshipService;
+  private RelationshipServiceImpl relationshipServiceImpl;
 
   @Autowired
   private EngineClient engineClient;
@@ -77,16 +78,11 @@ public class ScheduleServiceImpl implements ScheduleService {
    * @return a single Workflow Schedule
    */
   @Override
-  public WorkflowSchedule get(String scheduleId) {
+  public WorkflowSchedule get(String team, String scheduleId) {
     final Optional<WorkflowScheduleEntity> scheduleEntity = scheduleRepository.findById(scheduleId);
-    if (scheduleEntity.isPresent()) {
-      // Get Refs that request has access to
-      List<String> refs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipType.WORKFLOW),
-          Optional.of(List.of(scheduleEntity.get().getWorkflowRef())), Optional.of(RelationshipLabel.BELONGSTO), Optional.ofNullable(RelationshipType.TEAM),
-          Optional.empty());
-      if (!refs.isEmpty()) {
-        return convertScheduleEntityToModel(scheduleEntity.get());
-      }
+    if (scheduleEntity.isPresent() && relationshipServiceImpl.hasTeamRelationship(Optional.of(RelationshipType.WORKFLOW),
+          Optional.of(scheduleEntity.get().getWorkflowRef()), RelationshipLabel.BELONGSTO, team, false)) {
+      return convertScheduleEntityToModel(scheduleEntity.get());
     }
     throw new BoomerangException(BoomerangError.SCHEDULE_INVALID_REF);
   }
@@ -111,13 +107,8 @@ public class ScheduleServiceImpl implements ScheduleService {
    * @return list of Workflow Schedules
    */
   @Override
-  public Page<WorkflowSchedule> query(int page, int limit, Sort sort, Optional<List<String>> queryStatus, Optional<List<String>> queryTypes, Optional<List<String>> queryWorkflows,
-      Optional<List<String>> queryTeams) {
-    // Get Refs that request has access to
-    List<String> refs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipType.WORKFLOW),
-        queryWorkflows, Optional.of(RelationshipLabel.BELONGSTO), Optional.ofNullable(RelationshipType.TEAM),
-        queryTeams);
-
+  public Page<WorkflowSchedule> query(String queryTeam, int page, int limit, Sort sort, Optional<List<String>> queryStatus, Optional<List<String>> queryTypes, Optional<List<String>> queryWorkflows) {
+    List<String> refs = relationshipServiceImpl.getFilteredRefs(Optional.of(RelationshipType.WORKFLOW), queryWorkflows, RelationshipLabel.BELONGSTO, RelationshipType.TEAM, queryTeam, false);
     if (!refs.isEmpty()) {
       List<Criteria> criteriaList = new ArrayList<>();
       Criteria criteria = Criteria.where("workflowRef").in(refs);
@@ -168,21 +159,16 @@ public class ScheduleServiceImpl implements ScheduleService {
    * @return echos the created schedule
    */
   @Override
-  public WorkflowSchedule create(final WorkflowSchedule schedule, String team) {
-    if (schedule != null && schedule.getWorkflowRef() != null && team != null) {
-      // Get Refs that request has access to
-      final List<String> refs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipType.WORKFLOW),
-          Optional.of(List.of(schedule.getWorkflowRef())), Optional.of(RelationshipLabel.BELONGSTO),
-          Optional.ofNullable(RelationshipType.TEAM), Optional.of(List.of(team)));
-      if (!refs.isEmpty()) {
-        WorkflowScheduleEntity scheduleEntity = internalCreate(schedule);
+  public WorkflowSchedule create(String team, final WorkflowSchedule schedule) {
+    if (schedule != null && schedule.getWorkflowRef() != null && relationshipServiceImpl.hasTeamRelationship(Optional.of(RelationshipType.WORKFLOW),
+        Optional.of(schedule.getWorkflowRef()), RelationshipLabel.BELONGSTO, team, false)) {
+        WorkflowScheduleEntity scheduleEntity = internalCreate(team, schedule);
         return convertScheduleEntityToModel(scheduleEntity);
-      }
     }
     throw new BoomerangException(BoomerangError.SCHEDULE_INVALID_REF);
   }
 
-  public WorkflowScheduleEntity internalCreate(final WorkflowSchedule schedule) {
+  public WorkflowScheduleEntity internalCreate(final String team, final WorkflowSchedule schedule) {
     // Validate required fields are present
     if ((WorkflowScheduleType.runOnce.equals(schedule.getType())
         && schedule.getDateSchedule() == null)
@@ -204,7 +190,7 @@ public class ScheduleServiceImpl implements ScheduleService {
       scheduleEntity.setStatus(WorkflowScheduleStatus.trigger_disabled);
     }
     scheduleRepository.save(scheduleEntity);
-    createOrUpdateSchedule(scheduleEntity, enableJob);
+    createOrUpdateSchedule(team, scheduleEntity, enableJob);
     return scheduleEntity;
   }
   
@@ -213,7 +199,7 @@ public class ScheduleServiceImpl implements ScheduleService {
    * 
    * @return the single returnable schedule.
    */
-  protected WorkflowSchedule convertScheduleEntityToModel(WorkflowScheduleEntity entity) {
+  private WorkflowSchedule convertScheduleEntityToModel(WorkflowScheduleEntity entity) {
     try {
       return new WorkflowSchedule(entity, this.taskScheduler.getNextTriggerDate(entity));
     } catch (Exception e) {
@@ -227,10 +213,11 @@ public class ScheduleServiceImpl implements ScheduleService {
    * Retrieves the calendar dates between a start and end date period for the schedules provided.
    * 
    * @return list of Schedule Calendars
+   * 
+   * TODO add relationship check
    */
   @Override
-  public List<WorkflowScheduleCalendar> calendars(final List<String> scheduleIds, Date fromDate, Date toDate) {
-    
+  public List<WorkflowScheduleCalendar> calendars(String team, final List<String> scheduleIds, Date fromDate, Date toDate) {
     List<WorkflowScheduleCalendar> scheduleCalendars = new LinkedList<>();
     final Optional<List<WorkflowScheduleEntity>> scheduleEntities = scheduleRepository.findByIdInAndStatusIn(scheduleIds, getStatusesNotCompletedOrDeleted());
     if (scheduleEntities.isPresent()) {
@@ -250,18 +237,22 @@ public class ScheduleServiceImpl implements ScheduleService {
    * @return list of Schedule Calendars
    */
   @Override
-  public List<WorkflowScheduleCalendar> getCalendarsForWorkflow(final String workflowId, Date fromDate, Date toDate) {
-    List<WorkflowScheduleCalendar> scheduleCalendars = new LinkedList<>();
-    final Optional<List<WorkflowScheduleEntity>> scheduleEntities = scheduleRepository.findByWorkflowRefInAndStatusIn(List.of(workflowId), getStatusesNotCompletedOrDeleted());
-    if (scheduleEntities.isPresent()) {
-      scheduleEntities.get().forEach(e -> {
-        WorkflowScheduleCalendar scheduleCalendar = new WorkflowScheduleCalendar();
-        scheduleCalendar.setScheduleId(e.getId());
-        scheduleCalendar.setDates(getCalendarForDates(e.getId(), fromDate, toDate));
-        scheduleCalendars.add(scheduleCalendar);
-      });
+  public List<WorkflowScheduleCalendar> getCalendarsForWorkflow(String team, final String workflowId, Date fromDate, Date toDate) {
+    if (relationshipServiceImpl.hasTeamRelationship(Optional.of(RelationshipType.WORKFLOW),
+        Optional.of(workflowId), RelationshipLabel.BELONGSTO, team, false)) {
+      List<WorkflowScheduleCalendar> scheduleCalendars = new LinkedList<>();
+      final Optional<List<WorkflowScheduleEntity>> scheduleEntities = scheduleRepository.findByWorkflowRefInAndStatusIn(List.of(workflowId), getStatusesNotCompletedOrDeleted());
+      if (scheduleEntities.isPresent()) {
+        scheduleEntities.get().forEach(e -> {
+          WorkflowScheduleCalendar scheduleCalendar = new WorkflowScheduleCalendar();
+          scheduleCalendar.setScheduleId(e.getId());
+          scheduleCalendar.setDates(getCalendarForDates(e.getId(), fromDate, toDate));
+          scheduleCalendars.add(scheduleCalendar);
+        });
+      }
+      return scheduleCalendars;
     }
-    return scheduleCalendars;
+    throw new BoomerangException(BoomerangError.SCHEDULE_INVALID_REF);
   }
   
   /*
@@ -289,7 +280,7 @@ public class ScheduleServiceImpl implements ScheduleService {
    * @return echos the updated schedule
    */
   @Override
-  public WorkflowSchedule apply(final WorkflowSchedule request, Optional<String> team) {
+  public WorkflowSchedule apply(String team, final WorkflowSchedule request) {
     if (request != null && request.getId() != null && !request.getId().isBlank()
         && !request.getId().isEmpty()) {
       final Optional<WorkflowScheduleEntity> optScheduleEntity =
@@ -308,7 +299,7 @@ public class ScheduleServiceImpl implements ScheduleService {
         // Check if job is trying to be enabled with date in the past
         WorkflowScheduleStatus newStatus = scheduleEntity.getStatus();
         Workflow workflow =
-            workflowService.get(scheduleEntity.getWorkflowRef(), Optional.empty(), false);
+            workflowService.get(team, scheduleEntity.getWorkflowRef(), Optional.empty(), false);
         Boolean enableJob = true;
         if (!previousStatus.equals(newStatus)) {
           if (WorkflowScheduleStatus.active.equals(previousStatus)
@@ -344,12 +335,12 @@ public class ScheduleServiceImpl implements ScheduleService {
           }
         }
         scheduleRepository.save(scheduleEntity);
-        createOrUpdateSchedule(scheduleEntity, enableJob);
+        createOrUpdateSchedule(team, scheduleEntity, enableJob);
         return convertScheduleEntityToModel(scheduleEntity);
       }
-    } else if (request != null && team.isPresent()) {
+    } else if (request != null) {
       request.setId(null);
-      return this.create(request, team.get());
+      return this.create(team, request);
     } 
     throw new BoomerangException(BoomerangError.SCHEDULE_INVALID_REF);
   }
@@ -358,12 +349,12 @@ public class ScheduleServiceImpl implements ScheduleService {
    * Helper method to determine if we are updating a cron or runonce schedule. It also handles
    * pausing a schedule if the status is set to pause.
    */
-  private void createOrUpdateSchedule(final WorkflowScheduleEntity schedule, Boolean enableJob) {
+  private void createOrUpdateSchedule(final String team, final WorkflowScheduleEntity schedule, Boolean enableJob) {
     try {
       if (WorkflowScheduleType.runOnce.equals(schedule.getType())) {
-        this.taskScheduler.createOrUpdateRunOnceJob(schedule);
+        this.taskScheduler.createOrUpdateRunOnceJob(team, schedule);
       } else {
-        this.taskScheduler.createOrUpdateCronJob(schedule);
+        this.taskScheduler.createOrUpdateCronJob(team, schedule);
       }
       if (!enableJob) {
         this.taskScheduler.pauseJob(schedule);
@@ -381,8 +372,7 @@ public class ScheduleServiceImpl implements ScheduleService {
    * Enables all schedules that have been disabled by the trigger being disabled. This is needed to 
    * differentiate between user paused and trigger disabled schedules.
    */
-  @Override
-  public void enableAllTriggerSchedules(final String workflowId) {
+  protected void enableAllTriggerSchedules(final String workflowId) {
     final Optional<List<WorkflowScheduleEntity>> entities = scheduleRepository.findByWorkflowRefInAndStatusIn(List.of(workflowId), List.of(WorkflowScheduleStatus.trigger_disabled));
     if (entities.isPresent()) {
       entities.get().forEach(s -> {
@@ -427,8 +417,7 @@ public class ScheduleServiceImpl implements ScheduleService {
   /*
    * Disables all schedules that are currently active and is used when the trigger is disabled.
    */
-  @Override
-  public void disableAllTriggerSchedules(final String workflowId) {
+  protected void disableAllTriggerSchedules(final String workflowId) {
     final Optional<List<WorkflowScheduleEntity>> entities = scheduleRepository.findByWorkflowRefInAndStatusIn(List.of(workflowId), List.of(WorkflowScheduleStatus.active));
     if (entities.isPresent()) {
       entities.get().forEach(s -> {
@@ -445,51 +434,33 @@ public class ScheduleServiceImpl implements ScheduleService {
   }
   
   /*
-   * Disable a specific schedule
-   */
-  private void disableSchedule(String scheduleId) throws SchedulerException {
-    Optional<WorkflowScheduleEntity> schedule = scheduleRepository.findById(scheduleId);
-    if (schedule.isPresent() && !WorkflowScheduleStatus.deleted.equals(schedule.get().getStatus())) {
-      schedule.get().setStatus(WorkflowScheduleStatus.inactive);
-      scheduleRepository.save(schedule.get());
-      this.taskScheduler.pauseJob(schedule.get());
-    } else {
-//        TODO: return that it couldn't be disabled or doesn't exist
-    }
-  }
-  
-  /*
-   * Disable a specific schedule
+   * Complete a specific schedule
    * 
    * Used by ExecuteScheduleJob
    */
-  public ResponseEntity<?> complete(String scheduleId) {
+  public void complete(String scheduleId) {
     Optional<WorkflowScheduleEntity> schedule = scheduleRepository.findById(scheduleId);
     if (schedule.isPresent() && !WorkflowScheduleStatus.deleted.equals(schedule.get().getStatus())) {
       schedule.get().setStatus(WorkflowScheduleStatus.completed);
-      try {
-        scheduleRepository.save(schedule.get());
-        this.taskScheduler.pauseJob(schedule.get());
-      } catch (SchedulerException e) {
-        logger.info("Unable to delete schedule {}.", scheduleId);
-        logger.error(e);
-        return ResponseEntity.internalServerError().build();
-      }
-    } else {
-//        TODO: return that it couldn't be disabled or doesn't exist
+      scheduleRepository.save(schedule.get());
     }
-    return ResponseEntity.ok().build();
   }
   
   /*
    * Mark all schedules as deleted and cancel the quartz jobs. This is used when a workflow is deleted.
    */
-  @Override
-  public void deleteAllForWorkflow(final String workflowId) {
+  protected void deleteAllForWorkflow(final String workflowId) {
     final Optional<List<WorkflowScheduleEntity>> entities = scheduleRepository.findByWorkflowRef(workflowId);
     if (entities.isPresent()) {
       entities.get().forEach(s -> {
-        delete(s.getId());
+        try {
+          s.setStatus(WorkflowScheduleStatus.deleted);
+          scheduleRepository.save(s);
+          this.taskScheduler.cancelJob(s);
+        } catch (SchedulerException e) {
+          logger.info("Unable to delete schedule: {}.", s.getId());
+          logger.error(e);
+        }
       });
     }
   }
@@ -498,22 +469,20 @@ public class ScheduleServiceImpl implements ScheduleService {
    * Mark a single schedule as deleted and cancel the quartz jobs. Used by the UI when deleting a schedule.
    */
   @Override
-  public ResponseEntity<?> delete(final String scheduleId) {
-    try {
-      final Optional<WorkflowScheduleEntity> schedule = scheduleRepository.findById(scheduleId);
-      if (schedule.isPresent()) {
-        schedule.get().setStatus(WorkflowScheduleStatus.deleted);
-        scheduleRepository.save(schedule.get());
-        this.taskScheduler.cancelJob(schedule.get());
-      } else {
-        return ResponseEntity.badRequest().build();
+  public void delete(String team, final String scheduleId) {
+    final Optional<WorkflowScheduleEntity> schedule = scheduleRepository.findById(scheduleId);
+    if (schedule.isPresent() && relationshipServiceImpl.hasTeamRelationship(Optional.of(RelationshipType.WORKFLOW),
+        Optional.of(schedule.get().getWorkflowRef()), RelationshipLabel.BELONGSTO, team, false)) {
+      try {
+          schedule.get().setStatus(WorkflowScheduleStatus.deleted);
+          scheduleRepository.save(schedule.get());
+          this.taskScheduler.cancelJob(schedule.get());
+      } catch (SchedulerException e) {
+        logger.info("Unable to delete schedule: {}.", scheduleId);
+        logger.error(e);
       }
-    } catch (SchedulerException e) {
-      logger.info("Unable to delete schedule {}.", scheduleId);
-      logger.error(e);
-      return ResponseEntity.internalServerError().build();
     }
-    return ResponseEntity.ok().build();
+    throw new BoomerangException(BoomerangError.SCHEDULE_INVALID_REF);
   }
   
   /*

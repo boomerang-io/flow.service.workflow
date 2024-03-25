@@ -47,6 +47,10 @@ public interface RelationshipRepositoryV2 extends MongoRepository<RelationshipEn
       "{ '$graphLookup' : { 'from' :  ?2, 'startWith': '$_id', 'connectFromField':'id', 'connectToField': 'connections.to', 'as': 'children', restrictSearchWithMatch: {'type': ?3 } } }"})
   RelationshipEntityV2Graph graphRelationshipsByTypeTo(RelationshipType type, String ref, String collection, RelationshipType childType);
   
+  @Aggregation(pipeline={"{'$match':{'type': 'WORKFLOW, '$or': [{'slug': ?0},{'ref': ?0}]}}",
+      "{ '$graphLookup' : { 'from' :  ?1, 'startWith': '$connections.to', 'connectFromField':'connections.to', 'connectToField': '_id', 'as': 'children', restrictSearchWithMatch: {'type': 'TEAM' } } }"})
+  RelationshipEntityV2Graph findWorkflowTeamRelationship(String ref, String collection);
+  
   @Aggregation(pipeline={"{'$match':{'type': 'USER', '$or': [{'slug': ?0},{'ref': ?0}]}}",
       "{ '$graphLookup' : { 'from' :  ?1, 'startWith': '$connections.to', 'connectFromField':'connections.to', 'connectToField': '_id', 'as': 'children' } }",
       "{ '$addFields' : { 'teams' : { '$map' : { 'input' : '$children', 'in' : { '$mergeObjects' : [ '$$this', { '$arrayElemAt' : [ '$connections', { '$indexOfArray': [ '$connections.to', '$$this._id' ] } ] } ] } } } } }"})

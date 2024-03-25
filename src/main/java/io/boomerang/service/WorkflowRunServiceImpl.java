@@ -71,24 +71,33 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
       Optional<List<String>> queryWorkflows, Optional<List<String>> queryTriggers) {
 
     // Get Refs that request has access to
-    List<String> wfRunRefs = relationshipServiceImpl.getFilteredRefs(Optional.of(RelationshipType.WORKFLOWRUN), queryWorkflowRuns, RelationshipLabel.BELONGSTO, RelationshipType.TEAM, queryTeam, false);
-    LOGGER.debug("WorkflowRun Refs: {}", wfRunRefs.toString());
-    if (wfRunRefs == null || wfRunRefs.size() == 0) {
-      return new WorkflowRunResponsePage();
-    }
+//    List<String> wfRunRefs = relationshipServiceImpl.getFilteredRefs(Optional.of(RelationshipType.WORKFLOWRUN), queryWorkflowRuns, RelationshipLabel.BELONGSTO, RelationshipType.TEAM, queryTeam, false);
+//    LOGGER.debug("WorkflowRun Refs: {}", wfRunRefs.toString());
+//    if (wfRunRefs == null || wfRunRefs.size() == 0) {
+//      return new WorkflowRunResponsePage();
+//    }
     
     // Check the queryWorkflows
-    if (queryWorkflows.isPresent()) {
+//    if (queryWorkflows.isPresent()) {
       List<String> wfRefs = relationshipServiceImpl.getFilteredRefs(Optional.of(RelationshipType.WORKFLOW), queryWorkflows, RelationshipLabel.BELONGSTO, RelationshipType.TEAM, queryTeam, false);
       LOGGER.debug("Workflow Refs: {}", wfRefs.toString());
-      queryWorkflows.get().clear();
-      queryWorkflows.get().addAll(wfRefs);
-    }
+//      queryWorkflows.get().clear();
+//      queryWorkflows.get().addAll(wfRefs);
+//    }
 
-    if (!wfRunRefs.isEmpty()) {
+//    if (!wfRunRefs.isEmpty()) {
+//    if (!wfRunRefs.isEmpty()) {
+//      return engineClient.queryWorkflowRuns(fromDate,
+//          toDate, queryLimit, queryPage, queryOrder, queryLabels, queryStatus, queryPhase, Optional.of(wfRunRefs),
+//          queryWorkflows, queryTriggers);
+//    } else {
+//      throw new BoomerangException(BoomerangError.WORKFLOWRUN_INVALID_REF);
+//    } 
+    if (!wfRefs.isEmpty()) {
+      LOGGER.debug("triggers: {}", queryTriggers.get().toString());
       return engineClient.queryWorkflowRuns(fromDate,
-          toDate, queryLimit, queryPage, queryOrder, queryLabels, queryStatus, queryPhase, Optional.of(wfRunRefs),
-          queryWorkflows, queryTriggers);
+          toDate, queryLimit, queryPage, queryOrder, queryLabels, queryStatus, queryPhase, Optional.empty(),
+          Optional.of(wfRefs), queryTriggers);
     } else {
       throw new BoomerangException(BoomerangError.WORKFLOWRUN_INVALID_REF);
     }
