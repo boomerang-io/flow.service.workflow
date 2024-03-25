@@ -94,7 +94,7 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
 //      throw new BoomerangException(BoomerangError.WORKFLOWRUN_INVALID_REF);
 //    } 
     if (!wfRefs.isEmpty()) {
-      LOGGER.debug("triggers: {}", queryTriggers.get().toString());
+//      LOGGER.debug("triggers: {}", queryTriggers.get().toString());
       return engineClient.queryWorkflowRuns(fromDate,
           toDate, queryLimit, queryPage, queryOrder, queryLabels, queryStatus, queryPhase, Optional.empty(),
           Optional.of(wfRefs), queryTriggers);
