@@ -50,7 +50,6 @@ public class TaskServiceImpl implements TaskService {
 
   /*
    * Retrieve a TASK by name and optional version. If no version specified, will retrieve the latest.
-   * TODO: determine if all users need to be able to access (READ) but not edit (CREATE, UPDATE, DELETE)
    */
   @Override
   public Task get(String team, String name, Optional<Integer> version) {
@@ -65,7 +64,6 @@ public class TaskServiceImpl implements TaskService {
     
   /*
    * Retrieve a GLOBALTASK by name and optional version. If no version specified, will retrieve the latest.
-   * TODO: determine if all users need to be able to access (READ) but not edit (CREATE, UPDATE, DELETE).
    */
   @Override
   public Task get(String name, Optional<Integer> version) {

@@ -40,8 +40,8 @@ public interface RelationshipRepositoryV2 extends MongoRepository<RelationshipEn
   boolean existsByTypeAndSlugAndConnectionsTo(RelationshipType type, String slug, ObjectId to);
   
   @Aggregation(pipeline={"{'$match':{'type': ?0, '$or': [{'slug': ?1},{'ref': ?1}]}}",
-      "{ '$graphLookup' : { 'from' :  ?2, 'startWith': '$_id', 'connectFromField':'id', 'connectToField': 'connections.to', 'as': 'children', restrictSearchWithMatch: {'connections.label': ?3 } } }"})
-  RelationshipEntityV2Graph graphRelationshipsByLabelTo(RelationshipType type, String ref, String collection, RelationshipLabel label);
+      "{ '$graphLookup' : { 'from' :  ?2, 'startWith': '$_id', 'connectFromField':'id', 'connectToField': 'connections.to', 'as': 'children', restrictSearchWithMatch: {'type': ?3, '$or' : [{ 'slug' : { '$in': ?4 } }, { 'ref' : { '$in': ?4 } } ] } } }"})
+  RelationshipEntityV2Graph graphRelationshipsByTypeToAndIn(RelationshipType type, String ref, String collection, RelationshipType childType, List<String> childRefs);
   
   @Aggregation(pipeline={"{'$match':{'type': ?0, '$or': [{'slug': ?1},{'ref': ?1}]}}",
       "{ '$graphLookup' : { 'from' :  ?2, 'startWith': '$_id', 'connectFromField':'id', 'connectToField': 'connections.to', 'as': 'children', restrictSearchWithMatch: {'type': ?3 } } }"})

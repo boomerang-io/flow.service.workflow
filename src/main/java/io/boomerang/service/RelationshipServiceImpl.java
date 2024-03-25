@@ -817,16 +817,13 @@ public class RelationshipServiceImpl implements RelationshipService {
     //Query the database as a Graph for relationship
     if (usev2) {
       try {
-        RelationshipEntityV2Graph aggregate = this.relationshipRepositoryV2.graphRelationshipsByTypeTo(toType, toRef, mongoConfiguration.fullCollectionName("relationships_v2"), fromType.get());
-        LOGGER.debug(aggregate.toString());
-        if (!aggregate.getChildren().isEmpty()) {
-          if (fromRefs.isPresent()) {
-            final List<String> finalFromRefs = fromRefs.get(); 
-            filteredRefs = aggregate.getChildren().stream().filter(c -> finalFromRefs.contains(c.getRef())).map(c -> c.getRef()).toList();
-          } else {
-            filteredRefs = aggregate.getChildren().stream().map(c -> c.getRef()).toList();
-          }
+        RelationshipEntityV2Graph aggregate;
+        if (fromRefs.isPresent()) {
+          aggregate = this.relationshipRepositoryV2.graphRelationshipsByTypeToAndIn(toType, toRef, mongoConfiguration.fullCollectionName("relationships_v2"), fromType.get(), fromRefs.get());
+        } else {
+          aggregate = this.relationshipRepositoryV2.graphRelationshipsByTypeTo(toType, toRef, mongoConfiguration.fullCollectionName("relationships_v2"), fromType.get());
         }
+        filteredRefs = aggregate.getChildren().stream().map(c -> c.getRef()).toList();
       } catch (Exception ex) {
         LOGGER.error(ex);
       }
