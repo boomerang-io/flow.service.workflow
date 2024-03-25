@@ -31,7 +31,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @RequestMapping("/api/v2/task")
 @Tag(name = "Task Management",
 description = "Create and Manage the global Task definitions.")
-public class TaskTemplateV2Controller {
+public class TaskV2Controller {
 
   @Autowired
   private TaskService taskTemplateService;

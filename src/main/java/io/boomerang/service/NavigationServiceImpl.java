@@ -124,7 +124,7 @@ public class NavigationServiceImpl implements NavigationService {
       teamTasks.setType(NavigationType.link);
       teamTasks.setDisabled(disabled);
       teamTasks.setIcon("TaskSettings");
-      teamTasks.setLink(flowAppsUrl + teamIdURLContext + "/task-templates");
+      teamTasks.setLink(flowAppsUrl + teamIdURLContext + "/task-manager");
       response.add(teamTasks);
 
       Navigation teamParameters = new Navigation();
@@ -186,7 +186,7 @@ public class NavigationServiceImpl implements NavigationService {
 
         Navigation taskManager = new Navigation();
         taskManager.setName("Task Manager");
-        taskManager.setLink(flowAppsUrl + "/admin/task-templates");
+        taskManager.setLink(flowAppsUrl + "/admin/task-manager");
         taskManager.setType(NavigationType.link);
         admin.getChildLinks().add(taskManager);
 

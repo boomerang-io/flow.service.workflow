@@ -32,7 +32,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @RequestMapping("/api/v2/team/{team}/task")
 @Tag(name = "Task Management",
 description = "Create and manage the team based Task definitions.")
-public class TeamTaskTemplateV2Controller {
+public class TeamTaskV2Controller {
 
   @Autowired
   private TaskService taskService;
