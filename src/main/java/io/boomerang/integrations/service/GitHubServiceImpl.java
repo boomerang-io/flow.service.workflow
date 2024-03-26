@@ -35,9 +35,6 @@ public class GitHubServiceImpl implements GitHubService {
   private SettingsService settingsService;
   
   @Autowired
-  private RelationshipService relationshipService;
-  
-  @Autowired
   private RelationshipServiceImpl relationshipServiceImpl;
   
   @Autowired
@@ -70,10 +67,9 @@ public class GitHubServiceImpl implements GitHubService {
   @Override
   public ResponseEntity<?> getInstallationForTeam(String team) {
     List<String> rels =
-        relationshipService.getFilteredFromRefs(Optional.of(RelationshipType.INTEGRATION),
-            Optional.empty(), Optional.of(RelationshipLabel.BELONGSTO),
-            Optional.of(RelationshipType.TEAM), Optional.of(List.of(team)));
-
+        relationshipServiceImpl.getFilteredRefs(Optional.of(RelationshipType.INTEGRATION),
+            Optional.empty(), RelationshipLabel.BELONGSTO,
+            RelationshipType.TEAM, team, false);
     if (!rels.isEmpty()) {
       Optional<IntegrationsEntity> optEntity = integrationsRepository.findById(rels.get(0)); 
       if (optEntity.isPresent()) {        
@@ -125,7 +121,7 @@ public class GitHubServiceImpl implements GitHubService {
     if (optEntity.isPresent()) {
       IntegrationsEntity entity = optEntity.get();
 //      relationshipService.addRelationshipRef(RelationshipType.INTEGRATION, entity.getId(), RelationshipLabel.BELONGSTO, RelationshipType.TEAM, Optional.of(request.getTeam()), Optional.empty());
-      relationshipServiceImpl.upsertTeamConnectionBySlug(RelationshipType.INTEGRATION, entity.getId(), RelationshipLabel.INTEGRATIONFOR, request.getTeam(), Optional.empty());
+      relationshipServiceImpl.upsertTeamConnection(RelationshipType.INTEGRATION, entity.getId(), RelationshipLabel.INTEGRATIONFOR, request.getTeam(), Optional.empty());
       return ResponseEntity.ok().build();
     }
     return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
@@ -137,7 +133,7 @@ public class GitHubServiceImpl implements GitHubService {
     Optional<IntegrationsEntity> optEntity = integrationsRepository.findById(request.getRef());
     if (optEntity.isPresent()) {
       IntegrationsEntity entity = optEntity.get();
-      relationshipService.removeRelationships(RelationshipType.INTEGRATION, List.of(entity.getId()), RelationshipType.TEAM, List.of(request.getTeam()));
+      relationshipServiceImpl.removeTeamConnection(RelationshipType.INTEGRATION, List.of(entity.getId()), request.getTeam());
       integrationsRepository.delete(optEntity.get());
     }
   }

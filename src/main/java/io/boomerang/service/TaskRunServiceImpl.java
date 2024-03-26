@@ -31,9 +31,6 @@ public class TaskRunServiceImpl implements TaskRunService {
   @Autowired
   private ParameterManager parameterManager;
 
-  @Autowired
-  private RelationshipService relationshipService;
-
   @Override
   public StreamingResponseBody streamLog(String taskRunId) {
     if (!Objects.isNull(taskRunId) && !taskRunId.isBlank()) {

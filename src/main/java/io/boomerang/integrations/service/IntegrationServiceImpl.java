@@ -34,9 +34,6 @@ public class IntegrationServiceImpl implements IntegrationService {
   private IntegrationsRepository integrationsRepository;
   
   @Autowired
-  private RelationshipService relationshipService;
-  
-  @Autowired
   private RelationshipServiceImpl relationshipServiceImpl;
   
   @Autowired
@@ -50,9 +47,9 @@ public class IntegrationServiceImpl implements IntegrationService {
       LOGGER.debug(t.toString());
       Integration i = new Integration();
       BeanUtils.copyProperties(t, i);
-      List<String> refs = relationshipService.getFilteredFromRefs(Optional.of(RelationshipType.INTEGRATION),
-          Optional.empty(), Optional.of(RelationshipLabel.BELONGSTO),
-          Optional.of(RelationshipType.TEAM), Optional.of(List.of(team)));
+      List<String> refs = relationshipServiceImpl.getFilteredRefs(Optional.of(RelationshipType.INTEGRATION),
+          Optional.empty(), RelationshipLabel.BELONGSTO,
+          RelationshipType.TEAM, team, false);
       LOGGER.debug("Refs: " + refs.toString());
       if (!refs.isEmpty()) {
         i.setRef(refs.get(0));
@@ -74,11 +71,11 @@ public class IntegrationServiceImpl implements IntegrationService {
     Optional<IntegrationsEntity> optEntity = integrationsRepository.findByRef(ref);
     if (optEntity.isPresent()) {
       LOGGER.debug("Integration Entity ID: " + optEntity.get().getId());
-      List<String> refs = relationshipService.getFilteredToRefs(Optional.of(RelationshipType.INTEGRATION),
-          Optional.of(List.of(optEntity.get().getId())), Optional.of(RelationshipLabel.BELONGSTO),
-          Optional.of(RelationshipType.TEAM), Optional.empty());
-      LOGGER.debug("Team Refs: " + refs.toString());
-      return refs.get(0);
+      String team = relationshipServiceImpl.getTeamSlugFromChild(RelationshipType.INTEGRATION, optEntity.get().getId());
+      LOGGER.debug("Team Ref: " + team);
+      if (!team.isBlank()) {        
+        return team;
+      }
     }
     return null;
   }
@@ -103,11 +100,7 @@ public class IntegrationServiceImpl implements IntegrationService {
     if (optEntity.isPresent()) {
       IntegrationsEntity entity = optEntity.get();
       integrationsRepository.delete(optEntity.get());
-      List<String> rels =
-          relationshipService.getFilteredToRefs(Optional.of(RelationshipType.INTEGRATION),
-              Optional.of(List.of(entity.getId())), Optional.of(RelationshipLabel.BELONGSTO),
-              Optional.of(RelationshipType.TEAM), Optional.empty());
-      rels.forEach(r -> relationshipService.removeRelationshipById(r));
+      relationshipServiceImpl.removeNodeByRefOrSlug(RelationshipType.INTEGRATION, entity.getId());
     }
   }
 }
