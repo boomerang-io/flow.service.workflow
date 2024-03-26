@@ -74,7 +74,7 @@ public class TriggersServiceImpl implements TriggerService {
     LOGGER.debug("Webhook Request: " + request.toString());
     
     // Get the Workflows team
-    Optional<String> teamRef = relationshipServiceImpl.getRelationshipRef(RelationshipType.WORKFLOW, workflowRef, RelationshipLabel.BELONGSTO);
+    String teamRef = relationshipServiceImpl.getTeamSlugFromChild(RelationshipType.WORKFLOW, workflowRef);
     if (teamRef.isEmpty()) {
       throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
     }
@@ -82,7 +82,7 @@ public class TriggersServiceImpl implements TriggerService {
     // Auto start is not needed when using the default handler
     // As the default handler will pick up the queued Workflow and start the Workflow when ready.
     // However if using the non-default Handler then this may be needed to be set to true.
-    return workflowService.submit(teamRef.get(), workflowRef, request, autoStart);
+    return workflowService.submit(teamRef, workflowRef, request, autoStart);
   }
 
   @Override
@@ -95,7 +95,7 @@ public class TriggersServiceImpl implements TriggerService {
     LOGGER.debug("Webhook Request: " + request.toString());
     
     // Get the Workflows team
-    Optional<String> teamRef = relationshipServiceImpl.getRelationshipRef(RelationshipType.WORKFLOW, workflowRef, RelationshipLabel.BELONGSTO);
+    String teamRef = relationshipServiceImpl.getTeamSlugFromChild(RelationshipType.WORKFLOW, workflowRef);
     if (teamRef.isEmpty()) {
       throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
     }
@@ -103,7 +103,7 @@ public class TriggersServiceImpl implements TriggerService {
     // Auto start is not needed when using the default handler
     // As the default handler will pick up the queued Workflow and start the Workflow when ready.
     // However if using the non-default Handler then this may be needed to be set to true.
-    return workflowService.submit(teamRef.get(), workflowRef, request, autoStart);
+    return workflowService.submit(teamRef, workflowRef, request, autoStart);
   }
 
   @Override

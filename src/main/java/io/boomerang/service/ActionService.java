@@ -12,18 +12,16 @@ import io.boomerang.model.enums.ref.ActionStatus;
 import io.boomerang.model.enums.ref.ActionType;
 
 public interface ActionService {
+
+  Action get(String team, String id);
   
-  void action(List<ActionRequest> requests);
+  void action(String team, List<ActionRequest> requests);
 
-  Action get(String id);
+  ActionSummary summary(String team, Optional<Date> fromDate, Optional<Date> toDate,
+      Optional<List<String>> workflows);
 
-  Action getByTaskRun(String id);
-
-  ActionSummary summary(Optional<Date> fromDate, Optional<Date> toDate,
-      Optional<List<String>> workflows, Optional<List<String>> scopes);
-
-  Page<Action> query(Optional<Date> from, Optional<Date> to, Pageable pageable,
+  Page<Action> query(String team, Optional<Date> from, Optional<Date> to, Pageable pageable,
       Optional<List<ActionType>> types, Optional<List<ActionStatus>> status,
-      Optional<List<String>> workflows, Optional<List<String>> teams);
+      Optional<List<String>> workflows);
 
 }

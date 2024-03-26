@@ -78,9 +78,6 @@ public class SlackServiceImpl implements SlackService {
     @Autowired
     private IntegrationsRepository extensionsRepository;
 
-    @Autowired
-    private RelationshipService relationshipService;
-
 //    @Autowired
 //    private UserIdentityService userIdentityService;
 

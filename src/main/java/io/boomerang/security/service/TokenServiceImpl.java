@@ -73,9 +73,6 @@ public class TokenServiceImpl implements TokenService {
   private IdentityService identityService;
 
   @Autowired
-  private RelationshipService relationshipService;
-
-  @Autowired
   private RelationshipServiceImpl relationshipServiceImpl;
 
   @Value("${flow.token.max-user-session-duration}")
@@ -152,23 +149,19 @@ public class TokenServiceImpl implements TokenService {
         teams = Optional.of(request.getTeams());
       }
       // Validate principal against all the team permissions the user has
-      List<RelationshipEntity> userRels = relationshipService.getFilteredRels(
-          Optional.of(RelationshipType.USER), Optional.of(List.of(request.getPrincipal())),
-          Optional.of(RelationshipLabel.MEMBEROF), Optional.of(RelationshipType.TEAM), teams, false);
-      for (RelationshipEntity rel : userRels) {
-        String role = RoleEnum.READER.getLabel();
-        if (rel.getData() != null && rel.getData().get("role") != null) {
-          role = rel.getData().get("role").toString();
-        }
-        List<String> rolePermissions = roleRepository.findByTypeAndName("team", role).getPermissions();
+      Map<String, String> teamsAndRoles = relationshipServiceImpl.getMyTeamRefsAndRoles(request.getPrincipal());
+      for (Map.Entry<String, String> entry : teamsAndRoles.entrySet()) {
+//        String role = RoleEnum.READER.getLabel();
+//        if (rel.getData() != null && rel.getData().get("role") != null) {
+//          role = rel.getData().get("role").toString();
+//        }
+        List<String> rolePermissions = roleRepository.findByTypeAndName("team", entry.getValue()).getPermissions();
         List<String> replacedPermissions = rolePermissions.stream()
-            .map(str -> str.replace("{principal}", rel.getToRef()))
+            .map(str -> str.replace("{principal}", entry.getKey()))
             .collect(Collectors.toList());
         LOGGER.debug(replacedPermissions.toString());
-        tokenEntity.getPermissions()
-            .addAll(replacedPermissions);
-      } ;
-      LOGGER.debug(userRels.toString());
+        tokenEntity.getPermissions().addAll(replacedPermissions);
+      }
     } else {
       tokenEntity.setPermissions(request.getPermissions());
     }
@@ -345,8 +338,8 @@ public class TokenServiceImpl implements TokenService {
       user = identityService.getAndRegisterUser(email, firstName, lastName,
           Optional.of(UserType.admin), allowUserCreation);
       if (user.isPresent()) {
-        relationshipService.addRelationshipRef(RelationshipType.USER, user.get().getId(), RelationshipLabel.MEMBEROF,
-            RelationshipType.TEAM, Optional.of("system"),Optional.of(Map.of("role",RoleEnum.OWNER.getLabel())));
+        relationshipServiceImpl.upsertTeamConnection(RelationshipType.USER, user.get().getId(), RelationshipLabel.MEMBEROF,
+            "system", Optional.of(Map.of("role",RoleEnum.OWNER.getLabel())));
       }
     } else if (identityService.isActivated()) {
       user = identityService.getAndRegisterUser(email, firstName, lastName,

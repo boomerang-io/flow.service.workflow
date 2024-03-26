@@ -47,9 +47,9 @@ public interface RelationshipRepositoryV2 extends MongoRepository<RelationshipEn
       "{ '$graphLookup' : { 'from' :  ?2, 'startWith': '$_id', 'connectFromField':'id', 'connectToField': 'connections.to', 'as': 'children', restrictSearchWithMatch: {'type': ?3 } } }"})
   RelationshipEntityV2Graph graphRelationshipsByTypeTo(RelationshipType type, String ref, String collection, RelationshipType childType);
   
-  @Aggregation(pipeline={"{'$match':{'type': 'WORKFLOW, '$or': [{'slug': ?0},{'ref': ?0}]}}",
-      "{ '$graphLookup' : { 'from' :  ?1, 'startWith': '$connections.to', 'connectFromField':'connections.to', 'connectToField': '_id', 'as': 'children', restrictSearchWithMatch: {'type': 'TEAM' } } }"})
-  RelationshipEntityV2Graph findWorkflowTeamRelationship(String ref, String collection);
+  @Aggregation(pipeline={"{'$match':{'type': ?0, '$or': [{'slug': ?1},{'ref': ?1}]}}",
+      "{ '$graphLookup' : { 'from' :  ?2, 'startWith': '$connections.to', 'connectFromField':'connections.to', 'connectToField': '_id', 'as': 'children', restrictSearchWithMatch: {'type': ?3 } } }"})
+  RelationshipEntityV2Graph graphRelationshipsByTypeFrom(RelationshipType type, String ref, String collection, RelationshipType childType);
   
   @Aggregation(pipeline={"{'$match':{'type': 'USER', '$or': [{'slug': ?0},{'ref': ?0}]}}",
       "{ '$graphLookup' : { 'from' :  ?1, 'startWith': '$connections.to', 'connectFromField':'connections.to', 'connectToField': '_id', 'as': 'children' } }",
@@ -63,4 +63,12 @@ public interface RelationshipRepositoryV2 extends MongoRepository<RelationshipEn
   @Query("{'type': ?0, '$or': [{'slug': ?1},{'ref': ?1}], 'connections.to': ?2}")
   @Update("{ '$set' : { 'connections.$.data' : ?3 } }")
   long updateConnectionByTypeAndRefOrSlug(RelationshipType type, String ref, ObjectId to, Map<String, String> data);
+  
+  @Query("{}")
+  @Update("{ '$pull' : { 'connections' : { 'to' : ?0 } } }")
+  long removeAllConnectionsByTo(ObjectId ref);
+  
+  @Query("{'type': ?0, '$or': [{ 'slug' : { '$in': ?1 } }, { 'ref' : { '$in': ?1 } } ]}")
+  @Update("{ '$pull' : { 'connections' : { 'to' : ?2 } } }")
+  long removeConnectionByTo(RelationshipType type, List<String> ref, ObjectId to);
 }

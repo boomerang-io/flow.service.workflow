@@ -15,6 +15,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import io.boomerang.model.WorkflowSchedule;
+import io.boomerang.model.enums.RelationshipType;
 import io.boomerang.model.enums.TriggerEnum;
 import io.boomerang.model.enums.WorkflowScheduleType;
 import io.boomerang.model.ref.WorkflowSubmitRequest;
@@ -96,7 +97,7 @@ public class QuartzSchedulerJob extends QuartzJobBean {
       if (team == null || team.isEmpty()) {
         //Attempt to get the team from Workflow relationship.
         //Internal create for Workflows that create schedules via Engine where team won't be set.
-        team = relationshipService.getWorkflowsTeamSlug(jobDetail.getKey().getGroup());
+        team = relationshipService.getTeamSlugFromChild(RelationshipType.WORKFLOW, jobDetail.getKey().getGroup());
       }
       workflowService.submit(team, jobDetail.getKey().getGroup(), request, autoStart);
     }

@@ -72,9 +72,6 @@ public class IdentityServiceImpl implements IdentityService {
   private UserRepository userRepository;
 
   @Autowired
-  private RelationshipService relationshipService;
-
-  @Autowired
   private RelationshipServiceImpl relationshipServiceImpl;
 
   @Autowired
@@ -243,15 +240,12 @@ public class IdentityServiceImpl implements IdentityService {
         // Generate TeamSummary + Insight
         TeamSummary ts = new TeamSummary(teamEntity.get());
         TeamSummaryInsights tsi = new TeamSummaryInsights();
-        List<String> memberRefs =
-            relationshipService.getFilteredFromRefs(Optional.of(RelationshipType.USER),
-                Optional.empty(), Optional.of(RelationshipLabel.MEMBEROF),
-                Optional.of(RelationshipType.TEAM), Optional.of(List.of(k)));
-        tsi.setMembers(Long.valueOf(memberRefs.size()));
+        Map<String, String> membersAndRoles = relationshipServiceImpl.getMembersAndRoleForTeam(k);
+        tsi.setMembers(Long.valueOf(membersAndRoles.size()));
         List<String> workflowRefs =
-            relationshipService.getFilteredFromRefs(Optional.of(RelationshipType.WORKFLOW),
-                Optional.empty(), Optional.of(RelationshipLabel.BELONGSTO),
-                Optional.of(RelationshipType.TEAM), Optional.of(List.of(k)));
+            relationshipServiceImpl.getFilteredRefs(Optional.of(RelationshipType.WORKFLOW),
+                Optional.empty(), RelationshipLabel.BELONGSTO,
+                RelationshipType.TEAM, k, true);
         tsi.setWorkflows(Long.valueOf(workflowRefs.size()));
         ts.setInsights(tsi);
         teamSummaries.add(ts);
@@ -446,19 +440,21 @@ public class IdentityServiceImpl implements IdentityService {
   }
 
   @Override
-  // TODO - determine if we can set User to deleted and just remove the relationships
+  /*
+   * Delete User
+   * 
+   * User must leave or delete teams prior to deleting account
+   */
+  //TODO - determine if the user needs to be removed from ApproverGroups, and anything else
   public void delete(String userId) {
     Optional<UserEntity> user = userRepository.findById(userId);
-    List<String> teamRefs =
-        relationshipService.getFilteredFromRefs(Optional.of(RelationshipType.USER),
-            Optional.of(List.of(userId)), Optional.of(RelationshipLabel.MEMBEROF),
-            Optional.of(RelationshipType.TEAM), Optional.empty());
-    if (!teamRefs.isEmpty()) {
+    Map<String, String> teamRefsAndRoles = relationshipServiceImpl.getMyTeamRefsAndRoles(userId);
+    if (!teamRefsAndRoles.isEmpty()) {
       throw new BoomerangException(BoomerangError.USER_UNABLE_TO_DELETE);
     }
     if (user.isPresent()) {
-      user.get().setStatus(UserStatus.deleted);
-      userRepository.save(user.get());
+      userRepository.deleteById(userId);
+      relationshipServiceImpl.removeNodeByRefOrSlug(RelationshipType.USER, userId);
     }
   }
 

@@ -34,51 +34,68 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
-@RequestMapping("/api/v2/action")
+@RequestMapping("/api/v2/team/{team}/action")
 @Tag(name = "Actions Management",
 description = "Create and manage Manual and Approval Actions.")
-public class ActionV2Controller {
+public class TeamActionV2Controller {
 
   @Autowired
   private ActionService actionService;
 
-  @PutMapping(value = "")
-  @AuthScope(action = PermissionAction.ACTION, scope = PermissionScope.ACTION, types = {AuthType.session, AuthType.session, AuthType.team, AuthType.global})
-  @Operation(summary = "Provide an update for an Action")
-  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
-      @ApiResponse(responseCode = "400", description = "Bad Request")})
-  public void action(@RequestBody List<ActionRequest> request) {
-      actionService.action(request);
-  }
-
   @GetMapping(value = "/{actionId}")
-  @AuthScope(action = PermissionAction.READ, scope = PermissionScope.ACTION, types = {AuthType.session, AuthType.session, AuthType.team, AuthType.global})
+  @AuthScope(action = PermissionAction.READ, scope = PermissionScope.ACTION, types = {AuthType.session, AuthType.user, AuthType.team, AuthType.global})
   @Operation(summary = "Retrieve a specific Action by Id")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
   public Action get(
+      @Parameter(name = "workflow", description = "Workflow reference",
+      required = true) @PathVariable String workflow,
+  @Parameter(name = "team",
+  description = "Owning team name.",
+  example = "my-amazing-team",
+  required = true) @PathVariable String team,
       @Parameter(name = "actionId", description = "ID of Action",
       required = true) @PathVariable String actionId) {
-      return actionService.get(actionId);
+      return actionService.get(team, actionId);
   }
   
-  @GetMapping(value = "")
-  @AuthScope(action = PermissionAction.READ, scope = PermissionScope.ACTION, types = {AuthType.session, AuthType.session, AuthType.team, AuthType.global})
-  @Operation(summary = "Retrieve a specifc Action by TaskRun")
+//  @GetMapping(value = "")
+//  @AuthScope(action = PermissionAction.READ, scope = PermissionScope.ACTION, types = {AuthType.session, AuthType.user, AuthType.team, AuthType.global})
+//  @Operation(summary = "Retrieve a specifc Action by TaskRun")
+//  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
+//      @ApiResponse(responseCode = "400", description = "Bad Request")})
+//  public Action getByTaskRun(
+//      @Parameter(name = "taskRunId", description = "Retrieve Action by TaskRun",
+//      required = true) @RequestParam(required = true) String taskRunId) {
+//      return actionService.getByTaskRun(taskRunId);
+//  }
+
+  @PutMapping(value = "")
+  @AuthScope(action = PermissionAction.ACTION, scope = PermissionScope.ACTION, types = {AuthType.session, AuthType.user, AuthType.team, AuthType.global})
+  @Operation(summary = "Provide an update for an Action")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
-  public Action getByTaskRun(
-      @Parameter(name = "taskRunId", description = "Retrieve Action by TaskRun",
-      required = true) @RequestParam(required = true) String taskRunId) {
-      return actionService.getByTaskRun(taskRunId);
+  public void action(
+      @Parameter(name = "workflow", description = "Workflow reference",
+      required = true) @PathVariable String workflow,
+  @Parameter(name = "team",
+  description = "Owning team name.",
+  example = "my-amazing-team",
+  required = true) @PathVariable String team,
+  @RequestBody List<ActionRequest> request) {
+      actionService.action(team, request);
   }
 
   @GetMapping(value = "/query")
-  @AuthScope(action = PermissionAction.READ, scope = PermissionScope.ACTION, types = {AuthType.session, AuthType.session, AuthType.team, AuthType.global})
+  @AuthScope(action = PermissionAction.READ, scope = PermissionScope.ACTION, types = {AuthType.session, AuthType.user, AuthType.team, AuthType.global})
   @Operation(summary = "Search for Actions")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
   public Page<Action> query(
+      @Parameter(name = "team",
+      description = "Owning team name.",
+      example = "my-amazing-team",
+      required = true) @PathVariable String team,
       @Parameter(name = "types",
       description = "List of types to filter for. Defaults to all.", example = "manual,approval",
       required = false) @RequestParam(required = false)  Optional<List<ActionType>> types,
@@ -87,8 +104,6 @@ public class ActionV2Controller {
       required = false) @RequestParam(required = false)  Optional<List<ActionStatus>> statuses,
       @Parameter(name = "workflows", description = "List of workflows to filter for.", 
       required = false) @RequestParam(required = false) Optional<List<String>> workflows,
-      @Parameter(name = "teams", description = "List of teams to filter for.", 
-      required = false) @RequestParam(required = false) Optional<List<String>> teams,
       @Parameter(name = "limit", description = "Result Size", example = "10",
           required = true) @RequestParam(defaultValue = "10") int limit,
       @Parameter(name = "page", description = "Page Number", example = "0",
@@ -112,19 +127,21 @@ public class ActionV2Controller {
     if (toDate.isPresent()) {
       to = Optional.of(new Date(toDate.get()));
     }
-    return actionService.query(from, to, pageable, types, statuses, workflows, teams);
+    return actionService.query(team, from, to, pageable, types, statuses, workflows);
   }
   
   @GetMapping(value = "/summary")
-  @AuthScope(action = PermissionAction.READ, scope = PermissionScope.ACTION, types = {AuthType.session, AuthType.session, AuthType.team, AuthType.global})
+  @AuthScope(action = PermissionAction.READ, scope = PermissionScope.ACTION, types = {AuthType.session, AuthType.user, AuthType.team, AuthType.global})
   @Operation(summary = "Get Actions Summary")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
   public ActionSummary summary(
+      @Parameter(name = "team",
+      description = "Owning team name.",
+      example = "my-amazing-team",
+      required = true) @PathVariable String team,
       @Parameter(name = "workflows", description = "List of workflows to filter for.", 
       required = false) @RequestParam(required = false) Optional<List<String>> workflows,
-      @Parameter(name = "teams", description = "List of teams to filter for.", 
-      required = false) @RequestParam(required = false) Optional<List<String>> teams,
       @Parameter(name = "fromDate", description = "The unix timestamp / date to search from in milliseconds since epoch", example = "1677589200000",
       required = false) @RequestParam Optional<Long> fromDate,
       @Parameter(name = "toDate", description = "The unix timestamp / date to search to in milliseconds since epoch", example = "1680267600000",
@@ -137,6 +154,6 @@ public class ActionV2Controller {
     if (toDate.isPresent()) {
       to = Optional.of(new Date(toDate.get()));
     }
-    return actionService.summary(from, to, workflows, teams);
+    return actionService.summary(team, from, to, workflows);
   }
 }

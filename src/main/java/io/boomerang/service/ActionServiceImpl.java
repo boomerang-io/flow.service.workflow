@@ -53,7 +53,7 @@ public class ActionServiceImpl implements ActionService {
   private EngineClient engineClient;
 
   @Autowired
-  private RelationshipService relationshipService;
+  private RelationshipServiceImpl relationshipServiceImpl;
 
   @Autowired
   private IdentityService userIdentityService;
@@ -68,7 +68,7 @@ public class ActionServiceImpl implements ActionService {
    * allows it. Once fixed will need to adjust the token scope on the Controller
    */
   @Override
-  public void action(List<ActionRequest> requests) {
+  public void action(String team, List<ActionRequest> requests) {
     for (ActionRequest request : requests) {
       Optional<ActionEntity> optActionEntity = this.actionRepository.findById(request.getId());
       if (!optActionEntity.isPresent()) {
@@ -81,11 +81,8 @@ public class ActionServiceImpl implements ActionService {
       }
 
       // Check if requester has access to the Workflow the Action Entity belongs to
-      List<String> workflowRefs =
-          relationshipService.getFilteredFromRefs(Optional.of(RelationshipType.WORKFLOW),
-              Optional.of(List.of(actionEntity.getWorkflowRef())),
-              Optional.of(RelationshipLabel.BELONGSTO), Optional.empty(), Optional.empty());
-      if (workflowRefs.isEmpty()) {
+      if (relationshipServiceImpl.hasTeamRelationship(Optional.of(RelationshipType.WORKFLOW),
+          Optional.of(actionEntity.getWorkflowRef()), RelationshipLabel.BELONGSTO, team, true)) {
         throw new BoomerangException(BoomerangError.ACTION_INVALID_REF);
       }
       
@@ -96,9 +93,9 @@ public class ActionServiceImpl implements ActionService {
         canBeActioned = true;
       } else if (actionEntity.getType() == ActionType.approval) {
         if (actionEntity.getApproverGroupRef() != null) {
-          List<String> approverGroupRefs = relationshipService.getFilteredFromRefs(
+          List<String> approverGroupRefs = relationshipServiceImpl.getFilteredRefs(
               Optional.of(RelationshipType.APPROVERGROUP), Optional.of(List.of(actionEntity.getApproverGroupRef())),
-              Optional.of(RelationshipLabel.BELONGSTO), Optional.empty(), Optional.empty());
+              RelationshipLabel.BELONGSTO, RelationshipType.TEAM, team, false);
           if (approverGroupRefs.isEmpty()) {
             //TODO better error around INVALID APPROVER GROUP REF
             throw new BoomerangException(BoomerangError.ACTION_INVALID_REF);
@@ -183,7 +180,7 @@ public class ActionServiceImpl implements ActionService {
   }
 
   @Override
-  public Action get(String id) {
+  public Action get(String team, String id) {
     Optional<ActionEntity> actionEntity = this.actionRepository.findById(id);
     if (actionEntity.isEmpty()) {
       throw new BoomerangException(BoomerangError.ACTION_INVALID_REF);
@@ -191,22 +188,22 @@ public class ActionServiceImpl implements ActionService {
     return this.convertToAction(actionEntity.get());
   }
 
-  @Override
-  public Action getByTaskRun(String id) {
-    Optional<ActionEntity> actionEntity = this.actionRepository.findByTaskRunRef(id);
-    if (actionEntity.isEmpty()) {
-      throw new BoomerangException(BoomerangError.ACTION_INVALID_REF);
-    }
-    return this.convertToAction(actionEntity.get());
-  }
+//  @Override
+//  public Action getByTaskRun(String id) {
+//    Optional<ActionEntity> actionEntity = this.actionRepository.findByTaskRunRef(id);
+//    if (actionEntity.isEmpty()) {
+//      throw new BoomerangException(BoomerangError.ACTION_INVALID_REF);
+//    }
+//    return this.convertToAction(actionEntity.get());
+//  }
 
   @Override
-  public Page<Action> query(Optional<Date> from, Optional<Date> to, Pageable pageable,
+  public Page<Action> query(String team, Optional<Date> from, Optional<Date> to, Pageable pageable,
       Optional<List<ActionType>> types, Optional<List<ActionStatus>> status,
-      Optional<List<String>> workflowIds, Optional<List<String>> teams) {
+      Optional<List<String>> workflowIds) {
     List<String> workflowRefs =
-        relationshipService.getFilteredFromRefs(Optional.of(RelationshipType.WORKFLOW), workflowIds,
-            Optional.of(RelationshipLabel.BELONGSTO), Optional.of(RelationshipType.TEAM), teams);
+        relationshipServiceImpl.getFilteredRefs(Optional.of(RelationshipType.WORKFLOW), workflowIds,
+            RelationshipLabel.BELONGSTO, RelationshipType.TEAM, team, false);
 
     Criteria criteria = buildCriteriaList(from, to, Optional.of(workflowRefs), types, status);
     Query query = new Query(criteria).with(pageable);
@@ -226,10 +223,10 @@ public class ActionServiceImpl implements ActionService {
   }
 
   @Override
-  public ActionSummary summary(Optional<Date> fromDate, Optional<Date> toDate, Optional<List<String>> workflowIds, Optional<List<String>> teams) {
+  public ActionSummary summary(String team, Optional<Date> fromDate, Optional<Date> toDate, Optional<List<String>> workflowIds) {
     List<String> workflowRefs =
-        relationshipService.getFilteredFromRefs(Optional.of(RelationshipType.WORKFLOW),
-            workflowIds, Optional.of(RelationshipLabel.BELONGSTO), Optional.of(RelationshipType.TEAM), teams);
+        relationshipServiceImpl.getFilteredRefs(Optional.of(RelationshipType.WORKFLOW), workflowIds,
+            RelationshipLabel.BELONGSTO, RelationshipType.TEAM, team, false);
     
     long approvalCount = this.getActionCountForType(ActionType.approval, fromDate,
         toDate, Optional.of(workflowRefs));
