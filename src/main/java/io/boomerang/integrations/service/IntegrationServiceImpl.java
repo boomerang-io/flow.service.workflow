@@ -18,7 +18,6 @@ import io.boomerang.integrations.model.Integration;
 import io.boomerang.integrations.model.enums.IntegrationStatus;
 import io.boomerang.model.enums.RelationshipLabel;
 import io.boomerang.model.enums.RelationshipType;
-import io.boomerang.service.RelationshipService;
 import io.boomerang.service.RelationshipServiceImpl;
 import io.boomerang.service.SettingsService;
 
@@ -59,7 +58,8 @@ public class IntegrationServiceImpl implements IntegrationService {
         }
       }
       if ("github".equals(i.getName().toLowerCase())) {
-        i.getLink().replace("{app_name}", settingsService.getSettingConfig("integration", "github.appName").getValue());
+        LOGGER.debug(settingsService.getSettingConfig("integration", "github.appName").getValue());
+        i.setLink(i.getLink().replace("{app_name}", settingsService.getSettingConfig("integration", "github.appName").getValue()));
       }
       integrations.add(i);
     });

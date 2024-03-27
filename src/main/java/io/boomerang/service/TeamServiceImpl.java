@@ -30,7 +30,6 @@ import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import io.boomerang.audit.AuditInterceptor;
-import io.boomerang.client.WorkflowResponsePage;
 import io.boomerang.data.entity.ApproverGroupEntity;
 import io.boomerang.data.entity.TeamEntity;
 import io.boomerang.data.entity.UserEntity;
