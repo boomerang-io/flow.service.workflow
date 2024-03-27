@@ -95,7 +95,7 @@ public class GitHubServiceImpl implements GitHubService {
   }  
   
   private byte[] getPEMBytes() {
-    final String pem = settingsService.getSettingConfig("integration", "github.pem").getValue();
+    final String pem = settingsService.getSettingConfig("integration", "github.jwt").getValue();
     final String RSA_BEGIN = "-----BEGIN RSA PRIVATE KEY-----";
     final String RSA_END = "-----END RSA PRIVATE KEY-----";
 
