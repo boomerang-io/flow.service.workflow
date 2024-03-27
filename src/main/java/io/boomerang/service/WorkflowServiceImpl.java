@@ -94,6 +94,9 @@ public class WorkflowServiceImpl implements WorkflowService {
   private SettingsService settingsService;
 
   @Autowired
+  private ActionService actionService;
+
+  @Autowired
   private TokenServiceImpl tokenService;
   
   @Autowired
@@ -115,9 +118,6 @@ public class WorkflowServiceImpl implements WorkflowService {
         Optional.of(workflowId), RelationshipLabel.BELONGSTO, team, false)) {
       Workflow workflow = engineClient.getWorkflow(workflowId, version, withTasks);
 
-      if (WorkflowStatus.deleted.equals(workflow.getStatus())) {
-        ResponseEntity.notFound();
-      }
       // Filter out sensitive values
       DataAdapterUtil.filterParamSpecValueByFieldType(workflow.getConfig(), workflow.getParams(),
           FieldType.PASSWORD.value());
@@ -142,11 +142,6 @@ public class WorkflowServiceImpl implements WorkflowService {
     LOGGER.debug("Workflow Refs: {}", refs.toString());
     if (refs == null || refs.size() == 0) {
       return new WorkflowResponsePage();
-    }
-
-    // Filter out deleted Workflows
-    if (queryStatus.isPresent() && queryStatus.get().contains("deleted")) {
-      queryStatus.get().remove("deleted");
     }
 
     WorkflowResponsePage response = engineClient.queryWorkflows(queryLimit, queryPage, querySort,
@@ -406,13 +401,11 @@ public class WorkflowServiceImpl implements WorkflowService {
   }
 
   /*
-   * Delete the Workflow and WorkflowRevisions by calling Engine.
+   * Delete the Workflows, WorkflowRuns, and TaskRuns by calling Engine.
    * 
    * Engine takes care of deleting Triggers & Workspaces
    * 
-   * We have to delete the Schedules, Tokens, Relationships
-   * 
-   * TODO: do we need to delete the WorkflowRuns
+   * We have to delete the Actions, Schedules, Tokens, and Relationships
    */
   @Override
   public void delete(String team, String workflowId) {
@@ -422,13 +415,11 @@ public class WorkflowServiceImpl implements WorkflowService {
 
     if (relationshipServiceImpl.hasTeamRelationship(Optional.of(RelationshipType.WORKFLOW),
         Optional.of(workflowId), RelationshipLabel.BELONGSTO, team, false)) {
+      // Deletes the Workflow and associated WorkflowRuns, and TaskRuns
       engineClient.deleteWorkflow(workflowId);
       scheduleService.deleteAllForWorkflow(workflowId);
-
-      // Delete all tokens
       tokenService.deleteAllForPrincipal(workflowId);
-      
-      //TODO: cancel any running WorkflowRuns - will need to do a query first
+      actionService.deleteAllByWorkflow(workflowId);
       relationshipServiceImpl.removeNodeByRefOrSlug(RelationshipType.WORKFLOW, workflowId);
     } else {
       throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);

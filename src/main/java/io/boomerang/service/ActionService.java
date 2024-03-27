@@ -24,4 +24,6 @@ public interface ActionService {
       Optional<List<ActionType>> types, Optional<List<ActionStatus>> status,
       Optional<List<String>> workflows);
 
+  void deleteAllByWorkflow(String workflowRef);
+
 }

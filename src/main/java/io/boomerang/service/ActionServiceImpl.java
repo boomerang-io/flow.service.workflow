@@ -295,5 +295,9 @@ public class ActionServiceImpl implements ActionService {
     
     return new Criteria().andOperator(criterias.toArray(new Criteria[criterias.size()]));
   }
-
+  
+  @Override
+  public void deleteAllByWorkflow(String workflowRef) {
+    actionRepository.deleteByWorkflowRef(workflowRef);
+  }
 }
