@@ -287,7 +287,7 @@ public class WorkflowServiceImpl implements WorkflowService {
             appliedWorkflow.getParams(), FieldType.PASSWORD.value());
 
         //Convert Workflow TaskRefs to Slugs
-        convertTaskRefsToSlugs(team, workflow);
+        convertTaskRefsToSlugs(team, appliedWorkflow);
         
         return appliedWorkflow;
       }
