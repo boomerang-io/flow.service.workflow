@@ -6,6 +6,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -29,8 +30,8 @@ public class AuditEntity {
   @Indexed
   private String selfName;
   @Indexed
-  private String parent; //Reference to the parent audit object
-  private Date createdDate = new Date();
+  private ObjectId parent; //Reference to the parent audit object
+  private Date creationDate = new Date();
   private List<AuditEvent> events = new LinkedList<>();
   private Map<String, String> data = new HashMap<>();
   
@@ -45,7 +46,7 @@ public class AuditEntity {
       this.selfName = selfName.get();
     }
     if (parent.isPresent()) {
-      this.parent = parent.get();
+      this.parent = new ObjectId(parent.get());
     }
     this.events.add(event);
     if (data.isPresent()) {
@@ -56,7 +57,7 @@ public class AuditEntity {
   @Override
   public String toString() {
     return "AuditEntity [id=" + id + ", scope=" + scope + ", selfRef=" + selfRef + ", selfName="
-        + selfName + ", parent=" + parent + ", createdDate=" + createdDate + ", events=" + events
+        + selfName + ", parent=" + parent + ", creationDate=" + creationDate + ", events=" + events
         + "]";
   }
 
@@ -93,11 +94,11 @@ public class AuditEntity {
   }
 
   public String getParent() {
-    return parent;
+    return parent.toString();
   }
 
   public void setParent(String parent) {
-    this.parent = parent;
+    this.parent = new ObjectId(parent);
   }
 
   public List<AuditEvent> getEvents() {
@@ -116,11 +117,11 @@ public class AuditEntity {
     this.data = data;
   }
 
-  public Date getCreatedDate() {
-    return createdDate;
+  public Date getCreationDate() {
+    return creationDate;
   }
 
-  public void setCreatedDate(Date createdDate) {
-    this.createdDate = createdDate;
+  public void setCreationDate(Date creationDate) {
+    this.creationDate = creationDate;
   }
 }

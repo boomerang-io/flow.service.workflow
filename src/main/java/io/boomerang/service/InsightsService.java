@@ -8,7 +8,6 @@ import io.boomerang.model.ref.WorkflowRunInsight;
 
 public interface InsightsService {
 
-  WorkflowRunInsight getInsights(String team, Optional<Date> from, Optional<Date> to,
-      Pageable pageable, Optional<List<String>> workflowIds, Optional<List<String>> statuses,
-      Optional<List<String>> triggers);
+  WorkflowRunInsight get(String team, Date from, Date to, Optional<List<String>> workflowRefs,
+      Optional<List<String>> statuses);
 }

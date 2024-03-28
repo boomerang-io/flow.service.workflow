@@ -98,6 +98,9 @@ public class TeamServiceImpl implements TeamService {
   private MongoTemplate mongoTemplate;
 
   @Autowired
+  private InsightsService insightsService;
+
+  @Autowired
   private WorkflowRunService workflowRunService;
   
   @Autowired
@@ -763,31 +766,29 @@ public class TeamServiceImpl implements TeamService {
     currentQuotas.setMonthlyResetDate(nextMonth.getTime());
 
     Calendar currentMonthStart = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-    nextMonth.set(Calendar.DAY_OF_MONTH, 1);
-    nextMonth.set(Calendar.HOUR_OF_DAY, 0);
-    nextMonth.set(Calendar.MINUTE, 0);
-    nextMonth.set(Calendar.SECOND, 0);
-    nextMonth.set(Calendar.MILLISECOND, 0);
+    currentMonthStart.set(Calendar.DAY_OF_MONTH, 1);
+    currentMonthStart.set(Calendar.HOUR_OF_DAY, 0);
+    currentMonthStart.set(Calendar.MINUTE, 0);
+    currentMonthStart.set(Calendar.SECOND, 0);
+    currentMonthStart.set(Calendar.MILLISECOND, 0);
 
     Calendar currentMonthEnd = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-    nextMonth.add(Calendar.MONTH, 1);
-    nextMonth.set(Calendar.DAY_OF_MONTH, 1);
-    nextMonth.set(Calendar.HOUR_OF_DAY, 0);
-    nextMonth.set(Calendar.MINUTE, 0);
-    nextMonth.set(Calendar.SECOND, 0);
-    nextMonth.set(Calendar.MILLISECOND, 0);
-
+    currentMonthEnd.set(Calendar.DAY_OF_MONTH, 1);
+    currentMonthEnd.set(Calendar.HOUR_OF_DAY, 0);
+    currentMonthEnd.set(Calendar.MINUTE, 0);
+    currentMonthEnd.set(Calendar.SECOND, 0);
+    currentMonthEnd.set(Calendar.MILLISECOND, 0);
+    currentMonthEnd.add(Calendar.MONTH, 1);
+    currentMonthEnd.add(Calendar.DAY_OF_MONTH, -1);
+    
     WorkflowRunInsight insight =
-        workflowRunService.insight(team, Optional.of(currentMonthStart.getTimeInMillis()),
-            Optional.of(currentMonthEnd.getTimeInMillis()), Optional.empty(), Optional.empty());
+        insightsService.get(team, currentMonthStart.getTime(),
+            currentMonthEnd.getTime(), Optional.empty(), Optional.empty());
+    LOGGER.debug("Insights: {}", insight.toString());
     currentQuotas.setCurrentConcurrentWorkflows(insight.getConcurrentRuns().intValue());
     currentQuotas.setCurrentRunTotalDuration(insight.getTotalDuration().intValue());
     currentQuotas.setCurrentRunMedianDuration(insight.getMedianDuration().intValue());
     currentQuotas.setCurrentRuns(insight.getTotalRuns().intValue());
-    
-    WorkflowRunInsight auditInsight = auditInterceptor.insights(Optional.of(currentMonthStart.getTimeInMillis()),
-            Optional.of(currentMonthEnd.getTimeInMillis()), team);
-    LOGGER.debug("Audit Insight: {}", auditInsight.toString());
 
     WorkflowCount count = workflowService.count(team, Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
     if (count.getStatus() != null) {
