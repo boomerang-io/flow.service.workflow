@@ -145,7 +145,7 @@ public class TeamWorkflowV2Controller {
     workflowService.delete(team, workflow);
   }
 
-  @PostMapping(value = "/{workflowId}/submit")
+  @PostMapping(value = "/{workflow}/submit")
   @AuthScope(action = PermissionAction.ACTION, scope = PermissionScope.WORKFLOW, types = {AuthType.team})
   @Operation(summary = "Submit a Workflow to be run. Will queue the WorkflowRun ready for execution.")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
