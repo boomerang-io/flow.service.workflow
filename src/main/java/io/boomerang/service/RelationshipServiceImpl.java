@@ -698,7 +698,7 @@ public class RelationshipServiceImpl implements RelationshipService {
 //      this.relationshipRepositoryV2.existsByTypeAndRefOrSlug(fromType, fromRef, slug)
     Optional<RelationshipEntityV2> teamNode = this.relationshipRepositoryV2.findFirstByTypeAndRefOrSlug(RelationshipType.TEAM, slug);
     if (teamNode.isPresent()) {
-      long update = this.relationshipRepositoryV2.updateConnectionByTypeAndRefOrSlug(fromType, fromRef, new ObjectId(teamNode.get().getId()), data.get());
+      long update = this.relationshipRepositoryV2.updateConnectionByTypeAndRefOrSlug(fromType, fromRef, new ObjectId(teamNode.get().getId()), data.isPresent() ? data.get() : new HashMap<String, String>());
       LOGGER.debug("Updates made: {}", update);
       if (update == 0) {
         long push = this.relationshipRepositoryV2.pushConnectionByTypeAndRefOrSlug(fromType, fromRef, new RelationshipConnectionEntity(label, teamNode.get().getId(), data));
