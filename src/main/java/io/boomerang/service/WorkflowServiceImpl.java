@@ -776,6 +776,11 @@ public class WorkflowServiceImpl implements WorkflowService {
     return workflow;
   }
 
+  /*
+   * Helper methods to from TaskRef to TaskSlug and vice versa
+   * 
+   * Duplicated in WorkflowRunService.impl
+   */
   private void convertTaskRefsToSlugs(String team, Workflow workflow) {
     workflow.getTasks().forEach(t -> {
       if (!t.getName().equals("start") && !t.getName().equals("end")) {

@@ -11,6 +11,13 @@ public class WorkflowRunInsight {
   private Long medianDuration = 0L;
   private List<WorkflowRunSummary> runs = new LinkedList<>();
 
+  @Override
+  public String toString() {
+    return "WorkflowRunInsight [totalRuns=" + totalRuns + ", concurrentRuns=" + concurrentRuns
+        + ", totalDuration=" + totalDuration + ", medianDuration=" + medianDuration + ", runs="
+        + runs + "]";
+  }
+
   public Long getTotalRuns() {
     return totalRuns;
   }
