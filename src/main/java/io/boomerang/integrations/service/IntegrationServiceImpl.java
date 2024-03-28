@@ -88,7 +88,7 @@ public class IntegrationServiceImpl implements IntegrationService {
     entity.setData(Document.parse(data.toString()));
     entity = integrationsRepository.save(entity);
     
-    relationshipServiceImpl.createNode(RelationshipType.INTEGRATION, entity.getId(), "", Optional.empty();
+    relationshipServiceImpl.createNode(RelationshipType.INTEGRATION, entity.getId(), "", Optional.empty());
     
     return entity;
   }
