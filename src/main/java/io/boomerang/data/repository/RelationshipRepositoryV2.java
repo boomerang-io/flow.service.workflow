@@ -29,7 +29,7 @@ public interface RelationshipRepositoryV2 extends MongoRepository<RelationshipEn
   RelationshipEntityV2 findAndSetSlugByTypeAndSlug(RelationshipType type, String slug, 
       String newSlug);  
   
-  @Query("{'type': ?0, '$or': [{'slug': ?1},{'ref': ?1}]}")
+  @Query(value = "{'type': ?0, '$or': [{'slug': ?1},{'ref': ?1}]}", delete = true)
   void deleteByTypeAndRefOrSlug(RelationshipType type,
       String slug);
   
