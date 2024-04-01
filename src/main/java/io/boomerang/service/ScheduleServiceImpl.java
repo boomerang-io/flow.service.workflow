@@ -389,7 +389,7 @@ public class ScheduleServiceImpl implements ScheduleService {
    */
   private void enableSchedule(String scheduleId) throws SchedulerException {
     Optional<WorkflowScheduleEntity> optSchedule = scheduleRepository.findById(scheduleId);
-    if (optSchedule.isPresent() && !WorkflowScheduleStatus.deleted.equals(optSchedule.get().getStatus())) {
+    if (optSchedule.isPresent()) {
       WorkflowScheduleEntity schedule = optSchedule.get();
       if (WorkflowScheduleType.runOnce.equals(schedule.getType())) {
         Date currentDate = new Date();
@@ -438,7 +438,7 @@ public class ScheduleServiceImpl implements ScheduleService {
    */
   public void complete(String scheduleId) {
     Optional<WorkflowScheduleEntity> schedule = scheduleRepository.findById(scheduleId);
-    if (schedule.isPresent() && !WorkflowScheduleStatus.deleted.equals(schedule.get().getStatus())) {
+    if (schedule.isPresent()) {
       schedule.get().setStatus(WorkflowScheduleStatus.completed);
       scheduleRepository.save(schedule.get());
     }
@@ -451,14 +451,7 @@ public class ScheduleServiceImpl implements ScheduleService {
     final Optional<List<WorkflowScheduleEntity>> entities = scheduleRepository.findByWorkflowRef(workflowId);
     if (entities.isPresent()) {
       entities.get().forEach(s -> {
-        try {
-          s.setStatus(WorkflowScheduleStatus.deleted);
-          scheduleRepository.save(s);
-          this.taskScheduler.cancelJob(s);
-        } catch (SchedulerException e) {
-          logger.info("Unable to delete schedule: {}.", s.getId());
-          logger.error(e);
-        }
+        this.internalDelete(s);
       });
     }
   }
@@ -471,16 +464,19 @@ public class ScheduleServiceImpl implements ScheduleService {
     final Optional<WorkflowScheduleEntity> schedule = scheduleRepository.findById(scheduleId);
     if (schedule.isPresent() && relationshipServiceImpl.hasTeamRelationship(Optional.of(RelationshipType.WORKFLOW),
         Optional.of(schedule.get().getWorkflowRef()), RelationshipLabel.BELONGSTO, team, false)) {
-      try {
-          schedule.get().setStatus(WorkflowScheduleStatus.deleted);
-          scheduleRepository.save(schedule.get());
-          this.taskScheduler.cancelJob(schedule.get());
-      } catch (SchedulerException e) {
-        logger.info("Unable to delete schedule: {}.", scheduleId);
-        logger.error(e);
-      }
+      this.internalDelete(schedule.get());
     }
     throw new BoomerangException(BoomerangError.SCHEDULE_INVALID_REF);
+  }
+  
+  private void internalDelete(WorkflowScheduleEntity entity) {
+    try {
+      this.taskScheduler.cancelJob(entity);
+      scheduleRepository.deleteById(entity.getId());
+    } catch (SchedulerException e) {
+      logger.info("Unable to delete schedule: {}.", entity.getId());
+      logger.error(e);
+    }
   }
   
   /*

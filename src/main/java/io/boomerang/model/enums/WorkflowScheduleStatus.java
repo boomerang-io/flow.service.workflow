@@ -8,6 +8,6 @@ package io.boomerang.model.enums;
  * - WorkflowScheduleServiceImpl
  */
 public enum WorkflowScheduleStatus {
-  active, inactive, trigger_disabled, error, completed, deleted // NOSONAR
+  active, inactive, trigger_disabled, error, completed // NOSONAR
 
 }

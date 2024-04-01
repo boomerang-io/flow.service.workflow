@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Optional;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -51,16 +52,15 @@ public class InsightsServiceImpl implements InsightsService {
       
       //If user, return Insights including for deleted Workflows
       if (workflowRefs.isEmpty()) {
-        Optional<AuditEntity> teamAE = auditRepository.findFirstBySelfName(team);
+        Optional<AuditEntity> teamAE = auditRepository.findFirstByScopeAndSelfName(AuditScope.TEAM,team);
         if (teamAE.isPresent()) {
-          List<AuditEntity> worfklowAEList = auditRepository.findByScopeAndParent(AuditScope.WORKFLOW, teamAE.get().getId());
+          List<AuditEntity> worfklowAEList = auditRepository.findByScopeAndParent(AuditScope.WORKFLOW, new ObjectId(teamAE.get().getId()));
           wfRefs = worfklowAEList.stream().map(AuditEntity::getSelfRef).toList();
         }
       } else {
         wfRefs = relationshipServiceImpl.getFilteredRefs(Optional.of(RelationshipType.WORKFLOW), workflowRefs, RelationshipLabel.BELONGSTO, RelationshipType.TEAM, team, false);
-        LOGGER.debug("Workflow Refs: {}", wfRefs.toString());
       }
-      
+      LOGGER.debug("Workflow Refs: {}", wfRefs.toString());      
       if (!wfRefs.isEmpty()) {
         List<Criteria> criteriaList = new ArrayList<>();
         Criteria scopeCriteria = Criteria.where("scope").is("WORKFLOWRUN");
@@ -107,7 +107,10 @@ public class InsightsServiceImpl implements InsightsService {
           summary.setDuration(Long.valueOf(e.getData().get("duration")));
           summary.setStatus(RunStatus.getRunStatus(e.getData().get("status")));
           summary.setWorkflowRef(e.getData().get("workflowRef"));
-          summary.setWorkflowName(relationshipServiceImpl.getSlugFromRef(RelationshipType.WORKFLOW, e.getData().get("workflowRef")));
+          Optional<AuditEntity> wfAE = auditRepository.findFirstByScopeAndSelfRef(AuditScope.WORKFLOW, e.getData().get("workflowRef"));
+          if (wfAE.isPresent()) {
+            summary.setWorkflowName(wfAE.get().getData().get("name"));
+          }
           summaries.add(summary);
         });
         insight.setRuns(summaries);
