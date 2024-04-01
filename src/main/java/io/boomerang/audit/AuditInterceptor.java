@@ -144,7 +144,7 @@ public class AuditInterceptor {
     try {
       LOGGER.debug("AuditInterceptor - Updating Audit for: {} with event: {}.", selfRef, type);
       Token accessToken = this.identityService.getCurrentIdentity();
-      Optional<AuditEntity> auditEntity = auditRepository.findFirstBySelfRef(selfRef);
+      Optional<AuditEntity> auditEntity = auditRepository.findFirstByScopeAndSelfRef(selfRef);
       if (auditEntity.isPresent()) {
         if (data.isPresent()) {
           auditEntity.get().getData().putAll(data.get());
@@ -191,7 +191,7 @@ public class AuditInterceptor {
     if (teamNameToAuditId.containsKey(name)) {
       return teamNameToAuditId.get(name);
     }
-    Optional<AuditEntity> optAuditEntity = auditRepository.findFirstBySelfName(name);
+    Optional<AuditEntity> optAuditEntity = auditRepository.findFirstByScopeAndSelfName(AuditScope.TEAM, name);
     if (optAuditEntity.isPresent()) {
       teamNameToAuditId.put(name, optAuditEntity.get().getId());
       return optAuditEntity.get().getId();
