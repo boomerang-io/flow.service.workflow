@@ -1,9 +1,6 @@
 package io.boomerang.audit;
 
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import org.apache.logging.log4j.LogManager;
@@ -12,16 +9,12 @@ import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Component;
 import io.boomerang.model.Team;
 import io.boomerang.model.TeamRequest;
 import io.boomerang.model.WorkflowCanvas;
 import io.boomerang.model.ref.Workflow;
 import io.boomerang.model.ref.WorkflowRun;
-import io.boomerang.model.ref.WorkflowRunInsight;
 import io.boomerang.security.model.Token;
 import io.boomerang.security.service.IdentityService;
 
@@ -41,9 +34,6 @@ public class AuditInterceptor {
   
   @Autowired
   private AuditRepository auditRepository;
-
-  @Autowired
-  private MongoTemplate mongoTemplate;
   
   private Map<String, String> teamNameToAuditId = new HashMap<>();
   
@@ -80,24 +70,24 @@ public class AuditInterceptor {
   
   @AfterReturning(pointcut="execution(* io.boomerang.service.WorkflowService.apply(..)) && args(team, request, replace)", returning="entity")
   private void updateWorkflow(JoinPoint thisJoinPoint, String team, Workflow request, boolean replace, Workflow entity) {
-    updateLog(AuditType.updated, entity.getId(), Optional.empty(), Optional.empty(), Optional.of(Map.of("name", entity.getName())));
+    updateLog(AuditScope.WORKFLOW, AuditType.updated, entity.getId(), Optional.empty(), Optional.empty(), Optional.of(Map.of("name", entity.getName())));
   }
   
   @AfterReturning(pointcut="execution(* io.boomerang.service.WorkflowService.composeApply(..)) && args(team, request, replace)", returning="entity")
   private void updateWorkflow(JoinPoint thisJoinPoint, String team, WorkflowCanvas request, boolean replace, WorkflowCanvas entity) {
-    updateLog(AuditType.updated, entity.getId(), Optional.empty(), Optional.empty(), Optional.of(Map.of("name", entity.getName())));
+    updateLog(AuditScope.WORKFLOW, AuditType.updated, entity.getId(), Optional.empty(), Optional.empty(), Optional.of(Map.of("name", entity.getName())));
   }
   
   @AfterReturning(pointcut="execution(* io.boomerang.service.WorkflowService.submit(..)) && args(team, id)", returning="entity")
   private void updateWorkflow(JoinPoint thisJoinPoint, String team, String id, WorkflowRun entity) {
-    updateLog(AuditType.submitted, id, Optional.empty(), Optional.of(getTeamAuditIdFromName(team)), Optional.empty());
+    updateLog(AuditScope.WORKFLOW, AuditType.submitted, id, Optional.empty(), Optional.of(getTeamAuditIdFromName(team)), Optional.empty());
   }
   
   @AfterReturning("execution(* io.boomerang.service.WorkflowService.delete(..))"
       + " && args(team, id)")
   private void deleteWorkflow(JoinPoint thisJoinPoint, String team, String id) {
     LOGGER.debug("AuditInterceptor - {}", thisJoinPoint.getSignature().getDeclaringType());
-    updateLog(AuditType.deleted, id, Optional.empty(), Optional.empty(), Optional.empty());
+    updateLog(AuditScope.WORKFLOW, AuditType.deleted, id, Optional.empty(), Optional.empty(), Optional.empty());
   }
   
   /*
@@ -111,7 +101,7 @@ public class AuditInterceptor {
   
   @AfterReturning(pointcut="execution(* io.boomerang.service.TeamService.patch(..))", returning="entity")
   private void updateTeam(JoinPoint thisJoinPoint, Team entity) {
-    AuditEntity log = updateLog(AuditType.updated, entity.getId(), Optional.of(entity.getName()), Optional.empty(), Optional.of(Map.of("name", entity.getName())));
+    AuditEntity log = updateLog(AuditScope.TEAM, AuditType.updated, entity.getId(), Optional.of(entity.getName()), Optional.empty(), Optional.of(Map.of("name", entity.getName())));
     teamNameToAuditId.put(entity.getName(), log.getId());
   }
   
@@ -140,11 +130,11 @@ public class AuditInterceptor {
   /*
    * Updates an AuditEntity
    */
-  private AuditEntity updateLog(AuditType type, String selfRef, Optional<String> selfName, Optional<String> parent, Optional<Map<String, String>> data) {
+  private AuditEntity updateLog(AuditScope scope, AuditType type, String selfRef, Optional<String> selfName, Optional<String> parent, Optional<Map<String, String>> data) {
     try {
       LOGGER.debug("AuditInterceptor - Updating Audit for: {} with event: {}.", selfRef, type);
       Token accessToken = this.identityService.getCurrentIdentity();
-      Optional<AuditEntity> auditEntity = auditRepository.findFirstByScopeAndSelfRef(selfRef);
+      Optional<AuditEntity> auditEntity = auditRepository.findFirstByScopeAndSelfRef(scope, selfRef);
       if (auditEntity.isPresent()) {
         if (data.isPresent()) {
           auditEntity.get().getData().putAll(data.get());

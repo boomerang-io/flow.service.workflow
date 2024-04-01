@@ -99,9 +99,6 @@ public class TeamServiceImpl implements TeamService {
 
   @Autowired
   private InsightsService insightsService;
-
-  @Autowired
-  private WorkflowRunService workflowRunService;
   
   @Autowired
   private WorkflowService workflowService;
