@@ -109,9 +109,6 @@ public class TeamServiceImpl implements TeamService {
   @Autowired
   private TaskService taskTemplateService;
 
-  @Autowired
-  private AuditInterceptor auditInterceptor;
-
   /*
    * Validate the team name - used by the UI to determine if a team can be created
    */
