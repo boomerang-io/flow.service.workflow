@@ -52,7 +52,6 @@ import io.boomerang.model.enums.TriggerEnum;
 import io.boomerang.model.ref.Workflow;
 import io.boomerang.model.ref.WorkflowRun;
 import io.boomerang.model.ref.WorkflowSubmitRequest;
-import io.boomerang.service.RelationshipService;
 import io.boomerang.service.SettingsService;
 import io.boomerang.service.WorkflowService;
 
