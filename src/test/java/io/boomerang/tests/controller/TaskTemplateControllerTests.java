@@ -14,7 +14,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import io.boomerang.controller.TaskTemplateV2Controller;
+import io.boomerang.controller.TaskV2Controller;
 import io.boomerang.misc.FlowTests;
 import io.boomerang.model.FlowTaskTemplate;
 import io.boomerang.tekton.TektonTask;
@@ -30,7 +30,7 @@ import io.boomerang.v3.mongo.model.Revision;
 public class TaskTemplateControllerTests extends FlowTests {
 
   @Autowired
-  private TaskTemplateV2Controller controller;
+  private TaskV2Controller controller;
 
   @Test
   public void testGetTaskTemplateWithId() {

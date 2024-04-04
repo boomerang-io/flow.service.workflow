@@ -95,7 +95,7 @@ public class WorkflowControllerTests extends FlowTests {
     WorkflowSummary summary = controller.getWorkflowWithId("5d1a188af6ca2c00014c4314");
      assertEquals("5d1a188af6ca2c00014c4314", summary.getId());
 		Optional<WorkflowAbstractParam> passProp = summary.getProperties().stream()
-				.filter(f -> FieldType.PASSWORD.value().equals(f.getType())).findAny();
+				.filter(f -> FieldType.PASSWORD.value().equals(f.getLabel())).findAny();
 		if (passProp.isPresent()) {
 			assertNull(passProp.get().getDefaultValue());
 		}
@@ -177,7 +177,7 @@ public class WorkflowControllerTests extends FlowTests {
 
     WorkflowEntity entity =
         controller.updateWorkflowProperties("5d1a188af6ca2c00014c4314", properties);
-    Optional<WorkflowAbstractParam> passProp = entity.getProperties().stream().filter(f->FieldType.PASSWORD.value().equals(f.getType())).findAny();
+    Optional<WorkflowAbstractParam> passProp = entity.getProperties().stream().filter(f->FieldType.PASSWORD.value().equals(f.getLabel())).findAny();
      assertTrue(passProp.isPresent());
      assertNull(passProp.get().getDefaultValue());
      assertTrue(passProp.get().isHiddenValue());

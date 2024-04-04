@@ -151,7 +151,7 @@ public class TeamControllerTests extends FlowTests {
     TeamParameter property = new TeamParameter();
     property.setKey("dylan.new.key");
     property.setToken("Sensitive data");
-    property.setType("password");
+    property.setLabel("password");
 
     TeamParameter newConfig =
         controller.createNewTeamProperty("5d1a1841f6ca2c00014c4309", property);
