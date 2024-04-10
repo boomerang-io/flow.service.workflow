@@ -7,14 +7,11 @@ import java.util.List;
 import java.util.Map;
 import org.springframework.beans.BeanUtils;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import io.boomerang.data.entity.TeamEntity;
 import io.boomerang.data.model.CurrentQuotas;
 import io.boomerang.model.enums.TeamStatus;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonInclude(Include.NON_EMPTY)
 public class Team {
 
   private String id;
@@ -27,9 +24,9 @@ public class Team {
   private List<AbstractParam> parameters = new LinkedList<>();
 //  private TeamSettings settings;
   private CurrentQuotas quotas;
-  private List<TeamMember> members;
+  private List<TeamMember> members = new LinkedList<>();
   private List<WorkflowSummary> workflows = new LinkedList<>();
-  private List<ApproverGroup> approverGroups;
+  private List<ApproverGroup> approverGroups = new LinkedList<>();
   
   public Team() {
     
