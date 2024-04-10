@@ -205,48 +205,12 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
     if (relationshipServiceImpl.hasTeamRelationship(Optional.of(RelationshipType.WORKFLOWRUN),
         Optional.of(workflowRunId), RelationshipLabel.BELONGSTO, team, false)) {
       WorkflowRun wfRun = engineClient.retryWorkflowRun(workflowRunId);
+
+      // Creates relationship with owning team
+      relationshipServiceImpl.createNodeWithTeamConnection(RelationshipType.WORKFLOWRUN, wfRun.getId(), "", team, Optional.empty());
       return ResponseEntity.ok(wfRun);
     } else {
       throw new BoomerangException(BoomerangError.WORKFLOWRUN_INVALID_REF);
     }
-  }
-  
-  /*
-   * Helper methods to from TaskRef to TaskSlug and vice versa
-   * 
-   * Duplicated in WorkflowService.impl
-   */
-  private void convertTaskRefsToSlugs(String team, Workflow workflow) {
-    workflow.getTasks().forEach(t -> {
-      if (!t.getName().equals("start") && !t.getName().equals("end")) {
-        String ref = "";
-        if (relationshipServiceImpl.doesSlugOrRefExistForType(RelationshipType.GLOBALTASK, t.getTaskRef())) {
-          ref = relationshipServiceImpl.getSlugFromRef(RelationshipType.GLOBALTASK, t.getTaskRef());
-        } else {
-          ref = team + TASK_REF_SEPERATOR + relationshipServiceImpl.getSlugFromRef(RelationshipType.TASK, t.getTaskRef());
-        }
-        if (ref.isBlank()) {
-          throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_TASK_REF, t.getName(), t.getTaskRef());
-        }
-        t.setTaskRef(ref);
-      }
-    });
-  }
-
-  private void convertTaskRefsToIds(String team, Workflow workflow) {
-    workflow.getTasks().forEach(t -> {
-      if (!t.getName().equals("start") && !t.getName().equals("end")) {
-        String ref = "";
-        if (!t.getTaskRef().contains(TASK_REF_SEPERATOR)) {
-          ref = relationshipServiceImpl.getRefFromSlug(RelationshipType.GLOBALTASK, t.getTaskRef());
-        } else {
-          ref = relationshipServiceImpl.getRefFromSlug(RelationshipType.TASK, t.getTaskRef().split(TASK_REF_SEPERATOR)[1]);
-        }
-        if (ref.isBlank()) {
-          throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_TASK_REF, t.getName(), t.getTaskRef());
-        }
-        t.setTaskRef(ref);
-      }
-    });
   }
 }

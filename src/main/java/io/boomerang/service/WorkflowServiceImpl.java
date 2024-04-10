@@ -377,7 +377,6 @@ public class WorkflowServiceImpl implements WorkflowService {
       WorkflowRun wfRun = engineClient.submitWorkflow(workflowId, request, start);
 
       // Creates relationship with owning team
-      // Needed for when we delete the Workflow but not the WorkflowRuns (to maintain activity history and quotas) 
       relationshipServiceImpl.createNodeWithTeamConnection(RelationshipType.WORKFLOWRUN, wfRun.getId(), "", team, Optional.empty());
       return wfRun;
   }
