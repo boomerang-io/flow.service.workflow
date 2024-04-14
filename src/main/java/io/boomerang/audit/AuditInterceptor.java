@@ -70,12 +70,12 @@ public class AuditInterceptor {
   
   @AfterReturning(pointcut="execution(* io.boomerang.service.WorkflowService.apply(..)) && args(team, request, replace)", returning="entity")
   private void updateWorkflow(JoinPoint thisJoinPoint, String team, Workflow request, boolean replace, Workflow entity) {
-    updateLog(AuditScope.WORKFLOW, AuditType.updated, entity.getId(), Optional.empty(), Optional.empty(), Optional.of(Map.of("name", entity.getName())));
+    updateLog(AuditScope.WORKFLOW, AuditType.updated, entity.getId(), Optional.empty(), Optional.of(getTeamAuditIdFromName(team)), Optional.of(Map.of("name", entity.getName())));
   }
   
   @AfterReturning(pointcut="execution(* io.boomerang.service.WorkflowService.composeApply(..)) && args(team, request, replace)", returning="entity")
   private void updateWorkflow(JoinPoint thisJoinPoint, String team, WorkflowCanvas request, boolean replace, WorkflowCanvas entity) {
-    updateLog(AuditScope.WORKFLOW, AuditType.updated, entity.getId(), Optional.empty(), Optional.empty(), Optional.of(Map.of("name", entity.getName())));
+    updateLog(AuditScope.WORKFLOW, AuditType.updated, entity.getId(), Optional.empty(), Optional.of(getTeamAuditIdFromName(team)), Optional.of(Map.of("name", entity.getName())));
   }
   
   @AfterReturning(pointcut="execution(* io.boomerang.service.WorkflowService.submit(..)) && args(team, id)", returning="entity")
@@ -87,7 +87,7 @@ public class AuditInterceptor {
       + " && args(team, id)")
   private void deleteWorkflow(JoinPoint thisJoinPoint, String team, String id) {
     LOGGER.debug("AuditInterceptor - {}", thisJoinPoint.getSignature().getDeclaringType());
-    updateLog(AuditScope.WORKFLOW, AuditType.deleted, id, Optional.empty(), Optional.empty(), Optional.empty());
+    updateLog(AuditScope.WORKFLOW, AuditType.deleted, id, Optional.empty(), Optional.of(getTeamAuditIdFromName(team)), Optional.empty());
   }
   
   /*
@@ -141,6 +141,9 @@ public class AuditInterceptor {
         }
         if (selfName.isPresent()) {
           auditEntity.get().setSelfName(selfName.get());
+        }
+        if (parent.isPresent() && auditEntity.get().getParent().isBlank()) {
+          auditEntity.get().setParent(parent.get());
         }
         AuditEvent auditEvent = new AuditEvent(type, accessToken);
         auditEntity.get().getEvents().add(auditEvent);

@@ -43,7 +43,6 @@ import io.boomerang.model.enums.RelationshipLabel;
 import io.boomerang.model.enums.RelationshipType;
 import io.boomerang.model.enums.TriggerEnum;
 import io.boomerang.model.enums.ref.TaskType;
-import io.boomerang.model.enums.ref.WorkflowStatus;
 import io.boomerang.model.ref.ChangeLogVersion;
 import io.boomerang.model.ref.ParamLayers;
 import io.boomerang.model.ref.RunParam;

@@ -2,12 +2,14 @@ package io.boomerang.data.entity;
 
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.boomerang.model.enums.RelationshipType;
-import io.boomerang.model.enums.RelationshipLabel;
 
 /*
  * Entity for Relationships
@@ -19,59 +21,48 @@ public class RelationshipEntity {
   @Id
   private String id;
   private Date creationDate = new Date();
-  private RelationshipType from;
-  private String fromRef;
-  private RelationshipLabel type; 
-  private RelationshipType to;
-  private String toRef;
-  private Map<String, Object> data = new HashMap<>();
-   
+  private RelationshipType type;
+  private String ref;
+  private String slug;
+  private Map<String, String> data = new HashMap<>();
+  private List<RelationshipConnectionEntity> connections = new LinkedList<>();
+  
+  public RelationshipEntity() {
+    // TODO Auto-generated constructor stub
+  }
+
+  public RelationshipEntity(RelationshipType type, String ref, String slug,
+      Optional<Map<String, String>> data) {
+    this.type = type;
+    this.ref = ref;
+    this.slug = slug;
+    if (data.isPresent()) {
+      this.data = data.get();      
+    }
+  }
+
+  public RelationshipEntity(RelationshipType type, String ref, String slug,
+      Optional<Map<String, String>> data, RelationshipConnectionEntity connection) {
+    this.type = type;
+    this.ref = ref;
+    this.slug = slug;
+    if (data.isPresent()) {
+      this.data = data.get();      
+    }
+    this.connections.add(connection);
+  }
+
   @Override
   public String toString() {
-    return "RelationshipEntity [id=" + id + ", from="
-        + from + ", fromRef=" + fromRef + ", label=" + type + ", to=" + to + ", toRef=" + toRef + ", date=" + creationDate + ", data=" + data + "]";
+    return "RelationshipEntityV2 [id=" + id + ", creationDate=" + creationDate + ", type=" + type
+        + ", ref=" + ref + ", slug=" + slug + ", data=" + data + "]";
   }
+  
   public String getId() {
     return id;
   }
   public void setId(String id) {
     this.id = id;
-  }
-  public RelationshipLabel getLabel() {
-    return type;
-  }
-  public void setLabel(RelationshipLabel type) {
-    this.type = type;
-  }
-  public RelationshipType getFrom() {
-    return from;
-  }
-  public void setFrom(RelationshipType from) {
-    this.from = from;
-  }
-  public String getFromRef() {
-    return fromRef;
-  }
-  public void setFromRef(String fromRef) {
-    this.fromRef = fromRef;
-  }
-  public RelationshipType getTo() {
-    return to;
-  }
-  public void setTo(RelationshipType to) {
-    this.to = to;
-  }
-  public String getToRef() {
-    return toRef;
-  }
-  public void setToRef(String toRef) {
-    this.toRef = toRef;
-  }
-  public Map<String, Object> getData() {
-    return data;
-  }
-  public void setData(Map<String, Object> data) {
-    this.data = data;
   }
   public Date getCreationDate() {
     return creationDate;
@@ -79,4 +70,40 @@ public class RelationshipEntity {
   public void setCreationDate(Date creationDate) {
     this.creationDate = creationDate;
   }
+  public RelationshipType getType() {
+    return type;
+  }
+  public void setType(RelationshipType type) {
+    this.type = type;
+  }
+  public String getRef() {
+    return ref;
+  }
+  public void setRef(String ref) {
+    this.ref = ref;
+  }
+  public String getSlug() {
+    return slug;
+  }
+
+  public void setSlug(String slug) {
+    this.slug = slug;
+  }
+
+  public Map<String, String> getData() {
+    return data;
+  }
+  public void setData(Map<String, String> data) {
+    this.data = data;
+  }
+
+  public List<RelationshipConnectionEntity> getConnections() {
+    return connections;
+  }
+
+  public void setConnections(List<RelationshipConnectionEntity> connections) {
+    this.connections = connections;
+  }
+ 
+  
 }
