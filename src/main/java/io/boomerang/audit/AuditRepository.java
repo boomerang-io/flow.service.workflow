@@ -15,6 +15,6 @@ public interface AuditRepository extends MongoRepository<AuditEntity, String> {
   @Aggregation(pipeline = {"{'$match':{'data.duplicateOf': ?0}}", "{'$sort': {'creationDate': -1}}", "{'$limit': 1}"})
   Optional<AuditEntity> findFirstByWorkflowDuplicateOf(String duplicateOf);
   
-  List<AuditEntity> findByScopeAndParent(AuditScope scope, ObjectId parent);
+  List<AuditEntity> findByScopeAndParent(AuditScope scope, String parent);
 }
 

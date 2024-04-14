@@ -54,7 +54,7 @@ public class RelationshipEntity {
 
   @Override
   public String toString() {
-    return "RelationshipEntityV2 [id=" + id + ", creationDate=" + creationDate + ", type=" + type
+    return "RelationshipEntity [id=" + id + ", creationDate=" + creationDate + ", type=" + type
         + ", ref=" + ref + ", slug=" + slug + ", data=" + data + "]";
   }
   

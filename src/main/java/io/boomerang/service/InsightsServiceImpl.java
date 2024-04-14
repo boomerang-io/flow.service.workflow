@@ -52,10 +52,11 @@ public class InsightsServiceImpl implements InsightsService {
       
       //If user, return Insights including for deleted Workflows
       if (workflowRefs.isEmpty()) {
-        Optional<AuditEntity> teamAE = auditRepository.findFirstByScopeAndSelfName(AuditScope.TEAM,team);
+        Optional<AuditEntity> teamAE = auditRepository.findFirstByScopeAndSelfName(AuditScope.TEAM, team);
         if (teamAE.isPresent()) {
-          List<AuditEntity> worfklowAEList = auditRepository.findByScopeAndParent(AuditScope.WORKFLOW, new ObjectId(teamAE.get().getId()));
-          wfRefs = worfklowAEList.stream().map(AuditEntity::getSelfRef).toList();
+          LOGGER.debug("Audit Team: {}", teamAE.toString());
+          List<AuditEntity> workflowAEList = auditRepository.findByScopeAndParent(AuditScope.WORKFLOW, teamAE.get().getId());
+          wfRefs = workflowAEList.stream().map(AuditEntity::getSelfRef).toList();
         }
       } else {
         wfRefs = relationshipServiceImpl.getFilteredRefs(Optional.of(RelationshipType.WORKFLOW), workflowRefs, RelationshipLabel.BELONGSTO, RelationshipType.TEAM, team, false);
