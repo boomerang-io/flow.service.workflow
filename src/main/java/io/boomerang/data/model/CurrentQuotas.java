@@ -19,6 +19,14 @@ public class CurrentQuotas extends Quotas {
   public CurrentQuotas(Quotas quotas) {
     BeanUtils.copyProperties(quotas, this);
   }
+
+  @Override
+  public String toString() {
+    return "CurrentQuotas [currentWorkflowCount=" + currentWorkflowCount + ", currentRuns="
+        + currentRuns + ", currentConcurrentRuns=" + currentConcurrentRuns
+        + ", currentRunTotalDuration=" + currentRunTotalDuration + ", currentRunMedianDuration="
+        + currentRunMedianDuration + ", monthlyResetDate=" + monthlyResetDate + "]";
+  }
   
   public Integer getCurrentWorkflowCount() {
     return currentWorkflowCount;
@@ -32,11 +40,11 @@ public class CurrentQuotas extends Quotas {
   public void setCurrentRuns(Integer currentRuns) {
     this.currentRuns = currentRuns;
   }
-  public Integer getCurrentConcurrentWorkflows() {
+  public Integer getCurrentConcurrentRuns() {
     return currentConcurrentRuns;
   }
-  public void setCurrentConcurrentWorkflows(Integer currentConcurrentWorkflows) {
-    this.currentConcurrentRuns = currentConcurrentWorkflows;
+  public void setCurrentConcurrentRuns(Integer currentConcurrentRuns) {
+    this.currentConcurrentRuns = currentConcurrentRuns;
   }
   public Integer getCurrentRunTotalDuration() {
     return currentRunTotalDuration;

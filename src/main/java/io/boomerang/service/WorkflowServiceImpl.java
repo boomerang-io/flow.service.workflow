@@ -575,13 +575,14 @@ public class WorkflowServiceImpl implements WorkflowService {
    * 
    * TODO: add additional checks for not exceeding Workspace size for any Workspace that is saved on the Workflow
    */
-  private void canRunWithQuotas(String teamId, String workflowId, Optional<List<WorkflowWorkspace>> workspaces) {
+  private void canRunWithQuotas(String team, String workflowId, Optional<List<WorkflowWorkspace>> workspaces) {
     if (settingsService.getSettingConfig("features", "workflowQuotas").getBooleanValue()) {
-      CurrentQuotas quotas = teamService.getCurrentQuotas(teamId);
-      if (quotas.getCurrentConcurrentWorkflows() > quotas.getMaxConcurrentRuns()) {
-        throw new BoomerangException(BoomerangError.QUOTA_EXCEEDED, "Concurrent Workflows", quotas.getCurrentConcurrentWorkflows(), quotas.getMaxConcurrentRuns());
+      CurrentQuotas quotas = teamService.getCurrentQuotas(team);
+      LOGGER.debug("Quotas: {}", quotas.toString());
+      if (quotas.getCurrentConcurrentRuns() > quotas.getMaxConcurrentRuns()) {
+        throw new BoomerangException(BoomerangError.QUOTA_EXCEEDED, "Concurrent runs (executions)", quotas.getCurrentConcurrentRuns(), quotas.getMaxConcurrentRuns());
       } else if (quotas.getCurrentRuns() > quotas.getMaxWorkflowRunMonthly()) {
-        throw new BoomerangException(BoomerangError.QUOTA_EXCEEDED, "Number of Runs (executions)", quotas.getCurrentRuns(), quotas.getMaxWorkflowRunMonthly());
+        throw new BoomerangException(BoomerangError.QUOTA_EXCEEDED, "Number of runs (executions)", quotas.getCurrentRuns(), quotas.getMaxWorkflowRunMonthly());
       } else if (workspaces.isPresent() && workspaces.get().size() > 0) {
         workspaces.get().forEach(ws -> {
           try {

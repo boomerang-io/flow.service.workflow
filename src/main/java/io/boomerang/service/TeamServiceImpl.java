@@ -611,13 +611,13 @@ public class TeamServiceImpl implements TeamService {
   /*
    * Used by WorkflowRun Service to ensure Workflow can run
    */
-  public CurrentQuotas getCurrentQuotas(String teamId) {
-    Optional<TeamEntity> optTeamEntity = teamRepository.findByNameIgnoreCase(teamId);
+  public CurrentQuotas getCurrentQuotas(String team) {
+    Optional<TeamEntity> optTeamEntity = teamRepository.findByNameIgnoreCase(team);
     if (optTeamEntity.isPresent()) {
       Quotas quotas = setDefaultQuotas();
       setCustomQuotas(quotas, optTeamEntity.get().getQuotas());
       CurrentQuotas currentQuotas = new CurrentQuotas(quotas);
-      setCurrentQuotas(currentQuotas, optTeamEntity.get().getId());
+      setCurrentQuotas(currentQuotas, team);
       return currentQuotas;
     }
     return null;
@@ -779,7 +779,7 @@ public class TeamServiceImpl implements TeamService {
         insightsService.get(team, currentMonthStart.getTime(),
             currentMonthEnd.getTime(), Optional.empty(), Optional.empty());
     LOGGER.debug("Insights: {}", insight.toString());
-    currentQuotas.setCurrentConcurrentWorkflows(insight.getConcurrentRuns().intValue());
+    currentQuotas.setCurrentConcurrentRuns(insight.getConcurrentRuns().intValue());
     currentQuotas.setCurrentRunTotalDuration(insight.getTotalDuration().intValue());
     currentQuotas.setCurrentRunMedianDuration(insight.getMedianDuration().intValue());
     currentQuotas.setCurrentRuns(insight.getTotalRuns().intValue());
