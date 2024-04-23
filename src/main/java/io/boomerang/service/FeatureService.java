@@ -1,9 +1,9 @@
 package io.boomerang.service;
 
-import io.boomerang.model.FeaturesAndQuotas;
+import io.boomerang.model.Features;
 
 public interface FeatureService {
   
-  FeaturesAndQuotas get();
+  Features get();
 
 }

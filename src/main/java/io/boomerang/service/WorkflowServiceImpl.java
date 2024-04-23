@@ -76,6 +76,11 @@ public class WorkflowServiceImpl implements WorkflowService {
   private static final Logger LOGGER = LogManager.getLogger();
   
   private static final String TASK_REF_SEPERATOR = "/";
+  public static final String TEAMS_SETTINGS_KEY = "teams";
+  public static final String QUOTA_MAX_WORKFLOW_DURATION = "max.workflow.duration";
+  public static final String QUOTA_MAX_WORKFLOW_STORAGE = "max.workflow.storage";
+  public static final String QUOTA_MAX_WORKFLOWRUN_STORAGE = "max.workflowrun.storage";
+  public static final String TASK_SETTINGS_KEY = "task";
 
   @Autowired
   private EngineClient engineClient;
@@ -212,47 +217,39 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   private void setUpWorkspaceDefaults(Workflow request) {
     if (request.getWorkspaces() != null && !request.getWorkspaces().isEmpty()) {
-      String maxSizeQuota = this.settingsService
-          .getSettingConfig("teams", "max.team.workflow.storage").getValue().replace("Gi", "");
-      Integer totalSize = 0;
-      if (request.getWorkspaces().stream().anyMatch(ws -> ws.getType().equals("workflow"))) {
-        WorkflowWorkspace workflowWorkspace = request.getWorkspaces().stream()
-            .filter(ws -> ws.getType().equals("workflow")).findFirst().get();
-        Integer index = request.getWorkspaces().indexOf(workflowWorkspace);
-        workflowWorkspace.setName("workflow");
-        workflowWorkspace.setOptional(false);
-        WorkflowWorkspaceSpec workflowWorkspaceSpec = new WorkflowWorkspaceSpec();
-        if (workflowWorkspace.getSpec() != null) {
-          workflowWorkspaceSpec = (WorkflowWorkspaceSpec) workflowWorkspace.getSpec();
+      //Workflow Storage
+      for (WorkflowWorkspace ws : request.getWorkspaces()) {
+        if (ws.getType().equals("workflow")) {
+          String maxStorageSizeQuota = this.settingsService
+              .getSettingConfig(TEAMS_SETTINGS_KEY, QUOTA_MAX_WORKFLOW_STORAGE).getValue().replace("Gi", "");
+          ws.setName("workflow");
+          ws.setOptional(false);
+          WorkflowWorkspaceSpec workflowWorkspaceSpec = new WorkflowWorkspaceSpec();
+          if (ws.getSpec() != null) {
+            workflowWorkspaceSpec = (WorkflowWorkspaceSpec) ws.getSpec();
+          }
+          if (workflowWorkspaceSpec.getSize() == null) {
+            workflowWorkspaceSpec.setSize(maxStorageSizeQuota);
+          } else if (Integer.valueOf(workflowWorkspaceSpec.getSize()) > Integer.valueOf(maxStorageSizeQuota)) {
+            throw new BoomerangException(BoomerangError.QUOTA_EXCEEDED, "Workspace Size Limit", workflowWorkspaceSpec.getSize(), maxStorageSizeQuota);
+          }
+          ws.setSpec(workflowWorkspaceSpec);
+        } else if (ws.getType().equals("workflowrun")) {
+          String maxStorageSizeQuota = this.settingsService
+              .getSettingConfig(TEAMS_SETTINGS_KEY, QUOTA_MAX_WORKFLOWRUN_STORAGE).getValue().replace("Gi", "");
+          ws.setName("workflowrun");
+          ws.setOptional(false);
+          WorkflowWorkspaceSpec workflowWorkspaceSpec = new WorkflowWorkspaceSpec();
+          if (ws.getSpec() != null) {
+            workflowWorkspaceSpec = (WorkflowWorkspaceSpec) ws.getSpec();
+          }
+          if (workflowWorkspaceSpec.getSize() == null) {
+            workflowWorkspaceSpec.setSize(maxStorageSizeQuota);
+          } else if (Integer.valueOf(workflowWorkspaceSpec.getSize()) > Integer.valueOf(maxStorageSizeQuota)) {
+            throw new BoomerangException(BoomerangError.QUOTA_EXCEEDED, "Workspace Size Limit", workflowWorkspaceSpec.getSize(), maxStorageSizeQuota);
+          }
+          ws.setSpec(workflowWorkspaceSpec);
         }
-        if (workflowWorkspaceSpec.getSize() == null) {
-          workflowWorkspaceSpec.setSize(this.settingsService
-              .getSettingConfig("workflow", "storage.size").getValue().replace("Gi", ""));
-        }
-        workflowWorkspace.setSpec(workflowWorkspaceSpec);
-        totalSize += Integer.valueOf(workflowWorkspaceSpec.getSize());
-        request.getWorkspaces().set(index, workflowWorkspace);
-      }
-      if (request.getWorkspaces().stream().anyMatch(ws -> ws.getType().equals("workflowrun"))) {
-        WorkflowWorkspace workflowWorkspace = request.getWorkspaces().stream()
-            .filter(ws -> ws.getType().equals("workflow")).findFirst().get();
-        Integer index = request.getWorkspaces().indexOf(workflowWorkspace);
-        workflowWorkspace.setName("workflowrun");
-        workflowWorkspace.setOptional(false);
-        WorkflowWorkspaceSpec workflowWorkspaceSpec = new WorkflowWorkspaceSpec();
-        if (workflowWorkspace.getSpec() != null) {
-          workflowWorkspaceSpec = (WorkflowWorkspaceSpec) workflowWorkspace.getSpec();
-        }
-        if (workflowWorkspaceSpec.getSize() == null) {
-          workflowWorkspaceSpec.setSize(this.settingsService
-              .getSettingConfig("workflowrun", "storage.size").getValue().replace("Gi", ""));
-        }
-        workflowWorkspace.setSpec(workflowWorkspaceSpec);
-        totalSize += Integer.valueOf(workflowWorkspaceSpec.getSize());
-        request.getWorkspaces().set(index, workflowWorkspace);
-      }
-      if (totalSize > Integer.valueOf(maxSizeQuota)) {
-        throw new BoomerangException(BoomerangError.QUOTA_EXCEEDED, "Workspace Size Limit", totalSize, maxSizeQuota);
       }
     }
   }
@@ -301,8 +298,6 @@ public class WorkflowServiceImpl implements WorkflowService {
     if (workflowId == null || workflowId.isBlank()) {
       throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
     }
-    // Check if Workflow can run (Quotas & Triggers)
-    // TODO: check triggers allow submission
     if (relationshipServiceImpl.hasTeamRelationship(Optional.of(RelationshipType.WORKFLOW),
         Optional.of(workflowId), RelationshipLabel.BELONGSTO, team, false)) {
       return this.internalSubmit(team, workflowId, request, start);
@@ -350,17 +345,16 @@ public class WorkflowServiceImpl implements WorkflowService {
         request.setDebug(Boolean.valueOf(enableDebug));
       }
       // Set Workflow Timeout
-      if (!Objects.isNull(request.getTimeout())) {
-        String setting = this.settingsService
-            .getSettingConfig("task", "default.timeout").getValue();
-        if (setting != null) {
-          request.setTimeout(Long.valueOf(setting));
-        }
+      Long timeout = teamService.getWorkflowMaxDurationForTeam(team).longValue();
+      if (!Objects.isNull(request.getTimeout()) && request.getTimeout() < timeout) {
+        timeout = request.getTimeout();
       }
+      request.setTimeout(Long.valueOf(timeout));
       //These annotations are processed by the DAGUtility in the Engine
       Map<String, Object> executionAnnotations = new HashMap<>();
-      executionAnnotations.put("boomerang.io/task-deletion", this.settingsService.getSettingConfig("task", "deletion.policy").getValue());
-      executionAnnotations.put("boomerang.io/task-default-image", this.settingsService.getSettingConfig("task", "default.image").getValue());
+      executionAnnotations.put("boomerang.io/task-deletion", this.settingsService.getSettingConfig(TASK_SETTINGS_KEY, "deletion.policy").getValue());
+      executionAnnotations.put("boomerang.io/task-default-image", this.settingsService.getSettingConfig(TASK_SETTINGS_KEY, "default.image").getValue());
+      executionAnnotations.put("boomerang.io/task-timeout", this.settingsService.getSettingConfig(TASK_SETTINGS_KEY, "default.timeout").getValue());
       
       //Add Context, Global, and Team parameters to the WorkflowRun request
       ParamLayers paramLayers = parameterManager.buildParamLayers(team, workflowId);
@@ -583,16 +577,28 @@ public class WorkflowServiceImpl implements WorkflowService {
         throw new BoomerangException(BoomerangError.QUOTA_EXCEEDED, "Concurrent runs (executions)", quotas.getCurrentConcurrentRuns(), quotas.getMaxConcurrentRuns());
       } else if (quotas.getCurrentRuns() > quotas.getMaxWorkflowRunMonthly()) {
         throw new BoomerangException(BoomerangError.QUOTA_EXCEEDED, "Number of runs (executions)", quotas.getCurrentRuns(), quotas.getMaxWorkflowRunMonthly());
-      } else if (workspaces.isPresent() && workspaces.get().size() > 0) {
+      } else if (workspaces.isPresent() && !workspaces.get().isEmpty() && workspaces.get().size() > 0) {
         workspaces.get().forEach(ws -> {
-          try {
-            Field sizeField = ws.getSpec().getClass().getDeclaredField("size");
-            String size = (String) sizeField.get(ws.getSpec());
-            if (Integer.valueOf(size) > quotas.getMaxWorkflowStorage()) {
-              throw new BoomerangException(BoomerangError.QUOTA_EXCEEDED, "Requested Workspace size", size, quotas.getMaxWorkflowStorage());
+          if (ws.getType().equals("workflow") && ws.getSpec()!= null) {
+            try {
+              Field sizeField = ws.getSpec().getClass().getDeclaredField("size");
+              String size = (String) sizeField.get(ws.getSpec());
+              if (Integer.valueOf(size) > quotas.getMaxWorkflowStorage()) {
+                throw new BoomerangException(BoomerangError.QUOTA_EXCEEDED, "Requested Workspace size", size, quotas.getMaxWorkflowStorage());
+              }
+            } catch (NoSuchFieldException | IllegalAccessException ex) {
+              //Do nothing
             }
-          } catch (NoSuchFieldException | IllegalAccessException ex) {
-            //Do nothing
+          } else if (ws.getType().equals("workflowrun") && ws.getSpec()!= null) {
+            try {
+              Field sizeField = ws.getSpec().getClass().getDeclaredField("size");
+              String size = (String) sizeField.get(ws.getSpec());
+              if (Integer.valueOf(size) > quotas.getMaxWorkflowRunStorage()) {
+                throw new BoomerangException(BoomerangError.QUOTA_EXCEEDED, "Requested Workspace size", size, quotas.getMaxWorkflowRunStorage());
+              }
+            } catch (NoSuchFieldException | IllegalAccessException ex) {
+              //Do nothing
+            }
           }
         });
       }

@@ -15,7 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
-import io.boomerang.model.FeaturesAndQuotas;
+import io.boomerang.model.Features;
 import io.boomerang.model.Navigation;
 import io.boomerang.model.NavigationType;
 import io.boomerang.security.service.ExternalTokenService;
@@ -49,7 +49,7 @@ public class NavigationServiceImpl implements NavigationService {
   @Override
   public List<Navigation> getNavigation(boolean isUserAdmin, Optional<String> optTeamId) {
 
-    FeaturesAndQuotas features = featureService.get();
+    Features features = featureService.get();
     
     boolean disabled = optTeamId.isPresent() ? false : true;
     String teamIdURLContext = optTeamId.isPresent() ? "/" + optTeamId.get() : "";

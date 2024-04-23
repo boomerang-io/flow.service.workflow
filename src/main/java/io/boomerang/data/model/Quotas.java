@@ -5,9 +5,17 @@ public class Quotas {
   private Integer maxWorkflowCount;
   private Integer maxWorkflowRunMonthly;
   private Integer maxWorkflowStorage;
-  private Integer maxWorkflowRunTime;
+  private Integer maxWorkflowRunStorage;
+  private Integer maxWorkflowRunDuration;
   private Integer maxConcurrentRuns;
   
+  @Override
+  public String toString() {
+    return "Quotas [maxWorkflowCount=" + maxWorkflowCount + ", maxWorkflowRunMonthly="
+        + maxWorkflowRunMonthly + ", maxWorkflowStorage=" + maxWorkflowStorage
+        + ", maxWorkflowRunStorage=" + maxWorkflowRunStorage + ", maxWorkflowRunDuration="
+        + maxWorkflowRunDuration + ", maxConcurrentRuns=" + maxConcurrentRuns + "]";
+  }
   public Integer getMaxWorkflowCount() {
     return maxWorkflowCount;
   }
@@ -26,11 +34,17 @@ public class Quotas {
   public void setMaxWorkflowStorage(Integer maxWorkflowStorage) {
     this.maxWorkflowStorage = maxWorkflowStorage;
   }
-  public Integer getMaxWorkflowRunTime() {
-    return maxWorkflowRunTime;
+  public Integer getMaxWorkflowRunStorage() {
+    return maxWorkflowRunStorage;
   }
-  public void setMaxWorkflowRunTime(Integer maxWorkflowRunTime) {
-    this.maxWorkflowRunTime = maxWorkflowRunTime;
+  public void setMaxWorkflowRunStorage(Integer maxWorkflowRunStorage) {
+    this.maxWorkflowRunStorage = maxWorkflowRunStorage;
+  }
+  public Integer getMaxWorkflowRunDuration() {
+    return maxWorkflowRunDuration;
+  }
+  public void setMaxWorkflowRunDuration(Integer maxWorkflowRunDuration) {
+    this.maxWorkflowRunDuration = maxWorkflowRunDuration;
   }
   public Integer getMaxConcurrentRuns() {
     return maxConcurrentRuns;

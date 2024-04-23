@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import io.boomerang.model.AbstractParam;
-import io.boomerang.model.FeaturesAndQuotas;
+import io.boomerang.model.Features;
 import io.boomerang.model.HeaderNavigationResponse;
 import io.boomerang.model.Navigation;
 import io.boomerang.model.OneTimeCode;
@@ -100,7 +100,7 @@ public class SystemV2Controller {
   @Operation(summary = "Retrieve feature flags.")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
-  public ResponseEntity<FeaturesAndQuotas> getFlowFeatures() {
+  public ResponseEntity<Features> getFlowFeatures() {
     CacheControl cacheControl = CacheControl.maxAge(5, TimeUnit.MINUTES);
     return ResponseEntity.ok().cacheControl(cacheControl).body(featureService.get());
   }

@@ -29,7 +29,6 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import io.boomerang.audit.AuditInterceptor;
 import io.boomerang.data.entity.ApproverGroupEntity;
 import io.boomerang.data.entity.TeamEntity;
 import io.boomerang.data.entity.UserEntity;
@@ -69,12 +68,13 @@ public class TeamServiceImpl implements TeamService {
   
   public static final List<String> RESERVED_TEAM_NAMES = List.of("home", "admin", "system", "profile", "connect");
   public static final String TEAMS_SETTINGS_KEY = "teams";
-  public static final String MAX_TEAM_WORKFLOW_COUNT = "max.team.workflow.count";
-  public static final String MAX_TEAM_CONCURRENT_WORKFLOW = "max.team.concurrent.workflows";
-  public static final String MAX_TEAM_WORKFLOW_EXECUTION_MONTHLY =
-      "max.team.workflow.execution.monthly";
-  public static final String MAX_TEAM_WORKFLOW_STORAGE = "max.team.workflow.storage";
-  public static final String MAX_TEAM_WORKFLOW_DURATION = "max.team.workflow.duration";
+  public static final String QUOTA_MAX_WORKFLOW_COUNT = "max.workflow.count";
+  public static final String QUOTA_MAX_WORKFLOW_STORAGE = "max.workflow.storage";
+  public static final String QUOTA_MAX_WORKFLOWRUN_CONCURRENT = "max.workflowrun.concurrent";
+  public static final String QUOTA_MAX_WORKFLOWRUN_MONTHLY =
+      "max.workflowrun.monthly";
+  public static final String QUOTA_MAX_WORKFLOWRUN_DURATION = "max.workflowrun.duration";
+  public static final String QUOTA_MAX_WORKFLOWRUN_STORAGE = "max.workflowrun.storage";
 
   @Autowired
   private TeamRepository teamRepository;
@@ -710,15 +710,17 @@ public class TeamServiceImpl implements TeamService {
   private Quotas setDefaultQuotas() {
     Quotas quotas = new Quotas();
     quotas.setMaxWorkflowCount(Integer
-        .valueOf(settingsService.getSettingConfig(TEAMS_SETTINGS_KEY, MAX_TEAM_WORKFLOW_COUNT).getValue()));
+        .valueOf(settingsService.getSettingConfig(TEAMS_SETTINGS_KEY, QUOTA_MAX_WORKFLOW_COUNT).getValue()));
     quotas.setMaxWorkflowRunMonthly(Integer.valueOf(
-        settingsService.getSettingConfig(TEAMS_SETTINGS_KEY, MAX_TEAM_WORKFLOW_EXECUTION_MONTHLY).getValue()));
+        settingsService.getSettingConfig(TEAMS_SETTINGS_KEY, QUOTA_MAX_WORKFLOWRUN_MONTHLY).getValue()));
     quotas.setMaxWorkflowStorage(Integer.valueOf(settingsService
-        .getSettingConfig(TEAMS_SETTINGS_KEY, MAX_TEAM_WORKFLOW_STORAGE).getValue().replace("Gi", "")));
-    quotas.setMaxWorkflowRunTime(Integer
-        .valueOf(settingsService.getSettingConfig(TEAMS_SETTINGS_KEY, MAX_TEAM_WORKFLOW_DURATION).getValue()));
+        .getSettingConfig(TEAMS_SETTINGS_KEY, QUOTA_MAX_WORKFLOW_STORAGE).getValue().replace("Gi", "")));
+    quotas.setMaxWorkflowRunStorage(Integer.valueOf(settingsService
+        .getSettingConfig(TEAMS_SETTINGS_KEY, QUOTA_MAX_WORKFLOWRUN_STORAGE).getValue().replace("Gi", "")));
+    quotas.setMaxWorkflowRunDuration(Integer
+        .valueOf(settingsService.getSettingConfig(TEAMS_SETTINGS_KEY, QUOTA_MAX_WORKFLOWRUN_DURATION).getValue()));
     quotas.setMaxConcurrentRuns(Integer
-        .valueOf(settingsService.getSettingConfig(TEAMS_SETTINGS_KEY, MAX_TEAM_CONCURRENT_WORKFLOW).getValue()));
+        .valueOf(settingsService.getSettingConfig(TEAMS_SETTINGS_KEY, QUOTA_MAX_WORKFLOWRUN_CONCURRENT).getValue()));
     return quotas;
   }
 
@@ -739,18 +741,34 @@ public class TeamServiceImpl implements TeamService {
       if (customQuotas.getMaxWorkflowStorage() != null) {
         quotas.setMaxWorkflowStorage(customQuotas.getMaxWorkflowStorage());
       }
-      if (customQuotas.getMaxWorkflowRunTime() != null) {
-        quotas.setMaxWorkflowRunTime(customQuotas.getMaxWorkflowRunTime());
+      if (customQuotas.getMaxWorkflowRunStorage() != null) {
+        quotas.setMaxWorkflowRunStorage(customQuotas.getMaxWorkflowRunStorage());
+      }
+      if (customQuotas.getMaxWorkflowRunDuration() != null) {
+        quotas.setMaxWorkflowRunDuration(customQuotas.getMaxWorkflowRunDuration());
       }
       if (customQuotas.getMaxConcurrentRuns() != null) {
         quotas.setMaxConcurrentRuns(customQuotas.getMaxConcurrentRuns());
       }
     }
   }
+  
+  protected Integer getWorkflowMaxDurationForTeam(String team) {
+    Integer d = Integer
+        .valueOf(settingsService.getSettingConfig(TEAMS_SETTINGS_KEY, QUOTA_MAX_WORKFLOWRUN_DURATION).getValue());
+
+    Optional<TeamEntity> optTeamEntity = teamRepository.findByNameIgnoreCase(team);
+    if (optTeamEntity.isPresent() && optTeamEntity.get().getQuotas() != null
+        && optTeamEntity.get().getQuotas().getMaxWorkflowRunDuration() != null
+        && optTeamEntity.get().getQuotas().getMaxWorkflowRunDuration() != 0) {
+      d = optTeamEntity.get().getQuotas().getMaxWorkflowRunDuration();
+    }
+    return d;
+  }
 
   private CurrentQuotas setCurrentQuotas(CurrentQuotas currentQuotas, String team) {
     // Set Quota Reset Date
-    Calendar nextMonth = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+    Calendar nextMonth = Calendar.getInstance(TimeZone.getTimeZone("UTC")); 
     nextMonth.add(Calendar.MONTH, 1);
     nextMonth.set(Calendar.DAY_OF_MONTH, 1);
     nextMonth.set(Calendar.HOUR_OF_DAY, 0);

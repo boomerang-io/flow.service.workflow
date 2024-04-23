@@ -33,8 +33,6 @@ import io.boomerang.model.ref.WorkflowRunRequest;
 public class WorkflowRunServiceImpl implements WorkflowRunService {
 
   private static final Logger LOGGER = LogManager.getLogger();
-  
-  private static final String TASK_REF_SEPERATOR = "/";
 
   @Autowired
   private EngineClient engineClient;

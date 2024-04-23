@@ -5,7 +5,7 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import io.boomerang.model.AbstractParam;
-import io.boomerang.model.FeaturesAndQuotas;
+import io.boomerang.model.Features;
 
 @Service
 public class FeatureServiceImpl implements FeatureService {
@@ -15,10 +15,9 @@ public class FeatureServiceImpl implements FeatureService {
   private SettingsService settingsService;
 
   @Override
-  public FeaturesAndQuotas get() {
-    FeaturesAndQuotas flowFeatures = new FeaturesAndQuotas();
+  public Features get() {
+    Features flowFeatures = new Features();
     Map<String, Object> features = new HashMap<>();
-    Map<String, Object> quotas = new HashMap<>();
 
     AbstractParam config = settingsService.getSettingConfig("task", "edit.verified");
 
@@ -48,14 +47,7 @@ public class FeatureServiceImpl implements FeatureService {
     features.put("team.tasks",
         settingsService.getSettingConfig("features", "teamTasks").getBooleanValue());
 
-    quotas.put("maxActivityStorageSize", settingsService
-        .getSettingConfig("workflowrun", "max.storage.size").getValue().replace("Gi", ""));
-
-    quotas.put("maxWorkflowStorageSize", settingsService
-        .getSettingConfig("workflow", "max.storage.size").getValue().replace("Gi", ""));
-
     flowFeatures.setFeatures(features);
-    flowFeatures.setQuotas(quotas);
     return flowFeatures;
   }
 
