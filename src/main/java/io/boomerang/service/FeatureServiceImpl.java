@@ -26,8 +26,8 @@ public class FeatureServiceImpl implements FeatureService {
     } else {
       features.put(VERIFIED_TASK_EDIT_KEY, false);
     }
-    features.put("workflow.quotas",
-        settingsService.getSettingConfig("features", "workflowQuotas").getBooleanValue());
+    features.put("team.quotas",
+        settingsService.getSettingConfig("features", "teamQuotas").getBooleanValue());
     features.put("workflow.triggers",
         settingsService.getSettingConfig("features", "workflowTriggers").getBooleanValue());
     features.put("workflow.tokens",

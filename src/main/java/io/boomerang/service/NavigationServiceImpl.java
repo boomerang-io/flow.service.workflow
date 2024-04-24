@@ -76,13 +76,15 @@ public class NavigationServiceImpl implements NavigationService {
       workflows.setLink(flowAppsUrl + teamIdURLContext + "/workflows");
       response.add(workflows);
 
-      Navigation activity = new Navigation();
-      activity.setName("Activity");
-      activity.setType(NavigationType.link);
-      activity.setDisabled(disabled);
-      activity.setIcon("Activity");
-      activity.setLink(flowAppsUrl + teamIdURLContext + "/activity");
-      response.add(activity);
+      if (((Boolean) features.getFeatures().get("activity"))) {
+        Navigation activity = new Navigation();
+        activity.setName("Activity");
+        activity.setType(NavigationType.link);
+        activity.setDisabled(disabled);
+        activity.setIcon("Activity");
+        activity.setLink(flowAppsUrl + teamIdURLContext + "/activity");
+        response.add(activity);
+      }
 
       Navigation actions = new Navigation();
       actions.setName("Actions");
@@ -92,13 +94,15 @@ public class NavigationServiceImpl implements NavigationService {
       actions.setLink(flowAppsUrl + teamIdURLContext + "/actions");
       response.add(actions);
 
-      Navigation insights = new Navigation();
-      insights.setName("Insights");
-      insights.setType(NavigationType.link);
-      insights.setDisabled(disabled);
-      insights.setIcon("ChartScatter");
-      insights.setLink(flowAppsUrl + teamIdURLContext + "/insights");
-      response.add(insights);
+      if (((Boolean) features.getFeatures().get("insights"))) {
+        Navigation insights = new Navigation();
+        insights.setName("Insights");
+        insights.setType(NavigationType.link);
+        insights.setDisabled(disabled);
+        insights.setIcon("ChartScatter");
+        insights.setLink(flowAppsUrl + teamIdURLContext + "/insights");
+        response.add(insights);
+      }
 
       Navigation schedules = new Navigation();
       schedules.setName("Schedules");
@@ -119,21 +123,25 @@ public class NavigationServiceImpl implements NavigationService {
 
       response.add(divider);
 
-      Navigation teamTasks = new Navigation();
-      teamTasks.setName("Task Manager");
-      teamTasks.setType(NavigationType.link);
-      teamTasks.setDisabled(disabled);
-      teamTasks.setIcon("TaskSettings");
-      teamTasks.setLink(flowAppsUrl + teamIdURLContext + "/task-manager");
-      response.add(teamTasks);
+      if (((Boolean) features.getFeatures().get("team.tasks"))) {
+        Navigation teamTasks = new Navigation();
+        teamTasks.setName("Task Manager");
+        teamTasks.setType(NavigationType.link);
+        teamTasks.setDisabled(disabled);
+        teamTasks.setIcon("TaskSettings");
+        teamTasks.setLink(flowAppsUrl + teamIdURLContext + "/task-manager");
+        response.add(teamTasks);
+      }
 
-      Navigation teamParameters = new Navigation();
-      teamParameters.setName("Parameters");
-      teamParameters.setType(NavigationType.link);
-      teamParameters.setDisabled(disabled);
-      teamParameters.setIcon("Parameter");
-      teamParameters.setLink(flowAppsUrl + teamIdURLContext + "/parameters");
-      response.add(teamParameters);
+      if (((Boolean) features.getFeatures().get("team.parameters"))) {
+        Navigation teamParameters = new Navigation();
+        teamParameters.setName("Parameters");
+        teamParameters.setType(NavigationType.link);
+        teamParameters.setDisabled(disabled);
+        teamParameters.setIcon("Parameter");
+        teamParameters.setLink(flowAppsUrl + teamIdURLContext + "/parameters");
+        response.add(teamParameters);
+      }
 
       Navigation management = new Navigation();
       management.setName("Manage Team");
@@ -166,11 +174,13 @@ public class NavigationServiceImpl implements NavigationService {
           admin.getChildLinks().add(users);
         }
 
-        Navigation properties = new Navigation();
-        properties.setName("Global Parameters");
-        properties.setLink(flowAppsUrl + "/admin/parameters");
-        properties.setType(NavigationType.link);
-        admin.getChildLinks().add(properties);
+        if (((Boolean) features.getFeatures().get("global.parameters"))) {
+          Navigation properties = new Navigation();
+          properties.setName("Global Parameters");
+          properties.setLink(flowAppsUrl + "/admin/parameters");
+          properties.setType(NavigationType.link);
+          admin.getChildLinks().add(properties);
+        }
 
         Navigation tokens = new Navigation();
         tokens.setName("Global Tokens");

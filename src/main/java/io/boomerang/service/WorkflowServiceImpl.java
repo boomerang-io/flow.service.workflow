@@ -77,6 +77,8 @@ public class WorkflowServiceImpl implements WorkflowService {
   
   private static final String TASK_REF_SEPERATOR = "/";
   public static final String TEAMS_SETTINGS_KEY = "teams";
+  public static final String FEATURES_SETTINGS_KEY = "features";
+  public static final String FEATURES_TEAM_QUOTA = "teamQuotas";
   public static final String QUOTA_MAX_WORKFLOW_DURATION = "max.workflow.duration";
   public static final String QUOTA_MAX_WORKFLOW_STORAGE = "max.workflow.storage";
   public static final String QUOTA_MAX_WORKFLOWRUN_STORAGE = "max.workflowrun.storage";
@@ -191,6 +193,9 @@ public class WorkflowServiceImpl implements WorkflowService {
   @Override
 //  @Audit(scope = PermissionScope.WORKFLOW)
   public Workflow create(String team, Workflow request) {
+    // Check creation quotas
+    canCreateWithQuotas(team);
+    
     // Default Triggers
     validateTriggerDefaults(request);
 
@@ -216,6 +221,7 @@ public class WorkflowServiceImpl implements WorkflowService {
   }
 
   private void setUpWorkspaceDefaults(Workflow request) {
+    boolean quotasEnabled = settingsService.getSettingConfig(FEATURES_SETTINGS_KEY, FEATURES_TEAM_QUOTA).getBooleanValue();
     if (request.getWorkspaces() != null && !request.getWorkspaces().isEmpty()) {
       //Workflow Storage
       for (WorkflowWorkspace ws : request.getWorkspaces()) {
@@ -230,7 +236,7 @@ public class WorkflowServiceImpl implements WorkflowService {
           }
           if (workflowWorkspaceSpec.getSize() == null) {
             workflowWorkspaceSpec.setSize(maxStorageSizeQuota);
-          } else if (Integer.valueOf(workflowWorkspaceSpec.getSize()) > Integer.valueOf(maxStorageSizeQuota)) {
+          } else if (quotasEnabled && (Integer.valueOf(workflowWorkspaceSpec.getSize()) > Integer.valueOf(maxStorageSizeQuota))) {
             throw new BoomerangException(BoomerangError.QUOTA_EXCEEDED, "Workspace Size Limit", workflowWorkspaceSpec.getSize(), maxStorageSizeQuota);
           }
           ws.setSpec(workflowWorkspaceSpec);
@@ -245,7 +251,7 @@ public class WorkflowServiceImpl implements WorkflowService {
           }
           if (workflowWorkspaceSpec.getSize() == null) {
             workflowWorkspaceSpec.setSize(maxStorageSizeQuota);
-          } else if (Integer.valueOf(workflowWorkspaceSpec.getSize()) > Integer.valueOf(maxStorageSizeQuota)) {
+          } else if (quotasEnabled && (Integer.valueOf(workflowWorkspaceSpec.getSize()) > Integer.valueOf(maxStorageSizeQuota))) {
             throw new BoomerangException(BoomerangError.QUOTA_EXCEEDED, "Workspace Size Limit", workflowWorkspaceSpec.getSize(), maxStorageSizeQuota);
           }
           ws.setSpec(workflowWorkspaceSpec);
@@ -566,11 +572,22 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   /*
    * Check if the Team Quotas allow a Workflow to run
-   * 
-   * TODO: add additional checks for not exceeding Workspace size for any Workspace that is saved on the Workflow
+   */
+  private void canCreateWithQuotas(String team) {
+    if (settingsService.getSettingConfig(FEATURES_SETTINGS_KEY, FEATURES_TEAM_QUOTA).getBooleanValue()) {
+      CurrentQuotas quotas = teamService.getCurrentQuotas(team);
+      LOGGER.debug("Quotas: {}", quotas.toString());
+      if (quotas.getCurrentWorkflowCount() > quotas.getMaxWorkflowCount()) {
+        throw new BoomerangException(BoomerangError.QUOTA_EXCEEDED, "Number of Workflows", quotas.getCurrentWorkflowCount(), quotas.getMaxWorkflowCount());
+      }
+    }
+  }
+
+  /*
+   * Check if the Team Quotas allow a Workflow to run
    */
   private void canRunWithQuotas(String team, String workflowId, Optional<List<WorkflowWorkspace>> workspaces) {
-    if (settingsService.getSettingConfig("features", "workflowQuotas").getBooleanValue()) {
+    if (settingsService.getSettingConfig(FEATURES_SETTINGS_KEY, FEATURES_TEAM_QUOTA).getBooleanValue()) {
       CurrentQuotas quotas = teamService.getCurrentQuotas(team);
       LOGGER.debug("Quotas: {}", quotas.toString());
       if (quotas.getCurrentConcurrentRuns() > quotas.getMaxConcurrentRuns()) {
