@@ -85,7 +85,7 @@ public class TaskServiceImpl implements TaskService {
     
     // Switch author from ID to Name
     switchChangeLogAuthorToUserName(taskTemplate.getChangelog());
-    LOGGER.debug("Changelog: " + taskTemplate.getChangelog().toString());
+    LOGGER.debug("Changelog: " + taskTemplate.getChangelog() != null ? taskTemplate.getChangelog().toString() : "No changelog exists");
     
     // Remove ID
     taskTemplate.setId(null);

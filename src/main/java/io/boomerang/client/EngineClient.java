@@ -13,6 +13,7 @@ import io.boomerang.model.ref.Workflow;
 import io.boomerang.model.ref.WorkflowCount;
 import io.boomerang.model.ref.WorkflowRun;
 import io.boomerang.model.ref.WorkflowRunCount;
+import io.boomerang.model.ref.WorkflowRunEventRequest;
 import io.boomerang.model.ref.WorkflowRunInsight;
 import io.boomerang.model.ref.WorkflowRunRequest;
 import io.boomerang.model.ref.WorkflowSubmitRequest;
@@ -45,6 +46,8 @@ public interface EngineClient {
   WorkflowRun retryWorkflowRun(String workflowRunId);
 
   void deleteWorkflowRun(String workflowRunId);
+
+  void eventWorkflowRun(String workflowRunId, WorkflowRunEventRequest request);
 
   Workflow getWorkflow(String workflowId, Optional<Integer> version, boolean withTasks);
 

@@ -16,15 +16,18 @@ import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.boomerang.client.EngineClient;
 import io.boomerang.error.BoomerangError;
 import io.boomerang.error.BoomerangException;
 import io.boomerang.integrations.service.IntegrationService;
-import io.boomerang.model.enums.RelationshipLabel;
 import io.boomerang.model.enums.RelationshipType;
 import io.boomerang.model.enums.TriggerEnum;
 import io.boomerang.model.enums.ref.ParamType;
+import io.boomerang.model.enums.ref.RunStatus;
 import io.boomerang.model.ref.RunParam;
+import io.boomerang.model.ref.RunResult;
 import io.boomerang.model.ref.WorkflowRun;
+import io.boomerang.model.ref.WorkflowRunEventRequest;
 import io.boomerang.model.ref.WorkflowSubmitRequest;
 import io.boomerang.util.ParameterUtil;
 import io.cloudevents.CloudEvent;
@@ -41,6 +44,9 @@ public class TriggersServiceImpl implements TriggerService {
 
   @Autowired
   private WorkflowServiceImpl workflowService;
+
+  @Autowired
+  private EngineClient engineClient;
 
   @Autowired
   private IntegrationService integrationService;
@@ -65,8 +71,8 @@ public class TriggersServiceImpl implements TriggerService {
     if (workflow.isPresent()) {
       workflowRef = workflow.get();
     } else {
-      // Assume the WorkflowRef is in the subject
-      workflowRef = eventSubject.replace("/", "");
+      // Assume the WorkflowRef is in the subject as the first element
+      workflowRef = eventSubject.replace("/", "").split("/")[0];
     }
     request.setTrigger(TriggerEnum.event);
     request.setParams(eventToRunParams(event));
@@ -144,10 +150,16 @@ public class TriggersServiceImpl implements TriggerService {
   }
 
   @Override
-  public WorkflowRun processWFE(String workflowId, String workflowRunId,
+  public void processWFE(String workflowRunId,
       String topic, String status, Optional<JsonNode> payload) {
-    // TODO figure out how to update the TaskRun for the WaitForEvent
-    return null;
+    WorkflowRunEventRequest request = new WorkflowRunEventRequest();
+    request.setTopic(topic);
+    request.setStatus(RunStatus.getRunStatus(status));
+    if (payload.isPresent()) {
+      RunResult data = new RunResult("data", (Object) payload);
+      request.setResults(List.of(data));
+    }
+    engineClient.eventWorkflowRun(workflowRunId, request);
   }
 
   /*
@@ -155,7 +167,7 @@ public class TriggersServiceImpl implements TriggerService {
    */
   private List<RunParam> payloadToRunParams(JsonNode payload) {
     List<RunParam> params = new LinkedList<>();
-    params.add(new RunParam("payload", (Object) payload, ParamType.object));
+    params.add(new RunParam("data", (Object) payload, ParamType.object));
     return params;
   }
 
@@ -169,7 +181,7 @@ public class TriggersServiceImpl implements TriggerService {
     ObjectMapper mapper = new ObjectMapper();
     PojoCloudEventData<Map<String, Object>> data = mapData(event,
         PojoCloudEventDataMapper.from(mapper, new TypeReference<Map<String, Object>>() {}));
-    params.add(new RunParam("payload", (Object) data, ParamType.object));
+    params.add(new RunParam("data", (Object) data, ParamType.object));
     params.addAll(ParameterUtil.mapToRunParamList(data.getValue()));
     return params;
   }

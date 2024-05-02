@@ -24,7 +24,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
-@RequestMapping("/api/v2/trigger")
+@RequestMapping("/api/v2")
 @Tag(name = "Triggers for Events, Topics, and Webhooks",
     description = "Listen for Events or Webhook requests to trigger Workflows and provide the ability to resolve Wait For Event TaskRuns.")
 public class TriggerV2Controller {
@@ -104,20 +104,18 @@ public class TriggerV2Controller {
    * HTTP POST specifically for the "Wait For Event" workflow task.
    * 
    * <h4>Sample</h4>
-   * <code>/topic?workflow={workflow}&workflowrun={workflowrun}&topic={topic}&status={status}&access_token={access_token}</code>
+   * <code>/callback?id={workflowrun}&topic={topic}&status={status}&access_token={access_token}</code>
    */
-  @PostMapping(value = "/topic", consumes = "application/json; charset=utf-8")
-  public ResponseEntity<?> acceptWaitForEvent(
-      @Parameter(name = "workflow", description = "The Workflow the request relates to",
-          required = true) @RequestParam(required = true) String workflow,
+  @PostMapping(value = "/callback", consumes = "application/json; charset=utf-8")
+  public void acceptWaitForEvent(
       @Parameter(name = "workflowrun", description = "The WorkflowRun the request relates to",
           required = true) @RequestParam(required = true) String workflowrun,
       @Parameter(name = "topic", description = "The topic to publish to",
           required = true) @RequestParam(required = true) String topic,
-      @Parameter(name = "status", description = "The status to set the wait for end to",
-          required = false) @RequestParam(defaultValue = "success") String status,
+      @Parameter(name = "status", description = "The status to set for the WaitForEvent TaskRun. Succeeded | Failed.",
+          required = false) @RequestParam(defaultValue = "succeeded") String status,
       @RequestBody JsonNode payload) {
-    return ResponseEntity.ok(triggerService.processWFE(workflow, workflowrun, topic, status, Optional.of(payload)));
+    triggerService.processWFE(workflowrun, topic, status, Optional.of(payload));
   }
 
   /**
@@ -127,19 +125,17 @@ public class TriggerV2Controller {
    * continue or similar.
    * 
    * <h4>Sample</h4>
-   * <code>/topic?workflow={workflow}&workflowrun={workflowrun}&topic={topic}&status={status}&access_token={access_token}</code>
+   * <code>/callback?id={workflowrun}&topic={topic}&status={status}&access_token={access_token}</code>
    */
-  @GetMapping(value = "/topic")
-  public ResponseEntity<?> acceptWaitForEvent(
-      @Parameter(name = "workflow", description = "The Workflow the request relates to",
-          required = true) @RequestParam(required = true) String workflow,
+  @GetMapping(value = "/callback")
+  public void acceptWaitForEvent(
       @Parameter(name = "workflowrun", description = "The WorkflowRun the request relates to",
           required = true) @RequestParam(required = true) String workflowrun,
       @Parameter(name = "topic", description = "The topic to publish to",
           required = true) @RequestParam(required = true) String topic,
-      @Parameter(name = "status", description = "The status to set for the WaitForEvent TaskRun",
-          required = false) @RequestParam(defaultValue = "success") String status) {
-    return ResponseEntity.ok(triggerService.processWFE(workflow, workflowrun, topic, status, Optional.empty()));
+      @Parameter(name = "status", description = "The status to set for the WaitForEvent TaskRun. Succeeded | Failed.",
+          required = false) @RequestParam(defaultValue = "succeeded") String status) {
+    triggerService.processWFE(workflowrun, topic, status, Optional.empty());
   }
 
   /**

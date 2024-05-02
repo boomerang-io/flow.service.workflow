@@ -48,12 +48,10 @@ public class TeamActionV2Controller {
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
   public Action get(
-      @Parameter(name = "workflow", description = "Workflow reference",
-      required = true) @PathVariable String workflow,
-  @Parameter(name = "team",
-  description = "Owning team name.",
-  example = "my-amazing-team",
-  required = true) @PathVariable String team,
+      @Parameter(name = "team",
+      description = "Owning team name.",
+      example = "my-amazing-team",
+      required = true) @PathVariable String team,
       @Parameter(name = "actionId", description = "ID of Action",
       required = true) @PathVariable String actionId) {
       return actionService.get(team, actionId);
@@ -76,13 +74,11 @@ public class TeamActionV2Controller {
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "400", description = "Bad Request")})
   public void action(
-      @Parameter(name = "workflow", description = "Workflow reference",
-      required = true) @PathVariable String workflow,
-  @Parameter(name = "team",
-  description = "Owning team name.",
-  example = "my-amazing-team",
-  required = true) @PathVariable String team,
-  @RequestBody List<ActionRequest> request) {
+      @Parameter(name = "team",
+      description = "Owning team name.",
+      example = "my-amazing-team",
+      required = true) @PathVariable String team,
+      @RequestBody List<ActionRequest> request) {
       actionService.action(team, request);
   }
 

@@ -32,13 +32,14 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 import org.springframework.web.util.UriComponentsBuilder;
 import io.boomerang.error.BoomerangException;
 import io.boomerang.model.ref.ChangeLogVersion;
+import io.boomerang.model.ref.Task;
 import io.boomerang.model.ref.TaskRun;
 import io.boomerang.model.ref.TaskRunEndRequest;
-import io.boomerang.model.ref.Task;
 import io.boomerang.model.ref.Workflow;
 import io.boomerang.model.ref.WorkflowCount;
 import io.boomerang.model.ref.WorkflowRun;
 import io.boomerang.model.ref.WorkflowRunCount;
+import io.boomerang.model.ref.WorkflowRunEventRequest;
 import io.boomerang.model.ref.WorkflowRunInsight;
 import io.boomerang.model.ref.WorkflowRunRequest;
 import io.boomerang.model.ref.WorkflowSubmitRequest;
@@ -76,6 +77,9 @@ public class EngineClientImpl implements EngineClient {
 
   @Value("${flow.engine.workflowrun.delete.url}")
   public String deleteWorkflowRunURL;
+
+  @Value("${flow.engine.workflowrun.event.url}")
+  public String eventWorkflowRunURL;
 
   @Value("${flow.engine.workflow.get.url}")
   public String getWorkflowURL;
@@ -434,6 +438,28 @@ public class EngineClientImpl implements EngineClient {
           HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
+
+  @Override
+  public void eventWorkflowRun(String workflowRunId, WorkflowRunEventRequest request) {
+    try {
+      String url = eventWorkflowRunURL.replace("{workflowRunId}", workflowRunId);
+
+      LOGGER.info("Query URL: " + url);
+      final HttpHeaders headers = new HttpHeaders();
+      headers.setContentType(MediaType.APPLICATION_JSON);
+      HttpEntity<WorkflowRunEventRequest> entity = new HttpEntity<WorkflowRunEventRequest>(request, headers);
+      ResponseEntity<Void> response =
+          restTemplate.exchange(url, HttpMethod.PUT, entity, Void.class);
+
+      LOGGER.info("Status Response: " + response.getStatusCode());
+    } catch (RestClientException ex) {
+      LOGGER.error(ex.toString());
+      throw new BoomerangException(ex, HttpStatus.INTERNAL_SERVER_ERROR.value(),
+          ex.getClass().getSimpleName(), "Exception in communicating with internal services.",
+          HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
 
   /*
    * ************************************** Workflow endpoints
