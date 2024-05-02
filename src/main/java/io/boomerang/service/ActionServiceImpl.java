@@ -97,13 +97,11 @@ public class ActionServiceImpl implements ActionService {
               Optional.of(RelationshipType.APPROVERGROUP), Optional.of(List.of(actionEntity.getApproverGroupRef())),
               RelationshipLabel.BELONGSTO, RelationshipType.TEAM, team, false);
           if (approverGroupRefs.isEmpty()) {
-            //TODO better error around INVALID APPROVER GROUP REF
-            throw new BoomerangException(BoomerangError.ACTION_INVALID_REF);
+            throw new BoomerangException(BoomerangError.ACTION_INVALID_APPROVERGROUP);
           }
           Optional<ApproverGroupEntity> approverGroupEntity = approverGroupRepository.findById(actionEntity.getApproverGroupRef());
           if (approverGroupEntity.isEmpty()) {
-            //TODO better error around INVALID APPROVER GROUP REF
-            throw new BoomerangException(BoomerangError.ACTION_INVALID_REF);
+            throw new BoomerangException(BoomerangError.ACTION_INVALID_APPROVERGROUP);
           }
           boolean partOfGroup = approverGroupEntity.get().getApprovers().contains(userEntity.getId());
           if (partOfGroup) {
@@ -139,8 +137,7 @@ public class ActionServiceImpl implements ActionService {
           endRequest.setStatus(approved ? RunStatus.succeeded : RunStatus.failed);
           engineClient.endTaskRun(actionEntity.getTaskRunRef(), endRequest);
         } catch (BoomerangException e) {
-        //TODO better error around INVALID APPROVER GROUP REF
-          throw new BoomerangException(BoomerangError.ACTION_INVALID_REF);
+          throw new BoomerangException(BoomerangError.ACTION_UNABLE_TO_ACTION);
         }
         this.actionRepository.save(actionEntity);
       }
