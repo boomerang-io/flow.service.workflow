@@ -81,7 +81,7 @@ public class ActionServiceImpl implements ActionService {
       }
 
       // Check if requester has access to the Workflow the Action Entity belongs to
-      if (relationshipServiceImpl.hasTeamRelationship(Optional.of(RelationshipType.WORKFLOW),
+      if (!relationshipServiceImpl.hasTeamRelationship(Optional.of(RelationshipType.WORKFLOW),
           Optional.of(actionEntity.getWorkflowRef()), RelationshipLabel.BELONGSTO, team, true)) {
         throw new BoomerangException(BoomerangError.ACTION_INVALID_REF);
       }
