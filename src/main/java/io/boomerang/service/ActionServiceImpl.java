@@ -297,4 +297,9 @@ public class ActionServiceImpl implements ActionService {
   public void deleteAllByWorkflow(String workflowRef) {
     actionRepository.deleteByWorkflowRef(workflowRef);
   }
+  
+  @Override
+  public void cancelAllByWorkflowRun(String workflowRunRef) {
+    actionRepository.updateStatusByWorkflowRunRef(workflowRunRef, ActionStatus.cancelled);
+  }
 }

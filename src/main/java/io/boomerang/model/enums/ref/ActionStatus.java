@@ -8,5 +8,5 @@ package io.boomerang.model.enums.ref;
  * Created with 'submitted'. Moved to 'approved' or 'rejected'.
  */
 public enum ActionStatus {
-  approved, submitted, rejected //NOSONAR
+  approved, submitted, rejected, cancelled //NOSONAR
 }

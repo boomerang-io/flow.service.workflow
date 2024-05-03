@@ -26,4 +26,6 @@ public interface ActionService {
 
   void deleteAllByWorkflow(String workflowRef);
 
+  void cancelAllByWorkflowRun(String workflowRunRef);
+
 }

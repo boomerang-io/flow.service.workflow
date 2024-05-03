@@ -39,6 +39,9 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
 
   @Autowired
   private RelationshipServiceImpl relationshipServiceImpl;
+
+  @Autowired
+  private ActionService actionService;
   
   /*
    * Get Workflow Run
@@ -185,6 +188,7 @@ public class WorkflowRunServiceImpl implements WorkflowRunService {
     if (relationshipServiceImpl.hasTeamRelationship(Optional.of(RelationshipType.WORKFLOWRUN),
         Optional.of(workflowRunId), RelationshipLabel.BELONGSTO, team, false)) {
       WorkflowRun wfRun = engineClient.cancelWorkflowRun(workflowRunId);
+      actionService.cancelAllByWorkflowRun(workflowRunId);
       return ResponseEntity.ok(wfRun);
     } else {
       //TODO: do we want to return invalid ref or unauthorized
