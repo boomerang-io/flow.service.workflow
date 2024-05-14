@@ -74,10 +74,12 @@ public class DataAdapterUtil {
      */
     public static void filterParamSpecValueByFieldType(
             List<AbstractParam> config, List<ParamSpec> params, String fieldType) {   
-      if (config.stream().anyMatch(p -> fieldType.equals(p.getType()))) {
-        config.stream().filter(p -> fieldType.equals(p.getType())).forEach(p -> {
-          p.setValue(null);
-          params.stream().filter(param -> param.getName().equalsIgnoreCase((p.getKey()))).findFirst().get().setDefaultValue("");
+      if (config.stream().anyMatch(c -> fieldType.equals(c.getType()))) {
+        config.stream().filter(c -> fieldType.equals(c.getType())).forEach(c -> {
+          c.setValue("");
+          params.stream().filter(param -> param.getName().equalsIgnoreCase((c.getKey()))).forEach(p -> {
+            p.setDefaultValue("");
+          });
         });
       }
     }
@@ -92,10 +94,12 @@ public class DataAdapterUtil {
      */
     public static void filterRunParamValueByFieldType(
             List<AbstractParam> config, List<RunParam> params, String fieldType) {    
-      if (config.stream().anyMatch(p -> fieldType.equals(p.getType()))) {    
-        config.stream().filter(p -> fieldType.equals(p.getType())).forEach(p -> {
-          p.setValue(null);
-          params.stream().filter(param -> param.getName().equalsIgnoreCase((p.getKey()))).findFirst().get().setValue("");
+      if (config.stream().anyMatch(c -> fieldType.equals(c.getType()))) {    
+        config.stream().filter(c -> fieldType.equals(c.getType())).forEach(c -> {
+          c.setValue("");
+          params.stream().filter(param -> param.getName().equalsIgnoreCase((c.getKey()))).forEach(p -> {
+            p.setValue("");
+          });
         });
       }
     }
