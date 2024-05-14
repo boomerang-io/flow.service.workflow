@@ -77,7 +77,7 @@ public class DataAdapterUtil {
       if (config.stream().anyMatch(p -> fieldType.equals(p.getType()))) {
         config.stream().filter(p -> fieldType.equals(p.getType())).forEach(p -> {
           p.setValue(null);
-          params.stream().filter(param -> param.getName().equalsIgnoreCase((p.getKey()))).findFirst().get().setDefaultValue(null);
+          params.stream().filter(param -> param.getName().equalsIgnoreCase((p.getKey()))).findFirst().get().setDefaultValue("");
         });
       }
     }
@@ -95,7 +95,7 @@ public class DataAdapterUtil {
       if (config.stream().anyMatch(p -> fieldType.equals(p.getType()))) {    
         config.stream().filter(p -> fieldType.equals(p.getType())).forEach(p -> {
           p.setValue(null);
-          params.stream().filter(param -> param.getName().equalsIgnoreCase((p.getKey()))).findFirst().get().setValue(null);
+          params.stream().filter(param -> param.getName().equalsIgnoreCase((p.getKey()))).findFirst().get().setValue("");
         });
       }
     }
