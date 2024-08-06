@@ -336,8 +336,11 @@ public class WorkflowServiceImpl implements WorkflowService {
    */
   public WorkflowRun internalSubmit(String team, String workflowId, WorkflowSubmitRequest request,
       boolean start) {
+      // Check if Workflow exists and is active. Then check triggers are enabled.
+      // Presumed workflow exists as relationship was valid to get to this point.
+      Workflow workflow = engineClient.getWorkflow(workflowId, Optional.empty(), false);
       //Check Triggers - Throws Exception - Check first, as if trigger not enabled, no point in checking quotas
-      canRunWithTrigger(workflowId, request.getTrigger(), request.getParams());
+      canRunWithTrigger(workflow.getTriggers(), request.getTrigger(), request.getParams());
       //Check Quotas - Throws Exception
       canRunWithQuotas(team, workflowId, Optional.of(request.getWorkspaces()));
       // Set Workflow & Task Debug
@@ -363,7 +366,7 @@ public class WorkflowServiceImpl implements WorkflowService {
       executionAnnotations.put("boomerang.io/task-timeout", this.settingsService.getSettingConfig(TASK_SETTINGS_KEY, "default.timeout").getValue());
       
       //Add Context, Global, and Team parameters to the WorkflowRun request
-      ParamLayers paramLayers = parameterManager.buildParamLayers(team, workflowId);
+      ParamLayers paramLayers = parameterManager.buildParamLayers(team, workflow);
       executionAnnotations.put("boomerang.io/global-params", paramLayers.getGlobalParams());
       executionAnnotations.put("boomerang.io/context-params", paramLayers.getContextParams());
       executionAnnotations.put("boomerang.io/team-params", paramLayers.getTeamParams());
@@ -516,7 +519,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     
     final Workflow workflow = this.get(team, workflowId, Optional.empty(), true);
     List<String> paramKeys =
-        parameterManager.buildParamKeys(team, workflowId, workflow.getParams());
+        parameterManager.buildParamKeys(team, workflow, workflow.getParams());
     workflow.getTasks().forEach(t -> {
       if (t.getResults() != null && !t.getResults().isEmpty()) {
         t.getResults().forEach(r -> {
@@ -629,13 +632,10 @@ public class WorkflowServiceImpl implements WorkflowService {
    * 
    * @param Trigger an optional Trigger object
    */
-  protected void canRunWithTrigger(String workflowId, TriggerEnum runTrigger, List<RunParam> params) {
+  protected void canRunWithTrigger(WorkflowTrigger triggers, TriggerEnum runTrigger, List<RunParam> params) {
     // Check no further if trigger not provided
     if (!Objects.isNull(runTrigger)) {
-      // Check if Workflow exists and is active. Then check triggers are enabled.
-      Workflow workflow = engineClient.getWorkflow(workflowId, Optional.empty(), false);
-      if (!Objects.isNull(workflow)) {
-        WorkflowTrigger triggers = workflow.getTriggers();
+      if (!Objects.isNull(triggers)) {
         if (TriggerEnum.manual.equals(runTrigger) && triggers.getManual().getEnabled()) {
           return;
         } else if (TriggerEnum.schedule.equals(runTrigger)

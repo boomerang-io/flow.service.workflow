@@ -12,6 +12,7 @@ import io.boomerang.error.BoomerangException;
 import io.boomerang.model.AbstractParam;
 import io.boomerang.model.ref.ParamLayers;
 import io.boomerang.model.ref.ParamSpec;
+import io.boomerang.model.ref.Workflow;
 import io.boomerang.security.entity.TokenEntity;
 import io.boomerang.security.model.AuthType;
 import io.boomerang.security.repository.TokenRepository;
@@ -41,7 +42,7 @@ public class ParameterManagerImpl implements ParameterManager {
   final String[] reserved = {"system", "workflow", "global", "team", "workflow"};
   
   @Override
-  public List<String> buildParamKeys(String teamId, String workflowId, List<ParamSpec> workflowParamSpecs) {
+  public List<String> buildParamKeys(String teamId, Workflow workflow, List<ParamSpec> workflowParamSpecs) {
     ParamLayers paramLayers = new ParamLayers();
     Map<String, Object> globalParams = paramLayers.getGlobalParams();
     Map<String, Object> teamParams = paramLayers.getTeamParams();
@@ -59,7 +60,7 @@ public class ParameterManagerImpl implements ParameterManager {
     for (ParamSpec wfParam : workflowParamSpecs) {
       workflowParams.put(wfParam.getName(), "");
     }
-    buildContextParams(contextParams, workflowId);
+    buildContextParams(contextParams, workflow);
 
     return paramLayers.getFlatKeys();
   }
@@ -68,20 +69,20 @@ public class ParameterManagerImpl implements ParameterManager {
    * Only needs to set the Global, Team, and partial Context Params. Engine will add and resolve.
    */
   @Override
-  public ParamLayers buildParamLayers(String teamId, String workflowId) {
+  public ParamLayers buildParamLayers(String teamId, Workflow workflow) {
     ParamLayers paramLayers = new ParamLayers();
-    Map<String, Object> globalParams = paramLayers.getGlobalParams();
     Map<String, Object> teamParams = paramLayers.getTeamParams();
+    Map<String, Object> globalParams = paramLayers.getGlobalParams();
     Map<String, Object> contextParams = paramLayers.getContextParams();
-    //Set Global Params
-    if (settingsService.getSettingConfig("features", "globalParameters").getBooleanValue()) {
-      buildGlobalParams(globalParams);
-    }
     //Set Team Params
     if (settingsService.getSettingConfig("features", "teamParameters").getBooleanValue()) {
         buildTeamParams(teamParams, teamId);
     }
-    buildContextParams(contextParams, workflowId);
+    //Set Global Params
+    if (settingsService.getSettingConfig("features", "globalParameters").getBooleanValue()) {
+      buildGlobalParams(globalParams);
+    }
+    buildContextParams(contextParams, workflow);
     
     return paramLayers;
   }
@@ -119,13 +120,13 @@ public class ParameterManagerImpl implements ParameterManager {
    * 
    * TODO: check this with the reserved Tekton ones
    */
-  private void buildContextParams(Map<String, Object> contextParams, String workflowId) {
+  private void buildContextParams(Map<String, Object> contextParams, Workflow workflow) {
     contextParams.put("workflowrun-trigger", "");
     contextParams.put("workflowrun-initiator", "");
     contextParams.put("workflowrun-id", "");
-    contextParams.put("workflow-name", "");
-    contextParams.put("workflow-id", workflowId);
-    contextParams.put("workflow-version", "");
+    contextParams.put("workflow-name", workflow.getName());
+    contextParams.put("workflow-id", workflow.getId());
+    contextParams.put("workflow-version", workflow.getVersion());
     contextParams.put("taskrun-id", "");
     contextParams.put("taskrun-name", "");
     contextParams.put("taskrun-type", "");
@@ -133,11 +134,11 @@ public class ParameterManagerImpl implements ParameterManager {
     contextParams.put("wfe-url", this.settingsService.getWFEURL());
     contextParams.put("event-url", this.settingsService.getEventURL());
     
-    Optional<List<TokenEntity>> tokens = tokenRepository.findByPrincipalAndType(workflowId, AuthType.workflow);
+    Optional<List<TokenEntity>> tokens = tokenRepository.findByPrincipalAndType(workflow.getId(), AuthType.workflow);
     // Add Tokens
     if (tokens.isPresent() && !tokens.isEmpty()) {
       for (TokenEntity t : tokens.get()) {
-        contextParams.put("context.tokens." + t.getName(), t.getToken());
+        contextParams.put("tokens." + t.getName(), t.getToken());
       }
     }
   }

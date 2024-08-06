@@ -58,7 +58,7 @@ public class UserV2Controller {
   
   @PatchMapping(value = "/profile")
   @AuthScope(action = PermissionAction.WRITE, scope = PermissionScope.USER, types = {AuthType.session, AuthType.user})
-  @Operation(summary = "Get your Profile")
+  @Operation(summary = "Patch your Profile")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"),
       @ApiResponse(responseCode = "423", description = "OK"),
       @ApiResponse(responseCode = "404", description = "Instance not activated. Profile locked.")})
