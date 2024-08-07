@@ -344,7 +344,7 @@ public class WorkflowServiceImpl implements WorkflowService {
       //Check Quotas - Throws Exception
       canRunWithQuotas(team, workflowId, Optional.of(request.getWorkspaces()));
       // Set Workflow & Task Debug
-      if (!Objects.isNull(request.getDebug())) {
+      if (Objects.isNull(request.getDebug())) {
         boolean enableDebug = false;
         String setting =
             this.settingsService.getSettingConfig("task", "debug").getValue();
@@ -352,7 +352,7 @@ public class WorkflowServiceImpl implements WorkflowService {
           enableDebug = Boolean.parseBoolean(setting);
         }
         request.setDebug(Boolean.valueOf(enableDebug));
-        LOGGER.debug("Setting debug = " + enableDebug);
+        LOGGER.info("Setting debug = " + enableDebug);
       }
       // Set Workflow Timeout
       Long timeout = teamService.getWorkflowMaxDurationForTeam(team).longValue();
