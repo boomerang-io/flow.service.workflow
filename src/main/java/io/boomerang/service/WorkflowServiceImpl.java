@@ -352,6 +352,7 @@ public class WorkflowServiceImpl implements WorkflowService {
           enableDebug = Boolean.parseBoolean(setting);
         }
         request.setDebug(Boolean.valueOf(enableDebug));
+        LOGGER.debug("Setting debug = " + enableDebug);
       }
       // Set Workflow Timeout
       Long timeout = teamService.getWorkflowMaxDurationForTeam(team).longValue();
