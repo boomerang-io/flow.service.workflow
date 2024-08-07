@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -228,6 +229,26 @@ public class ParameterUtil {
     }
     return params;
   }
+  
+  //Similar to above, however assumes that the Abstract Param is source of truth.
+  //That means if there is no defaultValue or description in the Abstract Param, then null is the correct value to set
+  //If the Abstract Param doesn't exist but it does in the ParamSpec, then do not return it, it must have been deleted.
+  public static List<ParamSpec> abstractParamsToParamSpecsV2(List<AbstractParam> abstractParams) {
+    List<ParamSpec> params = new LinkedList<>();
+    if (abstractParams != null && !abstractParams.isEmpty()) {
+      for (AbstractParam ap : abstractParams) {
+        ParamSpec param = new ParamSpec();
+        param.setName(ap.getKey());
+        param.setDefaultValue(ap.getDefaultValue());
+        param.setDescription(ap.getDescription());
+        //TODO: conditionally know the type based on AbstractParam type
+        // Need to do a mapping
+        param.setType(ParamType.string);
+        params.add(param);
+      };
+    }
+    return params;
+  }
 
   /*
    * Turns the ParamSpec into an AbstractParam. Used if the Workflow was created by API or other
@@ -262,6 +283,46 @@ public class ParameterUtil {
     // If any abstractParams are remaining, return them
     if (abstractParams != null && !abstractParams.isEmpty()) {
       params.addAll(abstractParams);
+    }
+    return params;
+  }
+  
+  //Similar to above, however assumes that the Param spec has the correct value
+  public static List<AbstractParam> paramSpecToAbstractParamV2(List<ParamSpec> paramSpecs,
+      List<AbstractParam> abstractParams) {
+    //If paramSpecs is empty, return empty params
+    List<AbstractParam> params = new LinkedList<>();
+    if (paramSpecs != null && !paramSpecs.isEmpty()) {
+      for (ParamSpec ps : paramSpecs) {
+        AbstractParam param = new AbstractParam();
+        if (abstractParams.stream().anyMatch(p -> p.getKey().equals(ps.getName()))) {
+          param = abstractParams.stream().filter(p -> p.getKey().equals(ps.getName())).findFirst()
+              .get();
+          abstractParams.remove(param);
+        } else {
+          param.setKey(ps.getName());
+        }
+        // Any value from Param Spec is trusted, thus override even if empty / null
+        param.setDefaultValue(Objects.isNull(ps.getDefaultValue()) ? null : ps.getDefaultValue().toString());
+        param.setDescription(ps.getDescription());
+        //Check before defaulting as may be an existing property and because the following elements don't exist on ParamSpec, we have to merge.
+        if (Objects.isNull(param.getLabel()) || param.getLabel().isEmpty()) {          
+          param.setLabel(ps.getName());
+        }
+        if (Objects.isNull(param.getType()) || param.getType().isEmpty()) {     
+          //TOOD better type mapping
+          //Would have to detect multiline values
+          //Handle objects vs arrays
+          param.setType("text");
+        }
+        if (Objects.isNull(param.isReadOnly())) {
+            param.setReadOnly(false);
+        }
+        if (Objects.isNull(param.getPlaceholder()) || param.getPlaceholder().isEmpty()) {          
+          param.setPlaceholder("");
+        }
+        params.add(param);
+      };
     }
     return params;
   }

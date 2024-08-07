@@ -439,7 +439,6 @@ public class WorkflowServiceImpl implements WorkflowService {
     headers.add("Cache-Control", "no-cache, no-store, must-revalidate");
     headers.add("Pragma", "no-cache");
     headers.add("Expires", "0");
-
     headers.add("Content-Disposition", "attachment; filename=\"any_name.json\"");
 
     try {
@@ -508,7 +507,9 @@ public class WorkflowServiceImpl implements WorkflowService {
   }
 
   /*
-   * Forms the param layers
+   * Forms the param layers (keys only)
+   * 
+   * Used by the UI to provide helpful prompts on available params
    * 
    * Relationship check handled in Get
    */
@@ -520,7 +521,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     
     final Workflow workflow = this.get(team, workflowId, Optional.empty(), true);
     List<String> paramKeys =
-        parameterManager.buildParamKeys(team, workflow, workflow.getParams());
+        parameterManager.buildParamKeys(team, workflow);
     workflow.getTasks().forEach(t -> {
       if (t.getResults() != null && !t.getResults().isEmpty()) {
         t.getResults().forEach(r -> {
@@ -709,6 +710,9 @@ public class WorkflowServiceImpl implements WorkflowService {
     Map<String, TaskType> taskNamesToType =
         wfTasks.stream().collect(Collectors.toMap(WorkflowTask::getName, WorkflowTask::getType));
     Map<String, String> taskNameToNodeId = new HashMap<>();
+   
+    //Make config the source of truth on the canvas
+    wfCanvas.setConfig(ParameterUtil.paramSpecToAbstractParamV2(workflow.getParams(), workflow.getConfig()));
 
     // Create Nodes
     wfTasks.forEach(task -> {
@@ -764,7 +768,10 @@ public class WorkflowServiceImpl implements WorkflowService {
   protected Workflow convertCanvasToWorkflow(WorkflowCanvas canvas) {
     LOGGER.debug("Workflow Canvas: " + canvas.toString());
     Workflow workflow = new Workflow(canvas);
-    LOGGER.debug("Converted Workfloed: " + workflow.toString());
+    
+    //Make params the source of truth on the Workflow
+    workflow.setParams(ParameterUtil.abstractParamsToParamSpecsV2(canvas.getConfig()));
+    
     List<CanvasNode> nodes = canvas.getNodes();
     List<CanvasEdge> edges = canvas.getEdges();
 
@@ -795,7 +802,7 @@ public class WorkflowServiceImpl implements WorkflowService {
       task.setDependencies(dependencies);
       workflow.getTasks().add(task);
     });
-
+    LOGGER.debug("Converted Workflow: " + workflow.toString());
     return workflow;
   }
 

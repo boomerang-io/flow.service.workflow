@@ -41,8 +41,11 @@ public class ParameterManagerImpl implements ParameterManager {
 
   final String[] reserved = {"system", "workflow", "global", "team", "workflow"};
   
+  /*
+   * Used by the /available-params endpoint to retrieve all param keys workflow and above in stack
+   */
   @Override
-  public List<String> buildParamKeys(String teamId, Workflow workflow, List<ParamSpec> workflowParamSpecs) {
+  public List<String> buildParamKeys(String teamId, Workflow workflow) {
     ParamLayers paramLayers = new ParamLayers();
     Map<String, Object> globalParams = paramLayers.getGlobalParams();
     Map<String, Object> teamParams = paramLayers.getTeamParams();
@@ -57,7 +60,7 @@ public class ParameterManagerImpl implements ParameterManager {
       buildTeamParams(teamParams, teamId);
     }
     //Set the Keys from the Workflow - ignore values
-    for (ParamSpec wfParam : workflowParamSpecs) {
+    for (ParamSpec wfParam : workflow.getParams()) {
       workflowParams.put(wfParam.getName(), "");
     }
     buildContextParams(contextParams, workflow);

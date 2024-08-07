@@ -7,7 +7,7 @@ import io.boomerang.model.ref.Workflow;
 
 public interface ParameterManager {
 
-  List<String> buildParamKeys(String teamId, Workflow workflow, List<ParamSpec> workflowParamSpecs);
+  List<String> buildParamKeys(String teamId, Workflow workflow);
 
   ParamLayers buildParamLayers(String teamId, Workflow workflow);
 
