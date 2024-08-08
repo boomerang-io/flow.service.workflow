@@ -25,7 +25,8 @@ public interface RelationshipRepository extends MongoRepository<RelationshipEnti
   
   List<RelationshipEntity> findAllByConnectionsLabelAndConnectionsTo(RelationshipLabel label, String to);
   
-  @Aggregation(pipeline={"{'$match':{'type': ?0, 'slug': ?1}}","{ '$set' : { 'slug' : ?2 } }"})
+  @Query("{'type': ?0, 'slug': ?1}")
+  @Update("{ '$set' : { 'slug' : ?2 } }")
   RelationshipEntity findAndSetSlugByTypeAndSlug(RelationshipType type, String slug, 
       String newSlug);  
   
