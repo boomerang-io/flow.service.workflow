@@ -736,9 +736,10 @@ public class RelationshipServiceImpl implements RelationshipService {
   
   // Team Node
   public void updateNodeSlug(RelationshipType type, String currentSlug, String newSlug) {
-    RelationshipEntity entity = this.relationshipRepository.findAndSetSlugByTypeAndSlug(type, currentSlug, newSlug);
-    teamSlugToRelationshipId.remove(currentSlug);
-    teamSlugToRelationshipId.put(newSlug, entity.getId());
+    long update = this.relationshipRepository.findAndSetSlugByTypeAndSlug(type, currentSlug, newSlug);
+    LOGGER.debug("Updates made: {}", update);
+//    teamSlugToRelationshipId.remove(currentSlug);
+//    teamSlugToRelationshipId.put(newSlug, entity.getId());
 //      teamSlugToRef.remove(currentSlug);
 //      teamSlugToRef.put(newSlug, entity.getRef());
   }

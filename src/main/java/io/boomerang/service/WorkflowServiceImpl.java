@@ -119,14 +119,23 @@ public class WorkflowServiceImpl implements WorkflowService {
     if (workflowId == null || workflowId.isBlank()) {
       throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
     }
+    Workflow workflow = internalGet(team, workflowId, version, withTasks);
 
+    // Filter out sensitive values
+    DataAdapterUtil.filterParamSpecValueByFieldType(workflow.getConfig(), workflow.getParams(),
+        FieldType.PASSWORD.value());
+    
+    return workflow;
+  }
+  
+  /*
+   * This method is used by the compose methods but ensures the password values are not yet filtered.
+   */
+  private Workflow internalGet(String team, String workflowId, Optional<Integer> version,
+      boolean withTasks) {
     if (relationshipServiceImpl.hasTeamRelationship(Optional.of(RelationshipType.WORKFLOW),
         Optional.of(workflowId), RelationshipLabel.BELONGSTO, team, false)) {
       Workflow workflow = engineClient.getWorkflow(workflowId, version, withTasks);
-
-      // Filter out sensitive values
-      DataAdapterUtil.filterParamSpecValueByFieldType(workflow.getConfig(), workflow.getParams(),
-          FieldType.PASSWORD.value());
       
       //Convert Workflow TaskRefs to Slugs
       convertTaskRefsToSlugs(team, workflow);
@@ -484,7 +493,7 @@ public class WorkflowServiceImpl implements WorkflowService {
       throw new BoomerangException(BoomerangError.WORKFLOW_INVALID_REF);
     }
 
-    final Workflow response = this.get(team, workflowId, Optional.empty(), true);
+    final Workflow response = this.internalGet(team, workflowId, Optional.empty(), true);
     return convertWorkflowToCanvas(response);
   }
 
@@ -770,7 +779,10 @@ public class WorkflowServiceImpl implements WorkflowService {
     Workflow workflow = new Workflow(canvas);
     
     //Make params the source of truth on the Workflow
-    workflow.setParams(ParameterUtil.abstractParamsToParamSpecsV2(canvas.getConfig(), workflow.getParams()));
+    //First merge the config so that password defaultValues are preserved
+    workflow.setConfig(ParameterUtil.mergeAbstractParms(workflow.getConfig(), canvas.getConfig()));
+    //Next merge params using the merged config
+    workflow.setParams(ParameterUtil.abstractParamsToParamSpecsV2(workflow.getConfig(), workflow.getParams()));
     
     List<CanvasNode> nodes = canvas.getNodes();
     List<CanvasEdge> edges = canvas.getEdges();

@@ -27,7 +27,7 @@ public interface RelationshipRepository extends MongoRepository<RelationshipEnti
   
   @Query("{'type': ?0, 'slug': ?1}")
   @Update("{ '$set' : { 'slug' : ?2 } }")
-  RelationshipEntity findAndSetSlugByTypeAndSlug(RelationshipType type, String slug, 
+  long findAndSetSlugByTypeAndSlug(RelationshipType type, String slug, 
       String newSlug);  
   
   @Query(value = "{'type': ?0, '$or': [{'slug': ?1},{'ref': ?1}]}", delete = true)

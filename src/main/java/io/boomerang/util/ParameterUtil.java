@@ -261,6 +261,22 @@ public class ParameterUtil {
     }
     return params;
   }
+  
+  //Loop through the newAPs and if of password type with empty defaultValue, retrieve the original value
+  public static List<AbstractParam> mergeAbstractParms(List<AbstractParam> origAP, List<AbstractParam> newAP) {
+    if (newAP != null && !newAP.isEmpty()) {
+      for (AbstractParam ap : newAP) {
+        if (ap.getType().equals("password") && ap.getDefaultValue().isEmpty()) {
+          if (origAP.stream().anyMatch(p -> p.getKey().equals(ap.getKey()))) {
+            ap.setDefaultValue(origAP.stream().filter(p -> p.getKey().equals(ap.getKey())).findFirst()
+                .get().getDefaultValue());
+          }
+        }
+        
+      }
+    }
+    return newAP;
+  }
 
   /*
    * Turns the ParamSpec into an AbstractParam. Used if the Workflow was created by API or other
