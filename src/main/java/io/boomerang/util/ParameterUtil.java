@@ -210,7 +210,7 @@ public class ParameterUtil {
     if (abstractParams != null && !abstractParams.isEmpty()) {
       for (AbstractParam ap : abstractParams) {
         ParamSpec param = new ParamSpec();
-        if (paramSpecs != null && !paramSpecs.isEmpty() && paramSpecs.stream().filter(p -> p.getName().equals(ap.getKey())).count() > 0) {
+        if (paramSpecs != null && !paramSpecs.isEmpty() && paramSpecs.stream().anyMatch(p -> p.getName().equals(ap.getKey()))) {
           param =
               paramSpecs.stream().filter(p -> p.getName().equals(ap.getKey())).findFirst().get();
           paramSpecs.remove(param);
@@ -233,13 +233,25 @@ public class ParameterUtil {
   //Similar to above, however assumes that the Abstract Param is source of truth.
   //That means if there is no defaultValue or description in the Abstract Param, then null is the correct value to set
   //If the Abstract Param doesn't exist but it does in the ParamSpec, then do not return it, it must have been deleted.
-  public static List<ParamSpec> abstractParamsToParamSpecsV2(List<AbstractParam> abstractParams) {
+  public static List<ParamSpec> abstractParamsToParamSpecsV2(List<AbstractParam> abstractParams,
+      List<ParamSpec> paramSpecs) {
     List<ParamSpec> params = new LinkedList<>();
     if (abstractParams != null && !abstractParams.isEmpty()) {
       for (AbstractParam ap : abstractParams) {
         ParamSpec param = new ParamSpec();
+        //We mainly do this for secret abstractParams where the value would have been set to the UI as blank
+        if (paramSpecs != null && !paramSpecs.isEmpty() && paramSpecs.stream().anyMatch(p -> p.getName().equals(ap.getKey()))) {
+          param =
+              paramSpecs.stream().filter(p -> p.getName().equals(ap.getKey())).findFirst().get();
+          paramSpecs.remove(param);
+        } else {
+          param.setName(ap.getKey());
+        }
         param.setName(ap.getKey());
-        param.setDefaultValue(ap.getDefaultValue());
+        //If secret, only replace the stored value when not empty (as its removed on display to the UI)
+        if (ap.getType().equals("secret") && !Objects.isNull(ap.getDefaultValue()) && !ap.getDefaultValue().isEmpty()) {          
+          param.setDefaultValue(ap.getDefaultValue());
+        }
         param.setDescription(ap.getDescription());
         //TODO: conditionally know the type based on AbstractParam type
         // Need to do a mapping

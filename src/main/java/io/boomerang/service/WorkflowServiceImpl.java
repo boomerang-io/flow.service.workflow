@@ -770,7 +770,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     Workflow workflow = new Workflow(canvas);
     
     //Make params the source of truth on the Workflow
-    workflow.setParams(ParameterUtil.abstractParamsToParamSpecsV2(canvas.getConfig()));
+    workflow.setParams(ParameterUtil.abstractParamsToParamSpecsV2(canvas.getConfig(), workflow.getParams()));
     
     List<CanvasNode> nodes = canvas.getNodes();
     List<CanvasEdge> edges = canvas.getEdges();
