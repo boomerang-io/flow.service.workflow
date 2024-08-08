@@ -218,6 +218,9 @@ public class TeamServiceImpl implements TeamService {
         teamEntity.setName(request.getName());
         updatedName = true;
       }
+      if (request.getDisplayName() != null && !request.getDisplayName().isBlank()) {
+        teamEntity.setDisplayName(request.getDisplayName());
+      }
       if (request.getStatus() != null) {
         teamEntity.setStatus(request.getStatus());
       }
