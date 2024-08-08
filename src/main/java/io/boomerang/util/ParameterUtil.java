@@ -249,7 +249,7 @@ public class ParameterUtil {
         }
         param.setName(ap.getKey());
         //If secret, only replace the stored value when not empty (as its removed on display to the UI)
-        if (ap.getType().equals("secret") && !Objects.isNull(ap.getDefaultValue()) && !ap.getDefaultValue().isEmpty()) {          
+        if (ap.getType().equals("password") && !Objects.isNull(ap.getDefaultValue()) && !ap.getDefaultValue().isEmpty()) {          
           param.setDefaultValue(ap.getDefaultValue());
         }
         param.setDescription(ap.getDescription());
