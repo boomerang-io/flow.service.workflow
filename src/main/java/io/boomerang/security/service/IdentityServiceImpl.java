@@ -128,6 +128,8 @@ public class IdentityServiceImpl implements IdentityService {
           newUserEntity.setType(usertype.get());
         }
         userEntity = Optional.of(newUserEntity);
+
+        createRelationshipNode = true;
       } else if (userEntity.isEmpty()) {
         return Optional.empty();
       }
