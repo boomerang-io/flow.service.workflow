@@ -688,6 +688,7 @@ public class FlowActivityServiceImpl implements FlowActivityService {
                 if (inputValue == null || inputValue.isBlank()) {
                   inputValue = taskConfig.getDefaultValue();
                 }
+                inputValue = inputValue == null ? "" : inputValue;
                 String value = propertyManager.replaceValueWithProperty(inputValue, activityId,
                     applicationProperties);
                 value = propertyManager.replaceValueWithProperty(value, activityId,
