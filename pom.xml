@@ -194,7 +194,6 @@
 				<artifactId>httpcore5-h2</artifactId>
 				<version>${httpcomponents.core5.version}</version>
 			</dependency>
-
 		</dependencies>
 
 	</dependencyManagement>
